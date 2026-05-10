@@ -49,7 +49,7 @@ internal static class AbiDelegateFactory
         if (type.GenericParameters.Count > 0) { return; }
         MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
-        MethodSig sig = new(invoke);
+        MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         IndentedTextWriter __scratchIidExpr = new();
@@ -105,7 +105,7 @@ internal static class AbiDelegateFactory
         if (type.GenericParameters.Count > 0) { return; }
         MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
-        MethodSig sig = new(invoke);
+        MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -131,7 +131,7 @@ internal static class AbiDelegateFactory
         if (type.GenericParameters.Count > 0) { return; }
         MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
-        MethodSig sig = new(invoke);
+        MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -208,7 +208,7 @@ internal static class AbiDelegateFactory
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
-        MethodSig sig = new(invoke);
+        MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -259,9 +259,9 @@ internal static class AbiDelegateFactory
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
-            if (pc == ParamCategory.Ref) { writer.Write("in "); }
-            else if (pc is ParamCategory.Out or ParamCategory.ReceiveArray) { writer.Write("out "); }
+            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Params[i]);
+            if (pc == ParameterCategory.Ref) { writer.Write("in "); }
+            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray) { writer.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
@@ -269,9 +269,9 @@ internal static class AbiDelegateFactory
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
-            if (pc == ParamCategory.Ref) { writer.Write("in "); }
-            else if (pc is ParamCategory.Out or ParamCategory.ReceiveArray) { writer.Write("out "); }
+            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Params[i]);
+            if (pc == ParameterCategory.Ref) { writer.Write("in "); }
+            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray) { writer.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }

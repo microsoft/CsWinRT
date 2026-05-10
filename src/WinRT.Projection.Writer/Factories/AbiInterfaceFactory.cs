@@ -33,7 +33,7 @@ internal static class AbiInterfaceFactory
         WriteInterfaceMarshaller(writer, context, type);
     }
 
-    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig)
+    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig)
     {
         WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: false);
     }
@@ -42,7 +42,7 @@ internal static class AbiInterfaceFactory
     /// Writes the ABI parameter types for a vtable function pointer signature, optionally
     /// including parameter names (for method declarations vs. function pointer type lists).
     /// </summary>
-    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, bool includeParamNames)
+    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, bool includeParamNames)
     {
         // void* thisPtr, then each param's ABI type, then return type pointer
         writer.Write("void*");
@@ -50,8 +50,8 @@ internal static class AbiInterfaceFactory
         for (int i = 0; i < sig.Params.Count; i++)
         {
             writer.Write(", ");
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature)
             {
                 // length pointer + value pointer.
@@ -68,7 +68,7 @@ internal static class AbiInterfaceFactory
             else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
             {
                 // Special case: 'out T[]' is a ReceiveArray ABI signature: (uint* size, T** data).
-                if (br.BaseType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature brSz && cat == ParamCategory.ReceiveArray)
+                if (br.BaseType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
                     bool isRefElemBr = brSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
                     if (includeParamNames)
@@ -107,7 +107,7 @@ internal static class AbiInterfaceFactory
             else
             {
                 AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
-                if (cat is ParamCategory.Out or ParamCategory.Ref) { writer.Write("*"); }
+                if (cat is ParameterCategory.Out or ParameterCategory.Ref) { writer.Write("*"); }
                 if (includeParamNames)
                 {
                     writer.Write(" ");
@@ -172,7 +172,7 @@ internal static class AbiInterfaceFactory
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = AbiTypeHelpers.GetVMethodName(type, method);
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             writer.Write("public delegate* unmanaged[MemberFunction]<");
             WriteAbiParameterTypesPointer(writer, context, sig);
             writer.WriteLine($", int> {vm};");
@@ -306,7 +306,7 @@ internal static class AbiInterfaceFactory
         void EmitOneDoAbi(MethodDefinition method)
         {
             string vm = AbiTypeHelpers.GetVMethodName(type, method);
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
             // If this method is an event add accessor, emit the per-event ConditionalWeakTable

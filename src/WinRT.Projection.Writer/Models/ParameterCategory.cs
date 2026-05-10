@@ -7,7 +7,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 namespace WindowsRuntime.ProjectionWriter.Models;
 
 /// <summary>Param category mirroring C++ <c>param_category</c>.</summary>
-internal enum ParamCategory
+internal enum ParameterCategory
 {
     In,
     Ref,
@@ -18,9 +18,9 @@ internal enum ParamCategory
 }
 
 /// <summary>Helpers for parameter analysis.</summary>
-internal static class ParamHelpers
+internal static class ParameterCategoryResolver
 {
-    public static ParamCategory GetParamCategory(ParamInfo p)
+    public static ParameterCategory GetParamCategory(ParameterInfo p)
     {
         bool isArray = p.Type is SzArrayTypeSignature;
         bool isOut = p.Parameter.Definition?.IsOut == true;
@@ -34,12 +34,12 @@ internal static class ParamHelpers
         bool isByRefArray = isByRef && p.Type.StripByRefAndCustomModifiers() is SzArrayTypeSignature;
         if (isArray || isByRefArray)
         {
-            if (isIn) { return ParamCategory.PassArray; }
-            if (isByRef && isOut) { return ParamCategory.ReceiveArray; }
-            return ParamCategory.FillArray;
+            if (isIn) { return ParameterCategory.PassArray; }
+            if (isByRef && isOut) { return ParameterCategory.ReceiveArray; }
+            return ParameterCategory.FillArray;
         }
-        if (isOut) { return ParamCategory.Out; }
-        if (isByRef) { return ParamCategory.Ref; }
-        return ParamCategory.In;
+        if (isOut) { return ParameterCategory.Out; }
+        if (isByRef) { return ParameterCategory.Ref; }
+        return ParameterCategory.In;
     }
 }

@@ -191,7 +191,7 @@ internal static class ClassMembersFactory
         // WriteInterfaceMembersRecursive (matches the original code's per-interface ordering).
     }
 
-    private static string BuildMethodSignatureKey(string name, MethodSig sig)
+    private static string BuildMethodSignatureKey(string name, MethodSignatureInfo sig)
     {
         System.Text.StringBuilder sb = new();
         _ = sb.Append(name);
@@ -464,7 +464,7 @@ internal static class ClassMembersFactory
             string name = method.Name?.Value ?? string.Empty;
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
-            MethodSig sig = new(method, genCtx);
+            MethodSignatureInfo sig = new(method, genCtx);
             string key = BuildMethodSignatureKey(name, sig);
             if (!writtenMethods.Add(key)) { continue; }
 
@@ -778,18 +778,18 @@ internal static class ClassMembersFactory
     /// <summary>
     /// Writes a parameter name prefixed with its modifier (in/out/ref) for use as a call argument.
     /// </summary>
-    internal static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
+    internal static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        ParamCategory cat = ParamHelpers.GetParamCategory(p);
+        ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
         switch (cat)
         {
-            case ParamCategory.Out:
+            case ParameterCategory.Out:
                 writer.Write("out ");
                 break;
-            case ParamCategory.Ref:
+            case ParameterCategory.Ref:
                 writer.Write("in ");
                 break;
-            case ParamCategory.ReceiveArray:
+            case ParameterCategory.ReceiveArray:
                 writer.Write("out ");
                 break;
         }

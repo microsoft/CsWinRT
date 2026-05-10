@@ -102,7 +102,7 @@ internal static class ConstructorFactory
             foreach (MethodDefinition method in factoryType.Methods)
             {
                 if (method.IsSpecial()) { methodIndex++; continue; }
-                MethodSig sig = new(method);
+                MethodSignatureInfo sig = new(method);
                 string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
 
@@ -213,7 +213,7 @@ internal static class ConstructorFactory
     /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/>
     /// params (used for composable factories where the trailing baseInterface/innerInterface params
     /// are consumed by the callback Invoke signature directly, not stored in args).</param>
-    private static void EmitFactoryArgsStruct(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string argsName, int userParamCount = -1)
+    private static void EmitFactoryArgsStruct(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string argsName, int userParamCount = -1)
     {
         int count = userParamCount >= 0 ? userParamCount : sig.Params.Count;
         writer.WriteLine("");
@@ -229,7 +229,7 @@ internal static class ConstructorFactory
             """, isMultiline: true);
         for (int i = 0; i < count; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write("    public readonly ");
@@ -254,7 +254,7 @@ internal static class ConstructorFactory
     /// <c>out void* innerInterface</c> params. Iteration over user params is bounded by
     /// <paramref name="userParamCount"/> (defaults to all params).</param>
     /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/> user params (used for composable factories).</param>
-    private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
+    private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
         int paramCount = userParamCount >= 0 ? userParamCount : sig.Params.Count;
         string baseClass = isComposable
@@ -308,19 +308,19 @@ internal static class ConstructorFactory
         // Bind arg locals.
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             writer.Write("        ");
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
-            if (cat == ParamCategory.PassArray)
+            if (cat == ParameterCategory.PassArray)
             {
                 writer.Write("ReadOnlySpan<");
                 TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
             }
-            else if (cat == ParamCategory.FillArray)
+            else if (cat == ParameterCategory.FillArray)
             {
                 writer.Write("Span<");
                 TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
@@ -336,7 +336,7 @@ internal static class ConstructorFactory
         // For generic instance params, emit local UnsafeAccessor delegates (or Nullable<T> -> BoxToUnmanaged).
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             if (!p.Type.IsGenericInstance()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -361,7 +361,7 @@ internal static class ConstructorFactory
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             if (p.Type.IsGenericInstance()) { continue; } // already handled above
             if (!AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) && !p.Type.IsObject()) { continue; }
             string raw = p.Parameter.Name ?? "param";
@@ -385,7 +385,7 @@ internal static class ConstructorFactory
         // For mapped value-type params (DateTime, TimeSpan), emit ABI local + marshaller conversion.
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             if (!AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -399,7 +399,7 @@ internal static class ConstructorFactory
         // places", but for activator factory ctor params the marshalling pattern is the same.)
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             if (!p.Type.IsHResultException()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -411,9 +411,9 @@ internal static class ConstructorFactory
         bool hasNonBlittableArray = false;
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             hasNonBlittableArray = true;
@@ -461,7 +461,7 @@ internal static class ConstructorFactory
         // fixed() block since the fixed block pins the resulting reference).
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             if (!p.Type.IsSystemType()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -475,10 +475,10 @@ internal static class ConstructorFactory
         int pinnableCount = 0;
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             if (p.Type.IsString() || p.Type.IsSystemType()) { pinnableCount++; }
-            else if (cat is ParamCategory.PassArray or ParamCategory.FillArray) { pinnableCount++; }
+            else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray) { pinnableCount++; }
         }
         if (pinnableCount > 0)
         {
@@ -487,11 +487,11 @@ internal static class ConstructorFactory
             bool firstPin = true;
             for (int i = 0; i < paramCount; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 bool isStr = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
-                bool isArr = cat is ParamCategory.PassArray or ParamCategory.FillArray;
+                bool isArr = cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
                 if (!isStr && !isType && !isArr) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -527,7 +527,7 @@ internal static class ConstructorFactory
             string innerIndent = baseIndent + new string(' ', fixedNesting * 4);
             for (int i = 0; i < paramCount; i++)
             {
-                ParamInfo p = sig.Params[i];
+                ParameterInfo p = sig.Params[i];
                 if (!p.Type.IsString()) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -540,9 +540,9 @@ internal static class ConstructorFactory
         // Emit CopyToUnmanaged for non-blittable PassArray params.
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
@@ -575,9 +575,9 @@ internal static class ConstructorFactory
         writer.Write($"{callIndent}RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 writer.Write("uint, void*, ");
                 continue;
@@ -593,15 +593,15 @@ internal static class ConstructorFactory
         writer.Write($"void**, int>**)ThisPtr)[{(6 + factoryMethodIndex).ToString(System.Globalization.CultureInfo.InvariantCulture)}](ThisPtr");
         for (int i = 0; i < paramCount; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write("""
                 ,
                   
                 """, isMultiline: true);
-            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 writer.Write($"(uint){pname}.Length, _{raw}");
                 continue;
@@ -685,9 +685,9 @@ internal static class ConstructorFactory
                 """, isMultiline: true);
             for (int i = 0; i < paramCount; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -787,7 +787,7 @@ internal static class ConstructorFactory
             // Composable factory methods have signature like:
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             int userParamCount = sig.Params.Count >= 2 ? sig.Params.Count - 2 : sig.Params.Count;
             // the callback / args type name suffix is the TOTAL ABI param count
             // (size(method.Signature().Params())), NOT the user-visible param count. Using the

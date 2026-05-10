@@ -13,13 +13,13 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// (with any active generic-context substitutions already applied), the optional return parameter,
 /// and the substituted return type.
 /// </summary>
-internal sealed class MethodSig
+internal sealed class MethodSignatureInfo
 {
     /// <summary>Gets the underlying method definition.</summary>
     public MethodDefinition Method { get; }
 
     /// <summary>Gets the per-parameter info for the method, in declaration order.</summary>
-    public List<ParamInfo> Params { get; }
+    public List<ParameterInfo> Params { get; }
 
     /// <summary>
     /// Gets the parameter definition with sequence 0 (the return parameter), or <see langword="null"/>
@@ -28,21 +28,21 @@ internal sealed class MethodSig
     public ParameterDefinition? ReturnParam { get; }
 
     /// <summary>
-    /// Initializes a new <see cref="MethodSig"/> with no generic context.
+    /// Initializes a new <see cref="MethodSignatureInfo"/> with no generic context.
     /// </summary>
     /// <param name="method">The method definition to wrap.</param>
-    public MethodSig(MethodDefinition method) : this(method, null) { }
+    public MethodSignatureInfo(MethodDefinition method) : this(method, null) { }
 
     /// <summary>
-    /// Initializes a new <see cref="MethodSig"/>.
+    /// Initializes a new <see cref="MethodSignatureInfo"/>.
     /// </summary>
     /// <param name="method">The method definition to wrap.</param>
     /// <param name="genCtx">An optional generic context used to substitute generic parameters in the parameter and return types.</param>
-    public MethodSig(MethodDefinition method, GenericContext? genCtx)
+    public MethodSignatureInfo(MethodDefinition method, GenericContext? genCtx)
     {
         Method = method;
 #pragma warning disable IDE0028 // Use collection expression -- intentional capacity hint
-        Params = new List<ParamInfo>(method.Parameters.Count);
+        Params = new List<ParameterInfo>(method.Parameters.Count);
 #pragma warning restore IDE0028
         ReturnParam = null;
         foreach (ParameterDefinition p in method.ParameterDefinitions)
@@ -63,7 +63,7 @@ internal sealed class MethodSig
             {
                 TypeSignature pt = sig.ParameterTypes[i];
                 if (genCtx is not null) { pt = pt.InstantiateGenericTypes(genCtx.Value); }
-                Params.Add(new ParamInfo(method.Parameters[i], pt));
+                Params.Add(new ParameterInfo(method.Parameters[i], pt));
             }
         }
     }

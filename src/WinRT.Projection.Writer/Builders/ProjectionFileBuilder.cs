@@ -303,7 +303,7 @@ internal static class ProjectionFileBuilder
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
-        MethodSig sig = new(invoke);
+        MethodSignatureInfo sig = new(invoke);
 
         writer.WriteLine("");
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
@@ -341,7 +341,7 @@ internal static class ProjectionFileBuilder
         foreach (MethodDefinition method in type.Methods)
         {
             if (method.Name?.Value != ".ctor") { continue; }
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             writer.Write($"public {typeName}(");
             MethodFactory.WriteParameterList(writer, context, sig);
             writer.WriteLine("){}");

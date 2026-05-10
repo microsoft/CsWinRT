@@ -7,4 +7,4 @@ using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Models;
 
 /// <summary>One param: links the parameter definition to its signature type.</summary>
-internal sealed record ParamInfo(Parameter Parameter, TypeSignature Type);
+internal sealed record ParameterInfo(Parameter Parameter, TypeSignature Type);

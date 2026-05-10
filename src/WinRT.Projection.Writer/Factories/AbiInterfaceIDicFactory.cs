@@ -243,7 +243,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (MethodDefinition method in type.Methods)
         {
             if (method.IsSpecial()) { continue; }
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
             writer.WriteLine("");
@@ -373,7 +373,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (MethodDefinition method in type.Methods)
         {
             if (method.IsSpecial()) { continue; }
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
             writer.WriteLine("");

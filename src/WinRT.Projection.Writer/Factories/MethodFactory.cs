@@ -47,34 +47,34 @@ internal static class MethodFactory
         TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
-    /// <summary>Writes a parameter's projected type, applying the <see cref="ParamCategory"/>-specific transformations.</summary>
+    /// <summary>Writes a parameter's projected type, applying the <see cref="ParameterCategory"/>-specific transformations.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="p">The parameter info.</param>
-    public static void WriteProjectionParameterType(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
+    public static void WriteProjectionParameterType(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        ParamCategory cat = ParamHelpers.GetParamCategory(p);
+        ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
         switch (cat)
         {
-            case ParamCategory.Out:
+            case ParameterCategory.Out:
                 writer.Write("out ");
                 WriteProjectedSignature(writer, context, p.Type, true);
                 break;
-            case ParamCategory.Ref:
+            case ParameterCategory.Ref:
                 writer.Write("in ");
                 WriteProjectedSignature(writer, context, p.Type, true);
                 break;
-            case ParamCategory.PassArray:
+            case ParameterCategory.PassArray:
                 writer.Write("ReadOnlySpan<");
                 TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
                 break;
-            case ParamCategory.FillArray:
+            case ParameterCategory.FillArray:
                 writer.Write("Span<");
                 TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
                 break;
-            case ParamCategory.ReceiveArray:
+            case ParameterCategory.ReceiveArray:
                 writer.Write("out ");
                 {
                     SzArrayTypeSignature? sz = p.Type as SzArrayTypeSignature
@@ -99,7 +99,7 @@ internal static class MethodFactory
     /// <summary>Writes the parameter name (escaped if it would clash with a C# keyword).</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="p">The parameter info.</param>
-    public static void WriteParameterName(IndentedTextWriter writer, ParamInfo p)
+    public static void WriteParameterName(IndentedTextWriter writer, ParameterInfo p)
     {
         string name = p.Parameter.Name ?? "param";
         if (CSharpKeywords.IsKeyword(name)) { writer.Write("@"); }
@@ -110,7 +110,7 @@ internal static class MethodFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="p">The parameter info.</param>
-    public static void WriteProjectionParameter(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
+    public static void WriteProjectionParameter(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
         WriteProjectionParameterType(writer, context, p);
         writer.Write(" ");
@@ -121,7 +121,7 @@ internal static class MethodFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The method signature.</param>
-    public static void WriteProjectionReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig)
+    public static void WriteProjectionReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig)
     {
         TypeSignature? rt = sig.ReturnType;
         if (rt is null)
@@ -136,7 +136,7 @@ internal static class MethodFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The method signature whose parameters to enumerate.</param>
-    public static void WriteParameterList(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig)
+    public static void WriteParameterList(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig)
     {
         for (int i = 0; i < sig.Params.Count; i++)
         {

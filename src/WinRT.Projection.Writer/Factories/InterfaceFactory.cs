@@ -181,7 +181,7 @@ internal static class InterfaceFactory
         foreach (MethodDefinition method in type.Methods)
         {
             if (method.IsSpecial()) { continue; }
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
             writer.WriteLine("");
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).

@@ -21,13 +21,13 @@ internal static class AbiMethodBodyFactory
     /// implementation that uses simple per-marshaller patterns inline rather than the
     /// fully-general <c>abi_marshaler</c> abstraction.
     /// </summary>
-    internal static void EmitDoAbiBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string ifaceFullName, string methodName)
+    internal static void EmitDoAbiBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string ifaceFullName, string methodName)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
         // String params drive whether we need HString header allocation in the body.
         bool hasStringParams = false;
-        foreach (ParamInfo p in sig.Params)
+        foreach (ParameterInfo p in sig.Params)
         {
             if (p.Type.IsString()) { hasStringParams = true; break; }
         }
@@ -88,9 +88,9 @@ internal static class AbiMethodBodyFactory
             // The body's writeback later references these already-declared accessors.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.Out) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.Out) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 if (!uOut.IsGenericInstance()) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -109,9 +109,9 @@ internal static class AbiMethodBodyFactory
             // in the body reference these already-declared accessors.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.ReceiveArray) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 IndentedTextWriter __scratchElementProjected = new();
@@ -206,18 +206,18 @@ internal static class AbiMethodBodyFactory
             // (we read directly via *<name>).
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.Out) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"*{ptr} = default;");
             }
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.Out) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
@@ -232,9 +232,9 @@ internal static class AbiMethodBodyFactory
             // the call we copy to the ABI buffer via UnsafeAccessor.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.ReceiveArray) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -253,9 +253,9 @@ internal static class AbiMethodBodyFactory
             // ArrayPool fallback then CopyToManaged via UnsafeAccessor.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -265,7 +265,7 @@ internal static class AbiMethodBodyFactory
                 bool isBlittableElem = AbiTypeHelpers.IsBlittablePrimitive(context.Cache, sz.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, sz.BaseType);
                 if (isBlittableElem)
                 {
-                    writer.WriteLine($"{(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = new({ptr}, (int)__{raw}Size);");
+                    writer.WriteLine($"{(cat == ParameterCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = new({ptr}, (int)__{raw}Size);");
                 }
                 else
                 {
@@ -291,9 +291,9 @@ internal static class AbiMethodBodyFactory
             // fills — the post-call writeback loop handles that.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.PassArray) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.PassArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -332,7 +332,7 @@ internal static class AbiMethodBodyFactory
             // first so the call site can reference them.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
+                ParameterInfo p = sig.Params[i];
                 if (p.Type.IsNullableT())
                 {
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
@@ -404,14 +404,14 @@ internal static class AbiMethodBodyFactory
                           
                         """, isMultiline: true);
                     }
-                    ParamInfo p = sig.Params[i];
-                    ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                    if (cat == ParamCategory.Out)
+                    ParameterInfo p = sig.Params[i];
+                    ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                    if (cat == ParameterCategory.Out)
                     {
                         string raw = p.Parameter.Name ?? "param";
                         writer.Write($"out __{raw}");
                     }
-                    else if (cat == ParamCategory.Ref)
+                    else if (cat == ParameterCategory.Ref)
                     {
                         // WinRT 'in T' / 'ref const T' is a read-only by-ref input on the ABI side
                         // (pointer to a value the native caller owns). On the C# delegate / interface
@@ -454,12 +454,12 @@ internal static class AbiMethodBodyFactory
                             writer.Write($"*{ptr}");
                         }
                     }
-                    else if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+                    else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
                     {
                         string raw = p.Parameter.Name ?? "param";
                         writer.Write($"__{raw}");
                     }
-                    else if (cat == ParamCategory.ReceiveArray)
+                    else if (cat == ParameterCategory.ReceiveArray)
                     {
                         string raw = p.Parameter.Name ?? "param";
                         writer.Write($"out __{raw}");
@@ -475,9 +475,9 @@ internal static class AbiMethodBodyFactory
             // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.Out) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -536,9 +536,9 @@ internal static class AbiMethodBodyFactory
             // [UnsafeAccessor] declaration was hoisted to the top of the method body).
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.ReceiveArray) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
@@ -550,9 +550,9 @@ internal static class AbiMethodBodyFactory
             // Blittable element types don't need this — the Span wraps the native buffer directly.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.FillArray) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.FillArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
                 // Blittable element types: Span wraps the native buffer; no copy-back needed.
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
@@ -693,9 +693,9 @@ internal static class AbiMethodBodyFactory
             bool hasNonBlittableArrayDoAbi = false;
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 hasNonBlittableArrayDoAbi = true;
@@ -709,9 +709,9 @@ internal static class AbiMethodBodyFactory
                     """, isMultiline: true);
                 for (int i = 0; i < sig.Params.Count; i++)
                 {
-                    ParamInfo p = sig.Params[i];
-                    ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                    if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                    ParameterInfo p = sig.Params[i];
+                    ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                    if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                     if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                     if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                     string raw = p.Parameter.Name ?? "param";
@@ -734,7 +734,7 @@ internal static class AbiMethodBodyFactory
     }
 
     /// <summary>Converts an ABI parameter to its projected (managed) form for the Do_Abi call.</summary>
-    internal static void EmitDoAbiParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
+    internal static void EmitDoAbiParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
         string rawName = p.Parameter.Name ?? "param";
         string pname = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
@@ -832,7 +832,7 @@ internal static class AbiMethodBodyFactory
         {
             if (method.IsSpecial()) { continue; }
             string mname = method.Name?.Value ?? string.Empty;
-            MethodSig sig = new(method);
+            MethodSignatureInfo sig = new(method);
 
             writer.Write("""
                     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -860,7 +860,7 @@ internal static class AbiMethodBodyFactory
             bool propIsNoExcept = prop.IsNoExcept();
             if (gMethod is not null)
             {
-                MethodSig getSig = new(gMethod);
+                MethodSignatureInfo getSig = new(gMethod);
                 writer.Write($$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
@@ -869,7 +869,7 @@ internal static class AbiMethodBodyFactory
             }
             if (sMethod is not null)
             {
-                MethodSig setSig = new(sMethod);
+                MethodSignatureInfo setSig = new(sMethod);
                 writer.Write($$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
@@ -988,7 +988,7 @@ internal static class AbiMethodBodyFactory
     /// contractually return <c>S_OK</c>).</param>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0045:Convert to conditional expression",
         Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
-    internal static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
+    internal static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
@@ -1007,15 +1007,15 @@ internal static class AbiMethodBodyFactory
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
         _ = fp.Append("void*");
-        foreach (ParamInfo p in sig.Params)
+        foreach (ParameterInfo p in sig.Params)
         {
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 _ = fp.Append(", uint, void*");
                 continue;
             }
-            if (cat == ParamCategory.Out)
+            if (cat == ParameterCategory.Out)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 _ = fp.Append(", ");
@@ -1026,7 +1026,7 @@ internal static class AbiMethodBodyFactory
                 else { _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); _ = fp.Append('*'); }
                 continue;
             }
-            if (cat == ParamCategory.Ref)
+            if (cat == ParameterCategory.Ref)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 _ = fp.Append(", ");
@@ -1035,7 +1035,7 @@ internal static class AbiMethodBodyFactory
                 else { _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef)); _ = fp.Append('*'); }
                 continue;
             }
-            if (cat == ParamCategory.ReceiveArray)
+            if (cat == ParameterCategory.ReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 _ = fp.Append(", uint*, ");
@@ -1133,7 +1133,7 @@ internal static class AbiMethodBodyFactory
         // Declare 'using' marshaller values for ref-type parameters (these need disposing).
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
+            ParameterInfo p = sig.Params[i];
             if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject())
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -1172,8 +1172,8 @@ internal static class AbiMethodBodyFactory
         // Declare locals for HResult/Exception input parameters (converted up-front).
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            ParameterInfo p = sig.Params[i];
+            if (ParameterCategoryResolver.GetParamCategory(p) != ParameterCategory.In) { continue; }
             if (!p.Type.IsHResultException()) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
@@ -1182,8 +1182,8 @@ internal static class AbiMethodBodyFactory
         // Declare locals for mapped value-type input parameters (DateTime/TimeSpan): convert via marshaller up-front.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            ParameterInfo p = sig.Params[i];
+            if (ParameterCategoryResolver.GetParamCategory(p) != ParameterCategory.In) { continue; }
             if (!AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
@@ -1192,12 +1192,12 @@ internal static class AbiMethodBodyFactory
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
         // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
         // dispose in finally.
-        // Includes both 'in' (ParamCategory.In) and 'in T' (ParamCategory.Ref) forms.
+        // Includes both 'in' (ParameterCategory.In) and 'in T' (ParameterCategory.Ref) forms.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.In or ParamCategory.Ref)) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is not (ParameterCategory.In or ParameterCategory.Ref)) { continue; }
             AsmResolver.DotNet.Signatures.TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             if (!AbiTypeHelpers.IsComplexStruct(context.Cache, pType)) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -1206,9 +1206,9 @@ internal static class AbiMethodBodyFactory
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat != ParameterCategory.Out) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        ");
@@ -1222,9 +1222,9 @@ internal static class AbiMethodBodyFactory
         // Declare locals for ReceiveArray params (uint length + element pointer).
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.ReceiveArray) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat != ParameterCategory.ReceiveArray) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write($$"""
@@ -1256,9 +1256,9 @@ internal static class AbiMethodBodyFactory
         // String: also needs InlineArray16<HStringHeader> + InlineArray16<nint> for pinned handles.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             // Non-blittable element type: emit InlineArray16<storageT> + ArrayPool<storageT>.
@@ -1283,7 +1283,7 @@ internal static class AbiMethodBodyFactory
                             : (__{{localName}}_arrayFromPool = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
                 """, isMultiline: true);
 
-            if (szArr.BaseType.IsString() && cat == ParamCategory.PassArray)
+            if (szArr.BaseType.IsString() && cat == ParameterCategory.PassArray)
             {
                 // Strings need an additional InlineArray16<HStringHeader> + InlineArray16<nint> (pinned handles).
                 // Only required for PassArray (managed -> HSTRING conversion); FillArray's native side
@@ -1374,23 +1374,23 @@ internal static class AbiMethodBodyFactory
         bool hasOutNeedsCleanup = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat != ParameterCategory.Out) { continue; }
             AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             if (uOut.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsSystemType() || AbiTypeHelpers.IsComplexStruct(context.Cache, uOut) || uOut.IsGenericInstance()) { hasOutNeedsCleanup = true; break; }
         }
         bool hasReceiveArray = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (ParamHelpers.GetParamCategory(sig.Params[i]) == ParamCategory.ReceiveArray) { hasReceiveArray = true; break; }
+            if (ParameterCategoryResolver.GetParamCategory(sig.Params[i]) == ParameterCategory.ReceiveArray) { hasReceiveArray = true; break; }
         }
         bool hasNonBlittablePassArray = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if ((cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if ((cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
                 && p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArrCheck
                 && !AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArrCheck.BaseType) && !AbiTypeHelpers.IsAnyStruct(context.Cache, szArrCheck.BaseType)
                 && !AbiTypeHelpers.IsMappedAbiValueType(szArrCheck.BaseType))
@@ -1401,9 +1401,9 @@ internal static class AbiMethodBodyFactory
         bool hasComplexStructInput = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if ((cat is ParamCategory.In or ParamCategory.Ref) && AbiTypeHelpers.IsComplexStruct(context.Cache, AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type))) { hasComplexStructInput = true; break; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if ((cat is ParameterCategory.In or ParameterCategory.Ref) && AbiTypeHelpers.IsComplexStruct(context.Cache, AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type))) { hasComplexStructInput = true; break; }
         }
         // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
         // after marshalling to managed System.Type, otherwise the HSTRING leaks.
@@ -1421,12 +1421,12 @@ internal static class AbiMethodBodyFactory
 
         // Inside try (if applicable): assign complex-struct input locals via marshaller.
         //.: '__value = ProfileUsageMarshaller.ConvertToUnmanaged(value);'
-        // Includes both 'in' (ParamCategory.In) and 'in T' (ParamCategory.Ref) forms.
+        // Includes both 'in' (ParameterCategory.In) and 'in T' (ParameterCategory.Ref) forms.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.In or ParamCategory.Ref)) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is not (ParameterCategory.In or ParameterCategory.Ref)) { continue; }
             AsmResolver.DotNet.Signatures.TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             if (!AbiTypeHelpers.IsComplexStruct(context.Cache, pType)) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -1437,8 +1437,8 @@ internal static class AbiMethodBodyFactory
         //   global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(forType, out TypeReference __forType);
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            ParameterInfo p = sig.Params[i];
+            if (ParameterCategoryResolver.GetParamCategory(p) != ParameterCategory.In) { continue; }
             if (!p.Type.IsSystemType()) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
@@ -1461,10 +1461,10 @@ internal static class AbiMethodBodyFactory
         bool hasAnyVoidStarPinnable = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             if (p.Type.IsString() || p.Type.IsSystemType()) { hasAnyVoidStarPinnable = true; continue; }
-            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 // All PassArrays (including complex structs) go in the void* combined block,
                 // matching truth's pattern. Complex structs use a (T*) cast at the call site.
@@ -1477,9 +1477,9 @@ internal static class AbiMethodBodyFactory
         int typedFixedCount = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.Ref)
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat == ParameterCategory.Ref)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRefSkip = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRefSkip)) { continue; }
@@ -1502,11 +1502,11 @@ internal static class AbiMethodBodyFactory
             bool first = true;
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 bool isString = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
-                bool isPassArray = cat is ParamCategory.PassArray or ParamCategory.FillArray;
+                bool isPassArray = cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
                 if (!isString && !isType && !isPassArray) { continue; }
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -1533,7 +1533,7 @@ internal static class AbiMethodBodyFactory
                     // For string elements: only PassArray needs the additional inlineHeaderArray
                     // pinned alongside the data span. FillArray fills HSTRINGs into the nint
                     // storage directly (no header conversion needed).
-                    if (isStringElem && cat == ParamCategory.PassArray)
+                    if (isStringElem && cat == ParameterCategory.PassArray)
                     {
                         writer.Write($", _{localName}_inlineHeaderArray = __{localName}_headerSpan");
                     }
@@ -1578,9 +1578,9 @@ internal static class AbiMethodBodyFactory
         // there's nothing to convert pre-call (the post-call CopyToManaged_<name> handles writeback).
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
@@ -1589,7 +1589,7 @@ internal static class AbiMethodBodyFactory
             {
                 // Skip pre-call ConvertToUnmanagedUnsafe for FillArray of strings — there's
                 // nothing to convert (native fills the handles).
-                if (cat == ParamCategory.FillArray) { continue; }
+                if (cat == ParameterCategory.FillArray) { continue; }
                 writer.Write($$"""
                     {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
                     {{callIndent}}    source: {{callName}},
@@ -1605,7 +1605,7 @@ internal static class AbiMethodBodyFactory
                 // ABI-format storage; the native callee fills it. The post-call writeback loop
                 // emits CopyToManaged_<name> to propagate the native fills into the user's
                 // managed Span<T>.
-                if (cat == ParamCategory.FillArray) { continue; }
+                if (cat == ParameterCategory.FillArray) { continue; }
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
@@ -1660,9 +1660,9 @@ internal static class AbiMethodBodyFactory
         writer.Write($"{fp}>**)ThisPtr)[{slot.ToString(System.Globalization.CultureInfo.InvariantCulture)}](ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -1672,7 +1672,7 @@ internal static class AbiMethodBodyFactory
                     """, isMultiline: true);
                 continue;
             }
-            if (cat == ParamCategory.Out)
+            if (cat == ParameterCategory.Out)
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.Write($$"""
@@ -1681,7 +1681,7 @@ internal static class AbiMethodBodyFactory
                     """, isMultiline: true);
                 continue;
             }
-            if (cat == ParamCategory.ReceiveArray)
+            if (cat == ParameterCategory.ReceiveArray)
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.Write($$"""
@@ -1690,7 +1690,7 @@ internal static class AbiMethodBodyFactory
                     """, isMultiline: true);
                 continue;
             }
-            if (cat == ParamCategory.Ref)
+            if (cat == ParameterCategory.Ref)
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature uRefArg = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -1778,9 +1778,9 @@ internal static class AbiMethodBodyFactory
         // because the user's Span wraps the same memory the native side wrote to.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.FillArray) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat != ParameterCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
@@ -1830,9 +1830,9 @@ internal static class AbiMethodBodyFactory
         // After call: write back Out params to caller's 'out' var.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat != ParameterCategory.Out) { continue; }
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -1903,9 +1903,9 @@ internal static class AbiMethodBodyFactory
         // Writeback for ReceiveArray params: emit a UnsafeAccessor + assign to the out param.
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.ReceiveArray) { continue; }
+            ParameterInfo p = sig.Params[i];
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat != ParameterCategory.ReceiveArray) { continue; }
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -2063,9 +2063,9 @@ internal static class AbiMethodBodyFactory
             // 0. Dispose complex-struct input params via marshaller (both 'in' and 'in T' forms).
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat is not (ParamCategory.In or ParamCategory.Ref)) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat is not (ParameterCategory.In or ParameterCategory.Ref)) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 if (!AbiTypeHelpers.IsComplexStruct(context.Cache, pType)) { continue; }
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -2078,9 +2078,9 @@ internal static class AbiMethodBodyFactory
             // doesn't return the ArrayPool either, so skip entirely.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 if (AbiTypeHelpers.IsMappedAbiValueType(szArr.BaseType)) { continue; }
@@ -2106,7 +2106,7 @@ internal static class AbiMethodBodyFactory
                     // apply to PassArray (where we set up the pinned handles + headers in the
                     // first place). FillArray writes back HSTRING handles into the nint storage
                     // array directly, with no per-element pinned handle / header to release.
-                    if (cat == ParamCategory.PassArray)
+                    if (cat == ParameterCategory.PassArray)
                     {
                         writer.Write($$"""
                                         HStringArrayMarshaller.Dispose(__{{localName}}_pinnedHandleSpan);
@@ -2189,9 +2189,9 @@ internal static class AbiMethodBodyFactory
             // 2. Free Out string/object/runtime-class params.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.Out) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.Out) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 if (uOut.IsString())
@@ -2215,9 +2215,9 @@ internal static class AbiMethodBodyFactory
             // 3. Free ReceiveArray params via UnsafeAccessor.
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.ReceiveArray) { continue; }
+                ParameterInfo p = sig.Params[i];
+                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
@@ -2313,7 +2313,7 @@ internal static class AbiMethodBodyFactory
     }
 
     /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
-    internal static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p, string? paramNameOverride = null)
+    internal static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p, string? paramNameOverride = null)
     {
         string pname = paramNameOverride ?? p.Parameter.Name ?? "param";
         // bool: ABI is 'bool' directly; pass as-is.

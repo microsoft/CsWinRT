@@ -184,7 +184,7 @@ internal static class AbiTypeHelpers
     /// <summary>
     /// Returns the metadata-derived name for the return parameter, or the C++ default <c>__return_value__</c>.
     /// </summary>
-    internal static string GetReturnParamName(MethodSig sig)
+    internal static string GetReturnParamName(MethodSignatureInfo sig)
     {
         string? n = sig.ReturnParam?.Name?.Value;
         if (string.IsNullOrEmpty(n)) { return "__return_value__"; }
@@ -195,13 +195,13 @@ internal static class AbiTypeHelpers
     /// Returns the local-variable name for the return parameter on the server side.
     /// <c>abi_marshaler::get_marshaler_local()</c> which prefixes <c>__</c> to the param name.
     /// </summary>
-    internal static string GetReturnLocalName(MethodSig sig)
+    internal static string GetReturnLocalName(MethodSignatureInfo sig)
     {
         return "__" + GetReturnParamName(sig);
     }
 
     /// <summary>Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.</summary>
-    internal static string GetReturnSizeParamName(MethodSig sig)
+    internal static string GetReturnSizeParamName(MethodSignatureInfo sig)
     {
         return "__" + GetReturnParamName(sig) + "Size";
     }
@@ -240,7 +240,7 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
-    internal static bool IsDelegateInvokeNativeSupported(MetadataCache cache, MethodSig sig)
+    internal static bool IsDelegateInvokeNativeSupported(MetadataCache cache, MethodSignatureInfo sig)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
         if (rt is not null)
@@ -248,10 +248,10 @@ internal static class AbiTypeHelpers
             if (rt.IsHResultException()) { return false; }
             if (!(IsBlittablePrimitive(cache, rt) || IsAnyStruct(cache, rt) || rt.IsString() || IsRuntimeClassOrInterface(cache, rt) || rt.IsObject() || rt.IsGenericInstance() || IsComplexStruct(cache, rt))) { return false; }
         }
-        foreach (ParamInfo p in sig.Params)
+        foreach (ParameterInfo p in sig.Params)
         {
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
                 {
@@ -260,7 +260,7 @@ internal static class AbiTypeHelpers
                 }
                 return false;
             }
-            if (cat != ParamCategory.In) { return false; }
+            if (cat != ParameterCategory.In) { return false; }
             if (p.Type.IsHResultException()) { return false; }
             if (IsBlittablePrimitive(cache, p.Type)) { continue; }
             if (IsAnyStruct(cache, p.Type)) { continue; }
@@ -548,13 +548,13 @@ internal static class AbiTypeHelpers
         return "global::ABI.Object.Marshaller";
     }
 
-    internal static string GetParamName(ParamInfo p, string? paramNameOverride)
+    internal static string GetParamName(ParameterInfo p, string? paramNameOverride)
     {
         string name = paramNameOverride ?? p.Parameter.Name ?? "param";
         return CSharpKeywords.IsKeyword(name) ? "@" + name : name;
     }
 
-    internal static string GetParamLocalName(ParamInfo p, string? paramNameOverride)
+    internal static string GetParamLocalName(ParameterInfo p, string? paramNameOverride)
     {
         // For local helper variables (e.g. __<name>), strip the @ escape since `__event` is valid.
         return paramNameOverride ?? p.Parameter.Name ?? "param";

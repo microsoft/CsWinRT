@@ -50,7 +50,7 @@ internal static class EventTableFactory
     /// <summary>
     /// Emits the body of the <c>Do_Abi_add_&lt;EventName&gt;_N</c> method.
     /// </summary>
-    internal static void EmitDoAbiAddEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSig sig, string ifaceFullName)
+    internal static void EmitDoAbiAddEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSignatureInfo sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
         // Handler is the (last) input parameter of the add method. The emitted parameter name in the
@@ -108,7 +108,7 @@ internal static class EventTableFactory
     /// <summary>
     /// Emits the body of the <c>Do_Abi_remove_&lt;EventName&gt;_N</c> method.
     /// </summary>
-    internal static void EmitDoAbiRemoveEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSig sig, string ifaceFullName)
+    internal static void EmitDoAbiRemoveEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSignatureInfo sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
         string tokenRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "token") : "token";
