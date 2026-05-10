@@ -193,8 +193,10 @@ internal static class ObjRefNameGenerator
         string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
         writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"get_IID_");
         writer.Write(interopName);
-        writer.WriteLine("\")]");
-        writer.Write($"static extern ref readonly Guid {propName}([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object");
+        writer.Write($$"""
+            ")]
+            static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
+            """, isMultiline: true);
         if (isInNullableContext) { writer.Write("?"); }
         writer.WriteLine(" _);");
     }
@@ -327,23 +329,27 @@ internal static class ObjRefNameGenerator
             writer.Write(objRefName);
             writer.WriteLine("");
             writer.WriteLine("{");
-            writer.WriteLine("    get");
-            writer.WriteLine("    {");
-            writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
-            writer.WriteLine("        WindowsRuntimeObjectReference MakeObjectReference()");
-            writer.WriteLine("        {");
-            writer.WriteLine("            _ = global::System.Threading.Interlocked.CompareExchange(");
-            writer.WriteLine("                location1: ref field,");
-            writer.Write("                value: NativeObjectReference.As(");
+            writer.Write("""
+                    get
+                    {
+                        [MethodImpl(MethodImplOptions.NoInlining)]
+                        WindowsRuntimeObjectReference MakeObjectReference()
+                        {
+                            _ = global::System.Threading.Interlocked.CompareExchange(
+                                location1: ref field,
+                                value: NativeObjectReference.As(
+                """, isMultiline: true);
             WriteIidExpression(writer, context, ifaceRef);
-            writer.WriteLine("),");
-            writer.WriteLine("                comparand: null);");
-            writer.WriteLine("");
-            writer.WriteLine("            return field;");
-            writer.WriteLine("        }");
-            writer.WriteLine("");
-            writer.WriteLine("        return field ?? MakeObjectReference();");
-            writer.WriteLine("    }");
+            writer.Write("""
+                ),
+                                comparand: null);
+                
+                            return field;
+                        }
+                
+                        return field ?? MakeObjectReference();
+                    }
+                """, isMultiline: true);
             if (isDefault) { writer.WriteLine("    init;"); }
             writer.WriteLine("}");
         }

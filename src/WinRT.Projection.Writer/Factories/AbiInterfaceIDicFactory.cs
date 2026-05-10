@@ -270,8 +270,10 @@ internal static class AbiInterfaceIDicFactory
             writer.Write(ccwIfaceName);
             writer.Write(")(WindowsRuntimeObject)this).");
             writer.Write(evtName);
-            writer.WriteLine(" += value;");
-            writer.Write("    remove => ((");
+            writer.Write("""
+                 += value;
+                    remove => ((
+                """, isMultiline: true);
             writer.Write(ccwIfaceName);
             writer.Write(")(WindowsRuntimeObject)this).");
             writer.Write(evtName);
@@ -370,9 +372,11 @@ internal static class AbiInterfaceIDicFactory
             writer.Write($"\nunsafe {propType} {ccwIfaceName}.{pname}\n{{\n");
             if (getter is not null)
             {
-                writer.WriteLine("    get");
-                writer.WriteLine("    {");
-                writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+                writer.Write("""
+                        get
+                        {
+                            var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(
+                    """, isMultiline: true);
                 writer.Write(ccwIfaceName);
                 writer.WriteLine(").TypeHandle);");
                 writer.Write($"        return {abiClass}.{pname}(_obj);\n    }}\n");
@@ -393,9 +397,11 @@ internal static class AbiInterfaceIDicFactory
                         writer.WriteLine($")(WindowsRuntimeObject)this).{pname}; }}");
                     }
                 }
-                writer.WriteLine("    set");
-                writer.WriteLine("    {");
-                writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+                writer.Write("""
+                        set
+                        {
+                            var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(
+                    """, isMultiline: true);
                 writer.Write(ccwIfaceName);
                 writer.WriteLine(").TypeHandle);");
                 writer.Write($"        {abiClass}.{pname}(_obj, value);\n    }}\n");

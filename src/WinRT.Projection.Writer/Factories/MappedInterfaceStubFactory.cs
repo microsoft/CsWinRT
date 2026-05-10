@@ -135,9 +135,11 @@ internal static class MappedInterfaceStubFactory
         EmitUnsafeAccessor(writer, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
 
         writer.Write($"\npublic bool MoveNext() => {prefix}MoveNext(null, {objRefName});\n");
-        writer.WriteLine("public void Reset() => throw new NotSupportedException();");
-        writer.WriteLine("public void Dispose() {}");
-        writer.WriteLine($"{$"public {t} Current => {prefix}Current(null, {objRefName});\n"}object global::System.Collections.IEnumerator.Current => Current!;");
+        writer.Write($$"""
+            public void Reset() => throw new NotSupportedException();
+            public void Dispose() {}
+            {{$"public {t} Current => {prefix}Current(null, {objRefName});\n"}}object global::System.Collections.IEnumerator.Current => Current!;
+            """, isMultiline: true);
     }
 
     private static void EmitDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -181,11 +183,13 @@ internal static class MappedInterfaceStubFactory
         // Public member emission order matches the WinRT IMap<K,V> vtable order, NOT alphabetical.
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s own
         // EmitGenericEnumerable invocation.
-        writer.Write($"public ICollection<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
-        writer.Write($"public ICollection<{v}> Values => {prefix}Values(null, {objRefName});\n");
-        writer.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
-        writer.WriteLine("public bool IsReadOnly => false;");
-        writer.Write($"{$"public {v} this[{k} key]\n{{\n    get => {prefix}Item(null, {objRefName}, key);\n    set => {prefix}Item(null, {objRefName}, key, value);\n}}\n"}{$"public void Add({k} key, {v} value) => {prefix}Add(null, {objRefName}, key, value);\n"}{$"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n"}{$"public bool Remove({k} key) => {prefix}Remove(null, {objRefName}, key);\n"}{$"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n"}{$"public void Add({kv} item) => {prefix}Add(null, {objRefName}, item);\n"}{$"public void Clear() => {prefix}Clear(null, {objRefName});\n"}{$"public bool Contains({kv} item) => {prefix}Contains(null, {objRefName}, item);\n"}{$"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n"}{$"bool ICollection<{kv}>.Remove({kv} item) => {prefix}Remove(null, {objRefName}, item);\n"}");
+        writer.Write($$"""
+            public ICollection<{{k}}> Keys => {{prefix}}Keys(null, {{objRefName}});
+            public ICollection<{{v}}> Values => {{prefix}}Values(null, {{objRefName}});
+            public int Count => {{prefix}}Count(null, {{objRefName}});
+            public bool IsReadOnly => false;
+            {{$"public {v} this[{k} key]\n{{\n    get => {prefix}Item(null, {objRefName}, key);\n    set => {prefix}Item(null, {objRefName}, key, value);\n}}\n"}}{{$"public void Add({k} key, {v} value) => {prefix}Add(null, {objRefName}, key, value);\n"}}{{$"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n"}}{{$"public bool Remove({k} key) => {prefix}Remove(null, {objRefName}, key);\n"}}{{$"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n"}}{{$"public void Add({kv} item) => {prefix}Add(null, {objRefName}, item);\n"}}{{$"public void Clear() => {prefix}Clear(null, {objRefName});\n"}}{{$"public bool Contains({kv} item) => {prefix}Contains(null, {objRefName}, item);\n"}}{{$"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n"}}{{$"bool ICollection<{kv}>.Remove({kv} item) => {prefix}Remove(null, {objRefName}, item);\n"}}
+            """, isMultiline: true);
     }
 
     private static void EmitReadOnlyDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -276,9 +280,13 @@ internal static class MappedInterfaceStubFactory
         // Public member emission order matches the WinRT IVector<T> vtable order mapped to IList<T>,
         // NOT alphabetical. GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // own EmitGenericEnumerable invocation.
-        writer.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
-        writer.WriteLine("public bool IsReadOnly => false;");
-        writer.Write($"\n[global::System.Runtime.CompilerServices.IndexerName(\"ListItem\")]\n{$"public {t} this[int index]\n{{\n    get => {prefix}Item(null, {objRefName}, index);\n    set => {prefix}Item(null, {objRefName}, index, value);\n}}\n"}{$"public int IndexOf({t} item) => {prefix}IndexOf(null, {objRefName}, item);\n"}{$"public void Insert(int index, {t} item) => {prefix}Insert(null, {objRefName}, index, item);\n"}{$"public void RemoveAt(int index) => {prefix}RemoveAt(null, {objRefName}, index);\n"}{$"public void Add({t} item) => {prefix}Add(null, {objRefName}, item);\n"}{$"public void Clear() => {prefix}Clear(null, {objRefName});\n"}{$"public bool Contains({t} item) => {prefix}Contains(null, {objRefName}, item);\n"}{$"public void CopyTo({t}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, array, arrayIndex);\n"}{$"public bool Remove({t} item) => {prefix}Remove(null, {objRefName}, item);\n"}");
+        writer.Write($$"""
+            public int Count => {{prefix}}Count(null, {{objRefName}});
+            public bool IsReadOnly => false;
+            
+            [global::System.Runtime.CompilerServices.IndexerName("ListItem")]
+            {{$"public {t} this[int index]\n{{\n    get => {prefix}Item(null, {objRefName}, index);\n    set => {prefix}Item(null, {objRefName}, index, value);\n}}\n"}}{{$"public int IndexOf({t} item) => {prefix}IndexOf(null, {objRefName}, item);\n"}}{{$"public void Insert(int index, {t} item) => {prefix}Insert(null, {objRefName}, index, item);\n"}}{{$"public void RemoveAt(int index) => {prefix}RemoveAt(null, {objRefName}, index);\n"}}{{$"public void Add({t} item) => {prefix}Add(null, {objRefName}, item);\n"}}{{$"public void Clear() => {prefix}Clear(null, {objRefName});\n"}}{{$"public bool Contains({t} item) => {prefix}Contains(null, {objRefName}, item);\n"}}{{$"public void CopyTo({t}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, array, arrayIndex);\n"}}{{$"public bool Remove({t} item) => {prefix}Remove(null, {objRefName}, item);\n"}}
+            """, isMultiline: true);
     }
 
     /// <summary>
@@ -298,12 +306,14 @@ internal static class MappedInterfaceStubFactory
         writer.WriteLine("");
         writer.WriteLine("[global::System.Runtime.CompilerServices.IndexerName(\"NonGenericListItem\")]");
         writer.Write($"public object this[int index]\n{{\n    get => global::ABI.System.Collections.IListMethods.Item({objRefName}, index);\n    set => global::ABI.System.Collections.IListMethods.Item({objRefName}, index, value);\n}}\n");
-        writer.Write($"public int Count => global::ABI.System.Collections.IListMethods.Count({objRefName});\n");
-        writer.WriteLine("public bool IsReadOnly => false;");
-        writer.WriteLine("public bool IsFixedSize => false;");
-        writer.WriteLine("public bool IsSynchronized => false;");
-        writer.WriteLine("public object SyncRoot => this;");
-        writer.Write($"{$"public int Add(object value) => global::ABI.System.Collections.IListMethods.Add({objRefName}, value);\n"}{$"public void Clear() => global::ABI.System.Collections.IListMethods.Clear({objRefName});\n"}{$"public bool Contains(object value) => global::ABI.System.Collections.IListMethods.Contains({objRefName}, value);\n"}{$"public int IndexOf(object value) => global::ABI.System.Collections.IListMethods.IndexOf({objRefName}, value);\n"}{$"public void Insert(int index, object value) => global::ABI.System.Collections.IListMethods.Insert({objRefName}, index, value);\n"}{$"public void Remove(object value) => global::ABI.System.Collections.IListMethods.Remove({objRefName}, value);\n"}{$"public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({objRefName}, index);\n"}{$"public void CopyTo(Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({objRefName}, array, index);\n"}");
+        writer.Write($$"""
+            public int Count => global::ABI.System.Collections.IListMethods.Count({{objRefName}});
+            public bool IsReadOnly => false;
+            public bool IsFixedSize => false;
+            public bool IsSynchronized => false;
+            public object SyncRoot => this;
+            {{$"public int Add(object value) => global::ABI.System.Collections.IListMethods.Add({objRefName}, value);\n"}}{{$"public void Clear() => global::ABI.System.Collections.IListMethods.Clear({objRefName});\n"}}{{$"public bool Contains(object value) => global::ABI.System.Collections.IListMethods.Contains({objRefName}, value);\n"}}{{$"public int IndexOf(object value) => global::ABI.System.Collections.IListMethods.IndexOf({objRefName}, value);\n"}}{{$"public void Insert(int index, object value) => global::ABI.System.Collections.IListMethods.Insert({objRefName}, index, value);\n"}}{{$"public void Remove(object value) => global::ABI.System.Collections.IListMethods.Remove({objRefName}, value);\n"}}{{$"public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({objRefName}, index);\n"}}{{$"public void CopyTo(Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({objRefName}, array, index);\n"}}
+            """, isMultiline: true);
         // GetEnumerator is NOT emitted here -- it's handled separately by IBindableIterable's
         // EmitNonGenericEnumerable invocation.
     }

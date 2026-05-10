@@ -154,17 +154,21 @@ internal static class AbiInterfaceFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine("");
-        writer.WriteLine("[StructLayout(LayoutKind.Sequential)]");
-        writer.Write("internal unsafe struct ");
+        writer.Write("""
+            [StructLayout(LayoutKind.Sequential)]
+            internal unsafe struct 
+            """, isMultiline: true);
         writer.Write(nameStripped);
         writer.WriteLine("Vftbl");
         writer.WriteLine("{");
-        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;");
-        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;");
-        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> Release;");
-        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;");
-        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;");
-        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;");
+        writer.Write("""
+            public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+            public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+            public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+            public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
+            public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
+            public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
+            """, isMultiline: true);
 
         foreach (MethodDefinition method in type.Methods)
         {
@@ -201,8 +205,10 @@ internal static class AbiInterfaceFactory
         writer.WriteLine("");
         writer.WriteLine("public static ref readonly Guid IID");
         writer.WriteLine("{");
-        writer.WriteLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        writer.Write("    get => ref ");
+        writer.Write("""
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => ref 
+            """, isMultiline: true);
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
         writer.WriteLine(";");
         writer.WriteLine("}");
@@ -301,8 +307,10 @@ internal static class AbiInterfaceFactory
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
-            writer.WriteLine("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
-            writer.Write($"private static unsafe int Do_Abi_{vm}(");
+            writer.Write($$"""
+                [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+                private static unsafe int Do_Abi_{{vm}}(
+                """, isMultiline: true);
             WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
             writer.Write(")");
 
@@ -357,22 +365,28 @@ internal static class AbiInterfaceFactory
         writer.Write($"\n#nullable enable\npublic static unsafe class {nameStripped}Marshaller\n{{\n    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine(" value)");
-        writer.WriteLine("    {");
-        writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
+        writer.Write("""
+             value)
+                {
+                    return WindowsRuntimeInterfaceMarshaller<
+            """, isMultiline: true);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(">.ConvertToUnmanaged(value, ");
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.WriteLine(");");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.Write("    public static ");
+        writer.Write("""
+            );
+                }
+            
+                public static 
+            """, isMultiline: true);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("? ConvertToManaged(void* value)");
-        writer.WriteLine("    {");
-        writer.Write("        return (");
+        writer.Write("""
+            ? ConvertToManaged(void* value)
+                {
+                    return (
+            """, isMultiline: true);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.WriteLine("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);");
