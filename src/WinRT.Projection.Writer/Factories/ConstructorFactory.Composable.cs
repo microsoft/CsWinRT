@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -55,7 +56,7 @@ internal static partial class ConstructorFactory
             // (size(method.Signature().Params())), NOT the user-visible param count. Using the
             // total count guarantees uniqueness against other composable factory overloads that
             // might share the same user-param count but differ in trailing baseInterface shape.
-            string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(CultureInfo.InvariantCulture);
             string argsName = callbackName + "Args";
             bool isParameterless = userParamCount == 0;
 
@@ -103,7 +104,7 @@ internal static partial class ConstructorFactory
             writer.WriteLine("}");
             if (gcPressure > 0)
             {
-                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)});");
+                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
             }
             writer.WriteLine("}");
 
@@ -125,7 +126,7 @@ internal static partial class ConstructorFactory
 
         // Emit the four base-chaining constructors used by derived projected types.
         string gcPressureBody = gcPressure > 0
-            ? "GC.AddMemoryPressure(" + gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture) + ");"
+            ? "GC.AddMemoryPressure(" + gcPressure.ToString(CultureInfo.InvariantCulture) + ");"
             : string.Empty;
 
         // 1. WindowsRuntimeActivationTypes.DerivedComposed

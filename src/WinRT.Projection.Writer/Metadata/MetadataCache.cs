@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver.DotNet;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
 
@@ -37,6 +38,13 @@ internal sealed class MetadataCache
         RuntimeContext = runtimeContext;
     }
 
+    /// <summary>
+    /// Loads the input <c>.winmd</c> files (or directories of <c>.winmd</c> files) into a new metadata cache.
+    /// </summary>
+    /// <param name="inputs">The input paths.</param>
+    /// <returns>The loaded metadata cache.</returns>
+    [SuppressMessage("Style", "IDE0028:Use collection expression",
+        Justification = "HashSet<string>(StringComparer.OrdinalIgnoreCase) cannot be expressed as a collection expression.")]
     public static MetadataCache Load(IEnumerable<string> inputs)
     {
         // Collect all .winmd files first so the resolver knows about all of them. Dedupe by canonical
@@ -45,9 +53,7 @@ internal sealed class MetadataCache
         // and one picked up by an enclosing directory scan) is only loaded once. Loading the same
         // .winmd twice causes duplicate types to be added to NamespaceMembers.Types and ultimately
         // emitted twice in the same output file (CS0101).
-#pragma warning disable IDE0028 // Use collection expression -- needs StringComparer.OrdinalIgnoreCase
         HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
-#pragma warning restore IDE0028
         List<string> winmdFiles = [];
         foreach (string input in inputs)
         {
@@ -128,7 +134,7 @@ internal sealed class MetadataCache
         AssemblyDefinition assemblyDefinition = RuntimeContext.LoadAssembly(path);
         if (assemblyDefinition.Modules is not [ModuleDefinition module])
         {
-            throw new System.BadImageFormatException($"Expected exactly one module in '{path}'.");
+            throw new BadImageFormatException($"Expected exactly one module in '{path}'.");
         }
         _modules.Add(module);
         string moduleFilePath = path;

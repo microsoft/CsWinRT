@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
+using System;
+using System.Globalization;
+using System.Text;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -124,7 +125,7 @@ internal static class InteropTypeNameWriter
                 arity = parsed;
             }
             _ = sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
-            _ = sb.Append(arity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            _ = sb.Append(arity.ToString(CultureInfo.InvariantCulture));
             // Append the generic args (if any).
             if (generic_args is { Count: > 0 })
             {

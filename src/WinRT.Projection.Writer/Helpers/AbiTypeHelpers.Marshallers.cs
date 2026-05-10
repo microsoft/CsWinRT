@@ -4,8 +4,9 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using System;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -107,7 +108,7 @@ internal static partial class AbiTypeHelpers
             }
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
-            if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, System.StringComparison.Ordinal))
+            if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, StringComparison.Ordinal))
             {
                 return nameStripped + MarshallerSuffix;
             }

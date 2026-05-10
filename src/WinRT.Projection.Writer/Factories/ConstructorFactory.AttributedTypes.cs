@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
+using System.Collections.Generic;
+using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
 
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
@@ -103,7 +104,7 @@ internal static partial class ConstructorFactory
             {
                 if (method.IsSpecial()) { methodIndex++; continue; }
                 MethodSignatureInfo sig = new(method);
-                string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
@@ -136,7 +137,7 @@ internal static partial class ConstructorFactory
                     """, isMultiline: true);
                 if (gcPressure > 0)
                 {
-                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)});");
+                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
                 writer.WriteLine("}");
 
@@ -168,7 +169,7 @@ internal static partial class ConstructorFactory
                 """, isMultiline: true);
             if (gcPressure > 0)
             {
-                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)});");
+                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
             }
             writer.WriteLine("}");
         }

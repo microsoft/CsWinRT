@@ -1,13 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text;
+using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -26,7 +30,7 @@ internal static partial class AbiMethodBodyFactory
     /// <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> wrap (methods/properties annotated with
     /// <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>, or remove-overload methods,
     /// contractually return <c>S_OK</c>).</param>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0045:Convert to conditional expression",
+    [SuppressMessage("Style", "IDE0045:Convert to conditional expression",
         Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
     internal static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
@@ -47,7 +51,7 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsHResultException = returnShape == AbiTypeShapeKind.HResultException;
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
-        System.Text.StringBuilder fp = new();
+        StringBuilder fp = new();
         _ = fp.Append("void*");
         foreach (ParameterInfo p in sig.Params)
         {
@@ -699,7 +703,7 @@ internal static partial class AbiMethodBodyFactory
         {
             writer.Write("(*(delegate* unmanaged[MemberFunction]<");
         }
-        writer.Write($"{fp}>**)ThisPtr)[{slot.ToString(System.Globalization.CultureInfo.InvariantCulture)}](ThisPtr");
+        writer.Write($"{fp}>**)ThisPtr)[{slot.ToString(CultureInfo.InvariantCulture)}](ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParameterInfo p = sig.Params[i];
@@ -1202,7 +1206,7 @@ internal static partial class AbiMethodBodyFactory
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
                                     static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
                         """, isMultiline: true);
-                    if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { writer.Write(" data"); }
+                    if (!disposeDataParamType.EndsWith("data", StringComparison.Ordinal)) { writer.Write(" data"); }
                     writer.Write($$"""
                         );
                         

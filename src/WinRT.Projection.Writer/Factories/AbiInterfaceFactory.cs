@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using System;
+using System.Collections.Generic;
+using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -282,17 +283,17 @@ internal static class AbiInterfaceFactory
                 TypedefNameWriter.WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
                 ifaceFullName = __scratchIfaceFullName.ToString();
             }
-            if (!ifaceFullName.StartsWith(GlobalPrefix, System.StringComparison.Ordinal)) { ifaceFullName = GlobalPrefix + ifaceFullName; }
+            if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ifaceFullName = GlobalPrefix + ifaceFullName; }
         }
 
         // Build a map of event add/remove methods to their event so we can emit the table field
         // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies.
-        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = AbiTypeHelpers.BuildEventMethodMap(type);
+        Dictionary<MethodDefinition, EventDefinition>? eventMap = AbiTypeHelpers.BuildEventMethodMap(type);
 
         // Build sets of property accessors and event accessors so the first loop below can
         // iterate "regular" methods (non-property, non-event) only. Do_Abi bodies are emitted in
         // this order: methods first, then properties (setter before getter), then events.
-        System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = [];
+        HashSet<MethodDefinition> propertyAccessors = [];
         foreach (PropertyDefinition prop in type.Properties)
         {
             if (prop.GetMethod is MethodDefinition g) { _ = propertyAccessors.Add(g); }

@@ -54,10 +54,10 @@ public static class ProjectionWriter
                 OutputFolder = Path.GetFullPath(options.OutputFolder),
             };
 
-            foreach (string p in options.InputPaths) { _ = settings.Input.Add(p); }
-            foreach (string p in options.Include) { _ = settings.Include.Add(p); }
-            foreach (string p in options.Exclude) { _ = settings.Exclude.Add(p); }
-            foreach (string p in options.AdditionExclude) { _ = settings.AdditionExclude.Add(p); }
+            settings.Input.UnionWith(options.InputPaths);
+            settings.Include.UnionWith(options.Include);
+            settings.Exclude.UnionWith(options.Exclude);
+            settings.AdditionExclude.UnionWith(options.AdditionExclude);
 
             settings.Filter = new TypeFilter(settings.Include, settings.Exclude);
             settings.AdditionFilter = new TypeFilter(settings.Include, settings.AdditionExclude);

@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
@@ -123,7 +125,7 @@ internal static partial class AbiMethodBodyFactory
                 IndentedTextWriter __scratchEvSrcGeneric = new();
                 TypedefNameWriter.WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
                 eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
-                if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
+                if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
                 {
                     eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;
                 }
@@ -176,7 +178,7 @@ internal static partial class AbiMethodBodyFactory
                     
                             return _{{evtName}}.GetOrAdd(
                                 key: thisObject,
-                                valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture)}})),
+                                valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}})),
                                 factoryArgument: thisReference);
                     """, isMultiline: true);
             }
@@ -186,7 +188,7 @@ internal static partial class AbiMethodBodyFactory
                 writer.Write($$"""
                             return _{{evtName}}.GetOrAdd(
                                 key: thisObject,
-                                valueFactory: static (_, thisReference) => new {{eventSourceProjectedFull}}(thisReference, {{eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture)}}),
+                                valueFactory: static (_, thisReference) => new {{eventSourceProjectedFull}}(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}}),
                                 factoryArgument: thisReference);
                     """, isMultiline: true);
             }

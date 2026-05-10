@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using System.Globalization;
+using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -399,7 +400,7 @@ internal static partial class ConstructorFactory
             // Composable extras: baseInterface (void*), out innerInterface (void**)
             writer.Write("void*, void**, ");
         }
-        writer.Write($"void**, int>**)ThisPtr)[{(6 + factoryMethodIndex).ToString(System.Globalization.CultureInfo.InvariantCulture)}](ThisPtr");
+        writer.Write($"void**, int>**)ThisPtr)[{(6 + factoryMethodIndex).ToString(CultureInfo.InvariantCulture)}](ThisPtr");
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Params[i];

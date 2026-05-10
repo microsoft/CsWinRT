@@ -3,6 +3,8 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using System.Collections.Generic;
+using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
@@ -80,7 +82,7 @@ internal static partial class AbiTypeHelpers
             if (m == method) { break; }
             index++;
         }
-        return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -110,10 +112,10 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>Build a method-to-event map for add/remove accessors of a type.</summary>
-    internal static System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
+    internal static Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
     {
         if (type.Events.Count == 0) { return null; }
-        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition> map = [];
+        Dictionary<MethodDefinition, EventDefinition> map = [];
         foreach (EventDefinition evt in type.Events)
         {
             if (evt.AddMethod is MethodDefinition add) { map[add] = evt; }

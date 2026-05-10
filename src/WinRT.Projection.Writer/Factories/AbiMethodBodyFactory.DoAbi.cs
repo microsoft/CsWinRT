@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
+using System;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -39,10 +40,10 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsGenericInstance = rt is not null && rt.IsGenericInstance();
         bool returnIsBlittableStruct = rt is not null && AbiTypeHelpers.IsAnyStruct(context.Cache, rt);
 
-        bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
-        bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
-        bool isAddEvent = methodName.StartsWith("add_", System.StringComparison.Ordinal);
-        bool isRemoveEvent = methodName.StartsWith("remove_", System.StringComparison.Ordinal);
+        bool isGetter = methodName.StartsWith("get_", StringComparison.Ordinal);
+        bool isSetter = methodName.StartsWith("put_", StringComparison.Ordinal);
+        bool isAddEvent = methodName.StartsWith("add_", StringComparison.Ordinal);
+        bool isRemoveEvent = methodName.StartsWith("remove_", StringComparison.Ordinal);
 
         if (isAddEvent || isRemoveEvent)
         {

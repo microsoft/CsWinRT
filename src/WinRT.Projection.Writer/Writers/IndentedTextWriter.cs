@@ -15,6 +15,7 @@
 // optimization that does not require any callsite churn.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace WindowsRuntime.ProjectionWriter.Writers;
@@ -48,10 +49,10 @@ internal sealed class IndentedTextWriter
     /// <summary>The underlying buffer that text is written to.</summary>
     private readonly StringBuilder _buffer;
 
-#pragma warning disable IDE0032 // CurrentIndentLevel exposes the field directly via a property.
     /// <summary>The current indentation level (number of <see cref="DefaultIndentation"/> repeats).</summary>
+    [SuppressMessage("Style", "IDE0032:Use auto property",
+        Justification = "CurrentIndentLevel exposes the field directly via a property; the field is mutated in hot paths and an auto-property would not be inlined as cleanly.")]
     private int _currentIndentationLevel;
-#pragma warning restore IDE0032
 
     /// <summary>The current indentation string (cached for fast reuse).</summary>
     private string _currentIndentation;

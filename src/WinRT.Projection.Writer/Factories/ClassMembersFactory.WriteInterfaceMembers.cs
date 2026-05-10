@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
@@ -200,7 +202,7 @@ internal static partial class ClassMembersFactory
         IndentedTextWriter __scratchAbiClass = new();
         TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
         string abiClass = __scratchAbiClass.ToString();
-        if (!abiClass.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
+        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
             abiClass = GlobalPrefix + abiClass;
         }
@@ -436,7 +438,7 @@ internal static partial class ClassMembersFactory
                 eventSourceType = __scratchEventSource.ToString();
             }
             string eventSourceTypeFull = eventSourceType;
-            if (!eventSourceTypeFull.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
+            if (!eventSourceTypeFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
                 eventSourceTypeFull = GlobalPrefix + eventSourceTypeFull;
             }
@@ -486,11 +488,11 @@ internal static partial class ClassMembersFactory
                     """, isMultiline: true);
                 if (isGenericEvent)
                 {
-                    writer.Write($"Unsafe.As<{eventSourceTypeFull}>(ctor({objRef}, {vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)}))");
+                    writer.Write($"Unsafe.As<{eventSourceTypeFull}>(ctor({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)}))");
                 }
                 else
                 {
-                    writer.Write($"new {eventSourceTypeFull}({objRef}, {vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)})");
+                    writer.Write($"new {eventSourceTypeFull}({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)})");
                 }
                 writer.Write("""
                     ,

@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
-using AsmResolver;
+using WindowsRuntime.ProjectionWriter.Writers;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -245,7 +246,7 @@ internal static class CustomAttributeFactory
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
             string name = attrType.Name?.Value ?? string.Empty;
-            if (name.EndsWith("Attribute", System.StringComparison.Ordinal))
+            if (name.EndsWith("Attribute", StringComparison.Ordinal))
             {
                 name = name[..^"Attribute".Length];
             }
@@ -280,7 +281,7 @@ internal static class CustomAttributeFactory
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
             (string ns, string name) = attrType.Names();
-            string strippedName = name.EndsWith("Attribute", System.StringComparison.Ordinal)
+            string strippedName = name.EndsWith("Attribute", StringComparison.Ordinal)
                 ? name[..^"Attribute".Length]
                 : name;
 

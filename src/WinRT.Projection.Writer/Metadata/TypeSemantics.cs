@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
 
@@ -172,13 +173,13 @@ internal static class TypeSemanticsFactory
         };
     }
 
+    [SuppressMessage("Style", "IDE0028:Use collection expression",
+        Justification = "List<TypeSemantics>(capacity) cannot be expressed as a collection expression.")]
     private static TypeSemantics GetGenericInstance(GenericInstanceTypeSignature gi)
     {
         ITypeDefOrRef genericType = gi.GenericType;
         // Always preserve the type arguments.
-#pragma warning disable IDE0028 // Use collection expression -- intentional capacity hint
         List<TypeSemantics> args = new(gi.TypeArguments.Count);
-#pragma warning restore IDE0028
         foreach (TypeSignature arg in gi.TypeArguments)
         {
             args.Add(Get(arg));

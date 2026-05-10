@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Factories;
@@ -140,15 +141,15 @@ internal static class ProjectionFileBuilder
         byte[] data = constant.Value?.Data ?? [];
         return type switch
         {
-            ElementType.I1 => ((sbyte)data[0]).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ElementType.U1 => data[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.I1 => ((sbyte)data[0]).ToString(CultureInfo.InvariantCulture),
+            ElementType.U1 => data[0].ToString(CultureInfo.InvariantCulture),
+            ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(CultureInfo.InvariantCulture),
+            ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(CultureInfo.InvariantCulture),
             // I4/U4 use printf "%#0x" semantics: 0 -> "0", non-zero -> "0x<hex>"
             ElementType.I4 => FormatHexAlternate((uint)System.BitConverter.ToInt32(data, 0)),
             ElementType.U4 => FormatHexAlternate(System.BitConverter.ToUInt32(data, 0)),
-            ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(CultureInfo.InvariantCulture),
+            ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(CultureInfo.InvariantCulture),
             _ => "0"
         };
     }
@@ -157,7 +158,7 @@ internal static class ProjectionFileBuilder
     {
         // Match printf "%#0x" semantics: for 0, output "0"; for non-zero, output "0x<hex>" with no padding.
         if (v == 0) { return "0"; }
-        return "0x" + v.ToString("x", System.Globalization.CultureInfo.InvariantCulture);
+        return "0x" + v.ToString("x", CultureInfo.InvariantCulture);
     }
 
     /// <summary>Writes a projected struct.</summary>

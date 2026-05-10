@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Models;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -227,7 +229,7 @@ internal static class ClassFactory
             IndentedTextWriter __scratchAbiClass = new();
             TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
             string abiClass = __scratchAbiClass.ToString();
-            if (!abiClass.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
+            if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
                 abiClass = GlobalPrefix + abiClass;
             }
@@ -510,7 +512,7 @@ internal static class ClassFactory
             }
             if (gcPressure > 0)
             {
-                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)});");
+                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
             }
             writer.WriteLine("}");
         }
@@ -559,7 +561,7 @@ internal static class ClassFactory
             writer.Write($$"""
                 ~{{typeName}}()
                 {
-                GC.RemoveMemoryPressure({{gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)}});
+                GC.RemoveMemoryPressure({{gcPressure.ToString(CultureInfo.InvariantCulture)}});
                 }
                 """, isMultiline: true);
         }

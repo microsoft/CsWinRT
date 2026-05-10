@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
@@ -38,12 +39,12 @@ internal sealed class MethodSignatureInfo
     /// </summary>
     /// <param name="method">The method definition to wrap.</param>
     /// <param name="genCtx">An optional generic context used to substitute generic parameters in the parameter and return types.</param>
+    [SuppressMessage("Style", "IDE0028:Use collection expression",
+        Justification = "List<ParameterInfo>(capacity) cannot be expressed as a collection expression.")]
     public MethodSignatureInfo(MethodDefinition method, GenericContext? genCtx)
     {
         Method = method;
-#pragma warning disable IDE0028 // Use collection expression -- intentional capacity hint
         Params = new List<ParameterInfo>(method.Parameters.Count);
-#pragma warning restore IDE0028
         ReturnParam = null;
         foreach (ParameterDefinition p in method.ParameterDefinitions)
         {
@@ -68,9 +69,9 @@ internal sealed class MethodSignatureInfo
         }
     }
 
-#pragma warning disable IDE0032 // Use auto property — manual backing field needed for substituted return type
+    [SuppressMessage("Style", "IDE0032:Use auto property",
+        Justification = "Manual backing field is needed because ReturnType collapses void/unset to null.")]
     private readonly TypeSignature? _substitutedReturnType;
-#pragma warning restore IDE0032
 
     /// <summary>
     /// Gets the (possibly generic-context-substituted) return type of the method, or

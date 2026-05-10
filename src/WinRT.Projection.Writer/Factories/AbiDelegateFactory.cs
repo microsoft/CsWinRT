@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using System;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -89,7 +90,7 @@ internal static class AbiDelegateFactory
         IndentedTextWriter __scratchProjectedDelegateForBody = new();
         TypedefNameWriter.WriteTypedefName(__scratchProjectedDelegateForBody, context, type, TypedefNameType.Projected, true);
         string projectedDelegateForBody = __scratchProjectedDelegateForBody.ToString();
-        if (!projectedDelegateForBody.StartsWith(GlobalPrefix, System.StringComparison.Ordinal)) { projectedDelegateForBody = GlobalPrefix + projectedDelegateForBody; }
+        if (!projectedDelegateForBody.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { projectedDelegateForBody = GlobalPrefix + projectedDelegateForBody; }
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
         writer.WriteLine("");
         writer.Write($$"""
@@ -211,7 +212,7 @@ internal static class AbiDelegateFactory
         IndentedTextWriter __scratchProjectedName = new();
         TypedefNameWriter.WriteTypedefName(__scratchProjectedName, context, type, TypedefNameType.Projected, true);
         string projectedName = __scratchProjectedName.ToString();
-        if (!projectedName.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
+        if (!projectedName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
             projectedName = GlobalPrefix + projectedName;
         }

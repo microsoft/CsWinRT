@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using System;
 
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
@@ -34,7 +35,7 @@ internal static class MethodDefinitionExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the method is an event remover; otherwise <see langword="false"/>.</returns>
         public bool IsRemoveOverload()
-            => method.IsSpecialName && (method.Name?.Value?.StartsWith("remove_", System.StringComparison.Ordinal) == true);
+            => method.IsSpecialName && (method.Name?.Value?.StartsWith("remove_", StringComparison.Ordinal) == true);
 
         /// <summary>
         /// Returns whether the method carries the <c>[NoExceptionAttribute]</c> or is a

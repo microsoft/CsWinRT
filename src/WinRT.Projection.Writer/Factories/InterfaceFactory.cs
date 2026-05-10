@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Models;
+using System;
+using System.Collections.Generic;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using AsmResolver;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -227,11 +229,11 @@ internal static class InterfaceFactory
     private static bool FindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return false; }
-        System.Collections.Generic.HashSet<TypeDefinition> visited = [];
+        HashSet<TypeDefinition> visited = [];
         return FindPropertyInBaseInterfacesRecursive(cache, type, propName, visited);
     }
 
-    private static bool FindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
+    private static bool FindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -257,11 +259,11 @@ internal static class InterfaceFactory
     internal static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return null; }
-        System.Collections.Generic.HashSet<TypeDefinition> visited = [];
+        HashSet<TypeDefinition> visited = [];
         return FindPropertyInterfaceInBasesRecursive(cache, type, propName, visited);
     }
 
-    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(MetadataCache cache, TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
+    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -292,7 +294,7 @@ internal static class InterfaceFactory
             if (attrType is null) { continue; }
             (string ns, string nm) = attrType.Names();
             if (ns != "Windows.Foundation.Metadata") { continue; }
-            string baseName = nm.EndsWith("Attribute", System.StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
+            string baseName = nm.EndsWith("Attribute", StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
             if (baseName is not ("Overload" or "DefaultOverload" or "Experimental"))
             {
                 continue;
