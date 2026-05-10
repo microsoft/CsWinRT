@@ -198,8 +198,10 @@ internal static class ClassFactory
             writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} static class ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
             TypedefNameWriter.WriteTypeParams(writer, type);
-            writer.WriteLine("");
-            writer.WriteLine("{");
+            writer.Write("""
+                
+                {
+                """, isMultiline: true);
             WriteStaticClassMembers(writer, context, type);
             writer.WriteLine("}");
         }
@@ -289,8 +291,10 @@ internal static class ClassFactory
                 if (context.Settings.ReferenceProjection)
                 {
                     // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.WriteLine("    add => throw null;");
-                    writer.WriteLine("    remove => throw null;");
+                    writer.Write("""
+                            add => throw null;
+                            remove => throw null;
+                        """, isMultiline: true);
                 }
                 else
                 {
@@ -302,8 +306,10 @@ internal static class ClassFactory
                     writer.Write(objRef);
                     writer.Write(", ");
                     writer.Write(objRef);
-                    writer.WriteLine(").Subscribe(value);");
-                    writer.WriteLine($"    remove => {abiClass}.{evtName}({objRef}, {objRef}).Unsubscribe(value);");
+                    writer.Write($$"""
+                        ).Subscribe(value);
+                            remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
+                        """, isMultiline: true);
                 }
                 writer.WriteLine("}");
             }
@@ -372,8 +378,10 @@ internal static class ClassFactory
             }
             else
             {
-                writer.WriteLine("");
-                writer.WriteLine("{");
+                writer.Write("""
+                    
+                    {
+                    """, isMultiline: true);
                 if (s.HasGetter)
                 {
                     if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
@@ -413,23 +421,29 @@ internal static class ClassFactory
         if (context.Settings.ReferenceProjection)
         {
             // the static factory objref getter body is just 'throw null;'.
-            writer.WriteLine("    get");
-            writer.WriteLine("    {");
-            writer.WriteLine("        throw null;");
-            writer.WriteLine("    }");
-            writer.WriteLine("}");
+            writer.Write("""
+                    get
+                    {
+                        throw null;
+                    }
+                }
+                """, isMultiline: true);
             return;
         }
-        writer.WriteLine("    get");
-        writer.WriteLine("    {");
-        writer.Write("        var __");
+        writer.Write("""
+                get
+                {
+                    var __
+            """, isMultiline: true);
         writer.Write(objRefName);
         writer.WriteLine(" = field;");
         writer.Write($"        if (__{objRefName} != null && __{objRefName}.IsInCurrentContext)\n        {{\n            return __{objRefName};\n        }}\n        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"{runtimeClassFullName}\", ");
         ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
-        writer.WriteLine(");");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+            );
+                }
+            }
+            """, isMultiline: true);
     }
     /// <summary>Writes a projected runtime class.</summary>
     public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -475,8 +489,10 @@ internal static class ClassFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
-        writer.WriteLine("");
-        writer.WriteLine("{");
+        writer.Write("""
+            
+            {
+            """, isMultiline: true);
 
         // ObjRef field definitions for each implemented interface.
         // These back the per-interface dispatch in instance methods/properties and the
@@ -499,11 +515,15 @@ internal static class ClassFactory
                     string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
                     writer.Write("if (GetType() == typeof(");
                     writer.Write(typeName);
-                    writer.WriteLine("))");
-                    writer.WriteLine("{");
+                    writer.Write("""
+                        ))
+                        {
+                        """, isMultiline: true);
                     writer.Write(defaultObjRefName);
-                    writer.WriteLine(" = NativeObjectReference;");
-                    writer.WriteLine("}");
+                    writer.Write("""
+                         = NativeObjectReference;
+                        }
+                        """, isMultiline: true);
                 }
             }
             if (gcPressure > 0)
@@ -564,8 +584,10 @@ internal static class ClassFactory
         // HasUnwrappableNativeObjectReference and IsOverridableInterface overrides.
         if (!context.Settings.ReferenceProjection)
         {
-            writer.WriteLine("");
-            writer.Write("protected override bool HasUnwrappableNativeObjectReference => ");
+            writer.Write("""
+                
+                protected override bool HasUnwrappableNativeObjectReference => 
+                """, isMultiline: true);
             if (!type.IsSealed)
             {
                 writer.Write($"GetType() == typeof({typeName});");
@@ -574,9 +596,11 @@ internal static class ClassFactory
             {
                 writer.Write("true;");
             }
-            writer.WriteLine("");
-            writer.WriteLine("");
-            writer.Write("protected override bool IsOverridableInterface(in Guid iid) => ");
+            writer.Write("""
+                
+                
+                protected override bool IsOverridableInterface(in Guid iid) => 
+                """, isMultiline: true);
             bool firstClause = true;
             foreach (InterfaceImplementation impl in type.Interfaces)
             {

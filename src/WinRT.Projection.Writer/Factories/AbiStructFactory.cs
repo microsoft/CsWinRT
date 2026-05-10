@@ -43,8 +43,10 @@ internal static class AbiStructFactory
             MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
             writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} unsafe struct ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine("");
-            writer.WriteLine("{");
+            writer.Write("""
+                
+                {
+                """, isMultiline: true);
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
@@ -74,8 +76,10 @@ internal static class AbiStructFactory
                 }
                 writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
             }
-            writer.WriteLine("}");
-            writer.WriteLine("");
+            writer.Write("""
+                }
+                
+                """, isMultiline: true);
         }
         else if (blittable && context.Settings.Component)
         {

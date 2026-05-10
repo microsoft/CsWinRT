@@ -90,8 +90,10 @@ internal static class ProjectionFileBuilder
 
         if (isFlags)
         {
-            writer.WriteLine("");
-            writer.WriteLine("[FlagsAttribute]");
+            writer.Write("""
+                
+                [FlagsAttribute]
+                """, isMultiline: true);
         }
         else
         {
@@ -117,8 +119,10 @@ internal static class ProjectionFileBuilder
             CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
             writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
         }
-        writer.WriteLine("}");
-        writer.WriteLine("");
+        writer.Write("""
+            }
+            
+            """, isMultiline: true);
     }
     /// <summary>Formats a metadata Constant value as a C# literal.</summary>
     internal static string FormatConstant(AsmResolver.DotNet.Constant constant)
@@ -194,8 +198,10 @@ internal static class ProjectionFileBuilder
             writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
-        writer.WriteLine(")");
-        writer.WriteLine("{");
+        writer.Write("""
+            )
+            {
+            """, isMultiline: true);
         foreach ((string _, string name, string paramName, bool _) in fields)
         {
             // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
@@ -213,8 +219,10 @@ internal static class ProjectionFileBuilder
                 writer.Write("; ");
             }
         }
-        writer.WriteLine("");
-        writer.WriteLine("}");
+        writer.Write("""
+            
+            }
+            """, isMultiline: true);
 
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
@@ -236,26 +244,27 @@ internal static class ProjectionFileBuilder
                 writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
             }
         }
-        writer.WriteLine(";");
-
-        // !=
-        writer.Write("public static bool operator !=(");
+        writer.Write("""
+            ;
+            public static bool operator !=(
+            """, isMultiline: true);
         writer.Write(projectionName);
         writer.Write(" x, ");
         writer.Write(projectionName);
-        writer.WriteLine(" y) => !(x == y);");
-
-        // equals
-        writer.Write("public bool Equals(");
+        writer.Write("""
+             y) => !(x == y);
+            public bool Equals(
+            """, isMultiline: true);
         writer.Write(projectionName);
-        writer.WriteLine(" other) => this == other;");
-
-        writer.Write("public override bool Equals(object obj) => obj is ");
+        writer.Write("""
+             other) => this == other;
+            public override bool Equals(object obj) => obj is 
+            """, isMultiline: true);
         writer.Write(projectionName);
-        writer.WriteLine(" that && this == that;");
-
-        // hashcode
-        writer.Write("public override int GetHashCode() => ");
+        writer.Write("""
+             that && this == that;
+            public override int GetHashCode() => 
+            """, isMultiline: true);
         if (fields.Count == 0)
         {
             writer.Write("0");
@@ -268,9 +277,11 @@ internal static class ProjectionFileBuilder
                 writer.Write($"{fields[i].Name}.GetHashCode()");
             }
         }
-        writer.WriteLine(";");
-        writer.WriteLine("}");
-        writer.WriteLine("");
+        writer.Write("""
+            ;
+            }
+            
+            """, isMultiline: true);
     }
     /// <summary>Writes a projected API contract (an empty enum stand-in).</summary>
     public static void WriteContract(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
