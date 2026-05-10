@@ -17,41 +17,30 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// <see cref="EnterAbiNamespace"/> / <see cref="EnterAbiImplNamespace"/> <see cref="IDisposable"/>
 /// helpers, which guarantees the flag is reset even on exceptional control flow.
 /// </remarks>
-internal sealed class ProjectionEmitContext
+/// <param name="settings">The active projection settings.</param>
+/// <param name="cache">The metadata cache for the current generation.</param>
+/// <param name="currentNamespace">The namespace currently being emitted (or <see cref="string.Empty"/> when not in a per-namespace pass).</param>
+internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cache, string currentNamespace)
 {
-    /// <summary>
-    /// Initializes a new <see cref="ProjectionEmitContext"/>.
-    /// </summary>
-    /// <param name="settings">The active projection settings.</param>
-    /// <param name="cache">The metadata cache for the current generation.</param>
-    /// <param name="currentNamespace">The namespace currently being emitted (or <see cref="string.Empty"/> when not in a per-namespace pass).</param>
-    public ProjectionEmitContext(Settings settings, MetadataCache cache, string currentNamespace)
-    {
-        Settings = settings;
-        Cache = cache;
-        CurrentNamespace = currentNamespace;
-        AbiTypeShapeResolver = new AbiTypeShapeResolver(cache);
-    }
-
     /// <summary>
     /// Gets the active projection settings.
     /// </summary>
-    public Settings Settings { get; }
+    public Settings Settings { get; } = settings;
 
     /// <summary>
     /// Gets the metadata cache for the current generation.
     /// </summary>
-    public MetadataCache Cache { get; }
+    public MetadataCache Cache { get; } = cache;
 
     /// <summary>
     /// Gets the namespace currently being emitted, or <see cref="string.Empty"/> when not in a per-namespace pass.
     /// </summary>
-    public string CurrentNamespace { get; }
+    public string CurrentNamespace { get; } = currentNamespace;
 
     /// <summary>
     /// Gets the resolver used to classify type signatures by their ABI marshalling shape.
     /// </summary>
-    public AbiTypeShapeResolver AbiTypeShapeResolver { get; }
+    public AbiTypeShapeResolver AbiTypeShapeResolver { get; } = new AbiTypeShapeResolver(cache);
 
     /// <summary>
     /// Gets a value indicating whether the writer is currently inside an ABI namespace block.

@@ -19,24 +19,14 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// namespace in the metadata cache and emits the per-namespace <c>.cs</c> files, then writes
 /// the per-projection support files (default-interfaces map, exclusive-to map, base resources).
 /// </summary>
-internal sealed partial class ProjectionGenerator
+/// <param name="settings">The active projection settings.</param>
+/// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
+/// <param name="token">The cancellation token observed across all phases.</param>
+internal sealed partial class ProjectionGenerator(Settings settings, MetadataCache cache, CancellationToken token)
 {
-    private readonly Settings _settings;
-    private readonly MetadataCache _cache;
-    private readonly CancellationToken _token;
-
-    /// <summary>
-    /// Initializes a new <see cref="ProjectionGenerator"/>.
-    /// </summary>
-    /// <param name="settings">The active projection settings.</param>
-    /// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
-    /// <param name="token">The cancellation token observed across all phases.</param>
-    public ProjectionGenerator(Settings settings, MetadataCache cache, CancellationToken token)
-    {
-        _settings = settings;
-        _cache = cache;
-        _token = token;
-    }
+    private readonly Settings _settings = settings;
+    private readonly MetadataCache _cache = cache;
+    private readonly CancellationToken _token = token;
 
     /// <summary>
     /// Runs the projection-generation pipeline end-to-end.
