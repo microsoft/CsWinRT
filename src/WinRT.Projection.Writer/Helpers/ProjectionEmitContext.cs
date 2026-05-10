@@ -6,22 +6,14 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
-/// Per-emission context bundling all state that is shared by the projection writers when
-/// emitting a single projection (settings + metadata cache + the active namespace + scoped
-/// emission-mode flags).
+/// Per-emission context bundling all state shared by the projection writers when emitting a
+/// single projection (settings, metadata cache, the active namespace, scoped emission-mode flags).
 /// </summary>
 /// <remarks>
-/// <para>
-/// Replaces the implicit state previously held on <c>TypeWriter</c> (which mixed indented-text
-/// emission with WinRT-specific state). (Replaces the static <c>_cacheRef</c> field that the 2.x design used.)
-/// </para>
-/// <para>
 /// The two emission-mode flags (<see cref="InAbiNamespace"/> and <see cref="InAbiImplNamespace"/>)
 /// are exposed as read-only properties; callers must enter/leave them via the scoped
 /// <see cref="EnterAbiNamespace"/> / <see cref="EnterAbiImplNamespace"/> <see cref="IDisposable"/>
-/// helpers. This eliminates the "did I forget to reset?" failure mode of the legacy mutable
-/// flags on <c>TypeWriter</c>.
-/// </para>
+/// helpers, which guarantees the flag is reset even on exceptional control flow.
 /// </remarks>
 internal sealed class ProjectionEmitContext
 {
@@ -52,15 +44,20 @@ internal sealed class ProjectionEmitContext
     public bool InAbiImplNamespace { get; private set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether platform-attribute computation should suppress
-    /// platforms that are less than or equal to <see cref="Platform"/>. Used to apply class-scope
-    /// platform suppression so member-level <c>[SupportedOSPlatform]</c> attributes don't repeat
-    /// information already on the enclosing type.
+    /// Gets a value indicating whether platform-attribute computation should suppress platforms
+    /// that are less than or equal to <see cref="Platform"/>. Used to apply class-scope platform
+    /// suppression so member-level <c>[SupportedOSPlatform]</c> attributes don't repeat
+    /// information already on the enclosing type. Set via <see cref="EnterPlatformSuppressionScope(string)"/>.
     /// </summary>
-    public bool CheckPlatform { get; set; }
+    public bool CheckPlatform { get; private set; }
 
-    /// <summary>Gets or sets the active platform string for the platform-attribute suppression mode.</summary>
-    public string Platform { get; set; } = string.Empty;
+    /// <summary>Gets the active platform string for the platform-attribute suppression mode.</summary>
+    /// <remarks>
+    /// The setter is internal and is used by both the scope helper (to install/restore the
+    /// surrounding scope's platform) and the platform-attribute algorithm itself (which seeds
+    /// the platform on the first non-empty observation within an active scope).
+    /// </remarks>
+    public string Platform { get; internal set; } = string.Empty;
 
     /// <summary>
     /// Enters the ABI namespace mode. Returns an <see cref="IDisposable"/> token that resets the
@@ -84,6 +81,23 @@ internal sealed class ProjectionEmitContext
         return new AbiImplNamespaceScope(this);
     }
 
+    /// <summary>
+    /// Enters platform-attribute suppression mode for the given <paramref name="platform"/>.
+    /// Returns an <see cref="IDisposable"/> token that resets <see cref="CheckPlatform"/> and
+    /// <see cref="Platform"/> on dispose. Use as
+    /// <c>using (context.EnterPlatformSuppressionScope(platform)) { ... }</c>.
+    /// </summary>
+    /// <param name="platform">The platform string for which member-level attributes are suppressed.</param>
+    /// <returns>The scope token.</returns>
+    public PlatformSuppressionScope EnterPlatformSuppressionScope(string platform)
+    {
+        bool prevCheck = CheckPlatform;
+        string prevPlatform = Platform;
+        CheckPlatform = true;
+        Platform = platform;
+        return new PlatformSuppressionScope(this, prevCheck, prevPlatform);
+    }
+
     /// <summary>Scope token for <see cref="EnterAbiNamespace"/>.</summary>
     public struct AbiNamespaceScope : IDisposable
     {
@@ -94,8 +108,11 @@ internal sealed class ProjectionEmitContext
         /// <summary>Resets the ABI namespace mode.</summary>
         public void Dispose()
         {
-            _context?.SetInAbiNamespace(false);
-            _context = null;
+            if (_context is { } context)
+            {
+                context.InAbiNamespace = false;
+                _context = null;
+            }
         }
     }
 
@@ -109,24 +126,37 @@ internal sealed class ProjectionEmitContext
         /// <summary>Resets the ABI.Impl namespace mode.</summary>
         public void Dispose()
         {
-            _context?.SetInAbiImplNamespace(false);
-            _context = null;
+            if (_context is { } context)
+            {
+                context.InAbiImplNamespace = false;
+                _context = null;
+            }
         }
     }
 
-    /// <summary>
-    /// Sets the <see cref="InAbiNamespace"/> mode flag without returning a scope. Used by the
-    /// legacy <c>TypeWriter</c> passthrough (which opens/closes the ABI namespace as separate
-    /// imperative calls). New code should use <see cref="EnterAbiNamespace"/> instead.
-    /// </summary>
-    /// <param name="value">The new value of <see cref="InAbiNamespace"/>.</param>
-    internal void SetInAbiNamespace(bool value) => InAbiNamespace = value;
+    /// <summary>Scope token for <see cref="EnterPlatformSuppressionScope(string)"/>.</summary>
+    public struct PlatformSuppressionScope : IDisposable
+    {
+        private ProjectionEmitContext? _context;
+        private readonly bool _prevCheck;
+        private readonly string _prevPlatform;
 
-    /// <summary>
-    /// Sets the <see cref="InAbiImplNamespace"/> mode flag without returning a scope. Used by the
-    /// legacy <c>TypeWriter</c> passthrough. New code should use
-    /// <see cref="EnterAbiImplNamespace"/> instead.
-    /// </summary>
-    /// <param name="value">The new value of <see cref="InAbiImplNamespace"/>.</param>
-    internal void SetInAbiImplNamespace(bool value) => InAbiImplNamespace = value;
+        internal PlatformSuppressionScope(ProjectionEmitContext context, bool prevCheck, string prevPlatform)
+        {
+            _context = context;
+            _prevCheck = prevCheck;
+            _prevPlatform = prevPlatform;
+        }
+
+        /// <summary>Restores the prior platform-suppression state.</summary>
+        public void Dispose()
+        {
+            if (_context is { } context)
+            {
+                context.CheckPlatform = _prevCheck;
+                context.Platform = _prevPlatform;
+                _context = null;
+            }
+        }
+    }
 }

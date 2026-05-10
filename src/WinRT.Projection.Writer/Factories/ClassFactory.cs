@@ -188,11 +188,7 @@ internal static class ClassFactory
     /// <summary>Writes a static class declaration with [ContractVersion]-derived platform suppression.</summary>
     public static void WriteStaticClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        bool prevCheckPlatform = context.CheckPlatform;
-        string prevPlatform = context.Platform;
-        context.CheckPlatform = true;
-        context.Platform = string.Empty;
-        try
+        using (context.EnterPlatformSuppressionScope(string.Empty))
         {
             MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
             CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
@@ -204,11 +200,6 @@ internal static class ClassFactory
             {
                 WriteStaticClassMembers(writer, context, type);
             }
-        }
-        finally
-        {
-            context.CheckPlatform = prevCheckPlatform;
-            context.Platform = prevPlatform;
         }
     }
     /// <summary>Emits static members from [Static] factory interfaces.</summary>
@@ -457,18 +448,9 @@ internal static class ClassFactory
         }
         // Tracks the highest platform seen within this class to suppress redundant
         // [SupportedOSPlatform(...)] emissions across interface boundaries.
-        bool prevCheckPlatform = context.CheckPlatform;
-        string prevPlatform = context.Platform;
-        context.CheckPlatform = true;
-        context.Platform = string.Empty;
-        try
+        using (context.EnterPlatformSuppressionScope(string.Empty))
         {
             WriteClassCore(writer, context, type);
-        }
-        finally
-        {
-            context.CheckPlatform = prevCheckPlatform;
-            context.Platform = prevPlatform;
         }
     }
 
