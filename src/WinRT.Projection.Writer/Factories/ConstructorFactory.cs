@@ -256,11 +256,14 @@ internal static class ConstructorFactory
     private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
         int paramCount = userParamCount >= 0 ? userParamCount : sig.Params.Count;
+        string baseClass = isComposable
+            ? "WindowsRuntimeActivationFactoryCallback.DerivedComposed"
+            : "WindowsRuntimeActivationFactoryCallback.DerivedSealed";
         writer.WriteLine("");
         writer.Write($$"""
-            private sealed class {{callbackName}}{{(isComposable
-            ? " : WindowsRuntimeActivationFactoryCallback.DerivedComposed\n{\n"
-            : " : WindowsRuntimeActivationFactoryCallback.DerivedSealed\n{\n")}}    public static readonly {{callbackName}} Instance = new();
+            private sealed class {{callbackName}} : {{baseClass}}
+            {
+                public static readonly {{callbackName}} Instance = new();
             
                 [MethodImpl(MethodImplOptions.NoInlining)]
             """, isMultiline: true);
@@ -859,7 +862,7 @@ internal static class ConstructorFactory
 
         // Emit the four base-chaining constructors used by derived projected types.
         string gcPressureBody = gcPressure > 0
-            ? "GC.AddMemoryPressure(" + gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture) + ");\n"
+            ? "GC.AddMemoryPressure(" + gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture) + ");"
             : string.Empty;
 
         // 1. WindowsRuntimeActivationTypes.DerivedComposed
@@ -869,7 +872,7 @@ internal static class ConstructorFactory
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
         writer.Write($$"""
             }
             
@@ -877,7 +880,7 @@ internal static class ConstructorFactory
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
         writer.Write($$"""
             }
             
@@ -885,7 +888,7 @@ internal static class ConstructorFactory
               :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
         writer.Write($$"""
             }
             
@@ -893,7 +896,7 @@ internal static class ConstructorFactory
               :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
         writer.WriteLine("}");
     }
 }

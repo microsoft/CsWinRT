@@ -127,7 +127,7 @@ internal static class StructEnumMarshallerFactory
                         return new 
                 """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(useObjectInitializer ? "(){\n" : "(\n");
+            writer.WriteLine(useObjectInitializer ? "(){" : "(");
             first = true;
             foreach (FieldDefinition field in type.Fields)
             {
@@ -173,7 +173,10 @@ internal static class StructEnumMarshallerFactory
                     writer.Write($"value.{fname}");
                 }
             }
-            writer.Write($"{(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n")}    public static void Dispose(");
+            writer.WriteLine("");
+            writer.WriteLine(useObjectInitializer ? "        };" : "        );");
+            writer.WriteLine("    }");
+            writer.Write("    public static void Dispose(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("""
                  value)
