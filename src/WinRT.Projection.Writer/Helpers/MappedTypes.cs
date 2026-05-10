@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Frozen;
 using System.Collections.Generic;
 
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -23,15 +24,15 @@ internal sealed record MappedType(
     bool EmitAbi = false);
 
 /// <summary>
-/// Static lookup table for Windows Runtime → .NET type mappings
+/// Static lookup table for Windows Runtime → .NET type mappings.
 /// </summary>
 internal static class MappedTypes
 {
-    private static readonly Dictionary<string, Dictionary<string, MappedType>> _byNamespace = Build();
+    private static readonly FrozenDictionary<string, FrozenDictionary<string, MappedType>> s_typeMappings = Build();
 
     public static MappedType? Get(string typeNamespace, string typeName)
     {
-        if (_byNamespace.TryGetValue(typeNamespace, out Dictionary<string, MappedType>? namesp) &&
+        if (s_typeMappings.TryGetValue(typeNamespace, out FrozenDictionary<string, MappedType>? namesp) &&
             namesp.TryGetValue(typeName, out MappedType? mapped))
         {
             return mapped;
@@ -39,9 +40,9 @@ internal static class MappedTypes
         return null;
     }
 
-    public static bool HasNamespace(string typeNamespace) => _byNamespace.ContainsKey(typeNamespace);
+    public static bool HasNamespace(string typeNamespace) => s_typeMappings.ContainsKey(typeNamespace);
 
-    private static Dictionary<string, Dictionary<string, MappedType>> Build()
+    private static FrozenDictionary<string, FrozenDictionary<string, MappedType>> Build()
     {
         Dictionary<string, Dictionary<string, MappedType>> result = [];
 
@@ -259,6 +260,11 @@ internal static class MappedTypes
         Add(WindowsRuntimeInternal, new("HWND", "System", "IntPtr"));
         Add(WindowsRuntimeInternal, new("ProjectionInternalAttribute", "", ""));
 
-        return result;
+        Dictionary<string, FrozenDictionary<string, MappedType>> frozenInner = [];
+        foreach (KeyValuePair<string, Dictionary<string, MappedType>> kvp in result)
+        {
+            frozenInner[kvp.Key] = kvp.Value.ToFrozenDictionary();
+        }
+        return frozenInner.ToFrozenDictionary();
     }
 }

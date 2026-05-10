@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -10,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class ContractPlatforms
 {
-    private static readonly Dictionary<string, List<(int Version, string Platform)>> s_table = Build();
+    private static readonly FrozenDictionary<string, (int Version, string Platform)[]> s_table = Build();
 
     /// <summary>
     /// Returns the platform version (e.g., "10.0.17763.0") that introduced the given contract version,
@@ -18,12 +20,12 @@ internal static class ContractPlatforms
     /// </summary>
     public static string GetPlatform(string contractName, int contractVersion)
     {
-        if (!s_table.TryGetValue(contractName, out List<(int Version, string Platform)>? versions))
+        if (!s_table.TryGetValue(contractName, out (int Version, string Platform)[]? versions))
         {
             return string.Empty;
         }
-        // Find the first version >= contractVersion (mirrors std::lower_bound)
-        for (int i = 0; i < versions.Count; i++)
+        // Find the first version >= contractVersion.
+        for (int i = 0; i < versions.Length; i++)
         {
             if (versions[i].Version >= contractVersion)
             {
@@ -33,89 +35,82 @@ internal static class ContractPlatforms
         return string.Empty;
     }
 
-    private static Dictionary<string, List<(int, string)>> Build()
+    private static FrozenDictionary<string, (int Version, string Platform)[]> Build()
     {
-        Dictionary<string, List<(int, string)>> t = [];
-
-        void Add(string name, params (int v, string p)[] vs)
+        Dictionary<string, (int Version, string Platform)[]> t = new(StringComparer.Ordinal)
         {
-            List<(int, string)> list = [];
-            foreach ((int v, string p) in vs) { list.Add((v, p)); }
-            t[name] = list;
-        }
-
-        Add("Windows.AI.MachineLearning.MachineLearningContract",
-            (1, "10.0.17763.0"), (2, "10.0.18362.0"), (3, "10.0.19041.0"), (4, "10.0.20348.0"), (5, "10.0.22000.0"));
-        Add("Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract",
-            (1, "10.0.17134.0"), (2, "10.0.17763.0"));
-        Add("Windows.ApplicationModel.Calls.Background.CallsBackgroundContract",
-            (1, "10.0.17763.0"), (2, "10.0.18362.0"), (3, "10.0.20348.0"), (4, "10.0.22621.0"));
-        Add("Windows.ApplicationModel.Calls.CallsPhoneContract",
-            (4, "10.0.17763.0"), (5, "10.0.18362.0"), (6, "10.0.20348.0"), (7, "10.0.22621.0"));
-        Add("Windows.ApplicationModel.Calls.CallsVoipContract",
-            (1, "10.0.10586.0"), (2, "10.0.16299.0"), (3, "10.0.17134.0"), (4, "10.0.17763.0"), (5, "10.0.26100.0"));
-        Add("Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract",
-            (2, "10.0.17763.0"));
-        Add("Windows.ApplicationModel.SocialInfo.SocialInfoContract",
-            (1, "10.0.14393.0"), (2, "10.0.15063.0"));
-        Add("Windows.ApplicationModel.StartupTaskContract",
-            (2, "10.0.16299.0"), (3, "10.0.17134.0"));
-        Add("Windows.Devices.Custom.CustomDeviceContract",
-            (1, "10.0.16299.0"));
-        Add("Windows.Devices.DevicesLowLevelContract",
-            (2, "10.0.14393.0"), (3, "10.0.15063.0"));
-        Add("Windows.Devices.Printers.PrintersContract",
-            (1, "10.0.10586.0"));
-        Add("Windows.Devices.SmartCards.SmartCardBackgroundTriggerContract",
-            (3, "10.0.16299.0"));
-        Add("Windows.Devices.SmartCards.SmartCardEmulatorContract",
-            (5, "10.0.16299.0"), (6, "10.0.17763.0"));
-        Add("Windows.Foundation.FoundationContract",
-            (1, "10.0.10240.0"), (2, "10.0.10586.0"), (3, "10.0.15063.0"), (4, "10.0.19041.0"));
-        Add("Windows.Foundation.UniversalApiContract",
-            (1, "10.0.10240.0"), (2, "10.0.10586.0"), (3, "10.0.14393.0"), (4, "10.0.15063.0"), (5, "10.0.16299.0"),
-            (6, "10.0.17134.0"), (7, "10.0.17763.0"), (8, "10.0.18362.0"), (10, "10.0.19041.0"), (12, "10.0.20348.0"),
-            (14, "10.0.22000.0"), (15, "10.0.22621.0"), (19, "10.0.26100.0"));
-        Add("Windows.Foundation.VelocityIntegration.VelocityIntegrationContract",
-            (1, "10.0.17134.0"));
-        Add("Windows.Gaming.XboxLive.StorageApiContract",
-            (1, "10.0.16299.0"));
-        Add("Windows.Graphics.Printing3D.Printing3DContract",
-            (2, "10.0.10586.0"), (3, "10.0.14393.0"), (4, "10.0.16299.0"));
-        Add("Windows.Networking.Connectivity.WwanContract",
-            (1, "10.0.10240.0"), (2, "10.0.17134.0"), (3, "10.0.26100.0"));
-        Add("Windows.Networking.Sockets.ControlChannelTriggerContract",
-            (3, "10.0.17763.0"));
-        Add("Windows.Security.Isolation.IsolatedWindowsEnvironmentContract",
-            (1, "10.0.19041.0"), (3, "10.0.20348.0"), (4, "10.0.22621.0"), (5, "10.0.26100.0"));
-        Add("Windows.Services.Maps.GuidanceContract",
-            (3, "10.0.17763.0"));
-        Add("Windows.Services.Maps.LocalSearchContract",
-            (4, "10.0.17763.0"));
-        Add("Windows.Services.Store.StoreContract",
-            (1, "10.0.14393.0"), (2, "10.0.15063.0"), (3, "10.0.17134.0"), (4, "10.0.17763.0"));
-        Add("Windows.Services.TargetedContent.TargetedContentContract",
-            (1, "10.0.15063.0"));
-        Add("Windows.Storage.Provider.CloudFilesContract",
-            (4, "10.0.19041.0"), (6, "10.0.20348.0"), (7, "10.0.22621.0"));
-        Add("Windows.System.Profile.ProfileHardwareTokenContract",
-            (1, "10.0.14393.0"));
-        Add("Windows.System.Profile.ProfileRetailInfoContract",
-            (1, "10.0.20348.0"));
-        Add("Windows.System.Profile.ProfileSharedModeContract",
-            (1, "10.0.14393.0"), (2, "10.0.15063.0"));
-        Add("Windows.System.Profile.SystemManufacturers.SystemManufacturersContract",
-            (3, "10.0.17763.0"));
-        Add("Windows.System.SystemManagementContract",
-            (6, "10.0.17763.0"), (7, "10.0.19041.0"));
-        Add("Windows.UI.UIAutomation.UIAutomationContract",
-            (1, "10.0.20348.0"), (2, "10.0.22000.0"));
-        Add("Windows.UI.ViewManagement.ViewManagementViewScalingContract",
-            (1, "10.0.14393.0"));
-        Add("Windows.UI.Xaml.Core.Direct.XamlDirectContract",
-            (1, "10.0.17763.0"), (2, "10.0.18362.0"), (3, "10.0.20348.0"), (5, "10.0.22000.0"));
-
-        return t;
+            ["Windows.AI.MachineLearning.MachineLearningContract"] =
+                [(1, "10.0.17763.0"), (2, "10.0.18362.0"), (3, "10.0.19041.0"), (4, "10.0.20348.0"), (5, "10.0.22000.0")],
+            ["Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract"] =
+                [(1, "10.0.17134.0"), (2, "10.0.17763.0")],
+            ["Windows.ApplicationModel.Calls.Background.CallsBackgroundContract"] =
+                [(1, "10.0.17763.0"), (2, "10.0.18362.0"), (3, "10.0.20348.0"), (4, "10.0.22621.0")],
+            ["Windows.ApplicationModel.Calls.CallsPhoneContract"] =
+                [(4, "10.0.17763.0"), (5, "10.0.18362.0"), (6, "10.0.20348.0"), (7, "10.0.22621.0")],
+            ["Windows.ApplicationModel.Calls.CallsVoipContract"] =
+                [(1, "10.0.10586.0"), (2, "10.0.16299.0"), (3, "10.0.17134.0"), (4, "10.0.17763.0"), (5, "10.0.26100.0")],
+            ["Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract"] =
+                [(2, "10.0.17763.0")],
+            ["Windows.ApplicationModel.SocialInfo.SocialInfoContract"] =
+                [(1, "10.0.14393.0"), (2, "10.0.15063.0")],
+            ["Windows.ApplicationModel.StartupTaskContract"] =
+                [(2, "10.0.16299.0"), (3, "10.0.17134.0")],
+            ["Windows.Devices.Custom.CustomDeviceContract"] =
+                [(1, "10.0.16299.0")],
+            ["Windows.Devices.DevicesLowLevelContract"] =
+                [(2, "10.0.14393.0"), (3, "10.0.15063.0")],
+            ["Windows.Devices.Printers.PrintersContract"] =
+                [(1, "10.0.10586.0")],
+            ["Windows.Devices.SmartCards.SmartCardBackgroundTriggerContract"] =
+                [(3, "10.0.16299.0")],
+            ["Windows.Devices.SmartCards.SmartCardEmulatorContract"] =
+                [(5, "10.0.16299.0"), (6, "10.0.17763.0")],
+            ["Windows.Foundation.FoundationContract"] =
+                [(1, "10.0.10240.0"), (2, "10.0.10586.0"), (3, "10.0.15063.0"), (4, "10.0.19041.0")],
+            ["Windows.Foundation.UniversalApiContract"] =
+                [(1, "10.0.10240.0"), (2, "10.0.10586.0"), (3, "10.0.14393.0"), (4, "10.0.15063.0"), (5, "10.0.16299.0"),
+                 (6, "10.0.17134.0"), (7, "10.0.17763.0"), (8, "10.0.18362.0"), (10, "10.0.19041.0"), (12, "10.0.20348.0"),
+                 (14, "10.0.22000.0"), (15, "10.0.22621.0"), (19, "10.0.26100.0")],
+            ["Windows.Foundation.VelocityIntegration.VelocityIntegrationContract"] =
+                [(1, "10.0.17134.0")],
+            ["Windows.Gaming.XboxLive.StorageApiContract"] =
+                [(1, "10.0.16299.0")],
+            ["Windows.Graphics.Printing3D.Printing3DContract"] =
+                [(2, "10.0.10586.0"), (3, "10.0.14393.0"), (4, "10.0.16299.0")],
+            ["Windows.Networking.Connectivity.WwanContract"] =
+                [(1, "10.0.10240.0"), (2, "10.0.17134.0"), (3, "10.0.26100.0")],
+            ["Windows.Networking.Sockets.ControlChannelTriggerContract"] =
+                [(3, "10.0.17763.0")],
+            ["Windows.Security.Isolation.IsolatedWindowsEnvironmentContract"] =
+                [(1, "10.0.19041.0"), (3, "10.0.20348.0"), (4, "10.0.22621.0"), (5, "10.0.26100.0")],
+            ["Windows.Services.Maps.GuidanceContract"] =
+                [(3, "10.0.17763.0")],
+            ["Windows.Services.Maps.LocalSearchContract"] =
+                [(4, "10.0.17763.0")],
+            ["Windows.Services.Store.StoreContract"] =
+                [(1, "10.0.14393.0"), (2, "10.0.15063.0"), (3, "10.0.17134.0"), (4, "10.0.17763.0")],
+            ["Windows.Services.TargetedContent.TargetedContentContract"] =
+                [(1, "10.0.15063.0")],
+            ["Windows.Storage.Provider.CloudFilesContract"] =
+                [(4, "10.0.19041.0"), (6, "10.0.20348.0"), (7, "10.0.22621.0")],
+            ["Windows.System.Profile.ProfileHardwareTokenContract"] =
+                [(1, "10.0.14393.0")],
+            ["Windows.System.Profile.ProfileRetailInfoContract"] =
+                [(1, "10.0.20348.0")],
+            ["Windows.System.Profile.ProfileSharedModeContract"] =
+                [(1, "10.0.14393.0"), (2, "10.0.15063.0")],
+            ["Windows.System.Profile.SystemManufacturers.SystemManufacturersContract"] =
+                [(3, "10.0.17763.0")],
+            ["Windows.System.SystemManagementContract"] =
+                [(6, "10.0.17763.0"), (7, "10.0.19041.0")],
+            ["Windows.UI.UIAutomation.UIAutomationContract"] =
+                [(1, "10.0.20348.0"), (2, "10.0.22000.0")],
+            ["Windows.UI.ViewManagement.ViewManagementViewScalingContract"] =
+                [(1, "10.0.14393.0")],
+            ["Windows.UI.Xaml.Core.Direct.XamlDirectContract"] =
+                [(1, "10.0.17763.0"), (2, "10.0.18362.0"), (3, "10.0.20348.0"), (5, "10.0.22000.0")],
+        };
+        return t.ToFrozenDictionary(StringComparer.Ordinal);
     }
 }
 
@@ -124,24 +119,21 @@ internal static class ContractPlatforms
 /// </summary>
 internal static class AdditionTypes
 {
-    private static readonly Dictionary<string, HashSet<string>> s_table = new(System.StringComparer.Ordinal)
+    private static readonly FrozenDictionary<string, FrozenSet<string>> s_table = new Dictionary<string, FrozenSet<string>>(StringComparer.Ordinal)
     {
-        { "Microsoft.UI.Xaml", new(System.StringComparer.Ordinal) { "Thickness" } },
-        { "Microsoft.UI.Xaml.Controls.Primitives", new(System.StringComparer.Ordinal) { "GeneratorPosition" } },
-        { "Microsoft.UI.Xaml.Media", new(System.StringComparer.Ordinal) { "Matrix" } },
-        { "Microsoft.UI.Xaml.Media.Animation", new(System.StringComparer.Ordinal) { "KeyTime" } },
-        { "Windows.UI", new(System.StringComparer.Ordinal) { "Color" } },
-        { "Windows.UI.Xaml", new(System.StringComparer.Ordinal) { "Thickness" } },
-        { "Windows.UI.Xaml.Controls.Primitives", new(System.StringComparer.Ordinal) { "GeneratorPosition" } },
-        { "Windows.UI.Xaml.Media", new(System.StringComparer.Ordinal) { "Matrix" } },
-        { "Windows.UI.Xaml.Media.Animation", new(System.StringComparer.Ordinal) { "KeyTime" } },
-    };
+        ["Microsoft.UI.Xaml"] = FrozenSet.Create(StringComparer.Ordinal, "Thickness"),
+        ["Microsoft.UI.Xaml.Controls.Primitives"] = FrozenSet.Create(StringComparer.Ordinal, "GeneratorPosition"),
+        ["Microsoft.UI.Xaml.Media"] = FrozenSet.Create(StringComparer.Ordinal, "Matrix"),
+        ["Microsoft.UI.Xaml.Media.Animation"] = FrozenSet.Create(StringComparer.Ordinal, "KeyTime"),
+        ["Windows.UI"] = FrozenSet.Create(StringComparer.Ordinal, "Color"),
+        ["Windows.UI.Xaml"] = FrozenSet.Create(StringComparer.Ordinal, "Thickness"),
+        ["Windows.UI.Xaml.Controls.Primitives"] = FrozenSet.Create(StringComparer.Ordinal, "GeneratorPosition"),
+        ["Windows.UI.Xaml.Media"] = FrozenSet.Create(StringComparer.Ordinal, "Matrix"),
+        ["Windows.UI.Xaml.Media.Animation"] = FrozenSet.Create(StringComparer.Ordinal, "KeyTime"),
+    }.ToFrozenDictionary(StringComparer.Ordinal);
+
     public static bool HasAdditionToType(string typeNamespace, string typeName)
     {
-        if (s_table.TryGetValue(typeNamespace, out HashSet<string>? names) && names.Contains(typeName))
-        {
-            return true;
-        }
-        return false;
+        return s_table.TryGetValue(typeNamespace, out FrozenSet<string>? names) && names.Contains(typeName);
     }
 }
