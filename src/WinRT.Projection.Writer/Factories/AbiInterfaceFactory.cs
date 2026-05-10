@@ -160,28 +160,27 @@ internal static class AbiInterfaceFactory
         writer.Write($$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
-            {
             """, isMultiline: true);
-        writer.IncreaseIndent();
-        writer.Write("""
-            public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-            public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-            public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-            public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-            public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
-            public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
-            """, isMultiline: true);
-
-        foreach (MethodDefinition method in type.Methods)
+        using (writer.WriteBlock())
         {
-            string vm = AbiTypeHelpers.GetVMethodName(type, method);
-            MethodSignatureInfo sig = new(method);
-            writer.Write("public delegate* unmanaged[MemberFunction]<");
-            WriteAbiParameterTypesPointer(writer, context, sig);
-            writer.WriteLine($", int> {vm};");
+            writer.Write("""
+                public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+                public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+                public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+                public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
+                public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
+                public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
+                """, isMultiline: true);
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                string vm = AbiTypeHelpers.GetVMethodName(type, method);
+                MethodSignatureInfo sig = new(method);
+                writer.Write("public delegate* unmanaged[MemberFunction]<");
+                WriteAbiParameterTypesPointer(writer, context, sig);
+                writer.WriteLine($", int> {vm};");
+            }
         }
-        writer.DecreaseIndent();
-        writer.WriteLine("}");
     }
 
     /// <summary>Emits the ABI implementation for a runtime interface type (vtable struct, IUnknown/IInspectable entries, Methods class, and CCW Do_Abi handlers).</summary>
@@ -193,11 +192,8 @@ internal static class AbiInterfaceFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine("");
-        writer.Write($$"""
-            public static unsafe class {{nameStripped}}Impl
-            {
-            """, isMultiline: true);
-        writer.IncreaseIndent();
+        writer.WriteLine($"public static unsafe class {nameStripped}Impl");
+        using IndentedTextWriter.Block __implBlock = writer.WriteBlock();
         writer.Write($$"""
             [FixedAddressValueType]
             private static readonly {{nameStripped}}Vftbl Vftbl;
@@ -364,8 +360,6 @@ internal static class AbiInterfaceFactory
             if (evt.AddMethod is MethodDefinition a) { EmitOneDoAbi(a); }
             if (evt.RemoveMethod is MethodDefinition r) { EmitOneDoAbi(r); }
         }
-        writer.DecreaseIndent();
-        writer.WriteLine("}");
     }
 
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)

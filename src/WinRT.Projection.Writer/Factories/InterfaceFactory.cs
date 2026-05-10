@@ -357,12 +357,10 @@ internal static class InterfaceFactory
         TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, false);
         writer.WriteLine("");
-        writer.Write("{");
-        writer.IncreaseIndent();
-        WriteInterfaceMemberSignatures(writer, context, type);
-        writer.DecreaseIndent();
-        writer.WriteLine("");
-        writer.WriteLine("}");
+        using (writer.WriteBlock())
+        {
+            WriteInterfaceMemberSignatures(writer, context, type);
+        }
     }
     /// <summary>Returns true if the given exclusive interface is referenced as a [Default] or
     /// [Overridable] interface impl on the class it's exclusive to.</summary>

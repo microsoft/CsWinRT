@@ -114,24 +114,22 @@ internal static class ProjectionFileBuilder
 
         writer.Write($$"""
             {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
-            {
             """, isMultiline: true);
-        writer.IncreaseIndent();
-
-        foreach (FieldDefinition field in type.Fields)
+        using (writer.WriteBlock())
         {
-            if (field.Constant is null)
+            foreach (FieldDefinition field in type.Fields)
             {
-                continue;
+                if (field.Constant is null)
+                {
+                    continue;
+                }
+                string fieldName = field.Name?.Value ?? string.Empty;
+                string constantValue = FormatConstant(field.Constant);
+                // Emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
+                CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
+                writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
             }
-            string fieldName = field.Name?.Value ?? string.Empty;
-            string constantValue = FormatConstant(field.Constant);
-            // Emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
-            CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
-            writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
         }
-        writer.DecreaseIndent();
-        writer.WriteLine("}");
         writer.WriteLine("");
     }
     /// <summary>Formats a metadata Constant value as a C# literal.</summary>
@@ -335,29 +333,27 @@ internal static class ProjectionFileBuilder
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.Write($$"""
-            {{AccessibilityHelper.InternalAccessibility(context.Settings)}} sealed class {{typeName}}: Attribute
+        writer.WriteLine($"{AccessibilityHelper.InternalAccessibility(context.Settings)} sealed class {typeName}: Attribute");
+        using (writer.WriteBlock())
+        {
+            // Constructors
+            foreach (MethodDefinition method in type.Methods)
             {
-            """, isMultiline: true);
-
-        // Constructors
-        foreach (MethodDefinition method in type.Methods)
-        {
-            if (method.Name?.Value != ".ctor") { continue; }
-            MethodSignatureInfo sig = new(method);
-            writer.Write($"public {typeName}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.WriteLine("){}");
+                if (method.Name?.Value != ".ctor") { continue; }
+                MethodSignatureInfo sig = new(method);
+                writer.Write($"public {typeName}(");
+                MethodFactory.WriteParameterList(writer, context, sig);
+                writer.WriteLine("){}");
+            }
+            // Fields
+            foreach (FieldDefinition field in type.Fields)
+            {
+                if (field.IsStatic || field.Signature is null) { continue; }
+                writer.Write("public ");
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
+                writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
+            }
         }
-        // Fields
-        foreach (FieldDefinition field in type.Fields)
-        {
-            if (field.IsStatic || field.Signature is null) { continue; }
-            writer.Write("public ");
-            TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
-            writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
-        }
-        writer.WriteLine("}");
     }
 
     /// <summary>Returns the camel-case form of <paramref name="name"/>.</summary>
