@@ -133,7 +133,7 @@
           Outputs="$(NativeLibraryPublishedDllPath)">
     <MSBuild Projects="$(NativeLibraryProjectFilePath)"
              Targets="Restore;Publish"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1;PublishAot=true" />
     <ItemGroup>
       <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
     </ItemGroup>
