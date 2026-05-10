@@ -2,13 +2,15 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Models;
+using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
+
 namespace WindowsRuntime.ProjectionWriter.Builders;
 
 /// <summary>
@@ -52,7 +54,7 @@ internal static class ProjectionFileBuilder
                 }
                 break;
             default:
-                throw new System.InvalidOperationException($"Unknown TypeCategory: {category}");
+                throw WellKnownProjectionWriterExceptions.UnknownTypeCategory(category);
         }
     }
 
@@ -78,7 +80,7 @@ internal static class ProjectionFileBuilder
                 AbiStructFactory.Write(writer, context, type);
                 break;
             default:
-                throw new System.InvalidOperationException($"Unknown TypeCategory: {category}");
+                throw WellKnownProjectionWriterExceptions.UnknownTypeCategory(category);
         }
     }
 

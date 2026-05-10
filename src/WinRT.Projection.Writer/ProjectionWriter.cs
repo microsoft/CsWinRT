@@ -3,9 +3,12 @@
 
 using System;
 using System.IO;
+using WindowsRuntime.ProjectionWriter.Errors;
+using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
@@ -33,34 +36,57 @@ public static class ProjectionWriter
             throw new ArgumentException("Output folder must be provided.", nameof(options));
         }
 
-        // Configure global settings
-        Settings settings = new()
+        Settings settings;
+
+        // Translate the public options into the internal settings bag.
+        try
         {
-            Verbose = options.Verbose,
-            Component = options.Component,
-            Internal = options.Internal,
-            Embedded = options.Embedded,
-            PublicEnums = options.PublicEnums,
-            PublicExclusiveTo = options.PublicExclusiveTo,
-            IdicExclusiveTo = options.IdicExclusiveTo,
-            ReferenceProjection = options.ReferenceProjection,
-            OutputFolder = Path.GetFullPath(options.OutputFolder),
-        };
+            settings = new()
+            {
+                Verbose = options.Verbose,
+                Component = options.Component,
+                Internal = options.Internal,
+                Embedded = options.Embedded,
+                PublicEnums = options.PublicEnums,
+                PublicExclusiveTo = options.PublicExclusiveTo,
+                IdicExclusiveTo = options.IdicExclusiveTo,
+                ReferenceProjection = options.ReferenceProjection,
+                OutputFolder = Path.GetFullPath(options.OutputFolder),
+            };
 
-        foreach (string p in options.InputPaths) { _ = settings.Input.Add(p); }
-        foreach (string p in options.Include) { _ = settings.Include.Add(p); }
-        foreach (string p in options.Exclude) { _ = settings.Exclude.Add(p); }
-        foreach (string p in options.AdditionExclude) { _ = settings.AdditionExclude.Add(p); }
+            foreach (string p in options.InputPaths) { _ = settings.Input.Add(p); }
+            foreach (string p in options.Include) { _ = settings.Include.Add(p); }
+            foreach (string p in options.Exclude) { _ = settings.Exclude.Add(p); }
+            foreach (string p in options.AdditionExclude) { _ = settings.AdditionExclude.Add(p); }
 
-        settings.Filter = new TypeFilter(settings.Include, settings.Exclude);
-        settings.AdditionFilter = new TypeFilter(settings.Include, settings.AdditionExclude);
+            settings.Filter = new TypeFilter(settings.Include, settings.Exclude);
+            settings.AdditionFilter = new TypeFilter(settings.Include, settings.AdditionExclude);
 
-        _ = Directory.CreateDirectory(settings.OutputFolder);
+            _ = Directory.CreateDirectory(settings.OutputFolder);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledProjectionWriterException("parsing", e);
+        }
 
-        // Load metadata
-        MetadataCache cache = MetadataCache.Load(settings.Input);
+        options.CancellationToken.ThrowIfCancellationRequested();
 
-        // Run the generator
+        MetadataCache cache;
+
+        // Load the metadata cache from the configured input paths.
+        try
+        {
+            cache = MetadataCache.Load(settings.Input);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw new UnhandledProjectionWriterException("metadata-load", e);
+        }
+
+        options.CancellationToken.ThrowIfCancellationRequested();
+
+        // Run the generator. Phase boundaries within the orchestrator wrap their own
+        // discovery / emit blocks with UnhandledProjectionWriterException.
         ProjectionGenerator generator = new(settings, cache, options.CancellationToken);
         generator.Run();
     }

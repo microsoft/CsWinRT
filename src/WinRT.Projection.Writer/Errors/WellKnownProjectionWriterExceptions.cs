@@ -36,6 +36,87 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(2, $"The type '{typeName}' could not be resolved against the metadata cache.");
     }
 
+    /// <summary>
+    /// Raised when a switch over the well-known <c>TypeCategory</c> enum encounters an unrecognized member.
+    /// </summary>
+    /// <param name="category">The unknown category value.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException UnknownTypeCategory(object category)
+    {
+        return Exception(3, $"Unknown TypeCategory: {category}.");
+    }
+
+    /// <summary>
+    /// Raised when a type signature passed to <c>TypeSemanticsFactory</c> cannot be classified.
+    /// </summary>
+    /// <param name="signature">The unsupported signature (rendered via <c>ToString()</c>).</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException UnsupportedTypeSignature(string signature)
+    {
+        return Exception(4, $"Unsupported signature: '{signature}'.");
+    }
+
+    /// <summary>
+    /// Raised when a corlib element type passed to <c>TypeSemanticsFactory.GetFundamental</c> is not in the
+    /// supported set.
+    /// </summary>
+    /// <param name="elementType">The unsupported element type.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException UnsupportedCorLibElementType(object elementType)
+    {
+        return Exception(5, $"Unsupported corlib element type: {elementType}.");
+    }
+
+    /// <summary>
+    /// Raised when a fundamental type passed to <c>IIDExpressionWriter</c> is not in the supported set.
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException UnknownFundamentalType()
+    {
+        return Exception(6, "Unknown fundamental type.");
+    }
+
+    /// <summary>
+    /// Raised when a type referenced from <c>IIDExpressionWriter</c> is missing the expected
+    /// <c>[Guid]</c> attribute or has malformed <c>Guid</c> fields.
+    /// </summary>
+    /// <param name="typeName">The fully-qualified type name that lacks usable GUID metadata.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException MissingGuidAttribute(string typeName)
+    {
+        return Exception(7, $"Type '{typeName}' is missing a usable [Guid] attribute or has malformed Guid fields.");
+    }
+
+    /// <summary>
+    /// Raised when the orchestrator cannot locate the Windows SDK install root in the registry.
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException WindowsSdkNotFound()
+    {
+        return Exception(8, "Could not find the Windows SDK in the registry.");
+    }
+
+    /// <summary>
+    /// Raised when the orchestrator cannot read a Windows SDK platform XML file.
+    /// </summary>
+    /// <param name="xmlPath">The path of the XML file that could not be read.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException CannotReadWindowsSdkXml(string xmlPath)
+    {
+        return Exception(9, $"Could not read the Windows SDK's XML at '{xmlPath}'.");
+    }
+
+    /// <summary>
+    /// Raised when an emission helper detects a programming error (e.g. an unexpected null state)
+    /// that should never occur at runtime.
+    /// </summary>
+    /// <param name="message">The message describing the unreachable state.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException UnreachableEmissionState(string message)
+    {
+        return Exception(10, message);
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException(

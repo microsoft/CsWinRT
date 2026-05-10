@@ -5,11 +5,13 @@ using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Writers;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -33,7 +35,7 @@ internal static class IIDExpressionWriter
         FundamentalType.Float => "f4",
         FundamentalType.Double => "f8",
         FundamentalType.String => "string",
-        _ => throw new InvalidOperationException("Unknown fundamental type")
+        _ => throw WellKnownProjectionWriterExceptions.UnknownFundamentalType()
     };
 
     private static readonly Regex s_typeNameEscapeRe = new(@"[ :<>`,.]", RegexOptions.Compiled);
@@ -99,8 +101,7 @@ internal static class IIDExpressionWriter
     /// <summary>Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.</summary>
     public static void WriteGuid(IndentedTextWriter writer, TypeDefinition type, bool lowerCase)
     {
-        (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw new InvalidOperationException(
-            $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
+        (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
         string fmt = lowerCase ? "x" : "X";
         // Format: %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x
         writer.Write($"{data1.ToString(fmt + "8", CultureInfo.InvariantCulture)}-{data2.ToString(fmt + "4", CultureInfo.InvariantCulture)}-{data3.ToString(fmt + "4", CultureInfo.InvariantCulture)}-");
@@ -111,8 +112,7 @@ internal static class IIDExpressionWriter
     /// <summary>Writes the GUID bytes for <paramref name="type"/> as a hex byte list.</summary>
     public static void WriteGuidBytes(IndentedTextWriter writer, TypeDefinition type)
     {
-        (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw new InvalidOperationException(
-            $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
+        (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
         WriteByte(writer, (data1 >> 0) & 0xFF, true);
         WriteByte(writer, (data1 >> 8) & 0xFF, false);
         WriteByte(writer, (data1 >> 16) & 0xFF, false);

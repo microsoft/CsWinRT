@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Win32;
+using WindowsRuntime.ProjectionWriter.Errors;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -81,7 +82,7 @@ public static partial class WindowsMetadataExpander
             string sdkPath = TryGetSdkPath();
             if (string.IsNullOrEmpty(sdkPath))
             {
-                throw new InvalidOperationException("Could not find the Windows SDK in the registry.");
+                throw WellKnownProjectionWriterExceptions.WindowsSdkNotFound();
             }
 
             string platformXml = Path.Combine(sdkPath, "Platforms", "UAP", sdkVersion, "Platform.xml");
@@ -179,7 +180,7 @@ public static partial class WindowsMetadataExpander
     {
         if (!File.Exists(xmlPath))
         {
-            throw new InvalidOperationException($"Could not read the Windows SDK's XML at {xmlPath}.");
+            throw WellKnownProjectionWriterExceptions.CannotReadWindowsSdkXml(xmlPath);
         }
 
         XmlReaderSettings settings = new() { DtdProcessing = DtdProcessing.Ignore, IgnoreWhitespace = true };

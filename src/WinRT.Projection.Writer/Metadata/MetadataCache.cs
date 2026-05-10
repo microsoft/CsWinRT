@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
@@ -188,7 +189,7 @@ internal sealed class MetadataCache
     /// </summary>
     public TypeDefinition FindRequired(string fullName)
     {
-        return Find(fullName) ?? throw new InvalidOperationException($"Required type '{fullName}' not found in metadata.");
+        return Find(fullName) ?? throw WellKnownProjectionWriterExceptions.CannotResolveType(fullName);
     }
 }
 

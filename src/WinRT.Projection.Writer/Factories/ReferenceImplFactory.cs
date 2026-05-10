@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Writers;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -156,7 +158,7 @@ internal static class ReferenceImplFactory
         {
             // Defensive: should be unreachable. WriteReferenceImpl is only called for enum/struct/delegate
             // types (WriteAbiEnum / WriteAbiStruct / WriteAbiDelegate dispatchers).
-            throw new System.InvalidOperationException(
+            throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
                 $"WriteReferenceImpl: unsupported type category {TypeCategorization.GetCategory(type)} " +
                 $"for type '{type.FullName}'. Expected enum/struct/delegate.");
         }

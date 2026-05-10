@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
@@ -65,7 +66,7 @@ internal static class TypeSemanticsFactory
             TypeDefOrRefSignature tdorref => GetFromTypeDefOrRef(tdorref.Type, tdorref.IsValueType),
             SzArrayTypeSignature sz => Get(sz.BaseType), // SZ arrays handled by callers
             ByReferenceTypeSignature br => Get(br.BaseType),
-            _ => GetFromTypeDefOrRef(signature.GetUnderlyingTypeDefOrRef() ?? throw new System.InvalidOperationException("Unsupported signature: " + signature?.ToString())),
+            _ => GetFromTypeDefOrRef(signature.GetUnderlyingTypeDefOrRef() ?? throw WellKnownProjectionWriterExceptions.UnsupportedTypeSignature(signature?.ToString() ?? "<null>")),
         };
     }
 
@@ -108,7 +109,7 @@ internal static class TypeSemanticsFactory
             ElementType.R8 => new TypeSemantics.Fundamental(FundamentalType.Double),
             ElementType.String => new TypeSemantics.Fundamental(FundamentalType.String),
             ElementType.Object => new TypeSemantics.Object_(),
-            _ => throw new System.InvalidOperationException($"Unsupported corlib element type: {elementType}")
+            _ => throw WellKnownProjectionWriterExceptions.UnsupportedCorLibElementType(elementType)
         };
     }
 

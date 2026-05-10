@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 
@@ -48,7 +49,7 @@ internal static partial class AbiMethodBodyFactory
             // Events go through dedicated EmitDoAbiAddEvent / EmitDoAbiRemoveEvent paths
             // upstream (see lines 1153-1159). If we reach here for an event accessor it's a
             // generator bug. Defensive guard against future regressions.
-            throw new System.InvalidOperationException(
+            throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
                 $"EmitDoAbiBodyIfSimple: unexpectedly called for event accessor '{methodName}' " +
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
         }
