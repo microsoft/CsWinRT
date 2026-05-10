@@ -549,9 +549,8 @@ internal static class ClassFactory
         // write_static_members) BEFORE the override hooks and instance members.
         ConstructorFactory.WriteAttributedTypes(writer, context, type);
 
-        // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
-        // C++ emits these inside write_attributed_types -> write_static_members; emit them
-        // here right after to preserve the same overall ordering.
+        // Static members from [Static] factory interfaces (e.g. GetForCurrentView), emitted
+        // right after the attributed types to preserve the overall ordering.
         WriteStaticClassMembers(writer, context, type);
 
         // Conditional finalizer
@@ -565,10 +564,9 @@ internal static class ClassFactory
                 """, isMultiline: true);
         }
 
-        // Class members from interfaces (instance methods, properties, events)
-        // Override hooks must be emitted BEFORE the public members to match the C++
-        // ordering (write_class line 9591/9600/9601: hooks first, then write_class_members).
-        // HasUnwrappableNativeObjectReference and IsOverridableInterface overrides.
+        // Class members from interfaces (instance methods, properties, events).
+        // Override hooks (HasUnwrappableNativeObjectReference and IsOverridableInterface) must
+        // be emitted BEFORE the public members.
         if (!context.Settings.ReferenceProjection)
         {
             writer.WriteLine("");

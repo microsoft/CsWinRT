@@ -225,9 +225,8 @@ internal static class InteropTypeNameWriter
             }
             if (typeNs.StartsWith("Windows", StringComparison.Ordinal))
             {
-                // unintended template placeholder in C++ that's unreachable in practice (no
-                // standard mapped type maps to a Windows.* namespace with EmitAbi=true). We
-                // emit the corrected '<#Windows>' so any future addition that hits this
+                // Unreachable in practice: no standard mapped type maps to a Windows.* namespace
+                // with EmitAbi=true. Emit '<#Windows>' so any future addition that hits this
                 // branch produces a runtime-resolvable assembly marker rather than garbage.
                 return "<#Windows>";
             }

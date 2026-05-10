@@ -24,7 +24,7 @@ internal static class AbiInterfaceFactory
         // Generic interfaces are handled by interopgen
         if (type.GenericParameters.Count > 0) { return; }
 
-        // The C++ also emits write_static_abi_classes here - we emit a basic stub for now
+        // Emit the per-interface marshaller stub.
         WriteInterfaceMarshallerStub(writer, context, type);
 
         // For internal projections, just the static ABI methods class is enough.
@@ -290,10 +290,8 @@ internal static class AbiInterfaceFactory
         System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = AbiTypeHelpers.BuildEventMethodMap(type);
 
         // Build sets of property accessors and event accessors so the first loop below can
-        // iterate "regular" methods (non-property, non-event) only. C++ emits Do_Abi bodies in
-        // this order: methods first, then properties (setter before getter per write_property_abi_invoke
-        // at), then events. Mine previously emitted them in pure metadata
-        // (slot) order which matched neither truth nor C++.
+        // iterate "regular" methods (non-property, non-event) only. Do_Abi bodies are emitted in
+        // this order: methods first, then properties (setter before getter), then events.
         System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = [];
         foreach (PropertyDefinition prop in type.Properties)
         {

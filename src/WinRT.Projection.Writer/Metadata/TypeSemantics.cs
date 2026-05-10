@@ -30,7 +30,7 @@ internal enum FundamentalType
 }
 
 /// <summary>
-/// Discriminated union of the type semantics from C++ <c>type_semantics</c>.
+/// Discriminated union of WinRT type semantics produced by <see cref="TypeSemanticsFactory"/>.
 /// </summary>
 internal abstract record TypeSemantics
 {

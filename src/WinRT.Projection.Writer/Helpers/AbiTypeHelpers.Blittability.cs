@@ -40,9 +40,8 @@ internal static partial class AbiTypeHelpers
     {
         if (sig is CorLibTypeSignature corlib)
         {
-            //   return (type != fundamental_type::String);
-            // i.e. ALL fundamentals (including Boolean, Char) are considered blittable here;
-            // only String is non-blittable. Object isn't a fundamental in C++; handled below.
+            // ALL fundamentals (including Boolean, Char) are considered blittable here;
+            // only String is non-blittable. Object is not a fundamental — it's handled below.
             return corlib.ElementType switch
             {
                 ElementType.String => false,
@@ -250,9 +249,8 @@ internal static partial class AbiTypeHelpers
             def = cache.Find(ns + "." + name);
         }
         if (def is null) { return false; }
-        // Special case: mapped struct types short-circuit based on RequiresMarshaling, mirroring
-        // C++ is_type_blittable: 'auto mapping = get_mapped_type(...); return !mapping->requires_marshaling'.
-        // Only applies to actual structs (not mapped interfaces like IAsyncAction).
+        // Mapped struct types short-circuit based on the mapping's RequiresMarshaling flag
+        // (only applies to actual structs, not mapped interfaces like IAsyncAction).
         if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
         {
             string sNs = td.Type?.Namespace?.Value ?? string.Empty;

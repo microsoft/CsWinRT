@@ -239,8 +239,8 @@ internal static partial class ClassMembersFactory
             string key = BuildMethodSignatureKey(name, sig);
             if (!writtenMethods.Add(key)) { continue; }
 
-            // Detect a 'string ToString()' that overrides Object.ToString(). C++ uses 'override'
-            // here (and even forces 'string' as the return type). See.
+            // Detect a 'string ToString()' that overrides Object.ToString() and force the
+            // 'override' modifier on the emitted member.
             string methodSpecForThis = methodSpec;
             if (name == "ToString" && sig.Params.Count == 0
                 && sig.ReturnType is CorLibTypeSignature crt

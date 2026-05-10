@@ -155,7 +155,7 @@ internal static class ProjectionFileBuilder
 
     private static string FormatHexAlternate(uint v)
     {
-        // C++ printf "%#0x": for 0, outputs "0"; for non-zero, outputs "0x<hex>" with no padding.
+        // Match printf "%#0x" semantics: for 0, output "0"; for non-zero, output "0x<hex>" with no padding.
         if (v == 0) { return "0"; }
         return "0x" + v.ToString("x", System.Globalization.CultureInfo.InvariantCulture);
     }

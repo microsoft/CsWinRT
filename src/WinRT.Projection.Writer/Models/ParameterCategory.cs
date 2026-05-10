@@ -6,7 +6,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
-/// <summary>Param category mirroring C++ <c>param_category</c>.</summary>
+/// <summary>Categorization of how a parameter is passed across the WinRT ABI boundary.</summary>
 internal enum ParameterCategory
 {
     In,

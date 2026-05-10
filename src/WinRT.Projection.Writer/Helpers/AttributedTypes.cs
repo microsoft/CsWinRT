@@ -64,9 +64,8 @@ internal static class AttributedTypes
             result[key] = info;
         }
 
-        // C++ uses std::map<std::string, attributed_type> which iterates in sorted-by-key order.
-        // The key is the factory-interface type name (e.g. 'IButtonUtilsStatic'), so the inheritance
-        // order in the generated code is alphabetical by interface name.
+        // Sort by key (the factory-interface type name, e.g. 'IButtonUtilsStatic') so the
+        // inheritance order in the generated code is alphabetical by interface name.
         SortedDictionary<string, AttributedType> sorted = [];
         foreach (KeyValuePair<string, AttributedType> kv in result)
         {

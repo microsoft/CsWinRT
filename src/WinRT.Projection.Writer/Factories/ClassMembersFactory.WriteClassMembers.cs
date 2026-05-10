@@ -59,8 +59,9 @@ internal static partial class ClassMembersFactory
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
             string propertyPlat = string.Empty;
-            // C++: if (getter_platform == setter_platform) { property_platform = getter_platform; getter_platform = ""; setter_platform = ""; }
-            // For getter-only or setter-only properties, only one side is set; compare the relevant side.
+            // If both accessor platform attributes are equal, collapse them to a single
+            // property-level attribute. For getter-only or setter-only properties only one side
+            // is set; compare the relevant side.
             bool bothSidesPresent = s.HasGetter && s.HasSetter;
             if (!bothSidesPresent || getterPlat == setterPlat)
             {

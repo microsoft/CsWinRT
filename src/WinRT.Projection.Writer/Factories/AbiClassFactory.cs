@@ -197,9 +197,8 @@ internal static class AbiClassFactory
             defaultIfaceIid = "default(global::System.Guid)";
         }
 
-        // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute]
-        //. This is used by both the marshaller attribute and the
-        // callback (the C++ code uses the same value for both).
+        // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute].
+        // The same value is used for both the marshaller attribute and the callback.
         string marshalingType = ConstructorFactory.GetMarshalingTypeName(type);
 
         bool isSealed = type.IsSealed;

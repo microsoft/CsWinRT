@@ -146,10 +146,7 @@ internal sealed class MetadataCache
             // Dedupe by full type name. Multiple input .winmd files can legitimately define types
             // with the same full name (e.g. WindowsRuntime.Internal types appearing in both
             // WindowsRuntime.Internal.winmd and cswinrt.winmd, or types showing up in both an SDK
-            // contract winmd and a 3rd-party WinMD that re-exports/forwards them). The C++ cswinrt
-            // tool silently dedupes via 'std::map<full_name, TypeDef>' in its cache; the C# port
-            // mirrors that here so the same input set produces semantically identical output.
-            // First-load-wins matches the C++ behavior (the map's insert is "no overwrite").
+            // contract winmd and a 3rd-party WinMD that re-exports / forwards them). First-load-wins.
             string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
             if (_typesByFullName.ContainsKey(fullName))
             {

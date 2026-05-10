@@ -84,7 +84,8 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>
-    /// Returns the metadata-derived name for the return parameter, or the C++ default <c>__return_value__</c>.
+    /// Returns the metadata-derived name for the return parameter, or the conventional
+    /// <c>__return_value__</c> placeholder when the metadata does not name it.
     /// </summary>
     internal static string GetReturnParamName(MethodSignatureInfo sig)
     {
