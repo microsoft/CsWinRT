@@ -103,7 +103,10 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
 
-        writer.Write($"{accessibility} enum {typeName} : {enumUnderlyingType}\n{{\n");
+        writer.Write($$"""
+            {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
+            {
+            """, isMultiline: true);
 
         foreach (FieldDefinition field in type.Fields)
         {
@@ -187,7 +190,11 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
         if (hasAddition) { writer.Write(" partial"); }
-        writer.Write($" struct {projectionName}: IEquatable<{projectionName}>\n{{\npublic {projectionName}(");
+        writer.Write($$"""
+             struct {{projectionName}}: IEquatable<{{projectionName}}>
+            {
+            public {{projectionName}}(
+            """, isMultiline: true);
         for (int i = 0; i < fields.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
@@ -221,7 +228,12 @@ internal static class ProjectionFileBuilder
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
         {
-            writer.Write($"public {typeStr} {name}\n{{\nreadonly get; set;\n}}\n");
+            writer.Write($$"""
+                public {{typeStr}} {{name}}
+                {
+                readonly get; set;
+                }
+                """, isMultiline: true);
         }
 
         // ==
@@ -270,7 +282,11 @@ internal static class ProjectionFileBuilder
 
         string typeName = type.Name?.Value ?? string.Empty;
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} enum {typeName}\n{{\n}}\n");
+        writer.Write($$"""
+            {{AccessibilityHelper.InternalAccessibility(context.Settings)}} enum {{typeName}}
+            {
+            }
+            """, isMultiline: true);
     }
     /// <summary>Writes a projected delegate.</summary>
     public static void WriteDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -308,7 +324,10 @@ internal static class ProjectionFileBuilder
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} sealed class {typeName}: Attribute\n{{\n");
+        writer.Write($$"""
+            {{AccessibilityHelper.InternalAccessibility(context.Settings)}} sealed class {{typeName}}: Attribute
+            {
+            """, isMultiline: true);
 
         // Constructors
         foreach (MethodDefinition method in type.Methods)

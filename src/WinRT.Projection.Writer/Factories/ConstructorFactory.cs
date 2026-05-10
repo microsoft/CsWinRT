@@ -39,7 +39,8 @@ internal static class ConstructorFactory
         {
             string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + (classType.Name?.Value ?? string.Empty);
             string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
-            writer.Write($"\nprivate static WindowsRuntimeObjectReference {objRefName}");
+            writer.WriteLine("");
+            writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
             if (context.Settings.ReferenceProjection)
             {
                 // in ref mode the activation factory objref getter body is just 'throw null;'.
@@ -47,7 +48,20 @@ internal static class ConstructorFactory
             }
             else
             {
-                writer.Write($"\n{{\n    get\n    {{\n        var __{objRefName} = field;\n        if (__{objRefName} != null && __{objRefName}.IsInCurrentContext)\n        {{\n            return __{objRefName};\n        }}\n        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"{fullName}\");\n    }}\n}}\n");
+                writer.WriteLine("");
+                writer.Write($$"""
+                    {
+                        get
+                        {
+                            var __{{objRefName}} = field;
+                            if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
+                            {
+                                return __{{objRefName}};
+                            }
+                            return field = WindowsRuntimeObjectReference.GetActivationFactory("{{fullName}}");
+                        }
+                    }
+                    """, isMultiline: true);
             }
         }
 
@@ -145,7 +159,12 @@ internal static class ConstructorFactory
             // Find the default interface IID to use.
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
 
-            writer.Write($"\npublic {typeName}()\n  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), {objRefName}, {defaultIfaceIid}, {GetMarshalingTypeName(classType)})\n{{\n");
+            writer.WriteLine("");
+            writer.Write($$"""
+                public {{typeName}}()
+                  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), {{objRefName}}, {{defaultIfaceIid}}, {{GetMarshalingTypeName(classType)}})
+                {
+                """, isMultiline: true);
             if (gcPressure > 0)
             {
                 writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)});");
@@ -196,7 +215,8 @@ internal static class ConstructorFactory
     private static void EmitFactoryArgsStruct(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string argsName, int userParamCount = -1)
     {
         int count = userParamCount >= 0 ? userParamCount : sig.Params.Count;
-        writer.Write($"\nprivate readonly ref struct {argsName}(");
+        writer.WriteLine("");
+        writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
             if (i > 0) { writer.Write(", "); }
@@ -236,9 +256,14 @@ internal static class ConstructorFactory
     private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
         int paramCount = userParamCount >= 0 ? userParamCount : sig.Params.Count;
-        writer.WriteLine($"\nprivate sealed class {callbackName}{(isComposable
+        writer.WriteLine("");
+        writer.Write($$"""
+            private sealed class {{callbackName}}{{(isComposable
             ? " : WindowsRuntimeActivationFactoryCallback.DerivedComposed\n{\n"
-            : " : WindowsRuntimeActivationFactoryCallback.DerivedSealed\n{\n")}    public static readonly {callbackName} Instance = new();\n\n    [MethodImpl(MethodImplOptions.NoInlining)]");
+            : " : WindowsRuntimeActivationFactoryCallback.DerivedSealed\n{\n")}}    public static readonly {{callbackName}} Instance = new();
+            
+                [MethodImpl(MethodImplOptions.NoInlining)]
+            """, isMultiline: true);
         if (isComposable)
         {
             // Composable Invoke signature is multi-line and includes baseInterface (in) +
@@ -488,8 +513,10 @@ internal static class ConstructorFactory
                     writer.Write(pname);
                 }
             }
-            writer.WriteLine(")");
-            writer.WriteLine($"{indent}{{");
+            writer.Write($$"""
+                )
+                {{indent}}{
+                """, isMultiline: true);
             fixedNesting = 1;
             // Inside the block: emit HStringMarshaller.ConvertToUnmanagedUnsafe for each
             // string input. The HStringReference local lives stack-only.
@@ -662,15 +689,43 @@ internal static class ConstructorFactory
                 string raw = p.Parameter.Name ?? "param";
                 if (szArr.BaseType.IsString())
                 {
-                    writer.Write($"\n            HStringArrayMarshaller.Dispose(__{raw}_pinnedHandleSpan);\n\n            if (__{raw}_pinnedHandleArrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<nint>.Shared.Return(__{raw}_pinnedHandleArrayFromPool);\n            }}\n\n            if (__{raw}_headerArrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{raw}_headerArrayFromPool);\n            }}\n");
+                    writer.WriteLine("");
+                    writer.Write($$"""
+                                    HStringArrayMarshaller.Dispose(__{{raw}}_pinnedHandleSpan);
+                        
+                                    if (__{{raw}}_pinnedHandleArrayFromPool is not null)
+                                    {
+                                        global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_pinnedHandleArrayFromPool);
+                                    }
+                        
+                                    if (__{{raw}}_headerArrayFromPool is not null)
+                                    {
+                                        global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{{raw}}_headerArrayFromPool);
+                                    }
+                        """, isMultiline: true);
                 }
                 else
                 {
                     string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                     _ = elementInteropArg;
-                    writer.Write($"\n            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n            static extern void Dispose_{raw}([UnsafeAccessorType(\"{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}\")] object _, uint length, void** data);\n\n            fixed(void* _{raw} = __{raw}_span)\n            {{\n                Dispose_{raw}(null, (uint) __{raw}_span.Length, (void**)_{raw});\n            }}\n");
+                    writer.WriteLine("");
+                    writer.Write($$"""
+                                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+                                    static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
+                        
+                                    fixed(void* _{{raw}} = __{{raw}}_span)
+                                    {
+                                        Dispose_{{raw}}(null, (uint) __{{raw}}_span.Length, (void**)_{{raw}});
+                                    }
+                        """, isMultiline: true);
                 }
-                writer.Write($"\n            if (__{raw}_arrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<nint>.Shared.Return(__{raw}_arrayFromPool);\n            }}\n");
+                writer.WriteLine("");
+                writer.Write($$"""
+                                if (__{{raw}}_arrayFromPool is not null)
+                                {
+                                    global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_arrayFromPool);
+                                }
+                    """, isMultiline: true);
             }
             writer.WriteLine("        }");
         }
@@ -769,7 +824,12 @@ internal static class ConstructorFactory
                 }
                 writer.Write("))");
             }
-            writer.Write($")\n{{\nif (GetType() == typeof({typeName}))\n{{\n");
+            writer.Write($$"""
+                )
+                {
+                if (GetType() == typeof({{typeName}}))
+                {
+                """, isMultiline: true);
             if (!string.IsNullOrEmpty(defaultIfaceObjRef))
             {
                 writer.WriteLine($"{defaultIfaceObjRef} = NativeObjectReference;");

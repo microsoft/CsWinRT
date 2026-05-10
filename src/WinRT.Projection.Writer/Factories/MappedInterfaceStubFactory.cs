@@ -103,7 +103,8 @@ internal static class MappedInterfaceStubFactory
     }
     private static void EmitDisposable(IndentedTextWriter writer, string objRefName)
     {
-        writer.WriteLine($"\npublic void Dispose() => global::ABI.System.IDisposableMethods.Dispose({objRefName});");
+        writer.WriteLine("");
+        writer.WriteLine($"public void Dispose() => global::ABI.System.IDisposableMethods.Dispose({objRefName});");
     }
 
     private static void EmitGenericEnumerable(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -134,7 +135,8 @@ internal static class MappedInterfaceStubFactory
         EmitUnsafeAccessor(writer, "Current", t, $"{prefix}Current", interopType, "");
         EmitUnsafeAccessor(writer, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
 
-        writer.Write($"\npublic bool MoveNext() => {prefix}MoveNext(null, {objRefName});\n");
+        writer.WriteLine("");
+        writer.WriteLine($"public bool MoveNext() => {prefix}MoveNext(null, {objRefName});");
         writer.Write($$"""
             public void Reset() => throw new NotSupportedException();
             public void Dispose() {}
@@ -232,7 +234,11 @@ internal static class MappedInterfaceStubFactory
 
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // EmitGenericEnumerable invocation.
-        writer.Write($"\n[global::System.Runtime.CompilerServices.IndexerName(\"ReadOnlyListItem\")]\n{$"public {t} this[int index] => {prefix}Item(null, {objRefName}, index);\n"}{$"public int Count => {prefix}Count(null, {objRefName});\n"}");
+        writer.WriteLine("");
+        writer.Write($$"""
+            [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
+            {{$"public {t} this[int index] => {prefix}Item(null, {objRefName}, index);\n"}}{{$"public int Count => {prefix}Count(null, {objRefName});\n"}}
+            """, isMultiline: true);
     }
 
     /// <summary>
@@ -295,17 +301,24 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams)
     {
-        writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-        writer.Write(accessName);
-        writer.WriteLine("\")]");
-        writer.Write($"static extern {returnType} {functionName}([UnsafeAccessorType(\"{interopType}\")] object _, WindowsRuntimeObjectReference objRef{extraParams});\n\n");
+        writer.Write($$"""
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{accessName}}")]
+            static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _, WindowsRuntimeObjectReference objRef{{extraParams}});
+            """, isMultiline: true);
+        writer.WriteLine("");
     }
 
     private static void EmitNonGenericList(IndentedTextWriter writer, string objRefName)
     {
         writer.WriteLine("");
-        writer.WriteLine("[global::System.Runtime.CompilerServices.IndexerName(\"NonGenericListItem\")]");
-        writer.Write($"public object this[int index]\n{{\n    get => global::ABI.System.Collections.IListMethods.Item({objRefName}, index);\n    set => global::ABI.System.Collections.IListMethods.Item({objRefName}, index, value);\n}}\n");
+        writer.Write($$"""
+            [global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
+            public object this[int index]
+            {
+                get => global::ABI.System.Collections.IListMethods.Item({{objRefName}}, index);
+                set => global::ABI.System.Collections.IListMethods.Item({{objRefName}}, index, value);
+            }
+            """, isMultiline: true);
         writer.Write($$"""
             public int Count => global::ABI.System.Collections.IListMethods.Count({{objRefName}});
             public bool IsReadOnly => false;

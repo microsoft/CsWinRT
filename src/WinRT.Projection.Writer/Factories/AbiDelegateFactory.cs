@@ -88,7 +88,15 @@ internal static class AbiDelegateFactory
         string projectedDelegateForBody = __scratchProjectedDelegateForBody.ToString();
         if (!projectedDelegateForBody.StartsWith("global::", System.StringComparison.Ordinal)) { projectedDelegateForBody = "global::" + projectedDelegateForBody; }
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
-        writer.Write($"\n    public static ref readonly Guid IID\n    {{\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref {iidExpr};\n    }}\n}}\n");
+        writer.WriteLine("");
+        writer.Write($$"""
+                public static ref readonly Guid IID
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => ref {{iidExpr}};
+                }
+            }
+            """, isMultiline: true);
     }
 
     private static void WriteDelegateVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -126,7 +134,12 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.Write($"\npublic static unsafe class {nameStripped}NativeDelegate\n{{\n    public static unsafe ");
+        writer.WriteLine("");
+        writer.Write($$"""
+            public static unsafe class {{nameStripped}}NativeDelegate
+            {
+                public static unsafe 
+            """, isMultiline: true);
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
         if (sig.Params.Count > 0) { writer.Write(", "); }
@@ -208,50 +221,40 @@ internal static class AbiDelegateFactory
         }
 
         writer.WriteLine("");
-        writer.Write("public sealed unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("EventSource : EventSource<");
-        writer.Write(projectedName);
-        writer.WriteLine(">");
-        writer.WriteLine("{");
-        writer.WriteLine("    /// <inheritdoc cref=\"EventSource{T}.EventSource\"/>");
-        writer.Write("    public ");
-        writer.Write(nameStripped);
-        writer.WriteLine("EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)");
-        writer.WriteLine("        : base(nativeObjectReference, index)");
-        writer.WriteLine("    {");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    /// <inheritdoc/>");
-        writer.Write("    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        writer.Write(projectedName);
-        writer.WriteLine(" value)");
-        writer.WriteLine("    {");
-        writer.Write("        return ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Marshaller.ConvertToUnmanaged(value);");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    /// <inheritdoc/>");
-        writer.Write("    protected override EventSourceState<");
-        writer.Write(projectedName);
-        writer.WriteLine("> CreateEventSourceState()");
-        writer.WriteLine("    {");
-        writer.WriteLine("        return new EventState(GetNativeObjectReferenceThisPtrUnsafe(), Index);");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.Write("    private sealed class EventState : EventSourceState<");
-        writer.Write(projectedName);
-        writer.WriteLine(">");
-        writer.WriteLine("    {");
-        writer.WriteLine("        /// <inheritdoc cref=\"EventSourceState{T}.EventSourceState\"/>");
-        writer.WriteLine("        public EventState(void* thisPtr, int index)");
-        writer.WriteLine("            : base(thisPtr, index)");
-        writer.WriteLine("        {");
-        writer.WriteLine("        }");
-        writer.WriteLine("");
-        writer.WriteLine("        /// <inheritdoc/>");
-        writer.Write($"        protected override {projectedName} GetEventInvoke()\n        {{\n            return (");
+        writer.Write($$"""
+            public sealed unsafe class {{nameStripped}}EventSource : EventSource<{{projectedName}}>
+            {
+                /// <inheritdoc cref="EventSource{T}.EventSource"/>
+                public {{nameStripped}}EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
+                    : base(nativeObjectReference, index)
+                {
+                }
+            
+                /// <inheritdoc/>
+                protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedName}} value)
+                {
+                    return {{nameStripped}}Marshaller.ConvertToUnmanaged(value);
+                }
+            
+                /// <inheritdoc/>
+                protected override EventSourceState<{{projectedName}}> CreateEventSourceState()
+                {
+                    return new EventState(GetNativeObjectReferenceThisPtrUnsafe(), Index);
+                }
+            
+                private sealed class EventState : EventSourceState<{{projectedName}}>
+                {
+                    /// <inheritdoc cref="EventSourceState{T}.EventSourceState"/>
+                    public EventState(void* thisPtr, int index)
+                        : base(thisPtr, index)
+                    {
+                    }
+            
+                    /// <inheritdoc/>
+                    protected override {{projectedName}} GetEventInvoke()
+                    {
+                        return (
+            """, isMultiline: true);
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
@@ -369,31 +372,31 @@ internal static class AbiDelegateFactory
         string iidRefExpr = __scratchIidRefExpr.ToString();
 
         writer.WriteLine("");
-        writer.Write("internal sealed unsafe class ");
-        writer.Write(nameStripped);
-        writer.WriteLine("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute");
-        writer.WriteLine("{");
-        writer.WriteLine("    /// <inheritdoc/>");
-        writer.WriteLine("    public override void* GetOrCreateComInterfaceForObject(object value)");
-        writer.WriteLine("    {");
-        writer.WriteLine("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    /// <inheritdoc/>");
-        writer.WriteLine("    public override ComInterfaceEntry* ComputeVtables(out int count)");
-        writer.WriteLine("    {");
-        writer.WriteLine("        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);");
-        writer.WriteLine("");
-        writer.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
-        writer.Write(nameStripped);
-        writer.WriteLine("InterfaceEntriesImpl.Entries);");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    /// <inheritdoc/>");
-        writer.WriteLine("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)");
-        writer.WriteLine("    {");
-        writer.WriteLine("        wrapperFlags = CreatedWrapperFlags.NonWrapping;");
-        writer.WriteLine($"        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<{nameStripped}ComWrappersCallback>(value, in {iidRefExpr})!;\n    }}\n}}");
+        writer.Write($$"""
+            internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+            {
+                /// <inheritdoc/>
+                public override void* GetOrCreateComInterfaceForObject(object value)
+                {
+                    return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);
+                }
+            
+                /// <inheritdoc/>
+                public override ComInterfaceEntry* ComputeVtables(out int count)
+                {
+                    count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
+            
+                    return (ComInterfaceEntry*)Unsafe.AsPointer(in {{nameStripped}}InterfaceEntriesImpl.Entries);
+                }
+            
+                /// <inheritdoc/>
+                public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+                {
+                    wrapperFlags = CreatedWrapperFlags.NonWrapping;
+                    return WindowsRuntimeDelegateMarshaller.UnboxToManaged<{{nameStripped}}ComWrappersCallback>(value, in {{iidRefExpr}})!;
+                }
+            }
+            """, isMultiline: true);
     }
 
 }

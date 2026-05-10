@@ -201,7 +201,8 @@ internal static class InterfaceFactory
                 && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.Write($"\n{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
+            writer.WriteLine("");
+            writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
             if (getter is not null || setter is not null) { writer.Write(" get;"); }
             if (setter is not null) { writer.Write(" set;"); }
             writer.Write(" }");

@@ -71,7 +71,11 @@ internal static class ProjectionWriterExtensions
     public static void WriteBeginProjectedNamespace(this IndentedTextWriter writer, ProjectionEmitContext context)
     {
         string nsPrefix = context.Settings.Component ? "ABI.Impl." : string.Empty;
-        writer.Write($"\nnamespace {nsPrefix}{context.CurrentNamespace}\n{{\n");
+        writer.WriteLine("");
+        writer.Write($$"""
+            namespace {{nsPrefix}}{{context.CurrentNamespace}}
+            {
+            """, isMultiline: true);
     }
 
     /// <summary>Writes the closing <c>}</c> for the projected namespace.</summary>
@@ -89,7 +93,12 @@ internal static class ProjectionWriterExtensions
     /// <param name="context">The active emit context (provides the namespace).</param>
     public static void WriteBeginAbiNamespace(this IndentedTextWriter writer, ProjectionEmitContext context)
     {
-        writer.Write($"\n#pragma warning disable CA1416\nnamespace ABI.{context.CurrentNamespace}\n{{\n");
+        writer.WriteLine("");
+        writer.Write($$"""
+            #pragma warning disable CA1416
+            namespace ABI.{{context.CurrentNamespace}}
+            {
+            """, isMultiline: true);
     }
 
     /// <summary>
