@@ -17,7 +17,9 @@ using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
-/// GUID/IID-related code writers.
+/// Helpers for emitting WinRT GUID / IID expressions: signature characters for the GUID
+/// hash algorithm, the canonical hyphenated string form of a type's <c>[Guid]</c>, and the
+/// <c>byte</c>-list form used when initializing native IID storage.
 /// </summary>
 internal static class IIDExpressionWriter
 {

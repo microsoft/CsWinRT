@@ -15,7 +15,9 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <summary>
-/// Orchestrates the projection generation.
+/// Orchestrates the projection generation: discovers component-activatable types, walks each
+/// namespace in the metadata cache and emits the per-namespace <c>.cs</c> files, then writes
+/// the per-projection support files (default-interfaces map, exclusive-to map, base resources).
 /// </summary>
 internal sealed partial class ProjectionGenerator
 {
@@ -23,6 +25,10 @@ internal sealed partial class ProjectionGenerator
     private readonly MetadataCache _cache;
     private readonly CancellationToken _token;
 
+    /// <summary>Initializes a new <see cref="ProjectionGenerator"/>.</summary>
+    /// <param name="settings">The active projection settings.</param>
+    /// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
+    /// <param name="token">The cancellation token observed across all phases.</param>
     public ProjectionGenerator(Settings settings, MetadataCache cache, CancellationToken token)
     {
         _settings = settings;
@@ -30,6 +36,7 @@ internal sealed partial class ProjectionGenerator
         _token = token;
     }
 
+    /// <summary>Runs the projection-generation pipeline end-to-end.</summary>
     public void Run()
     {
         HashSet<TypeDefinition> componentActivatable;

@@ -6,7 +6,10 @@ using System.Threading;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Input parameters for <see cref="ProjectionWriter"/>. CLI options
+/// Configuration bag passed to <see cref="ProjectionWriter.Run(ProjectionWriterOptions)"/>.
+/// Specifies the input <c>.winmd</c> metadata, the output folder, namespace include / exclude
+/// filters, and per-projection-mode toggles (component authoring, reference-only projection,
+/// public enums, etc.).
 /// </summary>
 public sealed class ProjectionWriterOptions
 {
