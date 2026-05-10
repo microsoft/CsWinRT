@@ -27,7 +27,7 @@ internal static partial class ConstructorFactory
     private static void EmitFactoryArgsStruct(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string argsName, int userParamCount = -1)
     {
         int count = userParamCount >= 0 ? userParamCount : sig.Params.Count;
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
@@ -73,7 +73,7 @@ internal static partial class ConstructorFactory
         string baseClass = isComposable
             ? "WindowsRuntimeActivationFactoryCallback.DerivedComposed"
             : "WindowsRuntimeActivationFactoryCallback.DerivedSealed";
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             private sealed class {{callbackName}} : {{baseClass}}
             {
@@ -161,9 +161,9 @@ internal static partial class ConstructorFactory
                 continue;
             }
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-            IndentedTextWriter __scratchProjType = new();
-            MethodFactory.WriteProjectedSignature(__scratchProjType, context, p.Type, false);
-            string projectedTypeName = __scratchProjType.ToString();
+            IndentedTextWriter scratchProjType = new();
+            MethodFactory.WriteProjectedSignature(scratchProjType, context, p.Type, false);
+            string projectedTypeName = scratchProjType.ToString();
             writer.Write($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                         static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -232,7 +232,7 @@ internal static partial class ConstructorFactory
             hasNonBlittableArray = true;
             string raw = p.Parameter.Name ?? "param";
             string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                         Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlineArray);
                         nint[] __{{raw}}_arrayFromPool = null;
@@ -243,7 +243,7 @@ internal static partial class ConstructorFactory
 
             if (szArr.BaseType.IsString())
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                             Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{raw}}_inlineHeaderArray);
                             HStringHeader[] __{{raw}}_headerArrayFromPool = null;
@@ -372,9 +372,9 @@ internal static partial class ConstructorFactory
             }
             else
             {
-                IndentedTextWriter __scratchElement = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElement, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementProjected = __scratchElement.ToString();
+                IndentedTextWriter scratchElement = new();
+                TypedefNameWriter.WriteProjectionType(scratchElement, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                string elementProjected = scratchElement.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;
                 writer.Write($$"""
@@ -506,7 +506,7 @@ internal static partial class ConstructorFactory
                 string raw = p.Parameter.Name ?? "param";
                 if (szArr.BaseType.IsString())
                 {
-                    writer.WriteLine("");
+                    writer.WriteLine();
                     writer.Write($$"""
                                     HStringArrayMarshaller.Dispose(__{{raw}}_pinnedHandleSpan);
                         
@@ -525,7 +525,7 @@ internal static partial class ConstructorFactory
                 {
                     string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                     _ = elementInteropArg;
-                    writer.WriteLine("");
+                    writer.WriteLine();
                     writer.Write($$"""
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
                                     static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
@@ -536,7 +536,7 @@ internal static partial class ConstructorFactory
                                     }
                         """, isMultiline: true);
                 }
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                                 if (__{{raw}}_arrayFromPool is not null)
                                 {
@@ -560,8 +560,8 @@ internal static partial class ConstructorFactory
     {
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         if (defaultIface is null) { return "default(global::System.Guid)"; }
-        IndentedTextWriter __scratchIid = new();
-        ObjRefNameGenerator.WriteIidExpression(__scratchIid, context, defaultIface);
-        return __scratchIid.ToString();
+        IndentedTextWriter scratchIid = new();
+        ObjRefNameGenerator.WriteIidExpression(scratchIid, context, defaultIface);
+        return scratchIid.ToString();
     }
 }

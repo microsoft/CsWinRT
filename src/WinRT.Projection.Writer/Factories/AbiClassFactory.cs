@@ -65,9 +65,9 @@ internal static class AbiClassFactory
         {
             if (defaultIface is not null)
             {
-                IndentedTextWriter __scratchDefaultIid = new();
-                ObjRefNameGenerator.WriteIidExpression(__scratchDefaultIid, context, defaultIface);
-                defaultIfaceIid = __scratchDefaultIid.ToString();
+                IndentedTextWriter scratchDefaultIid = new();
+                ObjRefNameGenerator.WriteIidExpression(scratchDefaultIid, context, defaultIface);
+                defaultIfaceIid = scratchDefaultIid.ToString();
             }
             else
             {
@@ -75,7 +75,7 @@ internal static class AbiClassFactory
             }
         }
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
@@ -86,9 +86,9 @@ internal static class AbiClassFactory
         {
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
             // marshallers run inside #nullable enable).
-            IndentedTextWriter __scratchAccessor = new();
-            ObjRefNameGenerator.EmitUnsafeAccessorForIid(__scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
-            string accessorBlock = __scratchAccessor.ToString();
+            IndentedTextWriter scratchAccessor = new();
+            ObjRefNameGenerator.EmitUnsafeAccessorForIid(scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
+            string accessorBlock = scratchAccessor.ToString();
             // Re-emit each line indented by 8 spaces.
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
             foreach (string accessorLine in accessorLines)
@@ -188,9 +188,9 @@ internal static class AbiClassFactory
         string defaultIfaceIid;
         if (defaultIface is not null)
         {
-            IndentedTextWriter __scratchIid = new();
-            ObjRefNameGenerator.WriteIidExpression(__scratchIid, context, defaultIface);
-            defaultIfaceIid = __scratchIid.ToString();
+            IndentedTextWriter scratchIid = new();
+            ObjRefNameGenerator.WriteIidExpression(scratchIid, context, defaultIface);
+            defaultIfaceIid = scratchIid.ToString();
         }
         else
         {
@@ -227,9 +227,9 @@ internal static class AbiClassFactory
         }
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
-            IndentedTextWriter __scratchDefIfaceTypeName = new();
-            TypedefNameWriter.WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
-            string defIfaceTypeName = __scratchDefIfaceTypeName.ToString();
+            IndentedTextWriter scratchDefIfaceTypeName = new();
+            TypedefNameWriter.WriteTypeName(scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
+            string defIfaceTypeName = scratchDefIfaceTypeName.ToString();
             writer.Write($$"""
                         if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
                         {
@@ -273,7 +273,7 @@ internal static class AbiClassFactory
                 }
             }
             """, isMultiline: true);
-        writer.WriteLine("");
+        writer.WriteLine();
 
         if (isSealed)
         {

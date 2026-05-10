@@ -24,11 +24,11 @@ internal static class EventTableFactory
     internal static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        IndentedTextWriter __scratchEvtType = new();
-        TypedefNameWriter.WriteEventType(__scratchEvtType, context, evt);
-        string evtType = __scratchEvtType.ToString();
+        IndentedTextWriter scratchEvtType = new();
+        TypedefNameWriter.WriteEventType(scratchEvtType, context, evt);
+        string evtType = scratchEvtType.ToString();
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             private static ConditionalWeakTable<{{ifaceFullName}}, EventRegistrationTokenTable<{{evtType}}>> _{{evName}}
             {
@@ -66,7 +66,7 @@ internal static class EventTableFactory
         TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
         bool isGeneric = evtTypeSig is GenericInstanceTypeSignature;
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             {
                 *{{cookieName}} = default;
@@ -78,9 +78,9 @@ internal static class EventTableFactory
         if (isGeneric)
         {
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
-            IndentedTextWriter __scratchProjectedTypeName = new();
-            MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
-            string projectedTypeName = __scratchProjectedTypeName.ToString();
+            IndentedTextWriter scratchProjectedTypeName = new();
+            MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, evtTypeSig, false);
+            string projectedTypeName = scratchProjectedTypeName.ToString();
             writer.Write($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                         static extern {{projectedTypeName}} ConvertToManaged([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -116,13 +116,13 @@ internal static class EventTableFactory
         string tokenRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "token") : "token";
         string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             {
                 try
                 {
                     var __this = ComInterfaceDispatch.GetInstance<{{ifaceFullName}}>((ComInterfaceDispatch*)thisPtr);
-                    if(__this is not null && _{{evName}}.TryGetValue(__this, out var __table) && __table.RemoveEventHandler({{tokenRef}}, out var __handler))
+                    if (__this is not null && _{{evName}}.TryGetValue(__this, out var __table) && __table.RemoveEventHandler({{tokenRef}}, out var __handler))
                     {
                         __this.{{evName}} -= __handler;
                     }

@@ -39,7 +39,7 @@ internal static partial class ClassMembersFactory
             // C# allows method overloading on parameter list for the static externs).
             if (s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{kvp.Key}}")]
                     static extern {{s.GetterPropTypeText}} {{s.GetterGenericAccessorName}}([UnsafeAccessorType("{{s.GetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference);
@@ -47,14 +47,14 @@ internal static partial class ClassMembersFactory
             }
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{kvp.Key}}")]
                     static extern void {{s.SetterGenericAccessorName}}([UnsafeAccessorType("{{s.SetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference, {{s.SetterPropTypeText}} value);
                     """, isMultiline: true);
             }
 
-            writer.WriteLine("");
+            writer.WriteLine();
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -99,11 +99,11 @@ internal static partial class ClassMembersFactory
                 {
                     writer.Write($"{s.GetterAbiClass}.{kvp.Key}({s.GetterObjRef});");
                 }
-                writer.WriteLine("");
+                writer.WriteLine();
             }
             else
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 using (writer.WriteBlock())
                 {
                     if (s.HasGetter)

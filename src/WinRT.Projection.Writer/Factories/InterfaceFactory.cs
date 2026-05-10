@@ -196,7 +196,7 @@ internal static class InterfaceFactory
         {
             if (method.IsSpecial()) { continue; }
             MethodSignatureInfo sig = new(method);
-            writer.WriteLine("");
+            writer.WriteLine();
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
@@ -216,7 +216,7 @@ internal static class InterfaceFactory
                 && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
             if (getter is not null || setter is not null) { writer.Write(" get;"); }
             if (setter is not null) { writer.Write(" set;"); }
@@ -225,7 +225,7 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write($" {evt.Name?.Value ?? string.Empty};");
@@ -359,10 +359,10 @@ internal static class InterfaceFactory
             return;
         }
 
-        writer.WriteLine("");
+        writer.WriteLine();
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteGuidAttribute(writer, type);
-        writer.WriteLine("");
+        writer.WriteLine();
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
@@ -371,7 +371,7 @@ internal static class InterfaceFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, false);
-        writer.WriteLine("");
+        writer.WriteLine();
         using (writer.WriteBlock())
         {
             WriteInterfaceMemberSignatures(writer, context, type);

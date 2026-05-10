@@ -109,7 +109,7 @@ internal static class StructEnumMarshallerFactory
                     writer.Write($"value.{fname}");
                 }
             }
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("""
                         };
                     }
@@ -175,7 +175,7 @@ internal static class StructEnumMarshallerFactory
                     writer.Write($"value.{fname}");
                 }
             }
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.WriteLine(useObjectInitializer ? "        };" : "        );");
             writer.WriteLine("    }");
             writer.Write("    public static void Dispose(");
@@ -307,7 +307,7 @@ internal static class StructEnumMarshallerFactory
         }
 
         writer.WriteLine("}");
-        writer.WriteLine("");
+        writer.WriteLine();
 
         // Emit the InterfaceEntriesImpl static class and the proper ComWrappersMarshallerAttribute
         // class derived from WindowsRuntimeComWrappersMarshallerAttribute (matches truth).
@@ -317,9 +317,9 @@ internal static class StructEnumMarshallerFactory
         // unboxing to the ABI struct.
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            IndentedTextWriter __scratchIidRefExpr = new();
-            ObjRefNameGenerator.WriteIidReferenceExpression(__scratchIidRefExpr, type);
-            string iidRefExpr = __scratchIidRefExpr.ToString();
+            IndentedTextWriter scratchIidRefExpr = new();
+            ObjRefNameGenerator.WriteIidReferenceExpression(scratchIidRefExpr, type);
+            string iidRefExpr = scratchIidRefExpr.ToString();
 
             // InterfaceEntriesImpl
             writer.Write($$"""
@@ -349,7 +349,7 @@ internal static class StructEnumMarshallerFactory
                     }
                 }
                 """, isMultiline: true);
-            writer.WriteLine("");
+            writer.WriteLine();
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
             if (context.Settings.Component && cat == TypeCategory.Struct) { return; }

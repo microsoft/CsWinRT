@@ -156,7 +156,7 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
@@ -193,7 +193,7 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine($"public static unsafe class {nameStripped}Impl");
         using IndentedTextWriter.Block __implBlock = writer.WriteBlock();
         writer.Write($$"""
@@ -228,7 +228,7 @@ internal static class AbiInterfaceFactory
                 get => (nint)Unsafe.AsPointer(in Vftbl);
             }
             """, isMultiline: true);
-        writer.WriteLine("");
+        writer.WriteLine();
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
@@ -280,9 +280,9 @@ internal static class AbiInterfaceFactory
         else
         {
             {
-                IndentedTextWriter __scratchIfaceFullName = new();
-                TypedefNameWriter.WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
-                ifaceFullName = __scratchIfaceFullName.ToString();
+                IndentedTextWriter scratchIfaceFullName = new();
+                TypedefNameWriter.WriteTypedefName(scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
+                ifaceFullName = scratchIfaceFullName.ToString();
             }
             if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ifaceFullName = GlobalPrefix + ifaceFullName; }
         }
@@ -369,7 +369,7 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             #nullable enable
             public static unsafe class {{nameStripped}}Marshaller

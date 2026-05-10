@@ -105,12 +105,12 @@ internal static class ProjectionFileBuilder
 
         if (isFlags)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.WriteLine("[FlagsAttribute]");
         }
         else
         {
-            writer.WriteLine("");
+            writer.WriteLine();
         }
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
@@ -136,7 +136,7 @@ internal static class ProjectionFileBuilder
                 writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
             }
         }
-        writer.WriteLine("");
+        writer.WriteLine();
     }
     /// <summary>
     /// Formats a metadata Constant value as a C# literal.
@@ -241,7 +241,7 @@ internal static class ProjectionFileBuilder
                 writer.Write("; ");
             }
         }
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine("}");
 
         // properties
@@ -292,7 +292,7 @@ internal static class ProjectionFileBuilder
             ;
             }
             """, isMultiline: true);
-        writer.WriteLine("");
+        writer.WriteLine();
     }
     /// <summary>
     /// Writes a projected API contract (an empty enum stand-in).
@@ -320,7 +320,7 @@ internal static class ProjectionFileBuilder
         if (invoke is null) { return; }
         MethodSignatureInfo sig = new(invoke);
 
-        writer.WriteLine("");
+        writer.WriteLine();
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);

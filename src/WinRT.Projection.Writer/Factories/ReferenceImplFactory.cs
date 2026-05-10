@@ -28,7 +28,7 @@ internal static class ReferenceImplFactory
         string visibility = context.Settings.Component ? "public" : "file";
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             {{visibility}} static unsafe class {{nameStripped}}ReferenceImpl
             {
@@ -165,7 +165,7 @@ internal static class ReferenceImplFactory
                 $"for type '{type.FullName}'. Expected enum/struct/delegate.");
         }
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("""
                 public static ref readonly Guid IID
                 {
@@ -178,6 +178,6 @@ internal static class ReferenceImplFactory
                 }
             }
             """, isMultiline: true);
-        writer.WriteLine("");
+        writer.WriteLine();
     }
 }

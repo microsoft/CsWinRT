@@ -65,7 +65,7 @@ internal static class ProjectionWriterExtensions
         public void WriteBeginProjectedNamespace(ProjectionEmitContext context)
         {
             string nsPrefix = context.Settings.Component ? "ABI.Impl." : string.Empty;
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 namespace {{nsPrefix}}{{context.CurrentNamespace}}
                 {
@@ -89,7 +89,7 @@ internal static class ProjectionWriterExtensions
         /// <param name="context">The active emit context (provides the namespace).</param>
         public void WriteBeginAbiNamespace(ProjectionEmitContext context)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 #pragma warning disable CA1416
                 namespace ABI.{{context.CurrentNamespace}}

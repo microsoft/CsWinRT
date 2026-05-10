@@ -120,9 +120,9 @@ internal static partial class AbiMethodBodyFactory
             string eventSourceProjectedFull;
             if (isGenericEvent)
             {
-                IndentedTextWriter __scratchEvSrcGeneric = new();
-                TypedefNameWriter.WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
-                eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
+                IndentedTextWriter scratchEvSrcGeneric = new();
+                TypedefNameWriter.WriteTypeName(scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+                eventSourceProjectedFull = scratchEvSrcGeneric.ToString();
                 if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
                 {
                     eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;
@@ -145,7 +145,7 @@ internal static partial class AbiMethodBodyFactory
                 : string.Empty;
 
             // Emit the per-event ConditionalWeakTable static field.
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                     private static ConditionalWeakTable<object, {{eventSourceProjectedFull}}> _{{evtName}}
                     {

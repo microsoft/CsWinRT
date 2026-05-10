@@ -38,7 +38,7 @@ internal static partial class ConstructorFactory
         {
             string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + (classType.Name?.Value ?? string.Empty);
             string objRefName = "_objRef_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
             if (context.Settings.ReferenceProjection)
             {
@@ -47,7 +47,7 @@ internal static partial class ConstructorFactory
             }
             else
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                     {
                         get
@@ -96,9 +96,9 @@ internal static partial class ConstructorFactory
             string marshalingType = GetMarshalingTypeName(classType);
             // Compute the platform attribute string from the activation factory interface's
             // [ContractVersion] attribute
-            IndentedTextWriter __scratchPlatform = new();
-            CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, factoryType);
-            string platformAttribute = __scratchPlatform.ToString();
+            IndentedTextWriter scratchPlatform = new();
+            CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, factoryType);
+            string platformAttribute = scratchPlatform.ToString();
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
@@ -108,7 +108,7 @@ internal static partial class ConstructorFactory
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
-                writer.WriteLine("");
+                writer.WriteLine();
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write($"public unsafe {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
@@ -161,7 +161,7 @@ internal static partial class ConstructorFactory
             // Find the default interface IID to use.
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
 
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 public {{typeName}}()
                   :base(default(WindowsRuntimeActivationTypes.DerivedSealed), {{objRefName}}, {{defaultIfaceIid}}, {{GetMarshalingTypeName(classType)}})

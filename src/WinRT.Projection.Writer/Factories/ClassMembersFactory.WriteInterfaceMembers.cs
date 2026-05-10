@@ -79,7 +79,7 @@ internal static partial class ClassMembersFactory
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
                 WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
                 writer.Write($$"""
@@ -106,7 +106,7 @@ internal static partial class ClassMembersFactory
                     string? baseName = classType.BaseType.Name?.Value;
                     hasBaseType = !(baseNs == "System" && baseName == "Object");
                 }
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write("internal ");
                 if (hasBaseType) { writer.Write("new "); }
                 writer.Write($$"""
@@ -198,9 +198,9 @@ internal static partial class ClassMembersFactory
         // — note this is the ungenerified Methods class for generic interfaces
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
-        IndentedTextWriter __scratchAbiClass = new();
-        TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
-        string abiClass = __scratchAbiClass.ToString();
+        IndentedTextWriter scratchAbiClass = new();
+        TypedefNameWriter.WriteTypedefName(scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
+        string abiClass = scratchAbiClass.ToString();
         if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
             abiClass = GlobalPrefix + abiClass;
@@ -213,9 +213,9 @@ internal static partial class ClassMembersFactory
         string genericInteropType = string.Empty;
         if (isGenericInterface && currentInstance is not null)
         {
-            IndentedTextWriter __scratchProjectedParent = new();
-            TypedefNameWriter.WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
-            string projectedParent = __scratchProjectedParent.ToString();
+            IndentedTextWriter scratchProjectedParent = new();
+            TypedefNameWriter.WriteTypeName(scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
+            string projectedParent = scratchProjectedParent.ToString();
             genericParentEncoded = IIDExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
@@ -225,9 +225,9 @@ internal static partial class ClassMembersFactory
         // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
         // immediately if not ref)
-        IndentedTextWriter __scratchPlatform = new();
-        CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, ifaceType);
-        string platformAttribute = __scratchPlatform.ToString();
+        IndentedTextWriter scratchPlatform = new();
+        CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, ifaceType);
+        string platformAttribute = scratchPlatform.ToString();
 
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
@@ -277,7 +277,7 @@ internal static partial class ClassMembersFactory
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
                     static extern 
@@ -315,7 +315,7 @@ internal static partial class ClassMembersFactory
             }
             else
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write($"{access}{methodSpecForThis}");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
@@ -432,9 +432,9 @@ internal static partial class ClassMembersFactory
             }
             else
             {
-                IndentedTextWriter __scratchEventSource = new();
-                TypedefNameWriter.WriteTypeName(__scratchEventSource, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
-                eventSourceType = __scratchEventSource.ToString();
+                IndentedTextWriter scratchEventSource = new();
+                TypedefNameWriter.WriteTypeName(scratchEventSource, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
+                eventSourceType = scratchEventSource.ToString();
             }
             string eventSourceTypeFull = eventSourceType;
             if (!eventSourceTypeFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
@@ -461,7 +461,7 @@ internal static partial class ClassMembersFactory
             // don't reference the field,
             if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                     private {{eventSourceTypeFull}} _eventSource_{{name}}
                     {
@@ -475,7 +475,7 @@ internal static partial class ClassMembersFactory
                                 [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
                                 static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
                         """, isMultiline: true);
-                    writer.WriteLine("");
+                    writer.WriteLine();
                 }
                 writer.Write($$"""
                             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -507,7 +507,7 @@ internal static partial class ClassMembersFactory
             }
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
-            writer.WriteLine("");
+            writer.WriteLine();
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
             if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }

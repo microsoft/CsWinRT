@@ -68,7 +68,7 @@ internal static class ComponentFactory
             }
         }
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($"internal sealed class {factoryTypeName} : global::WindowsRuntime.InteropServices.IActivationFactory");
         foreach (TypeDefinition iface in factoryInterfaces)
         {
@@ -77,7 +77,7 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
             TypedefNameWriter.WriteTypeParams(writer, iface);
         }
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             {
             static {{factoryTypeName}}()
@@ -105,7 +105,7 @@ internal static class ComponentFactory
         {
             writer.Write("throw new NotImplementedException();");
         }
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine("}");
 
         // Emit factory-class members: forwarding methods/properties/events for static factory
@@ -154,7 +154,7 @@ internal static class ComponentFactory
     {
         if (method.IsSpecialName) { return; }
         string methodName = method.Name?.Value ?? string.Empty;
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($"public {projectedTypeName} {methodName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
         writer.Write($") => new {projectedTypeName}(");
@@ -170,7 +170,7 @@ internal static class ComponentFactory
     {
         if (method.IsSpecialName) { return; }
         string methodName = method.Name?.Value ?? string.Empty;
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("public ");
         WriteFactoryReturnType(writer, context, method);
         writer.Write($" {methodName}(");
@@ -190,13 +190,13 @@ internal static class ComponentFactory
         // Single-line form when no setter is present.
         if (setter is null)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("public ");
             WriteFactoryPropertyType(writer, context, prop);
             writer.WriteLine($" {propName} => {projectedTypeName}.{propName};");
             return;
         }
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("public ");
         WriteFactoryPropertyType(writer, context, prop);
         writer.Write($$"""
@@ -219,7 +219,7 @@ internal static class ComponentFactory
     private static void WriteStaticFactoryEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string projectedTypeName)
     {
         string evtName = evt.Name?.Value ?? string.Empty;
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("public event ");
         if (evt.EventType is not null)
         {
@@ -282,11 +282,11 @@ internal static class ComponentFactory
     /// </summary>
     public static void WriteModuleActivationFactory(IndentedTextWriter writer, IReadOnlyDictionary<string, HashSet<TypeDefinition>> typesByModule)
     {
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine("using System;");
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 namespace ABI.{{kv.Key}}
                 {

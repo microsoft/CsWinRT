@@ -38,9 +38,9 @@ internal static partial class ConstructorFactory
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
         // [ContractVersion] attribute
-        IndentedTextWriter __scratchPlatform = new();
-        CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, composableType);
-        string platformAttribute = __scratchPlatform.ToString();
+        IndentedTextWriter scratchPlatform = new();
+        CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, composableType);
+        string platformAttribute = scratchPlatform.ToString();
 
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
@@ -59,7 +59,7 @@ internal static partial class ConstructorFactory
             string argsName = callbackName + "Args";
             bool isParameterless = userParamCount == 0;
 
-            writer.WriteLine("");
+            writer.WriteLine();
             if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
             writer.Write(visibility);
             if (!isParameterless) { writer.Write(" unsafe "); } else { writer.Write(" "); }
@@ -129,7 +129,7 @@ internal static partial class ConstructorFactory
             : string.Empty;
 
         // 1. WindowsRuntimeActivationTypes.DerivedComposed
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
               :base(_, activationFactoryObjectReference, in iid, marshalingType)

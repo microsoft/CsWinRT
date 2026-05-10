@@ -25,7 +25,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void WritePragmaDisableIL2026(IndentedTextWriter writer)
     {
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine("#pragma warning disable IL2026");
     }
 
@@ -35,7 +35,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void WritePragmaRestoreIL2026(IndentedTextWriter writer)
     {
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine("#pragma warning restore IL2026");
     }
 
@@ -182,7 +182,7 @@ internal static class MetadataAttributeFactory
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
                 value: "{{projectionName}}",
@@ -204,7 +204,7 @@ internal static class MetadataAttributeFactory
 
         if (context.Settings.Component)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
                     source: typeof({{projectionName}}),
@@ -213,7 +213,7 @@ internal static class MetadataAttributeFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine("))]");
-            writer.WriteLine("");
+            writer.WriteLine();
         }
     }
 
@@ -232,7 +232,7 @@ internal static class MetadataAttributeFactory
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("""
             [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
                 value: "
@@ -267,7 +267,7 @@ internal static class MetadataAttributeFactory
         TypeCategory cat = TypeCategorization.GetCategory(type);
         if (cat is not (TypeCategory.Interface or TypeCategory.Struct) && context.Settings.Component)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
                     source: typeof({{projectionName}}),
@@ -276,7 +276,7 @@ internal static class MetadataAttributeFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine("))]");
-            writer.WriteLine("");
+            writer.WriteLine();
         }
     }
 
@@ -298,7 +298,7 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("""
             [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
                 source: typeof(
@@ -312,7 +312,7 @@ internal static class MetadataAttributeFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.WriteLine("))]");
-        writer.WriteLine("");
+        writer.WriteLine();
     }
 
     /// <summary>

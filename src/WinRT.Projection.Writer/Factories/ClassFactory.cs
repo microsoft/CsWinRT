@@ -200,7 +200,7 @@ internal static class ClassFactory
             writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} static class ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
             TypedefNameWriter.WriteTypeParams(writer, type);
-            writer.WriteLine("");
+            writer.WriteLine();
             using (writer.WriteBlock())
             {
                 WriteStaticClassMembers(writer, context, type);
@@ -229,9 +229,9 @@ internal static class ClassFactory
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
-            IndentedTextWriter __scratchAbiClass = new();
-            TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
-            string abiClass = __scratchAbiClass.ToString();
+            IndentedTextWriter scratchAbiClass = new();
+            TypedefNameWriter.WriteTypedefName(scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
+            string abiClass = scratchAbiClass.ToString();
             if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
                 abiClass = GlobalPrefix + abiClass;
@@ -245,9 +245,9 @@ internal static class ClassFactory
 
             // Compute the platform attribute string from the static factory interface's
             // [ContractVersion] attribute
-            IndentedTextWriter __scratchPlatform = new();
-            CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, staticIface);
-            string platformAttribute = __scratchPlatform.ToString();
+            IndentedTextWriter scratchPlatform = new();
+            CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, staticIface);
+            string platformAttribute = scratchPlatform.ToString();
 
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)
@@ -255,7 +255,7 @@ internal static class ClassFactory
                 if (method.IsSpecial()) { continue; }
                 MethodSignatureInfo sig = new(method);
                 string mname = method.Name?.Value ?? string.Empty;
-                writer.WriteLine("");
+                writer.WriteLine();
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write("public static ");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
@@ -281,7 +281,7 @@ internal static class ClassFactory
             foreach (EventDefinition evt in staticIface.Events)
             {
                 string evtName = evt.Name?.Value ?? string.Empty;
-                writer.WriteLine("");
+                writer.WriteLine();
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write("public static event ");
                 TypedefNameWriter.WriteEventType(writer, context, evt);
@@ -341,7 +341,7 @@ internal static class ClassFactory
         foreach (KeyValuePair<string, StaticPropertyAccessorState> kv in properties)
         {
             StaticPropertyAccessorState s = kv.Value;
-            writer.WriteLine("");
+            writer.WriteLine();
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -371,7 +371,7 @@ internal static class ClassFactory
             }
             else
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 using (writer.WriteBlock())
                 {
                     if (s.HasGetter)
@@ -409,7 +409,7 @@ internal static class ClassFactory
     /// </summary>
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             private static WindowsRuntimeObjectReference {{objRefName}}
             {
@@ -469,7 +469,7 @@ internal static class ClassFactory
         int gcPressure = GetGcPressureAmount(type);
 
         // Header attributes
-        writer.WriteLine("");
+        writer.WriteLine();
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
@@ -480,7 +480,7 @@ internal static class ClassFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
-        writer.WriteLine("");
+        writer.WriteLine();
         using IndentedTextWriter.Block __classBlock = writer.WriteBlock();
 
         // ObjRef field definitions for each implemented interface.
@@ -492,7 +492,7 @@ internal static class ClassFactory
         if (!context.Settings.ReferenceProjection)
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
                 : base(nativeObjectReference)
@@ -576,7 +576,7 @@ internal static class ClassFactory
         // be emitted BEFORE the public members.
         if (!context.Settings.ReferenceProjection)
         {
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("protected override bool HasUnwrappableNativeObjectReference => ");
             if (!type.IsSealed)
             {
@@ -586,8 +586,8 @@ internal static class ClassFactory
             {
                 writer.Write("true;");
             }
-            writer.WriteLine("");
-            writer.WriteLine("");
+            writer.WriteLine();
+            writer.WriteLine();
             writer.Write("protected override bool IsOverridableInterface(in Guid iid) => ");
             bool firstClause = true;
             foreach (InterfaceImplementation impl in type.Interfaces)

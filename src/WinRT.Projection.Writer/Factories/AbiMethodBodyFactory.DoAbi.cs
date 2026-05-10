@@ -54,7 +54,7 @@ internal static partial class AbiMethodBodyFactory
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
         }
 
-        writer.WriteLine("");
+        writer.WriteLine();
         using (writer.WriteBlock())
         {
             string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
@@ -71,14 +71,14 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
             {
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter __scratchProjectedTypeName = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
-                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                IndentedTextWriter scratchProjectedTypeName = new();
+                MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, rt!, false);
+                string projectedTypeName = scratchProjectedTypeName.ToString();
                 writer.Write($$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
                 """, isMultiline: true);
-                writer.WriteLine("");
+                writer.WriteLine();
             }
 
             // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
@@ -93,14 +93,14 @@ internal static partial class AbiMethodBodyFactory
                 if (!uOut.IsGenericInstance()) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter __scratchProjectedTypeName = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
-                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                IndentedTextWriter scratchProjectedTypeName = new();
+                MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, uOut, false);
+                string projectedTypeName = scratchProjectedTypeName.ToString();
                 writer.Write($$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
                 """, isMultiline: true);
-                writer.WriteLine("");
+                writer.WriteLine();
             }
             // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
             // top of the method body, before locals and the try block. The actual call sites later
@@ -112,9 +112,9 @@ internal static partial class AbiMethodBodyFactory
                 if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -130,13 +130,13 @@ internal static partial class AbiMethodBodyFactory
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern void ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
                 """, isMultiline: true);
-                writer.WriteLine("");
+                writer.WriteLine();
             }
             if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 string elementAbi = retSzHoist.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSzHoist.BaseType)
@@ -152,7 +152,7 @@ internal static partial class AbiMethodBodyFactory
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern void ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
                 """, isMultiline: true);
-                writer.WriteLine("");
+                writer.WriteLine();
             }
             // the OUT pointer(s). The actual assignment happens inside the try block.
             if (rt is not null)
@@ -163,23 +163,23 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (returnIsRefType)
                 {
-                    IndentedTextWriter __scratchProjected = new();
-                    MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
-                    string projected = __scratchProjected.ToString();
+                    IndentedTextWriter scratchProjected = new();
+                    MethodFactory.WriteProjectedSignature(scratchProjected, context, rt, false);
+                    string projected = scratchProjected.ToString();
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
                 else if (returnIsReceiveArrayDoAbi)
                 {
-                    IndentedTextWriter __scratchProjected = new();
-                    MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
-                    string projected = __scratchProjected.ToString();
+                    IndentedTextWriter scratchProjected = new();
+                    MethodFactory.WriteProjectedSignature(scratchProjected, context, rt, false);
+                    string projected = scratchProjected.ToString();
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
                 else
                 {
-                    IndentedTextWriter __scratchProjected = new();
-                    MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
-                    string projected = __scratchProjected.ToString();
+                    IndentedTextWriter scratchProjected = new();
+                    MethodFactory.WriteProjectedSignature(scratchProjected, context, rt, false);
+                    string projected = scratchProjected.ToString();
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
             }
@@ -220,9 +220,9 @@ internal static partial class AbiMethodBodyFactory
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                IndentedTextWriter __scratchProjected = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjected, context, underlying, false);
-                string projected = __scratchProjected.ToString();
+                IndentedTextWriter scratchProjected = new();
+                MethodFactory.WriteProjectedSignature(scratchProjected, context, underlying, false);
+                string projected = scratchProjected.ToString();
                 writer.WriteLine($"{projected} __{raw} = default;");
             }
             // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
@@ -236,9 +236,9 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 writer.Write($$"""
                 *{{ptr}} = default;
                     *__{{raw}}Size = default;
@@ -257,9 +257,9 @@ internal static partial class AbiMethodBodyFactory
                 if (p.Type is not SzArrayTypeSignature sz) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(sz.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(sz.BaseType);
                 if (isBlittableElem)
                 {
@@ -268,7 +268,7 @@ internal static partial class AbiMethodBodyFactory
                 else
                 {
                     // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
-                    writer.WriteLine("");
+                    writer.WriteLine();
                     writer.Write($$"""
                     Unsafe.SkipInit(out InlineArray16<{{elementProjected}}> __{{raw}}_inlineArray);
                         {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
@@ -296,9 +296,9 @@ internal static partial class AbiMethodBodyFactory
                 if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -345,9 +345,9 @@ internal static partial class AbiMethodBodyFactory
                     string rawName = p.Parameter.Name ?? "param";
                     string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                    IndentedTextWriter __scratchProjectedTypeName = new();
-                    MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
-                    string projectedTypeName = __scratchProjectedTypeName.ToString();
+                    IndentedTextWriter scratchProjectedTypeName = new();
+                    MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, p.Type, false);
+                    string projectedTypeName = scratchProjectedTypeName.ToString();
                     writer.Write($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                             static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -556,9 +556,9 @@ internal static partial class AbiMethodBodyFactory
                 if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szFA.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -713,10 +713,10 @@ internal static partial class AbiMethodBodyFactory
                     if (p.Type is not SzArrayTypeSignature szArr) { continue; }
                     if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
                     string raw = p.Parameter.Name ?? "param";
-                    IndentedTextWriter __scratchElementProjected = new();
-                    TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                    string elementProjected = __scratchElementProjected.ToString();
-                    writer.WriteLine("");
+                    IndentedTextWriter scratchElementProjected = new();
+                    TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                    string elementProjected = scratchElementProjected.ToString();
+                    writer.WriteLine();
                     writer.Write($$"""
                         if (__{{raw}}_arrayFromPool is not null)
                             {
@@ -727,7 +727,7 @@ internal static partial class AbiMethodBodyFactory
                 writer.WriteLine("}");
             }
         }
-        writer.WriteLine("");
+        writer.WriteLine();
         _ = hasStringParams;
     }
 

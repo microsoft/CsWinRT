@@ -168,7 +168,7 @@ internal static partial class AbiMethodBodyFactory
         }
         _ = fp.Append(", int");
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write("""
                 {
                     using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
@@ -202,9 +202,9 @@ internal static partial class AbiMethodBodyFactory
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter __scratchProjectedTypeName = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
-                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                IndentedTextWriter scratchProjectedTypeName = new();
+                MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, p.Type, false);
+                string projectedTypeName = scratchProjectedTypeName.ToString();
                 writer.Write($$"""
                             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -319,7 +319,7 @@ internal static partial class AbiMethodBodyFactory
                     : szArr.BaseType.IsHResultException()
                         ? "global::ABI.System.Exception"
                         : "nint";
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                         Unsafe.SkipInit(out InlineArray16<{{storageT}}> __{{localName}}_inlineArray);
                         {{storageT}}[] __{{localName}}_arrayFromPool = null;
@@ -333,7 +333,7 @@ internal static partial class AbiMethodBodyFactory
                 // Strings need an additional InlineArray16<HStringHeader> + InlineArray16<nint> (pinned handles).
                 // Only required for PassArray (managed -> HSTRING conversion); FillArray's native side
                 // fills HSTRING handles directly into the nint storage.
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                             Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{localName}}_inlineHeaderArray);
                             HStringHeader[] __{{localName}}_headerArrayFromPool = null;
@@ -651,9 +651,9 @@ internal static partial class AbiMethodBodyFactory
                 // emits CopyToManaged_<name> to propagate the native fills into the user's
                 // managed Span<T>.
                 if (cat == ParameterCategory.FillArray) { continue; }
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -830,9 +830,9 @@ internal static partial class AbiMethodBodyFactory
             if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szFA.BaseType)) { continue; }
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
+            IndentedTextWriter scratchElementProjected = new();
+            TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+            string elementProjected = scratchElementProjected.ToString();
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
@@ -888,9 +888,9 @@ internal static partial class AbiMethodBodyFactory
             if (uOut.IsGenericInstance())
             {
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter __scratchProjectedTypeName = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
-                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                IndentedTextWriter scratchProjectedTypeName = new();
+                MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, uOut, false);
+                string projectedTypeName = scratchProjectedTypeName.ToString();
                 writer.Write($$"""
                     {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                     {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -954,9 +954,9 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
+            IndentedTextWriter scratchElementProjected = new();
+            TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            string elementProjected = scratchElementProjected.ToString();
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
             // blittable structs; primitive ABI otherwise.
@@ -982,9 +982,9 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsReceiveArray)
             {
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt;
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
+                IndentedTextWriter scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                string elementProjected = scratchElementProjected.ToString();
                 string elementAbi = retSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType)
@@ -1026,9 +1026,9 @@ internal static partial class AbiMethodBodyFactory
                 else if (rt.IsGenericInstance())
                 {
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
-                    IndentedTextWriter __scratchProjectedTypeName = new();
-                    MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
-                    string projectedTypeName = __scratchProjectedTypeName.ToString();
+                    IndentedTextWriter scratchProjectedTypeName = new();
+                    MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, rt, false);
+                    string projectedTypeName = scratchProjectedTypeName.ToString();
                     writer.Write($$"""
                         {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                         {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_retval([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -1072,9 +1072,9 @@ internal static partial class AbiMethodBodyFactory
             else
             {
                 writer.Write($"{callIndent}return ");
-                IndentedTextWriter __scratchProjected = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt!, false);
-                string projected = __scratchProjected.ToString();
+                IndentedTextWriter scratchProjected = new();
+                MethodFactory.WriteProjectedSignature(scratchProjected, context, rt!, false);
+                string projected = scratchProjected.ToString();
                 string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!);
                 if (projected == abiType) { writer.WriteLine("__retval;"); }
                 else
@@ -1135,7 +1135,7 @@ internal static partial class AbiMethodBodyFactory
                     // the truth: no Dispose_<name> emitted). Just return the inline-array's pool
                     // using the correct element type (ABI.System.Exception, not nint).
                     string localNameH = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                    writer.WriteLine("");
+                    writer.WriteLine();
                     writer.Write($$"""
                                     if (__{{localNameH}}_arrayFromPool is not null)
                                     {
@@ -1168,7 +1168,7 @@ internal static partial class AbiMethodBodyFactory
                             """, isMultiline: true);
                     }
                     // Both PassArray and FillArray need the inline-array's nint pool returned.
-                    writer.WriteLine("");
+                    writer.WriteLine();
                     writer.Write($$"""
                                     if (__{{localName}}_arrayFromPool is not null)
                                     {
@@ -1222,7 +1222,7 @@ internal static partial class AbiMethodBodyFactory
                     : context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType)
                         : "nint";
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write($$"""
                                 if (__{{localName}}_arrayFromPool is not null)
                                 {

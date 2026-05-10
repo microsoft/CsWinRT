@@ -28,19 +28,19 @@ internal static class AbiInterfaceIDicFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.WriteLine("[DynamicInterfaceCastableImplementation]");
         InterfaceFactory.WriteGuidAttribute(writer, type);
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($"file interface {nameStripped} : ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("");
+        writer.WriteLine();
         using (writer.WriteBlock())
         {
             // Emit DIM bodies that dispatch through the static ABI Methods class.
             WriteInterfaceIdicImplMembers(writer, context, type);
-            writer.WriteLine("");
+            writer.WriteLine();
         }
     }
 
@@ -96,12 +96,12 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
-                    IndentedTextWriter __scratchKeyText = new();
-                    TypedefNameWriter.WriteTypeName(__scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
-                    string keyText = __scratchKeyText.ToString();
-                    IndentedTextWriter __scratchValueText = new();
-                    TypedefNameWriter.WriteTypeName(__scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
-                    string valueText = __scratchValueText.ToString();
+                    IndentedTextWriter scratchKeyText = new();
+                    TypedefNameWriter.WriteTypeName(scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string keyText = scratchKeyText.ToString();
+                    IndentedTextWriter scratchValueText = new();
+                    TypedefNameWriter.WriteTypeName(scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
+                    string valueText = scratchValueText.ToString();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
@@ -117,9 +117,9 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
-                    IndentedTextWriter __scratchElementText = new();
-                    TypedefNameWriter.WriteTypeName(__scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
-                    string elementText = __scratchElementText.ToString();
+                    IndentedTextWriter scratchElementText = new();
+                    TypedefNameWriter.WriteTypeName(scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string elementText = scratchElementText.ToString();
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
@@ -149,7 +149,7 @@ internal static class AbiInterfaceIDicFactory
         string target = $"((global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             ICollection<{{keyText}}> {{self}}Keys => {{target}}.Keys;
             ICollection<{{valueText}}> {{self}}Values => {{target}}.Values;
@@ -175,7 +175,7 @@ internal static class AbiInterfaceIDicFactory
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             event global::Windows.Foundation.Collections.MapChangedEventHandler<{{keyText}}, {{valueText}}> {{obsSelf}}MapChanged
             {
@@ -196,7 +196,7 @@ internal static class AbiInterfaceIDicFactory
         string target = $"((global::System.Collections.Generic.IList<{elementText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IList<{elementText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             int {{icoll}}Count => {{target}}.Count;
             bool {{icoll}}IsReadOnly => {{target}}.IsReadOnly;
@@ -219,7 +219,7 @@ internal static class AbiInterfaceIDicFactory
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
-        writer.WriteLine("");
+        writer.WriteLine();
         writer.Write($$"""
             event global::Windows.Foundation.Collections.VectorChangedEventHandler<{{elementText}}> {{obsSelf}}VectorChanged
             {
@@ -239,9 +239,9 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
-        IndentedTextWriter __scratchCcwIfaceName = new();
-        TypedefNameWriter.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
-        string ccwIfaceName = __scratchCcwIfaceName.ToString();
+        IndentedTextWriter scratchCcwIfaceName = new();
+        TypedefNameWriter.WriteTypedefName(scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
+        string ccwIfaceName = scratchCcwIfaceName.ToString();
         if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
 
         foreach (MethodDefinition method in type.Methods)
@@ -250,7 +250,7 @@ internal static class AbiInterfaceIDicFactory
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
-            writer.WriteLine("");
+            writer.WriteLine();
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {ccwIfaceName}.{mname}(");
             MethodFactory.WriteParameterList(writer, context, sig);
@@ -269,7 +269,7 @@ internal static class AbiInterfaceIDicFactory
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = InterfaceFactory.WritePropType(context, prop);
 
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($"{propType} {ccwIfaceName}.{pname}");
             if (getter is not null && setter is null)
             {
@@ -278,7 +278,7 @@ internal static class AbiInterfaceIDicFactory
             }
             else
             {
-                writer.WriteLine("");
+                writer.WriteLine();
                 using (writer.WriteBlock())
                 {
                     if (getter is not null)
@@ -296,7 +296,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (EventDefinition evt in type.Events)
         {
             string evtName = evt.Name?.Value ?? string.Empty;
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write($$"""
@@ -324,12 +324,12 @@ internal static class AbiInterfaceIDicFactory
             case "IClosable":
                 // IClosable maps to IDisposable. Forward Dispose() to the
                 // WindowsRuntimeObject base which has the actual implementation.
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.WriteLine("void global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();");
                 break;
             case "IBindableVector":
                 // IList covers IList, ICollection, and IEnumerable members.
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.Write("""
                     int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;
                     bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;
@@ -355,7 +355,7 @@ internal static class AbiInterfaceIDicFactory
                     """, isMultiline: true);
                 break;
             case "IBindableIterable":
-                writer.WriteLine("");
+                writer.WriteLine();
                 writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();");
                 break;
         }
@@ -364,14 +364,14 @@ internal static class AbiInterfaceIDicFactory
     internal static void WriteInterfaceIdicImplMembersForInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
-        IndentedTextWriter __scratchCcwIfaceName = new();
-        TypedefNameWriter.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
-        string ccwIfaceName = __scratchCcwIfaceName.ToString();
+        IndentedTextWriter scratchCcwIfaceName = new();
+        TypedefNameWriter.WriteTypedefName(scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
+        string ccwIfaceName = scratchCcwIfaceName.ToString();
         if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
         // The static ABI Methods class name.
-        IndentedTextWriter __scratchAbiClass = new();
-        TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
-        string abiClass = __scratchAbiClass.ToString();
+        IndentedTextWriter scratchAbiClass = new();
+        TypedefNameWriter.WriteTypedefName(scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
+        string abiClass = scratchAbiClass.ToString();
         if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { abiClass = GlobalPrefix + abiClass; }
 
         foreach (MethodDefinition method in type.Methods)
@@ -380,7 +380,7 @@ internal static class AbiInterfaceIDicFactory
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("unsafe ");
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {ccwIfaceName}.{mname}(");
@@ -410,7 +410,7 @@ internal static class AbiInterfaceIDicFactory
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = InterfaceFactory.WritePropType(context, prop);
 
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write($$"""
                 unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
                 {
@@ -457,7 +457,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (EventDefinition evt in type.Events)
         {
             string evtName = evt.Name?.Value ?? string.Empty;
-            writer.WriteLine("");
+            writer.WriteLine();
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write($$"""
