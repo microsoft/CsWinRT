@@ -10,11 +10,13 @@ namespace WindowsRuntime.ProjectionWriter.Extensions;
 /// </summary>
 internal static class EventDefinitionExtensions
 {
-    /// <summary>
-    /// Returns the (add, remove) accessor pair of <paramref name="evt"/>.
-    /// </summary>
-    /// <param name="evt">The event definition.</param>
-    /// <returns>A tuple of (Add, Remove) accessor methods, either of which may be <see langword="null"/>.</returns>
-    public static (MethodDefinition? Add, MethodDefinition? Remove) GetEventMethods(this EventDefinition evt)
-        => (evt.AddMethod, evt.RemoveMethod);
+    extension(EventDefinition evt)
+    {
+        /// <summary>
+        /// Returns the (add, remove) accessor pair of the event.
+        /// </summary>
+        /// <returns>A tuple of (Add, Remove) accessor methods, either of which may be <see langword="null"/>.</returns>
+        public (MethodDefinition? Add, MethodDefinition? Remove) GetEventMethods()
+            => (evt.AddMethod, evt.RemoveMethod);
+    }
 }

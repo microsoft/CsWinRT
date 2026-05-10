@@ -10,47 +10,48 @@ namespace WindowsRuntime.ProjectionWriter.Extensions;
 /// </summary>
 internal static class HasCustomAttributeExtensions
 {
-    /// <summary>
-    /// Returns whether <paramref name="member"/> carries a custom attribute matching the given
-    /// <paramref name="ns"/> and <paramref name="name"/>.
-    /// </summary>
-    /// <param name="member">The metadata member to inspect.</param>
-    /// <param name="ns">The namespace of the attribute type.</param>
-    /// <param name="name">The unqualified type name of the attribute.</param>
-    /// <returns><see langword="true"/> if a matching custom attribute is found; otherwise <see langword="false"/>.</returns>
-    public static bool HasAttribute(this IHasCustomAttribute member, string ns, string name)
+    extension(IHasCustomAttribute member)
     {
-        foreach (CustomAttribute attr in member.CustomAttributes)
+        /// <summary>
+        /// Returns whether the member carries a custom attribute matching the given
+        /// <paramref name="ns"/> and <paramref name="name"/>.
+        /// </summary>
+        /// <param name="ns">The namespace of the attribute type.</param>
+        /// <param name="name">The unqualified type name of the attribute.</param>
+        /// <returns><see langword="true"/> if a matching custom attribute is found; otherwise <see langword="false"/>.</returns>
+        public bool HasAttribute(string ns, string name)
         {
-            if (attr.Constructor?.DeclaringType is { } dt &&
-                (dt.Namespace?.Value == ns) &&
-                (dt.Name?.Value == name))
+            foreach (CustomAttribute attr in member.CustomAttributes)
             {
-                return true;
+                if (attr.Constructor?.DeclaringType is { } dt &&
+                    (dt.Namespace?.Value == ns) &&
+                    (dt.Name?.Value == name))
+                {
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
-    }
 
-    /// <summary>
-    /// Returns the matching custom attribute on <paramref name="member"/>, or <see langword="null"/>
-    /// if none is found.
-    /// </summary>
-    /// <param name="member">The metadata member to inspect.</param>
-    /// <param name="ns">The namespace of the attribute type.</param>
-    /// <param name="name">The unqualified type name of the attribute.</param>
-    /// <returns>The matching custom attribute, or <see langword="null"/> if none is found.</returns>
-    public static CustomAttribute? GetAttribute(this IHasCustomAttribute member, string ns, string name)
-    {
-        foreach (CustomAttribute attr in member.CustomAttributes)
+        /// <summary>
+        /// Returns the matching custom attribute on the member, or <see langword="null"/>
+        /// if none is found.
+        /// </summary>
+        /// <param name="ns">The namespace of the attribute type.</param>
+        /// <param name="name">The unqualified type name of the attribute.</param>
+        /// <returns>The matching custom attribute, or <see langword="null"/> if none is found.</returns>
+        public CustomAttribute? GetAttribute(string ns, string name)
         {
-            if (attr.Constructor?.DeclaringType is { } dt &&
-                (dt.Namespace?.Value == ns) &&
-                (dt.Name?.Value == name))
+            foreach (CustomAttribute attr in member.CustomAttributes)
             {
-                return attr;
+                if (attr.Constructor?.DeclaringType is { } dt &&
+                    (dt.Namespace?.Value == ns) &&
+                    (dt.Name?.Value == name))
+                {
+                    return attr;
+                }
             }
+            return null;
         }
-        return null;
     }
 }
