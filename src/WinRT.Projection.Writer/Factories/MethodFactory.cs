@@ -151,10 +151,10 @@ internal static class MethodFactory
     /// <param name="sig">The method signature whose parameters to enumerate.</param>
     public static void WriteParameterList(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig)
     {
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < sig.Parameters.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            WriteProjectionParameter(writer, context, sig.Params[i]);
+            WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
     }
 

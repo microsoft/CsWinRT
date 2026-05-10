@@ -76,7 +76,7 @@ internal static partial class AbiTypeHelpers
         }
         return null;
     }
-    public static string GetVMethodName(TypeDefinition type, MethodDefinition method)
+    public static string GetVirtualMethodName(TypeDefinition type, MethodDefinition method)
     {
         // Index of method in the type's method list
         int index = 0;
@@ -94,7 +94,7 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static string GetReturnParamName(MethodSignatureInfo sig)
     {
-        string? n = sig.ReturnParam?.Name?.Value;
+        string? n = sig.ReturnParameter?.Name?.Value;
         if (string.IsNullOrEmpty(n)) { return "__return_value__"; }
         return CSharpKeywords.IsKeyword(n) ? "@" + n : n;
     }
@@ -164,7 +164,7 @@ internal static partial class AbiTypeHelpers
             if (rt.IsHResultException()) { return false; }
             if (!(IsBlittablePrimitive(cache, rt) || IsAnyStruct(cache, rt) || rt.IsString() || IsRuntimeClassOrInterface(cache, rt) || rt.IsObject() || rt.IsGenericInstance() || IsComplexStruct(cache, rt))) { return false; }
         }
-        foreach (ParameterInfo p in sig.Params)
+        foreach (ParameterInfo p in sig.Parameters)
         {
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)

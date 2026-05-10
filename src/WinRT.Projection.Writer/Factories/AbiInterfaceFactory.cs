@@ -50,10 +50,10 @@ internal static class AbiInterfaceFactory
         // void* thisPtr, then each param's ABI type, then return type pointer
         writer.Write("void*");
         if (includeParamNames) { writer.Write(" thisPtr"); }
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < sig.Parameters.Count; i++)
         {
             writer.Write(", ");
-            ParameterInfo p = sig.Params[i];
+            ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             if (p.Type is SzArrayTypeSignature)
             {
@@ -174,7 +174,7 @@ internal static class AbiInterfaceFactory
 
             foreach (MethodDefinition method in type.Methods)
             {
-                string vm = AbiTypeHelpers.GetVMethodName(type, method);
+                string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
                 MethodSignatureInfo sig = new(method);
                 writer.Write("public delegate* unmanaged[MemberFunction]<");
                 WriteAbiParameterTypesPointer(writer, context, sig);
@@ -206,7 +206,7 @@ internal static class AbiInterfaceFactory
             """, isMultiline: true);
         foreach (MethodDefinition method in type.Methods)
         {
-            string vm = AbiTypeHelpers.GetVMethodName(type, method);
+            string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
             writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
         }
         writer.Write("""
@@ -304,7 +304,7 @@ internal static class AbiInterfaceFactory
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
         void EmitOneDoAbi(MethodDefinition method)
         {
-            string vm = AbiTypeHelpers.GetVMethodName(type, method);
+            string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 

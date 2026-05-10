@@ -191,10 +191,10 @@ internal static partial class ClassMembersFactory
         System.Text.StringBuilder sb = new();
         _ = sb.Append(name);
         _ = sb.Append('(');
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < sig.Parameters.Count; i++)
         {
             if (i > 0) { _ = sb.Append(','); }
-            _ = sb.Append(sig.Params[i].Type?.FullName ?? "?");
+            _ = sb.Append(sig.Parameters[i].Type?.FullName ?? "?");
         }
         _ = sb.Append(')');
         return sb.ToString();

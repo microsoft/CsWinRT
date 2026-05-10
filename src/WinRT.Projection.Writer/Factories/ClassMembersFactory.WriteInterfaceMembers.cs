@@ -22,7 +22,7 @@ internal static partial class ClassMembersFactory
         GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
     {
-        GenericContext genCtx = new(currentInstance, null);
+        GenericContext genericContext = new(currentInstance, null);
 
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
@@ -49,7 +49,7 @@ internal static partial class ClassMembersFactory
             {
                 if (currentInstance is not null)
                 {
-                    TypeSignature subSig = gi.InstantiateGenericTypes(genCtx);
+                    TypeSignature subSig = gi.InstantiateGenericTypes(genericContext);
                     if (subSig is GenericInstanceTypeSignature subGi)
                     {
                         nextInstance = subGi;
@@ -158,7 +158,7 @@ internal static partial class ClassMembersFactory
             methodSpec = "virtual ";
         }
 
-        GenericContext? genCtx = currentInstance is not null
+        GenericContext? genericContext = currentInstance is not null
             ? new GenericContext(currentInstance, null)
             : null;
 
@@ -236,14 +236,14 @@ internal static partial class ClassMembersFactory
             string name = method.Name?.Value ?? string.Empty;
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
-            MethodSignatureInfo sig = new(method, genCtx);
+            MethodSignatureInfo sig = new(method, genericContext);
             string key = BuildMethodSignatureKey(name, sig);
             if (!writtenMethods.Add(key)) { continue; }
 
             // Detect a 'string ToString()' that overrides Object.ToString() and force the
             // 'override' modifier on the emitted member.
             string methodSpecForThis = methodSpec;
-            if (name == "ToString" && sig.Params.Count == 0
+            if (name == "ToString" && sig.Parameters.Count == 0
                 && sig.ReturnType is CorLibTypeSignature crt
                 && crt.ElementType == ElementType.String)
             {
@@ -254,9 +254,9 @@ internal static partial class ClassMembersFactory
             // System.Object counterparts.h:566 (is_object_equals_method) and
             //matching
             // signature and return type -> 'override'; matching name only -> 'new'.
-            if (name == "Equals" && sig.Params.Count == 1)
+            if (name == "Equals" && sig.Parameters.Count == 1)
             {
-                TypeSignature p0 = sig.Params[0].Type;
+                TypeSignature p0 = sig.Parameters[0].Type;
                 bool paramIsObject = p0 is CorLibTypeSignature po
                     && po.ElementType == ElementType.Object;
                 bool returnsBool = sig.ReturnType is CorLibTypeSignature ro
@@ -266,7 +266,7 @@ internal static partial class ClassMembersFactory
                     methodSpecForThis = returnsBool ? "override " : (methodSpecForThis + "new ");
                 }
             }
-            else if (name == "GetHashCode" && sig.Params.Count == 0)
+            else if (name == "GetHashCode" && sig.Parameters.Count == 0)
             {
                 bool returnsInt = sig.ReturnType is CorLibTypeSignature ri
                     && ri.ElementType == ElementType.I4;
@@ -284,10 +284,10 @@ internal static partial class ClassMembersFactory
                     """, isMultiline: true);
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write($" {accessorName}([UnsafeAccessorType(\"{genericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference");
-                for (int i = 0; i < sig.Params.Count; i++)
+                for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     writer.Write(", ");
-                    MethodFactory.WriteProjectionParameter(writer, context, sig.Params[i]);
+                    MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
                 }
                 writer.WriteLine(");");
                 // string to each public method emission. In ref mode this produces e.g.
@@ -305,10 +305,10 @@ internal static partial class ClassMembersFactory
                 else
                 {
                     writer.Write($") => {accessorName}(null, {objRef}");
-                    for (int i = 0; i < sig.Params.Count; i++)
+                    for (int i = 0; i < sig.Parameters.Count; i++)
                     {
                         writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                        WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
                     }
                     writer.WriteLine(");");
                 }
@@ -329,10 +329,10 @@ internal static partial class ClassMembersFactory
                 else
                 {
                     writer.Write($") => {abiClass}.{name}({objRef}");
-                    for (int i = 0; i < sig.Params.Count; i++)
+                    for (int i = 0; i < sig.Parameters.Count; i++)
                     {
                         writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                        WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
                     }
                     writer.WriteLine(");");
                 }
@@ -350,10 +350,10 @@ internal static partial class ClassMembersFactory
                 writer.Write($".{name}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
                 writer.Write($") => {name}(");
-                for (int i = 0; i < sig.Params.Count; i++)
+                for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     if (i > 0) { writer.Write(", "); }
-                    WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                    WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
                 }
                 writer.WriteLine(");");
             }
@@ -370,7 +370,7 @@ internal static partial class ClassMembersFactory
             {
                 state = new PropertyAccessorState
                 {
-                    PropTypeText = InterfaceFactory.WritePropType(context, prop, genCtx),
+                    PropTypeText = InterfaceFactory.WritePropType(context, prop, genericContext),
                     Access = access,
                     MethodSpec = methodSpec,
                     IsOverridable = isOverridable,
@@ -386,7 +386,7 @@ internal static partial class ClassMembersFactory
                 state.GetterIsGeneric = isGenericInterface;
                 state.GetterGenericInteropType = genericInteropType;
                 state.GetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
-                state.GetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genCtx);
+                state.GetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genericContext);
                 state.GetterPlatformAttribute = platformAttribute;
             }
             if (setter is not null && !state.HasSetter)
@@ -397,7 +397,7 @@ internal static partial class ClassMembersFactory
                 state.SetterIsGeneric = isGenericInterface;
                 state.SetterGenericInteropType = genericInteropType;
                 state.SetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
-                state.SetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genCtx);
+                state.SetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genericContext);
                 state.SetterPlatformAttribute = platformAttribute;
             }
         }

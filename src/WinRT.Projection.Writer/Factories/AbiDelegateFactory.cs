@@ -147,7 +147,7 @@ internal static class AbiDelegateFactory
             """, isMultiline: true);
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
-        if (sig.Params.Count > 0) { writer.Write(", "); }
+        if (sig.Parameters.Count > 0) { writer.Write(", "); }
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(")");
 
@@ -253,23 +253,23 @@ internal static class AbiDelegateFactory
                     {
                         return (
             """, isMultiline: true);
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < sig.Parameters.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Params[i]);
+            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
             if (pc == ParameterCategory.Ref) { writer.Write("in "); }
             else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray) { writer.Write("out "); }
-            string raw = sig.Params[i].Parameter.Name ?? "p";
+            string raw = sig.Parameters[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
         writer.Write(") => TargetDelegate.Invoke(");
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < sig.Parameters.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Params[i]);
+            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
             if (pc == ParameterCategory.Ref) { writer.Write("in "); }
             else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray) { writer.Write("out "); }
-            string raw = sig.Params[i].Parameter.Name ?? "p";
+            string raw = sig.Parameters[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
         writer.Write("""

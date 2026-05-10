@@ -104,7 +104,7 @@ internal static partial class ConstructorFactory
             {
                 if (method.IsSpecial()) { methodIndex++; continue; }
                 MethodSignatureInfo sig = new(method);
-                string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(CultureInfo.InvariantCulture);
+                string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Parameters.Count.ToString(CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
@@ -116,17 +116,17 @@ internal static partial class ConstructorFactory
                     )
                       :base(
                     """, isMultiline: true);
-                if (sig.Params.Count == 0)
+                if (sig.Parameters.Count == 0)
                 {
                     writer.Write("default");
                 }
                 else
                 {
                     writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
-                    for (int i = 0; i < sig.Params.Count; i++)
+                    for (int i = 0; i < sig.Parameters.Count; i++)
                     {
                         if (i > 0) { writer.Write(", "); }
-                        string raw = sig.Params[i].Parameter.Name ?? "param";
+                        string raw = sig.Parameters[i].Parameter.Name ?? "param";
                         writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
                     }
                     writer.Write("))");
@@ -141,7 +141,7 @@ internal static partial class ConstructorFactory
                 }
                 writer.WriteLine("}");
 
-                if (sig.Params.Count > 0)
+                if (sig.Parameters.Count > 0)
                 {
                     EmitFactoryArgsStruct(writer, context, sig, argsName);
                     EmitFactoryCallbackClass(writer, context, sig, callbackName, argsName, factoryObjRefName, methodIndex);

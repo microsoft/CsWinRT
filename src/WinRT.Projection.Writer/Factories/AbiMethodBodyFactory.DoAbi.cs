@@ -25,7 +25,7 @@ internal static partial class AbiMethodBodyFactory
 
         // String params drive whether we need HString header allocation in the body.
         bool hasStringParams = false;
-        foreach (ParameterInfo p in sig.Params)
+        foreach (ParameterInfo p in sig.Parameters)
         {
             if (p.Type.IsString()) { hasStringParams = true; break; }
         }
@@ -84,9 +84,9 @@ internal static partial class AbiMethodBodyFactory
             // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
             // ConvertToUnmanaged_<name> wraps the projected value into a WindowsRuntimeObjectReferenceValue.
             // The body's writeback later references these already-declared accessors.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.Out) { continue; }
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -105,9 +105,9 @@ internal static partial class AbiMethodBodyFactory
             // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
             // top of the method body, before locals and the try block. The actual call sites later
             // in the body reference these already-declared accessors.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -202,18 +202,18 @@ internal static partial class AbiMethodBodyFactory
             // NOTE: Ref params (WinRT 'in T' / 'ref const T') are READ-ONLY inputs from the caller's
             // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
             // (we read directly via *<name>).
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"*{ptr} = default;");
             }
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -228,9 +228,9 @@ internal static partial class AbiMethodBodyFactory
             // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
             // and declare a managed array local. The managed call passes 'out __<name>' and after
             // the call we copy to the ABI buffer via UnsafeAccessor.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -249,9 +249,9 @@ internal static partial class AbiMethodBodyFactory
             // wraps the (length, pointer) pair from the ABI signature.
             // For non-blittable element types (string/runtime class/object), declare InlineArray16<T> +
             // ArrayPool fallback then CopyToManaged via UnsafeAccessor.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                 if (p.Type is not SzArrayTypeSignature sz) { continue; }
@@ -287,9 +287,9 @@ internal static partial class AbiMethodBodyFactory
             // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
             // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
             // fills — the post-call writeback loop handles that.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.PassArray) { continue; }
                 if (p.Type is not SzArrayTypeSignature szArr) { continue; }
@@ -328,9 +328,9 @@ internal static partial class AbiMethodBodyFactory
 
             // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
             // first so the call site can reference them.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 if (p.Type.IsNullableT())
                 {
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
@@ -387,13 +387,13 @@ internal static partial class AbiMethodBodyFactory
             {
                 string propName = methodName[4..];
                 writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
-                EmitDoAbiParamArgConversion(writer, context, sig.Params[0]);
+                EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
                 writer.WriteLine(";");
             }
             else
             {
                 writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{methodName}(");
-                for (int i = 0; i < sig.Params.Count; i++)
+                for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     if (i > 0)
                     {
@@ -402,7 +402,7 @@ internal static partial class AbiMethodBodyFactory
                           
                         """, isMultiline: true);
                     }
-                    ParameterInfo p = sig.Params[i];
+                    ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                     if (cat == ParameterCategory.Out)
                     {
@@ -471,9 +471,9 @@ internal static partial class AbiMethodBodyFactory
             }
             // After call: write back out params to caller's pointer.
             // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -532,9 +532,9 @@ internal static partial class AbiMethodBodyFactory
             }
             // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
             // [UnsafeAccessor] declaration was hoisted to the top of the method body).
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -546,9 +546,9 @@ internal static partial class AbiMethodBodyFactory
             // native ABI buffer..
             // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
             // Blittable element types don't need this — the Span wraps the native buffer directly.
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.FillArray) { continue; }
                 if (p.Type is not SzArrayTypeSignature szFA) { continue; }
@@ -689,9 +689,9 @@ internal static partial class AbiMethodBodyFactory
 
             // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
             bool hasNonBlittableArrayDoAbi = false;
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                ParameterInfo p = sig.Params[i];
+                ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                 if (p.Type is not SzArrayTypeSignature szArr) { continue; }
@@ -705,9 +705,9 @@ internal static partial class AbiMethodBodyFactory
                     finally
                     {
                     """, isMultiline: true);
-                for (int i = 0; i < sig.Params.Count; i++)
+                for (int i = 0; i < sig.Parameters.Count; i++)
                 {
-                    ParameterInfo p = sig.Params[i];
+                    ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                     if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
                     if (p.Type is not SzArrayTypeSignature szArr) { continue; }

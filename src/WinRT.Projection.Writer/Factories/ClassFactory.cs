@@ -269,10 +269,10 @@ internal static class ClassFactory
                 else
                 {
                     writer.Write($") => {abiClass}.{mname}({objRef}");
-                    for (int i = 0; i < sig.Params.Count; i++)
+                    for (int i = 0; i < sig.Parameters.Count; i++)
                     {
                         writer.Write(", ");
-                        ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                        ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
                     }
                     writer.WriteLine(");");
                 }

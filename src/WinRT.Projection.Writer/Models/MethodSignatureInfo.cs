@@ -24,7 +24,7 @@ internal sealed class MethodSignatureInfo
     /// <summary>
     /// Gets the per-parameter info for the method, in declaration order.
     /// </summary>
-    public IReadOnlyList<ParameterInfo> Params => _params;
+    public IReadOnlyList<ParameterInfo> Parameters => _params;
 
     private readonly List<ParameterInfo> _params;
 
@@ -32,7 +32,7 @@ internal sealed class MethodSignatureInfo
     /// Gets the parameter definition with sequence 0 (the return parameter), or <see langword="null"/>
     /// if the method does not have one.
     /// </summary>
-    public ParameterDefinition? ReturnParam { get; }
+    public ParameterDefinition? ReturnParameter { get; }
 
     /// <summary>
     /// Initializes a new <see cref="MethodSignatureInfo"/> with no generic context.
@@ -44,32 +44,32 @@ internal sealed class MethodSignatureInfo
     /// Initializes a new <see cref="MethodSignatureInfo"/>.
     /// </summary>
     /// <param name="method">The method definition to wrap.</param>
-    /// <param name="genCtx">An optional generic context used to substitute generic parameters in the parameter and return types.</param>
+    /// <param name="genericContext">An optional generic context used to substitute generic parameters in the parameter and return types.</param>
     [SuppressMessage("Style", "IDE0028:Use collection expression",
         Justification = "List<ParameterInfo>(capacity) cannot be expressed as a collection expression.")]
-    public MethodSignatureInfo(MethodDefinition method, GenericContext? genCtx)
+    public MethodSignatureInfo(MethodDefinition method, GenericContext? genericContext)
     {
         Method = method;
         _params = new List<ParameterInfo>(method.Parameters.Count);
-        ReturnParam = null;
+        ReturnParameter = null;
         foreach (ParameterDefinition p in method.ParameterDefinitions)
         {
             if (p.Sequence == 0)
             {
-                ReturnParam = p;
+                ReturnParameter = p;
                 break;
             }
         }
 
         if (method.Signature is MethodSignature sig)
         {
-            _substitutedReturnType = genCtx is not null && sig.ReturnType is not null
-                ? sig.ReturnType.InstantiateGenericTypes(genCtx.Value)
+            _substitutedReturnType = genericContext is not null && sig.ReturnType is not null
+                ? sig.ReturnType.InstantiateGenericTypes(genericContext.Value)
                 : sig.ReturnType;
             for (int i = 0; i < sig.ParameterTypes.Count; i++)
             {
                 TypeSignature pt = sig.ParameterTypes[i];
-                if (genCtx is not null) { pt = pt.InstantiateGenericTypes(genCtx.Value); }
+                if (genericContext is not null) { pt = pt.InstantiateGenericTypes(genericContext.Value); }
                 _params.Add(new ParameterInfo(method.Parameters[i], pt));
             }
         }
@@ -93,6 +93,6 @@ internal sealed class MethodSignatureInfo
     /// </summary>
     /// <param name="defaultName">The default name to use when no return parameter is declared.</param>
     /// <returns>The return parameter name (or default).</returns>
-    public string ReturnParamName(string defaultName = "__return_value__")
-        => ReturnParam?.Name?.Value ?? defaultName;
+    public string ReturnParameterName(string defaultName = "__return_value__")
+        => ReturnParameter?.Name?.Value ?? defaultName;
 }

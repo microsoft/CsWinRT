@@ -50,12 +50,12 @@ internal static partial class ConstructorFactory
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.
             MethodSignatureInfo sig = new(method);
-            int userParamCount = sig.Params.Count >= 2 ? sig.Params.Count - 2 : sig.Params.Count;
+            int userParamCount = sig.Parameters.Count >= 2 ? sig.Parameters.Count - 2 : sig.Parameters.Count;
             // the callback / args type name suffix is the TOTAL ABI param count
-            // (size(method.Signature().Params())), NOT the user-visible param count. Using the
+            // (size(method.Signature().Parameters())), NOT the user-visible param count. Using the
             // total count guarantees uniqueness against other composable factory overloads that
             // might share the same user-param count but differ in trailing baseInterface shape.
-            string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(CultureInfo.InvariantCulture);
+            string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Parameters.Count.ToString(CultureInfo.InvariantCulture);
             string argsName = callbackName + "Args";
             bool isParameterless = userParamCount == 0;
 
@@ -67,7 +67,7 @@ internal static partial class ConstructorFactory
             for (int i = 0; i < userParamCount; i++)
             {
                 if (i > 0) { writer.Write(", "); }
-                MethodFactory.WriteProjectionParameter(writer, context, sig.Params[i]);
+                MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
             }
             writer.Write("""
                 )
@@ -85,7 +85,7 @@ internal static partial class ConstructorFactory
                 for (int i = 0; i < userParamCount; i++)
                 {
                     if (i > 0) { writer.Write(", "); }
-                    string raw = sig.Params[i].Parameter.Name ?? "param";
+                    string raw = sig.Parameters[i].Parameter.Name ?? "param";
                     writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
                 }
                 writer.Write("))");

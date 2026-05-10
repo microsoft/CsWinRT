@@ -255,10 +255,10 @@ internal static class AbiInterfaceIDicFactory
             writer.Write($" {ccwIfaceName}.{mname}(");
             MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write($") => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 if (i > 0) { writer.Write(", "); }
-                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
             }
             writer.WriteLine(");");
         }
@@ -393,10 +393,10 @@ internal static class AbiInterfaceIDicFactory
                 """, isMultiline: true);
             if (sig.ReturnType is not null) { writer.Write("return "); }
             writer.Write($"{abiClass}.{mname}(_obj");
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 writer.Write(", ");
-                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
             }
             writer.Write("""
                 );

@@ -177,11 +177,11 @@ internal static class InterfaceFactory
     /// <summary>
     /// Returns the projected property type for <paramref name="prop"/>, optionally substituting generic args.
     /// </summary>
-    public static string WritePropType(ProjectionEmitContext context, PropertyDefinition prop, GenericContext? genCtx, bool isSetProperty = false)
+    public static string WritePropType(ProjectionEmitContext context, PropertyDefinition prop, GenericContext? genericContext, bool isSetProperty = false)
     {
         TypeSignature? typeSig = prop.Signature?.ReturnType;
         if (typeSig is null) { return "object"; }
-        if (genCtx is not null) { typeSig = typeSig.InstantiateGenericTypes(genCtx.Value); }
+        if (genericContext is not null) { typeSig = typeSig.InstantiateGenericTypes(genericContext.Value); }
         IndentedTextWriter scratch = new();
         MethodFactory.WriteProjectedSignature(scratch, context, typeSig, isSetProperty);
         return scratch.ToString();

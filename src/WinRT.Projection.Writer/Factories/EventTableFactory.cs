@@ -57,7 +57,7 @@ internal static class EventTableFactory
         string evName = evt.Name?.Value ?? "Event";
         // Handler is the (last) input parameter of the add method. The emitted parameter name in the
         // signature comes from WriteAbiParameterTypesPointer which uses the metadata name verbatim.
-        string handlerRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "handler") : "handler";
+        string handlerRawName = sig.Parameters.Count > 0 ? (sig.Parameters[^1].Parameter.Name ?? "handler") : "handler";
         string handlerRef = CSharpKeywords.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
 
         // The cookie/token return parameter takes the metadata return param name (matches truth).
@@ -113,7 +113,7 @@ internal static class EventTableFactory
     internal static void EmitDoAbiRemoveEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSignatureInfo sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        string tokenRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "token") : "token";
+        string tokenRawName = sig.Parameters.Count > 0 ? (sig.Parameters[^1].Parameter.Name ?? "token") : "token";
         string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
 
         writer.WriteLine();
