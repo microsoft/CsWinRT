@@ -31,10 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- WebView2.Core.Projection.dll references the official signed Microsoft.Windows.SDK.NET
-         (v10.0.17763.38, PKT=31bf3856ad364e35), which conflicts with our locally-built unsigned
-         v1.0.0.0 -> NETSDK1148. AuthoringTest excludes WebView2 locally but doesn't block
-         transitive flow, so exclude it here too. -->
+    <!-- WebView2.Core.Projection.dll references the official signed Microsoft.Windows.SDK.NET,
+         which conflicts with our locally-built unsigned one. AuthoringTest excludes WebView2
+         locally but doesn't block transitive flow, so exclude it here too. -->
     <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
