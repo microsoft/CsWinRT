@@ -19,7 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="EntryPoint.cs" />
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj" />
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />

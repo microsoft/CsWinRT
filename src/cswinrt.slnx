@@ -178,14 +178,9 @@
       <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
       <BuildDependency Project="Tests/AuthoringTest2/AuthoringTest2.csproj" />
       <BuildDependency Project="Tests/AuthoringConsumptionTest2.AOT/AuthoringConsumptionTest2.AOT.csproj" />
-      <Platform Solution="*|ARM" Project="x64" />
-      <Platform Solution="*|ARM64" Project="x64" />
-      <Platform Solution="*|Win32" Project="x64" />
-      <Platform Solution="*|x86" Project="x64" />
+      <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
-      <Build Solution="*|Win32" Project="false" />
-      <Build Solution="*|x86" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringConsumptionTest2.AOT/AuthoringConsumptionTest2.AOT.csproj">
       <Platform Solution="*|ARM" Project="x64" />

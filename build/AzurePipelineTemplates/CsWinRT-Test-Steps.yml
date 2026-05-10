@@ -74,7 +74,7 @@ steps:
   - task: CmdLine@2
     displayName: Run Multi-Component Authoring Consumption Tests
     enabled: true
-    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     continueOnError: True
     inputs:
       workingDirectory: $(Build.SourcesDirectory)\src

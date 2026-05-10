@@ -237,6 +237,15 @@ if /I "%cswinrt_platform%"=="x64" (
     rem exit /b !ErrorLevel!
   )
 )
+if /I "%cswinrt_platform%"=="x86" (
+  call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest2\bin\AuthoringConsumptionTest2.exe --gtest_output=xml:%this_dir%authoringtest2_%cswinrt_version_string%.xml
+  if ErrorLevel 1 (
+    echo.
+    rem Not skipping due to known issue.
+    rem echo ERROR: Multi-component authoring test failed, skipping NuGet pack
+    rem exit /b !ErrorLevel!
+  )
+)
 
 :functionaltest
 rem Run functional tests
