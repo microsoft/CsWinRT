@@ -56,32 +56,27 @@ internal static class AbiDelegateFactory
         string iidExpr = __scratchIidExpr.ToString();
 
         writer.WriteLine("");
-        writer.Write("internal static unsafe class ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Impl");
-        writer.WriteLine("{");
-        writer.WriteLine("    [FixedAddressValueType]");
-        writer.Write("    private static readonly ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Vftbl Vftbl;");
-        writer.WriteLine("");
-        writer.Write("    static ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Impl()");
-        writer.WriteLine("    {");
-        writer.WriteLine("        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;");
-        writer.WriteLine("        Vftbl.Invoke = &Invoke;");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    public static nint Vtable");
-        writer.WriteLine("    {");
-        writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        writer.WriteLine("        get => (nint)Unsafe.AsPointer(in Vftbl);");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-
-        writer.WriteLine("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
-        writer.Write("private static int Invoke(");
+        writer.Write($$"""
+            internal static unsafe class {{nameStripped}}Impl
+            {
+                [FixedAddressValueType]
+                private static readonly {{nameStripped}}Vftbl Vftbl;
+            
+                static {{nameStripped}}Impl()
+                {
+                    *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
+                    Vftbl.Invoke = &Invoke;
+                }
+            
+                public static nint Vtable
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => (nint)Unsafe.AsPointer(in Vftbl);
+                }
+            
+            [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            private static int Invoke(
+            """, isMultiline: true);
         AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
         writer.Write(")");
 
@@ -106,18 +101,20 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine("");
-        writer.WriteLine("[StructLayout(LayoutKind.Sequential)]");
-        writer.Write("internal unsafe struct ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Vftbl");
-        writer.WriteLine("{");
-        writer.WriteLine("    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;");
-        writer.WriteLine("    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;");
-        writer.WriteLine("    public delegate* unmanaged[MemberFunction]<void*, uint> Release;");
-        writer.Write("    public delegate* unmanaged[MemberFunction]<");
+        writer.Write($$"""
+            [StructLayout(LayoutKind.Sequential)]
+            internal unsafe struct {{nameStripped}}Vftbl
+            {
+                public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+                public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+                public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+                public delegate* unmanaged[MemberFunction]<
+            """, isMultiline: true);
         AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig);
-        writer.WriteLine(", int> Invoke;");
-        writer.WriteLine("}");
+        writer.Write("""
+            , int> Invoke;
+            }
+            """, isMultiline: true);
     }
 
     private static void WriteNativeDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -158,45 +155,35 @@ internal static class AbiDelegateFactory
         string iidRefExpr = __scratchIidRefExpr.ToString();
 
         writer.WriteLine("");
-        writer.Write("file static class ");
-        writer.Write(nameStripped);
-        writer.WriteLine("InterfaceEntriesImpl");
-        writer.WriteLine("{");
-        writer.WriteLine("    [FixedAddressValueType]");
-        writer.WriteLine("    public static readonly DelegateReferenceInterfaceEntries Entries;");
-        writer.WriteLine("");
-        writer.Write("    static ");
-        writer.Write(nameStripped);
-        writer.WriteLine("InterfaceEntriesImpl()");
-        writer.WriteLine("    {");
-        writer.Write("        Entries.Delegate.IID = ");
-        writer.Write(iidExpr);
-        writer.WriteLine(";");
-        writer.Write("        Entries.Delegate.Vtable = ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Impl.Vtable;");
-        writer.Write("        Entries.DelegateReference.IID = ");
-        writer.Write(iidRefExpr);
-        writer.WriteLine(";");
-        writer.Write("        Entries.DelegateReference.Vtable = ");
-        writer.Write(nameStripped);
-        writer.WriteLine("ReferenceImpl.Vtable;");
-        writer.WriteLine("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;");
-        writer.WriteLine("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;");
-        writer.WriteLine("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;");
-        writer.WriteLine("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;");
-        writer.WriteLine("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;");
-        writer.WriteLine("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;");
-        writer.WriteLine("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;");
-        writer.WriteLine("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;");
-        writer.WriteLine("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;");
-        writer.WriteLine("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;");
-        writer.WriteLine("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;");
-        writer.WriteLine("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;");
-        writer.WriteLine("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;");
-        writer.WriteLine("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write($$"""
+            file static class {{nameStripped}}InterfaceEntriesImpl
+            {
+                [FixedAddressValueType]
+                public static readonly DelegateReferenceInterfaceEntries Entries;
+            
+                static {{nameStripped}}InterfaceEntriesImpl()
+                {
+                    Entries.Delegate.IID = {{iidExpr}};
+                    Entries.Delegate.Vtable = {{nameStripped}}Impl.Vtable;
+                    Entries.DelegateReference.IID = {{iidRefExpr}};
+                    Entries.DelegateReference.Vtable = {{nameStripped}}ReferenceImpl.Vtable;
+                    Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
+                    Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
+                    Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
+                    Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
+                    Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+                    Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
+                    Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
+                    Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;
+                    Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
+                    Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
+                    Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
+                    Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
+                    Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
+                    Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
+                }
+            }
+            """, isMultiline: true);
     }
 
     public static void WriteTempDelegateEventSourceSubclass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -284,10 +271,12 @@ internal static class AbiDelegateFactory
             string raw = sig.Params[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
-        writer.WriteLine(");");
-        writer.WriteLine("        }");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+            );
+                    }
+                }
+            }
+            """, isMultiline: true);
     }
 
     /// <summary>
@@ -307,32 +296,22 @@ internal static class AbiDelegateFactory
         string iidExpr = __scratchIidExpr.ToString();
 
         writer.WriteLine("");
-        writer.Write("public static unsafe class ");
-        writer.Write(nameStripped);
-        writer.WriteLine("Marshaller");
-        writer.WriteLine("{");
-        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        writer.Write(fullProjected);
-        writer.WriteLine(" value)");
-        writer.WriteLine("    {");
-        writer.Write("        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in ");
-        writer.Write(iidExpr);
-        writer.WriteLine(");");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("#nullable enable");
-        writer.Write("    public static ");
-        writer.Write(fullProjected);
-        writer.WriteLine("? ConvertToManaged(void* value)");
-        writer.WriteLine("    {");
-        writer.Write("        return (");
-        writer.Write(fullProjected);
-        writer.Write("?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<");
-        writer.Write(nameStripped);
-        writer.WriteLine("ComWrappersCallback>(value);");
-        writer.WriteLine("    }");
-        writer.WriteLine("#nullable disable");
-        writer.WriteLine("}");
+        writer.Write($$"""
+            public static unsafe class {{nameStripped}}Marshaller
+            {
+                public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
+                {
+                    return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in {{iidExpr}});
+                }
+            
+            #nullable enable
+                public static {{fullProjected}}? ConvertToManaged(void* value)
+                {
+                    return ({{fullProjected}}?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
+                }
+            #nullable disable
+            }
+            """, isMultiline: true);
     }
 
     /// <summary>
@@ -356,19 +335,24 @@ internal static class AbiDelegateFactory
         bool nativeSupported = invoke is not null && AbiTypeHelpers.IsDelegateInvokeNativeSupported(context.Cache, new MethodSig(invoke));
 
         writer.WriteLine("");
-        writer.Write("file abstract unsafe class ");
-        writer.Write(nameStripped);
-        writer.WriteLine("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback");
-        writer.WriteLine("{");
-        writer.WriteLine("    /// <inheritdoc/>");
-        writer.WriteLine("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)");
-        writer.WriteLine("    {");
-        writer.WriteLine("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(");
-        writer.WriteLine("            externalComObject: value,");
-        writer.WriteLine($"            iid: in {iidExpr},\n            wrapperFlags: out wrapperFlags);\n\n        return new {fullProjected}(valueReference.{nameStripped}Invoke);");
+        writer.Write($$"""
+            file abstract unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
+            {
+                /// <inheritdoc/>
+                public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+                {
+                    WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                        externalComObject: value,
+                        iid: in {{iidExpr}},
+                        wrapperFlags: out wrapperFlags);
+            
+                    return new {{fullProjected}}(valueReference.{{nameStripped}}Invoke);
+            """, isMultiline: true);
         _ = nativeSupported;
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+                }
+            }
+            """, isMultiline: true);
     }
 
     /// <summary>

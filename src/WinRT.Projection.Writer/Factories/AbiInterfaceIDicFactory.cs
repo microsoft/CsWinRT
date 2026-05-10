@@ -143,16 +143,19 @@ internal static class AbiInterfaceIDicFactory
         string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
         writer.WriteLine("");
-        writer.Write($"ICollection<{keyText}> {self}Keys => {target}.Keys;\n");
-        writer.Write($"ICollection<{valueText}> {self}Values => {target}.Values;\n");
-        writer.Write($"int {icoll}Count => {target}.Count;\n");
-        writer.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
-        writer.Write($"{valueText} {self}this[{keyText} key] \n");
-        writer.WriteLine("{");
-        writer.Write($"get => {target}[key];\n");
-        writer.Write($"set => {target}[key] = value;\n");
-        writer.WriteLine("}");
-        writer.WriteLine($"{$"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n"}{$"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n"}{$"bool {self}Remove({keyText} key) => {target}.Remove(key);\n"}{$"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n"}{$"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n"}{$"void {icoll}Clear() => {target}.Clear();\n"}{$"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n"}{$"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}{$"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n"}\n{$"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n"}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
+        writer.Write($$"""
+            ICollection<{{keyText}}> {{self}}Keys => {{target}}.Keys;
+            ICollection<{{valueText}}> {{self}}Values => {{target}}.Values;
+            int {{icoll}}Count => {{target}}.Count;
+            bool {{icoll}}IsReadOnly => {{target}}.IsReadOnly;
+            {{valueText}} {{self}}this[{{keyText}} key] 
+            {
+            get => {{target}}[key];
+            set => {{target}}[key] = value;
+            }
+            {{$"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n"}}{{$"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n"}}{{$"bool {self}Remove({keyText} key) => {target}.Remove(key);\n"}}{{$"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n"}}{{$"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n"}}{{$"void {icoll}Clear() => {target}.Clear();\n"}}{{$"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n"}}{{$"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}}{{$"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n"}}
+            {{$"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n"}}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            """, isMultiline: true);
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
@@ -174,14 +177,17 @@ internal static class AbiInterfaceIDicFactory
         string self = $"global::System.Collections.Generic.IList<{elementText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
         writer.WriteLine("");
-        writer.Write($"int {icoll}Count => {target}.Count;\n");
-        writer.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
-        writer.Write($"{elementText} {self}this[int index]\n");
-        writer.WriteLine("{");
-        writer.Write($"get => {target}[index];\n");
-        writer.Write($"set => {target}[index] = value;\n");
-        writer.WriteLine("}");
-        writer.WriteLine($"{$"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n"}{$"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n"}{$"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n"}{$"void {icoll}Add({elementText} item) => {target}.Add(item);\n"}{$"void {icoll}Clear() => {target}.Clear();\n"}{$"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n"}{$"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}{$"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n"}\n{$"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n"}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
+        writer.Write($$"""
+            int {{icoll}}Count => {{target}}.Count;
+            bool {{icoll}}IsReadOnly => {{target}}.IsReadOnly;
+            {{elementText}} {{self}}this[int index]
+            {
+            get => {{target}}[index];
+            set => {{target}}[index] = value;
+            }
+            {{$"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n"}}{{$"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n"}}{{$"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n"}}{{$"void {icoll}Add({elementText} item) => {target}.Add(item);\n"}}{{$"void {icoll}Clear() => {target}.Clear();\n"}}{{$"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n"}}{{$"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}}{{$"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n"}}
+            {{$"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n"}}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            """, isMultiline: true);
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
@@ -260,23 +266,13 @@ internal static class AbiInterfaceIDicFactory
             writer.WriteLine("");
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.Write(" ");
-            writer.Write(ccwIfaceName);
-            writer.Write(".");
-            writer.Write(evtName);
-            writer.WriteLine("");
-            writer.WriteLine("{");
-            writer.Write("    add => ((");
-            writer.Write(ccwIfaceName);
-            writer.Write(")(WindowsRuntimeObject)this).");
-            writer.Write(evtName);
-            writer.WriteLine(" += value;");
-            writer.Write("    remove => ((");
-            writer.Write(ccwIfaceName);
-            writer.Write(")(WindowsRuntimeObject)this).");
-            writer.Write(evtName);
-            writer.WriteLine(" -= value;");
-            writer.WriteLine("}");
+            writer.Write($$"""
+                 {{ccwIfaceName}}.{{evtName}}
+                {
+                    add => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} += value;
+                    remove => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} -= value;
+                }
+                """, isMultiline: true);
         }
     }
 
@@ -357,8 +353,10 @@ internal static class AbiInterfaceIDicFactory
                 writer.Write(", ");
                 ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
             }
-            writer.WriteLine(");");
-            writer.WriteLine("}");
+            writer.Write("""
+                );
+                }
+                """, isMultiline: true);
         }
 
         foreach (PropertyDefinition prop in type.Properties)

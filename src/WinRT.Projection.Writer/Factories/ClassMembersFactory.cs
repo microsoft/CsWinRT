@@ -45,18 +45,18 @@ internal static class ClassMembersFactory
             if (s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
             {
                 writer.WriteLine("");
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-                writer.Write(kvp.Key);
-                writer.WriteLine("\")]");
-                writer.WriteLine($"static extern {s.GetterPropTypeText} {s.GetterGenericAccessorName}([UnsafeAccessorType(\"{s.GetterGenericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference);");
+                writer.Write($$"""
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{kvp.Key}}")]
+                    static extern {{s.GetterPropTypeText}} {{s.GetterGenericAccessorName}}([UnsafeAccessorType("{{s.GetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference);
+                    """, isMultiline: true);
             }
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
                 writer.WriteLine("");
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-                writer.Write(kvp.Key);
-                writer.WriteLine("\")]");
-                writer.WriteLine($"static extern void {s.SetterGenericAccessorName}([UnsafeAccessorType(\"{s.SetterGenericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference, {s.SetterPropTypeText} value);");
+                writer.Write($$"""
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{kvp.Key}}")]
+                    static extern void {{s.SetterGenericAccessorName}}([UnsafeAccessorType("{{s.SetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference, {{s.SetterPropTypeText}} value);
+                    """, isMultiline: true);
             }
 
             writer.WriteLine("");
@@ -496,10 +496,10 @@ internal static class ClassMembersFactory
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
                 writer.WriteLine("");
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-                writer.Write(name);
-                writer.WriteLine("\")]");
-                writer.Write("static extern ");
+                writer.Write($$"""
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
+                    static extern 
+                    """, isMultiline: true);
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write($" {accessorName}([UnsafeAccessorType(\"{genericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference");
                 for (int i = 0; i < sig.Params.Count; i++)
@@ -682,21 +682,21 @@ internal static class ClassMembersFactory
                 writer.Write($"\nprivate {eventSourceTypeFull} _eventSource_{name}\n{{\n    get\n    {{\n");
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
-                    writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]");
-                    writer.Write("        [return: UnsafeAccessorType(\"");
-                    writer.Write(eventSourceInteropType);
-                    writer.WriteLine("\")]");
-                    writer.WriteLine("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);");
+                    writer.Write($$"""
+                                [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+                                [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
+                                static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
+                        """, isMultiline: true);
                     writer.WriteLine("");
                 }
-                writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
-                writer.Write("        ");
-                writer.Write(eventSourceTypeFull);
-                writer.WriteLine(" MakeEventSource()");
-                writer.WriteLine("        {");
-                writer.WriteLine("            _ = global::System.Threading.Interlocked.CompareExchange(");
-                writer.WriteLine("                location1: ref field,");
-                writer.Write("                value: ");
+                writer.Write($$"""
+                            [MethodImpl(MethodImplOptions.NoInlining)]
+                            {{eventSourceTypeFull}} MakeEventSource()
+                            {
+                                _ = global::System.Threading.Interlocked.CompareExchange(
+                                    location1: ref field,
+                                    value: 
+                    """, isMultiline: true);
                 if (isGenericEvent)
                 {
                     writer.Write($"Unsafe.As<{eventSourceTypeFull}>(ctor({objRef}, {vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)}))");
@@ -705,15 +705,17 @@ internal static class ClassMembersFactory
                 {
                     writer.Write($"new {eventSourceTypeFull}({objRef}, {vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture)})");
                 }
-                writer.WriteLine(",");
-                writer.WriteLine("                comparand: null);");
-                writer.WriteLine("");
-                writer.WriteLine("            return field;");
-                writer.WriteLine("        }");
-                writer.WriteLine("");
-                writer.WriteLine("        return field ?? MakeEventSource();");
-                writer.WriteLine("    }");
-                writer.WriteLine("}");
+                writer.Write("""
+                    ,
+                                    comparand: null);
+                    
+                                return field;
+                            }
+                    
+                            return field ?? MakeEventSource();
+                        }
+                    }
+                    """, isMultiline: true);
             }
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
@@ -726,15 +728,17 @@ internal static class ClassMembersFactory
             writer.Write($" {name}\n{{\n");
             if (context.Settings.ReferenceProjection)
             {
-                writer.WriteLine("    add => throw null;");
-                writer.WriteLine("    remove => throw null;");
+                writer.Write("""
+                        add => throw null;
+                        remove => throw null;
+                    """, isMultiline: true);
             }
             else if (inlineEventSourceField)
             {
-                writer.Write("    add => _eventSource_");
-                writer.Write(name);
-                writer.WriteLine(".Subscribe(value);");
-                writer.WriteLine($"    remove => _eventSource_{name}.Unsubscribe(value);");
+                writer.Write($$"""
+                        add => _eventSource_{{name}}.Subscribe(value);
+                        remove => _eventSource_{{name}}.Unsubscribe(value);
+                    """, isMultiline: true);
             }
             else
             {
@@ -743,14 +747,10 @@ internal static class ClassMembersFactory
                 // inline_event_source_field is false (the default helper-based path).
                 // Example: Simple.Event0 (on ISimple5) becomes
                 //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
-                writer.Write("    add => ");
-                writer.Write(abiClass);
-                writer.Write(".");
-                writer.Write(name);
-                writer.Write("((WindowsRuntimeObject)this, ");
-                writer.Write(objRef);
-                writer.WriteLine(").Subscribe(value);");
-                writer.WriteLine($"    remove => {abiClass}.{name}((WindowsRuntimeObject)this, {objRef}).Unsubscribe(value);");
+                writer.Write($$"""
+                        add => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Subscribe(value);
+                        remove => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Unsubscribe(value);
+                    """, isMultiline: true);
             }
             writer.WriteLine("}");
         }

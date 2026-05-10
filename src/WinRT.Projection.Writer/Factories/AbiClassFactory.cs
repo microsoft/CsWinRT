@@ -199,29 +199,33 @@ internal static class AbiClassFactory
         if (isSealed)
         {
             // For projected sealed runtime classes, the RCW type is always unwrappable.
-            writer.WriteLine("        if (value is not null)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();");
-            writer.WriteLine("        }");
+            writer.Write("""
+                        if (value is not null)
+                        {
+                            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
+                        }
+                """, isMultiline: true);
         }
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
             IndentedTextWriter __scratchDefIfaceTypeName = new();
             TypedefNameWriter.WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
             string defIfaceTypeName = __scratchDefIfaceTypeName.ToString();
-            writer.Write("        if (value is IWindowsRuntimeInterface<");
-            writer.Write(defIfaceTypeName);
-            writer.WriteLine("> windowsRuntimeInterface)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return windowsRuntimeInterface.GetInterface();");
-            writer.WriteLine("        }");
+            writer.Write($$"""
+                        if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
+                        {
+                            return windowsRuntimeInterface.GetInterface();
+                        }
+                """, isMultiline: true);
         }
         else
         {
-            writer.WriteLine("        if (value is not null)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return value.GetDefaultInterface();");
-            writer.WriteLine("        }");
+            writer.Write("""
+                        if (value is not null)
+                        {
+                            return value.GetDefaultInterface();
+                        }
+                """, isMultiline: true);
         }
         writer.Write($"        return default;\n    }}\n\n    public static {fullProjected}? ConvertToManaged(void* value)\n    {{\n        return ({fullProjected}?){(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}.ConvertToManaged<{nameStripped}ComWrappersCallback>(value);\n    }}\n}}\n\nfile sealed unsafe class {nameStripped}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{{\n");
         AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
