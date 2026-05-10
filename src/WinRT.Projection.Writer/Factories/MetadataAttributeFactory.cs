@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;

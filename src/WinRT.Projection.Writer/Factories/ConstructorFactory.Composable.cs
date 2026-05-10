@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using System.Globalization;
-using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;

@@ -7,7 +7,7 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
-namespace WindowsRuntime.ProjectionWriter.Extensions;
+namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// General-purpose extension methods for <see cref="IndentedTextWriter"/> that capture

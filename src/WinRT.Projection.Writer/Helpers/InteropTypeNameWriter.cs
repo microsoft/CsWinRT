@@ -7,7 +7,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using System;
 using System.Globalization;
 using System.Text;
-using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 

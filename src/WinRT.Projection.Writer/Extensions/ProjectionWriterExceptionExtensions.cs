@@ -4,7 +4,7 @@
 using System;
 using WindowsRuntime.ProjectionWriter.Errors;
 
-namespace WindowsRuntime.ProjectionWriter.Extensions;
+namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Extension methods for <see cref="Exception"/>.

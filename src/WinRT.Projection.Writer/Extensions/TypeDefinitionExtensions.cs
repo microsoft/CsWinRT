@@ -7,7 +7,7 @@ using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
-namespace WindowsRuntime.ProjectionWriter.Extensions;
+namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Extension methods for <see cref="TypeDefinition"/>.

@@ -7,7 +7,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;

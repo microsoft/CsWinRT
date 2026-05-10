@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Extensions;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;

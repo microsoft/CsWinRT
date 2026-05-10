@@ -5,7 +5,6 @@ using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Errors;
-using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;

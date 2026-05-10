@@ -4,7 +4,7 @@
 using System;
 using AsmResolver.DotNet;
 
-namespace WindowsRuntime.ProjectionWriter.Extensions;
+namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Extension methods for <see cref="ITypeDefOrRef"/>.

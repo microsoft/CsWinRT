@@ -7,7 +7,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using WindowsRuntime.ProjectionWriter.Errors;
-using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
 

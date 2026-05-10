@@ -5,7 +5,7 @@ using AsmResolver.DotNet;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
-namespace WindowsRuntime.ProjectionWriter.Extensions;
+namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Extension methods for <see cref="InterfaceImplementation"/>.
