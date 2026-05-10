@@ -124,12 +124,25 @@ internal sealed class IndentedTextWriter
     /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation
     /// at the start of each new line.
     /// </summary>
+    /// <remarks>
+    /// In multi-line mode, if the buffer is mid-line (does not end with a newline) and the
+    /// buffer's last character is a brace (<c>{</c> or <c>}</c>), a newline is inserted before
+    /// the content is processed. This prevents the first line of the multi-line content from
+    /// being jammed onto the same line as a structural brace from a previous emission (raw
+    /// <c>"""..."""</c> strings never include a trailing newline before the closing token, so
+    /// emissions that end on <c>{</c> or <c>}</c> need a separator before the next emission).
+    /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
     public void Write(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
         if (isMultiline)
         {
+            if (_buffer.Length > 0 && (_buffer[^1] == '{' || _buffer[^1] == '}'))
+            {
+                _buffer.Append(DefaultNewLine);
+            }
+
             while (content.Length > 0)
             {
                 int newLineIndex = content.IndexOf(DefaultNewLine);
