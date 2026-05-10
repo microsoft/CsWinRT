@@ -489,8 +489,7 @@ internal static class ClassFactory
         TypedefNameWriter.WriteTypeParams(writer, type);
         InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
         writer.WriteLine("");
-        writer.WriteLine("{");
-        writer.IncreaseIndent();
+        using IndentedTextWriter.Block __classBlock = writer.WriteBlock();
 
         // ObjRef field definitions for each implemented interface.
         // These back the per-interface dispatch in instance methods/properties and the
@@ -626,8 +625,5 @@ internal static class ClassFactory
         }
 
         ClassMembersFactory.WriteClassMembers(writer, context, type);
-
-        writer.DecreaseIndent();
-        writer.WriteLine("}");
     }
 }

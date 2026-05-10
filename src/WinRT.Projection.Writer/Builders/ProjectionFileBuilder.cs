@@ -48,6 +48,8 @@ internal static class ProjectionFileBuilder
                     WriteStruct(writer, context, type);
                 }
                 break;
+            default:
+                throw new System.InvalidOperationException($"Unknown TypeCategory: {category}");
         }
     }
 
@@ -72,6 +74,8 @@ internal static class ProjectionFileBuilder
             case TypeCategory.Struct:
                 AbiStructFactory.Write(writer, context, type);
                 break;
+            default:
+                throw new System.InvalidOperationException($"Unknown TypeCategory: {category}");
         }
     }
 
