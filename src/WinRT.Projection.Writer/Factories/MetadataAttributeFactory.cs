@@ -6,6 +6,7 @@ using System.IO;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 using AsmResolver.DotNet.Signatures;

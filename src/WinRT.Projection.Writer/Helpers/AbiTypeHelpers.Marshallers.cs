@@ -10,6 +10,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
+using WindowsRuntime.ProjectionWriter.Generation;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers

@@ -3,7 +3,7 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Generation;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 

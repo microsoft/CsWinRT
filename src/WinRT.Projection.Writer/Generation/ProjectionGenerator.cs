@@ -8,7 +8,6 @@ using System.Threading;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;

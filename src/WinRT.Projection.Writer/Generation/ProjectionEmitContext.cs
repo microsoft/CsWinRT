@@ -5,7 +5,7 @@ using System;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 
-namespace WindowsRuntime.ProjectionWriter.Helpers;
+namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <summary>
 /// Per-emission context bundling all state shared by the projection writers when emitting a

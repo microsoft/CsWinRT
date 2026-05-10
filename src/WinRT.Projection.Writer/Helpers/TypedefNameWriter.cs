@@ -9,6 +9,8 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
+using WindowsRuntime.ProjectionWriter.Generation;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>

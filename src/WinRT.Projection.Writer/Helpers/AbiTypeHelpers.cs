@@ -12,6 +12,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
+using WindowsRuntime.ProjectionWriter.Generation;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>

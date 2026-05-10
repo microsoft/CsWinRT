@@ -9,6 +9,8 @@ using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
+using WindowsRuntime.ProjectionWriter.Generation;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>

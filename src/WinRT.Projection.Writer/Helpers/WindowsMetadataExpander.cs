@@ -9,6 +9,7 @@ using System.Xml;
 using Microsoft.Win32;
 using WindowsRuntime.ProjectionWriter.Errors;
 
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>

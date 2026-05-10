@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;

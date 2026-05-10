@@ -3,7 +3,7 @@
 
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Generation;
 
 namespace WindowsRuntime.ProjectionWriter;
 

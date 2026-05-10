@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 

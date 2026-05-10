@@ -3,8 +3,9 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using WindowsRuntime.ProjectionWriter.Helpers;
 
-namespace WindowsRuntime.ProjectionWriter.Helpers;
+namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <summary>
 /// Configuration bag for a projection-writer invocation: input metadata paths, output

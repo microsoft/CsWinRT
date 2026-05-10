@@ -10,6 +10,8 @@ using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using WindowsRuntime.ProjectionWriter.Generation;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
