@@ -125,24 +125,29 @@ internal sealed class IndentedTextWriter
     /// at the start of each new line.
     /// </summary>
     /// <remarks>
-    /// In multi-line mode, if the buffer is mid-line (does not end with a newline) and the
-    /// buffer's last character is a brace (<c>{</c> or <c>}</c>), a newline is inserted before
-    /// the content is processed. This prevents the first line of the multi-line content from
-    /// being jammed onto the same line as a structural brace from a previous emission (raw
-    /// <c>"""..."""</c> strings never include a trailing newline before the closing token, so
-    /// emissions that end on <c>{</c> or <c>}</c> need a separator before the next emission).
+    /// If the buffer is mid-line (does not end with a newline) and the buffer's last character
+    /// is a brace (<c>{</c> or <c>}</c>), and the new content starts with whitespace (i.e. is
+    /// indented as a fresh code statement), a newline is inserted before the content is
+    /// processed. This prevents an indented code line from being jammed onto the same line as
+    /// a structural brace from a previous emission. The whitespace check distinguishes "fresh
+    /// indented statement" from "inline continuation" (e.g. emitting a GUID string like
+    /// <c>{1234ABCD-...}</c> via consecutive single-character writes, where the bytes after
+    /// <c>{</c> are not indented).
     /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
     public void Write(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
+        if (content.Length > 0
+            && _buffer.Length > 0
+            && (_buffer[^1] == '{' || _buffer[^1] == '}')
+            && (isMultiline || content[0] == ' ' || content[0] == '\t'))
+        {
+            _buffer.Append(DefaultNewLine);
+        }
+
         if (isMultiline)
         {
-            if (_buffer.Length > 0 && (_buffer[^1] == '{' || _buffer[^1] == '}'))
-            {
-                _buffer.Append(DefaultNewLine);
-            }
-
             while (content.Length > 0)
             {
                 int newLineIndex = content.IndexOf(DefaultNewLine);
