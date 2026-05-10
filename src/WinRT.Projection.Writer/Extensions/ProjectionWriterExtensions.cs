@@ -75,12 +75,14 @@ internal static class ProjectionWriterExtensions
             namespace {{nsPrefix}}{{context.CurrentNamespace}}
             {
             """, isMultiline: true);
+        writer.IncreaseIndent();
     }
 
     /// <summary>Writes the closing <c>}</c> for the projected namespace.</summary>
     /// <param name="writer">The writer to emit to.</param>
     public static void WriteEndProjectedNamespace(this IndentedTextWriter writer)
     {
+        writer.DecreaseIndent();
         writer.WriteLine("}");
     }
 
@@ -98,6 +100,7 @@ internal static class ProjectionWriterExtensions
             namespace ABI.{{context.CurrentNamespace}}
             {
             """, isMultiline: true);
+        writer.IncreaseIndent();
     }
 
     /// <summary>
@@ -107,6 +110,7 @@ internal static class ProjectionWriterExtensions
     /// <param name="writer">The writer to emit to.</param>
     public static void WriteEndAbiNamespace(this IndentedTextWriter writer)
     {
+        writer.DecreaseIndent();
         writer.Write("""
             }
             #pragma warning restore CA1416
