@@ -74,7 +74,7 @@ internal static class AbiInterfaceFactory
                 // Special case: 'out T[]' is a ReceiveArray ABI signature: (uint* size, T** data).
                 if (br.BaseType is SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
-                    bool isRefElemBr = brSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
+                    bool isRefElemBr = brSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
                     if (includeParamNames)
                     {
                         writer.Write($"uint* __{p.Parameter.Name ?? "param"}Size, ");

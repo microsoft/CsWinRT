@@ -77,7 +77,7 @@ internal static class AbiTypeWriter
                     // fields) can pass through using the projected type since the C# layout
                     // matches the WinRT ABI directly. Truly complex structs (with string/object/
                     // Nullable<T> fields) need the ABI struct.
-                    if (AbiTypeHelpers.IsAnyStruct(context.Cache, dts))
+                    if (context.AbiTypeShapeResolver.IsAnyStruct(dts))
                     {
                         TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                     }
@@ -144,7 +144,7 @@ internal static class AbiTypeWriter
                                 writer.Write("global::ABI.System.Exception");
                                 break;
                             }
-                            if (AbiTypeHelpers.IsAnyStruct(context.Cache, rd.ToTypeSignature()))
+                            if (context.AbiTypeShapeResolver.IsAnyStruct(rd.ToTypeSignature()))
                             {
                                 TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             }

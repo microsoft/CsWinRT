@@ -62,7 +62,7 @@ internal static class AbiStructFactory
                     {
                         writer.Write("void*");
                     }
-                    else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
+                    else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
                     {
                         writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(ft));
                     }
