@@ -356,7 +356,9 @@ internal static class InterfaceFactory
         WriteTypeInheritance(writer, context, type, false, false);
         writer.WriteLine("");
         writer.Write("{");
+        writer.IncreaseIndent();
         WriteInterfaceMemberSignatures(writer, context, type);
+        writer.DecreaseIndent();
         writer.WriteLine("");
         writer.WriteLine("}");
     }
