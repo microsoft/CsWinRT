@@ -26,7 +26,7 @@
         a managed input. Without this, AuthoringTest copies WinAppSDK runtimes to its bin and
         we hit NETSDK1152 duplicate publish output errors.
       -->
-      <Properties>PublishAot=false;SelfContained=false;NativeLib=;OutputType=Library;CustomNativeMain=false</Properties>
+      <Properties>PublishAot=false;SelfContained=false;WindowsAppSDKSelfContained=false;NativeLib=;CustomNativeMain=false</Properties>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
