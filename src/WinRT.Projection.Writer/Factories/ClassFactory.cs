@@ -199,9 +199,10 @@ internal static class ClassFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine("");
-            writer.WriteLine("{");
-            WriteStaticClassMembers(writer, context, type);
-            writer.WriteLine("}");
+            using (writer.WriteBlock())
+            {
+                WriteStaticClassMembers(writer, context, type);
+            }
         }
         finally
         {
@@ -372,32 +373,33 @@ internal static class ClassFactory
             else
             {
                 writer.WriteLine("");
-                writer.WriteLine("{");
-                if (s.HasGetter)
+                using (writer.WriteBlock())
                 {
-                    if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
-                    if (context.Settings.ReferenceProjection)
+                    if (s.HasGetter)
                     {
-                        writer.WriteLine("get => throw null;");
+                        if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
+                        if (context.Settings.ReferenceProjection)
+                        {
+                            writer.WriteLine("get => throw null;");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"get => {s.GetterAbiClass}.{kv.Key}({s.GetterObjRef});");
+                        }
                     }
-                    else
+                    if (s.HasSetter)
                     {
-                        writer.WriteLine($"get => {s.GetterAbiClass}.{kv.Key}({s.GetterObjRef});");
+                        if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
+                        if (context.Settings.ReferenceProjection)
+                        {
+                            writer.WriteLine("set => throw null;");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"set => {s.SetterAbiClass}.{kv.Key}({s.SetterObjRef}, value);");
+                        }
                     }
                 }
-                if (s.HasSetter)
-                {
-                    if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
-                    if (context.Settings.ReferenceProjection)
-                    {
-                        writer.WriteLine("set => throw null;");
-                    }
-                    else
-                    {
-                        writer.WriteLine($"set => {s.SetterAbiClass}.{kv.Key}({s.SetterObjRef}, value);");
-                    }
-                }
-                writer.WriteLine("}");
             }
         }
     }

@@ -31,11 +31,12 @@ internal static class AbiInterfaceIDicFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.WriteLine("");
-        writer.WriteLine("{");
-        // Emit DIM bodies that dispatch through the static ABI Methods class.
-        WriteInterfaceIdicImplMembers(writer, context, type);
-        writer.WriteLine("");
-        writer.WriteLine("}");
+        using (writer.WriteBlock())
+        {
+            // Emit DIM bodies that dispatch through the static ABI Methods class.
+            WriteInterfaceIdicImplMembers(writer, context, type);
+            writer.WriteLine("");
+        }
     }
 
     /// <summary>
@@ -253,16 +254,17 @@ internal static class AbiInterfaceIDicFactory
             else
             {
                 writer.WriteLine("");
-                writer.WriteLine("{");
-                if (getter is not null)
+                using (writer.WriteBlock())
                 {
-                    writer.WriteLine($"    get => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname};");
+                    if (getter is not null)
+                    {
+                        writer.WriteLine($"get => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname};");
+                    }
+                    if (setter is not null)
+                    {
+                        writer.WriteLine($"set => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname} = value;");
+                    }
                 }
-                if (setter is not null)
-                {
-                    writer.WriteLine($"    set => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname} = value;");
-                }
-                writer.WriteLine("}");
             }
         }
 

@@ -44,37 +44,38 @@ internal static class AbiStructFactory
             writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} unsafe struct ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.WriteLine("");
-            writer.WriteLine("{");
-            foreach (FieldDefinition field in type.Fields)
+            using (writer.WriteBlock())
             {
-                if (field.IsStatic || field.Signature is null) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                writer.Write("public ");
-                // Truth uses void* for string and Nullable<T> fields, the ABI type for mapped value
-                // types (DateTime/TimeSpan), and the projected type for everything else (including
-                // enums and bool — their C# layout matches the WinRT ABI directly).
-                if (ft.IsString() || AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
+                foreach (FieldDefinition field in type.Fields)
                 {
-                    writer.Write("void*");
+                    if (field.IsStatic || field.Signature is null) { continue; }
+                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                    writer.Write("public ");
+                    // Truth uses void* for string and Nullable<T> fields, the ABI type for mapped value
+                    // types (DateTime/TimeSpan), and the projected type for everything else (including
+                    // enums and bool — their C# layout matches the WinRT ABI directly).
+                    if (ft.IsString() || AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
+                    {
+                        writer.Write("void*");
+                    }
+                    else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
+                    {
+                        writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(ft));
+                    }
+                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
+                             && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
+                             && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
+                             && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))
+                    {
+                        TypedefNameWriter.WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
+                    }
+                    else
+                    {
+                        MethodFactory.WriteProjectedSignature(writer, context, ft, false);
+                    }
+                    writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
                 }
-                else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
-                {
-                    writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(ft));
-                }
-                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
-                         && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
-                         && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
-                         && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))
-                {
-                    TypedefNameWriter.WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
-                }
-                else
-                {
-                    MethodFactory.WriteProjectedSignature(writer, context, ft, false);
-                }
-                writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
             }
-            writer.WriteLine("}");
             writer.WriteLine("");
         }
         else if (blittable && context.Settings.Component)
