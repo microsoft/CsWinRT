@@ -370,6 +370,13 @@ internal sealed class IndentedTextWriter
     /// <param name="content">The raw text to write.</param>
     private void WriteRawText(scoped ReadOnlySpan<char> content)
     {
+        // Skip writing indent for empty content so that empty lines never receive
+        // trailing whitespace from the indentation prefix.
+        if (content.IsEmpty)
+        {
+            return;
+        }
+
         if (_buffer.Length == 0 || _buffer[^1] == DefaultNewLine)
         {
             _buffer.Append(_currentIndentation);
