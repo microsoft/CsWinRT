@@ -8,6 +8,8 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -227,8 +229,8 @@ internal static class ComponentFactory
 
     private static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
     {
-        AsmResolver.DotNet.Signatures.TypeSignature? returnType = method.Signature?.ReturnType;
-        if (returnType is null || returnType.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Void)
+        TypeSignature? returnType = method.Signature?.ReturnType;
+        if (returnType is null || returnType.ElementType == ElementType.Void)
         {
             writer.Write("void");
             return;
@@ -239,7 +241,7 @@ internal static class ComponentFactory
 
     private static void WriteFactoryPropertyType(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop)
     {
-        AsmResolver.DotNet.Signatures.TypeSignature? sig = prop.Signature?.ReturnType;
+        TypeSignature? sig = prop.Signature?.ReturnType;
         if (sig is null) { writer.Write("object"); return; }
         TypeSemantics semantics = TypeSemanticsFactory.Get(sig);
         TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
@@ -247,7 +249,7 @@ internal static class ComponentFactory
 
     private static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
     {
-        AsmResolver.DotNet.Signatures.MethodSignature? sig = method.Signature;
+        MethodSignature? sig = method.Signature;
         if (sig is null) { return; }
         for (int i = 0; i < sig.ParameterTypes.Count; i++)
         {

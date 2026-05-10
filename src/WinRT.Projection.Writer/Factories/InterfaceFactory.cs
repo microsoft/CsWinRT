@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -305,7 +306,7 @@ internal static class InterfaceFactory
                 {
                     if (i > 0) { writer.Write(", "); }
                     object? val = attr.Signature.FixedArguments[i].Element;
-                    if (val is AsmResolver.Utf8String s)
+                    if (val is Utf8String s)
                     {
                         writer.Write($"@\"{s.Value}\"");
                     }

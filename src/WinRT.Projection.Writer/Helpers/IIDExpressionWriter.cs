@@ -9,6 +9,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -60,7 +61,7 @@ internal static class IIDExpressionWriter
     {
         CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "GuidAttribute");
         if (attr is null || attr.Signature is null) { return null; }
-        System.Collections.Generic.IList<AsmResolver.DotNet.Signatures.CustomAttributeArgument> args = attr.Signature.FixedArguments;
+        System.Collections.Generic.IList<CustomAttributeArgument> args = attr.Signature.FixedArguments;
         if (args.Count < 11) { return null; }
 
         uint data1 = ToUInt32(args[0].Element);

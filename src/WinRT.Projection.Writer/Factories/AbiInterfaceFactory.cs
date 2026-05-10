@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -52,7 +53,7 @@ internal static class AbiInterfaceFactory
             writer.Write(", ");
             ParameterInfo p = sig.Params[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature)
+            if (p.Type is SzArrayTypeSignature)
             {
                 // length pointer + value pointer.
                 if (includeParamNames)
@@ -65,10 +66,10 @@ internal static class AbiInterfaceFactory
                     writer.Write("uint, void*");
                 }
             }
-            else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
+            else if (p.Type is ByReferenceTypeSignature br)
             {
                 // Special case: 'out T[]' is a ReceiveArray ABI signature: (uint* size, T** data).
-                if (br.BaseType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
+                if (br.BaseType is SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
                     bool isRefElemBr = brSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
                     if (includeParamNames)
@@ -122,7 +123,7 @@ internal static class AbiInterfaceFactory
             string retName = AbiTypeHelpers.GetReturnParamName(sig);
             string retSizeName = AbiTypeHelpers.GetReturnSizeParamName(sig);
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
-            if (sig.ReturnType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz)
+            if (sig.ReturnType is SzArrayTypeSignature retSz)
             {
                 if (includeParamNames)
                 {

@@ -6,6 +6,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -23,7 +24,7 @@ internal static class StructEnumMarshallerFactory
         TypeCategory cat = TypeCategorization.GetCategory(type);
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
-        AsmResolver.DotNet.Signatures.TypeDefOrRefSignature sig = type.ToTypeSignature(false) is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td2 ? td2 : null!;
+        TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
         bool almostBlittable = cat == TypeCategory.Struct && (sig is null || AbiTypeHelpers.IsAnyStruct(context.Cache, sig));
         bool isEnum = cat == TypeCategory.Enum;
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
@@ -36,7 +37,7 @@ internal static class StructEnumMarshallerFactory
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature.FieldType;
                 if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; }
             }
         }
@@ -72,7 +73,7 @@ internal static class StructEnumMarshallerFactory
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
-                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature.FieldType;
                 if (!first) { writer.WriteLine(","); }
                 first = false;
                 writer.Write($"            {fname} = ");
@@ -91,7 +92,7 @@ internal static class StructEnumMarshallerFactory
                     // marshalling is identical: use ABI.System.ExceptionMarshaller).
                     writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.{fname})");
                 }
-                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
+                else if (ft is TypeDefOrRefSignature ftd
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
                          && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
@@ -134,7 +135,7 @@ internal static class StructEnumMarshallerFactory
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
-                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature.FieldType;
                 if (!first) { writer.WriteLine(","); }
                 first = false;
                 writer.Write("            ");
@@ -157,7 +158,7 @@ internal static class StructEnumMarshallerFactory
                     // marshalling is identical: use ABI.System.ExceptionMarshaller).
                     writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.{fname})");
                 }
-                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
+                else if (ft is TypeDefOrRefSignature ftd2
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
                          && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
@@ -187,7 +188,7 @@ internal static class StructEnumMarshallerFactory
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
-                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature.FieldType;
                 if (ft.IsString())
                 {
                     writer.WriteLine($"        HStringMarshaller.Free(value.{fname});");
@@ -204,7 +205,7 @@ internal static class StructEnumMarshallerFactory
                     // release — the ABI representation is just an int64
                     continue;
                 }
-                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
+                else if (ft is TypeDefOrRefSignature ftd3
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd3) is TypeDefinition fieldStructTd3
                          && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd3))

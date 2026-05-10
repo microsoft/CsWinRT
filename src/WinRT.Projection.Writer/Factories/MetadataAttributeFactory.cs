@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -348,7 +349,7 @@ internal static class MetadataAttributeFactory
                 catch { ifaceDef = null; }
             }
             if (ifaceDef is null && impl.Interface is TypeSpecification spec
-                && spec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+                && spec.Signature is GenericInstanceTypeSignature gi)
             {
                 ifaceDef = gi.GenericType as TypeDefinition;
                 if (ifaceDef is null && context.Cache is not null)

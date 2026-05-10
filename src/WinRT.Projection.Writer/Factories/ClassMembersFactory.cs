@@ -116,7 +116,7 @@ internal static partial class ClassMembersFactory
             }
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();

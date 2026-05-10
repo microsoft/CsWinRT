@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Builders;
 
 /// <summary>
@@ -132,22 +133,22 @@ internal static class ProjectionFileBuilder
         writer.WriteLine("");
     }
     /// <summary>Formats a metadata Constant value as a C# literal.</summary>
-    internal static string FormatConstant(AsmResolver.DotNet.Constant constant)
+    internal static string FormatConstant(Constant constant)
     {
         // The Constant.Value contains raw bytes representing the value
-        AsmResolver.PE.DotNet.Metadata.Tables.ElementType type = constant.Type;
+        ElementType type = constant.Type;
         byte[] data = constant.Value?.Data ?? [];
         return type switch
         {
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => ((sbyte)data[0]).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => data[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.I1 => ((sbyte)data[0]).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.U1 => data[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             // I4/U4 use printf "%#0x" semantics: 0 -> "0", non-zero -> "0x<hex>"
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => FormatHexAlternate((uint)System.BitConverter.ToInt32(data, 0)),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => FormatHexAlternate(System.BitConverter.ToUInt32(data, 0)),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.I4 => FormatHexAlternate((uint)System.BitConverter.ToInt32(data, 0)),
+            ElementType.U4 => FormatHexAlternate(System.BitConverter.ToUInt32(data, 0)),
+            ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             _ => "0"
         };
     }

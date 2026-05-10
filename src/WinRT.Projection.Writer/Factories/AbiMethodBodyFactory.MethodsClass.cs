@@ -104,8 +104,8 @@ internal static partial class AbiMethodBodyFactory
         {
             if (skipExclusiveEvents) { continue; }
             string evtName = evt.Name?.Value ?? string.Empty;
-            AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
-            bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+            TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
+            bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
 
             // Use the add method's WinMD slot (events project as the add_X method's vmethod_index).
             (MethodDefinition? addMethod, MethodDefinition? _) = evt.GetEventMethods();
@@ -131,7 +131,7 @@ internal static partial class AbiMethodBodyFactory
                 // Non-generic delegate handler: the EventSource lives in the same ABI namespace
                 // as this Methods class, so we use just the short name
                 string delegateName = string.Empty;
-                if (evtSig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+                if (evtSig is TypeDefOrRefSignature td)
                 {
                     delegateName = td.Type?.Name?.Value ?? string.Empty;
                     delegateName = IdentifierEscaping.StripBackticks(delegateName);

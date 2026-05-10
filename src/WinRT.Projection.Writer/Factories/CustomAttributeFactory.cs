@@ -9,6 +9,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using AsmResolver;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -105,7 +106,7 @@ internal static class CustomAttributeFactory
         {
             null => "null",
             string s => "@\"" + EscapeVerbatimString(s) + "\"",
-            AsmResolver.Utf8String us => "@\"" + EscapeVerbatimString(us.Value) + "\"",
+            Utf8String us => "@\"" + EscapeVerbatimString(us.Value) + "\"",
             bool b => b ? "true" : "false",
             byte by => by.ToString(CultureInfo.InvariantCulture),
             sbyte sb => sb.ToString(CultureInfo.InvariantCulture),

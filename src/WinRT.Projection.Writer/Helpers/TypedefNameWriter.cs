@@ -5,6 +5,8 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -250,17 +252,17 @@ internal static class TypedefNameWriter
     /// but applies the supplied generic context for substitution (e.g., <c>T0</c>/<c>T1</c> -&gt;
     /// concrete type arguments when emitting members for an instantiated parent generic interface).
     /// </summary>
-    public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance)
+    public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, GenericInstanceTypeSignature? currentInstance)
     {
         if (evt.EventType is null)
         {
             writer.Write("global::Windows.Foundation.EventHandler");
             return;
         }
-        AsmResolver.DotNet.Signatures.TypeSignature sig = evt.EventType.ToTypeSignature(false);
+        TypeSignature sig = evt.EventType.ToTypeSignature(false);
         if (currentInstance is not null)
         {
-            sig = sig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
+            sig = sig.InstantiateGenericTypes(new GenericContext(currentInstance, null));
         }
         // Special case for Microsoft.UI.Xaml.Input.ICommand.CanExecuteChanged: the WinRT event
         // handler is EventHandler<object> but C# expects non-generic EventHandler.
@@ -269,12 +271,12 @@ internal static class TypedefNameWriter
             && (declaringType.FullName is "Microsoft.UI.Xaml.Input.ICommand" or "Windows.UI.Xaml.Input.ICommand"))
         {
             // Verify the event type matches EventHandler<object> before applying override.
-            if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi
+            if (sig is GenericInstanceTypeSignature gi
                 && gi.GenericType.Namespace?.Value == "Windows.Foundation"
                 && gi.GenericType.Name?.Value == "EventHandler`1"
                 && gi.TypeArguments.Count == 1
-                && gi.TypeArguments[0] is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib
-                && corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object)
+                && gi.TypeArguments[0] is CorLibTypeSignature corlib
+                && corlib.ElementType == ElementType.Object)
             {
                 writer.Write("global::System.EventHandler");
                 return;

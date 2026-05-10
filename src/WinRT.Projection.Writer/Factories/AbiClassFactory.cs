@@ -6,6 +6,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -46,9 +47,9 @@ internal static class AbiClassFactory
         // inside ConvertToUnmanaged that fetches the IID via WinRT.Interop's InterfaceIIDs class
         // (since the IID for a generic instantiation is computed at runtime). The IID expression
         // in the call then becomes '<accessor>(null)' instead of a static InterfaceIIDs reference.
-        AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? defaultGenericInst = null;
-        if (defaultIface is AsmResolver.DotNet.TypeSpecification spec
-            && spec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        GenericInstanceTypeSignature? defaultGenericInst = null;
+        if (defaultIface is TypeSpecification spec
+            && spec.Signature is GenericInstanceTypeSignature gi)
         {
             defaultGenericInst = gi;
         }

@@ -3,6 +3,8 @@
 
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -16,7 +18,7 @@ internal static class ArrayElementEncoder
     /// (typeNamespace prefix outside the brackets, and the element inside the brackets uses just the
     /// type name without its namespace because depth=0 in the interop generator's AppendRawTypeName).
     /// </summary>
-    internal static string GetArrayMarshallerInteropPath(AsmResolver.DotNet.Signatures.TypeSignature elementType)
+    internal static string GetArrayMarshallerInteropPath(TypeSignature elementType)
     {
         // The 'encodedElement' passed in uses the depth>0 form (assembly + hyphenated namespace + name),
         // but inside the array brackets the interop generator uses the depth=0 form (assembly + just name).
@@ -36,19 +38,19 @@ internal static class ArrayElementEncoder
     /// fundamentals use their short C# name; typedefs use just the type name (no namespace) prefixed
     /// with the assembly marker; generic instances include their assembly marker, name, and type arguments.
     /// </summary>
-    private static string EncodeArrayElementName(AsmResolver.DotNet.Signatures.TypeSignature elementType)
+    private static string EncodeArrayElementName(TypeSignature elementType)
     {
         System.Text.StringBuilder sb = new();
         EncodeArrayElementNameInto(sb, elementType);
         return sb.ToString();
     }
 
-    private static void EncodeArrayElementNameInto(System.Text.StringBuilder sb, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    private static void EncodeArrayElementNameInto(System.Text.StringBuilder sb, TypeSignature sig)
     {
         // Special case for System.Guid: the depth=0 (top-level array element) form drops the
         // namespace prefix and uses just the assembly marker + type name, so for Guid this
         // becomes "<#corlib>Guid".
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature gtd
+        if (sig is TypeDefOrRefSignature gtd
             && gtd.Type?.Namespace?.Value == "System"
             && gtd.Type?.Name?.Value == "Guid")
         {
@@ -57,13 +59,13 @@ internal static class ArrayElementEncoder
         }
         switch (sig)
         {
-            case AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib:
+            case CorLibTypeSignature corlib:
                 InteropTypeNameWriter.EncodeFundamental(sb, corlib, TypedefNameType.Projected);
                 return;
-            case AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td:
+            case TypeDefOrRefSignature td:
                 EncodeArrayElementForTypeDef(sb, td.Type, generic_args: null);
                 return;
-            case AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi:
+            case GenericInstanceTypeSignature gi:
                 EncodeArrayElementForTypeDef(sb, gi.GenericType, generic_args: gi.TypeArguments);
                 return;
             default:
@@ -72,7 +74,7 @@ internal static class ArrayElementEncoder
         }
     }
 
-    private static void EncodeArrayElementForTypeDef(System.Text.StringBuilder sb, AsmResolver.DotNet.ITypeDefOrRef type, System.Collections.Generic.IList<AsmResolver.DotNet.Signatures.TypeSignature>? generic_args)
+    private static void EncodeArrayElementForTypeDef(System.Text.StringBuilder sb, ITypeDefOrRef type, System.Collections.Generic.IList<TypeSignature>? generic_args)
     {
         (string typeNs, string typeName) = type.Names();
         // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).

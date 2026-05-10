@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -35,7 +36,7 @@ internal static partial class ConstructorFactory
             if (attr.Signature is null) { continue; }
             for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
             {
-                AsmResolver.DotNet.Signatures.CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
+                CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
                 if (arg.Element is int v)
                 {
                     return v switch

@@ -7,6 +7,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -80,24 +81,24 @@ internal static class InteropTypeNameWriter
     {
         switch (corlib.ElementType)
         {
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object:
+            case ElementType.Object:
                 _ = nameType == TypedefNameType.Projected
                     ? sb.Append("object")
                     : sb.Append("ABI.System.<object>");
                 return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean: _ = sb.Append("bool"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char: _ = sb.Append("char"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1: _ = sb.Append("sbyte"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1: _ = sb.Append("byte"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2: _ = sb.Append("short"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2: _ = sb.Append("ushort"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4: _ = sb.Append("int"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4: _ = sb.Append("uint"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8: _ = sb.Append("long"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8: _ = sb.Append("ulong"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4: _ = sb.Append("float"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8: _ = sb.Append("double"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String:
+            case ElementType.Boolean: _ = sb.Append("bool"); return;
+            case ElementType.Char: _ = sb.Append("char"); return;
+            case ElementType.I1: _ = sb.Append("sbyte"); return;
+            case ElementType.U1: _ = sb.Append("byte"); return;
+            case ElementType.I2: _ = sb.Append("short"); return;
+            case ElementType.U2: _ = sb.Append("ushort"); return;
+            case ElementType.I4: _ = sb.Append("int"); return;
+            case ElementType.U4: _ = sb.Append("uint"); return;
+            case ElementType.I8: _ = sb.Append("long"); return;
+            case ElementType.U8: _ = sb.Append("ulong"); return;
+            case ElementType.R4: _ = sb.Append("float"); return;
+            case ElementType.R8: _ = sb.Append("double"); return;
+            case ElementType.String:
                 _ = sb.Append("string");
                 return;
         }

@@ -6,6 +6,7 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -61,8 +62,8 @@ internal static class EventTableFactory
         // The cookie/token return parameter takes the metadata return param name (matches truth).
         string cookieName = AbiTypeHelpers.GetReturnParamName(sig);
 
-        AsmResolver.DotNet.Signatures.TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
-        bool isGeneric = evtTypeSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+        TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
+        bool isGeneric = evtTypeSig is GenericInstanceTypeSignature;
 
         writer.WriteLine("");
         writer.Write($$"""

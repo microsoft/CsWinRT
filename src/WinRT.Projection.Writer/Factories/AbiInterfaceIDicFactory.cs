@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -90,7 +91,7 @@ internal static class AbiInterfaceIDicFactory
             // IDictionary/IList members for cast-based dispatch.
             if (rNs == "Windows.Foundation.Collections" && rName == "IObservableMap`2")
             {
-                if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
+                if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
                     IndentedTextWriter __scratchKeyText = new();
                     TypedefNameWriter.WriteTypeName(__scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
@@ -111,7 +112,7 @@ internal static class AbiInterfaceIDicFactory
             }
             if (rNs == "Windows.Foundation.Collections" && rName == "IObservableVector`1")
             {
-                if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
+                if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
                     IndentedTextWriter __scratchElementText = new();
                     TypedefNameWriter.WriteTypeName(__scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);

@@ -6,6 +6,8 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -18,7 +20,7 @@ internal static partial class AbiMethodBodyFactory
     /// </summary>
     internal static void EmitDoAbiBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string ifaceFullName, string methodName)
     {
-        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+        TypeSignature? rt = sig.ReturnType;
 
         // String params drive whether we need HString header allocation in the body.
         bool hasStringParams = false;
@@ -26,7 +28,7 @@ internal static partial class AbiMethodBodyFactory
         {
             if (p.Type.IsString()) { hasStringParams = true; break; }
         }
-        bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
+        bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi
             && (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, retSzAbi.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, retSzAbi.BaseType)
                 || retSzAbi.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzAbi.BaseType) || retSzAbi.BaseType.IsObject()
                 || AbiTypeHelpers.IsComplexStruct(context.Cache, retSzAbi.BaseType));
@@ -86,7 +88,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Params[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.Out) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 if (!uOut.IsGenericInstance()) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
@@ -108,7 +110,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
@@ -129,7 +131,7 @@ internal static partial class AbiMethodBodyFactory
                 """, isMultiline: true);
                 writer.WriteLine("");
             }
-            if (returnIsReceiveArrayDoAbi && rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzHoist)
+            if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
@@ -216,7 +218,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
-                AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 IndentedTextWriter __scratchProjected = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjected, context, underlying, false);
                 string projected = __scratchProjected.ToString();
@@ -232,7 +234,7 @@ internal static partial class AbiMethodBodyFactory
                 if (cat != ParameterCategory.ReceiveArray) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
@@ -251,7 +253,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Params[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
+                if (p.Type is not SzArrayTypeSignature sz) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 IndentedTextWriter __scratchElementProjected = new();
@@ -289,7 +291,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Params[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.PassArray) { continue; }
-                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                if (p.Type is not SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -333,7 +335,7 @@ internal static partial class AbiMethodBodyFactory
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
                     string rawName = p.Parameter.Name ?? "param";
                     string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
-                    AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
+                    TypeSignature inner = p.Type.GetNullableInnerType()!;
                     string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                     writer.WriteLine($"    var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
                 }
@@ -414,7 +416,7 @@ internal static partial class AbiMethodBodyFactory
                         // marshaller — DO NOT zero or write back.
                         string raw = p.Parameter.Name ?? "param";
                         string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                        AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                        TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                         if (uRef.IsString())
                         {
                             writer.Write($"HStringMarshaller.ConvertToManaged(*{ptr})");
@@ -475,7 +477,7 @@ internal static partial class AbiMethodBodyFactory
                 if (cat != ParameterCategory.Out) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 writer.Write($"    *{ptr} = ");
                 // String: HStringMarshaller.ConvertToUnmanaged
                 if (underlying.IsString())
@@ -503,13 +505,13 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.Write($"__{raw}");
                 }
-                else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
-                         corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+                else if (underlying is CorLibTypeSignature corlibBool &&
+                         corlibBool.ElementType == ElementType.Boolean)
                 {
                     writer.Write($"__{raw}");
                 }
-                else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
-                         corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+                else if (underlying is CorLibTypeSignature corlibChar &&
+                         corlibChar.ElementType == ElementType.Char)
                 {
                     writer.Write($"__{raw}");
                 }
@@ -548,7 +550,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Params[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat != ParameterCategory.FillArray) { continue; }
-                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
+                if (p.Type is not SzArrayTypeSignature szFA) { continue; }
                 // Blittable element types: Span wraps the native buffer; no copy-back needed.
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -609,7 +611,7 @@ internal static partial class AbiMethodBodyFactory
                     if (rt is not null && rt.IsNullableT())
                     {
                         // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
-                        AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
+                        TypeSignature inner = rt.GetNullableInnerType()!;
                         string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                         writer.WriteLine($"    *{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
                     }
@@ -654,13 +656,13 @@ internal static partial class AbiMethodBodyFactory
                 else
                 {
                     writer.Write($"    *{retParamName} = ");
-                    if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
-                        corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+                    if (rt is CorLibTypeSignature corlib &&
+                        corlib.ElementType == ElementType.Boolean)
                     {
                         writer.WriteLine($"{retLocalName};");
                     }
-                    else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
-                             corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+                    else if (rt is CorLibTypeSignature corlib2 &&
+                             corlib2.ElementType == ElementType.Char)
                     {
                         writer.WriteLine($"{retLocalName};");
                     }
@@ -691,7 +693,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Params[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                if (p.Type is not SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 hasNonBlittableArrayDoAbi = true;
                 break;
@@ -707,7 +709,7 @@ internal static partial class AbiMethodBodyFactory
                     ParameterInfo p = sig.Params[i];
                     ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                     if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                    if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                    if (p.Type is not SzArrayTypeSignature szArr) { continue; }
                     if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                     string raw = p.Parameter.Name ?? "param";
                     IndentedTextWriter __scratchElementProjected = new();
@@ -733,18 +735,18 @@ internal static partial class AbiMethodBodyFactory
     {
         string rawName = p.Parameter.Name ?? "param";
         string pname = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
-        if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
-            corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+        if (p.Type is CorLibTypeSignature corlib &&
+            corlib.ElementType == ElementType.Boolean)
         {
             writer.Write(pname);
         }
-        else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
-                 corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+        else if (p.Type is CorLibTypeSignature corlib2 &&
+                 corlib2.ElementType == ElementType.Char)
         {
             writer.Write(pname);
         }
-        else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibStr &&
-                 corlibStr.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String)
+        else if (p.Type is CorLibTypeSignature corlibStr &&
+                 corlibStr.ElementType == ElementType.String)
         {
             writer.Write($"HStringMarshaller.ConvertToManaged({pname})");
         }

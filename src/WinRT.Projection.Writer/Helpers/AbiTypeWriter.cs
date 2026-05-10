@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -63,7 +64,7 @@ internal static class AbiTypeWriter
                         writer.Write("global::ABI.System.Type");
                         break;
                     }
-                    AsmResolver.DotNet.Signatures.TypeSignature dts = d.Type.ToTypeSignature();
+                    TypeSignature dts = d.Type.ToTypeSignature();
                     // "Almost-blittable" structs (with bool/char fields but no reference-type
                     // fields) can pass through using the projected type since the C# layout
                     // matches the WinRT ABI directly. Truly complex structs (with string/object/

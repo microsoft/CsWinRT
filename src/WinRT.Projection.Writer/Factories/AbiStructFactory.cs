@@ -6,6 +6,7 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -50,7 +51,7 @@ internal static class AbiStructFactory
                 foreach (FieldDefinition field in type.Fields)
                 {
                     if (field.IsStatic || field.Signature is null) { continue; }
-                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                    TypeSignature ft = field.Signature.FieldType;
                     writer.Write("public ");
                     // Truth uses void* for string and Nullable<T> fields, the ABI type for mapped value
                     // types (DateTime/TimeSpan), and the projected type for everything else (including
@@ -63,7 +64,7 @@ internal static class AbiStructFactory
                     {
                         writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(ft));
                     }
-                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
+                    else if (ft is TypeDefOrRefSignature tdr
                              && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
                              && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
                              && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))

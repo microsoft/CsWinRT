@@ -7,6 +7,8 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -40,22 +42,22 @@ internal static class AbiTypeHelpers
         return true;
     }
 
-    internal static bool IsFieldTypeBlittable(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsFieldTypeBlittable(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        if (sig is CorLibTypeSignature corlib)
         {
             //   return (type != fundamental_type::String);
             // i.e. ALL fundamentals (including Boolean, Char) are considered blittable here;
             // only String is non-blittable. Object isn't a fundamental in C++; handled below.
             return corlib.ElementType switch
             {
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String => false,
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object => false,
+                ElementType.String => false,
+                ElementType.Object => false,
                 _ => true
             };
         }
         // For TypeRef/TypeDef, resolve and check blittability.
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature todr)
+        if (sig is TypeDefOrRefSignature todr)
         {
             string fNs = todr.Type?.Namespace?.Value ?? string.Empty;
             string fName = todr.Type?.Name?.Value ?? string.Empty;
@@ -90,7 +92,7 @@ internal static class AbiTypeHelpers
     /// cross-assembly/TypeRef-row references via the metadata cache. Returns <c>null</c> when
     /// the reference cannot be resolved.
     /// </summary>
-    internal static TypeDefinition? TryResolveStructTypeDef(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr)
+    internal static TypeDefinition? TryResolveStructTypeDef(MetadataCache cache, TypeDefOrRefSignature tdr)
     {
         if (tdr.Type is TypeDefinition td) { return td; }
         if (tdr.Type is TypeReference tr)
@@ -102,13 +104,13 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>Returns the (possibly mapped) namespace of a type signature, or 'System' for fundamentals.</summary>
-    internal static string GetMappedNamespace(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetMappedNamespace(TypeSignature sig)
     {
         // Fundamentals (string, bool, int, etc.) live in 'System' for ArrayMarshaller path purposes.
-        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature) { return "System"; }
-        AsmResolver.DotNet.ITypeDefOrRef? td = null;
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
-        else if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { td = gi.GenericType; }
+        if (sig is CorLibTypeSignature) { return "System"; }
+        ITypeDefOrRef? td = null;
+        if (sig is TypeDefOrRefSignature tds) { td = tds.Type; }
+        else if (sig is GenericInstanceTypeSignature gi) { td = gi.GenericType; }
         if (td is null) { return string.Empty; }
         (string typeNs, string typeName) = td.Names();
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
@@ -131,8 +133,8 @@ internal static class AbiTypeHelpers
             if (attr.Signature is null) { continue; }
             for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
             {
-                AsmResolver.DotNet.Signatures.CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
-                if (arg.Element is AsmResolver.DotNet.Signatures.TypeSignature sig)
+                CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
+                if (arg.Element is TypeSignature sig)
                 {
                     string fullName = sig.FullName ?? string.Empty;
                     TypeDefinition? td = cache.Find(fullName);
@@ -152,7 +154,7 @@ internal static class AbiTypeHelpers
     internal static TypeDefinition? ResolveInterfaceTypeDef(MetadataCache cache, ITypeDefOrRef ifaceRef)
     {
         if (ifaceRef is TypeDefinition td) { return td; }
-        if (ifaceRef is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef? gen = gi.GenericType;
             if (gen is TypeDefinition gtd) { return gtd; }
@@ -242,7 +244,7 @@ internal static class AbiTypeHelpers
     /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
     internal static bool IsDelegateInvokeNativeSupported(MetadataCache cache, MethodSignatureInfo sig)
     {
-        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+        TypeSignature? rt = sig.ReturnType;
         if (rt is not null)
         {
             if (rt.IsHResultException()) { return false; }
@@ -253,7 +255,7 @@ internal static class AbiTypeHelpers
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
-                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
+                if (p.Type is SzArrayTypeSignature szP)
                 {
                     if (IsBlittablePrimitive(cache, szP.BaseType)) { continue; }
                     if (IsAnyStruct(cache, szP.BaseType)) { continue; }
@@ -324,11 +326,11 @@ internal static class AbiTypeHelpers
     /// <summary>True if the type signature is a Nullable&lt;T&gt; where T is a primitive
     /// supported by an ABI.System.&lt;T&gt;Marshaller (e.g. UInt64Marshaller, Int32Marshaller, etc.).
     /// Returns the fully-qualified marshaller name in <paramref name="marshallerName"/>.</summary>
-    internal static bool TryGetNullablePrimitiveMarshallerName(AsmResolver.DotNet.Signatures.TypeSignature sig, out string? marshallerName)
+    internal static bool TryGetNullablePrimitiveMarshallerName(TypeSignature sig, out string? marshallerName)
     {
         marshallerName = null;
-        if (sig is not AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { return false; }
-        AsmResolver.DotNet.ITypeDefOrRef gt = gi.GenericType;
+        if (sig is not GenericInstanceTypeSignature gi) { return false; }
+        ITypeDefOrRef gt = gi.GenericType;
         string ns = gt?.Namespace?.Value ?? string.Empty;
         string name = gt?.Name?.Value ?? string.Empty;
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
@@ -337,24 +339,24 @@ internal static class AbiTypeHelpers
             || (ns == "Windows.Foundation" && name == "IReference`1");
         if (!isNullable) { return false; }
         if (gi.TypeArguments.Count != 1) { return false; }
-        AsmResolver.DotNet.Signatures.TypeSignature arg = gi.TypeArguments[0];
+        TypeSignature arg = gi.TypeArguments[0];
         // Map primitive corlib element type to its ABI marshaller name.
-        if (arg is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        if (arg is CorLibTypeSignature corlib)
         {
             string? mn = corlib.ElementType switch
             {
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "Boolean",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "Char",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => "SByte",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => "Byte",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => "Int16",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => "UInt16",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "Int32",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "UInt32",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => "Int64",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => "UInt64",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 => "Single",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "Double",
+                ElementType.Boolean => "Boolean",
+                ElementType.Char => "Char",
+                ElementType.I1 => "SByte",
+                ElementType.U1 => "Byte",
+                ElementType.I2 => "Int16",
+                ElementType.U2 => "UInt16",
+                ElementType.I4 => "Int32",
+                ElementType.U4 => "UInt32",
+                ElementType.I8 => "Int64",
+                ElementType.U8 => "UInt64",
+                ElementType.R4 => "Single",
+                ElementType.R8 => "Double",
                 _ => null
             };
             if (mn is null) { return false; }
@@ -372,12 +374,12 @@ internal static class AbiTypeHelpers
     /// and need an explicit marshaller call ('global::ABI.&lt;MappedNamespace&gt;.&lt;MappedName&gt;Marshaller.ConvertToUnmanaged'/
     /// 'ConvertToManaged') to convert values across the boundary.
     /// </summary>
-    private static bool IsMappedMarshalingValueType(AsmResolver.DotNet.Signatures.TypeSignature sig, out string mappedNs, out string mappedName)
+    private static bool IsMappedMarshalingValueType(TypeSignature sig, out string mappedNs, out string mappedName)
     {
         mappedNs = string.Empty;
         mappedName = string.Empty;
-        AsmResolver.DotNet.ITypeDefOrRef? td = null;
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
+        ITypeDefOrRef? td = null;
+        if (sig is TypeDefOrRefSignature tds) { td = tds.Type; }
         if (td is null) { return false; }
         (string ns, string name) = td.Names();
         // The set of mapped types that use the 'value-type marshaller' pattern (DateTime, TimeSpan, HResult).
@@ -392,7 +394,7 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>True if the type is a mapped value type that needs ABI marshalling (excluding HResult, handled separately).</summary>
-    internal static bool IsMappedAbiValueType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsMappedAbiValueType(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out _, out string mappedName)) { return false; }
         // HResult/Exception is treated specially in many places; this helper is for DateTime/TimeSpan only.
@@ -400,23 +402,23 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>Returns the ABI type name for a mapped value type (e.g. 'global::ABI.System.TimeSpan').</summary>
-    internal static string GetMappedAbiTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetMappedAbiTypeName(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
         return "global::ABI." + ns + "." + name;
     }
 
     /// <summary>Returns the marshaller class name for a mapped value type (e.g. 'global::ABI.System.TimeSpanMarshaller').</summary>
-    internal static string GetMappedMarshallerName(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetMappedMarshallerName(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
         return "global::ABI." + ns + "." + name + "Marshaller";
     }
 
     /// <summary>True if the type signature represents an enum (resolves cross-module typerefs).</summary>
-    internal static bool IsEnumType(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsEnumType(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        if (sig is not TypeDefOrRefSignature td) { return false; }
         if (td.Type is TypeDefinition def)
         {
             return TypeCategorization.GetCategory(def) == TypeCategory.Enum;
@@ -434,25 +436,25 @@ internal static class AbiTypeHelpers
     ///.: e.g. for <c>Nullable&lt;DateTimeOffset&gt;</c> returns
     /// <c>global::ABI.System.DateTimeOffsetMarshaller</c>; for primitives like <c>Nullable&lt;int&gt;</c>
     /// returns <c>global::ABI.System.Int32Marshaller</c>.</summary>
-    internal static string GetNullableInnerMarshallerName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature innerType)
+    internal static string GetNullableInnerMarshallerName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature innerType)
     {
         // Primitives (Int32, Int64, Boolean, etc.) live in ABI.System with the canonical .NET name.
-        if (innerType is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        if (innerType is CorLibTypeSignature corlib)
         {
             string typeName = corlib.ElementType switch
             {
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "Boolean",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "Char",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => "SByte",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => "Byte",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => "Int16",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => "UInt16",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "Int32",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "UInt32",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => "Int64",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => "UInt64",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 => "Single",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "Double",
+                ElementType.Boolean => "Boolean",
+                ElementType.Char => "Char",
+                ElementType.I1 => "SByte",
+                ElementType.U1 => "Byte",
+                ElementType.I2 => "Int16",
+                ElementType.U2 => "UInt16",
+                ElementType.I4 => "Int32",
+                ElementType.U4 => "UInt32",
+                ElementType.I8 => "Int64",
+                ElementType.U8 => "UInt64",
+                ElementType.R4 => "Single",
+                ElementType.R8 => "Double",
                 _ => "",
             };
             if (!string.IsNullOrEmpty(typeName))
@@ -466,21 +468,21 @@ internal static class AbiTypeHelpers
 
     /// <summary>Strips <c>ByReferenceTypeSignature</c> and <c>CustomModifierTypeSignature</c> wrappers
     /// to get the underlying type signature.</summary>
-    internal static AsmResolver.DotNet.Signatures.TypeSignature StripByRefAndCustomModifiers(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static TypeSignature StripByRefAndCustomModifiers(TypeSignature sig)
     {
-        AsmResolver.DotNet.Signatures.TypeSignature current = sig;
+        TypeSignature current = sig;
         while (true)
         {
-            if (current is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br) { current = br.BaseType; continue; }
-            if (current is AsmResolver.DotNet.Signatures.CustomModifierTypeSignature cm) { current = cm.BaseType; continue; }
+            if (current is ByReferenceTypeSignature br) { current = br.BaseType; continue; }
+            if (current is CustomModifierTypeSignature cm) { current = cm.BaseType; continue; }
             return current;
         }
     }
 
     /// <summary>True if the type signature represents a WinRT runtime class, interface, or delegate (reference type marshallable via *Marshaller).</summary>
-    internal static bool IsRuntimeClassOrInterface(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsRuntimeClassOrInterface(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        if (sig is TypeDefOrRefSignature td)
         {
             // Same-module: use the resolved category directly.
             if (td.Type is TypeDefinition def)
@@ -524,9 +526,9 @@ internal static class AbiTypeHelpers
     /// When the marshaller would land in the writer's current ABI namespace, returns just the
     /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) —.
     /// elides the qualifier in same-namespace contexts.</summary>
-    internal static string GetMarshallerFullName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetMarshallerFullName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
     {
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        if (sig is TypeDefOrRefSignature td)
         {
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
@@ -562,26 +564,26 @@ internal static class AbiTypeHelpers
 
     /// <summary>True if the type is a blittable primitive (or enum) directly representable
     /// at the ABI: bool/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/char and enums.</summary>
-    internal static bool IsBlittablePrimitive(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsBlittablePrimitive(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        if (sig is CorLibTypeSignature corlib)
         {
             return corlib.ElementType is
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 or
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char;
+                ElementType.Boolean or
+                ElementType.I1 or
+                ElementType.U1 or
+                ElementType.I2 or
+                ElementType.U2 or
+                ElementType.I4 or
+                ElementType.U4 or
+                ElementType.I8 or
+                ElementType.U8 or
+                ElementType.R4 or
+                ElementType.R8 or
+                ElementType.Char;
         }
         // Enum (TypeDefOrRef-based value type with non-Object base) - same module or cross-module
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        if (sig is TypeDefOrRefSignature td)
         {
             if (td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
             {
@@ -608,9 +610,9 @@ internal static class AbiTypeHelpers
     /// <summary>True for structs that have at least one reference type field (string, generic
     /// instance Nullable&lt;T&gt;, etc.). These need per-field marshalling via the *Marshaller class
     /// (ConvertToUnmanaged/ConvertToManaged/Dispose).</summary>
-    internal static bool IsComplexStruct(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsComplexStruct(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        if (sig is not TypeDefOrRefSignature td) { return false; }
         TypeDefinition? def = td.Type as TypeDefinition;
         if (def is null && td.Type is TypeReference tr)
         {
@@ -634,7 +636,7 @@ internal static class AbiTypeHelpers
         foreach (FieldDefinition field in def.Fields)
         {
             if (field.IsStatic || field.Signature is null) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+            TypeSignature ft = field.Signature.FieldType;
             if (IsBlittablePrimitive(cache, ft)) { continue; }
             if (IsAnyStruct(cache, ft)) { continue; }
             return true;
@@ -642,9 +644,9 @@ internal static class AbiTypeHelpers
         return false;
     }
 
-    internal static bool IsAnyStruct(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsAnyStruct(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        if (sig is not TypeDefOrRefSignature td) { return false; }
         TypeDefinition? def = td.Type as TypeDefinition;
         if (def is null && td.Type is TypeReference trEarly)
         {
@@ -669,12 +671,12 @@ internal static class AbiTypeHelpers
         foreach (FieldDefinition field in def.Fields)
         {
             if (field.IsStatic || field.Signature is null) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-            if (ft is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibField)
+            TypeSignature ft = field.Signature.FieldType;
+            if (ft is CorLibTypeSignature corlibField)
             {
                 if (corlibField.ElementType is
-                    AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String or
-                    AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object)
+                    ElementType.String or
+                    ElementType.Object)
                 { return false; }
                 continue;
             }
@@ -687,7 +689,7 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
-    internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
     {
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
@@ -700,9 +702,9 @@ internal static class AbiTypeHelpers
     /// When the writer is currently in the matching ABI namespace, returns just the
     /// short type name (e.g. <c>HttpProgress</c>) to mirror the original code which uses the
     /// unqualified name in same-namespace contexts.</summary>
-    internal static string GetAbiStructTypeName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetAbiStructTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
     {
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        if (sig is TypeDefOrRefSignature td)
         {
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
@@ -726,19 +728,19 @@ internal static class AbiTypeHelpers
         return "global::ABI.Object";
     }
 
-    internal static string GetAbiPrimitiveType(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetAbiPrimitiveType(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        if (sig is CorLibTypeSignature corlib)
         {
             return corlib.ElementType switch
             {
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "bool",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "char",
+                ElementType.Boolean => "bool",
+                ElementType.Char => "char",
                 _ => GetAbiFundamentalTypeFromCorLib(corlib.ElementType),
             };
         }
         // Enum: use the projected enum type as the ABI signature
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        if (sig is TypeDefOrRefSignature td)
         {
             TypeDefinition? def = td.Type as TypeDefinition;
             if (def is null && td.Type is TypeReference tr)
@@ -770,20 +772,20 @@ internal static class AbiTypeHelpers
         return string.IsNullOrEmpty(ns) ? "global::" + name : "global::" + ns + "." + name;
     }
 
-    private static string GetAbiFundamentalTypeFromCorLib(AsmResolver.PE.DotNet.Metadata.Tables.ElementType et)
+    private static string GetAbiFundamentalTypeFromCorLib(ElementType et)
     {
         return et switch
         {
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => "sbyte",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => "byte",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => "short",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => "ushort",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "int",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "uint",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => "long",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => "ulong",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 => "float",
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "double",
+            ElementType.I1 => "sbyte",
+            ElementType.U1 => "byte",
+            ElementType.I2 => "short",
+            ElementType.U2 => "ushort",
+            ElementType.I4 => "int",
+            ElementType.U4 => "uint",
+            ElementType.I8 => "long",
+            ElementType.U8 => "ulong",
+            ElementType.R4 => "float",
+            ElementType.R8 => "double",
             _ => "int",
         };
     }

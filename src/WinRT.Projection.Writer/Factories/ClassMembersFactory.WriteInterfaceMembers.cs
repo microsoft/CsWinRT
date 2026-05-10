@@ -8,16 +8,18 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class ClassMembersFactory
 {
     private static void WriteInterfaceMembersRecursive(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType, TypeDefinition declaringType,
-        AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
+        GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
     {
-        AsmResolver.DotNet.Signatures.GenericContext genCtx = new(currentInstance, null);
+        GenericContext genCtx = new(currentInstance, null);
 
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
@@ -39,16 +41,16 @@ internal static partial class ClassMembersFactory
             // substitute !0/!1 with string/object so the generated code references
             // IDictionary<string, object> instead of IDictionary<T0, T1>.
             ITypeDefOrRef substitutedInterface = impl.Interface;
-            AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
-            if (impl.Interface is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+            GenericInstanceTypeSignature? nextInstance = null;
+            if (impl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
             {
                 if (currentInstance is not null)
                 {
-                    AsmResolver.DotNet.Signatures.TypeSignature subSig = gi.InstantiateGenericTypes(genCtx);
-                    if (subSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature subGi)
+                    TypeSignature subSig = gi.InstantiateGenericTypes(genCtx);
+                    if (subSig is GenericInstanceTypeSignature subGi)
                     {
                         nextInstance = subGi;
-                        AsmResolver.DotNet.ITypeDefOrRef? newRef = subGi.ToTypeDefOrRef();
+                        ITypeDefOrRef? newRef = subGi.ToTypeDefOrRef();
                         if (newRef is not null) { substitutedInterface = newRef; }
                     }
                     else
@@ -139,7 +141,7 @@ internal static partial class ClassMembersFactory
 
     private static void WriteInterfaceMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType, TypeDefinition ifaceType,
         ITypeDefOrRef originalInterface,
-        bool isOverridable, bool isProtected, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
+        bool isOverridable, bool isProtected, GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
@@ -153,8 +155,8 @@ internal static partial class ClassMembersFactory
             methodSpec = "virtual ";
         }
 
-        AsmResolver.DotNet.Signatures.GenericContext? genCtx = currentInstance is not null
-            ? new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null)
+        GenericContext? genCtx = currentInstance is not null
+            ? new GenericContext(currentInstance, null)
             : null;
 
         // Generic interfaces require UnsafeAccessor-based dispatch (real ABI lives in the
@@ -239,8 +241,8 @@ internal static partial class ClassMembersFactory
             // here (and even forces 'string' as the return type). See.
             string methodSpecForThis = methodSpec;
             if (name == "ToString" && sig.Params.Count == 0
-                && sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature crt
-                && crt.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String)
+                && sig.ReturnType is CorLibTypeSignature crt
+                && crt.ElementType == ElementType.String)
             {
                 methodSpecForThis = "override ";
             }
@@ -251,11 +253,11 @@ internal static partial class ClassMembersFactory
             // signature and return type -> 'override'; matching name only -> 'new'.
             if (name == "Equals" && sig.Params.Count == 1)
             {
-                AsmResolver.DotNet.Signatures.TypeSignature p0 = sig.Params[0].Type;
-                bool paramIsObject = p0 is AsmResolver.DotNet.Signatures.CorLibTypeSignature po
-                    && po.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
-                bool returnsBool = sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ro
-                    && ro.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean;
+                TypeSignature p0 = sig.Params[0].Type;
+                bool paramIsObject = p0 is CorLibTypeSignature po
+                    && po.ElementType == ElementType.Object;
+                bool returnsBool = sig.ReturnType is CorLibTypeSignature ro
+                    && ro.ElementType == ElementType.Boolean;
                 if (paramIsObject)
                 {
                     methodSpecForThis = returnsBool ? "override " : (methodSpecForThis + "new ");
@@ -263,8 +265,8 @@ internal static partial class ClassMembersFactory
             }
             else if (name == "GetHashCode" && sig.Params.Count == 0)
             {
-                bool returnsInt = sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ri
-                    && ri.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4;
+                bool returnsInt = sig.ReturnType is CorLibTypeSignature ri
+                    && ri.ElementType == ElementType.I4;
                 methodSpecForThis = returnsInt ? "override " : (methodSpecForThis + "new ");
             }
 
@@ -406,12 +408,12 @@ internal static partial class ClassMembersFactory
             if (!writtenEvents.Add(name)) { continue; }
 
             // Compute event handler type and event source type strings.
-            AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
+            TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             if (currentInstance is not null)
             {
-                evtSig = evtSig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
+                evtSig = evtSig.InstantiateGenericTypes(new GenericContext(currentInstance, null));
             }
-            bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+            bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
 
             // Special case for ICommand.CanExecuteChanged: the WinRT event handler is
             // EventHandler<object> but C# expects non-generic EventHandler. Use the non-generic
