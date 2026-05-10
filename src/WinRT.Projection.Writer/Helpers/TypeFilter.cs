@@ -29,7 +29,7 @@ internal readonly struct TypeFilter
     /// <summary>
     /// Whether this filter matches everything by default (no include rules).
     /// </summary>
-    public bool MatchesAllByDefault => _include == null || _include.Count == 0;
+    public bool MatchesAllByDefault => _include.Count == 0;
 
     /// <summary>
     /// Returns whether the given type name passes the include/exclude filter.
@@ -40,7 +40,7 @@ internal readonly struct TypeFilter
     /// </summary>
     public bool Includes(string fullName)
     {
-        if ((_include == null || _include.Count == 0) && (_exclude == null || _exclude.Count == 0))
+        if (_include.Count == 0 && _exclude.Count == 0)
         {
             return true;
         }
@@ -66,8 +66,8 @@ internal readonly struct TypeFilter
         int excIdx = 0;
         while (true)
         {
-            string? incRule = (_include != null && incIdx < _include.Count) ? _include[incIdx] : null;
-            string? excRule = (_exclude != null && excIdx < _exclude.Count) ? _exclude[excIdx] : null;
+            string? incRule = incIdx < _include.Count ? _include[incIdx] : null;
+            string? excRule = excIdx < _exclude.Count ? _exclude[excIdx] : null;
             if (incRule == null && excRule == null) { break; }
 
             bool pickInclude;
@@ -94,7 +94,7 @@ internal readonly struct TypeFilter
         }
 
         // No rule matched. If we have any include rules, default-exclude; else default-include.
-        return _include == null || _include.Count == 0;
+        return _include.Count == 0;
     }
     private static bool Match(string typeNamespace, string typeName, string rule)
     {

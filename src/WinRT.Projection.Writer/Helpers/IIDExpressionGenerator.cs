@@ -20,7 +20,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// hash algorithm, the canonical hyphenated string form of a type's <c>[Guid]</c>, and the
 /// <c>byte</c>-list form used when initializing native IID storage.
 /// </summary>
-internal static class IIDExpressionGenerator
+internal static partial class IIDExpressionGenerator
 {
     /// <summary>
     /// Returns the GUID-signature character code for a fundamental WinRT type.
@@ -43,7 +43,8 @@ internal static class IIDExpressionGenerator
         _ => throw WellKnownProjectionWriterExceptions.UnknownFundamentalType()
     };
 
-    private static readonly Regex s_typeNameEscapeRe = new(@"[ :<>`,.]", RegexOptions.Compiled);
+    [GeneratedRegex(@"[ :<>`,.]")]
+    private static partial Regex TypeNameEscapeRegex();
 
     /// <summary>
     /// Escapes a type name into a C# identifier-safe form.
@@ -51,7 +52,7 @@ internal static class IIDExpressionGenerator
     public static string EscapeTypeNameForIdentifier(string typeName, bool stripGlobal = false, bool stripGlobalABI = false)
     {
         // Escape special chars first, then strip ONLY the prefix (not all occurrences).
-        string result = s_typeNameEscapeRe.Replace(typeName, "_");
+        string result = TypeNameEscapeRegex().Replace(typeName, "_");
         if (stripGlobalABI && typeName.StartsWith(GlobalAbiPrefix, StringComparison.Ordinal))
         {
             result = result[12..]; // Remove GlobalAbiPrefix (with ":" and "." already replaced)

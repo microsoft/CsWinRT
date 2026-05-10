@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
@@ -199,11 +200,8 @@ internal static partial class AbiTypeHelpers
         {
             if (!m.IsSpecial()) { return true; }
         }
-        foreach (PropertyDefinition _ in iface.Properties) { return true; }
-        if (!skipExclusiveEvents)
-        {
-            foreach (EventDefinition _ in iface.Events) { return true; }
-        }
+        if (iface.Properties.Count > 0) { return true; }
+        if (!skipExclusiveEvents && iface.Events.Count > 0) { return true; }
         return false;
     }
 
@@ -212,9 +210,7 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static int CountMethods(TypeDefinition iface)
     {
-        int count = 0;
-        foreach (MethodDefinition _ in iface.Methods) { count++; }
-        return count;
+        return iface.Methods.Count;
     }
 
     /// <summary>
