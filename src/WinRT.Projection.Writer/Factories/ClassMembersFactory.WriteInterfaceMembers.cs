@@ -217,7 +217,7 @@ internal static partial class ClassMembersFactory
             IndentedTextWriter __scratchProjectedParent = new();
             TypedefNameWriter.WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
             string projectedParent = __scratchProjectedParent.ToString();
-            genericParentEncoded = IIDExpressionWriter.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
+            genericParentEncoded = IIDExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
 

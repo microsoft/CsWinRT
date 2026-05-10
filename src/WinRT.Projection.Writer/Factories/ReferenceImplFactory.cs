@@ -172,7 +172,7 @@ internal static class ReferenceImplFactory
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref global::ABI.InterfaceIIDs.
             """, isMultiline: true);
-        IIDExpressionWriter.WriteIidReferenceGuidPropertyName(writer, context, type);
+        IIDExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
         writer.Write("""
             ;
                 }

@@ -70,7 +70,7 @@ internal static class WellKnownProjectionWriterExceptions
     }
 
     /// <summary>
-    /// Raised when a fundamental type passed to <c>IIDExpressionWriter</c> is not in the supported set.
+    /// Raised when a fundamental type passed to <c>IIDExpressionGenerator</c> is not in the supported set.
     /// </summary>
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException UnknownFundamentalType()
@@ -79,7 +79,7 @@ internal static class WellKnownProjectionWriterExceptions
     }
 
     /// <summary>
-    /// Raised when a type referenced from <c>IIDExpressionWriter</c> is missing the expected
+    /// Raised when a type referenced from <c>IIDExpressionGenerator</c> is missing the expected
     /// <c>[Guid]</c> attribute or has malformed <c>Guid</c> fields.
     /// </summary>
     /// <param name="typeName">The fully-qualified type name that lacks usable GUID metadata.</param>

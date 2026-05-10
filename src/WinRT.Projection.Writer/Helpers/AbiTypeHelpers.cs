@@ -138,7 +138,7 @@ internal static partial class AbiTypeHelpers
         if (type.GenericParameters.Count != 0)
         {
             // Generic interface IID - call the unsafe accessor
-            IIDExpressionWriter.WriteIidGuidPropertyName(writer, context, type);
+            IIDExpressionGenerator.WriteIidGuidPropertyName(writer, context, type);
             writer.Write("(null)");
             return;
         }
@@ -149,7 +149,7 @@ internal static partial class AbiTypeHelpers
             return;
         }
         writer.Write("global::ABI.InterfaceIIDs.");
-        IIDExpressionWriter.WriteIidGuidPropertyName(writer, context, type);
+        IIDExpressionGenerator.WriteIidGuidPropertyName(writer, context, type);
     }
 
     /// <summary>

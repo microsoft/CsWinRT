@@ -21,7 +21,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// hash algorithm, the canonical hyphenated string form of a type's <c>[Guid]</c>, and the
 /// <c>byte</c>-list form used when initializing native IID storage.
 /// </summary>
-internal static class IIDExpressionWriter
+internal static class IIDExpressionGenerator
 {
     /// <summary>
     /// Returns the GUID-signature character code for a fundamental WinRT type.

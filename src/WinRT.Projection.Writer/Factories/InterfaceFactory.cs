@@ -25,7 +25,7 @@ internal static class InterfaceFactory
     {
         bool fullyQualify = type.Namespace == "Windows.Foundation.Metadata";
         writer.Write($"[{(fullyQualify ? "global::System.Runtime.InteropServices.Guid" : "Guid")}(\"");
-        IIDExpressionWriter.WriteGuid(writer, type, false);
+        IIDExpressionGenerator.WriteGuid(writer, type, false);
         writer.Write("\")]");
     }
     /// <summary>

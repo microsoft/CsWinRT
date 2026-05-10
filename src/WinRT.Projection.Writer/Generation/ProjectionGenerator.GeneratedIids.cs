@@ -55,7 +55,7 @@ internal sealed partial class ProjectionGenerator
         HashSet<TypeDefinition> interfacesFromClassesEmitted = [];
         ProjectionEmitContext guidContext = new(_settings, _cache, "ABI");
         Writers.IndentedTextWriter guidIndented = new();
-        IIDExpressionWriter.WriteInterfaceIidsBegin(guidIndented);
+        IIDExpressionGenerator.WriteInterfaceIidsBegin(guidIndented);
         // Iterate namespaces in sorted order . Within each namespace, types are already sorted by SortMembersByName.
         // The sorted-by-namespace order produces the parent-before-child grouping in the
         // GeneratedInterfaceIIDs.cs output (e.g. Windows.ApplicationModel.* types before
@@ -75,25 +75,25 @@ internal sealed partial class ProjectionGenerator
                 switch (cat)
                 {
                     case TypeCategory.Delegate:
-                        IIDExpressionWriter.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
-                        IIDExpressionWriter.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
+                        IIDExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
+                        IIDExpressionGenerator.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Enum:
-                        IIDExpressionWriter.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
+                        IIDExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Interface:
-                        IIDExpressionWriter.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
+                        IIDExpressionGenerator.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Struct:
-                        IIDExpressionWriter.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
+                        IIDExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Class:
-                        IIDExpressionWriter.WriteIidGuidPropertyForClassInterfaces(guidIndented, guidContext, type, interfacesFromClassesEmitted);
+                        IIDExpressionGenerator.WriteIidGuidPropertyForClassInterfaces(guidIndented, guidContext, type, interfacesFromClassesEmitted);
                         break;
                 }
             }
         }
-        IIDExpressionWriter.WriteInterfaceIidsEnd(guidIndented);
+        IIDExpressionGenerator.WriteInterfaceIidsEnd(guidIndented);
         if (iidWritten)
         {
             guidIndented.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));

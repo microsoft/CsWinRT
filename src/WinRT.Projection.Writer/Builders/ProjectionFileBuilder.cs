@@ -329,7 +329,7 @@ internal static class ProjectionFileBuilder
         {
             // GUID attribute
             writer.Write("[Guid(\"");
-            IIDExpressionWriter.WriteGuid(writer, type, false);
+            IIDExpressionGenerator.WriteGuid(writer, type, false);
             writer.WriteLine("\")]");
         }
         writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} delegate ");
