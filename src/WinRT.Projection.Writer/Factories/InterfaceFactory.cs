@@ -209,10 +209,8 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            writer.Write("""
-                
-                event 
-                """, isMultiline: true);
+            writer.WriteLine("");
+            writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write($" {evt.Name?.Value ?? string.Empty};");
         }
@@ -355,15 +353,11 @@ internal static class InterfaceFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, false);
-        writer.Write("""
-            
-            {
-            """, isMultiline: true);
+        writer.WriteLine("");
+        writer.Write("{");
         WriteInterfaceMemberSignatures(writer, context, type);
-        writer.Write("""
-            
-            }
-            """, isMultiline: true);
+        writer.WriteLine("");
+        writer.WriteLine("}");
     }
     /// <summary>Returns true if the given exclusive interface is referenced as a [Default] or
     /// [Overridable] interface impl on the class it's exclusive to.</summary>
