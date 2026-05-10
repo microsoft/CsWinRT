@@ -490,6 +490,7 @@ internal static class ClassFactory
         InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
         writer.WriteLine("");
         writer.WriteLine("{");
+        writer.IncreaseIndent();
 
         // ObjRef field definitions for each implemented interface.
         // These back the per-interface dispatch in instance methods/properties and the
@@ -626,6 +627,7 @@ internal static class ClassFactory
 
         ClassMembersFactory.WriteClassMembers(writer, context, type);
 
+        writer.DecreaseIndent();
         writer.WriteLine("}");
     }
 }
