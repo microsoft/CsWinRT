@@ -12,47 +12,47 @@ internal sealed class StaticPropertyAccessorState
     /// <summary>
     /// Gets or sets whether a static getter accessor has been seen for this property.
     /// </summary>
-    public bool HasGetter;
+    public bool HasGetter { get; set; }
 
     /// <summary>
     /// Gets or sets whether a static setter accessor has been seen for this property.
     /// </summary>
-    public bool HasSetter;
+    public bool HasSetter { get; set; }
 
     /// <summary>
     /// Gets or sets the projected C# type text of the property (for the unified getter+setter declaration).
     /// </summary>
-    public string PropTypeText = string.Empty;
+    public string PropTypeText { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the ABI Methods class name used by the getter dispatch.
     /// </summary>
-    public string GetterAbiClass = string.Empty;
+    public string GetterAbiClass { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the field name of the <c>_objRef_</c> the getter dispatches through.
     /// </summary>
-    public string GetterObjRef = string.Empty;
+    public string GetterObjRef { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the ABI Methods class name used by the setter dispatch.
     /// </summary>
-    public string SetterAbiClass = string.Empty;
+    public string SetterAbiClass { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the field name of the <c>_objRef_</c> the setter dispatches through.
     /// </summary>
-    public string SetterObjRef = string.Empty;
+    public string SetterObjRef { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the platform-attribute string for the getter (emitted before the property when
     /// both accessors share a platform; otherwise per-accessor).
     /// </summary>
-    public string GetterPlatformAttribute = string.Empty;
+    public string GetterPlatformAttribute { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the platform-attribute string for the setter (emitted before the property when
     /// both accessors share a platform; otherwise per-accessor).
     /// </summary>
-    public string SetterPlatformAttribute = string.Empty;
+    public string SetterPlatformAttribute { get; set; } = string.Empty;
 }
