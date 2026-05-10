@@ -35,13 +35,11 @@ internal static class EventTableFactory
         writer.Write(evName);
         writer.WriteLine("");
         writer.WriteLine("{");
-        writer.Write("""
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get
-                {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    static ConditionalWeakTable<
-            """, isMultiline: true);
+        writer.WriteLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        writer.WriteLine("    get");
+        writer.WriteLine("    {");
+        writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
+        writer.Write("        static ConditionalWeakTable<");
         writer.Write(ifaceFullName);
         writer.Write(", EventRegistrationTokenTable<");
         writer.Write(evtType);
@@ -88,17 +86,13 @@ internal static class EventTableFactory
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.Write("""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                        static extern 
-                """, isMultiline: true);
+            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
+            writer.Write("        static extern ");
             writer.Write(projectedTypeName);
             writer.Write(" ConvertToManaged([UnsafeAccessorType(\"");
             writer.Write(interopTypeName);
-            writer.Write($$"""
-                ")] object _, void* value);
-                        var __handler = ConvertToManaged(null, {{handlerRef}});
-                """, isMultiline: true);
+            writer.WriteLine("\")] object _, void* value);");
+            writer.WriteLine($"        var __handler = ConvertToManaged(null, {handlerRef});");
         }
         else
         {
@@ -111,10 +105,8 @@ internal static class EventTableFactory
         writer.Write(cookieName);
         writer.Write(" = _");
         writer.Write(evName);
-        writer.Write("""
-            .GetOrCreateValue(__this).AddEventHandler(__handler);
-                    __this.
-            """, isMultiline: true);
+        writer.WriteLine(".GetOrCreateValue(__this).AddEventHandler(__handler);");
+        writer.Write("        __this.");
         writer.Write(evName);
         writer.WriteLine(" += __handler;");
         writer.WriteLine("        return 0;");
@@ -138,24 +130,18 @@ internal static class EventTableFactory
 
         writer.WriteLine("");
         writer.WriteLine("{");
-        writer.Write("""
-                try
-                {
-                    var __this = ComInterfaceDispatch.GetInstance<
-            """, isMultiline: true);
+        writer.WriteLine("    try");
+        writer.WriteLine("    {");
+        writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
         writer.Write(ifaceFullName);
-        writer.Write("""
-            >((ComInterfaceDispatch*)thisPtr);
-                    if(__this is not null && _
-            """, isMultiline: true);
+        writer.WriteLine(">((ComInterfaceDispatch*)thisPtr);");
+        writer.Write("        if(__this is not null && _");
         writer.Write(evName);
         writer.Write(".TryGetValue(__this, out var __table) && __table.RemoveEventHandler(");
         writer.Write(tokenRef);
-        writer.Write("""
-            , out var __handler))
-                    {
-                        __this.
-            """, isMultiline: true);
+        writer.WriteLine(", out var __handler))");
+        writer.WriteLine("        {");
+        writer.Write("            __this.");
         writer.Write(evName);
         writer.WriteLine(" -= __handler;");
         writer.WriteLine("        }");

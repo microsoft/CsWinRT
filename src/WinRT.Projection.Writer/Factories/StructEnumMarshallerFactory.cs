@@ -58,11 +58,9 @@ internal static class StructEnumMarshallerFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write(" ConvertToUnmanaged(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
-                 value)
-                    {
-                        return new() {
-                """, isMultiline: true);
+            writer.WriteLine(" value)");
+            writer.WriteLine("    {");
+            writer.WriteLine("        return new() {");
             bool first = true;
             foreach (FieldDefinition field in type.Fields)
             {
@@ -105,11 +103,9 @@ internal static class StructEnumMarshallerFactory
                 }
             }
             writer.WriteLine("");
-            writer.Write("""
-                        };
-                    }
-                    public static 
-                """, isMultiline: true);
+            writer.WriteLine("        };");
+            writer.WriteLine("    }");
+            writer.Write("    public static ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" ConvertToManaged(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
@@ -118,11 +114,9 @@ internal static class StructEnumMarshallerFactory
             // - In non-component mode: emit positional constructor (matches the auto-generated
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
-            writer.Write("""
-                 value)
-                    {
-                        return new 
-                """, isMultiline: true);
+            writer.WriteLine(" value)");
+            writer.WriteLine("    {");
+            writer.Write("        return new ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(useObjectInitializer ? "(){\n" : "(\n");
             first = true;
@@ -172,10 +166,8 @@ internal static class StructEnumMarshallerFactory
             }
             writer.Write($"{(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n")}    public static void Dispose(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("""
-                 value)
-                    {
-                """, isMultiline: true);
+            writer.WriteLine(" value)");
+            writer.WriteLine("    {");
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
@@ -224,26 +216,20 @@ internal static class StructEnumMarshallerFactory
         {
             writer.Write($"? value)\n    {{\n        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{(hasReferenceFields ? "TrackerSupport" : "None")}, in ");
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.Write("""
-                );
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(");");
+            writer.WriteLine("    }");
         }
         else
         {
             // Mapped struct (Duration/KeyTime/etc.): BoxToUnmanaged is still required because the
             // public projected type still routes through this marshaller (it just lacks per-field
             // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-            writer.Write("""
-                ? value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in 
-                """, isMultiline: true);
+            writer.WriteLine("? value)");
+            writer.WriteLine("    {");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.Write("""
-                );
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(");");
+            writer.WriteLine("    }");
         }
 
         // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
@@ -251,47 +237,35 @@ internal static class StructEnumMarshallerFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable)
         {
-            writer.Write("""
-                ? UnboxToManaged(void* value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
-                """, isMultiline: true);
+            writer.WriteLine("? UnboxToManaged(void* value)");
+            writer.WriteLine("    {");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
-                >(value);
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(">(value);");
+            writer.WriteLine("    }");
         }
         else if (isComplexStruct)
         {
-            writer.Write("""
-                ? UnboxToManaged(void* value)
-                    {
-                        
-                """, isMultiline: true);
+            writer.WriteLine("? UnboxToManaged(void* value)");
+            writer.WriteLine("    {");
+            writer.Write("        ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("""
-                >(value);
-                        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(">(value);");
+            writer.WriteLine("        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;");
+            writer.WriteLine("    }");
         }
         else
         {
             // Mapped struct: unbox directly to projected type (no per-field ConvertToManaged needed
             // because the projected struct's field layout matches the WinMD struct layout).
-            writer.Write("""
-                ? UnboxToManaged(void* value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
-                """, isMultiline: true);
+            writer.WriteLine("? UnboxToManaged(void* value)");
+            writer.WriteLine("    {");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
-                >(value);
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(">(value);");
+            writer.WriteLine("    }");
         }
 
         writer.WriteLine("}");
@@ -314,23 +288,17 @@ internal static class StructEnumMarshallerFactory
             writer.Write(nameStripped);
             writer.WriteLine("InterfaceEntriesImpl");
             writer.WriteLine("{");
-            writer.Write("""
-                    [FixedAddressValueType]
-                    public static readonly ReferenceInterfaceEntries Entries;
-                
-                    static 
-                """, isMultiline: true);
+            writer.WriteLine("    [FixedAddressValueType]");
+            writer.WriteLine("    public static readonly ReferenceInterfaceEntries Entries;");
+            writer.WriteLine("");
+            writer.Write("    static ");
             writer.Write(nameStripped);
-            writer.Write("""
-                InterfaceEntriesImpl()
-                    {
-                        Entries.IReferenceValue.IID = 
-                """, isMultiline: true);
+            writer.WriteLine("InterfaceEntriesImpl()");
+            writer.WriteLine("    {");
+            writer.Write("        Entries.IReferenceValue.IID = ");
             writer.Write(iidRefExpr);
-            writer.Write("""
-                ;
-                        Entries.IReferenceValue.Vtable = 
-                """, isMultiline: true);
+            writer.WriteLine(";");
+            writer.Write("        Entries.IReferenceValue.Vtable = ");
             writer.Write(nameStripped);
             writer.WriteLine("ReferenceImpl.Vtable;");
             writer.WriteLine("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;");
@@ -359,11 +327,9 @@ internal static class StructEnumMarshallerFactory
             writer.Write(nameStripped);
             writer.WriteLine("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute");
             writer.WriteLine("{");
-            writer.Write("""
-                    public override void* GetOrCreateComInterfaceForObject(object value)
-                    {
-                        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.
-                """, isMultiline: true);
+            writer.WriteLine("    public override void* GetOrCreateComInterfaceForObject(object value)");
+            writer.WriteLine("    {");
+            writer.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.");
             writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
             writer.WriteLine(");");
             writer.WriteLine("    }");

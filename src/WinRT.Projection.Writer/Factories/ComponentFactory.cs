@@ -228,10 +228,8 @@ internal static class ComponentFactory
         writer.Write(projectedTypeName);
         writer.Write(".");
         writer.Write(evtName);
-        writer.Write("""
-             += value;
-            remove => 
-            """, isMultiline: true);
+        writer.WriteLine(" += value;");
+        writer.Write("remove => ");
         writer.Write(projectedTypeName);
         writer.Write(".");
         writer.Write(evtName);
