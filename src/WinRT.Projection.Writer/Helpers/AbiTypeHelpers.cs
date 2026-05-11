@@ -26,7 +26,6 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static TypeDefinition? GetExclusiveToType(MetadataCache cache, TypeDefinition iface)
     {
-        if (cache is null) { return null; }
         for (int i = 0; i < iface.CustomAttributes.Count; i++)
         {
             CustomAttribute attr = iface.CustomAttributes[i];

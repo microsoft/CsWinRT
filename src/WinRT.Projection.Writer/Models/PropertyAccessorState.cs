@@ -10,6 +10,12 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// and setter (which may come from different interfaces, with different platform attributes
 /// and ABI Methods classes) can be reconciled into a single C# property declaration.
 /// </summary>
+/// <remarks>
+/// The first nine fields below mirror <see cref="StaticPropertyAccessorState"/> in name and order
+/// (so the two state bags can be diffed side-by-side); the remaining fields hold instance-only
+/// data (accessibility/specifier text, generic-instantiation accessor info, overridable-interface
+/// metadata) that does not apply to static properties.
+/// </remarks>
 internal sealed class PropertyAccessorState
 {
     /// <summary>
@@ -26,16 +32,6 @@ internal sealed class PropertyAccessorState
     /// Gets or sets the projected C# type text of the property (for the unified getter+setter declaration).
     /// </summary>
     public string PropTypeText { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the C# accessibility modifier text (e.g. <c>"public "</c>).
-    /// </summary>
-    public string Access { get; set; } = "public ";
-
-    /// <summary>
-    /// Gets or sets the method-spec modifier text (e.g. <c>"override "</c>, <c>"new "</c>).
-    /// </summary>
-    public string MethodSpec { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the ABI Methods class name used by the getter dispatch.
@@ -56,6 +52,30 @@ internal sealed class PropertyAccessorState
     /// Gets or sets the field name of the <c>_objRef_</c> the setter dispatches through.
     /// </summary>
     public string SetterObjRef { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the platform-attribute string for the getter (in reference-projection mode,
+    /// emitted before the property when both accessors share a platform; otherwise per-accessor).
+    /// </summary>
+    public string GetterPlatformAttribute { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the platform-attribute string for the setter (in reference-projection mode,
+    /// emitted before the property when both accessors share a platform; otherwise per-accessor).
+    /// </summary>
+    public string SetterPlatformAttribute { get; set; } = string.Empty;
+
+    // -- Instance-only fields below (not present on StaticPropertyAccessorState) --
+
+    /// <summary>
+    /// Gets or sets the C# accessibility modifier text (e.g. <c>"public "</c>).
+    /// </summary>
+    public string Access { get; set; } = "public ";
+
+    /// <summary>
+    /// Gets or sets the method-spec modifier text (e.g. <c>"override "</c>, <c>"new "</c>).
+    /// </summary>
+    public string MethodSpec { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the property name.
@@ -113,16 +133,4 @@ internal sealed class PropertyAccessorState
     /// when <see cref="IsOverridable"/> is set).
     /// </summary>
     public ITypeDefOrRef? OverridableInterface { get; set; }
-
-    /// <summary>
-    /// Gets or sets the platform-attribute string for the getter (in reference-projection mode,
-    /// emitted before the property when both accessors share a platform; otherwise per-accessor).
-    /// </summary>
-    public string GetterPlatformAttribute { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the platform-attribute string for the setter (in reference-projection mode,
-    /// emitted before the property when both accessors share a platform; otherwise per-accessor).
-    /// </summary>
-    public string SetterPlatformAttribute { get; set; } = string.Empty;
 }

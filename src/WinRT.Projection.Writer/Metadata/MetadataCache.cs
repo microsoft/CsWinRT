@@ -198,9 +198,10 @@ internal sealed class MetadataCache
 /// <summary>
 /// The types in a particular namespace, organized by category.
 /// </summary>
-internal sealed class NamespaceMembers
+/// <param name="name">The name of the namespace.</param>
+internal sealed class NamespaceMembers(string name)
 {
-    public string Name { get; }
+    public string Name { get; } = name;
 
     public List<TypeDefinition> Types { get; } = [];
     public List<TypeDefinition> Interfaces { get; } = [];
@@ -210,11 +211,6 @@ internal sealed class NamespaceMembers
     public List<TypeDefinition> Delegates { get; } = [];
     public List<TypeDefinition> Attributes { get; } = [];
     public List<TypeDefinition> Contracts { get; } = [];
-
-    public NamespaceMembers(string name)
-    {
-        Name = name;
-    }
 
     public void AddType(TypeDefinition type)
     {

@@ -123,7 +123,7 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     /// <summary>
     /// Scope token for <see cref="EnterAbiNamespace"/>.
     /// </summary>
-    public struct AbiNamespaceScope : IDisposable
+    public ref struct AbiNamespaceScope : IDisposable
     {
         private ProjectionEmitContext? _context;
 
@@ -145,7 +145,7 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     /// <summary>
     /// Scope token for <see cref="EnterAbiImplNamespace"/>.
     /// </summary>
-    public struct AbiImplNamespaceScope : IDisposable
+    public ref struct AbiImplNamespaceScope : IDisposable
     {
         private ProjectionEmitContext? _context;
 
@@ -167,7 +167,7 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     /// <summary>
     /// Scope token for <see cref="EnterPlatformSuppressionScope(string)"/>.
     /// </summary>
-    public struct PlatformSuppressionScope : IDisposable
+    public ref struct PlatformSuppressionScope : IDisposable
     {
         private ProjectionEmitContext? _context;
         private readonly bool _prevCheck;
