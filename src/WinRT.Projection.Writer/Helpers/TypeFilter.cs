@@ -13,7 +13,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// Include/exclude type filter using longest-prefix-match semantics: type/namespace is checked
 /// against each prefix in the include/exclude lists, and the longest matching prefix wins.
 /// </summary>
-internal readonly struct TypeFilter
+internal sealed class TypeFilter
 {
     private readonly List<string> _include;
     private readonly List<string> _exclude;

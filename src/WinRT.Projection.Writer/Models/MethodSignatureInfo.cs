@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
@@ -33,6 +34,12 @@ internal sealed class MethodSignatureInfo
     /// if the method does not have one.
     /// </summary>
     public ParameterDefinition? ReturnParameter { get; }
+
+    /// <summary>
+    /// Gets the (possibly generic-context-substituted) return type of the method, or
+    /// <see langword="null"/> when the method returns <see langword="void"/>.
+    /// </summary>
+    public TypeSignature? ReturnType { get; }
 
     /// <summary>
     /// Initializes a new <see cref="MethodSignatureInfo"/> with no generic context.
@@ -63,9 +70,13 @@ internal sealed class MethodSignatureInfo
 
         if (method.Signature is MethodSignature sig)
         {
-            _substitutedReturnType = genericContext is not null && sig.ReturnType is not null
-                ? sig.ReturnType.InstantiateGenericTypes(genericContext.Value)
-                : sig.ReturnType;
+            TypeSignature? rt = sig.ReturnType;
+            if (rt is not null && genericContext is not null)
+            {
+                rt = rt.InstantiateGenericTypes(genericContext.Value);
+            }
+            ReturnType = rt is CorLibTypeSignature { ElementType: ElementType.Void } ? null : rt;
+
             for (int i = 0; i < sig.ParameterTypes.Count; i++)
             {
                 TypeSignature pt = sig.ParameterTypes[i];
@@ -75,24 +86,11 @@ internal sealed class MethodSignatureInfo
         }
     }
 
-    [SuppressMessage("Style", "IDE0032:Use auto property",
-        Justification = "Manual backing field is needed because ReturnType collapses void/unset to null.")]
-    private readonly TypeSignature? _substitutedReturnType;
-
-    /// <summary>
-    /// Gets the (possibly generic-context-substituted) return type of the method, or
-    /// <see langword="null"/> when the method returns <see langword="void"/>.
-    /// </summary>
-    public TypeSignature? ReturnType => _substitutedReturnType is TypeSignature t &&
-                                        t is not CorLibTypeSignature { ElementType: ElementType.Void }
-                                          ? _substitutedReturnType
-                                          : null;
-
     /// <summary>
     /// Returns the name of the return parameter, or <paramref name="defaultName"/> if there is none.
     /// </summary>
     /// <param name="defaultName">The default name to use when no return parameter is declared.</param>
     /// <returns>The return parameter name (or default).</returns>
-    public string ReturnParameterName(string defaultName = "__return_value__")
+    public string ReturnParameterName(string defaultName = ProjectionNames.DefaultReturnParameterName)
         => ReturnParameter?.Name?.Value ?? defaultName;
 }

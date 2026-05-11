@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Adapted from `src/Authoring/WinRT.SourceGenerator2/Helpers/IndentedTextWriter.cs`
-// (which itself was ported from ComputeSharp). The source-generator variant is a
-// `ref struct` backed by a `DefaultInterpolatedStringHandler` because it lives in
-// a Roslyn source generator (where transient compilation context + zero-alloc are
-// the priority). This variant is a `class` backed by a `StringBuilder` so it can
-// be passed around freely and live as long as needed in a long-running tool.
+// Adapted from src/Authoring/WinRT.SourceGenerator2/Helpers/IndentedTextWriter.cs (which itself
+// was ported from ComputeSharp); reshaped here as a class backed by StringBuilder so it can be
+// passed around freely and live as long as needed in this long-running tool.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 
@@ -51,13 +47,6 @@ internal sealed class IndentedTextWriter
     private readonly StringBuilder _buffer;
 
     /// <summary>
-    /// The current indentation level (number of <see cref="DefaultIndentation"/> repeats).
-    /// </summary>
-    [SuppressMessage("Style", "IDE0032:Use auto property",
-        Justification = "CurrentIndentLevel exposes the field directly via a property; the field is mutated in hot paths and an auto-property would not be inlined as cleanly.")]
-    private int _currentIndentationLevel;
-
-    /// <summary>
     /// The current indentation string (cached for fast reuse).
     /// </summary>
     private string _currentIndentation;
@@ -73,7 +62,7 @@ internal sealed class IndentedTextWriter
     public IndentedTextWriter()
     {
         _buffer = new StringBuilder();
-        _currentIndentationLevel = 0;
+        CurrentIndentLevel = 0;
         _currentIndentation = string.Empty;
         _availableIndentations = new string[4];
         _availableIndentations[0] = string.Empty;
@@ -88,15 +77,15 @@ internal sealed class IndentedTextWriter
     /// </summary>
     public void IncreaseIndent()
     {
-        _currentIndentationLevel++;
+        CurrentIndentLevel++;
 
-        if (_currentIndentationLevel == _availableIndentations.Length)
+        if (CurrentIndentLevel == _availableIndentations.Length)
         {
             Array.Resize(ref _availableIndentations, _availableIndentations.Length * 2);
         }
 
-        _currentIndentation = _availableIndentations[_currentIndentationLevel]
-            ??= _availableIndentations[_currentIndentationLevel - 1] + DefaultIndentation;
+        _currentIndentation = _availableIndentations[CurrentIndentLevel]
+            ??= _availableIndentations[CurrentIndentLevel - 1] + DefaultIndentation;
     }
 
     /// <summary>
@@ -104,8 +93,8 @@ internal sealed class IndentedTextWriter
     /// </summary>
     public void DecreaseIndent()
     {
-        _currentIndentationLevel--;
-        _currentIndentation = _availableIndentations[_currentIndentationLevel];
+        CurrentIndentLevel--;
+        _currentIndentation = _availableIndentations[CurrentIndentLevel];
     }
 
     /// <summary>
@@ -412,14 +401,14 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Returns the current indent level (number of <see cref="Block"/>-equivalent units of indentation).
     /// </summary>
-    public int CurrentIndentLevel => _currentIndentationLevel;
+    public int CurrentIndentLevel { get; private set; }
 
     /// <summary>
     /// Sets the indent level back to zero (for emergency reset; rarely needed).
     /// </summary>
     public void ResetIndent()
     {
-        _currentIndentationLevel = 0;
+        CurrentIndentLevel = 0;
         _currentIndentation = _availableIndentations[0];
     }
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using WindowsRuntime.ProjectionWriter.Helpers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -47,42 +46,12 @@ internal sealed class Settings
     /// <summary>
     /// Gets the compiled type-name filter built from <see cref="Include"/> and <see cref="Exclude"/>.
     /// </summary>
-    public TypeFilter Filter
-    {
-        get
-        {
-            if (!_filterCached)
-            {
-                _filter = new TypeFilter(Include, Exclude);
-                _filterCached = true;
-            }
-            return _filter;
-        }
-    }
-
-    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Lazy-initialized backing field for the computed filter.")]
-    private TypeFilter _filter = TypeFilter.Empty;
-    private bool _filterCached;
+    public TypeFilter Filter => field ??= new TypeFilter(Include, Exclude);
 
     /// <summary>
     /// Gets the compiled type-name filter built from <see cref="Include"/> and <see cref="AdditionExclude"/>, used for namespace-additions resources only.
     /// </summary>
-    public TypeFilter AdditionFilter
-    {
-        get
-        {
-            if (!_additionFilterCached)
-            {
-                _additionFilter = new TypeFilter(Include, AdditionExclude);
-                _additionFilterCached = true;
-            }
-            return _additionFilter;
-        }
-    }
-
-    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "Lazy-initialized backing field for the computed addition filter.")]
-    private TypeFilter _additionFilter = TypeFilter.Empty;
-    private bool _additionFilterCached;
+    public TypeFilter AdditionFilter => field ??= new TypeFilter(Include, AdditionExclude);
 
     /// <summary>
     /// Gets or sets a value indicating whether component-authoring mode is enabled.
