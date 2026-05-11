@@ -82,12 +82,16 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             .Select(static (name, _) => name!)
             .Collect();
 
-        // Combine all matching assembly names (reference + component) and filter out the Windows SDK ones
-        IncrementalValueProvider<ImmutableArray<string>> filteredAssemblyNames =
+        // Collect non-Windows-SDK reference assembly names. These feed the merged projection (WinRT.Projection.dll).
+        IncrementalValueProvider<ImmutableArray<string>> nonSdkReferenceAssemblyNames =
             referenceAssemblyNames
             .Where(static name => name is not null and not "Microsoft.Windows.SDK.NET" and not "Microsoft.Windows.UI.Xaml")
             .Select(static (name, _) => name!)
-            .Collect()
+            .Collect();
+
+        // Combine reference and component assembly names for the per-assembly '[TypeMapAssemblyTarget]' entries.
+        IncrementalValueProvider<ImmutableArray<string>> filteredAssemblyNames =
+            nonSdkReferenceAssemblyNames
             .Combine(collectedComponentAssemblyNames)
             .Select(static (pair, token) => pair.Left.AddRange(pair.Right));
 
@@ -96,9 +100,10 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
            filteredAssemblyNames
            .Select(static (names, token) => names.Sort(StringComparer.Ordinal).AsEquatableArray());
 
-        // Whether the merged projection will be generated
+        // Whether the merged projection will be generated. Only non-Windows-SDK reference assemblies feed
+        // WinRT.Projection.dll; component assemblies are projected into WinRT.Component.dll instead.
         IncrementalValueProvider<bool> hasMergedProjection =
-            filteredAssemblyNames
+            nonSdkReferenceAssemblyNames
             .Select(static (assemblyNames, token) => !assemblyNames.IsDefaultOrEmpty);
 
         // Generate the attributes for all matching assemblies
