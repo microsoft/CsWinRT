@@ -8,7 +8,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Extension methods for <see cref="IHasCustomAttribute"/>.
 /// </summary>
-internal static class HasCustomAttributeExtensions
+internal static class IHasCustomAttributeExtensions
 {
     extension(IHasCustomAttribute member)
     {

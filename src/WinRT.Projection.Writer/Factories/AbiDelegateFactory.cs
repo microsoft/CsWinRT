@@ -199,7 +199,16 @@ internal static class AbiDelegateFactory
             """, isMultiline: true);
     }
 
-    public static void WriteTempDelegateEventSourceSubclass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    /// <summary>
+    /// Emits a per-delegate <c>EventSource</c> subclass that adapts the given non-generic
+    /// delegate type to the runtime's <c>EventSource&lt;TDelegate&gt;</c> abstraction. Generic
+    /// delegates (e.g. <c>EventHandler&lt;T&gt;</c>) are handled by the generic
+    /// <c>EventHandlerEventSource&lt;T&gt;</c> instead and are skipped here.
+    /// </summary>
+    /// <param name="writer">The output writer.</param>
+    /// <param name="context">The active emission context.</param>
+    /// <param name="type">The delegate type to generate the EventSource subclass for.</param>
+    public static void WriteDelegateEventSourceSubclass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Skip generic delegates: only non-generic delegates get a per-delegate EventSource subclass.
         // Generic delegates (e.g. EventHandler<T>) use the generic EventHandlerEventSource<T> directly.

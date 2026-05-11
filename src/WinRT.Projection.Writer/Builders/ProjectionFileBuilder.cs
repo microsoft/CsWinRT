@@ -73,7 +73,7 @@ internal static class ProjectionFileBuilder
                 break;
             case TypeCategory.Delegate:
                 AbiDelegateFactory.WriteAbiDelegate(writer, context, type);
-                AbiDelegateFactory.WriteTempDelegateEventSourceSubclass(writer, context, type);
+                AbiDelegateFactory.WriteDelegateEventSourceSubclass(writer, context, type);
                 break;
             case TypeCategory.Enum:
                 AbiEnumFactory.WriteAbiEnum(writer, context, type);
