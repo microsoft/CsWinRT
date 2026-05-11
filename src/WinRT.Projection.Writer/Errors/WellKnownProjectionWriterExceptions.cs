@@ -165,6 +165,42 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5014, "The parallel projection work-item loop reported one or more failures.", exception);
     }
 
+    /// <summary>
+    /// Raised when emission of a single namespace's projection file fails. Used inside
+    /// <c>NamespaceWorkItem.Execute</c> via <see cref="WellKnownProjectionWriterException.ThrowOrAttach"/>
+    /// so the original failure surfaces with the namespace context attached.
+    /// </summary>
+    /// <param name="namespaceName">The namespace whose projection file was being emitted.</param>
+    /// <param name="exception">The inner exception that caused the failure.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException NamespaceEmissionFailed(string namespaceName, Exception exception)
+    {
+        return Exception(5015, $"Failed to emit the projection file for namespace '{namespaceName}'.", exception);
+    }
+
+    /// <summary>
+    /// Raised when emission of the global <c>GeneratedInterfaceIIDs.cs</c> file fails. Used
+    /// inside <c>IIDsWorkItem.Execute</c> via <see cref="WellKnownProjectionWriterException.ThrowOrAttach"/>.
+    /// </summary>
+    /// <param name="exception">The inner exception that caused the failure.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException GeneratedInterfaceIidsEmissionFailed(Exception exception)
+    {
+        return Exception(5016, "Failed to emit the global 'GeneratedInterfaceIIDs.cs' file.", exception);
+    }
+
+    /// <summary>
+    /// Raised when emission of the component-module activation-factory aggregator
+    /// <c>WinRT_Module.cs</c> fails. Used inside <c>ComponentModuleWorkItem.Execute</c> via
+    /// <see cref="WellKnownProjectionWriterException.ThrowOrAttach"/>.
+    /// </summary>
+    /// <param name="exception">The inner exception that caused the failure.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException ComponentModuleEmissionFailed(Exception exception)
+    {
+        return Exception(5017, "Failed to emit the component-mode 'WinRT_Module.cs' activation-factory file.", exception);
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException(

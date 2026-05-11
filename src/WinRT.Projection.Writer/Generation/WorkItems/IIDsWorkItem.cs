@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using WindowsRuntime.ProjectionWriter.Errors;
+
 namespace WindowsRuntime.ProjectionWriter.Generation.WorkItems;
 
 /// <summary>
@@ -15,6 +18,13 @@ internal sealed class IIDsWorkItem(ProjectionGenerator owner) : IProjectionWorkI
     /// <inheritdoc/>
     public void Execute()
     {
-        owner.WriteGeneratedInterfaceIIDsFile();
+        try
+        {
+            owner.WriteGeneratedInterfaceIIDsFile();
+        }
+        catch (Exception e)
+        {
+            WellKnownProjectionWriterExceptions.GeneratedInterfaceIidsEmissionFailed(e).ThrowOrAttach(e);
+        }
     }
 }

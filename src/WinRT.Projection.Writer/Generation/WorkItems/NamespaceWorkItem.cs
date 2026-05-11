@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Generation.WorkItems;
@@ -23,9 +25,16 @@ internal sealed class NamespaceWorkItem(
     /// <inheritdoc/>
     public void Execute()
     {
-        if (owner.ProcessNamespace(ns, members, state))
+        try
         {
-            state.MarkProjectionFileWritten();
+            if (owner.ProcessNamespace(ns, members, state))
+            {
+                state.MarkProjectionFileWritten();
+            }
+        }
+        catch (Exception e)
+        {
+            WellKnownProjectionWriterExceptions.NamespaceEmissionFailed(ns, e).ThrowOrAttach(e);
         }
     }
 }

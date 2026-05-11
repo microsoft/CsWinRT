@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using WindowsRuntime.ProjectionWriter.Errors;
+
 namespace WindowsRuntime.ProjectionWriter.Generation.WorkItems;
 
 /// <summary>
@@ -16,7 +19,14 @@ internal sealed class ComponentModuleWorkItem(
     /// <inheritdoc/>
     public void Execute()
     {
-        owner.WriteComponentModuleFile(state.ComponentByModule);
-        state.MarkProjectionFileWritten();
+        try
+        {
+            owner.WriteComponentModuleFile(state.ComponentByModule);
+            state.MarkProjectionFileWritten();
+        }
+        catch (Exception e)
+        {
+            WellKnownProjectionWriterExceptions.ComponentModuleEmissionFailed(e).ThrowOrAttach(e);
+        }
     }
 }
