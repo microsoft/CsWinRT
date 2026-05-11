@@ -131,11 +131,11 @@
   </Target>
   <ItemGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
     <Reference Include="AuthoringTest3">
-      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest3.winmd</HintPath>
+      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest3.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
     <Reference Include="AuthoringTest2">
-      <HintPath>..\AuthoringTest2\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest2.winmd</HintPath>
+      <HintPath>..\AuthoringTest2\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest2.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
@@ -143,12 +143,12 @@
        AuthoringTest2 winmds at compile time (it consumes the C++ projected types). -->
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <Reference Include="AuthoringTest3">
-      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest3.winmd</HintPath>
+      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest3.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
       <Implementation>AuthoringConsumptionTest2.AOT.dll</Implementation>
     </Reference>
     <Reference Include="AuthoringTest2">
-      <HintPath>..\AuthoringTest2\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest2.winmd</HintPath>
+      <HintPath>..\AuthoringTest2\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest2.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
       <Implementation>AuthoringConsumptionTest2.AOT.dll</Implementation>
     </Reference>
