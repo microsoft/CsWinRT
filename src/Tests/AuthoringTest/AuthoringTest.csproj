@@ -30,6 +30,14 @@
           location it is assigned to."		  
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CS0282;IL2087</WarningsNotAsErrors>
+
+    <!--
+      Suppress 'CSWINRT2016' (public type missing '[ContractVersion]' when at least one other public
+      type has it) in the authoring test project: the test surface intentionally exercises all the
+      various combinations of versioning attributes (with and without '[ContractVersion]', with
+      '[Version]', mixed, etc.), so the consistency analyzer is expected to fire here.
+    -->
+    <NoWarn>$(NoWarn);CSWINRT2016</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
