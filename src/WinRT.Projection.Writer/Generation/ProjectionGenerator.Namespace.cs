@@ -37,6 +37,7 @@ internal sealed partial class ProjectionGenerator
         _token.ThrowIfCancellationRequested();
         if (!_settings.ReferenceProjection)
         {
+            writer.WriteLine();
             MetadataAttributeFactory.WritePragmaDisableIL2026(writer);
             foreach (TypeDefinition type in members.Types)
             {

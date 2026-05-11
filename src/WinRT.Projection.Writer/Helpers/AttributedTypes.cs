@@ -11,16 +11,19 @@ using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
-/// Information about an [Activatable]/[Static]/[Composable] factory interface.
+/// Information about an <c>[Activatable]</c>/<c>[Static]</c>/<c>[Composable]</c> factory interface.
 /// </summary>
-internal sealed class AttributedType
-{
-    public TypeDefinition? Type { get; set; }
-    public bool Activatable { get; set; }
-    public bool Statics { get; set; }
-    public bool Composable { get; set; }
-    public bool Visible { get; set; }
-}
+/// <param name="Type">The factory-interface type definition (or <see langword="null"/> when the attribute did not carry one).</param>
+/// <param name="Activatable">Whether the carrying type has an <c>[Activatable]</c> attribute pointing at <paramref name="Type"/>.</param>
+/// <param name="Statics">Whether the carrying type has a <c>[Static]</c> attribute pointing at <paramref name="Type"/>.</param>
+/// <param name="Composable">Whether the carrying type has a <c>[Composable]</c> attribute pointing at <paramref name="Type"/>.</param>
+/// <param name="Visible">For composable attributes, whether the visibility argument is the public (<c>2</c>) value.</param>
+internal sealed record AttributedType(
+    TypeDefinition? Type = null,
+    bool Activatable = false,
+    bool Statics = false,
+    bool Composable = false,
+    bool Visible = false);
 
 /// <summary>
 /// Helpers for activator/static/composable factory enumeration.
@@ -51,21 +54,17 @@ internal static class AttributedTypes
                 continue;
             }
 
-            AttributedType info = new();
+            AttributedType info;
             switch (name)
             {
                 case ActivatableAttribute:
-                    info.Type = GetSystemType(attr, cache);
-                    info.Activatable = true;
+                    info = new AttributedType(Type: GetSystemType(attr, cache), Activatable: true);
                     break;
                 case StaticAttribute:
-                    info.Type = GetSystemType(attr, cache);
-                    info.Statics = true;
+                    info = new AttributedType(Type: GetSystemType(attr, cache), Statics: true);
                     break;
                 case ComposableAttribute:
-                    info.Type = GetSystemType(attr, cache);
-                    info.Composable = true;
-                    info.Visible = GetVisibility(attr) == 2;
+                    info = new AttributedType(Type: GetSystemType(attr, cache), Composable: true, Visible: GetVisibility(attr) == 2);
                     break;
                 default:
                     continue;

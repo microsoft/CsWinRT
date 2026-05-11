@@ -28,7 +28,6 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void WritePragmaDisableIL2026(IndentedTextWriter writer)
     {
-        writer.WriteLine();
         writer.WriteLine("#pragma warning disable IL2026");
     }
 
@@ -79,6 +78,20 @@ internal static class MetadataAttributeFactory
             // </auto-generated>
             //------------------------------------------------------------------------------
             """, isMultiline: true);
+    }
+
+    /// <summary>
+    /// Convenience overload of <see cref="WriteFileHeader(IndentedTextWriter)"/> that leases an
+    /// <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>, emits the
+    /// auto-generated banner into it, and returns the resulting string.
+    /// </summary>
+    /// <returns>The emitted auto-generated banner.</returns>
+    public static string GetFileHeader()
+    {
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
+        WriteFileHeader(writer);
+        return writer.ToString();
     }
 
     /// <summary>

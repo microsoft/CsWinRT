@@ -113,27 +113,3 @@ internal static class ContractPlatforms
         return t.ToFrozenDictionary(StringComparer.Ordinal);
     }
 }
-
-/// <summary>
-/// Static lookup for namespaces with addition files.
-/// </summary>
-internal static class AdditionTypes
-{
-    private static readonly FrozenDictionary<string, FrozenSet<string>> Table = new Dictionary<string, FrozenSet<string>>(StringComparer.Ordinal)
-    {
-        ["Microsoft.UI.Xaml"] = FrozenSet.Create(StringComparer.Ordinal, "Thickness"),
-        ["Microsoft.UI.Xaml.Controls.Primitives"] = FrozenSet.Create(StringComparer.Ordinal, "GeneratorPosition"),
-        ["Microsoft.UI.Xaml.Media"] = FrozenSet.Create(StringComparer.Ordinal, "Matrix"),
-        ["Microsoft.UI.Xaml.Media.Animation"] = FrozenSet.Create(StringComparer.Ordinal, "KeyTime"),
-        ["Windows.UI"] = FrozenSet.Create(StringComparer.Ordinal, "Color"),
-        ["Windows.UI.Xaml"] = FrozenSet.Create(StringComparer.Ordinal, "Thickness"),
-        ["Windows.UI.Xaml.Controls.Primitives"] = FrozenSet.Create(StringComparer.Ordinal, "GeneratorPosition"),
-        ["Windows.UI.Xaml.Media"] = FrozenSet.Create(StringComparer.Ordinal, "Matrix"),
-        ["Windows.UI.Xaml.Media.Animation"] = FrozenSet.Create(StringComparer.Ordinal, "KeyTime"),
-    }.ToFrozenDictionary(StringComparer.Ordinal);
-
-    public static bool HasAdditionToType(string typeNamespace, string typeName)
-    {
-        return Table.TryGetValue(typeNamespace, out FrozenSet<string>? names) && names.Contains(typeName);
-    }
-}

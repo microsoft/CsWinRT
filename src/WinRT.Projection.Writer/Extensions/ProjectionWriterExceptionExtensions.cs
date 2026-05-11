@@ -16,6 +16,6 @@ internal static class ProjectionWriterExceptionExtensions
         /// <summary>
         /// Gets a value indicating whether an exception is well known (and should therefore not be caught).
         /// </summary>
-        public bool IsWellKnown => exception is WellKnownProjectionWriterException or OperationCanceledException;
+        public bool IsWellKnown => exception is OperationCanceledException or WellKnownProjectionWriterException;
     }
 }

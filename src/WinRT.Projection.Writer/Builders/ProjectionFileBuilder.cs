@@ -230,7 +230,7 @@ internal static class ProjectionFileBuilder
         }
 
         writer.Write($$"""
-             struct {{projectionName}}: IEquatable<{{projectionName}}>
+             struct {{projectionName}} : IEquatable<{{projectionName}}>
             {
             public {{projectionName}}(
             """, isMultiline: true);
@@ -340,6 +340,8 @@ internal static class ProjectionFileBuilder
         }
 
         string typeName = type.Name?.Value ?? string.Empty;
+
+        writer.WriteLine();
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         writer.Write($$"""
             {{context.Settings.InternalAccessibility}} enum {{typeName}}
@@ -395,9 +397,10 @@ internal static class ProjectionFileBuilder
     {
         string typeName = type.Name?.Value ?? string.Empty;
 
+        writer.WriteLine();
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.WriteLine($"{context.Settings.InternalAccessibility} sealed class {typeName}: Attribute");
+        writer.WriteLine($"{context.Settings.InternalAccessibility} sealed class {typeName} : Attribute");
         using (writer.WriteBlock())
         {
             // Constructors

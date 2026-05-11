@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
+using System.Collections.Frozen;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -10,8 +10,8 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class CSharpKeywords
 {
-    private static readonly HashSet<string> Keywords =
-    [
+    private static readonly FrozenSet<string> Keywords = new[]
+    {
         "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue",
         "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally",
         "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long",
@@ -19,7 +19,7 @@ internal static class CSharpKeywords
         "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch",
         "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void",
         "volatile", "while"
-    ];
+    }.ToFrozenSet();
 
     /// <summary>
     /// Returns whether <paramref name="identifier"/> is a reserved C# language keyword.
