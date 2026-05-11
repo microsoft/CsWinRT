@@ -81,7 +81,8 @@ public sealed class ProjectionWriterOptions
     public bool Verbose { get; init; }
 
     /// <summary>
-    /// Cancellation token for the operation.
+    /// Gets the cancellation token observed during projection generation. Defaults to
+    /// <see cref="CancellationToken.None"/>, which never signals cancellation.
     /// </summary>
     public CancellationToken CancellationToken { get; init; }
 }

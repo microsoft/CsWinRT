@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace WindowsRuntime.InteropGenerator.Errors;
 
 /// <summary>
-/// A well known warning for the interop generator.
+/// A well-known warning for the interop generator.
 /// </summary>
 internal sealed class WellKnownInteropWarning
 {

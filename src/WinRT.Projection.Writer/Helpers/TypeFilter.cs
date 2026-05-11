@@ -124,11 +124,24 @@ internal sealed class TypeFilter
         return typeName.StartsWith(rest, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Returns whether the given <paramref name="type"/> passes the include/exclude filter.
+    /// Computes the type's full name (<c>namespace.typeName</c>) and delegates to
+    /// <see cref="Includes(string)"/>.
+    /// </summary>
+    /// <param name="type">The type definition to test.</param>
+    /// <returns><see langword="true"/> if the type's full name is included.</returns>
     public bool Includes(TypeDefinition type)
     {
         return Includes(GetFullName(type));
     }
 
+    /// <summary>
+    /// Returns the full name of <paramref name="type"/> in the <c>namespace.typeName</c> form
+    /// (or just the type name when the namespace is empty).
+    /// </summary>
+    /// <param name="type">The type definition to format.</param>
+    /// <returns>The fully-qualified type name.</returns>
     public static string GetFullName(TypeDefinition type)
     {
         Utf8String? ns = type.Namespace;
