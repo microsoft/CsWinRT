@@ -49,9 +49,11 @@ Drift is reported with file-by-file diffs (added / removed / changed).
   contributor sets up their own `.rsp` files for the scenarios they care
   about, then captures a baseline against the writer state they consider
   correct, and validates from there.
-- Pass 16 (output-format cleanup) intentionally broke byte identity. If you
-  need to validate parse-equivalence rather than byte identity, use the
-  Roslyn-based parse validator alongside this harness.
+- The harness validates byte-for-byte equality of the emitted `.cs` files
+  against the captured baseline. If a refactor intentionally changes the
+  emitted formatting (whitespace, ordering, etc.) the contributor is expected
+  to recapture the baselines after manually reviewing that the change is
+  benign.
 
 ## Why no xunit / unit test project?
 
