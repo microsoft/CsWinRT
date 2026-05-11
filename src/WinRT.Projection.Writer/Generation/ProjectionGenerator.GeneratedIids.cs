@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
@@ -54,13 +56,13 @@ internal sealed partial class ProjectionGenerator
         bool iidWritten = false;
         HashSet<TypeDefinition> interfacesFromClassesEmitted = [];
         ProjectionEmitContext guidContext = new(_settings, _cache, "ABI");
-        Writers.IndentedTextWriter guidIndented = new();
+        IndentedTextWriter guidIndented = new();
         IIDExpressionGenerator.WriteInterfaceIidsBegin(guidIndented);
         // Iterate namespaces in sorted order . Within each namespace, types are already sorted by SortMembersByName.
         // The sorted-by-namespace order produces the parent-before-child grouping in the
         // GeneratedInterfaceIIDs.cs output (e.g. Windows.ApplicationModel.* types before
         // Windows.ApplicationModel.Activation.* types).
-        foreach ((string ns, NamespaceMembers members) in _cache.Namespaces.OrderBy(kvp => kvp.Key, System.StringComparer.Ordinal))
+        foreach ((string ns, NamespaceMembers members) in _cache.Namespaces.OrderBy(kvp => kvp.Key, StringComparer.Ordinal))
         {
             foreach (TypeDefinition type in members.Types)
             {

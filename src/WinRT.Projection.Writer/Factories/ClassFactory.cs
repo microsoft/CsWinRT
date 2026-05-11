@@ -151,8 +151,8 @@ internal static class ClassFactory
 
             string aNs = a.Namespace?.Value ?? string.Empty;
             string bNs = b.Namespace?.Value ?? string.Empty;
-            if (aNs != bNs) { return System.StringComparer.Ordinal.Compare(aNs, bNs); }
-            return System.StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+            if (aNs != bNs) { return StringComparer.Ordinal.Compare(aNs, bNs); }
+            return StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
         });
         return (defaultIface, exclusiveIfaces);
     }

@@ -9,6 +9,7 @@ using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
@@ -23,7 +24,7 @@ internal sealed partial class ProjectionGenerator
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap)
     {
         ProjectionEmitContext context = new(_settings, _cache, ns);
-        Writers.IndentedTextWriter writer = new();
+        IndentedTextWriter writer = new();
 
         writer.WriteFileHeader(context);
 
@@ -175,9 +176,9 @@ internal sealed partial class ProjectionGenerator
         {
             if (addNs == ns && _settings.AdditionFilter.Includes(ns))
             {
-                using System.IO.Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
+                using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
                 if (stream is null) { continue; }
-                using System.IO.StreamReader reader = new(stream);
+                using StreamReader reader = new(stream);
                 string content = reader.ReadToEnd();
                 writer.Write(content);
             }

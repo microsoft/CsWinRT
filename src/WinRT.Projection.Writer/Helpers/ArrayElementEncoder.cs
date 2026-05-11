@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
+using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -74,7 +76,7 @@ internal static class ArrayElementEncoder
         }
     }
 
-    private static void EncodeArrayElementForTypeDef(System.Text.StringBuilder sb, ITypeDefOrRef type, System.Collections.Generic.IList<TypeSignature>? generic_args)
+    private static void EncodeArrayElementForTypeDef(StringBuilder sb, ITypeDefOrRef type, IList<TypeSignature>? generic_args)
     {
         (string typeNs, string typeName) = type.Names();
         // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).

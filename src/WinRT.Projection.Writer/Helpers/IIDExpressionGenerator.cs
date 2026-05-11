@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
@@ -72,7 +73,7 @@ internal static partial class IIDExpressionGenerator
     {
         CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GuidAttribute");
         if (attr is null || attr.Signature is null) { return null; }
-        System.Collections.Generic.IList<CustomAttributeArgument> args = attr.Signature.FixedArguments;
+        IList<CustomAttributeArgument> args = attr.Signature.FixedArguments;
         if (args.Count < 11) { return null; }
 
         uint data1 = ToUInt32(args[0].Element);

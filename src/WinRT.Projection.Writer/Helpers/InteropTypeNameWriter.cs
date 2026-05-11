@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using AsmResolver.DotNet;
@@ -107,7 +108,7 @@ internal static class InteropTypeNameWriter
         _ = sb.Append(corlib.FullName);
     }
 
-    private static void EncodeForTypeDef(StringBuilder sb, ITypeDefOrRef type, TypedefNameType nameType, System.Collections.Generic.IList<TypeSignature>? generic_args)
+    private static void EncodeForTypeDef(StringBuilder sb, ITypeDefOrRef type, TypedefNameType nameType, IList<TypeSignature>? generic_args)
     {
         (string typeNs, string typeName) = type.Names();
 
