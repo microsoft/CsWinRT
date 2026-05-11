@@ -37,7 +37,10 @@ internal static partial class AbiTypeHelpers
             }
 
             if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
-                attrType.Name?.Value != ExclusiveToAttribute) { continue; }
+                attrType.Name?.Value != ExclusiveToAttribute)
+            {
+                continue;
+            }
 
             if (attr.Signature is null)
             {

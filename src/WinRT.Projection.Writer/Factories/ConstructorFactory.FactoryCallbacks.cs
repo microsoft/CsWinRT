@@ -188,7 +188,11 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (p.Type.IsGenericInstance()) { continue; } // already handled above
+            // already handled above
+            if (p.Type.IsGenericInstance())
+            {
+                continue;
+            }
 
             if (!context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject())
             {

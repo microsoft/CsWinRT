@@ -38,7 +38,10 @@ internal static partial class ConstructorFactory
             }
 
             if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
-                attrType.Name?.Value != "MarshalingBehaviorAttribute") { continue; }
+                attrType.Name?.Value != "MarshalingBehaviorAttribute")
+            {
+                continue;
+            }
 
             if (attr.Signature is null)
             {

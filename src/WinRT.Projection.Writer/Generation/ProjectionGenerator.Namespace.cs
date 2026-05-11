@@ -34,6 +34,7 @@ internal sealed partial class ProjectionGenerator
         bool written = false;
 
         // Phase 1: TypeMapGroup assembly attributes
+        _token.ThrowIfCancellationRequested();
         if (!_settings.ReferenceProjection)
         {
             MetadataAttributeFactory.WritePragmaDisableIL2026(writer);
@@ -100,6 +101,7 @@ internal sealed partial class ProjectionGenerator
         }
 
         // Phase 2: Projected types
+        _token.ThrowIfCancellationRequested();
         writer.WriteBeginProjectedNamespace(context);
 
         foreach (TypeDefinition type in members.Types)
@@ -152,6 +154,7 @@ internal sealed partial class ProjectionGenerator
         }
 
         // Phase 3: ABI types (when not reference projection)
+        _token.ThrowIfCancellationRequested();
         if (!_settings.ReferenceProjection)
         {
             // Collect factory interfaces (Static/Activatable/Composable) referenced by classes
@@ -225,6 +228,7 @@ internal sealed partial class ProjectionGenerator
         }
 
         // Phase 4: Custom additions to namespaces
+        _token.ThrowIfCancellationRequested();
         if (Additions.ByNamespace.TryGetValue(ns, out string[]? resourceNames) && _settings.AdditionFilter.Includes(ns))
         {
             foreach (string resName in resourceNames)

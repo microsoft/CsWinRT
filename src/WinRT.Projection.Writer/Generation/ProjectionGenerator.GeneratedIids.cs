@@ -69,6 +69,7 @@ internal sealed partial class ProjectionGenerator
         // Windows.ApplicationModel.Activation.* types).
         foreach ((string ns, NamespaceMembers members) in _cache.Namespaces.OrderBy(kvp => kvp.Key, StringComparer.Ordinal))
         {
+            _token.ThrowIfCancellationRequested();
             foreach (TypeDefinition type in members.Types)
             {
                 bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
