@@ -208,10 +208,10 @@ internal static partial class IIDExpressionGenerator
     {
         switch (semantics)
         {
-            case TypeSemantics.Guid_:
+            case TypeSemantics.GuidType:
                 writer.Write("g16");
                 break;
-            case TypeSemantics.Object_:
+            case TypeSemantics.ObjectType:
                 writer.Write("cinterface(IInspectable)");
                 break;
             case TypeSemantics.Fundamental f:
@@ -223,12 +223,12 @@ internal static partial class IIDExpressionGenerator
             case TypeSemantics.Reference r:
                 {
                     // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
-                    (string ns, string name) = r.Reference_.Names();
+                    (string ns, string name) = r.Type.Names();
                     TypeDefinition? resolved = null;
 
                     if (context.Cache is not null)
                     {
-                        resolved = r.Reference_.TryResolve(context.Cache.RuntimeContext)
+                        resolved = r.Type.TryResolve(context.Cache.RuntimeContext)
                             ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
 

@@ -72,17 +72,17 @@ internal abstract record TypeSemantics
     /// <summary>
     /// The corlib <see cref="System.Object"/> type.
     /// </summary>
-    public sealed record Object_ : TypeSemantics;
+    public sealed record ObjectType : TypeSemantics;
 
     /// <summary>
     /// The corlib <see cref="System.Guid"/> type.
     /// </summary>
-    public sealed record Guid_ : TypeSemantics;
+    public sealed record GuidType : TypeSemantics;
 
     /// <summary>
     /// The corlib <see cref="System.Type"/> type.
     /// </summary>
-    public sealed record Type_ : TypeSemantics;
+    public sealed record SystemType : TypeSemantics;
 
     /// <summary>
     /// A WinRT class / interface / struct / enum / delegate defined in the loaded metadata.
@@ -120,14 +120,14 @@ internal abstract record TypeSemantics
     /// A bound generic parameter token (rare; appears in nested generics).
     /// </summary>
     /// <param name="Parameter">The generic parameter.</param>
-    public sealed record GenericParameter_(GenericParameter Parameter) : TypeSemantics;
+    public sealed record BoundGenericParameter(GenericParameter Parameter) : TypeSemantics;
 
     /// <summary>
     /// A reference to a type defined in another assembly.
     /// </summary>
-    /// <param name="Reference_">The type reference.</param>
+    /// <param name="Type">The type reference.</param>
     /// <param name="IsValueType">Whether the reference points at a value type (struct/enum) or a reference type.</param>
-    public sealed record Reference(TypeReference Reference_, bool IsValueType = false) : TypeSemantics;
+    public sealed record Reference(TypeReference Type, bool IsValueType = false) : TypeSemantics;
 }
 
 /// <summary>
@@ -164,17 +164,17 @@ internal static class TypeSemanticsFactory
 
             if (ns == "System" && name == "Guid")
             {
-                return new TypeSemantics.Guid_();
+                return new TypeSemantics.GuidType();
             }
 
             if (ns == "System" && name == "Object")
             {
-                return new TypeSemantics.Object_();
+                return new TypeSemantics.ObjectType();
             }
 
             if (ns == "System" && name == "Type")
             {
-                return new TypeSemantics.Type_();
+                return new TypeSemantics.SystemType();
             }
 
             return new TypeSemantics.Reference(reference, isValueType);
@@ -205,7 +205,7 @@ internal static class TypeSemanticsFactory
             ElementType.R4 => new TypeSemantics.Fundamental(FundamentalType.Float),
             ElementType.R8 => new TypeSemantics.Fundamental(FundamentalType.Double),
             ElementType.String => new TypeSemantics.Fundamental(FundamentalType.String),
-            ElementType.Object => new TypeSemantics.Object_(),
+            ElementType.Object => new TypeSemantics.ObjectType(),
             _ => throw WellKnownProjectionWriterExceptions.UnsupportedCorLibElementType(elementType)
         };
     }

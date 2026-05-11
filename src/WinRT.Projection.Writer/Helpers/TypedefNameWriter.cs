@@ -85,11 +85,9 @@ internal static class TypedefNameWriter
         }
         else if (forceWriteNamespace ||
             typeNamespace != context.CurrentNamespace ||
-            (nameToWrite == TypedefNameType.Projected && (context.InAbiNamespace || context.InAbiImplNamespace)) ||
-            (nameToWrite == TypedefNameType.ABI && !context.InAbiNamespace) ||
-            (nameToWrite == TypedefNameType.EventSource && !context.InAbiNamespace) ||
-            (nameToWrite == TypedefNameType.CCW && authoredType && !context.InAbiImplNamespace) ||
-            (nameToWrite == TypedefNameType.CCW && !authoredType && (context.InAbiNamespace || context.InAbiImplNamespace)))
+            nameToWrite == TypedefNameType.ABI ||
+            nameToWrite == TypedefNameType.EventSource ||
+            (nameToWrite == TypedefNameType.CCW && authoredType))
         {
             writer.Write(GlobalPrefix);
 
@@ -199,13 +197,13 @@ internal static class TypedefNameWriter
             case TypeSemantics.Fundamental f:
                 WriteFundamentalType(writer, f.Type);
                 break;
-            case TypeSemantics.Object_:
+            case TypeSemantics.ObjectType:
                 writer.Write("object");
                 break;
-            case TypeSemantics.Guid_:
+            case TypeSemantics.GuidType:
                 writer.Write("Guid");
                 break;
-            case TypeSemantics.Type_:
+            case TypeSemantics.SystemType:
                 writer.Write("Type");
                 break;
             case TypeSemantics.Definition d:
@@ -279,7 +277,7 @@ internal static class TypedefNameWriter
                 break;
             case TypeSemantics.Reference r:
                 {
-                    (string ns, string name) = r.Reference_.Names();
+                    (string ns, string name) = r.Type.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
 
                     if (mapped is { } m)
@@ -291,10 +289,8 @@ internal static class TypedefNameWriter
                     bool needsNsPrefix = !string.IsNullOrEmpty(ns) && (
                         forceWriteNamespace ||
                         ns != context.CurrentNamespace ||
-                        (nameType == TypedefNameType.Projected && (context.InAbiNamespace || context.InAbiImplNamespace)) ||
-                        (nameType == TypedefNameType.ABI && !context.InAbiNamespace) ||
-                        (nameType == TypedefNameType.EventSource && !context.InAbiNamespace) ||
-                        (nameType == TypedefNameType.CCW && (context.InAbiNamespace || context.InAbiImplNamespace)));
+                        nameType == TypedefNameType.ABI ||
+                        nameType == TypedefNameType.EventSource);
 
                     if (needsNsPrefix)
                     {

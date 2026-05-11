@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -106,14 +108,11 @@ internal static class ProjectionFileBuilder
         string accessibility = context.Settings.Internal ? "internal" : "public";
         string typeName = type.Name?.Value ?? string.Empty;
 
+        writer.WriteLine();
+
         if (isFlags)
         {
-            writer.WriteLine();
-            writer.WriteLine("[FlagsAttribute]");
-        }
-        else
-        {
-            writer.WriteLine();
+            writer.WriteLine("[Flags]");
         }
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
@@ -155,13 +154,13 @@ internal static class ProjectionFileBuilder
         {
             ElementType.I1 => ((sbyte)data[0]).ToString(CultureInfo.InvariantCulture),
             ElementType.U1 => data[0].ToString(CultureInfo.InvariantCulture),
-            ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(CultureInfo.InvariantCulture),
-            ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(CultureInfo.InvariantCulture),
+            ElementType.I2 => BitConverter.ToInt16(data, 0).ToString(CultureInfo.InvariantCulture),
+            ElementType.U2 => BitConverter.ToUInt16(data, 0).ToString(CultureInfo.InvariantCulture),
             // I4/U4 use printf "%#0x" semantics: 0 -> "0", non-zero -> "0x<hex>"
-            ElementType.I4 => FormatHexAlternate((uint)System.BitConverter.ToInt32(data, 0)),
-            ElementType.U4 => FormatHexAlternate(System.BitConverter.ToUInt32(data, 0)),
-            ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(CultureInfo.InvariantCulture),
-            ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(CultureInfo.InvariantCulture),
+            ElementType.I4 => FormatHexAlternate((uint)BitConverter.ToInt32(data, 0)),
+            ElementType.U4 => FormatHexAlternate(BitConverter.ToUInt32(data, 0)),
+            ElementType.I8 => BitConverter.ToInt64(data, 0).ToString(CultureInfo.InvariantCulture),
+            ElementType.U8 => BitConverter.ToUInt64(data, 0).ToString(CultureInfo.InvariantCulture),
             _ => "0"
         };
     }
@@ -188,7 +187,7 @@ internal static class ProjectionFileBuilder
         }
 
         // Collect field info
-        System.Collections.Generic.List<(string TypeStr, string Name, string ParamName, bool IsInterface)> fields = [];
+        List<(string TypeStr, string Name, string ParamName, bool IsInterface)> fields = [];
         foreach (FieldDefinition field in type.Fields)
         {
             if (field.IsStatic || field.Signature is null)

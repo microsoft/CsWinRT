@@ -27,13 +27,13 @@ internal static class AbiTypeWriter
             case TypeSemantics.Fundamental f:
                 writer.Write(GetAbiFundamentalType(f.Type));
                 break;
-            case TypeSemantics.Object_:
+            case TypeSemantics.ObjectType:
                 writer.Write("void*");
                 break;
-            case TypeSemantics.Guid_:
+            case TypeSemantics.GuidType:
                 writer.Write("Guid");
                 break;
-            case TypeSemantics.Type_:
+            case TypeSemantics.SystemType:
                 writer.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");
                 break;
             case TypeSemantics.Definition d:
@@ -102,7 +102,7 @@ internal static class AbiTypeWriter
                 // for the field/parameter type after resolution.
                 if (context.Cache is not null)
                 {
-                    (string rns, string rname) = r.Reference_.Names();
+                    (string rns, string rname) = r.Type.Names();
                     // Special case: mapped value types that require ABI marshalling.
                     if (rns == WindowsFoundation && rname == "DateTime")
                     {
@@ -181,7 +181,7 @@ internal static class AbiTypeWriter
                 // void* (it's a runtime class/interface/delegate).
                 if (r.IsValueType)
                 {
-                    (string rns, string rname) = r.Reference_.Names();
+                    (string rns, string rname) = r.Type.Names();
                     writer.Write(GlobalPrefix);
 
                     if (!string.IsNullOrEmpty(rns)) { writer.Write($"{rns}."); }

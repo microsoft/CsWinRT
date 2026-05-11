@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Builders;
@@ -43,16 +45,16 @@ internal static class MetadataAttributeFactory
     /// <summary>
     /// Returns the version string embedded in the banner comment of generated files.
     /// MSBuild and defaults to <c>0.0.0-private.0</c>).
-    /// We read the writer assembly's <see cref="System.Reflection.AssemblyInformationalVersionAttribute"/>
+    /// We read the writer assembly's <see cref="AssemblyInformationalVersionAttribute"/>
     /// (set via <c>$(InformationalVersion)</c>) and strip any SourceLink commit-sha suffix
     /// after a '+' so the banner is reproducible across rebuilds of the same source.
     /// </summary>
     internal static string GetVersionString()
     {
-        System.Reflection.Assembly asm = typeof(ProjectionFileBuilder).Assembly;
-        System.Reflection.AssemblyInformationalVersionAttribute? attr =
-            (System.Reflection.AssemblyInformationalVersionAttribute?)System.Attribute.GetCustomAttribute(
-                asm, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
+        Assembly asm = typeof(ProjectionFileBuilder).Assembly;
+        AssemblyInformationalVersionAttribute? attr =
+            (AssemblyInformationalVersionAttribute?)Attribute.GetCustomAttribute(
+                asm, typeof(AssemblyInformationalVersionAttribute));
         string version = attr?.InformationalVersion ?? "0.0.0-private.0";
         int plus = version.IndexOf('+');
         return plus >= 0 ? version[..plus] : version;

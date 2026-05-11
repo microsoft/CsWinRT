@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -132,14 +131,7 @@ internal static partial class AbiTypeHelpers
                 name = m.MappedName;
             }
 
-            string nameStripped = IdentifierEscaping.StripBackticks(name);
-            // If the writer is currently in the matching ABI namespace, drop the qualifier.
-            if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, StringComparison.Ordinal))
-            {
-                return nameStripped + MarshallerSuffix;
-            }
-
-            return GlobalAbiPrefix + ns + "." + nameStripped + MarshallerSuffix;
+            return GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name) + MarshallerSuffix;
         }
 
         return "global::ABI.Object.Marshaller";

@@ -11,12 +11,6 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// Per-emission context bundling all state shared by the projection writers when emitting a
 /// single projection (settings, metadata cache, the active namespace, scoped emission-mode flags).
 /// </summary>
-/// <remarks>
-/// The two emission-mode flags (<see cref="InAbiNamespace"/> and <see cref="InAbiImplNamespace"/>)
-/// are exposed as read-only properties; callers must enter/leave them via the scoped
-/// <see cref="EnterAbiNamespace"/> / <see cref="EnterAbiImplNamespace"/> <see cref="IDisposable"/>
-/// helpers, which guarantees the flag is reset even on exceptional control flow.
-/// </remarks>
 /// <param name="settings">The active projection settings.</param>
 /// <param name="cache">The metadata cache for the current generation.</param>
 /// <param name="currentNamespace">The namespace currently being emitted (or <see cref="string.Empty"/> when not in a per-namespace pass).</param>
@@ -41,16 +35,6 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     /// Gets the resolver used to classify type signatures by their ABI marshalling shape.
     /// </summary>
     public AbiTypeShapeResolver AbiTypeShapeResolver { get; } = new AbiTypeShapeResolver(cache);
-
-    /// <summary>
-    /// Gets a value indicating whether the writer is currently inside an ABI namespace block.
-    /// </summary>
-    public bool InAbiNamespace { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating whether the writer is currently inside an ABI.Impl namespace block.
-    /// </summary>
-    public bool InAbiImplNamespace { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether platform-attribute computation should suppress platforms
@@ -82,28 +66,6 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     }
 
     /// <summary>
-    /// Enters the ABI namespace mode. Returns an <see cref="IDisposable"/> token that resets the
-    /// mode on dispose. Use as <c>using (context.EnterAbiNamespace()) { ... }</c>.
-    /// </summary>
-    /// <returns>The scope token.</returns>
-    public AbiNamespaceScope EnterAbiNamespace()
-    {
-        InAbiNamespace = true;
-        return new AbiNamespaceScope(this);
-    }
-
-    /// <summary>
-    /// Enters the ABI.Impl namespace mode. Returns an <see cref="IDisposable"/> token that resets
-    /// the mode on dispose. Use as <c>using (context.EnterAbiImplNamespace()) { ... }</c>.
-    /// </summary>
-    /// <returns>The scope token.</returns>
-    public AbiImplNamespaceScope EnterAbiImplNamespace()
-    {
-        InAbiImplNamespace = true;
-        return new AbiImplNamespaceScope(this);
-    }
-
-    /// <summary>
     /// Enters platform-attribute suppression mode for the given <paramref name="platform"/>.
     /// Returns an <see cref="IDisposable"/> token that resets <see cref="CheckPlatform"/> and
     /// <see cref="Platform"/> on dispose. Use as
@@ -118,50 +80,6 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
         CheckPlatform = true;
         Platform = platform;
         return new PlatformSuppressionScope(this, prevCheck, prevPlatform);
-    }
-
-    /// <summary>
-    /// Scope token for <see cref="EnterAbiNamespace"/>.
-    /// </summary>
-    public ref struct AbiNamespaceScope : IDisposable
-    {
-        private ProjectionEmitContext? _context;
-
-        internal AbiNamespaceScope(ProjectionEmitContext context) { _context = context; }
-
-        /// <summary>
-        /// Resets the ABI namespace mode.
-        /// </summary>
-        public void Dispose()
-        {
-            if (_context is { } context)
-            {
-                context.InAbiNamespace = false;
-                _context = null;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Scope token for <see cref="EnterAbiImplNamespace"/>.
-    /// </summary>
-    public ref struct AbiImplNamespaceScope : IDisposable
-    {
-        private ProjectionEmitContext? _context;
-
-        internal AbiImplNamespaceScope(ProjectionEmitContext context) { _context = context; }
-
-        /// <summary>
-        /// Resets the ABI.Impl namespace mode.
-        /// </summary>
-        public void Dispose()
-        {
-            if (_context is { } context)
-            {
-                context.InAbiImplNamespace = false;
-                _context = null;
-            }
-        }
     }
 
     /// <summary>
