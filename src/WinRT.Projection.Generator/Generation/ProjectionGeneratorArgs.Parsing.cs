@@ -82,6 +82,7 @@ internal partial class ProjectionGeneratorArgs
             AssemblyName = GetOptionalStringArgument(argsMap, nameof(AssemblyName), "WinRT.Projection"),
             WindowsSdkOnly = GetOptionalBoolArgument(argsMap, nameof(WindowsSdkOnly)),
             WindowsUIXamlProjection = GetOptionalBoolArgument(argsMap, nameof(WindowsUIXamlProjection)),
+            MaxDegreesOfParallelism = GetInt32Argument(argsMap, nameof(MaxDegreesOfParallelism)),
             Token = token
         };
     }
@@ -166,5 +167,24 @@ internal partial class ProjectionGeneratorArgs
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Parses an <see cref="int"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument.</returns>
+    private static int GetInt32Argument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            if (int.TryParse(argumentValue, out int parsedValue))
+            {
+                return parsedValue;
+            }
+        }
+
+        throw WellKnownProjectionGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
     }
 }

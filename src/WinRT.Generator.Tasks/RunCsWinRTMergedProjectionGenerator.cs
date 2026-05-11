@@ -86,6 +86,12 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// </summary>
     public bool WindowsUIXamlProjection { get; set; }
 
+    /// <summary>
+    /// Gets or sets the maximum number of parallel tasks the projection writer is allowed to dispatch.
+    /// </summary>
+    /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
+    public int MaxDegreesOfParallelism { get; set; } = -1;
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -207,6 +213,8 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
         }
+
+        AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
 
         // Add any additional arguments that are not statically known
         foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])

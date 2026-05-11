@@ -258,6 +258,7 @@ internal partial class ProjectionGenerator
             Include = includes,
             Exclude = excludes,
             Component = componentMode,
+            MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };
     }

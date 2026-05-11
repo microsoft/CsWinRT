@@ -201,6 +201,26 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5017, "Failed to emit the component-mode 'WinRT_Module.cs' activation-factory file.", exception);
     }
 
+    /// <summary>
+    /// Raised when the input projection options do not include any <c>.winmd</c> path. Used by
+    /// <see cref="ProjectionWriter.Run"/> as a guard before any generation work.
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException MissingInputPaths()
+    {
+        return Exception(5018, "At least one input metadata path must be provided.");
+    }
+
+    /// <summary>
+    /// Raised when the input projection options do not include an output folder. Used by
+    /// <see cref="ProjectionWriter.Run"/> as a guard before any generation work.
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException MissingOutputFolder()
+    {
+        return Exception(5019, "An output folder must be provided.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException(

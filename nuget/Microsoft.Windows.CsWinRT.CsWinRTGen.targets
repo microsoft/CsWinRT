@@ -188,6 +188,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the interop .dll item -->
@@ -256,6 +257,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
       <ItemGroup>
@@ -349,6 +351,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the interop .dll item and add it to the required output groups -->
@@ -411,6 +414,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Only wire up the component DLL if it was actually produced (i.e. component types were found) -->
@@ -488,6 +492,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the SDK projection .dll item -->
@@ -573,6 +578,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the SDK XAML .dll item -->

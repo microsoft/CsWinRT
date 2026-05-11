@@ -54,6 +54,10 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
+    /// <summary>Gets the maximum number of parallel tasks to use for execution.</summary>
+    [CommandLineArgumentName("--max-degrees-of-parallelism")]
+    public required int MaxDegreesOfParallelism { get; init; }
+
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
 }
