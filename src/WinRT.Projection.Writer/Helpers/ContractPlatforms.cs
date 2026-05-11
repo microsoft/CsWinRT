@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class ContractPlatforms
 {
-    private static readonly FrozenDictionary<string, (int Version, string Platform)[]> s_table = Build();
+    private static readonly FrozenDictionary<string, (int Version, string Platform)[]> Table = Build();
 
     /// <summary>
     /// Returns the platform version (e.g., "10.0.17763.0") that introduced the given contract version,
@@ -20,7 +20,7 @@ internal static class ContractPlatforms
     /// </summary>
     public static string GetPlatform(string contractName, int contractVersion)
     {
-        if (!s_table.TryGetValue(contractName, out (int Version, string Platform)[]? versions))
+        if (!Table.TryGetValue(contractName, out (int Version, string Platform)[]? versions))
         {
             return string.Empty;
         }
@@ -119,7 +119,7 @@ internal static class ContractPlatforms
 /// </summary>
 internal static class AdditionTypes
 {
-    private static readonly FrozenDictionary<string, FrozenSet<string>> s_table = new Dictionary<string, FrozenSet<string>>(StringComparer.Ordinal)
+    private static readonly FrozenDictionary<string, FrozenSet<string>> Table = new Dictionary<string, FrozenSet<string>>(StringComparer.Ordinal)
     {
         ["Microsoft.UI.Xaml"] = FrozenSet.Create(StringComparer.Ordinal, "Thickness"),
         ["Microsoft.UI.Xaml.Controls.Primitives"] = FrozenSet.Create(StringComparer.Ordinal, "GeneratorPosition"),
@@ -134,6 +134,6 @@ internal static class AdditionTypes
 
     public static bool HasAdditionToType(string typeNamespace, string typeName)
     {
-        return s_table.TryGetValue(typeNamespace, out FrozenSet<string>? names) && names.Contains(typeName);
+        return Table.TryGetValue(typeNamespace, out FrozenSet<string>? names) && names.Contains(typeName);
     }
 }

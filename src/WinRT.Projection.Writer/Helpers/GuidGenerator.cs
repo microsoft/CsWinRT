@@ -20,7 +20,7 @@ internal static class GuidGenerator
     /// The PIID for the Windows Runtime namespace, used for generating IIDs of generic instantiations.
     /// </summary>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#guid-generation-for-parameterized-types"/>
-    private static readonly Guid s_windowsRuntimePIIDNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
+    private static readonly Guid WindowsRuntimePiidNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
 
     /// <summary>
     /// Generates a GUID for the given Windows Runtime parameterized type signature.
@@ -39,7 +39,7 @@ internal static class GuidGenerator
             ? stackalloc byte[512]
             : (utf8BytesFromPool = ArrayPool<byte>.Shared.Rent(minimumPooledLength));
 
-        _ = s_windowsRuntimePIIDNamespace.TryWriteBytes(utf8Bytes);
+        _ = WindowsRuntimePiidNamespace.TryWriteBytes(utf8Bytes);
 
         int encodedUtf8BytesWritten = Encoding.UTF8.GetBytes(signature, utf8Bytes[16..]);
         Span<byte> sha1Bytes = stackalloc byte[SHA1.HashSizeInBytes];

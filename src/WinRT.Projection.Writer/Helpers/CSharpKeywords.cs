@@ -10,7 +10,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class CSharpKeywords
 {
-    private static readonly HashSet<string> s_keywords =
+    private static readonly HashSet<string> Keywords =
     [
         "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue",
         "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally",
@@ -26,5 +26,5 @@ internal static class CSharpKeywords
     /// </summary>
     /// <param name="identifier">The identifier to test.</param>
     /// <returns><see langword="true"/> if <paramref name="identifier"/> is a C# keyword; otherwise <see langword="false"/>.</returns>
-    public static bool IsKeyword(string identifier) => s_keywords.Contains(identifier);
+    public static bool IsKeyword(string identifier) => Keywords.Contains(identifier);
 }

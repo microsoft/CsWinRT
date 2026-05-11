@@ -25,11 +25,11 @@ internal sealed record MappedType(
 /// </summary>
 internal static class MappedTypes
 {
-    private static readonly FrozenDictionary<string, FrozenDictionary<string, MappedType>> s_typeMappings = Build();
+    private static readonly FrozenDictionary<string, FrozenDictionary<string, MappedType>> TypeMappings = Build();
 
     public static MappedType? Get(string typeNamespace, string typeName)
     {
-        if (s_typeMappings.TryGetValue(typeNamespace, out FrozenDictionary<string, MappedType>? namesp) &&
+        if (TypeMappings.TryGetValue(typeNamespace, out FrozenDictionary<string, MappedType>? namesp) &&
             namesp.TryGetValue(typeName, out MappedType? mapped))
         {
             return mapped;
@@ -37,7 +37,7 @@ internal static class MappedTypes
         return null;
     }
 
-    public static bool HasNamespace(string typeNamespace) => s_typeMappings.ContainsKey(typeNamespace);
+    public static bool HasNamespace(string typeNamespace) => TypeMappings.ContainsKey(typeNamespace);
 
     private static FrozenDictionary<string, FrozenDictionary<string, MappedType>> Build()
     {
