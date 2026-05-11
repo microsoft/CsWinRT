@@ -49,8 +49,8 @@ internal static partial class AbiMethodBodyFactory
         if (isAddEvent || isRemoveEvent)
         {
             // Events go through dedicated EmitDoAbiAddEvent / EmitDoAbiRemoveEvent paths
-            // upstream (see lines 1153-1159). If we reach here for an event accessor it's a
-            // generator bug. Defensive guard against future regressions.
+            // upstream. If we reach here for an event accessor it's a generator bug.
+            // Defensive guard against future regressions.
             throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
                 $"EmitDoAbiBodyIfSimple: unexpectedly called for event accessor '{methodName}' " +
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");

@@ -263,7 +263,7 @@ internal static class ComponentFactory
         for (int i = 0; i < sig.ParameterTypes.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            ParameterDefinition? p = method.Parameters.Count > i + (method.IsStatic ? 0 : 0) ? method.Parameters[i].Definition : null;
+            ParameterDefinition? p = method.Parameters.Count > i ? method.Parameters[i].Definition : null;
             string paramName = p?.Name?.Value ?? $"arg{i}";
             if (includeTypes)
             {

@@ -21,7 +21,6 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static partial class AbiTypeHelpers
 {
-
     /// <summary>
     /// Returns the parent class for an interface marked <c>[ExclusiveToAttribute(typeof(T))]</c>.
     /// </summary>

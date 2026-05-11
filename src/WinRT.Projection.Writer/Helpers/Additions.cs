@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
-/// Registry of namespace addition files. array.
+/// Registry of namespace addition files.
 /// Each addition is the content of a <c>.cs</c> file that gets appended to the
 /// projection of the matching namespace.
 /// </summary>

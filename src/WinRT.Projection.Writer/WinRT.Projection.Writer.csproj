@@ -37,7 +37,7 @@
       the suppressed shape.
     -->
     <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
-    <!-- IDE0022: Use expression body for method — writer prefers expression bodies for one-liners. -->
+    <!-- IDE0022: Use expression body for method — writer prefers block bodies for emission helpers, even when short, for visual consistency with surrounding multi-statement methods. -->
     <!-- IDE0028: Use collection expression — limited to cases where comparer arguments don't fit collection-expression syntax. -->
     <!-- IDE0046: 'if' statement can be simplified — if/else if chains over type-class predicates are more readable than nested ternaries. -->
     <!-- IDE0060: Remove unused parameter — keep for API consistency across factory helpers. -->
