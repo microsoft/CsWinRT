@@ -31,18 +31,43 @@ internal static partial class ClassMembersFactory
     /// </summary>
     internal static bool IsInterfaceInInheritanceList(MetadataCache cache, InterfaceImplementation impl, bool includeExclusiveInterface)
     {
-        if (impl.Interface is null) { return false; }
-        if (impl.IsOverridable()) { return true; }
-        if (includeExclusiveInterface) { return true; }
+        if (impl.Interface is null)
+        {
+            return false;
+        }
+
+        if (impl.IsOverridable())
+        {
+            return true;
+        }
+
+        if (includeExclusiveInterface)
+        {
+            return true;
+        }
+
         TypeDefinition? td = ResolveInterface(cache, impl.Interface);
-        if (td is null) { return true; }
+
+        if (td is null)
+        {
+            return true;
+        }
+
         return !TypeCategorization.IsExclusiveTo(td);
     }
     internal static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
     {
-        if (typeRef is TypeDefinition td) { return td; }
+        if (typeRef is TypeDefinition td)
+        {
+            return td;
+        }
+
         TypeDefinition? resolved = typeRef.TryResolve(cache.RuntimeContext);
-        if (resolved is not null) { return resolved; }
+
+        if (resolved is not null)
+        {
+            return resolved;
+        }
         // Fall back to local lookup by full name
         if (typeRef is TypeReference tr)
         {
@@ -50,10 +75,12 @@ internal static partial class ClassMembersFactory
             string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
             return cache.Find(fullName);
         }
+
         if (typeRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             return ResolveInterface(cache, gi.GenericType);
         }
+
         return null;
     }
     /// <summary>
@@ -87,8 +114,13 @@ internal static partial class ClassMembersFactory
         if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && context.Cache is not null)
         {
             TypeDefinition? resolved = ifaceType.TryResolve(context.Cache.RuntimeContext);
-            if (resolved is not null) { ifaceType = resolved; }
+
+            if (resolved is not null)
+            {
+                ifaceType = resolved;
+            }
         }
+
         if (ifaceType is TypeDefinition td)
         {
             TypedefNameWriter.WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
@@ -98,11 +130,13 @@ internal static partial class ClassMembersFactory
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
@@ -110,15 +144,21 @@ internal static partial class ClassMembersFactory
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0) { writer.Write(", "); }
+                if (i > 0)
+                {
+                    writer.Write(", ");
+                }
+
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
             writer.Write(">");

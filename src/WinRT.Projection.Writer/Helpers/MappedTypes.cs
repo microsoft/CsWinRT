@@ -40,6 +40,7 @@ internal static class MappedTypes
         {
             return mapped;
         }
+
         return null;
     }
 
@@ -57,6 +58,7 @@ internal static class MappedTypes
                 bag = [];
                 result[ns] = bag;
             }
+
             bag[mt.AbiName] = mt;
         }
 

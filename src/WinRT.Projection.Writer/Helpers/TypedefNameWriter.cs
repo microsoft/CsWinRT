@@ -57,6 +57,7 @@ internal static class TypedefNameWriter
         }
 
         MappedType? proj = MappedTypes.Get(typeNamespace, typeName);
+
         if (proj is { } p)
         {
             typeNamespace = p.MappedNamespace;
@@ -64,6 +65,7 @@ internal static class TypedefNameWriter
         }
 
         TypedefNameType nameToWrite = nameType;
+
         if (authoredType && TypeCategorization.IsExclusiveTo(type) && nameToWrite == TypedefNameType.Projected)
         {
             nameToWrite = TypedefNameType.CCW;
@@ -90,6 +92,7 @@ internal static class TypedefNameWriter
             (nameToWrite == TypedefNameType.CCW && !authoredType && (context.InAbiNamespace || context.InAbiImplNamespace)))
         {
             writer.Write(GlobalPrefix);
+
             if (nameToWrite is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
             {
                 writer.Write("ABI.");
@@ -98,6 +101,7 @@ internal static class TypedefNameWriter
             {
                 writer.Write("ABI.Impl.");
             }
+
             writer.Write($"{typeNamespace}.");
         }
 
@@ -163,11 +167,19 @@ internal static class TypedefNameWriter
     /// <param name="type">The (potentially generic) type definition.</param>
     public static void WriteTypeParams(IndentedTextWriter writer, TypeDefinition type)
     {
-        if (type.GenericParameters.Count == 0) { return; }
+        if (type.GenericParameters.Count == 0)
+        {
+            return;
+        }
+
         writer.Write("<");
         for (int i = 0; i < type.GenericParameters.Count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             string? gpName = type.GenericParameters[i].Name?.Value;
             writer.Write(gpName ?? $"T{i}");
         }
@@ -207,7 +219,10 @@ internal static class TypedefNameWriter
                 writer.Write("<");
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
-                    if (i > 0) { writer.Write(", "); }
+                    if (i > 0)
+                    {
+                        writer.Write(", ");
+                    }
                     // Generic args ALWAYS use Projected, regardless of parent's nameType.
                     WriteTypeName(writer, context, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                 }
@@ -217,11 +232,13 @@ internal static class TypedefNameWriter
                 {
                     (string ns, string name) = gir.GenericType.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
+
                     if (mapped is { } m)
                     {
                         ns = m.MappedNamespace;
                         name = m.MappedName;
                     }
+
                     if (nameType == TypedefNameType.EventSource && ns == "System")
                     {
                         writer.Write("global::WindowsRuntime.InteropServices.");
@@ -229,20 +246,34 @@ internal static class TypedefNameWriter
                     else if (!string.IsNullOrEmpty(ns))
                     {
                         writer.Write(GlobalPrefix);
+
                         if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
                         {
                             writer.Write("ABI.");
                         }
+
                         writer.Write($"{ns}.");
                     }
+
                     writer.Write(IdentifierEscaping.StripBackticks(name));
-                    if (nameType == TypedefNameType.StaticAbiClass) { writer.Write("Methods"); }
-                    else if (nameType == TypedefNameType.EventSource) { writer.Write("EventSource"); }
+
+                    if (nameType == TypedefNameType.StaticAbiClass)
+                    {
+                        writer.Write("Methods");
+                    }
+                    else if (nameType == TypedefNameType.EventSource)
+                    {
+                        writer.Write("EventSource");
+                    }
 
                     writer.Write("<");
                     for (int i = 0; i < gir.GenericArgs.Count; i++)
                     {
-                        if (i > 0) { writer.Write(", "); }
+                        if (i > 0)
+                        {
+                            writer.Write(", ");
+                        }
+
                         WriteTypeName(writer, context, gir.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                     }
                     writer.Write(">");
@@ -252,11 +283,13 @@ internal static class TypedefNameWriter
                 {
                     (string ns, string name) = r.Reference_.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
+
                     if (mapped is { } m)
                     {
                         ns = m.MappedNamespace;
                         name = m.MappedName;
                     }
+
                     bool needsNsPrefix = !string.IsNullOrEmpty(ns) && (
                         forceWriteNamespace ||
                         ns != context.CurrentNamespace ||
@@ -264,18 +297,29 @@ internal static class TypedefNameWriter
                         (nameType == TypedefNameType.ABI && !context.InAbiNamespace) ||
                         (nameType == TypedefNameType.EventSource && !context.InAbiNamespace) ||
                         (nameType == TypedefNameType.CCW && (context.InAbiNamespace || context.InAbiImplNamespace)));
+
                     if (needsNsPrefix)
                     {
                         writer.Write(GlobalPrefix);
+
                         if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
                         {
                             writer.Write("ABI.");
                         }
+
                         writer.Write($"{ns}.");
                     }
+
                     writer.Write(IdentifierEscaping.StripBackticks(name));
-                    if (nameType == TypedefNameType.StaticAbiClass) { writer.Write("Methods"); }
-                    else if (nameType == TypedefNameType.EventSource) { writer.Write("EventSource"); }
+
+                    if (nameType == TypedefNameType.StaticAbiClass)
+                    {
+                        writer.Write("Methods");
+                    }
+                    else if (nameType == TypedefNameType.EventSource)
+                    {
+                        writer.Write("EventSource");
+                    }
                 }
                 break;
             case TypeSemantics.GenericTypeIndex gti:
@@ -368,7 +412,9 @@ internal static class TypedefNameWriter
             writer.Write("global::Windows.Foundation.EventHandler");
             return;
         }
+
         TypeSignature sig = evt.EventType.ToTypeSignature(false);
+
         if (currentInstance is not null)
         {
             sig = sig.InstantiateGenericTypes(new GenericContext(currentInstance, null));

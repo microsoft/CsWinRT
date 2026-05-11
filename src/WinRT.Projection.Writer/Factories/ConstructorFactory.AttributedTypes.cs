@@ -19,7 +19,10 @@ internal static partial class ConstructorFactory
     /// </summary>
     public static void WriteAttributedTypes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
     {
-        if (context.Cache is null) { return; }
+        if (context.Cache is null)
+        {
+            return;
+        }
 
         // Track whether we need to emit the static _objRef_<RuntimeClassName> field (used by
         // default constructors). Emit it once per class if any [Activatable] factory exists.
@@ -28,6 +31,7 @@ internal static partial class ConstructorFactory
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, context.Cache))
         {
             AttributedType factory = kv.Value;
+
             if (factory.Activatable && factory.Type is null)
             {
                 needsClassObjRef = true;
@@ -41,6 +45,7 @@ internal static partial class ConstructorFactory
             string objRefName = "_objRef_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
             writer.WriteLine();
             writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
+
             if (context.Settings.ReferenceProjection)
             {
                 // in ref mode the activation factory objref getter body is just 'throw null;'.
@@ -68,6 +73,7 @@ internal static partial class ConstructorFactory
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, context.Cache))
         {
             AttributedType factory = kv.Value;
+
             if (factory.Activatable)
             {
                 WriteFactoryConstructors(writer, context, factory.Type, classType);
@@ -86,6 +92,7 @@ internal static partial class ConstructorFactory
     {
         string typeName = classType.Name?.Value ?? string.Empty;
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
+
         if (factoryType is not null)
         {
             // Emit the factory objref property (lazy-initialized).
@@ -101,14 +108,23 @@ internal static partial class ConstructorFactory
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
-                if (method.IsSpecial()) { methodIndex++; continue; }
+                if (method.IsSpecial())
+                {
+                    methodIndex++; continue;
+                }
+
                 MethodSignatureInfo sig = new(method);
                 string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Parameters.Count.ToString(CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
                 writer.WriteLine();
-                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+
+                if (!string.IsNullOrEmpty(platformAttribute))
+                {
+                    writer.Write(platformAttribute);
+                }
+
                 writer.Write($"public unsafe {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
                 writer.Write("""
@@ -124,12 +140,17 @@ internal static partial class ConstructorFactory
                     writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
                     for (int i = 0; i < sig.Parameters.Count; i++)
                     {
-                        if (i > 0) { writer.Write(", "); }
+                        if (i > 0)
+                        {
+                            writer.Write(", ");
+                        }
+
                         string raw = sig.Parameters[i].Parameter.Name ?? "param";
                         writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
                     }
                     writer.Write("))");
                 }
+
                 writer.Write("""
                     )
                     {
@@ -138,6 +159,7 @@ internal static partial class ConstructorFactory
                 {
                     writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
+
                 writer.WriteLine("}");
 
                 if (sig.Parameters.Count > 0)
@@ -170,6 +192,7 @@ internal static partial class ConstructorFactory
             {
                 writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
             }
+
             writer.WriteLine("}");
         }
     }

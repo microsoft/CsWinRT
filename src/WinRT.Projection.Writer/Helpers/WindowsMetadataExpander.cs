@@ -54,10 +54,12 @@ public static partial class WindowsMetadataExpander
             string winDir = Environment.GetEnvironmentVariable("windir") ?? @"C:\Windows";
             string subdir = Environment.Is64BitProcess ? "System32" : "SysNative";
             string local = Path.Combine(winDir, subdir, "WinMetadata");
+
             if (Directory.Exists(local))
             {
                 result.Add(local);
             }
+
             return result;
         }
 
@@ -73,6 +75,7 @@ public static partial class WindowsMetadataExpander
         else
         {
             Match m = SdkVersionRegex.Match(token);
+
             if (m.Success)
             {
                 sdkVersion = m.Groups[1].Value;
@@ -82,6 +85,7 @@ public static partial class WindowsMetadataExpander
         if (!string.IsNullOrEmpty(sdkVersion))
         {
             string sdkPath = TryGetSdkPath();
+
             if (string.IsNullOrEmpty(sdkPath))
             {
                 throw WellKnownProjectionWriterExceptions.WindowsSdkNotFound();
@@ -93,11 +97,13 @@ public static partial class WindowsMetadataExpander
             if (includeExtensions)
             {
                 string extensionSdks = Path.Combine(sdkPath, "Extension SDKs");
+
                 if (Directory.Exists(extensionSdks))
                 {
                     foreach (string item in Directory.EnumerateDirectories(extensionSdks))
                     {
                         string xml = Path.Combine(item, sdkVersion, "SDKManifest.xml");
+
                         if (File.Exists(xml))
                         {
                             AddFilesFromPlatformXml(result, sdkVersion, xml, sdkPath);
@@ -126,11 +132,14 @@ public static partial class WindowsMetadataExpander
         try
         {
             using RegistryKey? wow = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subKey);
+
             if (wow?.GetValue("KitsRoot10") is string p1 && !string.IsNullOrEmpty(p1))
             {
                 return p1;
             }
+
             using RegistryKey? def = Registry.LocalMachine.OpenSubKey(subKey);
+
             if (def?.GetValue("KitsRoot10") is string p2 && !string.IsNullOrEmpty(p2))
             {
                 return p2;
@@ -147,11 +156,14 @@ public static partial class WindowsMetadataExpander
     private static string TryGetCurrentSdkVersion()
     {
         string sdkPath = TryGetSdkPath();
+
         if (string.IsNullOrEmpty(sdkPath))
         {
             return string.Empty;
         }
+
         string platforms = Path.Combine(sdkPath, "Platforms", "UAP");
+
         if (!Directory.Exists(platforms))
         {
             return string.Empty;
@@ -163,15 +175,20 @@ public static partial class WindowsMetadataExpander
         foreach (string dir in Directory.EnumerateDirectories(platforms))
         {
             string name = Path.GetFileName(dir);
+
             if (!Version.TryParse(name, out Version? v))
             {
                 continue;
             }
+
             string xml = Path.Combine(dir, "Platform.xml");
+
             if (!File.Exists(xml))
             {
                 continue;
             }
+
+
             if (v > best)
             {
                 best = v;
@@ -195,8 +212,10 @@ public static partial class WindowsMetadataExpander
             {
                 continue;
             }
+
             string? name = reader.GetAttribute("name");
             string? version = reader.GetAttribute("version");
+
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version))
             {
                 continue;

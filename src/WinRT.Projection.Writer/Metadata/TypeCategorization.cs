@@ -34,25 +34,34 @@ internal static class TypeCategorization
         {
             return TypeCategory.Interface;
         }
+
         ITypeDefOrRef? baseType = type.BaseType;
+
         if (baseType is null)
         {
             return TypeCategory.Class;
         }
+
         Utf8String? baseNs = baseType.Namespace;
         Utf8String? baseName = baseType.Name;
+
         if (baseNs == "System" && baseName == "Enum")
         {
             return TypeCategory.Enum;
         }
+
+
         if (baseNs == "System" && baseName == "ValueType")
         {
             return TypeCategory.Struct;
         }
+
+
         if (baseNs == "System" && baseName == "MulticastDelegate")
         {
             return TypeCategory.Delegate;
         }
+
         return TypeCategory.Class;
     }
 
@@ -140,6 +149,7 @@ internal static class TypeCategorization
         {
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
+
             if (type is not null && type.Namespace == ns && type.Name == name)
             {
                 return true;
@@ -157,6 +167,7 @@ internal static class TypeCategorization
         {
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
+
             if (type is not null && type.Namespace == ns && type.Name == name)
             {
                 return attr;

@@ -52,9 +52,18 @@ internal static class AbiDelegateFactory
     /// </summary>
     private static void WriteDelegateImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.GenericParameters.Count > 0) { return; }
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         MethodDefinition? invoke = type.GetDelegateInvoke();
-        if (invoke is null) { return; }
+
+        if (invoke is null)
+        {
+            return;
+        }
+
         MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -89,7 +98,12 @@ internal static class AbiDelegateFactory
         // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
         // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
         string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-        if (!projectedDelegateForBody.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { projectedDelegateForBody = GlobalPrefix + projectedDelegateForBody; }
+
+        if (!projectedDelegateForBody.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+        {
+            projectedDelegateForBody = GlobalPrefix + projectedDelegateForBody;
+        }
+
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
         writer.WriteLine();
         writer.Write($$"""
@@ -104,9 +118,18 @@ internal static class AbiDelegateFactory
 
     private static void WriteDelegateVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.GenericParameters.Count > 0) { return; }
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         MethodDefinition? invoke = type.GetDelegateInvoke();
-        if (invoke is null) { return; }
+
+        if (invoke is null)
+        {
+            return;
+        }
+
         MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -130,9 +153,18 @@ internal static class AbiDelegateFactory
 
     private static void WriteNativeDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.GenericParameters.Count > 0) { return; }
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         MethodDefinition? invoke = type.GetDelegateInvoke();
-        if (invoke is null) { return; }
+
+        if (invoke is null)
+        {
+            return;
+        }
+
         MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -145,7 +177,12 @@ internal static class AbiDelegateFactory
             """, isMultiline: true);
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
-        if (sig.Parameters.Count > 0) { writer.Write(", "); }
+
+        if (sig.Parameters.Count > 0)
+        {
+            writer.Write(", ");
+        }
+
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(")");
 
@@ -160,7 +197,11 @@ internal static class AbiDelegateFactory
 
     private static void WriteDelegateInterfaceEntriesImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.GenericParameters.Count > 0) { return; }
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
@@ -204,16 +245,25 @@ internal static class AbiDelegateFactory
     {
         // Skip generic delegates: only non-generic delegates get a per-delegate EventSource subclass.
         // Generic delegates (e.g. EventHandler<T>) use the generic EventHandlerEventSource<T> directly.
-        if (type.GenericParameters.Count > 0) { return; }
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
-        if (invoke is null) { return; }
+
+        if (invoke is null)
+        {
+            return;
+        }
+
         MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         // Compute the projected type name (with global::) used as the generic argument.
         string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+
         if (!projectedName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
             projectedName = GlobalPrefix + projectedName;
@@ -256,20 +306,44 @@ internal static class AbiDelegateFactory
             """, isMultiline: true);
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
-            if (pc == ParameterCategory.Ref) { writer.Write("in "); }
-            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray) { writer.Write("out "); }
+
+            if (pc == ParameterCategory.Ref)
+            {
+                writer.Write("in ");
+            }
+            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray)
+            {
+                writer.Write("out ");
+            }
+
             string raw = sig.Parameters[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
         writer.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
-            if (pc == ParameterCategory.Ref) { writer.Write("in "); }
-            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray) { writer.Write("out "); }
+
+            if (pc == ParameterCategory.Ref)
+            {
+                writer.Write("in ");
+            }
+            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray)
+            {
+                writer.Write("out ");
+            }
+
             string raw = sig.Parameters[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }

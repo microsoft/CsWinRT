@@ -55,6 +55,7 @@ internal static partial class IIDExpressionGenerator
     {
         // Escape special chars first, then strip ONLY the prefix (not all occurrences).
         string result = TypeNameEscapeRegex().Replace(typeName, "_");
+
         if (stripGlobalABI && typeName.StartsWith(GlobalAbiPrefix, StringComparison.Ordinal))
         {
             result = result[12..]; // Remove GlobalAbiPrefix (with ":" and "." already replaced)
@@ -63,6 +64,7 @@ internal static partial class IIDExpressionGenerator
         {
             result = result[8..]; // Remove GlobalPrefix
         }
+
         return result;
     }
 
@@ -72,9 +74,18 @@ internal static partial class IIDExpressionGenerator
     public static (uint Data1, ushort Data2, ushort Data3, byte[] Data4)? GetGuidFields(TypeDefinition type)
     {
         CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GuidAttribute");
-        if (attr is null || attr.Signature is null) { return null; }
+
+        if (attr is null || attr.Signature is null)
+        {
+            return null;
+        }
+
         IList<CustomAttributeArgument> args = attr.Signature.FixedArguments;
-        if (args.Count < 11) { return null; }
+
+        if (args.Count < 11)
+        {
+            return null;
+        }
 
         uint data1 = ToUInt32(args[0].Element);
         ushort data2 = ToUInt16(args[1].Element);
@@ -139,7 +150,11 @@ internal static partial class IIDExpressionGenerator
     }
     private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {
-        if (!first) { writer.Write(", "); }
+        if (!first)
+        {
+            writer.Write(", ");
+        }
+
         writer.Write($"0x{(b & 0xFF).ToString("X", CultureInfo.InvariantCulture)}");
     }
 
@@ -210,11 +225,13 @@ internal static partial class IIDExpressionGenerator
                     // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
                     (string ns, string name) = r.Reference_.Names();
                     TypeDefinition? resolved = null;
+
                     if (context.Cache is not null)
                     {
                         resolved = r.Reference_.TryResolve(context.Cache.RuntimeContext)
                             ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
+
                     if (resolved is not null)
                     {
                         WriteGuidSignatureForType(writer, context, resolved);
@@ -227,7 +244,11 @@ internal static partial class IIDExpressionGenerator
                 writer.Write("};");
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
-                    if (i > 0) { writer.Write(";"); }
+                    if (i > 0)
+                    {
+                        writer.Write(";");
+                    }
+
                     WriteGuidSignature(writer, context, gi.GenericArgs[i]);
                 }
                 writer.Write(")");
@@ -239,11 +260,13 @@ internal static partial class IIDExpressionGenerator
                     // so we can extract its [Guid]; recurse on each type argument.
                     (string ns, string name) = gir.GenericType.Names();
                     TypeDefinition? resolved = null;
+
                     if (context.Cache is not null)
                     {
                         resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext)
                             ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
+
                     if (resolved is not null)
                     {
                         writer.Write("pinterface({");
@@ -251,7 +274,11 @@ internal static partial class IIDExpressionGenerator
                         writer.Write("};");
                         for (int i = 0; i < gir.GenericArgs.Count; i++)
                         {
-                            if (i > 0) { writer.Write(";"); }
+                            if (i > 0)
+                            {
+                                writer.Write(";");
+                            }
+
                             WriteGuidSignature(writer, context, gir.GenericArgs[i]);
                         }
                         writer.Write(")");
@@ -299,9 +326,21 @@ internal static partial class IIDExpressionGenerator
                 bool first = true;
                 foreach (FieldDefinition field in type.Fields)
                 {
-                    if (field.IsStatic) { continue; }
-                    if (field.Signature is null) { continue; }
-                    if (!first) { writer.Write(";"); }
+                    if (field.IsStatic)
+                    {
+                        continue;
+                    }
+
+                    if (field.Signature is null)
+                    {
+                        continue;
+                    }
+
+                    if (!first)
+                    {
+                        writer.Write(";");
+                    }
+
                     first = false;
                     WriteGuidSignature(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
                 }
@@ -319,6 +358,7 @@ internal static partial class IIDExpressionGenerator
                 break;
             case TypeCategory.Class:
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
                 if (defaultIface is TypeDefinition di)
                 {
                     writer.Write("rc(");
@@ -334,6 +374,7 @@ internal static partial class IIDExpressionGenerator
                     WriteGuid(writer, type, true);
                     writer.Write("}");
                 }
+
                 break;
         }
     }
@@ -362,7 +403,11 @@ internal static partial class IIDExpressionGenerator
             """, isMultiline: true);
         for (int i = 0; i < 16; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             writer.Write($"0x{bytes[i].ToString("X", CultureInfo.InvariantCulture)}");
         }
         writer.WriteLine();
@@ -381,24 +426,41 @@ internal static partial class IIDExpressionGenerator
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
             // Resolve TypeRef -> TypeDefinition via metadata cache (so we pick up cross-module
             // inherited interfaces, e.g. Windows.UI.Composition.IAnimationObject from a XAML class).
             TypeDefinition? ifaceType = impl.Interface as TypeDefinition;
+
             if (ifaceType is null && impl.Interface is TypeReference tr)
             {
                 (string trNs, string trNm) = tr.Names();
                 ifaceType = ResolveCrossModuleType(context.Cache, trNs, trNm);
             }
-            if (ifaceType is null) { continue; }
+
+            if (ifaceType is null)
+            {
+                continue;
+            }
 
             (string ns, string nm) = ifaceType.Names();
             // Skip mapped types
-            if (MappedTypes.Get(ns, nm) is not null) { continue; }
+            if (MappedTypes.Get(ns, nm) is not null)
+            {
+                continue;
+            }
             // Skip generic interfaces
-            if (ifaceType.GenericParameters.Count != 0) { continue; }
+            if (ifaceType.GenericParameters.Count != 0)
+            {
+                continue;
+            }
             // Skip already-emitted
-            if (interfacesEmitted.Contains(ifaceType)) { continue; }
+            if (interfacesEmitted.Contains(ifaceType))
+            {
+                continue;
+            }
             // Only emit if the interface is not in the projection (otherwise it'll be emitted naturally)
             if (!context.Settings.Filter.Includes(ifaceType))
             {

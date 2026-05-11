@@ -196,7 +196,11 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, _cache))
         {
             TypeDefinition? facType = kv.Value.Type;
-            if (facType is not null) { _ = result.Add(facType); }
+
+            if (facType is not null)
+            {
+                _ = result.Add(facType);
+            }
         }
     }
 }

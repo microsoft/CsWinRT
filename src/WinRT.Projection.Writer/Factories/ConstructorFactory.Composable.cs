@@ -20,7 +20,11 @@ internal static partial class ConstructorFactory
     /// </summary>
     public static void WriteComposableConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? composableType, TypeDefinition classType, string visibility)
     {
-        if (composableType is null) { return; }
+        if (composableType is null)
+        {
+            return;
+        }
+
         string typeName = classType.Name?.Value ?? string.Empty;
 
         // Emit the factory objref + IIDs at the top so the parameterized ctors can reference it.
@@ -44,7 +48,10 @@ internal static partial class ConstructorFactory
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
         {
-            if (method.IsSpecial()) { methodIndex++; continue; }
+            if (method.IsSpecial())
+            {
+                methodIndex++; continue;
+            }
             // Composable factory methods have signature like:
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.
@@ -59,15 +66,26 @@ internal static partial class ConstructorFactory
             bool isParameterless = userParamCount == 0;
 
             writer.WriteLine();
-            if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+
+            if (!string.IsNullOrEmpty(platformAttribute))
+            {
+                writer.Write(platformAttribute);
+            }
+
             writer.Write(visibility);
+
             if (!isParameterless) { writer.Write(" unsafe "); } else { writer.Write(" "); }
             writer.Write($"{typeName}(");
             for (int i = 0; i < userParamCount; i++)
             {
-                if (i > 0) { writer.Write(", "); }
+                if (i > 0)
+                {
+                    writer.Write(", ");
+                }
+
                 MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
             }
+
             writer.Write("""
                 )
                   :base(
@@ -83,12 +101,17 @@ internal static partial class ConstructorFactory
                 writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
                 for (int i = 0; i < userParamCount; i++)
                 {
-                    if (i > 0) { writer.Write(", "); }
+                    if (i > 0)
+                    {
+                        writer.Write(", ");
+                    }
+
                     string raw = sig.Parameters[i].Parameter.Name ?? "param";
                     writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
                 }
                 writer.Write("))");
             }
+
             writer.Write($$"""
                 )
                 {
@@ -99,11 +122,14 @@ internal static partial class ConstructorFactory
             {
                 writer.WriteLine($"{defaultIfaceObjRef} = NativeObjectReference;");
             }
+
             writer.WriteLine("}");
+
             if (gcPressure > 0)
             {
                 writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
             }
+
             writer.WriteLine("}");
 
             // Emit args struct + callback class for parameterized composable factories.
@@ -120,7 +146,10 @@ internal static partial class ConstructorFactory
             methodIndex++;
         }
 
-        if (context.Settings.ReferenceProjection) { return; }
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
 
         // Emit the four base-chaining constructors used by derived projected types.
         string gcPressureBody = gcPressure > 0
@@ -134,7 +163,11 @@ internal static partial class ConstructorFactory
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody))
+        {
+            writer.WriteLine(gcPressureBody);
+        }
+
         writer.Write($$"""
             }
             
@@ -142,7 +175,11 @@ internal static partial class ConstructorFactory
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody))
+        {
+            writer.WriteLine(gcPressureBody);
+        }
+
         writer.Write($$"""
             }
             
@@ -150,7 +187,11 @@ internal static partial class ConstructorFactory
               :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody))
+        {
+            writer.WriteLine(gcPressureBody);
+        }
+
         writer.Write($$"""
             }
             
@@ -158,7 +199,11 @@ internal static partial class ConstructorFactory
               :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
             {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody)) { writer.WriteLine(gcPressureBody); }
+        if (!string.IsNullOrEmpty(gcPressureBody))
+        {
+            writer.WriteLine(gcPressureBody);
+        }
+
         writer.WriteLine("}");
     }
 }

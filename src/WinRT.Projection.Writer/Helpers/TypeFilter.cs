@@ -58,6 +58,7 @@ internal sealed class TypeFilter
         int dot = fullName.LastIndexOf('.');
         string ns;
         string name;
+
         if (dot < 0)
         {
             ns = fullName;
@@ -77,9 +78,14 @@ internal sealed class TypeFilter
         {
             string? incRule = incIdx < _include.Count ? _include[incIdx] : null;
             string? excRule = excIdx < _exclude.Count ? _exclude[excIdx] : null;
-            if (incRule == null && excRule == null) { break; }
+
+            if (incRule == null && excRule == null)
+            {
+                break;
+            }
 
             bool pickInclude;
+
             if (incRule == null)
             {
                 pickInclude = false;
@@ -95,10 +101,12 @@ internal sealed class TypeFilter
             }
 
             string rule = pickInclude ? incRule! : excRule!;
+
             if (Match(ns, name, rule))
             {
                 return pickInclude;
             }
+
             if (pickInclude) { incIdx++; } else { excIdx++; }
         }
 
@@ -111,10 +119,12 @@ internal sealed class TypeFilter
         {
             return typeNamespace.StartsWith(rule, StringComparison.Ordinal);
         }
+
         if (!rule.StartsWith(typeNamespace, StringComparison.Ordinal))
         {
             return false;
         }
+
         if (rule[typeNamespace.Length] != '.')
         {
             return false;
@@ -146,10 +156,12 @@ internal sealed class TypeFilter
     {
         Utf8String? ns = type.Namespace;
         Utf8String? name = type.Name;
+
         if (ns is null || ns.Length == 0)
         {
             return name?.Value ?? string.Empty;
         }
+
         return ns + "." + (name?.Value ?? string.Empty);
     }
 }

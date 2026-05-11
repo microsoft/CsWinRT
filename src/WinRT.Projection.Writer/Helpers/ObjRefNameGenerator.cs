@@ -27,26 +27,31 @@ internal static class ObjRefNameGenerator
     {
         // Build the projected, fully-qualified name with global::.
         string projected;
+
         if (ifaceType is TypeDefinition td)
         {
             (string ns, string name) = td.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else
@@ -55,6 +60,7 @@ internal static class ObjRefNameGenerator
             // name computation, so the resulting field name is unique across namespaces.
             projected = WriteFullyQualifiedInterfaceName(context, ifaceType);
         }
+
         return "_objRef_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
     /// <summary>
@@ -69,12 +75,15 @@ internal static class ObjRefNameGenerator
         {
             (string ns, string name) = td.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             writer.Write(GlobalPrefix);
+
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
@@ -82,12 +91,15 @@ internal static class ObjRefNameGenerator
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             writer.Write(GlobalPrefix);
+
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
@@ -96,20 +108,27 @@ internal static class ObjRefNameGenerator
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             writer.Write(GlobalPrefix);
+
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0) { writer.Write(", "); }
+                if (i > 0)
+                {
+                    writer.Write(", ");
+                }
                 // forceWriteNamespace=true so generic args also get global:: prefix.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
+
             writer.Write(">");
         }
     }
@@ -148,6 +167,7 @@ internal static class ObjRefNameGenerator
         string ns;
         string name;
         bool isMapped;
+
         if (ifaceType is TypeDefinition td)
         {
             ns = td.Namespace?.Value ?? string.Empty;
@@ -170,6 +190,7 @@ internal static class ObjRefNameGenerator
         {
             // IStringable maps to a simpler IID name in WellKnownInterfaceIIDs.
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { MappedName: "IStringable" })
             {
                 writer.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
@@ -232,7 +253,11 @@ internal static class ObjRefNameGenerator
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
             static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
             """, isMultiline: true);
-        if (isInNullableContext) { writer.Write("?"); }
+        if (isInNullableContext)
+        {
+            writer.Write("?");
+        }
+
         writer.WriteLine(" _);");
     }
 
@@ -314,7 +339,11 @@ internal static class ObjRefNameGenerator
         // IBaz, NOT IFoo, IBaz, IBar.
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
+
             if (!ClassMembersFactory.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
@@ -323,9 +352,11 @@ internal static class ObjRefNameGenerator
             // For FastAbi classes, skip non-default exclusive interfaces -- their methods
             // dispatch through the default interface's vtable so a separate objref is unnecessary.
             bool isDefault = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
+
             if (!isDefault && ClassFactory.IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -336,7 +367,11 @@ internal static class ObjRefNameGenerator
         }
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
+
             if (!ClassMembersFactory.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
@@ -344,14 +379,17 @@ internal static class ObjRefNameGenerator
             }
             // Same fast-abi guard as the first pass.
             bool isDefault2 = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
+
             if (!isDefault2 && ClassFactory.IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
                 }
             }
+
             EmitTransitiveInterfaceObjRefs(writer, context, impl.Interface, emitted);
         }
     }
@@ -368,7 +406,11 @@ internal static class ObjRefNameGenerator
     private static void EmitObjRefForInterface(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted, bool isDefault, bool useSimplePattern = false)
     {
         string objRefName = GetObjRefName(context, ifaceRef);
-        if (!emitted.Add(objRefName)) { return; }
+
+        if (!emitted.Add(objRefName))
+        {
+            return;
+        }
         // The [UnsafeAccessor] extern method declaration is used by the IID expression in both
         // simple and lazy patterns.
         bool isGenericInstance = ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature;
@@ -419,7 +461,11 @@ internal static class ObjRefNameGenerator
                         return field ?? MakeObjectReference();
                     }
                 """, isMultiline: true);
-            if (isDefault) { writer.WriteLine("    init;"); }
+            if (isDefault)
+            {
+                writer.WriteLine("    init;");
+            }
+
             writer.WriteLine("}");
         }
     }
@@ -431,10 +477,15 @@ internal static class ObjRefNameGenerator
     {
         // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
         TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, ifaceRef);
-        if (ifaceTd is null) { return; }
+
+        if (ifaceTd is null)
+        {
+            return;
+        }
 
         // Compute a substitution context if the parent is a closed generic instance.
         GenericContext? ctx = null;
+
         if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             ctx = new GenericContext(gi, null);
@@ -442,16 +493,24 @@ internal static class ObjRefNameGenerator
 
         foreach (InterfaceImplementation childImpl in ifaceTd.Interfaces)
         {
-            if (childImpl.Interface is null) { continue; }
+            if (childImpl.Interface is null)
+            {
+                continue;
+            }
 
             // If the parent is a closed generic, substitute the child's signature.
             ITypeDefOrRef childRef = childImpl.Interface;
+
             if (ctx is not null)
             {
                 TypeSignature childSig = childRef.ToTypeSignature(false);
                 TypeSignature substitutedSig = childSig.InstantiateGenericTypes(ctx.Value);
                 ITypeDefOrRef? newRef = substitutedSig.ToTypeDefOrRef();
-                if (newRef is not null) { childRef = newRef; }
+
+                if (newRef is not null)
+                {
+                    childRef = newRef;
+                }
             }
 
             // Emitting an _objRef_* field for an exclusive-to-someone-else parent interface is

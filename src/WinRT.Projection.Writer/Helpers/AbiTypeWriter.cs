@@ -53,16 +53,22 @@ internal static class AbiTypeWriter
                         writer.Write("global::ABI.System.DateTimeOffset");
                         break;
                     }
+
+
                     if (dNs == WindowsFoundation && dName == "TimeSpan")
                     {
                         writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
+
+
                     if (dNs == WindowsFoundation && dName == HResult)
                     {
                         writer.Write("global::ABI.System.Exception");
                         break;
                     }
+
+
                     if (dNs == WindowsUIXamlInterop && dName == TypeName)
                     {
                         // System.Type ABI struct: maps to global::ABI.System.Type, not the
@@ -70,6 +76,7 @@ internal static class AbiTypeWriter
                         writer.Write("global::ABI.System.Type");
                         break;
                     }
+
                     TypeSignature dts = d.Type.ToTypeSignature();
                     // "Almost-blittable" structs (with bool/char fields but no reference-type
                     // fields) can pass through using the projected type since the C# layout
@@ -88,6 +95,7 @@ internal static class AbiTypeWriter
                 {
                     writer.Write("void*");
                 }
+
                 break;
             case TypeSemantics.Reference r:
                 // Cross-module typeref: try resolving the type, applying mapped-type translation
@@ -101,11 +109,15 @@ internal static class AbiTypeWriter
                         writer.Write("global::ABI.System.DateTimeOffset");
                         break;
                     }
+
+
                     if (rns == WindowsFoundation && rname == "TimeSpan")
                     {
                         writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
+
+
                     if (rns == WindowsFoundation && rname == HResult)
                     {
                         writer.Write("global::ABI.System.Exception");
@@ -121,26 +133,34 @@ internal static class AbiTypeWriter
                             rd = context.Cache.Find(rmapped.MappedNamespace + "." + rmapped.MappedName);
                         }
                     }
+
+
                     if (rd is not null)
                     {
                         TypeCategory cat = TypeCategorization.GetCategory(rd);
+
                         if (cat == TypeCategory.Enum)
                         {
                             // Enums use the projected enum type directly (C# layout == ABI layout).
                             TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             break;
                         }
+
+
                         if (cat == TypeCategory.Struct)
                         {
                             // Special case: HResult is mapped to System.Exception (a reference type)
                             // but its ABI representation is the global::ABI.System.Exception struct
                             // (which wraps the underlying HRESULT int).
                             (string rdNs, string rdName) = rd.Names();
+
                             if (rdNs == WindowsFoundation && rdName == HResult)
                             {
                                 writer.Write("global::ABI.System.Exception");
                                 break;
                             }
+
+
                             if (context.AbiTypeShapeResolver.IsAnyStruct(rd.ToTypeSignature()))
                             {
                                 TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
@@ -149,6 +169,7 @@ internal static class AbiTypeWriter
                             {
                                 TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.ABI, true);
                             }
+
                             break;
                         }
                     }
@@ -162,10 +183,12 @@ internal static class AbiTypeWriter
                 {
                     (string rns, string rname) = r.Reference_.Names();
                     writer.Write(GlobalPrefix);
+
                     if (!string.IsNullOrEmpty(rns)) { writer.Write($"{rns}."); }
                     writer.Write(IdentifierEscaping.StripBackticks(rname));
                     break;
                 }
+
                 writer.Write("void*");
                 break;
             case TypeSemantics.GenericInstance:

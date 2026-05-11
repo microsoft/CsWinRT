@@ -28,7 +28,11 @@ internal static class CustomAttributeFactory
     public static List<string> WriteCustomAttributeArgs(CustomAttribute attribute)
     {
         List<string> result = [];
-        if (attribute.Signature is null) { return result; }
+
+        if (attribute.Signature is null)
+        {
+            return result;
+        }
 
         // Detect AttributeUsage which takes an AttributeTargets enum
         ITypeDefOrRef? attrType = attribute.Constructor?.DeclaringType;
@@ -38,11 +42,19 @@ internal static class CustomAttributeFactory
         {
             CustomAttributeArgument arg = attribute.Signature.FixedArguments[i];
             uint? targetsValue = null;
+
             if (isAttributeUsage && i == 0)
             {
-                if (arg.Element is uint u) { targetsValue = u; }
-                else if (arg.Element is int s) { targetsValue = unchecked((uint)s); }
+                if (arg.Element is uint u)
+                {
+                    targetsValue = u;
+                }
+                else if (arg.Element is int s)
+                {
+                    targetsValue = unchecked((uint)s);
+                }
             }
+
             if (targetsValue is uint tv)
             {
                 result.Add(FormatAttributeTargets(tv));
@@ -94,10 +106,12 @@ internal static class CustomAttributeFactory
                 values.Add("global::System.AttributeTargets." + name);
             }
         }
+
         if (values.Count == 0)
         {
             return "global::System.AttributeTargets.All";
         }
+
         return string.Join(" | ", values);
     }
 
@@ -156,15 +170,26 @@ internal static class CustomAttributeFactory
                 prevEscape = true;
                 continue;
             }
+
             if (prevEscape && c != '\\' && c != '\'' && c != '"')
             {
                 _ = sb.Append('\\');
             }
+
             prevEscape = false;
             _ = sb.Append(c);
-            if (c == '"') { _ = sb.Append('"'); }
+
+            if (c == '"')
+            {
+                _ = sb.Append('"');
+            }
         }
-        if (prevEscape) { _ = sb.Append('\\'); }
+
+        if (prevEscape)
+        {
+            _ = sb.Append('\\');
+        }
+
         return sb.ToString();
     }
 
@@ -183,8 +208,10 @@ internal static class CustomAttributeFactory
         {
             return string.Empty;
         }
+
         CustomAttributeArgument arg0 = attribute.Signature.FixedArguments[0];
         string contractName;
+
         if (arg0.Element is TypeSignature ts && ts.FullName is { } fn)
         {
             contractName = fn;
@@ -197,7 +224,11 @@ internal static class CustomAttributeFactory
         {
             // AsmResolver returns Utf8String for string custom-attribute args.
             contractName = arg0.Element.ToString() ?? string.Empty;
-            if (contractName.Length == 0) { return string.Empty; }
+
+            if (contractName.Length == 0)
+            {
+                return string.Empty;
+            }
         }
         else
         {
@@ -215,7 +246,12 @@ internal static class CustomAttributeFactory
         int contractVersion = (int)(versionRaw >> 16);
 
         string platform = ContractPlatforms.GetPlatform(contractName, contractVersion);
-        if (string.IsNullOrEmpty(platform)) { return string.Empty; }
+
+        if (string.IsNullOrEmpty(platform))
+        {
+            return string.Empty;
+        }
+
         if (context.CheckPlatform)
         {
             // Suppress when this platform is <= the previously seen platform for the class.
@@ -226,6 +262,7 @@ internal static class CustomAttributeFactory
             // Only seed Platform on first non-empty observation: higher platforms emit but don't update Platform.
             context.SeedPlatform(platform);
         }
+
         return "\"Windows" + platform + "\"";
     }
 
@@ -238,20 +275,32 @@ internal static class CustomAttributeFactory
     /// <param name="member">The member to inspect for <c>[ContractVersion]</c>.</param>
     public static void WritePlatformAttribute(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member)
     {
-        if (!context.Settings.ReferenceProjection) { return; }
+        if (!context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         for (int i = 0; i < member.CustomAttributes.Count; i++)
         {
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
-            if (attrType is null) { continue; }
+
+            if (attrType is null)
+            {
+                continue;
+            }
+
             string name = attrType.Name?.Value ?? string.Empty;
+
             if (name.EndsWith("Attribute", StringComparison.Ordinal))
             {
                 name = name[..^"Attribute".Length];
             }
+
             if (name == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
                 string platform = GetPlatform(context, attr);
+
                 if (!string.IsNullOrEmpty(platform))
                 {
                     writer.WriteLine($"[global::System.Runtime.Versioning.SupportedOSPlatform({platform})]");
@@ -296,14 +345,22 @@ internal static class CustomAttributeFactory
         {
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
-            if (attrType is null) { continue; }
+
+            if (attrType is null)
+            {
+                continue;
+            }
+
             (string ns, string name) = attrType.Names();
             string strippedName = name.EndsWith("Attribute", StringComparison.Ordinal)
                 ? name[..^"Attribute".Length]
                 : name;
 
             // Skip attributes handled separately
-            if (strippedName is "GCPressure" or "Guid" or "Flags" or "ProjectionInternal") { continue; }
+            if (strippedName is "GCPressure" or "Guid" or "Flags" or "ProjectionInternal")
+            {
+                continue;
+            }
 
             string fullAttrName = strippedName == "AttributeUsage"
                 ? "System.AttributeUsage"
@@ -314,6 +371,7 @@ internal static class CustomAttributeFactory
             if (context.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
                 string platform = GetPlatform(context, attr);
+
                 if (!string.IsNullOrEmpty(platform))
                 {
                     if (!attributes.TryGetValue("System.Runtime.Versioning.SupportedOSPlatform", out List<string>? list))
@@ -321,6 +379,7 @@ internal static class CustomAttributeFactory
                         list = [];
                         attributes["System.Runtime.Versioning.SupportedOSPlatform"] = list;
                     }
+
                     list.Add(platform);
                 }
             }
@@ -332,9 +391,13 @@ internal static class CustomAttributeFactory
                 {
                     allowMultiple = true;
                 }
+
                 if (strippedName == "ContractVersion")
                 {
-                    if (!context.Settings.ReferenceProjection) { continue; }
+                    if (!context.Settings.ReferenceProjection)
+                    {
+                        continue;
+                    }
                 }
                 else if (strippedName is not ("DefaultOverload" or "Overload" or "AttributeUsage" or "Experimental"))
                 {
@@ -354,16 +417,22 @@ internal static class CustomAttributeFactory
         foreach (KeyValuePair<string, List<string>> kv in attributes)
         {
             writer.Write($"[global::{kv.Key}");
+
             if (kv.Value.Count > 0)
             {
                 writer.Write("(");
                 for (int i = 0; i < kv.Value.Count; i++)
                 {
-                    if (i > 0) { writer.Write(", "); }
+                    if (i > 0)
+                    {
+                        writer.Write(", ");
+                    }
+
                     writer.Write(kv.Value[i]);
                 }
                 writer.Write(")");
             }
+
             writer.WriteLine("]");
         }
     }

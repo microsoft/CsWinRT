@@ -27,13 +27,24 @@ internal static partial class ClassMembersFactory
 
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
 
             // Resolve TypeRef to TypeDef using our cache
             TypeDefinition? ifaceType = ResolveInterface(context.Cache, impl.Interface);
-            if (ifaceType is null) { continue; }
 
-            if (writtenInterfaces.Contains(ifaceType)) { continue; }
+            if (ifaceType is null)
+            {
+                continue;
+            }
+
+            if (writtenInterfaces.Contains(ifaceType))
+            {
+                continue;
+            }
+
             _ = writtenInterfaces.Add(ifaceType);
 
             bool isOverridable = impl.IsOverridable();
@@ -46,16 +57,22 @@ internal static partial class ClassMembersFactory
             // IDictionary<string, object> instead of IDictionary<T0, T1>.
             ITypeDefOrRef substitutedInterface = impl.Interface;
             GenericInstanceTypeSignature? nextInstance = null;
+
             if (impl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
             {
                 if (currentInstance is not null)
                 {
                     TypeSignature subSig = gi.InstantiateGenericTypes(genericContext);
+
                     if (subSig is GenericInstanceTypeSignature subGi)
                     {
                         nextInstance = subGi;
                         ITypeDefOrRef? newRef = subGi.ToTypeDefOrRef();
-                        if (newRef is not null) { substitutedInterface = newRef; }
+
+                        if (newRef is not null)
+                        {
+                            substitutedInterface = newRef;
+                        }
                     }
                     else
                     {
@@ -101,15 +118,22 @@ internal static partial class ClassMembersFactory
                 // because non-exclusive default interfaces are routed to the prior branch.
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
                 bool hasBaseType = false;
+
                 if (classType.BaseType is not null)
                 {
                     string? baseNs = classType.BaseType.Namespace?.Value;
                     string? baseName = classType.BaseType.Name?.Value;
                     hasBaseType = !(baseNs == "System" && baseName == "Object");
                 }
+
                 writer.WriteLine();
                 writer.Write("internal ");
-                if (hasBaseType) { writer.Write("new "); }
+
+                if (hasBaseType)
+                {
+                    writer.Write("new ");
+                }
+
                 writer.Write($$"""
                     WindowsRuntimeObjectReferenceValue GetDefaultInterface()
                     {
@@ -122,6 +146,7 @@ internal static partial class ClassMembersFactory
             // -> IDictionary<K,V>), emit stubs for the C# interface's required members so the class
             // satisfies its inheritance contract. The runtime's adapter actually services them.
             (string ifaceNs, string ifaceName) = ifaceType.Names();
+
             if (MappedTypes.Get(ifaceNs, ifaceName) is { HasCustomMembersOutput: true })
             {
                 if (MappedInterfaceStubFactory.IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
@@ -132,6 +157,7 @@ internal static partial class ClassMembersFactory
                     string objRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
                     MappedInterfaceStubFactory.WriteMappedInterfaceStubs(writer, context, nextInstance, ifaceName, objRefName);
                 }
+
                 continue;
             }
 
@@ -154,6 +180,7 @@ internal static partial class ClassMembersFactory
         // non-sealed classes. Sealed classes still get 'protected' (without virtual).
         string access = (isOverridable || isProtected) ? "protected " : "public ";
         string methodSpec = string.Empty;
+
         if (isOverridable && !sealed_)
         {
             methodSpec = "virtual ";
@@ -176,9 +203,11 @@ internal static partial class ClassMembersFactory
         ITypeDefOrRef abiInterfaceRef = originalInterface;
         bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && TypeCategorization.IsExclusiveTo(ifaceType);
         bool isDefaultInterface = false;
+
         if (isFastAbiExclusive)
         {
             (TypeDefinition? defaultIface, _) = ClassFactory.GetFastAbiInterfaces(context.Cache, classType);
+
             if (defaultIface is not null)
             {
                 abiInterface = defaultIface;
@@ -200,16 +229,19 @@ internal static partial class ClassMembersFactory
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
         string abiClass = TypedefNameWriter.WriteTypedefName(context, abiInterface, TypedefNameType.StaticAbiClass, true);
+
         if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
             abiClass = GlobalPrefix + abiClass;
         }
+
         string objRef = ObjRefNameGenerator.GetObjRefName(context, abiInterfaceRef);
 
         // For generic interfaces, also compute the encoded parent type name (used in UnsafeAccessor
         // function names) and the WinRT.Interop accessor type string (passed to UnsafeAccessorType).
         string genericParentEncoded = string.Empty;
         string genericInteropType = string.Empty;
+
         if (isGenericInterface && currentInstance is not null)
         {
             string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
@@ -227,17 +259,26 @@ internal static partial class ClassMembersFactory
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
         {
-            if (method.IsSpecial()) { continue; }
+            if (method.IsSpecial())
+            {
+                continue;
+            }
+
             string name = method.Name?.Value ?? string.Empty;
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
             MethodSignatureInfo sig = new(method, genericContext);
             string key = BuildMethodSignatureKey(name, sig);
-            if (!writtenMethods.Add(key)) { continue; }
+
+            if (!writtenMethods.Add(key))
+            {
+                continue;
+            }
 
             // Detect a 'string ToString()' that overrides Object.ToString() and force the
             // 'override' modifier on the emitted member.
             string methodSpecForThis = methodSpec;
+
             if (name == "ToString" && sig.Parameters.Count == 0
                 && sig.ReturnType is CorLibTypeSignature crt
                 && crt.ElementType == ElementType.String)
@@ -256,6 +297,7 @@ internal static partial class ClassMembersFactory
                     && po.ElementType == ElementType.Object;
                 bool returnsBool = sig.ReturnType is CorLibTypeSignature ro
                     && ro.ElementType == ElementType.Boolean;
+
                 if (paramIsObject)
                 {
                     methodSpecForThis = returnsBool ? "override " : (methodSpecForThis + "new ");
@@ -287,11 +329,16 @@ internal static partial class ClassMembersFactory
                 writer.WriteLine(");");
                 // string to each public method emission. In ref mode this produces e.g.
                 // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                if (!string.IsNullOrEmpty(platformAttribute))
+                {
+                    writer.Write(platformAttribute);
+                }
+
                 writer.Write($"{access}{methodSpecForThis}");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write($" {name}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
+
                 if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
@@ -311,11 +358,17 @@ internal static partial class ClassMembersFactory
             else
             {
                 writer.WriteLine();
-                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+
+                if (!string.IsNullOrEmpty(platformAttribute))
+                {
+                    writer.Write(platformAttribute);
+                }
+
                 writer.Write($"{access}{methodSpecForThis}");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write($" {name}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
+
                 if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
@@ -338,7 +391,11 @@ internal static partial class ClassMembersFactory
             if (isOverridable)
             {
                 // impl as well (since it shares the same originating interface).
-                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                if (!string.IsNullOrEmpty(platformAttribute))
+                {
+                    writer.Write(platformAttribute);
+                }
+
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
                 WriteInterfaceTypeNameForCcw(writer, context, originalInterface);
@@ -347,7 +404,11 @@ internal static partial class ClassMembersFactory
                 writer.Write($") => {name}(");
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
-                    if (i > 0) { writer.Write(", "); }
+                    if (i > 0)
+                    {
+                        writer.Write(", ");
+                    }
+
                     WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
                 }
                 writer.WriteLine(");");
@@ -361,6 +422,7 @@ internal static partial class ClassMembersFactory
         {
             string name = prop.Name?.Value ?? string.Empty;
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+
             if (!propertyState.TryGetValue(name, out PropertyAccessorState? state))
             {
                 state = new PropertyAccessorState
@@ -373,6 +435,7 @@ internal static partial class ClassMembersFactory
                 };
                 propertyState[name] = state;
             }
+
             if (getter is not null && !state.HasGetter)
             {
                 state.HasGetter = true;
@@ -384,6 +447,7 @@ internal static partial class ClassMembersFactory
                 state.GetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genericContext);
                 state.GetterPlatformAttribute = platformAttribute;
             }
+
             if (setter is not null && !state.HasSetter)
             {
                 state.HasSetter = true;
@@ -403,14 +467,20 @@ internal static partial class ClassMembersFactory
         foreach (EventDefinition evt in ifaceType.Events)
         {
             string name = evt.Name?.Value ?? string.Empty;
-            if (!writtenEvents.Add(name)) { continue; }
+
+            if (!writtenEvents.Add(name))
+            {
+                continue;
+            }
 
             // Compute event handler type and event source type strings.
             TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
+
             if (currentInstance is not null)
             {
                 evtSig = evtSig.InstantiateGenericTypes(new GenericContext(currentInstance, null));
             }
+
             bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
 
             // Special case for ICommand.CanExecuteChanged: the WinRT event handler is
@@ -420,6 +490,7 @@ internal static partial class ClassMembersFactory
                 && (ifaceType.FullName is "Microsoft.UI.Xaml.Input.ICommand" or "Windows.UI.Xaml.Input.ICommand");
 
             string eventSourceType;
+
             if (isICommandCanExecuteChanged)
             {
                 eventSourceType = "global::WindowsRuntime.InteropServices.EventHandlerEventSource";
@@ -429,7 +500,9 @@ internal static partial class ClassMembersFactory
             {
                 eventSourceType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
             }
+
             string eventSourceTypeFull = eventSourceType;
+
             if (!eventSourceTypeFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
                 eventSourceTypeFull = GlobalPrefix + eventSourceTypeFull;
@@ -444,7 +517,11 @@ internal static partial class ClassMembersFactory
             int methodIndex = 0;
             foreach (MethodDefinition m in ifaceType.Methods)
             {
-                if (m == evt.AddMethod) { break; }
+                if (m == evt.AddMethod)
+                {
+                    break;
+                }
+
                 methodIndex++;
             }
             int vtableIndex = 6 + methodIndex;
@@ -486,6 +563,7 @@ internal static partial class ClassMembersFactory
                 {
                     writer.Write($"new {eventSourceTypeFull}({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)})");
                 }
+
                 writer.Write("""
                     ,
                                     comparand: null);
@@ -503,7 +581,11 @@ internal static partial class ClassMembersFactory
             writer.WriteLine();
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-            if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+            if (!string.IsNullOrEmpty(platformAttribute))
+            {
+                writer.Write(platformAttribute);
+            }
+
             writer.Write($"{access}{methodSpec}event ");
             TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
             writer.Write($$"""

@@ -29,14 +29,32 @@ internal static class ParameterCategoryResolver
         // If byref and underlying is an array, treat as array param (PassArray/ReceiveArray/FillArray)
         // based on in/out flags. WinRT metadata represents 'out byte[]' as 'byte[]&' with [out].
         bool isByRefArray = isByRef && p.Type.StripByRefAndCustomModifiers() is SzArrayTypeSignature;
+
         if (isArray || isByRefArray)
         {
-            if (isIn) { return ParameterCategory.PassArray; }
-            if (isByRef && isOut) { return ParameterCategory.ReceiveArray; }
+            if (isIn)
+            {
+                return ParameterCategory.PassArray;
+            }
+
+            if (isByRef && isOut)
+            {
+                return ParameterCategory.ReceiveArray;
+            }
+
             return ParameterCategory.FillArray;
         }
-        if (isOut) { return ParameterCategory.Out; }
-        if (isByRef) { return ParameterCategory.Ref; }
+
+        if (isOut)
+        {
+            return ParameterCategory.Out;
+        }
+
+        if (isByRef)
+        {
+            return ParameterCategory.Ref;
+        }
+
         return ParameterCategory.In;
     }
 }

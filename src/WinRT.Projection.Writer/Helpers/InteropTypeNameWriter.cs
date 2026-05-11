@@ -45,6 +45,7 @@ internal static class InteropTypeNameWriter
                 : sb.Append("ABI.System.<<#corlib>Guid>");
             return;
         }
+
         switch (sig)
         {
             case CorLibTypeSignature corlib:
@@ -67,6 +68,7 @@ internal static class InteropTypeNameWriter
                     EncodeInteropTypeNameInto(sb, sz.BaseType, TypedefNameType.Projected);
                     _ = sb.Append(">");
                 }
+
                 return;
             case ByReferenceTypeSignature br:
                 EncodeInteropTypeNameInto(sb, br.BaseType, nameType);
@@ -113,7 +115,11 @@ internal static class InteropTypeNameWriter
         (string typeNs, string typeName) = type.Names();
 
         bool isAbi = nameType is not (TypedefNameType.Projected or TypedefNameType.InteropIID);
-        if (isAbi) { _ = sb.Append("ABI."); }
+
+        if (isAbi)
+        {
+            _ = sb.Append("ABI.");
+        }
 
         // Special case for EventSource on Windows.Foundation event-handler delegate types
         // (e.g. EventHandler<T>, TypedEventHandler<S,R>).
@@ -122,10 +128,12 @@ internal static class InteropTypeNameWriter
             // Determine generic arity from the .winmd type name (e.g. "EventHandler`1" => 1).
             int arity = 0;
             int tickIdx = typeName.IndexOf('`');
+
             if (tickIdx >= 0 && int.TryParse(typeName.AsSpan(tickIdx + 1), out int parsed))
             {
                 arity = parsed;
             }
+
             _ = sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
             _ = sb.Append(arity.ToString(CultureInfo.InvariantCulture));
             // Append the generic args (if any).
@@ -134,16 +142,22 @@ internal static class InteropTypeNameWriter
                 _ = sb.Append('<');
                 for (int i = 0; i < generic_args.Count; i++)
                 {
-                    if (i > 0) { _ = sb.Append('|'); }
+                    if (i > 0)
+                    {
+                        _ = sb.Append('|');
+                    }
+
                     EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
                 }
                 _ = sb.Append('>');
             }
+
             return;
         }
 
         // Apply mapped-type remapping
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
+
         if (mapped is { } m)
         {
             typeNs = m.MappedNamespace;
@@ -179,7 +193,11 @@ internal static class InteropTypeNameWriter
             _ = sb.Append('<');
             for (int i = 0; i < generic_args.Count; i++)
             {
-                if (i > 0) { _ = sb.Append('|'); }
+                if (i > 0)
+                {
+                    _ = sb.Append('|');
+                }
+
                 EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
             }
             _ = sb.Append('>');
@@ -215,10 +233,12 @@ internal static class InteropTypeNameWriter
                 {
                     return "<System-Numerics-Vectors>";
                 }
+
                 if (IsMappedTypeInSystemObjectModel(typeNs, typeName))
                 {
                     return "<System-ObjectModel>";
                 }
+
                 return "<#corlib>";
             }
             // Mapped to a non-System namespace.
@@ -226,6 +246,7 @@ internal static class InteropTypeNameWriter
             {
                 return "<#CsWinRT>";
             }
+
             if (typeNs.StartsWith("Windows", StringComparison.Ordinal))
             {
                 // Unreachable in practice: no standard mapped type maps to a Windows.* namespace
@@ -239,6 +260,7 @@ internal static class InteropTypeNameWriter
         {
             return "<#Windows>";
         }
+
         if (typeNs.StartsWith("WindowsRuntime", StringComparison.Ordinal))
         {
             return "<#CsWinRT>";
@@ -249,6 +271,7 @@ internal static class InteropTypeNameWriter
         if (type is not null)
         {
             string? asmName = GetTypeAssemblyName(type);
+
             if (!string.IsNullOrEmpty(asmName))
             {
                 // Replace '.' with '-' for the assembly tag (e.g. "WinRT.Interop" -> "WinRT-Interop").
@@ -256,6 +279,7 @@ internal static class InteropTypeNameWriter
                 return "<" + hyphenated + ">";
             }
         }
+
         return "<#Windows>";
     }
 
@@ -271,6 +295,7 @@ internal static class InteropTypeNameWriter
                 or "NotifyCollectionChangedEventArgs"
                 or "NotifyCollectionChangedEventHandler";
         }
+
         if (typeNs == "System.ComponentModel")
         {
             return typeName is "INotifyDataErrorInfo"
@@ -279,10 +304,12 @@ internal static class InteropTypeNameWriter
                 or "PropertyChangedEventArgs"
                 or "PropertyChangedEventHandler";
         }
+
         if (typeNs == "System.Windows.Input")
         {
             return typeName == "ICommand";
         }
+
         return false;
     }
 

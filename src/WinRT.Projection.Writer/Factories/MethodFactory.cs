@@ -42,13 +42,16 @@ internal static class MethodFactory
                 TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                 writer.Write("[]");
             }
+
             return;
         }
+
         if (typeSig is ByReferenceTypeSignature br)
         {
             TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
             return;
         }
+
         TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
@@ -104,6 +107,7 @@ internal static class MethodFactory
                 {
                     SzArrayTypeSignature? sz = p.Type as SzArrayTypeSignature
                         ?? (p.Type is ByReferenceTypeSignature br ? br.BaseType as SzArrayTypeSignature : null);
+
                     if (sz is not null)
                     {
                         TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
@@ -129,7 +133,12 @@ internal static class MethodFactory
     public static void WriteParameterName(IndentedTextWriter writer, ParameterInfo p)
     {
         string name = p.Parameter.Name ?? "param";
-        if (CSharpKeywords.IsKeyword(name)) { writer.Write("@"); }
+
+        if (CSharpKeywords.IsKeyword(name))
+        {
+            writer.Write("@");
+        }
+
         writer.Write(name);
     }
 
@@ -155,11 +164,13 @@ internal static class MethodFactory
     public static void WriteProjectionReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig)
     {
         TypeSignature? rt = sig.ReturnType;
+
         if (rt is null)
         {
             writer.Write("void");
             return;
         }
+
         WriteProjectedSignature(writer, context, rt, false);
     }
 
@@ -173,7 +184,11 @@ internal static class MethodFactory
     {
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
     }
@@ -185,7 +200,11 @@ internal static class MethodFactory
     /// <returns>The formatted constant value, or an empty string.</returns>
     public static string FormatField(FieldDefinition field)
     {
-        if (field.Constant is null) { return string.Empty; }
+        if (field.Constant is null)
+        {
+            return string.Empty;
+        }
+
         return ProjectionFileBuilder.FormatConstant(field.Constant);
     }
 }

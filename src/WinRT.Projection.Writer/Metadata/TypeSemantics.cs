@@ -157,18 +157,34 @@ internal static class TypeSemanticsFactory
         {
             return new TypeSemantics.Definition(def);
         }
+
         if (type is TypeReference reference)
         {
             (string ns, string name) = reference.Names();
-            if (ns == "System" && name == "Guid") { return new TypeSemantics.Guid_(); }
-            if (ns == "System" && name == "Object") { return new TypeSemantics.Object_(); }
-            if (ns == "System" && name == "Type") { return new TypeSemantics.Type_(); }
+
+            if (ns == "System" && name == "Guid")
+            {
+                return new TypeSemantics.Guid_();
+            }
+
+            if (ns == "System" && name == "Object")
+            {
+                return new TypeSemantics.Object_();
+            }
+
+            if (ns == "System" && name == "Type")
+            {
+                return new TypeSemantics.Type_();
+            }
+
             return new TypeSemantics.Reference(reference, isValueType);
         }
+
         if (type is TypeSpecification spec && spec.Signature is GenericInstanceTypeSignature gi)
         {
             return GetGenericInstance(gi);
         }
+
         return new TypeSemantics.Reference((TypeReference)type, isValueType);
     }
 
@@ -205,11 +221,13 @@ internal static class TypeSemanticsFactory
         {
             args.Add(Get(arg));
         }
+
         if (genericType is not TypeDefinition def)
         {
             // Wrap the generic-type reference along with the resolved type arguments.
             return new TypeSemantics.GenericInstanceRef(genericType, args);
         }
+
         return new TypeSemantics.GenericInstance(def, args);
     }
 }

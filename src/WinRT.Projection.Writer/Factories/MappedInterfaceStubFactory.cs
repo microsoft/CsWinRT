@@ -28,6 +28,7 @@ internal static class MappedInterfaceStubFactory
         {
             return false;
         }
+
         return ifaceName switch
         {
             "IClosable" => true,
@@ -54,6 +55,7 @@ internal static class MappedInterfaceStubFactory
         // Resolve type arguments from the (substituted) generic instance signature, if any.
         List<TypeSemantics> typeArgs = [];
         List<TypeSignature> typeArgSigs = [];
+
         if (instance is not null)
         {
             foreach (TypeSignature arg in instance.TypeArguments)
@@ -123,7 +125,11 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitGenericEnumerable(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
-        if (args.Count != 1) { return; }
+        if (args.Count != 1)
+        {
+            return;
+        }
+
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -140,7 +146,11 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitGenericEnumerator(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
-        if (args.Count != 1) { return; }
+        if (args.Count != 1)
+        {
+            return;
+        }
+
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -163,7 +173,11 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
-        if (args.Count != 2) { return; }
+        if (args.Count != 2)
+        {
+            return;
+        }
+
         string k = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string v = WriteTypeNameToString(context, args[1], TypedefNameType.Projected, true);
         // Truth uses two forms for KeyValuePair:
@@ -226,7 +240,11 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitReadOnlyDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
-        if (args.Count != 2) { return; }
+        if (args.Count != 2)
+        {
+            return;
+        }
+
         string k = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string v = WriteTypeNameToString(context, args[1], TypedefNameType.Projected, true);
         string keyId = EncodeArgIdentifier(context, args[0]);
@@ -257,7 +275,11 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitReadOnlyList(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
-        if (args.Count != 1) { return; }
+        if (args.Count != 1)
+        {
+            return;
+        }
+
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -299,7 +321,11 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitList(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
-        if (args.Count != 1) { return; }
+        if (args.Count != 1)
+        {
+            return;
+        }
+
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);

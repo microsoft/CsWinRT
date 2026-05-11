@@ -25,10 +25,13 @@ public static class ProjectionWriter
     public static void Run(ProjectionWriterOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+
         if (options.InputPaths == null || options.InputPaths.Count == 0)
         {
             throw new ArgumentException("At least one input metadata path must be provided.", nameof(options));
         }
+
+
         if (string.IsNullOrEmpty(options.OutputFolder))
         {
             throw new ArgumentException("Output folder must be provided.", nameof(options));

@@ -33,7 +33,11 @@ internal static partial class ConstructorFactory
         writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
         writer.Write("""
@@ -145,6 +149,7 @@ internal static partial class ConstructorFactory
             {
                 MethodFactory.WriteProjectedSignature(writer, context, p.Type, true);
             }
+
             writer.WriteLine($" {pname} = args.{pname};");
         }
 
@@ -152,9 +157,15 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            if (!p.Type.IsGenericInstance()) { continue; }
+
+            if (!p.Type.IsGenericInstance())
+            {
+                continue;
+            }
+
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+
             if (p.Type.IsNullableT())
             {
                 TypeSignature inner = p.Type.GetNullableInnerType()!;
@@ -162,6 +173,7 @@ internal static partial class ConstructorFactory
                 writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{raw} = {innerMarshaller}.BoxToUnmanaged({pname});");
                 continue;
             }
+
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
             writer.Write($$"""
@@ -175,8 +187,14 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
+
             if (p.Type.IsGenericInstance()) { continue; } // already handled above
-            if (!context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject()) { continue; }
+
+            if (!context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject())
+            {
+                continue;
+            }
+
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write($"        using WindowsRuntimeObjectReferenceValue __{raw} = ");
@@ -199,7 +217,12 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            if (!context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type)) { continue; }
+
+            if (!context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
+            {
+                continue;
+            }
+
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             string abiType = AbiTypeHelpers.GetMappedAbiTypeName(p.Type);
@@ -213,7 +236,12 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            if (!p.Type.IsHResultException()) { continue; }
+
+            if (!p.Type.IsHResultException())
+            {
+                continue;
+            }
+
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.WriteLine($"        global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
@@ -226,9 +254,22 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-            if (p.Type is not SzArrayTypeSignature szArr) { continue; }
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
+
+            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+            {
+                continue;
+            }
+
+            if (p.Type is not SzArrayTypeSignature szArr)
+            {
+                continue;
+            }
+
+            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+            {
+                continue;
+            }
+
             hasNonBlittableArray = true;
             string raw = p.Parameter.Name ?? "param";
             string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -261,6 +302,7 @@ internal static partial class ConstructorFactory
         }
 
         writer.WriteLine("        void* __retval = default;");
+
         if (hasNonBlittableArray)
         {
             writer.Write("""
@@ -275,7 +317,12 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            if (!p.Type.IsSystemType()) { continue; }
+
+            if (!p.Type.IsSystemType())
+            {
+                continue;
+            }
+
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.WriteLine($"{baseIndent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({pname}, out TypeReference __{raw});");
@@ -290,9 +337,17 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            if (p.Type.IsString() || p.Type.IsSystemType()) { pinnableCount++; }
-            else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray) { pinnableCount++; }
+
+            if (p.Type.IsString() || p.Type.IsSystemType())
+            {
+                pinnableCount++;
+            }
+            else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            {
+                pinnableCount++;
+            }
         }
+
         if (pinnableCount > 0)
         {
             string indent = baseIndent;
@@ -305,20 +360,36 @@ internal static partial class ConstructorFactory
                 bool isStr = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
                 bool isArr = cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
-                if (!isStr && !isType && !isArr) { continue; }
+
+                if (!isStr && !isType && !isArr)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                if (!firstPin) { writer.Write(", "); }
+
+                if (!firstPin)
+                {
+                    writer.Write(", ");
+                }
+
                 firstPin = false;
                 writer.Write($"_{raw} = ");
+
                 if (isType) { writer.Write($"__{raw}"); }
                 else if (isArr)
                 {
                     TypeSignature elemT = ((SzArrayTypeSignature)p.Type).BaseType;
                     bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(elemT) || context.AbiTypeShapeResolver.IsAnyStruct(elemT);
                     bool isStringElem = elemT.IsString();
-                    if (isBlittableElem) { writer.Write(pname); }
+
+                    if (isBlittableElem)
+                    {
+                        writer.Write(pname);
+                    }
                     else { writer.Write($"__{raw}_span"); }
+
                     if (isStringElem)
                     {
                         writer.Write($", _{raw}_inlineHeaderArray = __{raw}_headerSpan");
@@ -341,7 +412,12 @@ internal static partial class ConstructorFactory
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                if (!p.Type.IsString()) { continue; }
+
+                if (!p.Type.IsString())
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"{innerIndent}HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{raw}, {pname}?.Length, out HStringReference __{raw});");
@@ -355,11 +431,25 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-            if (p.Type is not SzArrayTypeSignature szArr) { continue; }
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
+
+            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+            {
+                continue;
+            }
+
+            if (p.Type is not SzArrayTypeSignature szArr)
+            {
+                continue;
+            }
+
+            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+            {
+                continue;
+            }
+
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+
             if (szArr.BaseType.IsString())
             {
                 writer.Write($$"""
@@ -388,19 +478,23 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+
             if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
             {
                 writer.Write("uint, void*, ");
                 continue;
             }
+
             AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
             writer.Write(", ");
         }
+
         if (isComposable)
         {
             // Composable extras: baseInterface (void*), out innerInterface (void**)
             writer.Write("void*, void**, ");
         }
+
         writer.Write($"void**, int>**)ThisPtr)[{(6 + factoryMethodIndex).ToString(CultureInfo.InvariantCulture)}](ThisPtr");
         for (int i = 0; i < paramCount; i++)
         {
@@ -460,6 +554,7 @@ internal static partial class ConstructorFactory
                 writer.Write(pname);
             }
         }
+
         if (isComposable)
         {
             // Pass __baseInterface.GetThisPtrUnsafe() and &__innerInterface.
@@ -477,6 +572,7 @@ internal static partial class ConstructorFactory
         {
             writer.WriteLine($"{callIndent}innerInterface = __innerInterface;");
         }
+
         writer.WriteLine($"{callIndent}retval = __retval;");
 
         // Close fixed blocks (innermost first).
@@ -498,10 +594,24 @@ internal static partial class ConstructorFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                if (p.Type is not SzArrayTypeSignature szArr) { continue; }
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
+
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                {
+                    continue;
+                }
+
+                if (p.Type is not SzArrayTypeSignature szArr)
+                {
+                    continue;
+                }
+
+                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
+
                 if (szArr.BaseType.IsString())
                 {
                     writer.WriteLine();
@@ -557,7 +667,12 @@ internal static partial class ConstructorFactory
     private static string GetDefaultInterfaceIid(ProjectionEmitContext context, TypeDefinition classType)
     {
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
-        if (defaultIface is null) { return "default(global::System.Guid)"; }
+
+        if (defaultIface is null)
+        {
+            return "default(global::System.Guid)";
+        }
+
         string result = ObjRefNameGenerator.WriteIidExpression(context, defaultIface);
         return result;
     }

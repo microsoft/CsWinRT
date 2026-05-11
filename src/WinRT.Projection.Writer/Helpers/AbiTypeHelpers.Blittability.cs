@@ -16,14 +16,23 @@ internal static partial class AbiTypeHelpers
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)
     {
         TypeCategory cat = TypeCategorization.GetCategory(type);
-        if (cat == TypeCategory.Enum) { return true; }
-        if (cat != TypeCategory.Struct) { return false; }
+
+        if (cat == TypeCategory.Enum)
+        {
+            return true;
+        }
+
+        if (cat != TypeCategory.Struct)
+        {
+            return false;
+        }
         // struct itself has a mapped-type entry, return based on its RequiresMarshaling flag
         // BEFORE walking fields. This is critical for XAML structs like Duration / KeyTime /
         // RepeatBehavior which are self-mapped with RequiresMarshaling=false but have a
         // TimeSpan field (Windows.Foundation.TimeSpan -> System.TimeSpan with RequiresMarshaling=true).
         // Without this check, the field walk would incorrectly classify them as non-blittable.
         (string ns, string name) = type.Names();
+
         if (MappedTypes.Get(ns, name) is { } mapping)
         {
             return !mapping.RequiresMarshaling;
@@ -31,8 +40,15 @@ internal static partial class AbiTypeHelpers
         // Walk fields - all must be blittable
         foreach (FieldDefinition field in type.Fields)
         {
-            if (field.IsStatic || field.Signature is null) { continue; }
-            if (!IsFieldTypeBlittable(cache, field.Signature.FieldType)) { return false; }
+            if (field.IsStatic || field.Signature is null)
+            {
+                continue;
+            }
+
+            if (!IsFieldTypeBlittable(cache, field.Signature.FieldType))
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -63,7 +79,12 @@ internal static partial class AbiTypeHelpers
             }
             // Mapped struct types: blittable iff the mapping does NOT require marshalling
             MappedType? mapped = MappedTypes.Get(fNs, fName);
-            if (mapped is { RequiresMarshaling: true }) { return false; }
+
+            if (mapped is { RequiresMarshaling: true })
+            {
+                return false;
+            }
+
             if (todr.Type is TypeDefinition td)
             {
                 return IsTypeBlittable(cache, td);
@@ -73,10 +94,16 @@ internal static partial class AbiTypeHelpers
             {
                 (string ns, string name) = tr.Names();
                 TypeDefinition? resolved = cache.Find(ns + "." + name);
-                if (resolved is not null) { return IsTypeBlittable(cache, resolved); }
+
+                if (resolved is not null)
+                {
+                    return IsTypeBlittable(cache, resolved);
+                }
             }
+
             return false;
         }
+
         return false;
     }
 
@@ -88,12 +115,17 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static TypeDefinition? TryResolveStructTypeDef(MetadataCache cache, TypeDefOrRefSignature tdr)
     {
-        if (tdr.Type is TypeDefinition td) { return td; }
+        if (tdr.Type is TypeDefinition td)
+        {
+            return td;
+        }
+
         if (tdr.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
             return cache.Find(ns + "." + name);
         }
+
         return null;
     }
 
@@ -102,17 +134,23 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static bool IsEnumType(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is not TypeDefOrRefSignature td) { return false; }
+        if (sig is not TypeDefOrRefSignature td)
+        {
+            return false;
+        }
+
         if (td.Type is TypeDefinition def)
         {
             return TypeCategorization.GetCategory(def) == TypeCategory.Enum;
         }
+
         if (td.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
             TypeDefinition? resolved = cache.Find(ns + "." + name);
             return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum;
         }
+
         return false;
     }
 
@@ -132,6 +170,7 @@ internal static partial class AbiTypeHelpers
             // Cross-module typeref: try to resolve via the metadata cache to check category.
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
+
             if (ns == "System")
             {
                 return name switch
@@ -140,9 +179,11 @@ internal static partial class AbiTypeHelpers
                     _ => false,
                 };
             }
+
             if (cache is not null)
             {
                 TypeDefinition? resolved = cache.Find(ns + "." + name);
+
                 if (resolved is not null)
                 {
                     TypeCategory cat = TypeCategorization.GetCategory(resolved);
@@ -158,6 +199,7 @@ internal static partial class AbiTypeHelpers
             // dispatches based on the metadata semantics, not on resolution.
             return !td.IsValueType;
         }
+
         return false;
     }
 
@@ -193,12 +235,14 @@ internal static partial class AbiTypeHelpers
             {
                 (string ns, string name) = tr.Names();
                 TypeDefinition? resolved = cache.Find(ns + "." + name);
+
                 if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum)
                 {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -211,33 +255,69 @@ internal static partial class AbiTypeHelpers
     /// (ConvertToUnmanaged/ConvertToManaged/Dispose).</summary>
     internal static bool IsComplexStruct(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is not TypeDefOrRefSignature td) { return false; }
+        if (sig is not TypeDefOrRefSignature td)
+        {
+            return false;
+        }
+
         TypeDefinition? def = td.Type as TypeDefinition;
+
         if (def is null && td.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            if (ns == "System" && name == "Guid") { return false; }
+
+            if (ns == "System" && name == "Guid")
+            {
+                return false;
+            }
+
             def = cache.Find(ns + "." + name);
         }
-        if (def is null) { return false; }
+
+        if (def is null)
+        {
+            return false;
+        }
+
         TypeCategory cat = TypeCategorization.GetCategory(def);
-        if (cat != TypeCategory.Struct) { return false; }
+
+        if (cat != TypeCategory.Struct)
+        {
+            return false;
+        }
         // RequiresMarshaling, regardless of inner field layout. So for mapped types like
         // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
         {
             string sNs = td.Type?.Namespace?.Value ?? string.Empty;
             string sName = td.Type?.Name?.Value ?? string.Empty;
             MappedType? sMapped = MappedTypes.Get(sNs, sName);
-            if (sMapped is not null) { return false; }
+
+            if (sMapped is not null)
+            {
+                return false;
+            }
         }
         // A struct is "complex" if it has any field that is not a blittable primitive nor an
         // almost-blittable struct (i.e. has a string/object/Nullable<T>/etc. field).
         foreach (FieldDefinition field in def.Fields)
         {
-            if (field.IsStatic || field.Signature is null) { continue; }
+            if (field.IsStatic || field.Signature is null)
+            {
+                continue;
+            }
+
             TypeSignature ft = field.Signature.FieldType;
-            if (IsBlittablePrimitive(cache, ft)) { continue; }
-            if (IsAnyStruct(cache, ft)) { continue; }
+
+            if (IsBlittablePrimitive(cache, ft))
+            {
+                continue;
+            }
+
+            if (IsAnyStruct(cache, ft))
+            {
+                continue;
+            }
+
             return true;
         }
         return false;
@@ -245,15 +325,29 @@ internal static partial class AbiTypeHelpers
 
     internal static bool IsAnyStruct(MetadataCache cache, TypeSignature sig)
     {
-        if (sig is not TypeDefOrRefSignature td) { return false; }
+        if (sig is not TypeDefOrRefSignature td)
+        {
+            return false;
+        }
+
         TypeDefinition? def = td.Type as TypeDefinition;
+
         if (def is null && td.Type is TypeReference trEarly)
         {
             (string ns, string name) = trEarly.Names();
-            if (ns == "System" && name == "Guid") { return true; }
+
+            if (ns == "System" && name == "Guid")
+            {
+                return true;
+            }
+
             def = cache.Find(ns + "." + name);
         }
-        if (def is null) { return false; }
+
+        if (def is null)
+        {
+            return false;
+        }
         // Mapped struct types short-circuit based on the mapping's RequiresMarshaling flag
         // (only applies to actual structs, not mapped interfaces like IAsyncAction).
         if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
@@ -261,15 +355,29 @@ internal static partial class AbiTypeHelpers
             string sNs = td.Type?.Namespace?.Value ?? string.Empty;
             string sName = td.Type?.Name?.Value ?? string.Empty;
             MappedType? sMapped = MappedTypes.Get(sNs, sName);
-            if (sMapped is { } sMappedVal) { return !sMappedVal.RequiresMarshaling; }
+
+            if (sMapped is { } sMappedVal)
+            {
+                return !sMappedVal.RequiresMarshaling;
+            }
         }
+
         TypeCategory cat = TypeCategorization.GetCategory(def);
-        if (cat != TypeCategory.Struct) { return false; }
+
+        if (cat != TypeCategory.Struct)
+        {
+            return false;
+        }
         // Reject if any instance field is a reference type (string/object/runtime class/etc.).
         foreach (FieldDefinition field in def.Fields)
         {
-            if (field.IsStatic || field.Signature is null) { continue; }
+            if (field.IsStatic || field.Signature is null)
+            {
+                continue;
+            }
+
             TypeSignature ft = field.Signature.FieldType;
+
             if (ft is CorLibTypeSignature corlibField)
             {
                 if (corlibField.ElementType is
@@ -279,8 +387,16 @@ internal static partial class AbiTypeHelpers
                 continue;
             }
             // Recurse: nested struct must also pass IsAnyStruct, otherwise reject.
-            if (IsBlittablePrimitive(cache, ft)) { continue; }
-            if (IsAnyStruct(cache, ft)) { continue; }
+            if (IsBlittablePrimitive(cache, ft))
+            {
+                continue;
+            }
+
+            if (IsAnyStruct(cache, ft))
+            {
+                continue;
+            }
+
             return false;
         }
         return true;

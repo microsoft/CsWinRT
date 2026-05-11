@@ -21,7 +21,12 @@ internal static partial class AbiTypeHelpers
     internal static bool TryGetNullablePrimitiveMarshallerName(TypeSignature sig, out string? marshallerName)
     {
         marshallerName = null;
-        if (sig is not GenericInstanceTypeSignature gi) { return false; }
+
+        if (sig is not GenericInstanceTypeSignature gi)
+        {
+            return false;
+        }
+
         ITypeDefOrRef gt = gi.GenericType;
         string ns = gt?.Namespace?.Value ?? string.Empty;
         string name = gt?.Name?.Value ?? string.Empty;
@@ -29,8 +34,17 @@ internal static partial class AbiTypeHelpers
         // It only later gets projected to System.Nullable<T> by the projection layer.
         bool isNullable = (ns == "System" && name == NullableGeneric)
             || (ns == WindowsFoundation && name == IReferenceGeneric);
-        if (!isNullable) { return false; }
-        if (gi.TypeArguments.Count != 1) { return false; }
+
+        if (!isNullable)
+        {
+            return false;
+        }
+
+        if (gi.TypeArguments.Count != 1)
+        {
+            return false;
+        }
+
         TypeSignature arg = gi.TypeArguments[0];
         // Map primitive corlib element type to its ABI marshaller name.
         if (arg is CorLibTypeSignature corlib)
@@ -51,10 +65,16 @@ internal static partial class AbiTypeHelpers
                 ElementType.R8 => "Double",
                 _ => null
             };
-            if (mn is null) { return false; }
+
+            if (mn is null)
+            {
+                return false;
+            }
+
             marshallerName = AbiPrefix + "System." + mn + MarshallerSuffix;
             return true;
         }
+
         return false;
     }
 
@@ -83,6 +103,7 @@ internal static partial class AbiTypeHelpers
                 ElementType.R8 => "Double",
                 _ => "",
             };
+
             if (!string.IsNullOrEmpty(typeName))
             {
                 return GlobalAbiPrefix + "System." + typeName + MarshallerSuffix;
@@ -104,19 +125,23 @@ internal static partial class AbiTypeHelpers
             string name = td.Type?.Name?.Value ?? string.Empty;
             // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
             if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, StringComparison.Ordinal))
             {
                 return nameStripped + MarshallerSuffix;
             }
+
             return GlobalAbiPrefix + ns + "." + nameStripped + MarshallerSuffix;
         }
+
         return "global::ABI.Object.Marshaller";
     }
 }

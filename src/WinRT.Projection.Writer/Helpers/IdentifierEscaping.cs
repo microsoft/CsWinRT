@@ -34,6 +34,7 @@ internal static class IdentifierEscaping
         {
             writer.Write("@");
         }
+
         writer.Write(identifier);
     }
 }

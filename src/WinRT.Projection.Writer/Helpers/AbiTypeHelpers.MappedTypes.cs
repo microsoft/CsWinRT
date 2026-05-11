@@ -17,11 +17,27 @@ internal static partial class AbiTypeHelpers
     internal static string GetMappedNamespace(TypeSignature sig)
     {
         // Fundamentals (string, bool, int, etc.) live in 'System' for ArrayMarshaller path purposes.
-        if (sig is CorLibTypeSignature) { return "System"; }
+        if (sig is CorLibTypeSignature)
+        {
+            return "System";
+        }
+
         ITypeDefOrRef? td = null;
-        if (sig is TypeDefOrRefSignature tds) { td = tds.Type; }
-        else if (sig is GenericInstanceTypeSignature gi) { td = gi.GenericType; }
-        if (td is null) { return string.Empty; }
+
+        if (sig is TypeDefOrRefSignature tds)
+        {
+            td = tds.Type;
+        }
+        else if (sig is GenericInstanceTypeSignature gi)
+        {
+            td = gi.GenericType;
+        }
+
+        if (td is null)
+        {
+            return string.Empty;
+        }
+
         (string typeNs, string typeName) = td.Names();
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
         return mapped is { } m ? m.MappedNamespace : typeNs;
@@ -40,17 +56,38 @@ internal static partial class AbiTypeHelpers
         mappedNs = string.Empty;
         mappedName = string.Empty;
         ITypeDefOrRef? td = null;
-        if (sig is TypeDefOrRefSignature tds) { td = tds.Type; }
-        if (td is null) { return false; }
+
+        if (sig is TypeDefOrRefSignature tds)
+        {
+            td = tds.Type;
+        }
+
+        if (td is null)
+        {
+            return false;
+        }
+
         (string ns, string name) = td.Names();
         // The set of mapped types that use the 'value-type marshaller' pattern (DateTime, TimeSpan, HResult).
         // Uri is also a mapped marshalling type but it's a reference type (handled via UriMarshaller separately).
         if (ns == WindowsFoundation)
         {
-            if (name == "DateTime") { mappedNs = "System"; mappedName = "DateTimeOffset"; return true; }
-            if (name == "TimeSpan") { mappedNs = "System"; mappedName = "TimeSpan"; return true; }
-            if (name == HResult) { mappedNs = "System"; mappedName = "Exception"; return true; }
+            if (name == "DateTime")
+            {
+                mappedNs = "System"; mappedName = "DateTimeOffset"; return true;
+            }
+
+            if (name == "TimeSpan")
+            {
+                mappedNs = "System"; mappedName = "TimeSpan"; return true;
+            }
+
+            if (name == HResult)
+            {
+                mappedNs = "System"; mappedName = "Exception"; return true;
+            }
         }
+
         return false;
     }
 
@@ -59,7 +96,10 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static bool IsMappedAbiValueType(TypeSignature sig)
     {
-        if (!IsMappedMarshalingValueType(sig, out _, out string mappedName)) { return false; }
+        if (!IsMappedMarshalingValueType(sig, out _, out string mappedName))
+        {
+            return false;
+        }
         // HResult/Exception is treated specially in many places; this helper is for DateTime/TimeSpan only.
         return mappedName != "Exception";
     }
@@ -69,7 +109,11 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static string GetMappedAbiTypeName(TypeSignature sig)
     {
-        if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
+        if (!IsMappedMarshalingValueType(sig, out string ns, out string name))
+        {
+            return string.Empty;
+        }
+
         return GlobalAbiPrefix + ns + "." + name;
     }
 
@@ -78,7 +122,11 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     internal static string GetMappedMarshallerName(TypeSignature sig)
     {
-        if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
+        if (!IsMappedMarshalingValueType(sig, out string ns, out string name))
+        {
+            return string.Empty;
+        }
+
         return GlobalAbiPrefix + ns + "." + name + MarshallerSuffix;
     }
 }

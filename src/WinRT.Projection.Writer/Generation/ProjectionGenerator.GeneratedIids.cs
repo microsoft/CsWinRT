@@ -37,14 +37,22 @@ internal sealed partial class ProjectionGenerator
         {
             foreach (TypeDefinition type in nsMembers.Classes)
             {
-                if (!_settings.Filter.Includes(type)) { continue; }
+                if (!_settings.Filter.Includes(type))
+                {
+                    continue;
+                }
                 // Skip mapped classes whose ABI surface is suppressed (e.g.
                 // 'Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs' maps to
                 // 'System.Collections.Specialized.NotifyCollectionChangedEventArgs' with
                 // EmitAbi=false). Their factory/statics interfaces should also be skipped.
                 (string clsNs, string clsNm) = type.Names();
                 MappedType? clsMapped = MappedTypes.Get(clsNs, clsNm);
-                if (clsMapped is { EmitAbi: false }) { continue; }
+
+                if (clsMapped is { EmitAbi: false })
+                {
+                    continue;
+                }
+
                 AddFactoryInterfacesForClass(type, factoryInterfacesGlobal);
             }
         }
@@ -63,11 +71,25 @@ internal sealed partial class ProjectionGenerator
             foreach (TypeDefinition type in members.Types)
             {
                 bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
-                if (!_settings.Filter.Includes(type) && !isFactoryInterface) { continue; }
-                if (TypeCategorization.IsGeneric(type)) { continue; }
+
+                if (!_settings.Filter.Includes(type) && !isFactoryInterface)
+                {
+                    continue;
+                }
+
+                if (TypeCategorization.IsGeneric(type))
+                {
+                    continue;
+                }
+
                 (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
-                if (m is { EmitAbi: false }) { continue; }
+
+                if (m is { EmitAbi: false })
+                {
+                    continue;
+                }
+
                 iidWritten = true;
                 TypeCategory cat = TypeCategorization.GetCategory(type);
                 switch (cat)
@@ -92,10 +114,12 @@ internal sealed partial class ProjectionGenerator
             }
         }
         IIDExpressionGenerator.WriteInterfaceIidsEnd(guidIndented);
+
         if (iidWritten)
         {
             guidIndented.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));
         }
+
         IndentedTextWriterPool.Return(guidIndented);
     }
 }

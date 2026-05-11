@@ -52,6 +52,7 @@ internal static class ReferenceImplFactory
             """, isMultiline: true);
         bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
+
         if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
             || isBlittableStructType)
         {

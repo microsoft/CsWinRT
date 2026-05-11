@@ -24,8 +24,16 @@ internal static class AbiInterfaceIDicFactory
 {
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo) { return; }
-        if (type.GenericParameters.Count > 0) { return; }
+        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo)
+        {
+            return;
+        }
+
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -63,12 +71,26 @@ internal static class AbiInterfaceIDicFactory
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
+
             TypeDefinition? required = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
-            if (required is null) { continue; }
-            if (!visited.Add(required)) { continue; }
+
+            if (required is null)
+            {
+                continue;
+            }
+
+            if (!visited.Add(required))
+            {
+                continue;
+            }
+
             (string rNs, string rName) = required.Names();
             MappedType? mapped = MappedTypes.Get(rNs, rName);
+
             if (mapped is { HasCustomMembersOutput: true })
             {
                 // Mapped to a BCL interface (IBindableVector -> IList, IBindableIterable -> IEnumerable, etc.).
@@ -83,11 +105,20 @@ internal static class AbiInterfaceIDicFactory
                 {
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
-                        if (impl2.Interface is null) { continue; }
+                        if (impl2.Interface is null)
+                        {
+                            continue;
+                        }
+
                         TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-                        if (r2 is not null) { _ = visited.Add(r2); }
+
+                        if (r2 is not null)
+                        {
+                            _ = visited.Add(r2);
+                        }
                     }
                 }
+
                 continue;
             }
             // Special case: IObservableMap`2 and IObservableVector`1 are NOT mapped to BCL
@@ -103,13 +134,23 @@ internal static class AbiInterfaceIDicFactory
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
-                        if (impl2.Interface is null) { continue; }
+                        if (impl2.Interface is null)
+                        {
+                            continue;
+                        }
+
                         TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-                        if (r2 is not null) { _ = visited.Add(r2); }
+
+                        if (r2 is not null)
+                        {
+                            _ = visited.Add(r2);
+                        }
                     }
                 }
+
                 continue;
             }
+
             if (rNs == WindowsFoundationCollections && rName == "IObservableVector`1")
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
@@ -118,15 +159,27 @@ internal static class AbiInterfaceIDicFactory
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
-                        if (impl2.Interface is null) { continue; }
+                        if (impl2.Interface is null)
+                        {
+                            continue;
+                        }
+
                         TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-                        if (r2 is not null) { _ = visited.Add(r2); }
+
+                        if (r2 is not null)
+                        {
+                            _ = visited.Add(r2);
+                        }
                     }
                 }
+
                 continue;
             }
             // Skip generic interfaces with unbound params (we can't substitute T at this layer).
-            if (required.GenericParameters.Count > 0) { continue; }
+            if (required.GenericParameters.Count > 0)
+            {
+                continue;
+            }
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
             WriteInterfaceIdicImplMembersForRequiredInterfaces(writer, context, required, visited);
             WriteInterfaceIdicImplMembersForInheritedInterface(writer, context, required);
@@ -235,11 +288,19 @@ internal static class AbiInterfaceIDicFactory
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
         string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
+
+        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+        {
+            ccwIfaceName = GlobalPrefix + ccwIfaceName;
+        }
 
         foreach (MethodDefinition method in type.Methods)
         {
-            if (method.IsSpecial()) { continue; }
+            if (method.IsSpecial())
+            {
+                continue;
+            }
+
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
@@ -250,7 +311,11 @@ internal static class AbiInterfaceIDicFactory
             writer.Write($") => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                if (i > 0) { writer.Write(", "); }
+                if (i > 0)
+                {
+                    writer.Write(", ");
+                }
+
                 ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
             }
             writer.WriteLine(");");
@@ -264,6 +329,7 @@ internal static class AbiInterfaceIDicFactory
 
             writer.WriteLine();
             writer.Write($"{propType} {ccwIfaceName}.{pname}");
+
             if (getter is not null && setter is null)
             {
                 // Read-only: single-line expression body.
@@ -278,6 +344,7 @@ internal static class AbiInterfaceIDicFactory
                     {
                         writer.WriteLine($"get => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname};");
                     }
+
                     if (setter is not null)
                     {
                         writer.WriteLine($"set => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname} = value;");
@@ -358,14 +425,26 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix).
         string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
+
+        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+        {
+            ccwIfaceName = GlobalPrefix + ccwIfaceName;
+        }
         // The static ABI Methods class name.
         string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true);
-        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { abiClass = GlobalPrefix + abiClass; }
+
+        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+        {
+            abiClass = GlobalPrefix + abiClass;
+        }
 
         foreach (MethodDefinition method in type.Methods)
         {
-            if (method.IsSpecial()) { continue; }
+            if (method.IsSpecial())
+            {
+                continue;
+            }
+
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
@@ -380,7 +459,11 @@ internal static class AbiInterfaceIDicFactory
                     var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                     
                 """, isMultiline: true);
-            if (sig.ReturnType is not null) { writer.Write("return "); }
+            if (sig.ReturnType is not null)
+            {
+                writer.Write("return ");
+            }
+
             writer.Write($"{abiClass}.{mname}(_obj");
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
@@ -414,6 +497,7 @@ internal static class AbiInterfaceIDicFactory
                         }
                     """, isMultiline: true);
             }
+
             if (setter is not null)
             {
                 // If the property has only a setter on this interface BUT a base interface declares
@@ -423,6 +507,7 @@ internal static class AbiInterfaceIDicFactory
                 if (getter is null)
                 {
                     TypeDefinition? baseIfaceWithGetter = InterfaceFactory.FindPropertyInterfaceInBases(context.Cache, type, pname);
+
                     if (baseIfaceWithGetter is not null)
                     {
                         writer.Write("    get { return ((");
@@ -430,6 +515,7 @@ internal static class AbiInterfaceIDicFactory
                         writer.WriteLine($")(WindowsRuntimeObject)this).{pname}; }}");
                     }
                 }
+
                 writer.Write($$"""
                         set
                         {

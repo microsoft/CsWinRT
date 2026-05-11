@@ -52,7 +52,11 @@ internal static partial class AbiMethodBodyFactory
         // Emit non-special methods first (output order is unchanged from before; only the slot lookup changes).
         foreach (MethodDefinition method in type.Methods)
         {
-            if (method.IsSpecial()) { continue; }
+            if (method.IsSpecial())
+            {
+                continue;
+            }
+
             string mname = method.Name?.Value ?? string.Empty;
             MethodSignatureInfo sig = new(method);
 
@@ -62,7 +66,12 @@ internal static partial class AbiMethodBodyFactory
                 """, isMultiline: true);
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {mname}(WindowsRuntimeObjectReference thisReference");
-            if (sig.Parameters.Count > 0) { writer.Write(", "); }
+
+            if (sig.Parameters.Count > 0)
+            {
+                writer.Write(", ");
+            }
+
             MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(")");
 
@@ -80,6 +89,7 @@ internal static partial class AbiMethodBodyFactory
             // accessors of the property (the attribute is on the property itself, not on the
             // individual accessors).
             bool propIsNoExcept = prop.IsNoExcept();
+
             if (gMethod is not null)
             {
                 MethodSignatureInfo getSig = new(gMethod);
@@ -89,6 +99,7 @@ internal static partial class AbiMethodBodyFactory
                     """, isMultiline: true);
                 EmitAbiMethodBodyIfSimple(writer, context, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
             }
+
             if (sMethod is not null)
             {
                 MethodSignatureInfo setSig = new(sMethod);
@@ -105,7 +116,11 @@ internal static partial class AbiMethodBodyFactory
         // the RCW class.
         foreach (EventDefinition evt in type.Events)
         {
-            if (skipExclusiveEvents) { continue; }
+            if (skipExclusiveEvents)
+            {
+                continue;
+            }
+
             string evtName = evt.Name?.Value ?? string.Empty;
             TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
@@ -119,9 +134,11 @@ internal static partial class AbiMethodBodyFactory
             // we need to use the ABI-qualified name. For generic handlers (Windows.Foundation.*EventHandler),
             // it's mapped to global::WindowsRuntime.InteropServices.EventHandlerEventSource<...>.
             string eventSourceProjectedFull;
+
             if (isGenericEvent)
             {
                 eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+
                 if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
                 {
                     eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;
@@ -132,13 +149,16 @@ internal static partial class AbiMethodBodyFactory
                 // Non-generic delegate handler: the EventSource lives in the same ABI namespace
                 // as this Methods class, so we use just the short name
                 string delegateName = string.Empty;
+
                 if (evtSig is TypeDefOrRefSignature td)
                 {
                     delegateName = td.Type?.Name?.Value ?? string.Empty;
                     delegateName = IdentifierEscaping.StripBackticks(delegateName);
                 }
+
                 eventSourceProjectedFull = delegateName + "EventSource";
             }
+
             string eventSourceInteropType = isGenericEvent
                 ? InteropTypeNameWriter.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
                 : string.Empty;

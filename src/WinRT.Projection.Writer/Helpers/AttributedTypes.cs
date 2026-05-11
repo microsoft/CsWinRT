@@ -38,9 +38,18 @@ internal static class AttributedTypes
         {
             CustomAttribute attr = type.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
-            if (attrType is null) { continue; }
+
+            if (attrType is null)
+            {
+                continue;
+            }
+
             (string ns, string name) = attrType.Names();
-            if (ns != WindowsFoundationMetadata) { continue; }
+
+            if (ns != WindowsFoundationMetadata)
+            {
+                continue;
+            }
 
             AttributedType info = new();
             switch (name)
@@ -81,7 +90,11 @@ internal static class AttributedTypes
     /// </summary>
     private static TypeDefinition? GetSystemType(CustomAttribute attr, MetadataCache cache)
     {
-        if (attr.Signature is null) { return null; }
+        if (attr.Signature is null)
+        {
+            return null;
+        }
+
         for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
         {
             CustomAttributeArgument arg = attr.Signature.FixedArguments[i];
@@ -90,12 +103,20 @@ internal static class AttributedTypes
             {
                 string typeName = sig.FullName ?? string.Empty;
                 TypeDefinition? td = cache.Find(typeName);
-                if (td is not null) { return td; }
+
+                if (td is not null)
+                {
+                    return td;
+                }
             }
             else if (arg.Element is string s)
             {
                 TypeDefinition? td = cache.Find(s);
-                if (td is not null) { return td; }
+
+                if (td is not null)
+                {
+                    return td;
+                }
             }
         }
         return null;
@@ -110,6 +131,7 @@ internal static class AttributedTypes
         {
             return e;
         }
+
         return 0;
     }
 }

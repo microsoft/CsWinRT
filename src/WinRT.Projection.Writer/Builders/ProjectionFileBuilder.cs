@@ -36,6 +36,7 @@ internal static class ProjectionFileBuilder
                 {
                     ClassFactory.WriteClass(writer, context, type);
                 }
+
                 break;
             case TypeCategory.Delegate:
                 WriteDelegate(writer, context, type);
@@ -55,6 +56,7 @@ internal static class ProjectionFileBuilder
                 {
                     WriteStruct(writer, context, type);
                 }
+
                 break;
             default:
                 throw WellKnownProjectionWriterExceptions.UnknownTypeCategory(category);
@@ -113,6 +115,7 @@ internal static class ProjectionFileBuilder
         {
             writer.WriteLine();
         }
+
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
@@ -130,6 +133,7 @@ internal static class ProjectionFileBuilder
                 {
                     continue;
                 }
+
                 string fieldName = field.Name?.Value ?? string.Empty;
                 string constantValue = FormatConstant(field.Constant);
                 // Emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
@@ -165,7 +169,11 @@ internal static class ProjectionFileBuilder
     private static string FormatHexAlternate(uint v)
     {
         // Match printf "%#0x" semantics: for 0, output "0"; for non-zero, output "0x<hex>" with no padding.
-        if (v == 0) { return "0"; }
+        if (v == 0)
+        {
+            return "0";
+        }
+
         return "0x" + v.ToString("x", CultureInfo.InvariantCulture);
     }
 
@@ -174,18 +182,26 @@ internal static class ProjectionFileBuilder
     /// </summary>
     public static void WriteStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.Component) { return; }
+        if (context.Settings.Component)
+        {
+            return;
+        }
 
         // Collect field info
         System.Collections.Generic.List<(string TypeStr, string Name, string ParamName, bool IsInterface)> fields = [];
         foreach (FieldDefinition field in type.Fields)
         {
-            if (field.IsStatic || field.Signature is null) { continue; }
+            if (field.IsStatic || field.Signature is null)
+            {
+                continue;
+            }
+
             TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
             string fieldType = TypedefNameWriter.WriteProjectionType(context, semantics);
             string fieldName = field.Name?.Value ?? string.Empty;
             string paramName = ToCamelCase(fieldName);
             bool isInterface = false;
+
             if (semantics is TypeSemantics.Definition d)
             {
                 isInterface = TypeCategorization.GetCategory(d.Type) == TypeCategory.Interface;
@@ -194,6 +210,7 @@ internal static class ProjectionFileBuilder
             {
                 isInterface = TypeCategorization.GetCategory(gi.GenericType) == TypeCategory.Interface;
             }
+
             fields.Add((fieldType, fieldName, paramName, isInterface));
         }
 
@@ -207,7 +224,12 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
-        if (hasAddition) { writer.Write(" partial"); }
+
+        if (hasAddition)
+        {
+            writer.Write(" partial");
+        }
+
         writer.Write($$"""
              struct {{projectionName}}: IEquatable<{{projectionName}}>
             {
@@ -215,7 +237,11 @@ internal static class ProjectionFileBuilder
             """, isMultiline: true);
         for (int i = 0; i < fields.Count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
@@ -256,6 +282,7 @@ internal static class ProjectionFileBuilder
 
         // ==
         writer.Write($"public static bool operator ==({projectionName} x, {projectionName} y) => ");
+
         if (fields.Count == 0)
         {
             writer.Write("true");
@@ -264,10 +291,15 @@ internal static class ProjectionFileBuilder
         {
             for (int i = 0; i < fields.Count; i++)
             {
-                if (i > 0) { writer.Write(" && "); }
+                if (i > 0)
+                {
+                    writer.Write(" && ");
+                }
+
                 writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
             }
         }
+
         writer.Write($$"""
             ;
             public static bool operator !=({{projectionName}} x, {{projectionName}} y) => !(x == y);
@@ -283,10 +315,15 @@ internal static class ProjectionFileBuilder
         {
             for (int i = 0; i < fields.Count; i++)
             {
-                if (i > 0) { writer.Write(" ^ "); }
+                if (i > 0)
+                {
+                    writer.Write(" ^ ");
+                }
+
                 writer.Write($"{fields[i].Name}.GetHashCode()");
             }
         }
+
         writer.Write("""
             ;
             }
@@ -298,7 +335,10 @@ internal static class ProjectionFileBuilder
     /// </summary>
     public static void WriteContract(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.Component) { return; }
+        if (context.Settings.Component)
+        {
+            return;
+        }
 
         string typeName = type.Name?.Value ?? string.Empty;
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
@@ -313,16 +353,25 @@ internal static class ProjectionFileBuilder
     /// </summary>
     public static void WriteDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.Component) { return; }
+        if (context.Settings.Component)
+        {
+            return;
+        }
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
-        if (invoke is null) { return; }
+
+        if (invoke is null)
+        {
+            return;
+        }
+
         MethodSignatureInfo sig = new(invoke);
 
         writer.WriteLine();
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
+
         if (!context.Settings.ReferenceProjection)
         {
             // GUID attribute
@@ -330,6 +379,7 @@ internal static class ProjectionFileBuilder
             IIDExpressionGenerator.WriteGuid(writer, type, false);
             writer.WriteLine("\")]");
         }
+
         writer.Write($"{context.Settings.InternalAccessibility} delegate ");
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write(" ");
@@ -354,7 +404,11 @@ internal static class ProjectionFileBuilder
             // Constructors
             foreach (MethodDefinition method in type.Methods)
             {
-                if (method.Name?.Value != ".ctor") { continue; }
+                if (method.Name?.Value != ".ctor")
+                {
+                    continue;
+                }
+
                 MethodSignatureInfo sig = new(method);
                 writer.Write($"public {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
@@ -363,7 +417,11 @@ internal static class ProjectionFileBuilder
             // Fields
             foreach (FieldDefinition field in type.Fields)
             {
-                if (field.IsStatic || field.Signature is null) { continue; }
+                if (field.IsStatic || field.Signature is null)
+                {
+                    continue;
+                }
+
                 writer.Write("public ");
                 TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
                 writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
@@ -376,12 +434,18 @@ internal static class ProjectionFileBuilder
     /// </summary>
     public static string ToCamelCase(string name)
     {
-        if (string.IsNullOrEmpty(name)) { return name; }
+        if (string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
         char c = name[0];
+
         if (c is >= 'A' and <= 'Z')
         {
             return char.ToLowerInvariant(c) + name[1..];
         }
+
         return name;
     }
 }

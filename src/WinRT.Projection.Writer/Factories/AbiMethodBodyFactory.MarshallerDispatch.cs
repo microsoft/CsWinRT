@@ -34,6 +34,7 @@ internal static partial class AbiMethodBodyFactory
             writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToManaged({argName})");
             return;
         }
+
         writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, sig)}.ConvertToManaged({argName})");
     }
 }

@@ -19,8 +19,13 @@ internal static class AbiClassFactory
     public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Static classes don't get a *Marshaller (no instances).
-        if (TypeCategorization.IsStatic(type)) { return; }
+        if (TypeCategorization.IsStatic(type))
+        {
+            return;
+        }
+
         writer.WriteLine("#nullable enable");
+
         if (context.Settings.Component)
         {
             WriteComponentClassMarshaller(writer, context, type);
@@ -31,6 +36,7 @@ internal static class AbiClassFactory
             // Emit a ComWrappers marshaller class so the attribute reference resolves
             WriteClassMarshallerStub(writer, context, type);
         }
+
         writer.WriteLine("#nullable disable");
     }
 
@@ -49,6 +55,7 @@ internal static class AbiClassFactory
         // (since the IID for a generic instantiation is computed at runtime). The IID expression
         // in the call then becomes '<accessor>(null)' instead of a static InterfaceIIDs reference.
         GenericInstanceTypeSignature? defaultGenericInst = null;
+
         if (defaultIface is TypeSpecification spec
             && spec.Signature is GenericInstanceTypeSignature gi)
         {
@@ -56,6 +63,7 @@ internal static class AbiClassFactory
         }
 
         string defaultIfaceIid;
+
         if (defaultGenericInst is not null)
         {
             // Call the accessor: '<IID_<EscapedName>>(null)'.
@@ -88,6 +96,7 @@ internal static class AbiClassFactory
                 writer.WriteLine($"        {accessorLine}");
             }
         }
+
         writer.Write($$"""
                     return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{defaultIfaceIid}});
                 }
@@ -141,22 +150,40 @@ internal static class AbiClassFactory
 
     public static bool EmitImplType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.Component) { return true; }
+        if (context.Settings.Component)
+        {
+            return true;
+        }
+
         if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
         {
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
             TypeDefinition? exclusiveToType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
-            if (exclusiveToType is null) { return true; }
+
+            if (exclusiveToType is null)
+            {
+                return true;
+            }
+
             bool hasOverridable = false;
             foreach (InterfaceImplementation impl in exclusiveToType.Interfaces)
             {
-                if (impl.Interface is null) { continue; }
+                if (impl.Interface is null)
+                {
+                    continue;
+                }
+
                 TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
-                if (ifaceTd == type && impl.IsOverridable()) { hasOverridable = true; break; }
+
+                if (ifaceTd == type && impl.IsOverridable())
+                {
+                    hasOverridable = true; break;
+                }
             }
             return hasOverridable;
         }
+
         return true;
     }
 

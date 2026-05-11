@@ -71,16 +71,23 @@ internal sealed class MethodSignatureInfo
         if (method.Signature is MethodSignature sig)
         {
             TypeSignature? rt = sig.ReturnType;
+
             if (rt is not null && genericContext is not null)
             {
                 rt = rt.InstantiateGenericTypes(genericContext.Value);
             }
+
             ReturnType = rt is CorLibTypeSignature { ElementType: ElementType.Void } ? null : rt;
 
             for (int i = 0; i < sig.ParameterTypes.Count; i++)
             {
                 TypeSignature pt = sig.ParameterTypes[i];
-                if (genericContext is not null) { pt = pt.InstantiateGenericTypes(genericContext.Value); }
+
+                if (genericContext is not null)
+                {
+                    pt = pt.InstantiateGenericTypes(genericContext.Value);
+                }
+
                 _params.Add(new ParameterInfo(method.Parameters[i], pt));
             }
         }

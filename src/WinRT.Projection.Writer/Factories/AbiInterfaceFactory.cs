@@ -24,13 +24,19 @@ internal static class AbiInterfaceFactory
     public static void WriteAbiInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Generic interfaces are handled by interopgen
-        if (type.GenericParameters.Count > 0) { return; }
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
 
         // Emit the per-interface marshaller stub.
         WriteInterfaceMarshallerStub(writer, context, type);
 
         // For internal projections, just the static ABI methods class is enough.
-        if (TypeCategorization.IsProjectionInternal(type)) { return; }
+        if (TypeCategorization.IsProjectionInternal(type))
+        {
+            return;
+        }
 
         WriteInterfaceVftbl(writer, context, type);
         WriteInterfaceImpl(writer, context, type);
@@ -51,12 +57,18 @@ internal static class AbiInterfaceFactory
     {
         // void* thisPtr, then each param's ABI type, then return type pointer
         writer.Write("void*");
-        if (includeParamNames) { writer.Write(" thisPtr"); }
+
+        if (includeParamNames)
+        {
+            writer.Write(" thisPtr");
+        }
+
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             writer.Write(", ");
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+
             if (p.Type is SzArrayTypeSignature)
             {
                 // length pointer + value pointer.
@@ -76,21 +88,31 @@ internal static class AbiInterfaceFactory
                 if (br.BaseType is SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
                     bool isRefElemBr = brSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
+
                     if (includeParamNames)
                     {
                         writer.Write($"uint* __{p.Parameter.Name ?? "param"}Size, ");
-                        if (isRefElemBr) { writer.Write("void*** "); }
+
+                        if (isRefElemBr)
+                        {
+                            writer.Write("void*** ");
+                        }
                         else
                         {
                             AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
                             writer.Write("** ");
                         }
+
                         IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                     }
                     else
                     {
                         writer.Write("uint*, ");
-                        if (isRefElemBr) { writer.Write("void***"); }
+
+                        if (isRefElemBr)
+                        {
+                            writer.Write("void***");
+                        }
                         else
                         {
                             AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
@@ -102,6 +124,7 @@ internal static class AbiInterfaceFactory
                 {
                     AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
                     writer.Write("*");
+
                     if (includeParamNames)
                     {
                         writer.Write(" ");
@@ -112,7 +135,12 @@ internal static class AbiInterfaceFactory
             else
             {
                 AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
-                if (cat is ParameterCategory.Out or ParameterCategory.Ref) { writer.Write("*"); }
+
+                if (cat is ParameterCategory.Out or ParameterCategory.Ref)
+                {
+                    writer.Write("*");
+                }
+
                 if (includeParamNames)
                 {
                     writer.Write(" ");
@@ -146,6 +174,7 @@ internal static class AbiInterfaceFactory
             {
                 AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
                 writer.Write("*");
+
                 if (includeParamNames) { writer.Write($" {retName}"); }
             }
         }
@@ -153,8 +182,16 @@ internal static class AbiInterfaceFactory
 
     public static void WriteInterfaceVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (!AbiClassFactory.EmitImplType(writer, context, type)) { return; }
-        if (type.GenericParameters.Count > 0) { return; }
+        if (!AbiClassFactory.EmitImplType(writer, context, type))
+        {
+            return;
+        }
+
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -190,8 +227,16 @@ internal static class AbiInterfaceFactory
     /// </summary>
     public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (!AbiClassFactory.EmitImplType(writer, context, type)) { return; }
-        if (type.GenericParameters.Count > 0) { return; }
+        if (!AbiClassFactory.EmitImplType(writer, context, type))
+        {
+            return;
+        }
+
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -243,10 +288,12 @@ internal static class AbiInterfaceFactory
         // class. For those, the dispatch target must be 'global::ABI.Impl.<NS>.<InterfaceName>'.
         TypeDefinition? exclusiveToOwner = null;
         bool exclusiveIsFactoryOrStatic = false;
+
         if (context.Settings.Component)
         {
             MetadataCache cache = context.Cache;
             exclusiveToOwner = AbiTypeHelpers.GetExclusiveToType(cache, type);
+
             if (exclusiveToOwner is not null)
             {
                 foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(exclusiveToOwner, cache))
@@ -261,6 +308,7 @@ internal static class AbiInterfaceFactory
         }
 
         string ifaceFullName;
+
         if (exclusiveToOwner is not null && !exclusiveIsFactoryOrStatic)
         {
             string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
@@ -284,7 +332,11 @@ internal static class AbiInterfaceFactory
             {
                 ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
             }
-            if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ifaceFullName = GlobalPrefix + ifaceFullName; }
+
+            if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+            {
+                ifaceFullName = GlobalPrefix + ifaceFullName;
+            }
         }
 
         // Build a map of event add/remove methods to their event so we can emit the table field
@@ -297,8 +349,15 @@ internal static class AbiInterfaceFactory
         HashSet<MethodDefinition> propertyAccessors = [];
         foreach (PropertyDefinition prop in type.Properties)
         {
-            if (prop.GetMethod is MethodDefinition g) { _ = propertyAccessors.Add(g); }
-            if (prop.SetMethod is MethodDefinition s) { _ = propertyAccessors.Add(s); }
+            if (prop.GetMethod is MethodDefinition g)
+            {
+                _ = propertyAccessors.Add(g);
+            }
+
+            if (prop.SetMethod is MethodDefinition s)
+            {
+                _ = propertyAccessors.Add(s);
+            }
         }
 
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
@@ -342,30 +401,60 @@ internal static class AbiInterfaceFactory
         // 1. Regular methods (non-property, non-event), in metadata order.
         foreach (MethodDefinition method in type.Methods)
         {
-            if (propertyAccessors.Contains(method)) { continue; }
-            if (eventMap is not null && eventMap.ContainsKey(method)) { continue; }
+            if (propertyAccessors.Contains(method))
+            {
+                continue;
+            }
+
+            if (eventMap is not null && eventMap.ContainsKey(method))
+            {
+                continue;
+            }
+
             EmitOneDoAbi(method);
         }
 
         // 2. Properties, in metadata order. Setter before getter per write_property_abi_invoke.
         foreach (PropertyDefinition prop in type.Properties)
         {
-            if (prop.SetMethod is MethodDefinition s) { EmitOneDoAbi(s); }
-            if (prop.GetMethod is MethodDefinition g) { EmitOneDoAbi(g); }
+            if (prop.SetMethod is MethodDefinition s)
+            {
+                EmitOneDoAbi(s);
+            }
+
+            if (prop.GetMethod is MethodDefinition g)
+            {
+                EmitOneDoAbi(g);
+            }
         }
 
         // 3. Events, in metadata order. Add then Remove (matches metadata order from BuildEventMethodMap).
         foreach (EventDefinition evt in type.Events)
         {
-            if (evt.AddMethod is MethodDefinition a) { EmitOneDoAbi(a); }
-            if (evt.RemoveMethod is MethodDefinition r) { EmitOneDoAbi(r); }
+            if (evt.AddMethod is MethodDefinition a)
+            {
+                EmitOneDoAbi(a);
+            }
+
+            if (evt.RemoveMethod is MethodDefinition r)
+            {
+                EmitOneDoAbi(r);
+            }
         }
     }
 
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (TypeCategorization.IsExclusiveTo(type)) { return; }
-        if (type.GenericParameters.Count > 0) { return; }
+        if (TypeCategorization.IsExclusiveTo(type))
+        {
+            return;
+        }
+
+        if (type.GenericParameters.Count > 0)
+        {
+            return;
+        }
+
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
@@ -427,7 +516,10 @@ internal static class AbiInterfaceFactory
         // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
         // class, skip emitting it entirely — its members are merged into the default
         // interface's Methods class
-        if (ClassFactory.IsFastAbiOtherInterface(context.Cache, type)) { return; }
+        if (ClassFactory.IsFastAbiOtherInterface(context.Cache, type))
+        {
+            return;
+        }
 
         // If the interface is exclusive-to a class that's been excluded from the projection,
         // skip emitting the entire *Methods class — it would be dead code (the owning class
@@ -437,6 +529,7 @@ internal static class AbiInterfaceFactory
         if (TypeCategorization.IsExclusiveTo(type))
         {
             TypeDefinition? owningClass = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
+
             if (owningClass is not null && !context.Settings.Filter.Includes(owningClass))
             {
                 return;
@@ -444,14 +537,17 @@ internal static class AbiInterfaceFactory
         }
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
+
         if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
         {
             TypeDefinition? classType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
+
             if (classType is not null)
             {
                 foreach (InterfaceImplementation impl in classType.Interfaces)
                 {
                     TypeDefinition? implDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface!);
+
                     if (implDef is not null && implDef == type)
                     {
                         skipExclusiveEvents = true;
@@ -471,6 +567,7 @@ internal static class AbiInterfaceFactory
         (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = ClassFactory.GetFastAbiClassForInterface(context.Cache, type);
         bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
             && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, type);
+
         if (isFastAbiDefault)
         {
             int slot = InspectableMethodCount;
@@ -492,9 +589,16 @@ internal static class AbiInterfaceFactory
         bool hasAnyMember = false;
         foreach ((TypeDefinition seg, int _, bool segSkipEvents) in segments)
         {
-            if (AbiTypeHelpers.HasEmittableMembers(seg, segSkipEvents)) { hasAnyMember = true; break; }
+            if (AbiTypeHelpers.HasEmittableMembers(seg, segSkipEvents))
+            {
+                hasAnyMember = true; break;
+            }
         }
-        if (!hasAnyMember) { return; }
+
+        if (!hasAnyMember)
+        {
+            return;
+        }
 
         writer.Write($$"""
             {{(useInternal ? "internal static class " : "public static class ")}}{{nameStripped}}Methods

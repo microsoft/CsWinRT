@@ -28,10 +28,12 @@ internal static class ArrayElementEncoder
         string topLevelElement = EncodeArrayElementName(elementType);
         // Resolve the element's namespace to determine the path prefix.
         string ns = AbiTypeHelpers.GetMappedNamespace(elementType);
+
         if (string.IsNullOrEmpty(ns))
         {
             return "ABI.<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
         }
+
         return "ABI." + ns + ".<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
     }
 
@@ -59,6 +61,7 @@ internal static class ArrayElementEncoder
             _ = sb.Append("<#corlib>Guid");
             return;
         }
+
         switch (sig)
         {
             case CorLibTypeSignature corlib:
@@ -81,6 +84,7 @@ internal static class ArrayElementEncoder
         (string typeNs, string typeName) = type.Names();
         // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
+
         if (mapped is { } m)
         {
             typeNs = m.MappedNamespace;
@@ -102,7 +106,11 @@ internal static class ArrayElementEncoder
             _ = sb.Append('<');
             for (int i = 0; i < generic_args.Count; i++)
             {
-                if (i > 0) { _ = sb.Append('|'); }
+                if (i > 0)
+                {
+                    _ = sb.Append('|');
+                }
+
                 InteropTypeNameWriter.EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
             }
             _ = sb.Append('>');

@@ -31,6 +31,7 @@ internal static class AbiStructFactory
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
         (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
+
         if (!blittable && !isMappedStruct)
         {
             // In component mode emit the [WindowsRuntimeMetadataTypeName]/[WindowsRuntimeMappedType]
@@ -45,6 +46,7 @@ internal static class AbiStructFactory
             {
                 MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
             }
+
             MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
             writer.Write($"{context.Settings.InternalAccessibility} unsafe struct ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
@@ -53,7 +55,11 @@ internal static class AbiStructFactory
             {
                 foreach (FieldDefinition field in type.Fields)
                 {
-                    if (field.IsStatic || field.Signature is null) { continue; }
+                    if (field.IsStatic || field.Signature is null)
+                    {
+                        continue;
+                    }
+
                     TypeSignature ft = field.Signature.FieldType;
                     writer.Write("public ");
                     // Truth uses void* for string and Nullable<T> fields, the ABI type for mapped value
@@ -78,6 +84,7 @@ internal static class AbiStructFactory
                     {
                         MethodFactory.WriteProjectedSignature(writer, context, ft, false);
                     }
+
                     writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
                 }
             }

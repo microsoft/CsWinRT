@@ -45,6 +45,7 @@ internal static partial class ClassMembersFactory
                     static extern {{s.GetterPropTypeText}} {{s.GetterGenericAccessorName}}([UnsafeAccessorType("{{s.GetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference);
                     """, isMultiline: true);
             }
+
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
                 writer.WriteLine();
@@ -63,6 +64,7 @@ internal static partial class ClassMembersFactory
             // property-level attribute. For getter-only or setter-only properties only one side
             // is set; compare the relevant side.
             bool bothSidesPresent = s.HasGetter && s.HasSetter;
+
             if (!bothSidesPresent || getterPlat == setterPlat)
             {
                 // Collapse: prefer the populated side (treats both-empty as equal).
@@ -70,16 +72,23 @@ internal static partial class ClassMembersFactory
                 getterPlat = string.Empty;
                 setterPlat = string.Empty;
             }
-            if (!string.IsNullOrEmpty(propertyPlat)) { writer.Write(propertyPlat); }
+
+            if (!string.IsNullOrEmpty(propertyPlat))
+            {
+                writer.Write(propertyPlat);
+            }
+
             writer.Write($"{s.Access}{s.MethodSpec}{s.PropTypeText} {kvp.Key}");
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
             // In ref mode, all property bodies emit '=> throw null;'
             //, 1697).
             bool getterOnly = s.HasGetter && !s.HasSetter;
+
             if (getterOnly)
             {
                 writer.Write(" => ");
+
                 if (context.Settings.ReferenceProjection)
                 {
                     writer.Write("throw null;");
@@ -99,6 +108,7 @@ internal static partial class ClassMembersFactory
                 {
                     writer.Write($"{s.GetterAbiClass}.{kvp.Key}({s.GetterObjRef});");
                 }
+
                 writer.WriteLine();
             }
             else
@@ -112,6 +122,7 @@ internal static partial class ClassMembersFactory
                         {
                             writer.Write($"{getterPlat}");
                         }
+
                         if (context.Settings.ReferenceProjection)
                         {
                             writer.WriteLine("get => throw null;");
@@ -132,12 +143,14 @@ internal static partial class ClassMembersFactory
                             writer.WriteLine($"get => {s.GetterAbiClass}.{kvp.Key}({s.GetterObjRef});");
                         }
                     }
+
                     if (s.HasSetter)
                     {
                         if (!string.IsNullOrEmpty(setterPlat))
                         {
                             writer.Write($"{setterPlat}");
                         }
+
                         if (context.Settings.ReferenceProjection)
                         {
                             writer.WriteLine("set => throw null;");
@@ -170,14 +183,17 @@ internal static partial class ClassMembersFactory
                 writer.Write($"{s.PropTypeText} ");
                 WriteInterfaceTypeNameForCcw(writer, context, s.OverridableInterface);
                 writer.Write($".{kvp.Key} {{");
+
                 if (s.HasGetter)
                 {
                     writer.Write($"get => {kvp.Key}; ");
                 }
+
                 if (s.HasSetter)
                 {
                     writer.Write($"set => {kvp.Key} = value; ");
                 }
+
                 writer.WriteLine("}");
             }
         }
@@ -193,7 +209,11 @@ internal static partial class ClassMembersFactory
         _ = sb.Append('(');
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0) { _ = sb.Append(','); }
+            if (i > 0)
+            {
+                _ = sb.Append(',');
+            }
+
             _ = sb.Append(sig.Parameters[i].Type?.FullName ?? "?");
         }
         _ = sb.Append(')');

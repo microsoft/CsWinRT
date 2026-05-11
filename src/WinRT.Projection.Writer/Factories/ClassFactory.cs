@@ -39,6 +39,7 @@ internal static class ClassFactory
             writer.Write("static ");
             return;
         }
+
         if (type.IsSealed)
         {
             writer.Write("sealed ");
@@ -51,8 +52,17 @@ internal static class ClassFactory
     public static TypeDefinition? FindFastAbiClassType(MetadataCache cache, TypeDefinition iface)
     {
         TypeDefinition? exclusiveToClass = AbiTypeHelpers.GetExclusiveToType(cache, iface);
-        if (exclusiveToClass is null) { return null; }
-        if (!IsFastAbiClass(exclusiveToClass)) { return null; }
+
+        if (exclusiveToClass is null)
+        {
+            return null;
+        }
+
+        if (!IsFastAbiClass(exclusiveToClass))
+        {
+            return null;
+        }
+
         return exclusiveToClass;
     }
 
@@ -64,7 +74,12 @@ internal static class ClassFactory
     public static (TypeDefinition Class, TypeDefinition? Default, System.Collections.Generic.List<TypeDefinition> Others)? GetFastAbiClassForInterface(MetadataCache cache, TypeDefinition iface)
     {
         TypeDefinition? cls = FindFastAbiClassType(cache, iface);
-        if (cls is null) { return null; }
+
+        if (cls is null)
+        {
+            return null;
+        }
+
         (TypeDefinition? def, System.Collections.Generic.List<TypeDefinition> others) = GetFastAbiInterfaces(cache, cls);
         return (cls, def, others);
     }
@@ -77,11 +92,23 @@ internal static class ClassFactory
     public static bool IsFastAbiOtherInterface(MetadataCache cache, TypeDefinition iface)
     {
         (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(cache, iface);
-        if (fastAbi is null) { return false; }
-        if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface)) { return false; }
+
+        if (fastAbi is null)
+        {
+            return false;
+        }
+
+        if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface))
+        {
+            return false;
+        }
+
         foreach (TypeDefinition other in fastAbi.Value.Others)
         {
-            if (InterfacesEqual(other, iface)) { return true; }
+            if (InterfacesEqual(other, iface))
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -92,13 +119,22 @@ internal static class ClassFactory
     public static bool IsFastAbiDefaultInterface(MetadataCache cache, TypeDefinition iface)
     {
         (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(cache, iface);
-        if (fastAbi is null) { return false; }
+
+        if (fastAbi is null)
+        {
+            return false;
+        }
+
         return fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface);
     }
 
     private static bool InterfacesEqual(TypeDefinition a, TypeDefinition b)
     {
-        if (a == b) { return true; }
+        if (a == b)
+        {
+            return true;
+        }
+
         return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
             && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
     }
@@ -116,10 +152,18 @@ internal static class ClassFactory
         System.Collections.Generic.List<TypeDefinition> exclusiveIfaces = [];
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
+
             TypeDefinition? ifaceTd = impl.Interface as TypeDefinition
                 ?? impl.Interface.TryResolve(cache.RuntimeContext);
-            if (ifaceTd is null) { continue; }
+
+            if (ifaceTd is null)
+            {
+                continue;
+            }
 
             if (impl.IsDefaultInterface())
             {
@@ -139,19 +183,36 @@ internal static class ClassFactory
         {
             int aPrev = -CountAttributes(a, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
             int bPrev = -CountAttributes(b, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
-            if (aPrev != bPrev) { return aPrev.CompareTo(bPrev); }
+
+            if (aPrev != bPrev)
+            {
+                return aPrev.CompareTo(bPrev);
+            }
 
             int? aCV = a.GetContractVersion();
             int? bCV = b.GetContractVersion();
-            if (aCV.HasValue && bCV.HasValue && aCV.Value != bCV.Value) { return aCV.Value.CompareTo(bCV.Value); }
+
+            if (aCV.HasValue && bCV.HasValue && aCV.Value != bCV.Value)
+            {
+                return aCV.Value.CompareTo(bCV.Value);
+            }
 
             int? aV = a.GetVersion();
             int? bV = b.GetVersion();
-            if (aV.HasValue && bV.HasValue && aV.Value != bV.Value) { return aV.Value.CompareTo(bV.Value); }
+
+            if (aV.HasValue && bV.HasValue && aV.Value != bV.Value)
+            {
+                return aV.Value.CompareTo(bV.Value);
+            }
 
             string aNs = a.Namespace?.Value ?? string.Empty;
             string bNs = b.Namespace?.Value ?? string.Empty;
-            if (aNs != bNs) { return StringComparer.Ordinal.Compare(aNs, bNs); }
+
+            if (aNs != bNs)
+            {
+                return StringComparer.Ordinal.Compare(aNs, bNs);
+            }
+
             return StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
         });
         return (defaultIface, exclusiveIfaces);
@@ -164,23 +225,41 @@ internal static class ClassFactory
         {
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
-            if (type is not null && type.Namespace == ns && type.Name == name) { count++; }
+
+            if (type is not null && type.Namespace == ns && type.Name == name)
+            {
+                count++;
+            }
         }
         return count;
     }
     public static int GetGcPressureAmount(TypeDefinition type)
     {
-        if (!type.IsSealed) { return 0; }
+        if (!type.IsSealed)
+        {
+            return 0;
+        }
+
         CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GCPressureAttribute");
-        if (attr is null || attr.Signature is null) { return 0; }
+
+        if (attr is null || attr.Signature is null)
+        {
+            return 0;
+        }
         // The attribute has a single named arg "Amount" of an enum type. Defaults: 0=Low, 1=Medium, 2=High.
         // We try both fixed args and named args.
         int amount = -1;
+
         if (attr.Signature.NamedArguments.Count > 0)
         {
             object? v = attr.Signature.NamedArguments[0].Argument.Element;
-            if (v is int i) { amount = i; }
+
+            if (v is int i)
+            {
+                amount = i;
+            }
         }
+
         return amount switch
         {
             0 => 12000,
@@ -213,7 +292,10 @@ internal static class ClassFactory
     /// </summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Cache is null) { return; }
+        if (context.Cache is null)
+        {
+            return;
+        }
         // Per-property accessor state (origin tracking for getter/setter)
         Dictionary<string, StaticPropertyAccessorState> properties = [];
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
@@ -224,13 +306,19 @@ internal static class ClassFactory
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
             AttributedType factory = kv.Value;
-            if (!(factory.Statics && factory.Type is not null)) { continue; }
+
+            if (!(factory.Statics && factory.Type is not null))
+            {
+                continue;
+            }
+
             TypeDefinition staticIface = factory.Type;
 
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
             string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true);
+
             if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
                 abiClass = GlobalPrefix + abiClass;
@@ -249,15 +337,25 @@ internal static class ClassFactory
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)
             {
-                if (method.IsSpecial()) { continue; }
+                if (method.IsSpecial())
+                {
+                    continue;
+                }
+
                 MethodSignatureInfo sig = new(method);
                 string mname = method.Name?.Value ?? string.Empty;
                 writer.WriteLine();
-                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+
+                if (!string.IsNullOrEmpty(platformAttribute))
+                {
+                    writer.Write(platformAttribute);
+                }
+
                 writer.Write("public static ");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write($" {mname}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
+
                 if (context.Settings.ReferenceProjection)
                 {
                     // method bodies become 'throw null' in reference projection mode.
@@ -279,7 +377,12 @@ internal static class ClassFactory
             {
                 string evtName = evt.Name?.Value ?? string.Empty;
                 writer.WriteLine();
-                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+
+                if (!string.IsNullOrEmpty(platformAttribute))
+                {
+                    writer.Write(platformAttribute);
+                }
+
                 writer.Write("public static event ");
                 TypedefNameWriter.WriteEventType(writer, context, evt);
                 writer.Write($$"""
@@ -309,6 +412,7 @@ internal static class ClassFactory
                 string propName = prop.Name?.Value ?? string.Empty;
                 (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
                 string propType = InterfaceFactory.WritePropType(context, prop);
+
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
                 {
                     state = new StaticPropertyAccessorState
@@ -317,6 +421,7 @@ internal static class ClassFactory
                     };
                     properties[propName] = state;
                 }
+
                 if (getter is not null && !state.HasGetter)
                 {
                     state.HasGetter = true;
@@ -324,6 +429,7 @@ internal static class ClassFactory
                     state.GetterObjRef = objRef;
                     state.GetterPlatformAttribute = platformAttribute;
                 }
+
                 if (setter is not null && !state.HasSetter)
                 {
                     state.HasSetter = true;
@@ -344,17 +450,24 @@ internal static class ClassFactory
             string setterPlat = s.SetterPlatformAttribute;
             string propertyPlat = string.Empty;
             bool bothSidesPresent = s.HasGetter && s.HasSetter;
+
             if (!bothSidesPresent || getterPlat == setterPlat)
             {
                 propertyPlat = !string.IsNullOrEmpty(getterPlat) ? getterPlat : setterPlat;
                 getterPlat = string.Empty;
                 setterPlat = string.Empty;
             }
-            if (!string.IsNullOrEmpty(propertyPlat)) { writer.Write(propertyPlat); }
+
+            if (!string.IsNullOrEmpty(propertyPlat))
+            {
+                writer.Write(propertyPlat);
+            }
+
             writer.Write($"public static {s.PropTypeText} {kv.Key}");
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
             // In ref mode, all accessor bodies emit '=> throw null;'
             bool getterOnly = s.HasGetter && !s.HasSetter;
+
             if (getterOnly)
             {
                 if (context.Settings.ReferenceProjection)
@@ -373,7 +486,11 @@ internal static class ClassFactory
                 {
                     if (s.HasGetter)
                     {
-                        if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
+                        if (!string.IsNullOrEmpty(getterPlat))
+                        {
+                            writer.Write(getterPlat);
+                        }
+
                         if (context.Settings.ReferenceProjection)
                         {
                             writer.WriteLine("get => throw null;");
@@ -383,9 +500,14 @@ internal static class ClassFactory
                             writer.WriteLine($"get => {s.GetterAbiClass}.{kv.Key}({s.GetterObjRef});");
                         }
                     }
+
                     if (s.HasSetter)
                     {
-                        if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
+                        if (!string.IsNullOrEmpty(setterPlat))
+                        {
+                            writer.Write(setterPlat);
+                        }
+
                         if (context.Settings.ReferenceProjection)
                         {
                             writer.WriteLine("set => throw null;");
@@ -445,7 +567,10 @@ internal static class ClassFactory
     /// </summary>
     public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.Component) { return; }
+        if (context.Settings.Component)
+        {
+            return;
+        }
 
         if (TypeCategorization.IsStatic(type))
         {
@@ -501,6 +626,7 @@ internal static class ClassFactory
                 // when GetType() matches the projected class exactly (derived classes have their own
                 // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
                 if (defaultIface is not null)
                 {
                     string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
@@ -512,10 +638,12 @@ internal static class ClassFactory
                         """, isMultiline: true);
                 }
             }
+
             if (gcPressure > 0)
             {
                 writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
             }
+
             writer.WriteLine("}");
         }
         else if (context.Cache is not null)
@@ -532,17 +660,20 @@ internal static class ClassFactory
             foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
             {
                 AttributedType factory = kv.Value;
+
                 if (factory.Activatable)
                 {
                     hasRefModeCtors = true;
                     break;
                 }
+
                 if (factory.Composable && factory.Type is not null && factory.Type.Methods.Count > 0)
                 {
                     hasRefModeCtors = true;
                     break;
                 }
             }
+
             if (!hasRefModeCtors)
             {
                 RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName);
@@ -575,6 +706,7 @@ internal static class ClassFactory
         {
             writer.WriteLine();
             writer.Write("protected override bool HasUnwrappableNativeObjectReference => ");
+
             if (!type.IsSealed)
             {
                 writer.Write($"GetType() == typeof({typeName});");
@@ -583,16 +715,30 @@ internal static class ClassFactory
             {
                 writer.Write("true;");
             }
+
             writer.WriteLine();
             writer.WriteLine();
             writer.Write("protected override bool IsOverridableInterface(in Guid iid) => ");
             bool firstClause = true;
             foreach (InterfaceImplementation impl in type.Interfaces)
             {
-                if (!impl.IsOverridable()) { continue; }
+                if (!impl.IsOverridable())
+                {
+                    continue;
+                }
+
                 ITypeDefOrRef? implRef = impl.Interface;
-                if (implRef is null) { continue; }
-                if (!firstClause) { writer.Write(" || "); }
+
+                if (implRef is null)
+                {
+                    continue;
+                }
+
+                if (!firstClause)
+                {
+                    writer.Write(" || ");
+                }
+
                 firstClause = false;
                 ObjRefNameGenerator.WriteIidExpression(writer, context, implRef);
                 writer.Write(" == iid");
@@ -601,13 +747,23 @@ internal static class ClassFactory
             bool hasBaseClass = type.BaseType is not null
                 && !(type.BaseType.Namespace?.Value == "System" && type.BaseType.Name?.Value == "Object")
                 && !(type.BaseType.Namespace?.Value == "WindowsRuntime" && type.BaseType.Name?.Value == "WindowsRuntimeObject");
+
             if (hasBaseClass)
             {
-                if (!firstClause) { writer.Write(" || "); }
+                if (!firstClause)
+                {
+                    writer.Write(" || ");
+                }
+
                 writer.Write("base.IsOverridableInterface(in iid)");
                 firstClause = false;
             }
-            if (firstClause) { writer.Write("false"); }
+
+            if (firstClause)
+            {
+                writer.Write("false");
+            }
+
             writer.WriteLine(";");
         }
 

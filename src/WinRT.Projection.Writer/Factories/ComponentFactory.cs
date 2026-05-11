@@ -23,13 +23,19 @@ internal static class ComponentFactory
     /// </summary>
     public static void AddMetadataTypeEntry(ProjectionEmitContext context, TypeDefinition type, ConcurrentDictionary<string, string> map)
     {
-        if (!context.Settings.Component) { return; }
+        if (!context.Settings.Component)
+        {
+            return;
+        }
+
         TypeCategory cat = TypeCategorization.GetCategory(type);
+
         if ((cat == TypeCategory.Class && TypeCategorization.IsStatic(type)) ||
             (cat == TypeCategory.Interface && TypeCategorization.IsExclusiveTo(type)))
         {
             return;
         }
+
         string typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
 
         string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true);
@@ -56,6 +62,7 @@ internal static class ComponentFactory
             foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
             {
                 AttributedType info = kv.Value;
+
                 if ((info.Activatable || info.Statics) && info.Type is not null)
                 {
                     factoryInterfaces.Add(info.Type);
@@ -100,6 +107,7 @@ internal static class ComponentFactory
         {
             writer.Write("throw new NotImplementedException();");
         }
+
         writer.WriteLine();
         writer.WriteLine("}");
 
@@ -110,13 +118,21 @@ internal static class ComponentFactory
             foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
             {
                 AttributedType info = kv.Value;
-                if (info.Type is null) { continue; }
+
+                if (info.Type is null)
+                {
+                    continue;
+                }
 
                 if (info.Activatable)
                 {
                     foreach (MethodDefinition method in info.Type.Methods)
                     {
-                        if (method.IsConstructor) { continue; }
+                        if (method.IsConstructor)
+                        {
+                            continue;
+                        }
+
                         WriteFactoryActivatableMethod(writer, context, method, projectedTypeName);
                     }
                 }
@@ -124,7 +140,11 @@ internal static class ComponentFactory
                 {
                     foreach (MethodDefinition method in info.Type.Methods)
                     {
-                        if (method.IsConstructor) { continue; }
+                        if (method.IsConstructor)
+                        {
+                            continue;
+                        }
+
                         WriteStaticFactoryMethod(writer, context, method, projectedTypeName);
                     }
                     foreach (PropertyDefinition prop in info.Type.Properties)
@@ -147,7 +167,11 @@ internal static class ComponentFactory
     /// </summary>
     private static void WriteFactoryActivatableMethod(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, string projectedTypeName)
     {
-        if (method.IsSpecialName) { return; }
+        if (method.IsSpecialName)
+        {
+            return;
+        }
+
         string methodName = method.Name?.Value ?? string.Empty;
         writer.WriteLine();
         writer.Write($"public {projectedTypeName} {methodName}(");
@@ -163,7 +187,11 @@ internal static class ComponentFactory
     /// </summary>
     private static void WriteStaticFactoryMethod(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, string projectedTypeName)
     {
-        if (method.IsSpecialName) { return; }
+        if (method.IsSpecialName)
+        {
+            return;
+        }
+
         string methodName = method.Name?.Value ?? string.Empty;
         writer.WriteLine();
         writer.Write("public ");
@@ -191,6 +219,7 @@ internal static class ComponentFactory
             writer.WriteLine($" {propName} => {projectedTypeName}.{propName};");
             return;
         }
+
         writer.WriteLine();
         writer.Write("public ");
         WriteFactoryPropertyType(writer, context, prop);
@@ -202,6 +231,7 @@ internal static class ComponentFactory
         {
             writer.WriteLine($"get => {projectedTypeName}.{propName};");
         }
+
         writer.Write($$"""
             set => {{projectedTypeName}}.{{propName}} = value;
             }
@@ -216,11 +246,13 @@ internal static class ComponentFactory
         string evtName = evt.Name?.Value ?? string.Empty;
         writer.WriteLine();
         writer.Write("public event ");
+
         if (evt.EventType is not null)
         {
             TypeSemantics evtSemantics = TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType);
             TypedefNameWriter.WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
         }
+
         writer.Write($$"""
              {{evtName}}
             {
@@ -233,11 +265,13 @@ internal static class ComponentFactory
     private static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
     {
         TypeSignature? returnType = method.Signature?.ReturnType;
+
         if (returnType is null || returnType.ElementType == ElementType.Void)
         {
             writer.Write("void");
             return;
         }
+
         TypeSemantics semantics = TypeSemanticsFactory.Get(returnType);
         TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
@@ -245,7 +279,12 @@ internal static class ComponentFactory
     private static void WriteFactoryPropertyType(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop)
     {
         TypeSignature? sig = prop.Signature?.ReturnType;
-        if (sig is null) { writer.Write("object"); return; }
+
+        if (sig is null)
+        {
+            writer.Write("object"); return;
+        }
+
         TypeSemantics semantics = TypeSemanticsFactory.Get(sig);
         TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
@@ -253,12 +292,22 @@ internal static class ComponentFactory
     private static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
     {
         MethodSignature? sig = method.Signature;
-        if (sig is null) { return; }
+
+        if (sig is null)
+        {
+            return;
+        }
+
         for (int i = 0; i < sig.ParameterTypes.Count; i++)
         {
-            if (i > 0) { writer.Write(", "); }
+            if (i > 0)
+            {
+                writer.Write(", ");
+            }
+
             ParameterDefinition? p = method.Parameters.Count > i ? method.Parameters[i].Definition : null;
             string paramName = p?.Name?.Value ?? $"arg{i}";
+
             if (includeTypes)
             {
                 TypeSemantics semantics = TypeSemanticsFactory.Get(sig.ParameterTypes[i]);

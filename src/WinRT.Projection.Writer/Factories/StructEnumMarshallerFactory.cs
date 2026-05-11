@@ -33,13 +33,22 @@ internal static class StructEnumMarshallerFactory
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
         bool hasReferenceFields = false;
+
         if (isComplexStruct)
         {
             foreach (FieldDefinition field in type.Fields)
             {
-                if (field.IsStatic || field.Signature is null) { continue; }
+                if (field.IsStatic || field.Signature is null)
+                {
+                    continue;
+                }
+
                 TypeSignature ft = field.Signature.FieldType;
-                if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; }
+
+                if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
+                {
+                    hasReferenceFields = true;
+                }
             }
         }
 
@@ -50,7 +59,11 @@ internal static class StructEnumMarshallerFactory
         // contains only BoxToUnmanaged/UnboxToManaged.
         (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
-        if (isMappedStruct) { isComplexStruct = false; }
+
+        if (isMappedStruct)
+        {
+            isComplexStruct = false;
+        }
 
         writer.Write($$"""
             public static unsafe class {{nameStripped}}Marshaller
@@ -72,12 +85,22 @@ internal static class StructEnumMarshallerFactory
             bool first = true;
             foreach (FieldDefinition field in type.Fields)
             {
-                if (field.IsStatic || field.Signature is null) { continue; }
+                if (field.IsStatic || field.Signature is null)
+                {
+                    continue;
+                }
+
                 string fname = field.Name?.Value ?? "";
                 TypeSignature ft = field.Signature.FieldType;
-                if (!first) { writer.WriteLine(","); }
+
+                if (!first)
+                {
+                    writer.WriteLine(",");
+                }
+
                 first = false;
                 writer.Write($"            {fname} = ");
+
                 if (ft.IsString())
                 {
                     writer.Write($"HStringMarshaller.ConvertToUnmanaged(value.{fname})");
@@ -134,16 +157,27 @@ internal static class StructEnumMarshallerFactory
             first = true;
             foreach (FieldDefinition field in type.Fields)
             {
-                if (field.IsStatic || field.Signature is null) { continue; }
+                if (field.IsStatic || field.Signature is null)
+                {
+                    continue;
+                }
+
                 string fname = field.Name?.Value ?? "";
                 TypeSignature ft = field.Signature.FieldType;
-                if (!first) { writer.WriteLine(","); }
+
+                if (!first)
+                {
+                    writer.WriteLine(",");
+                }
+
                 first = false;
                 writer.Write("            ");
+
                 if (useObjectInitializer)
                 {
                     writer.Write($"{fname} = ");
                 }
+
                 if (ft.IsString())
                 {
                     writer.Write($"HStringMarshaller.ConvertToManaged(value.{fname})");
@@ -187,9 +221,14 @@ internal static class StructEnumMarshallerFactory
                 """, isMultiline: true);
             foreach (FieldDefinition field in type.Fields)
             {
-                if (field.IsStatic || field.Signature is null) { continue; }
+                if (field.IsStatic || field.Signature is null)
+                {
+                    continue;
+                }
+
                 string fname = field.Name?.Value ?? "";
                 TypeSignature ft = field.Signature.FieldType;
+
                 if (ft.IsString())
                 {
                     writer.WriteLine($"        HStringMarshaller.Free(value.{fname});");
@@ -229,6 +268,7 @@ internal static class StructEnumMarshallerFactory
         // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
         writer.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+
         if (isEnum || almostBlittable || isComplexStruct)
         {
             writer.Write($$"""
@@ -262,6 +302,7 @@ internal static class StructEnumMarshallerFactory
         // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
         writer.Write("    public static ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+
         if (isEnum || almostBlittable)
         {
             writer.Write("""
@@ -351,7 +392,10 @@ internal static class StructEnumMarshallerFactory
             writer.WriteLine();
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
-            if (context.Settings.Component && cat == TypeCategory.Struct) { return; }
+            if (context.Settings.Component && cat == TypeCategory.Struct)
+            {
+                return;
+            }
 
             // ComWrappersMarshallerAttribute (full body)
             writer.Write($$"""
@@ -384,6 +428,7 @@ internal static class StructEnumMarshallerFactory
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
                 writer.WriteLine($">(value, in {iidRefExpr});");
             }
+
             writer.Write("""
                     }
                 }

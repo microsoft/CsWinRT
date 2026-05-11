@@ -61,6 +61,7 @@ internal sealed class MetadataCache
                 foreach (string path in Directory.EnumerateFiles(input, "*.winmd", SearchOption.AllDirectories))
                 {
                     string canonical = Path.GetFullPath(path);
+
                     if (seen.Add(canonical))
                     {
                         winmdFiles.Add(canonical);
@@ -70,6 +71,7 @@ internal sealed class MetadataCache
             else if (File.Exists(input))
             {
                 string canonical = Path.GetFullPath(input);
+
                 if (seen.Add(canonical))
                 {
                     winmdFiles.Add(canonical);
@@ -131,10 +133,12 @@ internal sealed class MetadataCache
     private void LoadFile(string path)
     {
         AssemblyDefinition assemblyDefinition = RuntimeContext.LoadAssembly(path);
+
         if (assemblyDefinition.Modules is not [ModuleDefinition module])
         {
             throw WellKnownProjectionWriterExceptions.MalformedWinmd(path);
         }
+
         _modules.Add(module);
         string moduleFilePath = path;
 
@@ -153,6 +157,7 @@ internal sealed class MetadataCache
             // WindowsRuntime.Internal.winmd and cswinrt.winmd, or types showing up in both an SDK
             // contract winmd and a 3rd-party WinMD that re-exports / forwards them). First-load-wins.
             string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
+
             if (_typesByFullName.ContainsKey(fullName))
             {
                 continue;
@@ -163,6 +168,7 @@ internal sealed class MetadataCache
                 members = new NamespaceMembers(ns);
                 _namespaces[ns] = members;
             }
+
             members.AddType(type);
 
             _typesByFullName[fullName] = type;
@@ -230,6 +236,7 @@ internal sealed class NamespaceMembers(string name)
                 {
                     Classes.Add(type);
                 }
+
                 break;
             case TypeCategory.Enum:
                 Enums.Add(type);
@@ -243,6 +250,7 @@ internal sealed class NamespaceMembers(string name)
                 {
                     Structs.Add(type);
                 }
+
                 break;
             case TypeCategory.Delegate:
                 Delegates.Add(type);

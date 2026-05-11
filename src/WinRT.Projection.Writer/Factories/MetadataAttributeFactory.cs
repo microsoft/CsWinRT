@@ -128,7 +128,11 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The value type definition.</param>
     public static void WriteValueTypeWinRTClassNameAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.ReferenceProjection) { return; }
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         (string ns, string name) = type.Names();
         writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{ns}.{name}>\")]");
     }
@@ -141,7 +145,11 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The reference type definition.</param>
     public static void WriteWinRTReferenceTypeAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.ReferenceProjection) { return; }
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         writer.Write("[WindowsRuntimeReferenceType(typeof(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
@@ -156,7 +164,11 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The type definition.</param>
     public static void WriteComWrapperMarshallerAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Settings.ReferenceProjection) { return; }
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         (string ns, string name) = type.Names();
         writer.WriteLine($"[ABI.{ns}.{IdentifierEscaping.StripBackticks(name)}ComWrappersMarshaller]");
     }
@@ -195,6 +207,7 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
+
         writer.Write($$"""
             ),
                 trimTarget: typeof({{projectionName}}))]
@@ -240,6 +253,7 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
+
         writer.Write("""
             ",
                 target: typeof(
@@ -253,6 +267,7 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
+
         writer.Write($$"""
             ),
                 trimTarget: typeof({{projectionName}}))]
@@ -260,6 +275,7 @@ internal static class MetadataAttributeFactory
 
         // For non-interface, non-struct authored types, emit proxy association.
         TypeCategory cat = TypeCategorization.GetCategory(type);
+
         if (cat is not (TypeCategory.Interface or TypeCategory.Struct) && context.Settings.Component)
         {
             writer.WriteLine();
@@ -285,7 +301,10 @@ internal static class MetadataAttributeFactory
     public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Generic interfaces are handled elsewhere.
-        if (type.GenericParameters.Count != 0) { return; }
+        if (type.GenericParameters.Count != 0)
+        {
+            return;
+        }
         // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
         if ((TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo) ||
             TypeCategorization.IsProjectionInternal(type))
@@ -315,9 +334,17 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void AddDefaultInterfaceEntry(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
-        if (context.Settings.ReferenceProjection) { return; }
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-        if (defaultIface is null) { return; }
+
+        if (defaultIface is null)
+        {
+            return;
+        }
 
         (string typeNs, string typeName) = type.Names();
         string className = $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
@@ -325,10 +352,15 @@ internal static class MetadataAttributeFactory
         // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
         ITypeDefOrRef capturedIface = defaultIface;
+
         if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
         {
             TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
-            if (resolved is not null) { capturedIface = resolved; }
+
+            if (resolved is not null)
+            {
+                capturedIface = resolved;
+            }
         }
 
         // Build the interface display name via TypeSemantics so generic instantiations
@@ -342,41 +374,61 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void AddExclusiveToInterfaceEntries(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
-        if (!context.Settings.Component || context.Settings.ReferenceProjection) { return; }
+        if (!context.Settings.Component || context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         (string typeNs, string typeName) = type.Names();
         string className = $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
 
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null) { continue; }
+            if (impl.Interface is null)
+            {
+                continue;
+            }
 
             // Resolve the interface to a TypeDefinition for the [ExclusiveTo] check.
             TypeDefinition? ifaceDef = impl.Interface as TypeDefinition;
+
             if (ifaceDef is null && context.Cache is not null)
             {
                 ifaceDef = impl.Interface.TryResolve(context.Cache.RuntimeContext);
             }
+
             if (ifaceDef is null && impl.Interface is TypeSpecification spec
                 && spec.Signature is GenericInstanceTypeSignature gi)
             {
                 ifaceDef = gi.GenericType as TypeDefinition;
+
                 if (ifaceDef is null && context.Cache is not null)
                 {
                     ifaceDef = gi.GenericType.TryResolve(context.Cache.RuntimeContext);
                 }
             }
-            if (ifaceDef is null) { continue; }
+
+            if (ifaceDef is null)
+            {
+                continue;
+            }
 
             if (TypeCategorization.IsExclusiveTo(ifaceDef))
             {
                 // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the
                 // Definition branch which knows about authored-type CCW namespacing.
                 ITypeDefOrRef capturedIface = impl.Interface;
+
                 if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
                 {
                     TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
-                    if (resolved is not null) { capturedIface = resolved; }
+
+                    if (resolved is not null)
+                    {
+                        capturedIface = resolved;
+                    }
                 }
+
                 string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true);
                 entries.Add(new KeyValuePair<string, string>(className, interfaceName));
             }
@@ -387,7 +439,11 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
-        if (sortedEntries.Count == 0) { return; }
+        if (sortedEntries.Count == 0)
+        {
+            return;
+        }
+
         IndentedTextWriter w = IndentedTextWriterPool.GetOrCreate();
         WriteFileHeader(w);
         w.Write("""
@@ -416,7 +472,11 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
-        if (sortedEntries.Count == 0) { return; }
+        if (sortedEntries.Count == 0)
+        {
+            return;
+        }
+
         IndentedTextWriter w = IndentedTextWriterPool.GetOrCreate();
         WriteFileHeader(w);
         w.Write("""

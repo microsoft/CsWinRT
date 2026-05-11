@@ -38,11 +38,23 @@ internal sealed partial class ProjectionGenerator
             MetadataAttributeFactory.WritePragmaDisableIL2026(writer);
             foreach (TypeDefinition type in members.Types)
             {
-                if (!_settings.Filter.Includes(type)) { continue; }
-                if (TypeCategorization.IsGeneric(type)) { continue; }
+                if (!_settings.Filter.Includes(type))
+                {
+                    continue;
+                }
+
+                if (TypeCategorization.IsGeneric(type))
+                {
+                    continue;
+                }
+
                 (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
-                if (m is { EmitAbi: false }) { continue; }
+
+                if (m is { EmitAbi: false })
+                {
+                    continue;
+                }
 
                 TypeCategory cat = TypeCategorization.GetCategory(type);
                 switch (cat)
@@ -59,6 +71,7 @@ internal sealed partial class ProjectionGenerator
                                 MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, false);
                             }
                         }
+
                         break;
                     case TypeCategory.Delegate:
                         MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
@@ -78,6 +91,7 @@ internal sealed partial class ProjectionGenerator
                             MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
                             MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         }
+
                         break;
                 }
             }
@@ -89,7 +103,11 @@ internal sealed partial class ProjectionGenerator
 
         foreach (TypeDefinition type in members.Types)
         {
-            if (!_settings.Filter.Includes(type)) { continue; }
+            if (!_settings.Filter.Includes(type))
+            {
+                continue;
+            }
+
             (string ns2, string nm2) = type.Names();
             // Skip generic types and mapped types
             if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
@@ -107,6 +125,7 @@ internal sealed partial class ProjectionGenerator
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
+
                 if (_settings.Component && componentActivatable.Contains(type))
                 {
                     ComponentFactory.WriteFactoryClass(writer, context, type);
@@ -142,28 +161,61 @@ internal sealed partial class ProjectionGenerator
             HashSet<TypeDefinition> factoryInterfacesAllNs = [];
             foreach (TypeDefinition type in members.Types)
             {
-                if (!_settings.Filter.Includes(type)) { continue; }
-                if (TypeCategorization.GetCategory(type) != TypeCategory.Class) { continue; }
+                if (!_settings.Filter.Includes(type))
+                {
+                    continue;
+                }
+
+                if (TypeCategorization.GetCategory(type) != TypeCategory.Class)
+                {
+                    continue;
+                }
+
                 AddFactoryInterfacesForClass(type, factoryInterfacesAllNs);
             }
             foreach (TypeDefinition facType in factoryInterfacesAllNs)
             {
                 // Only consider factory interfaces in the same namespace as we're processing.
                 string facNs = facType.Namespace?.Value ?? string.Empty;
-                if (facNs == ns) { _ = factoryInterfacesInThisNs.Add(facType); }
+
+                if (facNs == ns)
+                {
+                    _ = factoryInterfacesInThisNs.Add(facType);
+                }
             }
 
             writer.WriteBeginAbiNamespace(context);
             foreach (TypeDefinition type in members.Types)
             {
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
-                if (!_settings.Filter.Includes(type) && !isFactoryInterface) { continue; }
-                if (TypeCategorization.IsGeneric(type)) { continue; }
+
+                if (!_settings.Filter.Includes(type) && !isFactoryInterface)
+                {
+                    continue;
+                }
+
+                if (TypeCategorization.IsGeneric(type))
+                {
+                    continue;
+                }
+
                 (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
-                if (m is { EmitAbi: false }) { continue; }
-                if (TypeCategorization.IsApiContractType(type)) { continue; }
-                if (TypeCategorization.IsAttributeType(type)) { continue; }
+
+                if (m is { EmitAbi: false })
+                {
+                    continue;
+                }
+
+                if (TypeCategorization.IsApiContractType(type))
+                {
+                    continue;
+                }
+
+                if (TypeCategorization.IsAttributeType(type))
+                {
+                    continue;
+                }
 
                 TypeCategory category = TypeCategorization.GetCategory(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, category);
@@ -177,7 +229,12 @@ internal sealed partial class ProjectionGenerator
             foreach (string resName in resourceNames)
             {
                 using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
-                if (stream is null) { continue; }
+
+                if (stream is null)
+                {
+                    continue;
+                }
+
                 using StreamReader reader = new(stream);
                 string content = reader.ReadToEnd();
                 writer.Write(content);

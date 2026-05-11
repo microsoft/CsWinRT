@@ -21,7 +21,11 @@ internal static partial class AbiTypeHelpers
     internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
     {
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
-        if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
+        if (IsMappedAbiValueType(sig))
+        {
+            return GetMappedAbiTypeName(sig);
+        }
+
         string result = MethodFactory.WriteProjectedSignature(context, sig, false);
         return result;
     }
@@ -40,19 +44,23 @@ internal static partial class AbiTypeHelpers
             // 'Windows.UI.Xaml.Interop.TypeName' is mapped to 'System.Type', so the ABI struct
             // is 'global::ABI.System.Type', not 'global::ABI.Windows.UI.Xaml.Interop.TypeName').
             MappedType? mapped = MappedTypes.Get(ns, name);
+
             if (mapped is { } m)
             {
                 ns = m.MappedNamespace;
                 name = m.MappedName;
             }
+
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
             if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, StringComparison.Ordinal))
             {
                 return nameStripped;
             }
+
             return GlobalAbiPrefix + ns + "." + nameStripped;
         }
+
         return "global::ABI.Object";
     }
 
@@ -71,16 +79,19 @@ internal static partial class AbiTypeHelpers
         if (sig is TypeDefOrRefSignature td)
         {
             TypeDefinition? def = td.Type as TypeDefinition;
+
             if (def is null && td.Type is TypeReference tr)
             {
                 (string ns, string name) = tr.Names();
                 def = cache.Find(ns + "." + name);
             }
+
             if (def is not null && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
             {
                 return cache is null ? "int" : GetProjectedEnumName(def);
             }
         }
+
         return "int";
     }
 
@@ -92,11 +103,13 @@ internal static partial class AbiTypeHelpers
         // System.Collections.Specialized.NotifyCollectionChangedAction). Same
         // remapping that WriteTypedefName performs.
         MappedType? mapped = MappedTypes.Get(ns, name);
+
         if (mapped is { } m)
         {
             ns = m.MappedNamespace;
             name = m.MappedName;
         }
+
         return string.IsNullOrEmpty(ns) ? GlobalPrefix + name : GlobalPrefix + ns + "." + name;
     }
 

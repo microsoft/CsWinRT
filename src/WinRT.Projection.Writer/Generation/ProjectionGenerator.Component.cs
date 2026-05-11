@@ -41,17 +41,23 @@ internal sealed partial class ProjectionGenerator
         {
             foreach (TypeDefinition type in members.Classes)
             {
-                if (!_settings.Filter.Includes(type)) { continue; }
+                if (!_settings.Filter.Includes(type))
+                {
+                    continue;
+                }
+
                 if (type.HasAttribute(WindowsFoundationMetadata, ActivatableAttribute) ||
                     type.HasAttribute(WindowsFoundationMetadata, StaticAttribute))
                 {
                     _ = componentActivatable.Add(type);
                     string moduleName = Path.GetFileNameWithoutExtension(_cache.GetSourcePath(type));
+
                     if (!componentByModule.TryGetValue(moduleName, out HashSet<TypeDefinition>? set))
                     {
                         set = [];
                         componentByModule[moduleName] = set;
                     }
+
                     _ = set.Add(type);
                 }
             }

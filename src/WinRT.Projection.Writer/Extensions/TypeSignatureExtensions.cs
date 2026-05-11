@@ -51,9 +51,18 @@ internal static class TypeSignatureExtensions
             if (sig is TypeDefOrRefSignature td && td.Type is { } t)
             {
                 (string ns, string name) = t.Names();
-                if (ns == "System" && name == "Type") { return true; }
-                if (ns == WindowsUIXamlInterop && name == TypeName) { return true; }
+
+                if (ns == "System" && name == "Type")
+                {
+                    return true;
+                }
+
+                if (ns == WindowsUIXamlInterop && name == TypeName)
+                {
+                    return true;
+                }
             }
+
             return false;
         }
 
@@ -64,7 +73,11 @@ internal static class TypeSignatureExtensions
         /// <returns><see langword="true"/> if the signature is a Nullable-shaped generic instantiation; otherwise <see langword="false"/>.</returns>
         public bool IsNullableT()
         {
-            if (sig is not GenericInstanceTypeSignature gi) { return false; }
+            if (sig is not GenericInstanceTypeSignature gi)
+            {
+                return false;
+            }
+
             string ns = gi.GenericType?.Namespace?.Value ?? string.Empty;
             string name = gi.GenericType?.Name?.Value ?? string.Empty;
             return (ns == WindowsFoundation && name == IReferenceGeneric)
@@ -83,6 +96,7 @@ internal static class TypeSignatureExtensions
             {
                 return gi.TypeArguments[0];
             }
+
             return null;
         }
 
@@ -104,7 +118,11 @@ internal static class TypeSignatureExtensions
         /// <returns><see langword="true"/> if the signature is the projected <c>HResult</c>/<c>Exception</c>; otherwise <see langword="false"/>.</returns>
         public bool IsHResultException()
         {
-            if (sig is not TypeDefOrRefSignature td || td.Type is null) { return false; }
+            if (sig is not TypeDefOrRefSignature td || td.Type is null)
+            {
+                return false;
+            }
+
             (string ns, string name) = td.Type.Names();
             return (ns == "System" && name == "Exception")
                 || (ns == WindowsFoundation && name == HResult);
@@ -124,8 +142,16 @@ internal static class TypeSignatureExtensions
             TypeSignature? cur = sig;
             while (true)
             {
-                if (cur is CustomModifierTypeSignature cm) { cur = cm.BaseType; continue; }
-                if (cur is ByReferenceTypeSignature br) { cur = br.BaseType; continue; }
+                if (cur is CustomModifierTypeSignature cm)
+                {
+                    cur = cm.BaseType; continue;
+                }
+
+                if (cur is ByReferenceTypeSignature br)
+                {
+                    cur = br.BaseType; continue;
+                }
+
                 break;
             }
             return cur;

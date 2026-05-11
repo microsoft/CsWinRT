@@ -102,24 +102,64 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     private AbiTypeShapeKind ClassifyShape(TypeSignature signature)
     {
         // Cheap top-level shape checks that don't need the cache.
-        if (signature.IsString()) { return AbiTypeShapeKind.String; }
-        if (signature.IsObject()) { return AbiTypeShapeKind.Object; }
-        if (signature.IsHResultException()) { return AbiTypeShapeKind.HResultException; }
-        if (signature.IsSystemType()) { return AbiTypeShapeKind.SystemType; }
-        if (signature.IsNullableT()) { return AbiTypeShapeKind.NullableT; }
-        if (signature is SzArrayTypeSignature) { return AbiTypeShapeKind.Array; }
-        if (signature.IsGenericInstance()) { return AbiTypeShapeKind.GenericInstance; }
+        if (signature.IsString())
+        {
+            return AbiTypeShapeKind.String;
+        }
+
+        if (signature.IsObject())
+        {
+            return AbiTypeShapeKind.Object;
+        }
+
+        if (signature.IsHResultException())
+        {
+            return AbiTypeShapeKind.HResultException;
+        }
+
+        if (signature.IsSystemType())
+        {
+            return AbiTypeShapeKind.SystemType;
+        }
+
+        if (signature.IsNullableT())
+        {
+            return AbiTypeShapeKind.NullableT;
+        }
+
+        if (signature is SzArrayTypeSignature)
+        {
+            return AbiTypeShapeKind.Array;
+        }
+
+        if (signature.IsGenericInstance())
+        {
+            return AbiTypeShapeKind.GenericInstance;
+        }
 
         // Cache-aware classifications. These are evaluated in the same order the writer's
         // emission paths historically queried the inline AbiTypeHelpers predicates so the
         // resolver returns the same shape the legacy code path would have inferred.
-        if (AbiTypeHelpers.IsMappedAbiValueType(signature)) { return AbiTypeShapeKind.MappedAbiValueType; }
+        if (AbiTypeHelpers.IsMappedAbiValueType(signature))
+        {
+            return AbiTypeShapeKind.MappedAbiValueType;
+        }
+
         if (AbiTypeHelpers.IsBlittablePrimitive(Cache, signature))
         {
             return signature is CorLibTypeSignature ? AbiTypeShapeKind.BlittablePrimitive : AbiTypeShapeKind.Enum;
         }
-        if (AbiTypeHelpers.IsComplexStruct(Cache, signature)) { return AbiTypeShapeKind.ComplexStruct; }
-        if (AbiTypeHelpers.IsAnyStruct(Cache, signature)) { return AbiTypeShapeKind.BlittableStruct; }
+
+        if (AbiTypeHelpers.IsComplexStruct(Cache, signature))
+        {
+            return AbiTypeShapeKind.ComplexStruct;
+        }
+
+        if (AbiTypeHelpers.IsAnyStruct(Cache, signature))
+        {
+            return AbiTypeShapeKind.BlittableStruct;
+        }
+
         if (AbiTypeHelpers.IsRuntimeClassOrInterface(Cache, signature))
         {
             if (signature is TypeDefOrRefSignature td &&
@@ -128,6 +168,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
             {
                 return AbiTypeShapeKind.Delegate;
             }
+
             return AbiTypeShapeKind.RuntimeClassOrInterface;
         }
 

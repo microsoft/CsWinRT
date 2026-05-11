@@ -31,13 +31,24 @@ internal static partial class ConstructorFactory
         {
             CustomAttribute attr = classType.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
-            if (attrType is null) { continue; }
+
+            if (attrType is null)
+            {
+                continue;
+            }
+
             if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
                 attrType.Name?.Value != "MarshalingBehaviorAttribute") { continue; }
-            if (attr.Signature is null) { continue; }
+
+            if (attr.Signature is null)
+            {
+                continue;
+            }
+
             for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
             {
                 CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
+
                 if (arg.Element is int v)
                 {
                     return v switch

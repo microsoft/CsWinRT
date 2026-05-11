@@ -29,7 +29,10 @@ internal static partial class AbiMethodBodyFactory
         bool hasStringParams = false;
         foreach (ParameterInfo p in sig.Parameters)
         {
-            if (p.Type.IsString()) { hasStringParams = true; break; }
+            if (p.Type.IsString())
+            {
+                hasStringParams = true; break;
+            }
         }
         bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi
             && (context.AbiTypeShapeResolver.IsBlittablePrimitive(retSzAbi.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(retSzAbi.BaseType)
@@ -88,9 +91,19 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.Out) { continue; }
+
+                if (cat != ParameterCategory.Out)
+                {
+                    continue;
+                }
+
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                if (!uOut.IsGenericInstance()) { continue; }
+
+                if (!uOut.IsGenericInstance())
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
                 string projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
@@ -107,7 +120,12 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.ReceiveArray) { continue; }
+
+                if (cat != ParameterCategory.ReceiveArray)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
@@ -128,6 +146,7 @@ internal static partial class AbiMethodBodyFactory
                 """, isMultiline: true);
                 writer.WriteLine();
             }
+
             if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
                 string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
@@ -194,7 +213,12 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.Out) { continue; }
+
+                if (cat != ParameterCategory.Out)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"*{ptr} = default;");
@@ -203,7 +227,12 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.Out) { continue; }
+
+                if (cat != ParameterCategory.Out)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
@@ -218,7 +247,12 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.ReceiveArray) { continue; }
+
+                if (cat != ParameterCategory.ReceiveArray)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -237,12 +271,22 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                if (p.Type is not SzArrayTypeSignature sz) { continue; }
+
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                {
+                    continue;
+                }
+
+                if (p.Type is not SzArrayTypeSignature sz)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
                 bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(sz.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(sz.BaseType);
+
                 if (isBlittableElem)
                 {
                     writer.WriteLine($"{(cat == ParameterCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = new({ptr}, (int)__{raw}Size);");
@@ -273,9 +317,22 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.PassArray) { continue; }
-                if (p.Type is not SzArrayTypeSignature szArr) { continue; }
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
+
+                if (cat != ParameterCategory.PassArray)
+                {
+                    continue;
+                }
+
+                if (p.Type is not SzArrayTypeSignature szArr)
+                {
+                    continue;
+                }
+
+                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
@@ -288,6 +345,7 @@ internal static partial class AbiMethodBodyFactory
                 // the data param is void** and the cast is (void**).
                 string dataParamType;
                 string dataCastExpr;
+
                 if (context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType))
                 {
                     string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
@@ -299,6 +357,7 @@ internal static partial class AbiMethodBodyFactory
                     dataParamType = "void** data";
                     dataCastExpr = "(void**)" + ptr;
                 }
+
                 writer.Write($$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
                         static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
@@ -311,6 +370,7 @@ internal static partial class AbiMethodBodyFactory
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
+
                 if (p.Type.IsNullableT())
                 {
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
@@ -382,6 +442,7 @@ internal static partial class AbiMethodBodyFactory
                     }
                     ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+
                     if (cat == ParameterCategory.Out)
                     {
                         string raw = p.Parameter.Name ?? "param";
@@ -396,6 +457,7 @@ internal static partial class AbiMethodBodyFactory
                         string raw = p.Parameter.Name ?? "param";
                         string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                         TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+
                         if (uRef.IsString())
                         {
                             writer.Write($"HStringMarshaller.ConvertToManaged(*{ptr})");
@@ -453,7 +515,12 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.Out) { continue; }
+
+                if (cat != ParameterCategory.Out)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -514,7 +581,12 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.ReceiveArray) { continue; }
+
+                if (cat != ParameterCategory.ReceiveArray)
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
@@ -528,10 +600,22 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat != ParameterCategory.FillArray) { continue; }
-                if (p.Type is not SzArrayTypeSignature szFA) { continue; }
+
+                if (cat != ParameterCategory.FillArray)
+                {
+                    continue;
+                }
+
+                if (p.Type is not SzArrayTypeSignature szFA)
+                {
+                    continue;
+                }
                 // Blittable element types: Span wraps the native buffer; no copy-back needed.
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szFA.BaseType)) { continue; }
+                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szFA.BaseType))
+                {
+                    continue;
+                }
+
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
@@ -545,6 +629,7 @@ internal static partial class AbiMethodBodyFactory
                 // - Complex structs: <ABI struct>*
                 string dataParamType;
                 string dataCastType;
+
                 if (szFA.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(szFA.BaseType) || szFA.BaseType.IsObject())
                 {
                     dataParamType = "void** data";
@@ -567,12 +652,14 @@ internal static partial class AbiMethodBodyFactory
                     dataParamType = abiStructName + "* data";
                     dataCastType = "(" + abiStructName + "*)";
                 }
+
                 writer.Write($$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
                         static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{dataParamType}});
                         CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, {{dataCastType}}{{ptr}});
                 """, isMultiline: true);
             }
+
             if (rt is not null)
             {
                 if (returnIsHResultExceptionDoAbi)
@@ -633,6 +720,7 @@ internal static partial class AbiMethodBodyFactory
                 else
                 {
                     writer.Write($"    *{retParamName} = ");
+
                     if (rt is CorLibTypeSignature corlib &&
                         corlib.ElementType == ElementType.Boolean)
                     {
@@ -654,6 +742,7 @@ internal static partial class AbiMethodBodyFactory
                     }
                 }
             }
+
             writer.Write("""
                     return 0;
                 }
@@ -669,12 +758,26 @@ internal static partial class AbiMethodBodyFactory
             {
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                if (p.Type is not SzArrayTypeSignature szArr) { continue; }
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
+
+                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                {
+                    continue;
+                }
+
+                if (p.Type is not SzArrayTypeSignature szArr)
+                {
+                    continue;
+                }
+
+                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+                {
+                    continue;
+                }
+
                 hasNonBlittableArrayDoAbi = true;
                 break;
             }
+
             if (hasNonBlittableArrayDoAbi)
             {
                 writer.Write("""
@@ -685,9 +788,22 @@ internal static partial class AbiMethodBodyFactory
                 {
                     ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-                    if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray)) { continue; }
-                    if (p.Type is not SzArrayTypeSignature szArr) { continue; }
-                    if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType)) { continue; }
+
+                    if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                    {
+                        continue;
+                    }
+
+                    if (p.Type is not SzArrayTypeSignature szArr)
+                    {
+                        continue;
+                    }
+
+                    if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+                    {
+                        continue;
+                    }
+
                     string raw = p.Parameter.Name ?? "param";
                     string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
@@ -712,6 +828,7 @@ internal static partial class AbiMethodBodyFactory
     {
         string rawName = p.Parameter.Name ?? "param";
         string pname = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
+
         if (p.Type is CorLibTypeSignature corlib &&
             corlib.ElementType == ElementType.Boolean)
         {
