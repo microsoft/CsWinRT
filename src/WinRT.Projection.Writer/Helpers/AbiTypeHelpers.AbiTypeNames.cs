@@ -22,9 +22,11 @@ internal static partial class AbiTypeHelpers
     {
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
-        IndentedTextWriter scratchProj = new();
+        IndentedTextWriter scratchProj = IndentedTextWriterPool.GetOrCreate();
         MethodFactory.WriteProjectedSignature(scratchProj, context, sig, false);
-        return scratchProj.ToString();
+        string result = scratchProj.ToString();
+        IndentedTextWriterPool.Return(scratchProj);
+        return result;
     }
 
     /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).

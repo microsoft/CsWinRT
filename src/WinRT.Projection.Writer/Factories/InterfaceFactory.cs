@@ -183,9 +183,11 @@ internal static class InterfaceFactory
         TypeSignature? typeSig = prop.Signature?.ReturnType;
         if (typeSig is null) { return "object"; }
         if (genericContext is not null) { typeSig = typeSig.InstantiateGenericTypes(genericContext.Value); }
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         MethodFactory.WriteProjectedSignature(scratch, context, typeSig, isSetProperty);
-        return scratch.ToString();
+        string result = scratch.ToString();
+        IndentedTextWriterPool.Return(scratch);
+        return result;
     }
 
     /// <summary>

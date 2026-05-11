@@ -97,9 +97,10 @@ internal static partial class ConstructorFactory
             string marshalingType = GetMarshalingTypeName(classType);
             // Compute the platform attribute string from the activation factory interface's
             // [ContractVersion] attribute
-            IndentedTextWriter scratchPlatform = new();
+            IndentedTextWriter scratchPlatform = IndentedTextWriterPool.GetOrCreate();
             CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, factoryType);
             string platformAttribute = scratchPlatform.ToString();
+            IndentedTextWriterPool.Return(scratchPlatform);
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {

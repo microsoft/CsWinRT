@@ -53,9 +53,10 @@ internal static class ObjRefNameGenerator
         {
             // Generic instantiation: always use fully qualified name (with global::) for the objref
             // name computation, so the resulting field name is unique across namespaces.
-            IndentedTextWriter scratch = new();
+            IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
             WriteFullyQualifiedInterfaceName(scratch, context, ifaceType);
             projected = scratch.ToString();
+            IndentedTextWriterPool.Return(scratch);
         }
         return "_objRef_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
@@ -179,9 +180,11 @@ internal static class ObjRefNameGenerator
     internal static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         TypedefNameWriter.WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
-        return "IID_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
+        string result = "IID_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
+        IndentedTextWriterPool.Return(scratch);
+        return result;
     }
     /// <summary>
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic

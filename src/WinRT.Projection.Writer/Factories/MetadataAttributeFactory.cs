@@ -178,10 +178,11 @@ internal static class MetadataAttributeFactory
         }
 
         // Capture the projected type name as a string by writing into a scratch writer at indent 0.
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
+        IndentedTextWriterPool.Return(scratch);
 
         writer.WriteLine();
         writer.Write($$"""
@@ -228,10 +229,11 @@ internal static class MetadataAttributeFactory
     /// <param name="isValueType">When <see langword="true"/>, wraps the projected type in <c>Windows.Foundation.IReference`1&lt;...&gt;</c>.</param>
     public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool isValueType)
     {
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
+        IndentedTextWriterPool.Return(scratch);
 
         writer.WriteLine();
         writer.Write("""
@@ -339,10 +341,11 @@ internal static class MetadataAttributeFactory
 
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
         TypedefNameWriter.WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
         string interfaceName = scratch.ToString();
+        IndentedTextWriterPool.Return(scratch);
 
         _ = entries.TryAdd(className, interfaceName);
     }
@@ -386,10 +389,11 @@ internal static class MetadataAttributeFactory
                     TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
                     if (resolved is not null) { capturedIface = resolved; }
                 }
-                IndentedTextWriter scratch = new();
+                IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
                 TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
                 TypedefNameWriter.WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
                 string interfaceName = scratch.ToString();
+                IndentedTextWriterPool.Return(scratch);
                 entries.Add(new KeyValuePair<string, string>(className, interfaceName));
             }
         }
@@ -400,7 +404,7 @@ internal static class MetadataAttributeFactory
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
-        IndentedTextWriter w = new();
+        IndentedTextWriter w = IndentedTextWriterPool.GetOrCreate();
         WriteFileHeader(w);
         w.Write("""
             using System;
@@ -420,6 +424,7 @@ internal static class MetadataAttributeFactory
             }
             """, isMultiline: true);
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeDefaultInterfaces.cs"));
+        IndentedTextWriterPool.Return(w);
     }
 
     /// <summary>
@@ -428,7 +433,7 @@ internal static class MetadataAttributeFactory
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
-        IndentedTextWriter w = new();
+        IndentedTextWriter w = IndentedTextWriterPool.GetOrCreate();
         WriteFileHeader(w);
         w.Write("""
             using System;
@@ -448,5 +453,6 @@ internal static class MetadataAttributeFactory
             }
             """, isMultiline: true);
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeExclusiveToInterfaces.cs"));
+        IndentedTextWriterPool.Return(w);
     }
 }

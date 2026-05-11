@@ -26,7 +26,7 @@ internal sealed partial class ProjectionGenerator
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
         HashSet<TypeDefinition> componentActivatable = state.ComponentActivatable;
         ProjectionEmitContext context = new(_settings, _cache, ns);
-        IndentedTextWriter writer = new();
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
 
         writer.WriteFileHeader(context);
 
@@ -188,6 +188,7 @@ internal sealed partial class ProjectionGenerator
         string filename = ns + ".cs";
         string fullPath = Path.Combine(_settings.OutputFolder, filename);
         writer.FlushToFile(fullPath);
+        IndentedTextWriterPool.Return(writer);
         return true;
     }
 }

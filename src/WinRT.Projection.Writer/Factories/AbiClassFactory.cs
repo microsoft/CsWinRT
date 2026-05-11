@@ -66,9 +66,10 @@ internal static class AbiClassFactory
         {
             if (defaultIface is not null)
             {
-                IndentedTextWriter scratchDefaultIid = new();
+                IndentedTextWriter scratchDefaultIid = IndentedTextWriterPool.GetOrCreate();
                 ObjRefNameGenerator.WriteIidExpression(scratchDefaultIid, context, defaultIface);
                 defaultIfaceIid = scratchDefaultIid.ToString();
+                IndentedTextWriterPool.Return(scratchDefaultIid);
             }
             else
             {
@@ -87,9 +88,10 @@ internal static class AbiClassFactory
         {
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
             // marshallers run inside #nullable enable).
-            IndentedTextWriter scratchAccessor = new();
+            IndentedTextWriter scratchAccessor = IndentedTextWriterPool.GetOrCreate();
             ObjRefNameGenerator.EmitUnsafeAccessorForIid(scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
             string accessorBlock = scratchAccessor.ToString();
+            IndentedTextWriterPool.Return(scratchAccessor);
             // Re-emit each line indented by 8 spaces.
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
             foreach (string accessorLine in accessorLines)
@@ -189,9 +191,10 @@ internal static class AbiClassFactory
         string defaultIfaceIid;
         if (defaultIface is not null)
         {
-            IndentedTextWriter scratchIid = new();
+            IndentedTextWriter scratchIid = IndentedTextWriterPool.GetOrCreate();
             ObjRefNameGenerator.WriteIidExpression(scratchIid, context, defaultIface);
             defaultIfaceIid = scratchIid.ToString();
+            IndentedTextWriterPool.Return(scratchIid);
         }
         else
         {
@@ -228,9 +231,10 @@ internal static class AbiClassFactory
         }
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
-            IndentedTextWriter scratchDefIfaceTypeName = new();
+            IndentedTextWriter scratchDefIfaceTypeName = IndentedTextWriterPool.GetOrCreate();
             TypedefNameWriter.WriteTypeName(scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
             string defIfaceTypeName = scratchDefIfaceTypeName.ToString();
+            IndentedTextWriterPool.Return(scratchDefIfaceTypeName);
             writer.Write($$"""
                         if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
                         {

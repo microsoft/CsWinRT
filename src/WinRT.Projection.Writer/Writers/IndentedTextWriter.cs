@@ -413,6 +413,18 @@ internal sealed class IndentedTextWriter
     }
 
     /// <summary>
+    /// Clears the underlying buffer and resets the current indentation level back to zero.
+    /// Used by <see cref="IndentedTextWriterPool.GetOrCreate"/> to recycle a returned writer
+    /// before handing it back out, so callers always observe a fully reset writer regardless
+    /// of how the previous lease left it.
+    /// </summary>
+    public void Clear()
+    {
+        _ = _buffer.Clear();
+        ResetIndent();
+    }
+
+    /// <summary>
     /// Flushes the current buffer to <paramref name="path"/> (skipping the write if the file
     /// already exists with identical content), then clears the buffer.
     /// </summary>

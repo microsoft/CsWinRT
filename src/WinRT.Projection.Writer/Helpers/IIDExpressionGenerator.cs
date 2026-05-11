@@ -148,10 +148,11 @@ internal static partial class IIDExpressionGenerator
     /// </summary>
     public static void WriteIidGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
+        IndentedTextWriterPool.Return(scratch);
         writer.Write($"IID_{name}");
     }
     /// <summary>
@@ -159,10 +160,11 @@ internal static partial class IIDExpressionGenerator
     /// </summary>
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
+        IndentedTextWriterPool.Return(scratch);
         writer.Write($"IID_{name}Reference");
     }
     /// <summary>
@@ -331,9 +333,10 @@ internal static partial class IIDExpressionGenerator
     /// </summary>
     public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
         WriteGuidSignature(scratch, context, new TypeSemantics.Definition(type));
         string guidSig = scratch.ToString();
+        IndentedTextWriterPool.Return(scratch);
         string ireferenceGuidSig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guidSig + ")";
         Guid guidValue = GuidGenerator.Generate(ireferenceGuidSig);
         byte[] bytes = guidValue.ToByteArray();

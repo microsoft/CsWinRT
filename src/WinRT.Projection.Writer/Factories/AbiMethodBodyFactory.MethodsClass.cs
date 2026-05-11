@@ -121,9 +121,10 @@ internal static partial class AbiMethodBodyFactory
             string eventSourceProjectedFull;
             if (isGenericEvent)
             {
-                IndentedTextWriter scratchEvSrcGeneric = new();
+                IndentedTextWriter scratchEvSrcGeneric = IndentedTextWriterPool.GetOrCreate();
                 TypedefNameWriter.WriteTypeName(scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
                 eventSourceProjectedFull = scratchEvSrcGeneric.ToString();
+                IndentedTextWriterPool.Return(scratchEvSrcGeneric);
                 if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
                 {
                     eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;

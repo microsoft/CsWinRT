@@ -282,9 +282,10 @@ internal static class AbiInterfaceFactory
         else
         {
             {
-                IndentedTextWriter scratchIfaceFullName = new();
+                IndentedTextWriter scratchIfaceFullName = IndentedTextWriterPool.GetOrCreate();
                 TypedefNameWriter.WriteTypedefName(scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
                 ifaceFullName = scratchIfaceFullName.ToString();
+                IndentedTextWriterPool.Return(scratchIfaceFullName);
             }
             if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ifaceFullName = GlobalPrefix + ifaceFullName; }
         }

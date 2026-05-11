@@ -199,9 +199,10 @@ internal static partial class ClassMembersFactory
         // — note this is the ungenerified Methods class for generic interfaces
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
-        IndentedTextWriter scratchAbiClass = new();
+        IndentedTextWriter scratchAbiClass = IndentedTextWriterPool.GetOrCreate();
         TypedefNameWriter.WriteTypedefName(scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
         string abiClass = scratchAbiClass.ToString();
+        IndentedTextWriterPool.Return(scratchAbiClass);
         if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
             abiClass = GlobalPrefix + abiClass;
@@ -214,9 +215,10 @@ internal static partial class ClassMembersFactory
         string genericInteropType = string.Empty;
         if (isGenericInterface && currentInstance is not null)
         {
-            IndentedTextWriter scratchProjectedParent = new();
+            IndentedTextWriter scratchProjectedParent = IndentedTextWriterPool.GetOrCreate();
             TypedefNameWriter.WriteTypeName(scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
             string projectedParent = scratchProjectedParent.ToString();
+            IndentedTextWriterPool.Return(scratchProjectedParent);
             genericParentEncoded = IIDExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
@@ -226,9 +228,10 @@ internal static partial class ClassMembersFactory
         // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
         // immediately if not ref)
-        IndentedTextWriter scratchPlatform = new();
+        IndentedTextWriter scratchPlatform = IndentedTextWriterPool.GetOrCreate();
         CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, ifaceType);
         string platformAttribute = scratchPlatform.ToString();
+        IndentedTextWriterPool.Return(scratchPlatform);
 
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
@@ -433,9 +436,10 @@ internal static partial class ClassMembersFactory
             }
             else
             {
-                IndentedTextWriter scratchEventSource = new();
+                IndentedTextWriter scratchEventSource = IndentedTextWriterPool.GetOrCreate();
                 TypedefNameWriter.WriteTypeName(scratchEventSource, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
                 eventSourceType = scratchEventSource.ToString();
+                IndentedTextWriterPool.Return(scratchEventSource);
             }
             string eventSourceTypeFull = eventSourceType;
             if (!eventSourceTypeFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))

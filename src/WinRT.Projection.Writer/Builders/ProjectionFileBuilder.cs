@@ -182,9 +182,10 @@ internal static class ProjectionFileBuilder
         {
             if (field.IsStatic || field.Signature is null) { continue; }
             TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
-            IndentedTextWriter scratch = new();
+            IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
             TypedefNameWriter.WriteProjectionType(scratch, context, semantics);
             string fieldType = scratch.ToString();
+            IndentedTextWriterPool.Return(scratch);
             string fieldName = field.Name?.Value ?? string.Empty;
             string paramName = ToCamelCase(fieldName);
             bool isInterface = false;

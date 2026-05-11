@@ -51,9 +51,10 @@ internal sealed partial class ProjectionGenerator
             }
 
             // Each base resource gets the standard auto-generated file header prepended.
-            IndentedTextWriter headerWriter = new();
+            IndentedTextWriter headerWriter = IndentedTextWriterPool.GetOrCreate();
             MetadataAttributeFactory.WriteFileHeader(headerWriter);
             string header = headerWriter.FlushToString();
+            IndentedTextWriterPool.Return(headerWriter);
 
             string outPath = Path.Combine(_settings.OutputFolder, fileName);
             File.WriteAllText(outPath, header + content);

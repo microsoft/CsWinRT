@@ -52,7 +52,7 @@ internal sealed partial class ProjectionGenerator
         bool iidWritten = false;
         HashSet<TypeDefinition> interfacesFromClassesEmitted = [];
         ProjectionEmitContext guidContext = new(_settings, _cache, "ABI");
-        IndentedTextWriter guidIndented = new();
+        IndentedTextWriter guidIndented = IndentedTextWriterPool.GetOrCreate();
         IIDExpressionGenerator.WriteInterfaceIidsBegin(guidIndented);
         // Iterate namespaces in sorted order. Within each namespace, types are already sorted by SortMembersByName.
         // The sorted-by-namespace order produces the parent-before-child grouping in the
@@ -96,5 +96,6 @@ internal sealed partial class ProjectionGenerator
         {
             guidIndented.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));
         }
+        IndentedTextWriterPool.Return(guidIndented);
     }
 }
