@@ -230,10 +230,7 @@ internal static class ClassFactory
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
-            IndentedTextWriter scratchAbiClass = IndentedTextWriterPool.GetOrCreate();
-            TypedefNameWriter.WriteTypedefName(scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
-            string abiClass = scratchAbiClass.ToString();
-            IndentedTextWriterPool.Return(scratchAbiClass);
+            string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true);
             if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
                 abiClass = GlobalPrefix + abiClass;
@@ -247,10 +244,7 @@ internal static class ClassFactory
 
             // Compute the platform attribute string from the static factory interface's
             // [ContractVersion] attribute
-            IndentedTextWriter scratchPlatform = IndentedTextWriterPool.GetOrCreate();
-            CustomAttributeFactory.WritePlatformAttribute(scratchPlatform, context, staticIface);
-            string platformAttribute = scratchPlatform.ToString();
-            IndentedTextWriterPool.Return(scratchPlatform);
+            string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, staticIface);
 
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)

@@ -318,10 +318,7 @@ internal static class StructEnumMarshallerFactory
         // unboxing to the ABI struct.
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            IndentedTextWriter scratchIidRefExpr = IndentedTextWriterPool.GetOrCreate();
-            ObjRefNameGenerator.WriteIidReferenceExpression(scratchIidRefExpr, type);
-            string iidRefExpr = scratchIidRefExpr.ToString();
-            IndentedTextWriterPool.Return(scratchIidRefExpr);
+            string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
             // InterfaceEntriesImpl
             writer.Write($$"""

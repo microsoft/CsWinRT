@@ -283,10 +283,7 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static string WriteTypeNameToString(ProjectionEmitContext context, TypeSemantics arg, TypedefNameType nameType, bool forceQualified)
     {
-        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypeName(scratch, context, arg, nameType, forceQualified);
-        string result = scratch.ToString();
-        IndentedTextWriterPool.Return(scratch);
+        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified);
         return result;
     }
 

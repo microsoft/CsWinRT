@@ -163,10 +163,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-            IndentedTextWriter scratchProjType = IndentedTextWriterPool.GetOrCreate();
-            MethodFactory.WriteProjectedSignature(scratchProjType, context, p.Type, false);
-            string projectedTypeName = scratchProjType.ToString();
-            IndentedTextWriterPool.Return(scratchProjType);
+            string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
             writer.Write($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                         static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -375,10 +372,7 @@ internal static partial class ConstructorFactory
             }
             else
             {
-                IndentedTextWriter scratchElement = IndentedTextWriterPool.GetOrCreate();
-                TypedefNameWriter.WriteProjectionType(scratchElement, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementProjected = scratchElement.ToString();
-                IndentedTextWriterPool.Return(scratchElement);
+                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;
                 writer.Write($$"""
@@ -564,10 +558,7 @@ internal static partial class ConstructorFactory
     {
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         if (defaultIface is null) { return "default(global::System.Guid)"; }
-        IndentedTextWriter scratchIid = IndentedTextWriterPool.GetOrCreate();
-        ObjRefNameGenerator.WriteIidExpression(scratchIid, context, defaultIface);
-        string result = scratchIid.ToString();
-        IndentedTextWriterPool.Return(scratchIid);
+        string result = ObjRefNameGenerator.WriteIidExpression(context, defaultIface);
         return result;
     }
 }

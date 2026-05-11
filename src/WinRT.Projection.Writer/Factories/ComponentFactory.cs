@@ -30,17 +30,9 @@ internal static class ComponentFactory
         {
             return;
         }
-        IndentedTextWriter scratch1 = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratch1, context, type, TypedefNameType.Projected, true);
-        TypedefNameWriter.WriteTypeParams(scratch1, type);
-        string typeName = scratch1.ToString();
-        IndentedTextWriterPool.Return(scratch1);
+        string typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
 
-        IndentedTextWriter scratch2 = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratch2, context, type, TypedefNameType.CCW, true);
-        TypedefNameWriter.WriteTypeParams(scratch2, type);
-        string metadataTypeName = scratch2.ToString();
-        IndentedTextWriterPool.Return(scratch2);
+        string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true);
 
         _ = map.TryAdd(typeName, metadataTypeName);
     }

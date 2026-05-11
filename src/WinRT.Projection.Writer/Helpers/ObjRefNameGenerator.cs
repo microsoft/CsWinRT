@@ -53,10 +53,7 @@ internal static class ObjRefNameGenerator
         {
             // Generic instantiation: always use fully qualified name (with global::) for the objref
             // name computation, so the resulting field name is unique across namespaces.
-            IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
-            WriteFullyQualifiedInterfaceName(scratch, context, ifaceType);
-            projected = scratch.ToString();
-            IndentedTextWriterPool.Return(scratch);
+            projected = WriteFullyQualifiedInterfaceName(context, ifaceType);
         }
         return "_objRef_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
@@ -118,6 +115,23 @@ internal static class ObjRefNameGenerator
     }
 
     /// <summary>
+    /// Convenience overload of <see cref="WriteFullyQualifiedInterfaceName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the fully-qualified interface name into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="ifaceType">The interface type whose fully-qualified name is emitted.</param>
+    /// <returns>The emitted fully-qualified interface name.</returns>
+    private static string WriteFullyQualifiedInterfaceName(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteFullyQualifiedInterfaceName(writer, context, ifaceType);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
     /// Writes the IID expression for the given interface impl (used as the second arg to
     /// <c>NativeObjectReference.As(...)</c>).
     /// </summary>
@@ -173,6 +187,23 @@ internal static class ObjRefNameGenerator
             writer.Write($"global::ABI.InterfaceIIDs.IID_{id}");
         }
     }
+
+    /// <summary>
+    /// Convenience overload of <see cref="WriteIidExpression(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the IID expression into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="ifaceType">The interface type whose IID expression is emitted.</param>
+    /// <returns>The emitted IID expression.</returns>
+    public static string WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteIidExpression(writer, context, ifaceType);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
     /// <summary>
     /// Builds the IID property name for a generic interface instantiation.
     /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
@@ -180,11 +211,9 @@ internal static class ObjRefNameGenerator
     internal static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
-        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
-        string result = "IID_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
-        IndentedTextWriterPool.Return(scratch);
-        return result;
+        return "IID_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(
+            TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true),
+            stripGlobal: true, stripGlobalABI: true);
     }
     /// <summary>
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
@@ -206,6 +235,24 @@ internal static class ObjRefNameGenerator
         if (isInNullableContext) { writer.Write("?"); }
         writer.WriteLine(" _);");
     }
+
+    /// <summary>
+    /// Convenience overload of <see cref="EmitUnsafeAccessorForIid(IndentedTextWriter, ProjectionEmitContext, GenericInstanceTypeSignature, bool)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the [UnsafeAccessor] declaration into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
+    /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is <c>object?</c>; otherwise <c>object</c>.</param>
+    /// <returns>The emitted [UnsafeAccessor] declaration.</returns>
+    internal static string EmitUnsafeAccessorForIid(ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        EmitUnsafeAccessorForIid(writer, context, gi, isInNullableContext);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
     private static string EscapeIdentifier(string s)
     {
         System.Text.StringBuilder sb = new(s.Length);
@@ -225,6 +272,22 @@ internal static class ObjRefNameGenerator
         string abiQualified = GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         string id = IIDExpressionGenerator.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         writer.Write($"global::ABI.InterfaceIIDs.IID_{id}Reference");
+    }
+
+    /// <summary>
+    /// Convenience overload of <see cref="WriteIidReferenceExpression(IndentedTextWriter, TypeDefinition)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the IID reference expression into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="type">The value type whose IReference&lt;T&gt; IID expression is emitted.</param>
+    /// <returns>The emitted IID reference expression.</returns>
+    public static string WriteIidReferenceExpression(TypeDefinition type)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteIidReferenceExpression(writer, type);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
     }
     /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on

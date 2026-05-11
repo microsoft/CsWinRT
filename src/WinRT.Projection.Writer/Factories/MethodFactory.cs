@@ -53,6 +53,24 @@ internal static class MethodFactory
     }
 
     /// <summary>
+    /// Convenience overload of <see cref="WriteProjectedSignature(IndentedTextWriter, ProjectionEmitContext, TypeSignature, bool)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the projected signature into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="typeSig">The signature to project.</param>
+    /// <param name="isParameter">When <see langword="true"/>, projects SZ-arrays as <see cref="System.ReadOnlySpan{T}"/> (parameter convention) instead of <c>T[]</c>.</param>
+    /// <returns>The projected signature.</returns>
+    public static string WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteProjectedSignature(writer, context, typeSig, isParameter);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
     /// Writes a parameter's projected type, applying the <see cref="ParameterCategory"/>-specific transformations.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>

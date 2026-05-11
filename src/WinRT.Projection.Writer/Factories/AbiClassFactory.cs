@@ -64,17 +64,9 @@ internal static class AbiClassFactory
         }
         else
         {
-            if (defaultIface is not null)
-            {
-                IndentedTextWriter scratchDefaultIid = IndentedTextWriterPool.GetOrCreate();
-                ObjRefNameGenerator.WriteIidExpression(scratchDefaultIid, context, defaultIface);
-                defaultIfaceIid = scratchDefaultIid.ToString();
-                IndentedTextWriterPool.Return(scratchDefaultIid);
-            }
-            else
-            {
-                defaultIfaceIid = "default(global::System.Guid)";
-            }
+            defaultIfaceIid = defaultIface is not null
+                ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface)
+                : "default(global::System.Guid)";
         }
 
         writer.WriteLine();
@@ -88,10 +80,7 @@ internal static class AbiClassFactory
         {
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
             // marshallers run inside #nullable enable).
-            IndentedTextWriter scratchAccessor = IndentedTextWriterPool.GetOrCreate();
-            ObjRefNameGenerator.EmitUnsafeAccessorForIid(scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
-            string accessorBlock = scratchAccessor.ToString();
-            IndentedTextWriterPool.Return(scratchAccessor);
+            string accessorBlock = ObjRefNameGenerator.EmitUnsafeAccessorForIid(context, defaultGenericInst, isInNullableContext: true);
             // Re-emit each line indented by 8 spaces.
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
             foreach (string accessorLine in accessorLines)
@@ -188,18 +177,9 @@ internal static class AbiClassFactory
 
         // Get the IID expression for the default interface (used by CreateObject).
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-        string defaultIfaceIid;
-        if (defaultIface is not null)
-        {
-            IndentedTextWriter scratchIid = IndentedTextWriterPool.GetOrCreate();
-            ObjRefNameGenerator.WriteIidExpression(scratchIid, context, defaultIface);
-            defaultIfaceIid = scratchIid.ToString();
-            IndentedTextWriterPool.Return(scratchIid);
-        }
-        else
-        {
-            defaultIfaceIid = "default(global::System.Guid)";
-        }
+        string defaultIfaceIid = defaultIface is not null
+            ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface)
+            : "default(global::System.Guid)";
 
         // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute].
         // The same value is used for both the marshaller attribute and the callback.
@@ -231,10 +211,7 @@ internal static class AbiClassFactory
         }
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
-            IndentedTextWriter scratchDefIfaceTypeName = IndentedTextWriterPool.GetOrCreate();
-            TypedefNameWriter.WriteTypeName(scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
-            string defIfaceTypeName = scratchDefIfaceTypeName.ToString();
-            IndentedTextWriterPool.Return(scratchDefIfaceTypeName);
+            string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
             writer.Write($$"""
                         if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
                         {

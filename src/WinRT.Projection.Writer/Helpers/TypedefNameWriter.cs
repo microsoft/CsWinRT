@@ -116,6 +116,47 @@ internal static class TypedefNameWriter
     }
 
     /// <summary>
+    /// Convenience overload of <see cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the typedef name into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition to emit the name of.</param>
+    /// <param name="nameType">The kind of name to emit (projected, non-projected, ABI, etc.).</param>
+    /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
+    /// <returns>The emitted typedef name.</returns>
+    public static string WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
+    /// Convenience helper that emits the typedef name immediately followed by the generic
+    /// parameter list (e.g. <c>Foo&lt;T0, T1&gt;</c>) into a pooled writer and returns the
+    /// resulting string. Equivalent to calling
+    /// <see cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
+    /// followed by <see cref="WriteTypeParams(IndentedTextWriter, TypeDefinition)"/>.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The (potentially generic) type definition.</param>
+    /// <param name="nameType">The kind of name to emit.</param>
+    /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
+    /// <returns>The emitted typedef name + generic-parameter list.</returns>
+    public static string WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
+        WriteTypeParams(writer, type);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
     /// Writes <c>&lt;T1, T2&gt;</c> for generic types.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -255,12 +296,65 @@ internal static class TypedefNameWriter
     }
 
     /// <summary>
+    /// Convenience overload of <see cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the type name into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="semantics">The semantic representation of the type.</param>
+    /// <param name="nameType">The kind of name to emit.</param>
+    /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
+    /// <returns>The emitted type name.</returns>
+    public static string WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
+    /// Convenience overload of <see cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the projected type name into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="semantics">The semantic representation of the type.</param>
+    /// <returns>The emitted projected type name.</returns>
+    public static string WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteProjectionType(writer, context, semantics);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
     /// Writes the event handler type for an EventDefinition. Handles all the cases:
     /// TypeDefinition, TypeReference, TypeSpecification (generic instances like <c>EventHandler&lt;T&gt;</c>),
     /// and any other ITypeDefOrRef.
     /// </summary>
     public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt)
         => WriteEventType(writer, context, evt, null);
+
+    /// <summary>
+    /// Convenience overload of <see cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the event handler type into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="evt">The event definition whose handler type is emitted.</param>
+    /// <returns>The emitted event handler type name.</returns>
+    public static string WriteEventType(ProjectionEmitContext context, EventDefinition evt)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteEventType(writer, context, evt, null);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
 
     /// <summary>
     /// Same as <see cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition)"/>

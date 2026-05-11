@@ -97,14 +97,8 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
-                    IndentedTextWriter scratchKeyText = IndentedTextWriterPool.GetOrCreate();
-                    TypedefNameWriter.WriteTypeName(scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
-                    string keyText = scratchKeyText.ToString();
-                    IndentedTextWriterPool.Return(scratchKeyText);
-                    IndentedTextWriter scratchValueText = IndentedTextWriterPool.GetOrCreate();
-                    TypedefNameWriter.WriteTypeName(scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
-                    string valueText = scratchValueText.ToString();
-                    IndentedTextWriterPool.Return(scratchValueText);
+                    string keyText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
@@ -120,10 +114,7 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
-                    IndentedTextWriter scratchElementText = IndentedTextWriterPool.GetOrCreate();
-                    TypedefNameWriter.WriteTypeName(scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
-                    string elementText = scratchElementText.ToString();
-                    IndentedTextWriterPool.Return(scratchElementText);
+                    string elementText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
@@ -243,10 +234,7 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
-        IndentedTextWriter scratchCcwIfaceName = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
-        string ccwIfaceName = scratchCcwIfaceName.ToString();
-        IndentedTextWriterPool.Return(scratchCcwIfaceName);
+        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
         if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
 
         foreach (MethodDefinition method in type.Methods)
@@ -369,16 +357,10 @@ internal static class AbiInterfaceIDicFactory
     internal static void WriteInterfaceIdicImplMembersForInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
-        IndentedTextWriter scratchCcwIfaceName = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
-        string ccwIfaceName = scratchCcwIfaceName.ToString();
-        IndentedTextWriterPool.Return(scratchCcwIfaceName);
+        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
         if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
         // The static ABI Methods class name.
-        IndentedTextWriter scratchAbiClass = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
-        string abiClass = scratchAbiClass.ToString();
-        IndentedTextWriterPool.Return(scratchAbiClass);
+        string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true);
         if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal)) { abiClass = GlobalPrefix + abiClass; }
 
         foreach (MethodDefinition method in type.Methods)

@@ -262,6 +262,24 @@ internal static class CustomAttributeFactory
     }
 
     /// <summary>
+    /// Convenience overload of <see cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the <c>[SupportedOSPlatform]</c> attribute (if any) into it, and returns the
+    /// resulting string. Returns the empty string when no attribute is emitted.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="member">The member to inspect for <c>[ContractVersion]</c>.</param>
+    /// <returns>The emitted attribute, or <see cref="string.Empty"/> when none.</returns>
+    public static string WritePlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WritePlatformAttribute(writer, context, member);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
+    /// <summary>
     /// Writes any custom attributes (e.g. <c>[Obsolete]</c>, <c>[Deprecated]</c>,
     /// <c>[SupportedOSPlatform]</c>) carried over from <paramref name="member"/> to the projection.
     /// </summary>

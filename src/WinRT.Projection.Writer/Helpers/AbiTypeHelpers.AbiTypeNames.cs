@@ -22,10 +22,7 @@ internal static partial class AbiTypeHelpers
     {
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
-        IndentedTextWriter scratchProj = IndentedTextWriterPool.GetOrCreate();
-        MethodFactory.WriteProjectedSignature(scratchProj, context, sig, false);
-        string result = scratchProj.ToString();
-        IndentedTextWriterPool.Return(scratchProj);
+        string result = MethodFactory.WriteProjectedSignature(context, sig, false);
         return result;
     }
 

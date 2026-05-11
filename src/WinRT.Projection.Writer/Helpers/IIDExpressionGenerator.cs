@@ -148,11 +148,7 @@ internal static partial class IIDExpressionGenerator
     /// </summary>
     public static void WriteIidGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
-        TypedefNameWriter.WriteTypeParams(scratch, type);
-        string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
-        IndentedTextWriterPool.Return(scratch);
+        string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true), true, true);
         writer.Write($"IID_{name}");
     }
     /// <summary>
@@ -160,11 +156,7 @@ internal static partial class IIDExpressionGenerator
     /// </summary>
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
-        TypedefNameWriter.WriteTypeParams(scratch, type);
-        string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
-        IndentedTextWriterPool.Return(scratch);
+        string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true), true, true);
         writer.Write($"IID_{name}Reference");
     }
     /// <summary>
@@ -268,6 +260,24 @@ internal static partial class IIDExpressionGenerator
                 break;
         }
     }
+
+    /// <summary>
+    /// Convenience overload of <see cref="WriteGuidSignature(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
+    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
+    /// emits the GUID signature into it, and returns the resulting string.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="semantics">The type semantics whose GUID signature is emitted.</param>
+    /// <returns>The emitted GUID signature.</returns>
+    public static string WriteGuidSignature(ProjectionEmitContext context, TypeSemantics semantics)
+    {
+        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        WriteGuidSignature(writer, context, semantics);
+        string result = writer.ToString();
+        IndentedTextWriterPool.Return(writer);
+        return result;
+    }
+
     private static void WriteGuidSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         TypeCategory cat = TypeCategorization.GetCategory(type);
@@ -333,10 +343,7 @@ internal static partial class IIDExpressionGenerator
     /// </summary>
     public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        IndentedTextWriter scratch = IndentedTextWriterPool.GetOrCreate();
-        WriteGuidSignature(scratch, context, new TypeSemantics.Definition(type));
-        string guidSig = scratch.ToString();
-        IndentedTextWriterPool.Return(scratch);
+        string guidSig = WriteGuidSignature(context, new TypeSemantics.Definition(type));
         string ireferenceGuidSig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guidSig + ")";
         Guid guidValue = GuidGenerator.Generate(ireferenceGuidSig);
         byte[] bytes = guidValue.ToByteArray();

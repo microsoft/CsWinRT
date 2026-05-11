@@ -25,10 +25,7 @@ internal static class EventTableFactory
     internal static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        IndentedTextWriter scratchEvtType = IndentedTextWriterPool.GetOrCreate();
-        TypedefNameWriter.WriteEventType(scratchEvtType, context, evt);
-        string evtType = scratchEvtType.ToString();
-        IndentedTextWriterPool.Return(scratchEvtType);
+        string evtType = TypedefNameWriter.WriteEventType(context, evt);
 
         writer.WriteLine();
         writer.Write($$"""
@@ -80,10 +77,7 @@ internal static class EventTableFactory
         if (isGeneric)
         {
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
-            IndentedTextWriter scratchProjectedTypeName = IndentedTextWriterPool.GetOrCreate();
-            MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, evtTypeSig, false);
-            string projectedTypeName = scratchProjectedTypeName.ToString();
-            IndentedTextWriterPool.Return(scratchProjectedTypeName);
+            string projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
             writer.Write($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                         static extern {{projectedTypeName}} ConvertToManaged([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);

@@ -204,10 +204,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter scratchProjectedTypeName = IndentedTextWriterPool.GetOrCreate();
-                MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, p.Type, false);
-                string projectedTypeName = scratchProjectedTypeName.ToString();
-                IndentedTextWriterPool.Return(scratchProjectedTypeName);
+                string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                 writer.Write($$"""
                             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -654,10 +651,7 @@ internal static partial class AbiMethodBodyFactory
                 // emits CopyToManaged_<name> to propagate the native fills into the user's
                 // managed Span<T>.
                 if (cat == ParameterCategory.FillArray) { continue; }
-                IndentedTextWriter scratchElementProjected = IndentedTextWriterPool.GetOrCreate();
-                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementProjected = scratchElementProjected.ToString();
-                IndentedTextWriterPool.Return(scratchElementProjected);
+                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -834,10 +828,7 @@ internal static partial class AbiMethodBodyFactory
             if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szFA.BaseType)) { continue; }
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            IndentedTextWriter scratchElementProjected = IndentedTextWriterPool.GetOrCreate();
-            TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
-            string elementProjected = scratchElementProjected.ToString();
-            IndentedTextWriterPool.Return(scratchElementProjected);
+            string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
@@ -893,10 +884,7 @@ internal static partial class AbiMethodBodyFactory
             if (uOut.IsGenericInstance())
             {
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter scratchProjectedTypeName = IndentedTextWriterPool.GetOrCreate();
-                MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, uOut, false);
-                string projectedTypeName = scratchProjectedTypeName.ToString();
-                IndentedTextWriterPool.Return(scratchProjectedTypeName);
+                string projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 writer.Write($$"""
                     {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                     {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -960,10 +948,7 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            IndentedTextWriter scratchElementProjected = IndentedTextWriterPool.GetOrCreate();
-            TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
-            string elementProjected = scratchElementProjected.ToString();
-            IndentedTextWriterPool.Return(scratchElementProjected);
+            string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
             // blittable structs; primitive ABI otherwise.
@@ -989,10 +974,7 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsReceiveArray)
             {
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt;
-                IndentedTextWriter scratchElementProjected = IndentedTextWriterPool.GetOrCreate();
-                TypedefNameWriter.WriteProjectionType(scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                string elementProjected = scratchElementProjected.ToString();
-                IndentedTextWriterPool.Return(scratchElementProjected);
+                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSz.BaseType));
                 string elementAbi = retSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType)
@@ -1034,10 +1016,7 @@ internal static partial class AbiMethodBodyFactory
                 else if (rt.IsGenericInstance())
                 {
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
-                    IndentedTextWriter scratchProjectedTypeName = IndentedTextWriterPool.GetOrCreate();
-                    MethodFactory.WriteProjectedSignature(scratchProjectedTypeName, context, rt, false);
-                    string projectedTypeName = scratchProjectedTypeName.ToString();
-                    IndentedTextWriterPool.Return(scratchProjectedTypeName);
+                    string projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.Write($$"""
                         {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                         {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_retval([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -1081,10 +1060,7 @@ internal static partial class AbiMethodBodyFactory
             else
             {
                 writer.Write($"{callIndent}return ");
-                IndentedTextWriter scratchProjected = IndentedTextWriterPool.GetOrCreate();
-                MethodFactory.WriteProjectedSignature(scratchProjected, context, rt!, false);
-                string projected = scratchProjected.ToString();
-                IndentedTextWriterPool.Return(scratchProjected);
+                string projected = MethodFactory.WriteProjectedSignature(context, rt!, false);
                 string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!);
                 if (projected == abiType) { writer.WriteLine("__retval;"); }
                 else
