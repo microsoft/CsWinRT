@@ -67,6 +67,7 @@ internal static partial class AbiTypeHelpers
                 _ => GetAbiFundamentalTypeFromCorLib(corlib.ElementType),
             };
         }
+
         // Enum: use the projected enum type as the ABI signature
         if (sig is TypeDefOrRefSignature td)
         {

@@ -215,6 +215,7 @@ internal static partial class ClassMembersFactory
                 isDefaultInterface = ReferenceEquals(defaultIface, ifaceType);
             }
         }
+
         // '!is_fast_abi_iface || is_default_interface'. For events on a fast-abi non-default
         // exclusive interface (e.g. ISimple5.Event0 on the Simple class), the inline
         // _eventSource_X field pattern is WRONG: the slot computed from the interface's own
@@ -245,7 +246,7 @@ internal static partial class ClassMembersFactory
         if (isGenericInterface && currentInstance is not null)
         {
             string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
-            genericParentEncoded = IIDExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
+            genericParentEncoded = IidExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
 
@@ -507,6 +508,7 @@ internal static partial class ClassMembersFactory
             {
                 eventSourceTypeFull = GlobalPrefix + eventSourceTypeFull;
             }
+
             // The "interop" type name string for the EventSource UnsafeAccessor (only needed for generic events).
             string eventSourceInteropType = isGenericEvent
                 ? InteropTypeNameWriter.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"

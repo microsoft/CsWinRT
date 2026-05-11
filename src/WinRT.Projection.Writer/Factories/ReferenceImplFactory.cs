@@ -166,6 +166,7 @@ internal static class ReferenceImplFactory
                 $"WriteReferenceImpl: unsupported type category {TypeCategorization.GetCategory(type)} " +
                 $"for type '{type.FullName}'. Expected enum/struct/delegate.");
         }
+
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
         writer.WriteLine();
         writer.Write("""
@@ -174,7 +175,7 @@ internal static class ReferenceImplFactory
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref global::ABI.InterfaceIIDs.
             """, isMultiline: true);
-        IIDExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
+        IidExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
         writer.Write("""
             ;
                 }

@@ -42,6 +42,7 @@ internal static class ComponentFactory
 
         _ = map.TryAdd(typeName, metadataTypeName);
     }
+
     /// <summary>
     /// Writes the per-runtime-class server-activation-factory type for component mode.
     /// </summary>
@@ -161,6 +162,7 @@ internal static class ComponentFactory
 
         writer.WriteLine("}");
     }
+
     /// <summary>
     /// Writes a factory-class activatable wrapper method:
     /// <c>public T MethodName(args) =&gt; new T(args);</c>.

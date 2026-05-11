@@ -121,6 +121,7 @@ internal static class AbiInterfaceIDicFactory
 
                 continue;
             }
+
             // Special case: IObservableMap`2 and IObservableVector`1 are NOT mapped to BCL
             // interfaces (they retain WinRT names) but they DO need to forward their inherited
             // IDictionary/IList members for cast-based dispatch.
@@ -175,11 +176,13 @@ internal static class AbiInterfaceIDicFactory
 
                 continue;
             }
+
             // Skip generic interfaces with unbound params (we can't substitute T at this layer).
             if (required.GenericParameters.Count > 0)
             {
                 continue;
             }
+
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
             WriteInterfaceIdicImplMembersForRequiredInterfaces(writer, context, required, visited);
             WriteInterfaceIdicImplMembersForInheritedInterface(writer, context, required);
@@ -430,6 +433,7 @@ internal static class AbiInterfaceIDicFactory
         {
             ccwIfaceName = GlobalPrefix + ccwIfaceName;
         }
+
         // The static ABI Methods class name.
         string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true);
 

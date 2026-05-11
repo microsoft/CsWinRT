@@ -163,7 +163,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     {
         if (!_settings.ReferenceProjection)
         {
-            yield return new IIDsWorkItem(this);
+            yield return new IidsWorkItem(this);
         }
 
         foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)

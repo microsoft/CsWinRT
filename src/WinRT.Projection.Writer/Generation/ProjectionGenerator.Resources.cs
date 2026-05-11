@@ -31,6 +31,7 @@ internal sealed partial class ProjectionGenerator
             {
                 continue;
             }
+
             // Skip ComInteropExtensions if Windows is not included
             string fileName = resName[(resName.IndexOf(ResourcesBaseSegment, StringComparison.Ordinal) + ResourcesBaseSegment.Length)..];
 

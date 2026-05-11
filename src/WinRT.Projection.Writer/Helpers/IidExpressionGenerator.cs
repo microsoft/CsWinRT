@@ -22,7 +22,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// hash algorithm, the canonical hyphenated string form of a type's <c>[Guid]</c>, and the
 /// <c>byte</c>-list form used when initializing native IID storage.
 /// </summary>
-internal static partial class IIDExpressionGenerator
+internal static partial class IidExpressionGenerator
 {
     /// <summary>
     /// Returns the GUID-signature character code for a fundamental WinRT type.
@@ -132,6 +132,7 @@ internal static partial class IIDExpressionGenerator
         writer.Write("-");
         for (int i = 2; i < 8; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
     }
+
     /// <summary>
     /// Writes the GUID bytes for <paramref name="type"/> as a hex byte list.
     /// </summary>
@@ -166,6 +167,7 @@ internal static partial class IIDExpressionGenerator
         string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true), true, true);
         writer.Write($"IID_{name}");
     }
+
     /// <summary>
     /// Writes the property name <c>IID_XReference</c> for the reference IID property.
     /// </summary>
@@ -174,6 +176,7 @@ internal static partial class IIDExpressionGenerator
         string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true), true, true);
         writer.Write($"IID_{name}Reference");
     }
+
     /// <summary>
     /// Writes a static IID property whose body is built from the [Guid] attribute bytes.
     /// </summary>
@@ -201,6 +204,7 @@ internal static partial class IIDExpressionGenerator
             """, isMultiline: true);
         writer.WriteLine();
     }
+
     /// <summary>
     /// Writes the WinRT GUID parametric signature string for a type semantics.
     /// </summary>
@@ -418,6 +422,7 @@ internal static partial class IIDExpressionGenerator
             """, isMultiline: true);
         writer.WriteLine();
     }
+
     /// <summary>
     /// Emits IID properties for any not-included interfaces transitively implemented by a class.
     /// </summary>
@@ -429,6 +434,7 @@ internal static partial class IIDExpressionGenerator
             {
                 continue;
             }
+
             // Resolve TypeRef -> TypeDefinition via metadata cache (so we pick up cross-module
             // inherited interfaces, e.g. Windows.UI.Composition.IAnimationObject from a XAML class).
             TypeDefinition? ifaceType = impl.Interface as TypeDefinition;
@@ -450,16 +456,19 @@ internal static partial class IIDExpressionGenerator
             {
                 continue;
             }
+
             // Skip generic interfaces
             if (ifaceType.GenericParameters.Count != 0)
             {
                 continue;
             }
+
             // Skip already-emitted
             if (interfacesEmitted.Contains(ifaceType))
             {
                 continue;
             }
+
             // Only emit if the interface is not in the projection (otherwise it'll be emitted naturally)
             if (!context.Settings.Filter.Includes(ifaceType))
             {

@@ -113,6 +113,7 @@ internal static partial class AbiMethodBodyFactory
                 """, isMultiline: true);
                 writer.WriteLine();
             }
+
             // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
             // top of the method body, before locals and the try block. The actual call sites later
             // in the body reference these already-declared accessors.
@@ -167,6 +168,7 @@ internal static partial class AbiMethodBodyFactory
                 """, isMultiline: true);
                 writer.WriteLine();
             }
+
             // the OUT pointer(s). The actual assignment happens inside the try block.
             if (rt is not null)
             {
@@ -205,6 +207,7 @@ internal static partial class AbiMethodBodyFactory
                     writer.WriteLine($"*{retParamName} = default;");
                 }
             }
+
             // For each out parameter, clear the destination and declare a local.
             // NOTE: Ref params (WinRT 'in T' / 'ref const T') are READ-ONLY inputs from the caller's
             // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
@@ -240,6 +243,7 @@ internal static partial class AbiMethodBodyFactory
                 string projected = MethodFactory.WriteProjectedSignature(context, underlying, false);
                 writer.WriteLine($"{projected} __{raw} = default;");
             }
+
             // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
             // and declare a managed array local. The managed call passes 'out __<name>' and after
             // the call we copy to the ABI buffer via UnsafeAccessor.
@@ -263,6 +267,7 @@ internal static partial class AbiMethodBodyFactory
                     {{elementProjected}}[] __{{raw}} = default;
                 """, isMultiline: true);
             }
+
             // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
             // wraps the (length, pointer) pair from the ABI signature.
             // For non-blittable element types (string/runtime class/object), declare InlineArray16<T> +
@@ -509,6 +514,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 writer.WriteLine(");");
             }
+
             // After call: write back out params to caller's pointer.
             // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
             for (int i = 0; i < sig.Parameters.Count; i++)
@@ -530,6 +536,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.Write($"HStringMarshaller.ConvertToUnmanaged(__{raw})");
                 }
+
                 // Object/runtime class: <Marshaller>.ConvertToUnmanaged(...).DetachThisPtrUnsafe()
                 else if (underlying.IsObject())
                 {
@@ -539,12 +546,14 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
                 }
+
                 // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
                 // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
                 else if (underlying.IsGenericInstance())
                 {
                     writer.Write($"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()");
                 }
+
                 // For enums, function pointer signature uses the projected enum type, no cast needed.
                 // For bool, cast to byte. For char, cast to ushort.
                 else if (context.AbiTypeShapeResolver.IsEnumType(underlying))
@@ -561,6 +570,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.Write($"__{raw}");
                 }
+
                 // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
                 // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
                 // writing it into the *out ABI struct slot.write_marshal_from_managed
@@ -575,6 +585,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 writer.WriteLine(";");
             }
+
             // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
             // [UnsafeAccessor] declaration was hoisted to the top of the method body).
             for (int i = 0; i < sig.Parameters.Count; i++)
@@ -591,6 +602,7 @@ internal static partial class AbiMethodBodyFactory
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
             }
+
             // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
             // class/object/non-blittable struct), copy the managed delegate's writes back into the
             // native ABI buffer..
@@ -610,6 +622,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     continue;
                 }
+
                 // Blittable element types: Span wraps the native buffer; no copy-back needed.
                 if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szFA.BaseType))
                 {

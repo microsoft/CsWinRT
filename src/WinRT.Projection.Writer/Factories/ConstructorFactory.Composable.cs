@@ -52,6 +52,7 @@ internal static partial class ConstructorFactory
             {
                 methodIndex++; continue;
             }
+
             // Composable factory methods have signature like:
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.

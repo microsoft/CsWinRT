@@ -195,7 +195,7 @@ internal static class MappedInterfaceStubFactory
         string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
-        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
+        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
 
         writer.WriteLine();
         EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
@@ -316,7 +316,7 @@ internal static class MappedInterfaceStubFactory
     private static string EncodeArgIdentifier(ProjectionEmitContext context, TypeSemantics arg)
     {
         string projected = WriteTypeNameToString(context, arg, TypedefNameType.Projected, false);
-        return IIDExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+        return IidExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
 
     private static void EmitList(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)

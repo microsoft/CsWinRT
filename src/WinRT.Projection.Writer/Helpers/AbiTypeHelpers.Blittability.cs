@@ -26,6 +26,7 @@ internal static partial class AbiTypeHelpers
         {
             return false;
         }
+
         // struct itself has a mapped-type entry, return based on its RequiresMarshaling flag
         // BEFORE walking fields. This is critical for XAML structs like Duration / KeyTime /
         // RepeatBehavior which are self-mapped with RequiresMarshaling=false but have a
@@ -37,6 +38,7 @@ internal static partial class AbiTypeHelpers
         {
             return !mapping.RequiresMarshaling;
         }
+
         // Walk fields - all must be blittable
         foreach (FieldDefinition field in type.Fields)
         {
@@ -53,6 +55,13 @@ internal static partial class AbiTypeHelpers
         return true;
     }
 
+    /// <summary>
+    /// Returns whether <paramref name="sig"/>, treated as a struct-field type, is blittable
+    /// at the WinRT ABI. Used by <see cref="IsTypeBlittable"/> to walk struct fields.
+    /// </summary>
+    /// <param name="cache">The metadata cache used to resolve cross-module references.</param>
+    /// <param name="sig">The field signature to test.</param>
+    /// <returns><see langword="true"/> if the field's storage layout matches its ABI layout.</returns>
     internal static bool IsFieldTypeBlittable(MetadataCache cache, TypeSignature sig)
     {
         if (sig is CorLibTypeSignature corlib)
@@ -66,6 +75,7 @@ internal static partial class AbiTypeHelpers
                 _ => true
             };
         }
+
         // For TypeRef/TypeDef, resolve and check blittability.
         if (sig is TypeDefOrRefSignature todr)
         {
@@ -77,6 +87,7 @@ internal static partial class AbiTypeHelpers
             {
                 return true;
             }
+
             // Mapped struct types: blittable iff the mapping does NOT require marshalling
             MappedType? mapped = MappedTypes.Get(fNs, fName);
 
@@ -89,6 +100,7 @@ internal static partial class AbiTypeHelpers
             {
                 return IsTypeBlittable(cache, td);
             }
+
             // Cross-module: try metadata cache.
             if (todr.Type is TypeReference tr)
             {
@@ -167,6 +179,7 @@ internal static partial class AbiTypeHelpers
                 TypeCategory cat = TypeCategorization.GetCategory(def);
                 return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
             }
+
             // Cross-module typeref: try to resolve via the metadata cache to check category.
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
@@ -190,6 +203,7 @@ internal static partial class AbiTypeHelpers
                     return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
                 }
             }
+
             // Unresolved cross-assembly TypeRef (e.g. a referenced winmd we don't have loaded).
             // Fall back to the signature's encoding: WinRT metadata distinguishes value types
             // (encoded as ValueType) from reference types (encoded as Class). If the signature
@@ -223,6 +237,7 @@ internal static partial class AbiTypeHelpers
                 ElementType.R8 or
                 ElementType.Char;
         }
+
         // Enum (TypeDefOrRef-based value type with non-Object base) - same module or cross-module
         if (sig is TypeDefOrRefSignature td)
         {
@@ -230,6 +245,7 @@ internal static partial class AbiTypeHelpers
             {
                 return true;
             }
+
             // Cross-module enum: try to resolve via the metadata cache.
             if (td.Type is TypeReference tr)
             {
@@ -285,6 +301,7 @@ internal static partial class AbiTypeHelpers
         {
             return false;
         }
+
         // RequiresMarshaling, regardless of inner field layout. So for mapped types like
         // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
         {
@@ -297,6 +314,7 @@ internal static partial class AbiTypeHelpers
                 return false;
             }
         }
+
         // A struct is "complex" if it has any field that is not a blittable primitive nor an
         // almost-blittable struct (i.e. has a string/object/Nullable<T>/etc. field).
         foreach (FieldDefinition field in def.Fields)
@@ -348,6 +366,7 @@ internal static partial class AbiTypeHelpers
         {
             return false;
         }
+
         // Mapped struct types short-circuit based on the mapping's RequiresMarshaling flag
         // (only applies to actual structs, not mapped interfaces like IAsyncAction).
         if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
@@ -368,6 +387,7 @@ internal static partial class AbiTypeHelpers
         {
             return false;
         }
+
         // Reject if any instance field is a reference type (string/object/runtime class/etc.).
         foreach (FieldDefinition field in def.Fields)
         {
@@ -386,6 +406,7 @@ internal static partial class AbiTypeHelpers
                 { return false; }
                 continue;
             }
+
             // Recurse: nested struct must also pass IsAnyStruct, otherwise reject.
             if (IsBlittablePrimitive(cache, ft))
             {

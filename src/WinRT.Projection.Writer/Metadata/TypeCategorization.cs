@@ -74,6 +74,7 @@ internal static class TypeCategorization
         {
             return false;
         }
+
         // Check immediate base type for System.Attribute (winmd attribute types extend it directly).
         ITypeDefOrRef? cur = type.BaseType;
         while (cur is not null)
@@ -82,6 +83,7 @@ internal static class TypeCategorization
             {
                 return true;
             }
+
             // For attributes, the base type chain is short and we typically stop at a TypeRef
             // pointing to System.Attribute. We don't try to resolve further.
             return false;

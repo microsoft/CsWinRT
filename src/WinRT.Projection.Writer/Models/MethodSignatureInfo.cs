@@ -59,11 +59,11 @@ internal sealed class MethodSignatureInfo
         Method = method;
         _params = new List<ParameterInfo>(method.Parameters.Count);
         ReturnParameter = null;
-        foreach (ParameterDefinition p in method.ParameterDefinitions)
+        foreach (ParameterDefinition parameter in method.ParameterDefinitions)
         {
-            if (p.Sequence == 0)
+            if (parameter.Sequence == 0)
             {
-                ReturnParameter = p;
+                ReturnParameter = parameter;
                 break;
             }
         }

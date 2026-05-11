@@ -81,6 +81,7 @@ internal static class CustomAttributeFactory
         {
             return "global::System.AttributeTargets.All";
         }
+
         // Map each bit to its corresponding enum name. Includes WinMD-specific values
         // that map to the same .NET enum (e.g., RuntimeClass=512 -> Class, ApiContract=8192 -> Struct).
         (uint Bit, string Name)[] entries =
@@ -259,6 +260,7 @@ internal static class CustomAttributeFactory
             {
                 return string.Empty;
             }
+
             // Only seed Platform on first non-empty observation: higher platforms emit but don't update Platform.
             context.SeedPlatform(platform);
         }

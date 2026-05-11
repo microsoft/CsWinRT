@@ -129,6 +129,7 @@ internal sealed class TypeFilter
         {
             return false;
         }
+
         // The rest of the rule (after 'namespace.') is matched as a prefix against typeName.
         string rest = rule[(typeNamespace.Length + 1)..];
         return typeName.StartsWith(rest, StringComparison.Ordinal);

@@ -24,6 +24,7 @@ internal static class ContractPlatforms
         {
             return string.Empty;
         }
+
         // Find the first version >= contractVersion.
         for (int i = 0; i < versions.Length; i++)
         {

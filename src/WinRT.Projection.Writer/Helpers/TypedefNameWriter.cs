@@ -219,6 +219,7 @@ internal static class TypedefNameWriter
                     {
                         writer.Write(", ");
                     }
+
                     // Generic args ALWAYS use Projected, regardless of parent's nameType.
                     WriteTypeName(writer, context, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                 }
@@ -410,6 +411,7 @@ internal static class TypedefNameWriter
         {
             sig = sig.InstantiateGenericTypes(new GenericContext(currentInstance, null));
         }
+
         // Special case for Microsoft.UI.Xaml.Input.ICommand.CanExecuteChanged: the WinRT event
         // handler is EventHandler<object> but C# expects non-generic EventHandler.
         if (evt.Name?.Value == "CanExecuteChanged"
@@ -428,6 +430,7 @@ internal static class TypedefNameWriter
                 return;
             }
         }
+
         // The outer EventHandler still gets 'global::System.' from being in a different namespace,
         // but type args in the same namespace stay unqualified.
         WriteTypeName(writer, context, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false);

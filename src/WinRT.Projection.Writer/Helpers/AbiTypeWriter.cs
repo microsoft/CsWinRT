@@ -123,6 +123,7 @@ internal static class AbiTypeWriter
                         writer.Write("global::ABI.System.Exception");
                         break;
                     }
+
                     // Look up the type by its ORIGINAL (unmapped) name in the cache.
                     TypeDefinition? rd = context.Cache.Find(rns + "." + rname);
                     // If not found, try the mapped name (for cases where the mapping target is in the cache).
@@ -174,6 +175,7 @@ internal static class AbiTypeWriter
                         }
                     }
                 }
+
                 // Unresolved cross-assembly TypeRef. If the signature was encoded as a value type
                 // (e.g. WindowId from Microsoft.UI.winmd when that winmd isn't loaded), assume it's
                 // a blittable struct and emit the projected type name — the consumer's compiler

@@ -135,6 +135,12 @@ internal abstract record TypeSemantics
 /// </summary>
 internal static class TypeSemanticsFactory
 {
+    /// <summary>
+    /// Resolves <paramref name="signature"/> into the discriminated <see cref="TypeSemantics"/>
+    /// shape used by the writer's emission paths.
+    /// </summary>
+    /// <param name="signature">The AsmResolver type signature to convert.</param>
+    /// <returns>The corresponding <see cref="TypeSemantics"/> case.</returns>
     public static TypeSemantics Get(TypeSignature signature)
     {
         return signature switch
@@ -151,6 +157,15 @@ internal static class TypeSemanticsFactory
         };
     }
 
+    /// <summary>
+    /// Resolves an <see cref="ITypeDefOrRef"/> into the corresponding <see cref="TypeSemantics"/>.
+    /// Recognizes the special-cased corlib types (<see cref="System.Object"/>, <see cref="System.Guid"/>,
+    /// <see cref="System.Type"/>) and falls back to <see cref="TypeSemantics.Definition"/> /
+    /// <see cref="TypeSemantics.Reference"/> for everything else.
+    /// </summary>
+    /// <param name="type">The type def-or-ref to convert.</param>
+    /// <param name="isValueType">Whether the type def-or-ref is known to be a value type (only used for the <see cref="TypeSemantics.Reference"/> case).</param>
+    /// <returns>The corresponding <see cref="TypeSemantics"/> case.</returns>
     public static TypeSemantics GetFromTypeDefOrRef(ITypeDefOrRef type, bool isValueType = false)
     {
         if (type is TypeDefinition def)
@@ -255,6 +270,12 @@ internal enum TypedefNameType
 /// </summary>
 internal static class FundamentalTypes
 {
+    /// <summary>
+    /// Returns the C# keyword form for <paramref name="t"/> (e.g. <c>"int"</c>, <c>"string"</c>),
+    /// or <c>"object"</c> for unrecognized cases.
+    /// </summary>
+    /// <param name="t">The fundamental type to format.</param>
+    /// <returns>The C# keyword.</returns>
     public static string ToCSharpType(FundamentalType t) => t switch
     {
         FundamentalType.Boolean => "bool",
@@ -273,6 +294,12 @@ internal static class FundamentalTypes
         _ => "object"
     };
 
+    /// <summary>
+    /// Returns the .NET reflection short name for <paramref name="t"/> (e.g. <c>"Int32"</c>,
+    /// <c>"String"</c>), or <c>"Object"</c> for unrecognized cases.
+    /// </summary>
+    /// <param name="t">The fundamental type to format.</param>
+    /// <returns>The .NET reflection short name.</returns>
     public static string ToDotNetType(FundamentalType t) => t switch
     {
         FundamentalType.Boolean => "Boolean",

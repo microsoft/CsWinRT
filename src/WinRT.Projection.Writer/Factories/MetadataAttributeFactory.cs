@@ -58,6 +58,7 @@ internal static class MetadataAttributeFactory
         int plus = version.IndexOf('+');
         return plus >= 0 ? version[..plus] : version;
     }
+
     /// <summary>
     /// Writes the standard auto-generated banner comment (no <c>using</c> imports, no pragmas).
     /// Used for the leaner <c>WinRT_Module.cs</c> / <c>GeneratedInterfaceIIDs.cs</c> /
@@ -320,6 +321,7 @@ internal static class MetadataAttributeFactory
         {
             return;
         }
+
         // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
         if ((TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo) ||
             TypeCategorization.IsProjectionInternal(type))
@@ -384,6 +386,7 @@ internal static class MetadataAttributeFactory
 
         _ = entries.TryAdd(className, interfaceName);
     }
+
     /// <summary>
     /// Adds entries for [ExclusiveTo] interfaces of the class type.
     /// </summary>
@@ -449,6 +452,7 @@ internal static class MetadataAttributeFactory
             }
         }
     }
+
     /// <summary>
     /// Writes the generated WindowsRuntimeDefaultInterfaces.cs file.
     /// </summary>

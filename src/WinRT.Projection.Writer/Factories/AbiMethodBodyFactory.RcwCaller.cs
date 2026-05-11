@@ -290,6 +290,7 @@ internal static partial class AbiMethodBodyFactory
                     """, isMultiline: true);
             }
         }
+
         // (String input params are now stack-allocated via the fast-path pinning pattern below;
         //  no separate void* local declaration or up-front allocation is needed.)
         // Declare locals for HResult/Exception input parameters (converted up-front).
@@ -311,6 +312,7 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.WriteLine($"        global::ABI.System.Exception __{localName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({callName});");
         }
+
         // Declare locals for mapped value-type input parameters (DateTime/TimeSpan): convert via marshaller up-front.
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
@@ -330,6 +332,7 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.WriteLine($"        {AbiTypeHelpers.GetMappedAbiTypeName(p.Type)} __{localName} = {AbiTypeHelpers.GetMappedMarshallerName(p.Type)}.ConvertToUnmanaged({callName});");
         }
+
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
         // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
         // dispose in finally.
@@ -354,6 +357,7 @@ internal static partial class AbiMethodBodyFactory
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             writer.WriteLine($"        {AbiTypeHelpers.GetAbiStructTypeName(writer, context, pType)} __{localName} = default;");
         }
+
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
@@ -392,6 +396,7 @@ internal static partial class AbiMethodBodyFactory
 
             writer.WriteLine($" __{localName} = default;");
         }
+
         // Declare locals for ReceiveArray params (uint length + element pointer).
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
@@ -430,6 +435,7 @@ internal static partial class AbiMethodBodyFactory
 
             writer.WriteLine($"* __{localName}_data = default;");
         }
+
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings). Runtime class/object: just one InlineArray16<nint>.
         // String: also needs InlineArray16<HStringHeader> + InlineArray16<nint> for pinned handles.
@@ -452,6 +458,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 continue;
             }
+
             // Non-blittable element type: emit InlineArray16<storageT> + ArrayPool<storageT>.
             // For mapped value types (DateTime/TimeSpan), use the ABI struct type.
             // For complex structs (e.g. authored BasicStruct with reference fields), use the ABI
@@ -616,6 +623,7 @@ internal static partial class AbiMethodBodyFactory
                 break;
             }
         }
+
         // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
         // after marshalling to managed System.Type, otherwise the HSTRING leaks.
         bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
@@ -655,6 +663,7 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.WriteLine($"{indent}__{localName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.ConvertToUnmanaged({callName});");
         }
+
         // Type input params: set up TypeReference locals before the fixed block:
         //   global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(forType, out TypeReference __forType);
         for (int i = 0; i < sig.Parameters.Count; i++)
@@ -675,6 +684,7 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.WriteLine($"{indent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({callName}, out TypeReference __{localName});");
         }
+
         // Open a SINGLE fixed-block for ALL pinnable inputs:
         //   1. Ref params (typed ptr, separate "fixed(T* _x = &x)\n" lines, no braces)
         //   2. Complex-struct PassArrays (typed ptr, separate fixed line)
@@ -707,6 +717,7 @@ internal static partial class AbiMethodBodyFactory
                 hasAnyVoidStarPinnable = true;
             }
         }
+
         // Emit typed fixed lines for Ref params.
         // Skip Ref+ComplexStruct: those are marshalled via __local (no fixed needed) and
         // passed as &__local at the call site (the is-value-type-in path).
@@ -785,6 +796,7 @@ internal static partial class AbiMethodBodyFactory
                     {
                         writer.Write($"__{localName}_span");
                     }
+
                     // For string elements: only PassArray needs the additional inlineHeaderArray
                     // pinned alongside the data span. FillArray fills HSTRINGs into the nint
                     // storage directly (no header conversion needed).
@@ -825,6 +837,7 @@ internal static partial class AbiMethodBodyFactory
             writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}{{");
             fixedNesting++;
         }
+
         // Suppress unused variable warning when block above doesn't fire.
         _ = stringPinnablesEmitted;
 
@@ -1054,6 +1067,7 @@ internal static partial class AbiMethodBodyFactory
                   &__retval
                 """, isMultiline: true);
         }
+
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
         writer.WriteLine(isNoExcept ? ");" : "));");
 
@@ -1390,6 +1404,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.WriteLine($"            {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.Dispose(__{localName});");
             }
+
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
             // For runtime classes/objects: Dispose_<name> (UnsafeAccessor) + return ArrayPool.
@@ -1459,6 +1474,7 @@ internal static partial class AbiMethodBodyFactory
                                         }
                             """, isMultiline: true);
                     }
+
                     // Both PassArray and FillArray need the inline-array's nint pool returned.
                     writer.WriteLine();
                     writer.Write($$"""
@@ -1513,6 +1529,7 @@ internal static partial class AbiMethodBodyFactory
                                     }
                         """, isMultiline: true);
                 }
+
                 // ArrayPool storage type matches the InlineArray storage (mapped ABI value type
                 // for DateTime/TimeSpan; ABI struct for complex structs; nint otherwise).
                 string poolStorageT = context.AbiTypeShapeResolver.IsMappedAbiValueType(szArr.BaseType)
@@ -1655,12 +1672,14 @@ internal static partial class AbiMethodBodyFactory
         {
             writer.Write(pname);
         }
+
         // char: ABI is 'char' directly; pass as-is.
         else if (p.Type is CorLibTypeSignature corlib2 &&
                  corlib2.ElementType == ElementType.Char)
         {
             writer.Write(pname);
         }
+
         // Enums: function pointer signature uses the projected enum type, so pass directly.
         else if (context.AbiTypeShapeResolver.IsEnumType(p.Type))
         {

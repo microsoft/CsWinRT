@@ -148,6 +148,7 @@ internal static class AbiInterfaceFactory
                 }
             }
         }
+
         // Return parameter
         if (sig.ReturnType is not null)
         {
@@ -535,6 +536,7 @@ internal static class AbiInterfaceFactory
                 return;
             }
         }
+
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
 

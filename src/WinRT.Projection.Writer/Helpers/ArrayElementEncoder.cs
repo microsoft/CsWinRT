@@ -90,6 +90,7 @@ internal static class ArrayElementEncoder
             typeNs = m.MappedNamespace;
             typeName = m.MappedName;
         }
+
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');
 

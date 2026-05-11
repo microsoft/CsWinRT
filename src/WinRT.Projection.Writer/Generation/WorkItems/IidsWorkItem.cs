@@ -13,14 +13,14 @@ namespace WindowsRuntime.ProjectionWriter.Generation.WorkItems;
 /// file that does not contend with any other work item.
 /// </summary>
 /// <param name="owner">The owning generator (provides access to settings, cache, and the IID-emission entry point).</param>
-internal sealed class IIDsWorkItem(ProjectionGenerator owner) : IProjectionWorkItem
+internal sealed class IidsWorkItem(ProjectionGenerator owner) : IProjectionWorkItem
 {
     /// <inheritdoc/>
     public void Execute()
     {
         try
         {
-            owner.WriteGeneratedInterfaceIIDsFile();
+            owner.WriteGeneratedInterfaceIidsFile();
         }
         catch (Exception e)
         {

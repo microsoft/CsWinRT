@@ -142,6 +142,7 @@ internal static class ProjectionFileBuilder
         }
         writer.WriteLine();
     }
+
     /// <summary>
     /// Formats a metadata Constant value as a C# literal.
     /// </summary>
@@ -198,7 +199,7 @@ internal static class ProjectionFileBuilder
             TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
             string fieldType = TypedefNameWriter.WriteProjectionType(context, semantics);
             string fieldName = field.Name?.Value ?? string.Empty;
-            string paramName = ToCamelCase(fieldName);
+            string paramName = IdentifierEscaping.ToCamelCase(fieldName);
             bool isInterface = false;
 
             if (semantics is TypeSemantics.Definition d)
@@ -329,6 +330,7 @@ internal static class ProjectionFileBuilder
             """, isMultiline: true);
         writer.WriteLine();
     }
+
     /// <summary>
     /// Writes a projected API contract (an empty enum stand-in).
     /// </summary>
@@ -349,6 +351,7 @@ internal static class ProjectionFileBuilder
             }
             """, isMultiline: true);
     }
+
     /// <summary>
     /// Writes a projected delegate.
     /// </summary>
@@ -377,7 +380,7 @@ internal static class ProjectionFileBuilder
         {
             // GUID attribute
             writer.Write("[Guid(\"");
-            IIDExpressionGenerator.WriteGuid(writer, type, false);
+            IidExpressionGenerator.WriteGuid(writer, type, false);
             writer.WriteLine("\")]");
         }
 
@@ -390,6 +393,7 @@ internal static class ProjectionFileBuilder
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.WriteLine(");");
     }
+
     /// <summary>
     /// Writes a projected attribute class.
     /// </summary>
@@ -416,6 +420,7 @@ internal static class ProjectionFileBuilder
                 MethodFactory.WriteParameterList(writer, context, sig);
                 writer.WriteLine("){}");
             }
+
             // Fields
             foreach (FieldDefinition field in type.Fields)
             {
@@ -429,25 +434,5 @@ internal static class ProjectionFileBuilder
                 writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
             }
         }
-    }
-
-    /// <summary>
-    /// Returns the camel-case form of <paramref name="name"/>.
-    /// </summary>
-    public static string ToCamelCase(string name)
-    {
-        if (string.IsNullOrEmpty(name))
-        {
-            return name;
-        }
-
-        char c = name[0];
-
-        if (c is >= 'A' and <= 'Z')
-        {
-            return char.ToLowerInvariant(c) + name[1..];
-        }
-
-        return name;
     }
 }

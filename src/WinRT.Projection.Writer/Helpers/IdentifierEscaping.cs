@@ -37,4 +37,28 @@ internal static class IdentifierEscaping
 
         writer.Write(identifier);
     }
+
+    /// <summary>
+    /// Returns the camel-case form of <paramref name="name"/>: if the first character is an
+    /// upper-case ASCII letter, it is lowered; otherwise <paramref name="name"/> is returned
+    /// unchanged. Used to derive C# constructor parameter names from public field names.
+    /// </summary>
+    /// <param name="name">The name to lower-case the first character of.</param>
+    /// <returns>The camel-case form.</returns>
+    public static string ToCamelCase(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
+        char c = name[0];
+
+        if (c is >= 'A' and <= 'Z')
+        {
+            return char.ToLowerInvariant(c) + name[1..];
+        }
+
+        return name;
+    }
 }

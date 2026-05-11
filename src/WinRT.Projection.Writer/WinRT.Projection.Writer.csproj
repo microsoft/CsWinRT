@@ -31,15 +31,15 @@
     <!--
       The writer enables the strictest analysis posture (AnalysisLevel=latest +
       AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The five entries
-      below are intentional permanent suppressions; each is a documented preference where
-      the writer's emission patterns can't reasonably comply with the IDE rule the analyzer
-      surfaces, and the rule fires noisily across hundreds of sites that genuinely do prefer
-      the suppressed shape.
+      below are intentional permanent suppressions. They are scoped at the project level
+      because each one fires across hundreds of sites where the writer's emission patterns
+      can't reasonably comply with the IDE rule the analyzer surfaces. Where a contributor
+      finds a clean local rewrite, that's preferred over relying on these suppressions, and
+      the suppression should be tightened over time.
     -->
     <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
     <!-- IDE0022: Use expression body for method — writer prefers block bodies for emission helpers, even when short, for visual consistency with surrounding multi-statement methods. -->
-    <!-- IDE0028: Use collection expression — limited to cases where comparer arguments don't fit collection-expression syntax. -->
-    <!-- IDE0046: 'if' statement can be simplified — if/else if chains over type-class predicates are more readable than nested ternaries. -->
+    <!-- IDE0046: 'if' statement can be simplified — early-return guards are more readable than nested ternaries when the branch produces a literal/sentinel and the rest of the method continues. -->
     <!-- IDE0060: Remove unused parameter — keep for API consistency across factory helpers. -->
     <NoWarn>$(NoWarn);IDE0010;IDE0022;IDE0046;IDE0060;IDE0072</NoWarn>
   </PropertyGroup>

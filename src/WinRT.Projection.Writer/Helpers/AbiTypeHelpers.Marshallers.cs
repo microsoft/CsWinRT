@@ -108,6 +108,7 @@ internal static partial class AbiTypeHelpers
                 return GlobalAbiPrefix + "System." + typeName + MarshallerSuffix;
             }
         }
+
         // For non-primitive types (DateTimeOffset, TimeSpan, struct/enum types), use GetMarshallerFullName.
         return GetMarshallerFullName(writer, context, innerType);
     }

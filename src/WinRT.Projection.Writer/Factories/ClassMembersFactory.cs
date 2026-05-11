@@ -68,6 +68,7 @@ internal static partial class ClassMembersFactory
         {
             return resolved;
         }
+
         // Fall back to local lookup by full name
         if (typeRef is TypeReference tr)
         {
@@ -83,6 +84,7 @@ internal static partial class ClassMembersFactory
 
         return null;
     }
+
     /// <summary>
     /// Writes a parameter name prefixed with its modifier (in/out/ref) for use as a call argument.
     /// </summary>
@@ -103,6 +105,7 @@ internal static partial class ClassMembersFactory
         }
         MethodFactory.WriteParameterName(writer, p);
     }
+
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping. Used inside <c>IWindowsRuntimeInterface&lt;T&gt;</c>.

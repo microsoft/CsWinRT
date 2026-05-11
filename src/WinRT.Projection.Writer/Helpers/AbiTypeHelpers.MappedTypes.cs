@@ -100,6 +100,7 @@ internal static partial class AbiTypeHelpers
         {
             return false;
         }
+
         // HResult/Exception is treated specially in many places; this helper is for DateTime/TimeSpan only.
         return mappedName != "Exception";
     }

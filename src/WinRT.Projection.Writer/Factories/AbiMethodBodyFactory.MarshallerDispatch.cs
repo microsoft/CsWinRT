@@ -20,6 +20,7 @@ internal static partial class AbiMethodBodyFactory
             writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged({argName})");
             return;
         }
+
         // Runtime class / interface: use ABI.<NS>.<Name>Marshaller
         writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, sig)}.ConvertToUnmanaged({argName})");
     }

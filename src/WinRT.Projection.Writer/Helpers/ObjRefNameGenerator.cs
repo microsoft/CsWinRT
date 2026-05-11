@@ -61,8 +61,9 @@ internal static class ObjRefNameGenerator
             projected = WriteFullyQualifiedInterfaceName(context, ifaceType);
         }
 
-        return "_objRef_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+        return "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
+
     /// <summary>
     /// Like <see cref="InterfaceFactory.WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
     /// but always emits a fully qualified name with <c>global::</c> prefix on every type
@@ -125,6 +126,7 @@ internal static class ObjRefNameGenerator
                 {
                     writer.Write(", ");
                 }
+
                 // forceWriteNamespace=true so generic args also get global:: prefix.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
@@ -195,6 +197,7 @@ internal static class ObjRefNameGenerator
                 writer.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
                 return;
             }
+
             // Mapped interface: use WellKnownInterfaceIIDs.IID_<EscapedNonProjectedName>.
             string id = EscapeIdentifier(ns + "." + IdentifierEscaping.StripBackticks(name));
             writer.Write($"global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_{id}");
@@ -203,7 +206,7 @@ internal static class ObjRefNameGenerator
         {
             // Non-mapped, non-generic: ABI.InterfaceIIDs.IID_<EscapedABIName>.
             string abiQualified = GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
-            string id = IIDExpressionGenerator.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+            string id = IidExpressionGenerator.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
             writer.Write($"global::ABI.InterfaceIIDs.IID_{id}");
         }
     }
@@ -223,6 +226,7 @@ internal static class ObjRefNameGenerator
         WriteIidExpression(writer, context, ifaceType);
         return writer.ToString();
     }
+
     /// <summary>
     /// Builds the IID property name for a generic interface instantiation.
     /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
@@ -230,10 +234,11 @@ internal static class ObjRefNameGenerator
     internal static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
-        return "IID_" + IIDExpressionGenerator.EscapeTypeNameForIdentifier(
+        return "IID_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(
             TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true),
             stripGlobal: true, stripGlobalABI: true);
     }
+
     /// <summary>
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
     /// interface instantiation.
@@ -292,7 +297,7 @@ internal static class ObjRefNameGenerator
     {
         (string ns, string name) = type.Names();
         string abiQualified = GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
-        string id = IIDExpressionGenerator.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+        string id = IidExpressionGenerator.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         writer.Write($"global::ABI.InterfaceIIDs.IID_{id}Reference");
     }
 
@@ -310,6 +315,7 @@ internal static class ObjRefNameGenerator
         WriteIidReferenceExpression(writer, type);
         return writer.ToString();
     }
+
     /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on
     /// the given runtime class. For sealed classes, the default interface is emitted as a
@@ -345,6 +351,7 @@ internal static class ObjRefNameGenerator
             {
                 continue;
             }
+
             // For FastAbi classes, skip non-default exclusive interfaces -- their methods
             // dispatch through the default interface's vtable so a separate objref is unnecessary.
             bool isDefault = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
@@ -373,6 +380,7 @@ internal static class ObjRefNameGenerator
             {
                 continue;
             }
+
             // Same fast-abi guard as the first pass.
             bool isDefault2 = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
 
@@ -389,6 +397,7 @@ internal static class ObjRefNameGenerator
             EmitTransitiveInterfaceObjRefs(writer, context, impl.Interface, emitted);
         }
     }
+
     /// <summary>
     /// Emits an _objRef_ field for a single interface impl reference.
     /// </summary>
@@ -407,6 +416,7 @@ internal static class ObjRefNameGenerator
         {
             return;
         }
+
         // The [UnsafeAccessor] extern method declaration is used by the IID expression in both
         // simple and lazy patterns.
         bool isGenericInstance = ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature;
@@ -432,6 +442,7 @@ internal static class ObjRefNameGenerator
             {
                 EmitUnsafeAccessorForIid(writer, context, gi);
             }
+
             // Lazy CompareExchange pattern. For unsealed-class defaults, also emit 'init;' so the
             // constructor can assign NativeObjectReference for the exact-type case.
             writer.Write($$"""

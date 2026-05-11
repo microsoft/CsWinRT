@@ -27,9 +27,10 @@ internal static class InterfaceFactory
     {
         bool fullyQualify = type.Namespace == WindowsFoundationMetadata;
         writer.Write($"[{(fullyQualify ? "global::System.Runtime.InteropServices.Guid" : "Guid")}(\"");
-        IIDExpressionGenerator.WriteGuid(writer, type, false);
+        IidExpressionGenerator.WriteGuid(writer, type, false);
         writer.Write("\")]");
     }
+
     /// <summary>
     /// Writes a class or interface inheritance clause: " : Base, Iface1, Iface2&lt;T&gt;".
     /// </summary>
@@ -125,6 +126,7 @@ internal static class InterfaceFactory
             }
         }
     }
+
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping (e.g.,
@@ -147,6 +149,7 @@ internal static class InterfaceFactory
                 ns = m1.MappedNamespace;
                 name = m1.MappedName;
             }
+
             // Only emit the global:: prefix when the namespace doesn't match the current emit
             // namespace (mirrors WriteTypedefName behavior -- same-namespace stays unqualified).
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
@@ -180,12 +183,14 @@ internal static class InterfaceFactory
                 {
                     writer.Write(", ");
                 }
+
                 // Pass forceWriteNamespace=false so type args also respect the current namespace.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
             }
             writer.Write(">");
         }
     }
+
     /// <summary>
     /// Returns the projected property type for <paramref name="prop"/>.
     /// </summary>
@@ -270,6 +275,7 @@ internal static class InterfaceFactory
             writer.Write($" {evt.Name?.Value ?? string.Empty};");
         }
     }
+
     /// <summary>
     /// Recursively walks the base interfaces of <paramref name="type"/> looking for a property
     /// with the given <paramref name="propName"/>. Returns true if any base interface declares
@@ -302,6 +308,7 @@ internal static class InterfaceFactory
             {
                 continue;
             }
+
             // Skip the original setter-defining interface itself. Also dedupe via the visited set.
             if (baseIface == type)
             {
@@ -489,6 +496,7 @@ internal static class InterfaceFactory
             WriteInterfaceMemberSignatures(writer, context, type);
         }
     }
+
     /// <summary>Returns true if the given exclusive interface is referenced as a [Default] or
     /// [Overridable] interface impl on the class it's exclusive to.</summary>
     private static bool IsDefaultOrOverridableInterfaceTypedef(MetadataCache cache, TypeDefinition iface)

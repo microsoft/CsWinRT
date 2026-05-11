@@ -23,12 +23,19 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class ClassFactory
 {
+    /// <summary>
+    /// Returns whether <paramref name="type"/> is marked with the <c>[FastAbi]</c> attribute,
+    /// indicating that fast-ABI calling conventions apply to its members.
+    /// </summary>
+    /// <param name="type">The runtime class definition to inspect.</param>
+    /// <returns><see langword="true"/> if <paramref name="type"/> is decorated with <c>[FastAbi]</c>.</returns>
     public static bool IsFastAbiClass(TypeDefinition type)
     {
         // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
         // netstandard_compat gate -- it was always false in the C# port.)
         return type.HasAttribute(WindowsFoundationMetadata, FastAbiAttribute);
     }
+
     /// <summary>
     /// Writes the class modifiers ('static '/'sealed ').
     /// </summary>
@@ -45,6 +52,7 @@ internal static class ClassFactory
             writer.Write("sealed ");
         }
     }
+
     /// <summary>
     /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
     /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>.
@@ -174,6 +182,7 @@ internal static class ClassFactory
                 exclusiveIfaces.Add(ifaceTd);
             }
         }
+
         // Sort exclusive interfaces by:
         // 1. Number of [PreviousContractVersion] attrs (ascending; newer interfaces have more)
         // 2. Contract version (ascending)
@@ -246,6 +255,7 @@ internal static class ClassFactory
         {
             return 0;
         }
+
         // The attribute has a single named arg "Amount" of an enum type. Defaults: 0=Low, 1=Medium, 2=High.
         // We try both fixed args and named args.
         int amount = -1;
@@ -268,6 +278,7 @@ internal static class ClassFactory
             _ => 0
         };
     }
+
     /// <summary>
     /// Writes a static class declaration with [ContractVersion]-derived platform suppression.
     /// </summary>
@@ -287,6 +298,7 @@ internal static class ClassFactory
             }
         }
     }
+
     /// <summary>
     /// Emits static members from [Static] factory interfaces.
     /// </summary>
@@ -296,6 +308,7 @@ internal static class ClassFactory
         {
             return;
         }
+
         // Per-property accessor state (origin tracking for getter/setter)
         Dictionary<string, StaticPropertyAccessorState> properties = [];
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
@@ -372,6 +385,7 @@ internal static class ClassFactory
                     writer.WriteLine(");");
                 }
             }
+
             // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
             {
@@ -406,6 +420,7 @@ internal static class ClassFactory
                 }
                 writer.WriteLine("}");
             }
+
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
             foreach (PropertyDefinition prop in staticIface.Properties)
             {
@@ -562,6 +577,7 @@ internal static class ClassFactory
             }
             """, isMultiline: true);
     }
+
     /// <summary>
     /// Writes a projected runtime class.
     /// </summary>
@@ -577,6 +593,7 @@ internal static class ClassFactory
             WriteStaticClass(writer, context, type);
             return;
         }
+
         // Tracks the highest platform seen within this class to suppress redundant
         // [SupportedOSPlatform(...)] emissions across interface boundaries.
         using (context.EnterPlatformSuppressionScope(string.Empty))
@@ -743,6 +760,7 @@ internal static class ClassFactory
                 ObjRefNameGenerator.WriteIidExpression(writer, context, implRef);
                 writer.Write(" == iid");
             }
+
             // base call when type has a non-object base class
             bool hasBaseClass = type.BaseType is not null
                 && !(type.BaseType.Namespace?.Value == "System" && type.BaseType.Name?.Value == "Object")

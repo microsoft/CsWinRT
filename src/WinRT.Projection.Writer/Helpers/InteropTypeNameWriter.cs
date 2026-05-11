@@ -163,6 +163,7 @@ internal static class InteropTypeNameWriter
             typeNs = m.MappedNamespace;
             typeName = m.MappedName;
         }
+
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');
 
@@ -241,6 +242,7 @@ internal static class InteropTypeNameWriter
 
                 return "<#corlib>";
             }
+
             // Mapped to a non-System namespace.
             if (!m.EmitAbi)
             {
@@ -255,6 +257,7 @@ internal static class InteropTypeNameWriter
                 return "<#Windows>";
             }
         }
+
         // Unmapped type.
         if (typeNs.StartsWith("Windows.", StringComparison.Ordinal) || typeNs == "Windows")
         {
@@ -265,6 +268,7 @@ internal static class InteropTypeNameWriter
         {
             return "<#CsWinRT>";
         }
+
         // For any other type (e.g. user-authored components in third-party .winmd assemblies),
         // use the actual assembly name from the type's resolution scope..
         // uses the .winmd file stem (e.g. "AuthoringTest" for AuthoringTest.winmd).

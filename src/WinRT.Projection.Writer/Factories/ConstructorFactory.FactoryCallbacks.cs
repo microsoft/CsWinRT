@@ -110,6 +110,7 @@ internal static partial class ConstructorFactory
                     {
                 """, isMultiline: true);
         }
+
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (context.Settings.ReferenceProjection)
         {
@@ -515,6 +516,7 @@ internal static partial class ConstructorFactory
                 writer.Write($"(uint){pname}.Length, _{raw}");
                 continue;
             }
+
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().

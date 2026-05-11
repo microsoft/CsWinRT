@@ -33,6 +33,14 @@ internal static class MappedTypes
 {
     private static readonly FrozenDictionary<string, FrozenDictionary<string, MappedType>> TypeMappings = Build();
 
+    /// <summary>
+    /// Returns the <see cref="MappedType"/> entry for the type identified by
+    /// (<paramref name="typeNamespace"/>, <paramref name="typeName"/>), or <see langword="null"/>
+    /// if no mapping exists.
+    /// </summary>
+    /// <param name="typeNamespace">The Windows Runtime namespace.</param>
+    /// <param name="typeName">The Windows Runtime type name.</param>
+    /// <returns>The mapping, or <see langword="null"/>.</returns>
     public static MappedType? Get(string typeNamespace, string typeName)
     {
         if (TypeMappings.TryGetValue(typeNamespace, out FrozenDictionary<string, MappedType>? namesp) &&
@@ -44,6 +52,11 @@ internal static class MappedTypes
         return null;
     }
 
+    /// <summary>
+    /// Returns whether <paramref name="typeNamespace"/> contains at least one mapped type.
+    /// </summary>
+    /// <param name="typeNamespace">The Windows Runtime namespace.</param>
+    /// <returns><see langword="true"/> if there is at least one mapping in this namespace.</returns>
     public static bool HasNamespace(string typeNamespace) => TypeMappings.ContainsKey(typeNamespace);
 
     private static FrozenDictionary<string, FrozenDictionary<string, MappedType>> Build()

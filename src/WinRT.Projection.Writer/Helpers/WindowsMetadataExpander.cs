@@ -126,6 +126,7 @@ public static partial class WindowsMetadataExpander
         {
             return string.Empty;
         }
+
         // HKLM\SOFTWARE\Microsoft\Windows Kits\Installed Roots\KitsRoot10
         // Try the WOW64 view first (the SDK installer registers under the 32-bit hive), then default view.
         const string subKey = @"SOFTWARE\Microsoft\Windows Kits\Installed Roots";
@@ -145,6 +146,7 @@ public static partial class WindowsMetadataExpander
                 return p2;
             }
         }
+
         // Both views can fail with permission errors on hardened machines, or with I/O errors
         // when the registry hive is being modified concurrently by an installer. Treat any of
         // those as "no SDK detected" and let the caller fall back to the path-not-found error.
@@ -220,6 +222,7 @@ public static partial class WindowsMetadataExpander
             {
                 continue;
             }
+
             // <KitsRoot10>\References\<sdk_version>\<contract_name>\<contract_version>\<contract_name>.winmd
             string winmd = Path.Combine(sdkPath, "References", sdkVersion, name, version, name + ".winmd");
             result.Add(winmd);
