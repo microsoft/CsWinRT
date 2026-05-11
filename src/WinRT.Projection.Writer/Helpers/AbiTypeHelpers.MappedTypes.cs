@@ -24,7 +24,7 @@ internal static partial class AbiTypeHelpers
         if (td is null) { return string.Empty; }
         (string typeNs, string typeName) = td.Names();
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
-        return mapped is not null ? mapped.MappedNamespace : typeNs;
+        return mapped is { } m ? m.MappedNamespace : typeNs;
     }
 
     /// <summary>

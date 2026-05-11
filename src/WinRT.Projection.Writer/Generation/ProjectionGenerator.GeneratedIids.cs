@@ -44,7 +44,7 @@ internal sealed partial class ProjectionGenerator
                 // EmitAbi=false). Their factory/statics interfaces should also be skipped.
                 (string clsNs, string clsNm) = type.Names();
                 MappedType? clsMapped = MappedTypes.Get(clsNs, clsNm);
-                if (clsMapped is not null && !clsMapped.EmitAbi) { continue; }
+                if (clsMapped is { EmitAbi: false }) { continue; }
                 foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
                 {
                     TypeDefinition? facType = kv.Value.Type;
@@ -71,7 +71,7 @@ internal sealed partial class ProjectionGenerator
                 if (TypeCategorization.IsGeneric(type)) { continue; }
                 (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
-                if (m is not null && !m.EmitAbi) { continue; }
+                if (m is { EmitAbi: false }) { continue; }
                 iidWritten = true;
                 TypeCategory cat = TypeCategorization.GetCategory(type);
                 switch (cat)

@@ -41,10 +41,10 @@ internal static partial class AbiTypeHelpers
             // 'Windows.UI.Xaml.Interop.TypeName' is mapped to 'System.Type', so the ABI struct
             // is 'global::ABI.System.Type', not 'global::ABI.Windows.UI.Xaml.Interop.TypeName').
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
@@ -93,10 +93,10 @@ internal static partial class AbiTypeHelpers
         // System.Collections.Specialized.NotifyCollectionChangedAction). Same
         // remapping that WriteTypedefName performs.
         MappedType? mapped = MappedTypes.Get(ns, name);
-        if (mapped is not null)
+        if (mapped is { } m)
         {
-            ns = mapped.MappedNamespace;
-            name = mapped.MappedName;
+            ns = m.MappedNamespace;
+            name = m.MappedName;
         }
         return string.IsNullOrEmpty(ns) ? GlobalPrefix + name : GlobalPrefix + ns + "." + name;
     }

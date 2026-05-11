@@ -144,10 +144,10 @@ internal static class InteropTypeNameWriter
 
         // Apply mapped-type remapping
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
-        if (mapped is not null)
+        if (mapped is { } m)
         {
-            typeNs = mapped.MappedNamespace;
-            typeName = mapped.MappedName;
+            typeNs = m.MappedNamespace;
+            typeName = m.MappedName;
         }
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');
@@ -206,7 +206,7 @@ internal static class InteropTypeNameWriter
     /// </summary>
     internal static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped, ITypeDefOrRef? type = null)
     {
-        if (mapped is not null)
+        if (mapped is { } m)
         {
             // determines the marker.
             if (typeNs.StartsWith("System", StringComparison.Ordinal))
@@ -222,7 +222,7 @@ internal static class InteropTypeNameWriter
                 return "<#corlib>";
             }
             // Mapped to a non-System namespace.
-            if (!mapped.EmitAbi)
+            if (!m.EmitAbi)
             {
                 return "<#CsWinRT>";
             }

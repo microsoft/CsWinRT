@@ -81,10 +81,10 @@ internal static class ArrayElementEncoder
         (string typeNs, string typeName) = type.Names();
         // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
-        if (mapped is not null)
+        if (mapped is { } m)
         {
-            typeNs = mapped.MappedNamespace;
-            typeName = mapped.MappedName;
+            typeNs = m.MappedNamespace;
+            typeName = m.MappedName;
         }
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');

@@ -104,10 +104,10 @@ internal static partial class AbiTypeHelpers
             string name = td.Type?.Name?.Value ?? string.Empty;
             // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.

@@ -63,7 +63,7 @@ internal static partial class AbiTypeHelpers
             }
             // Mapped struct types: blittable iff the mapping does NOT require marshalling
             MappedType? mapped = MappedTypes.Get(fNs, fName);
-            if (mapped is not null && mapped.RequiresMarshaling) { return false; }
+            if (mapped is { RequiresMarshaling: true }) { return false; }
             if (todr.Type is TypeDefinition td)
             {
                 return IsTypeBlittable(cache, td);
@@ -261,7 +261,7 @@ internal static partial class AbiTypeHelpers
             string sNs = td.Type?.Namespace?.Value ?? string.Empty;
             string sName = td.Type?.Name?.Value ?? string.Empty;
             MappedType? sMapped = MappedTypes.Get(sNs, sName);
-            if (sMapped is not null) { return !sMapped.RequiresMarshaling; }
+            if (sMapped is { } sMappedVal) { return !sMappedVal.RequiresMarshaling; }
         }
         TypeCategory cat = TypeCategorization.GetCategory(def);
         if (cat != TypeCategory.Struct) { return false; }

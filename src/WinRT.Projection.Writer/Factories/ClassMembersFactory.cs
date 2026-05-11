@@ -98,10 +98,10 @@ internal static partial class ClassMembersFactory
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
         }
@@ -110,10 +110,10 @@ internal static partial class ClassMembersFactory
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)

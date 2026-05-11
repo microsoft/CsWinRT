@@ -57,10 +57,10 @@ internal static class InterfaceFactory
             ITypeDefOrRef baseType = type.BaseType!;
             (string ns, string name) = baseType.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
@@ -132,10 +132,10 @@ internal static class InterfaceFactory
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m1)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m1.MappedNamespace;
+                name = m1.MappedName;
             }
             // Only emit the global:: prefix when the namespace doesn't match the current emit
             // namespace (mirrors WriteTypedefName behavior -- same-namespace stays unqualified).
@@ -150,10 +150,10 @@ internal static class InterfaceFactory
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m2)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m2.MappedNamespace;
+                name = m2.MappedName;
             }
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {

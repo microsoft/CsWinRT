@@ -69,7 +69,7 @@ internal static class AbiInterfaceIDicFactory
             if (!visited.Add(required)) { continue; }
             (string rNs, string rName) = required.Names();
             MappedType? mapped = MappedTypes.Get(rNs, rName);
-            if (mapped is not null && mapped.HasCustomMembersOutput)
+            if (mapped is { HasCustomMembersOutput: true })
             {
                 // Mapped to a BCL interface (IBindableVector -> IList, IBindableIterable -> IEnumerable, etc.).
                 // Emit explicit-interface DIM forwarders for the BCL members so the DIC shim

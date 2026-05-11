@@ -116,8 +116,7 @@ internal static class AbiTypeWriter
                     // If not found, try the mapped name (for cases where the mapping target is in the cache).
                     if (rd is null)
                     {
-                        MappedType? rmapped = MappedTypes.Get(rns, rname);
-                        if (rmapped is not null)
+                        if (MappedTypes.Get(rns, rname) is { } rmapped)
                         {
                             rd = context.Cache.Find(rmapped.MappedNamespace + "." + rmapped.MappedName);
                         }

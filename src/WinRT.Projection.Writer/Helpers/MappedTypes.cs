@@ -12,7 +12,13 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// <summary>
 /// Maps a Windows Runtime type to the corresponding .NET type.
 /// </summary>
-internal sealed record MappedType(
+/// <param name="AbiName">The Windows Runtime ABI type name.</param>
+/// <param name="MappedNamespace">The .NET namespace the WinRT type maps to.</param>
+/// <param name="MappedName">The .NET type name the WinRT type maps to.</param>
+/// <param name="RequiresMarshaling">Whether values of the mapped type require marshalling at the projection boundary.</param>
+/// <param name="HasCustomMembersOutput">Whether the writer should emit custom member projections for the mapped type.</param>
+/// <param name="EmitAbi">Whether the writer should emit an ABI projection for the mapped type.</param>
+internal readonly record struct MappedType(
     string AbiName,
     string MappedNamespace,
     string MappedName,
@@ -30,7 +36,7 @@ internal static class MappedTypes
     public static MappedType? Get(string typeNamespace, string typeName)
     {
         if (TypeMappings.TryGetValue(typeNamespace, out FrozenDictionary<string, MappedType>? namesp) &&
-            namesp.TryGetValue(typeName, out MappedType? mapped))
+            namesp.TryGetValue(typeName, out MappedType mapped))
         {
             return mapped;
         }

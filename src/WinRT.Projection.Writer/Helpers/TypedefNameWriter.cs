@@ -57,10 +57,10 @@ internal static class TypedefNameWriter
         }
 
         MappedType? proj = MappedTypes.Get(typeNamespace, typeName);
-        if (proj is not null)
+        if (proj is { } p)
         {
-            typeNamespace = proj.MappedNamespace;
-            typeName = proj.MappedName;
+            typeNamespace = p.MappedNamespace;
+            typeName = p.MappedName;
         }
 
         TypedefNameType nameToWrite = nameType;
@@ -176,10 +176,10 @@ internal static class TypedefNameWriter
                 {
                     (string ns, string name) = gir.GenericType.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
-                    if (mapped is not null)
+                    if (mapped is { } m)
                     {
-                        ns = mapped.MappedNamespace;
-                        name = mapped.MappedName;
+                        ns = m.MappedNamespace;
+                        name = m.MappedName;
                     }
                     if (nameType == TypedefNameType.EventSource && ns == "System")
                     {
@@ -211,10 +211,10 @@ internal static class TypedefNameWriter
                 {
                     (string ns, string name) = r.Reference_.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
-                    if (mapped is not null)
+                    if (mapped is { } m)
                     {
-                        ns = mapped.MappedNamespace;
-                        name = mapped.MappedName;
+                        ns = m.MappedNamespace;
+                        name = m.MappedName;
                     }
                     bool needsNsPrefix = !string.IsNullOrEmpty(ns) && (
                         forceWriteNamespace ||

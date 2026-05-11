@@ -31,10 +31,10 @@ internal static class ObjRefNameGenerator
         {
             (string ns, string name) = td.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
@@ -42,10 +42,10 @@ internal static class ObjRefNameGenerator
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
@@ -71,10 +71,10 @@ internal static class ObjRefNameGenerator
         {
             (string ns, string name) = td.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             writer.Write(GlobalPrefix);
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
@@ -84,10 +84,10 @@ internal static class ObjRefNameGenerator
         {
             (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             writer.Write(GlobalPrefix);
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
@@ -98,10 +98,10 @@ internal static class ObjRefNameGenerator
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null)
+            if (mapped is { } m)
             {
-                ns = mapped.MappedNamespace;
-                name = mapped.MappedName;
+                ns = m.MappedNamespace;
+                name = m.MappedName;
             }
             writer.Write(GlobalPrefix);
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }

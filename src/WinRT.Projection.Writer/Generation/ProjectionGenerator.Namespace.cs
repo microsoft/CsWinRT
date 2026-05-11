@@ -40,7 +40,7 @@ internal sealed partial class ProjectionGenerator
                 if (TypeCategorization.IsGeneric(type)) { continue; }
                 (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
-                if (m is not null && !m.EmitAbi) { continue; }
+                if (m is { EmitAbi: false }) { continue; }
 
                 TypeCategory cat = TypeCategorization.GetCategory(type);
                 switch (cat)
@@ -161,7 +161,7 @@ internal sealed partial class ProjectionGenerator
                 if (TypeCategorization.IsGeneric(type)) { continue; }
                 (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
-                if (m is not null && !m.EmitAbi) { continue; }
+                if (m is { EmitAbi: false }) { continue; }
                 if (TypeCategorization.IsApiContractType(type)) { continue; }
                 if (TypeCategorization.IsAttributeType(type)) { continue; }
 
