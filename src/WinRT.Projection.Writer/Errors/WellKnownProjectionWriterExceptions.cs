@@ -12,7 +12,9 @@ namespace WindowsRuntime.ProjectionWriter.Errors;
 internal static class WellKnownProjectionWriterExceptions
 {
     /// <summary>
-    /// The prefix for all error IDs produced by this tool.
+    /// The prefix for all error IDs produced by the writer. Shared with
+    /// <c>WinRT.Projection.Generator</c>; the writer uses the reserved 5000+ ID range so
+    /// writer and host-generator error IDs never collide.
     /// </summary>
     public const string ErrorPrefix = "CSWINRTPROJECTIONGEN";
 
@@ -25,7 +27,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception (callers are expected to <c>throw</c> the result).</returns>
     public static WellKnownProjectionWriterException InternalInvariantFailed(string message)
     {
-        return Exception(1, message);
+        return Exception(5001, message);
     }
 
     /// <summary>
@@ -35,7 +37,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException CannotResolveType(string typeName)
     {
-        return Exception(2, $"The type '{typeName}' could not be resolved against the metadata cache.");
+        return Exception(5002, $"The type '{typeName}' could not be resolved against the metadata cache.");
     }
 
     /// <summary>
@@ -45,7 +47,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException UnknownTypeCategory(object category)
     {
-        return Exception(3, $"Unknown TypeCategory: {category}.");
+        return Exception(5003, $"Unknown TypeCategory: {category}.");
     }
 
     /// <summary>
@@ -55,7 +57,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException UnsupportedTypeSignature(string signature)
     {
-        return Exception(4, $"Unsupported signature: '{signature}'.");
+        return Exception(5004, $"Unsupported signature: '{signature}'.");
     }
 
     /// <summary>
@@ -66,7 +68,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException UnsupportedCorLibElementType(object elementType)
     {
-        return Exception(5, $"Unsupported corlib element type: {elementType}.");
+        return Exception(5005, $"Unsupported corlib element type: {elementType}.");
     }
 
     /// <summary>
@@ -75,7 +77,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException UnknownFundamentalType()
     {
-        return Exception(6, "Unknown fundamental type.");
+        return Exception(5006, "Unknown fundamental type.");
     }
 
     /// <summary>
@@ -86,7 +88,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException MissingGuidAttribute(string typeName)
     {
-        return Exception(7, $"Type '{typeName}' is missing a usable [Guid] attribute or has malformed Guid fields.");
+        return Exception(5007, $"Type '{typeName}' is missing a usable [Guid] attribute or has malformed Guid fields.");
     }
 
     /// <summary>
@@ -95,7 +97,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException WindowsSdkNotFound()
     {
-        return Exception(8, "Could not find the Windows SDK in the registry.");
+        return Exception(5008, "Could not find the Windows SDK in the registry.");
     }
 
     /// <summary>
@@ -105,7 +107,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException CannotReadWindowsSdkXml(string xmlPath)
     {
-        return Exception(9, $"Could not read the Windows SDK's XML at '{xmlPath}'.");
+        return Exception(5009, $"Could not read the Windows SDK's XML at '{xmlPath}'.");
     }
 
     /// <summary>
@@ -116,7 +118,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException UnreachableEmissionState(string message)
     {
-        return Exception(10, message);
+        return Exception(5010, message);
     }
 
     /// <summary>
@@ -127,7 +129,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException InvalidInputPath(string path)
     {
-        return Exception(11, $"The input metadata path '{path}' does not exist (must be a <c>.winmd</c> file or a directory containing one).");
+        return Exception(5011, $"The input metadata path '{path}' does not exist (must be a <c>.winmd</c> file or a directory containing one).");
     }
 
     /// <summary>
@@ -138,7 +140,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException MalformedWinmd(string path)
     {
-        return Exception(12, $"The input metadata file '{path}' is malformed: expected exactly one module per .winmd file.");
+        return Exception(5012, $"The input metadata file '{path}' is malformed: expected exactly one module per .winmd file.");
     }
 
     /// <summary>
@@ -148,7 +150,19 @@ internal static class WellKnownProjectionWriterExceptions
     /// <returns>The constructed exception.</returns>
     public static WellKnownProjectionWriterException WorkItemLoopDidNotComplete()
     {
-        return Exception(13, "The parallel projection work-item loop did not complete; one or more work items were not dispatched.");
+        return Exception(5013, "The parallel projection work-item loop did not complete; one or more work items were not dispatched.");
+    }
+
+    /// <summary>
+    /// Raised when one of the projection work items dispatched by <c>Run</c> failed with an
+    /// unexpected (non well-known) exception. Mirrors
+    /// <c>WellKnownInteropExceptions.LoadAndDiscoverModulesLoopError</c>.
+    /// </summary>
+    /// <param name="exception">The first inner exception extracted from the <see cref="AggregateException"/>.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException WorkItemLoopError(Exception exception)
+    {
+        return Exception(5014, "The parallel projection work-item loop reported one or more failures.", exception);
     }
 
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)

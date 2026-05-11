@@ -134,21 +134,14 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
         }
         catch (AggregateException e)
         {
-            // Parallel.ForEach wraps every body exception (and worker-side cancellation
-            // exceptions) in an AggregateException. Unwrap to the first inner exception so the
-            // surface error matches what the sequential path used to produce. If the first
-            // inner exception is well-known, rethrow it directly; otherwise wrap it as an
-            // unhandled emit failure. Cancellation propagates as-is.
-            Exception inner = e.InnerExceptions.FirstOrDefault()!;
+            Exception innerException = e.InnerExceptions.FirstOrDefault()!;
 
-            if (inner is OperationCanceledException oce)
-            {
-                throw oce;
-            }
-
-            throw inner.IsWellKnown
-                ? inner
-                : new UnhandledProjectionWriterException("emit", inner);
+            // If the first inner exception is well known, just rethrow it.
+            // We're not concerned about always throwing the same one across
+            // re-runs with parallelism. It can be disabled for debugging.
+            throw innerException.IsWellKnown
+                ? innerException
+                : WellKnownProjectionWriterExceptions.WorkItemLoopError(innerException);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
