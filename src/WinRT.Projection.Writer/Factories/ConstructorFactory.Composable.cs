@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
 using System.Globalization;
-using WindowsRuntime.ProjectionWriter.Helpers;
+using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 

@@ -3,9 +3,9 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Generation;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter;
 

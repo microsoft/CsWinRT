@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 

@@ -4,12 +4,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
-using WindowsRuntime.ProjectionWriter.Generation;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 

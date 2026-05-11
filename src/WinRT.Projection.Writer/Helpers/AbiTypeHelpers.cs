@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
 using System.Collections.Generic;
 using System.Globalization;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-
-using WindowsRuntime.ProjectionWriter.Generation;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 

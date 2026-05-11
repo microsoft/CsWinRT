@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 

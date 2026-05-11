@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Helpers;
-using WindowsRuntime.ProjectionWriter.Generation;
-using WindowsRuntime.ProjectionWriter.Metadata;
-using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 

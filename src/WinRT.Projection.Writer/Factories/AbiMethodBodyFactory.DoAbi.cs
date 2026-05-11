@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using System;
 using WindowsRuntime.ProjectionWriter.Errors;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;

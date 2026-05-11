@@ -4,14 +4,13 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Metadata;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-
 using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 

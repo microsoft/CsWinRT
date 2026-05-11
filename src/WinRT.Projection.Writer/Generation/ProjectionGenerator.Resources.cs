@@ -4,8 +4,8 @@
 using System;
 using System.IO;
 using System.Reflection;
-using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 

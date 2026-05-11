@@ -3,8 +3,8 @@
 
 using AsmResolver;
 using AsmResolver.DotNet;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
 

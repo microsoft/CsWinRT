@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using System;
 using System.Globalization;
 using System.Text;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 

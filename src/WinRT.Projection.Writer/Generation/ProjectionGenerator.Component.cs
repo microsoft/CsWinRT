@@ -7,8 +7,8 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 

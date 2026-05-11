@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-
-using WindowsRuntime.ProjectionWriter.Generation;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 

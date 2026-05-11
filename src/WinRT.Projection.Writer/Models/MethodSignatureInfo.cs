@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
