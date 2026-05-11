@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
