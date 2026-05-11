@@ -42,6 +42,7 @@ public static class ProjectionWriter
             settings = new()
             {
                 Verbose = options.Verbose,
+                Logger = options.Logger,
                 Component = options.Component,
                 Internal = options.Internal,
                 Embedded = options.Embedded,

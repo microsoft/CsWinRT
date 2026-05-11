@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -79,6 +80,13 @@ public sealed class ProjectionWriterOptions
     /// Show detailed progress information.
     /// </summary>
     public bool Verbose { get; init; }
+
+    /// <summary>
+    /// Optional logger callback invoked for each verbose progress message (only used when
+    /// <see cref="Verbose"/> is <see langword="true"/>). Defaults to <see langword="null"/>,
+    /// in which case verbose messages are forwarded to <see cref="Console.Out"/>.
+    /// </summary>
+    public Action<string>? Logger { get; init; }
 
     /// <summary>
     /// Gets the cancellation token observed during projection generation. Defaults to

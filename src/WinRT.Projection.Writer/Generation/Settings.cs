@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -27,6 +28,13 @@ internal sealed class Settings
     /// Gets or sets a value indicating whether verbose progress is logged to the console.
     /// </summary>
     public bool Verbose { get; init; }
+
+    /// <summary>
+    /// Optional callback invoked for each verbose progress message. When <see langword="null"/>,
+    /// verbose messages are forwarded to <see cref="System.Console.Out"/>. Has no effect unless
+    /// <see cref="Verbose"/> is also set.
+    /// </summary>
+    public Action<string>? Logger { get; init; }
 
     /// <summary>
     /// Gets the namespace prefixes to include in projection (when empty, all namespaces are included).
