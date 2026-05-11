@@ -68,16 +68,6 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
         _token.ThrowIfCancellationRequested();
 
-        // Phase 2: pre-warm the lazy-initialized type filters on Settings before any work item
-        // can race on them. The two getters (Filter / AdditionFilter) use 'field ??=', which is
-        // not safe for concurrent first-access -- two threads could each construct a TypeFilter
-        // and one would lose. The cached values are deterministically derived from immutable
-        // include/exclude inputs, so the race never produces incorrect output, but the lazy
-        // pattern is a code smell when shared across threads. Touching both here on the calling
-        // thread guarantees the cached instances are visible to every work item below.
-        _ = _settings.Filter;
-        _ = _settings.AdditionFilter;
-
         ProjectionGeneratorRunState state = new(componentActivatable, componentByModule);
 
         // Phase 3..6: parallel emission. All file writes happen below; wrap the whole emission

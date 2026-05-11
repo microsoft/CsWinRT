@@ -221,6 +221,26 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5019, "An output folder must be provided.");
     }
 
+    /// <summary>
+    /// Raised when <c>Settings.MakeReadOnly</c> is called more than once on the same
+    /// <c>Settings</c> instance (the writer requires settings to be finalized exactly once).
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException SettingsAlreadyReadOnly()
+    {
+        return Exception(5020, "Settings have already been finalized via MakeReadOnly and cannot be finalized again.");
+    }
+
+    /// <summary>
+    /// Raised when a derived <c>Settings</c> property is accessed before <c>MakeReadOnly</c>
+    /// has been called (e.g. <c>Filter</c> / <c>AdditionFilter</c>).
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException SettingsNotReadOnly()
+    {
+        return Exception(5021, "Settings have not been finalized via MakeReadOnly; the derived state is not yet available.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException(

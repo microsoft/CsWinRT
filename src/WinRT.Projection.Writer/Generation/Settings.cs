@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Helpers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -12,8 +13,20 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// folder, namespace include/exclude filters, and per-emission-mode flags (component,
 /// reference projection, public enums, etc.).
 /// </summary>
+/// <remarks>
+/// Callers populate the mutable input/include/exclude sets and <c>init</c> properties up
+/// front, then call <see cref="MakeReadOnly"/> exactly once before passing this instance
+/// to <see cref="ProjectionGenerator"/>. <see cref="MakeReadOnly"/> eagerly computes the
+/// derived <see cref="Filter"/> and <see cref="AdditionFilter"/> so subsequent parallel
+/// reads from work items have a stable, non-racy view.
+/// </remarks>
 internal sealed class Settings
 {
+    /// <summary>
+    /// Indicates whether <see cref="MakeReadOnly"/> has been called.
+    /// </summary>
+    private volatile bool _isReadOnly;
+
     /// <summary>
     /// Gets the set of input <c>.winmd</c> file paths to project.
     /// </summary>
@@ -60,13 +73,29 @@ internal sealed class Settings
 
     /// <summary>
     /// Gets the compiled type-name filter built from <see cref="Include"/> and <see cref="Exclude"/>.
+    /// Only valid after <see cref="MakeReadOnly"/> has been called.
     /// </summary>
-    public TypeFilter Filter => field ??= new TypeFilter(Include, Exclude);
+    /// <exception cref="WellKnownProjectionWriterException">
+    /// Thrown if accessed before <see cref="MakeReadOnly"/> has been called.
+    /// </exception>
+    public TypeFilter Filter
+    {
+        get => field ?? throw WellKnownProjectionWriterExceptions.SettingsNotReadOnly();
+        private set;
+    }
 
     /// <summary>
     /// Gets the compiled type-name filter built from <see cref="Include"/> and <see cref="AdditionExclude"/>, used for namespace-additions resources only.
+    /// Only valid after <see cref="MakeReadOnly"/> has been called.
     /// </summary>
-    public TypeFilter AdditionFilter => field ??= new TypeFilter(Include, AdditionExclude);
+    /// <exception cref="WellKnownProjectionWriterException">
+    /// Thrown if accessed before <see cref="MakeReadOnly"/> has been called.
+    /// </exception>
+    public TypeFilter AdditionFilter
+    {
+        get => field ?? throw WellKnownProjectionWriterExceptions.SettingsNotReadOnly();
+        private set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether component-authoring mode is enabled.
@@ -102,4 +131,25 @@ internal sealed class Settings
     /// Gets or sets a value indicating whether reference-only projection mode is enabled (no implementation, no IID file).
     /// </summary>
     public bool ReferenceProjection { get; init; }
+
+    /// <summary>
+    /// Finalizes the settings: eagerly builds the derived <see cref="Filter"/> and
+    /// <see cref="AdditionFilter"/> from the configured include/exclude sets, then marks
+    /// the instance as read-only. Must be called exactly once before passing the instance
+    /// to <see cref="ProjectionGenerator"/>.
+    /// </summary>
+    /// <exception cref="WellKnownProjectionWriterException">
+    /// Thrown if <see cref="MakeReadOnly"/> was already called on this instance.
+    /// </exception>
+    public void MakeReadOnly()
+    {
+        if (_isReadOnly)
+        {
+            throw WellKnownProjectionWriterExceptions.SettingsAlreadyReadOnly();
+        }
+
+        Filter = new TypeFilter(Include, Exclude);
+        AdditionFilter = new TypeFilter(Include, AdditionExclude);
+        _isReadOnly = true;
+    }
 }

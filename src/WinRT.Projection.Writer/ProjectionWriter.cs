@@ -61,6 +61,8 @@ public static class ProjectionWriter
             settings.Exclude.UnionWith(options.Exclude);
             settings.AdditionExclude.UnionWith(options.AdditionExclude);
 
+            settings.MakeReadOnly();
+
             _ = Directory.CreateDirectory(settings.OutputFolder);
         }
         catch (Exception e) when (!e.IsWellKnown)
