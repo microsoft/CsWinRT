@@ -69,6 +69,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
+    <!-- PublishAot is needed by AuthoringExportTypesGenerator.ShouldEmitNativeExports for the
+         merged-aggregator scenario (non-component project with CsWinRTMergeReferencedActivationFactories=true).
+         Authoring.targets exposes the same property but only imports when CsWinRTComponent=true. -->
+    <CompilerVisibleProperty Include="PublishAot" />
   </ItemGroup>
   
   <Target Name="CsWinRTMinNet10" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &lt;= 9" BeforeTargets="CsWinRTPrepareProjection">
