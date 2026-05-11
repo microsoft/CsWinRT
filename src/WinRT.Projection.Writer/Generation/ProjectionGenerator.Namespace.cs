@@ -19,10 +19,12 @@ internal sealed partial class ProjectionGenerator
     /// <summary>
     /// Processes a single namespace and writes its projection file. Returns whether a file was written.
     /// </summary>
-    private bool ProcessNamespace(string ns, NamespaceMembers members, HashSet<TypeDefinition> componentActivatable,
-        ConcurrentDictionary<string, string> defaultInterfaceEntries, ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries,
-        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap)
+    internal bool ProcessNamespace(string ns, NamespaceMembers members, ProjectionGeneratorRunState state)
     {
+        ConcurrentDictionary<string, string> defaultInterfaceEntries = state.DefaultInterfaceEntries;
+        ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = state.ExclusiveToInterfaceEntries;
+        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
+        HashSet<TypeDefinition> componentActivatable = state.ComponentActivatable;
         ProjectionEmitContext context = new(_settings, _cache, ns);
         IndentedTextWriter writer = new();
 

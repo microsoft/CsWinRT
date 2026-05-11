@@ -4,10 +4,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Generation.WorkItems;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
@@ -18,6 +21,24 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// namespace in the metadata cache and emits the per-namespace <c>.cs</c> files, then writes
 /// the per-projection support files (default-interfaces map, exclusive-to map, base resources).
 /// </summary>
+/// <remarks>
+/// <para>
+/// Work is split into discrete <see cref="IProjectionWorkItem"/> units (one per namespace, plus
+/// the global <c>GeneratedInterfaceIIDs.cs</c> file and -- in component mode -- the
+/// <c>WinRT_Module.cs</c> activation-factory aggregator). Items are dispatched in parallel via
+/// <see cref="Parallel.ForEach{TSource}(IEnumerable{TSource}, ParallelOptions, System.Action{TSource})"/>
+/// with the configured <see cref="Settings.MaxDegreesOfParallelism"/>; cross-item shared state
+/// lives in <see cref="ProjectionGeneratorRunState"/> and uses <see cref="ConcurrentDictionary{TKey,TValue}"/>
+/// / <see cref="ConcurrentBag{T}"/> / <see cref="Interlocked"/> so the per-item bodies can run
+/// without explicit locking.
+/// </para>
+/// <para>
+/// Discovery (component activation lookups) and post-processing (default-interfaces table,
+/// exclusive-to-interfaces table, base-resource emission) remain sequential -- the former
+/// because it produces the read-only state every work item depends on, the latter because they
+/// consume the accumulated post-loop state.
+/// </para>
+/// </remarks>
 /// <param name="settings">The active projection settings.</param>
 /// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
 /// <param name="token">The cancellation token observed across all phases.</param>
@@ -47,7 +68,19 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
         _token.ThrowIfCancellationRequested();
 
-        // Phase 2..6: emission. All file writes happen below; wrap the whole emission
+        // Phase 2: pre-warm the lazy-initialized type filters on Settings before any work item
+        // can race on them. The two getters (Filter / AdditionFilter) use 'field ??=', which is
+        // not safe for concurrent first-access -- two threads could each construct a TypeFilter
+        // and one would lose. The cached values are deterministically derived from immutable
+        // include/exclude inputs, so the race never produces incorrect output, but the lazy
+        // pattern is a code smell when shared across threads. Touching both here on the calling
+        // thread guarantees the cached instances are visible to every work item below.
+        _ = _settings.Filter;
+        _ = _settings.AdditionFilter;
+
+        ProjectionGeneratorRunState state = new(componentActivatable, componentByModule);
+
+        // Phase 3..6: parallel emission. All file writes happen below; wrap the whole emission
         // pipeline in a single try/catch so any unexpected failure surfaces as an
         // UnhandledProjectionWriterException rather than a raw stack trace.
         try
@@ -62,51 +95,92 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
                 log($"output: {_settings.OutputFolder}");
             }
 
-            WriteGeneratedInterfaceIIDsFile();
-
-            ConcurrentDictionary<string, string> defaultInterfaceEntries = [];
-            ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = [];
-            ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = [];
-            bool projectionFileWritten = false;
-
-            foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)
+            ParallelOptions parallelOptions = new()
             {
-                _token.ThrowIfCancellationRequested();
-                bool wrote = ProcessNamespace(ns, members, componentActivatable, defaultInterfaceEntries, exclusiveToInterfaceEntries, authoredTypeNameToMetadataMap);
-                if (wrote)
-                {
-                    projectionFileWritten = true;
-                }
+                CancellationToken = _token,
+                MaxDegreeOfParallelism = _settings.MaxDegreesOfParallelism,
+            };
+
+            ParallelLoopResult result = Parallel.ForEach(
+                source: EnumerateWorkItems(state),
+                parallelOptions: parallelOptions,
+                body: static item => item.Execute());
+
+            // Defensive: should always be true (no break/stop in the body), but matches the
+            // interop generator's pattern.
+            if (!result.IsCompleted)
+            {
+                throw WellKnownProjectionWriterExceptions.WorkItemLoopDidNotComplete();
             }
 
-            if (_settings.Component)
+            if (state.DefaultInterfaceEntries.Count > 0 && !_settings.ReferenceProjection)
             {
-                WriteComponentModuleFile(componentByModule);
-                projectionFileWritten = true;
-            }
-
-            if (defaultInterfaceEntries.Count > 0 && !_settings.ReferenceProjection)
-            {
-                List<KeyValuePair<string, string>> sorted = [.. defaultInterfaceEntries];
+                List<KeyValuePair<string, string>> sorted = [.. state.DefaultInterfaceEntries];
                 sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
                 MetadataAttributeFactory.WriteDefaultInterfacesClass(_settings, sorted);
             }
 
-            if (!exclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)
+            if (!state.ExclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)
             {
-                List<KeyValuePair<string, string>> sorted = [.. exclusiveToInterfaceEntries];
+                List<KeyValuePair<string, string>> sorted = [.. state.ExclusiveToInterfaceEntries];
                 sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
                 MetadataAttributeFactory.WriteExclusiveToInterfacesClass(_settings, sorted);
             }
 
-            if (projectionFileWritten)
+            if (state.ProjectionFileWritten)
             {
                 WriteBaseStrings();
             }
         }
+        catch (AggregateException e)
+        {
+            // Parallel.ForEach wraps every body exception (and worker-side cancellation
+            // exceptions) in an AggregateException. Unwrap to the first inner exception so the
+            // surface error matches what the sequential path used to produce. If the first
+            // inner exception is well-known, rethrow it directly; otherwise wrap it as an
+            // unhandled emit failure. Cancellation propagates as-is.
+            Exception inner = e.InnerExceptions.FirstOrDefault()!;
+
+            if (inner is OperationCanceledException oce)
+            {
+                throw oce;
+            }
+
+            throw inner.IsWellKnown
+                ? inner
+                : new UnhandledProjectionWriterException("emit", inner);
+        }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw new UnhandledProjectionWriterException("emit", e);
+        }
+    }
+
+    /// <summary>
+    /// Enumerates the work items dispatched in parallel by <see cref="Run"/>: the global
+    /// <c>GeneratedInterfaceIIDs.cs</c> file (skipped in reference-projection mode), one item
+    /// per namespace in the metadata cache, and -- in component mode -- the
+    /// <c>WinRT_Module.cs</c> file. The component module item is yielded last so the other two
+    /// item kinds get a chance to start before the smaller (typically) component item picks up
+    /// any remaining slot.
+    /// </summary>
+    /// <param name="state">The shared run state passed to per-item factories.</param>
+    /// <returns>The lazy work-item sequence.</returns>
+    private IEnumerable<IProjectionWorkItem> EnumerateWorkItems(ProjectionGeneratorRunState state)
+    {
+        if (!_settings.ReferenceProjection)
+        {
+            yield return new IIDsWorkItem(this);
+        }
+
+        foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)
+        {
+            yield return new NamespaceWorkItem(this, ns, members, state);
+        }
+
+        if (_settings.Component)
+        {
+            yield return new ComponentModuleWorkItem(this, state);
         }
     }
 

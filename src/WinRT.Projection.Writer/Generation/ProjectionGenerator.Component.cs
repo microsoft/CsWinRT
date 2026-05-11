@@ -65,7 +65,7 @@ internal sealed partial class ProjectionGenerator
     /// entry points. Component mode only.
     /// </summary>
     /// <param name="componentByModule">The activatable classes grouped by source module name (from <see cref="DiscoverComponentActivatableTypes"/>).</param>
-    private void WriteComponentModuleFile(Dictionary<string, HashSet<TypeDefinition>> componentByModule)
+    internal void WriteComponentModuleFile(Dictionary<string, HashSet<TypeDefinition>> componentByModule)
     {
         // WinRT_Module.cs (and similar support files like GeneratedInterfaceIIDs.cs and the
         // base resources under Resources/Base/) require only the auto-generated banner without

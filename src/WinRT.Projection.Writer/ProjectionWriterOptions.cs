@@ -89,6 +89,14 @@ public sealed class ProjectionWriterOptions
     public Action<string>? Logger { get; init; }
 
     /// <summary>
+    /// Maximum number of parallel work items to dispatch when generating projections.
+    /// Defaults to <c>-1</c>, which lets the runtime pick (typically <see cref="System.Environment.ProcessorCount"/>).
+    /// Set to <c>1</c> to force fully sequential execution (useful for debugging or when a deterministic
+    /// thread schedule is required).
+    /// </summary>
+    public int MaxDegreesOfParallelism { get; init; } = -1;
+
+    /// <summary>
     /// Gets the cancellation token observed during projection generation. Defaults to
     /// <see cref="CancellationToken.None"/>, which never signals cancellation.
     /// </summary>

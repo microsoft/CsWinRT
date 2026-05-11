@@ -22,7 +22,7 @@ internal sealed partial class ProjectionGenerator
     /// <remarks>
     /// Skipped entirely in reference-projection mode (no IIDs are needed in the public API surface).
     /// </remarks>
-    private void WriteGeneratedInterfaceIIDsFile()
+    internal void WriteGeneratedInterfaceIIDsFile()
     {
         if (_settings.ReferenceProjection)
         {

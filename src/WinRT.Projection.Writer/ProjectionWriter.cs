@@ -43,6 +43,7 @@ public static class ProjectionWriter
             {
                 Verbose = options.Verbose,
                 Logger = options.Logger,
+                MaxDegreesOfParallelism = options.MaxDegreesOfParallelism,
                 Component = options.Component,
                 Internal = options.Internal,
                 Embedded = options.Embedded,

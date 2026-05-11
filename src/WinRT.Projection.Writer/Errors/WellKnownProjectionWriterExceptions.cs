@@ -141,6 +141,16 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(12, $"The input metadata file '{path}' is malformed: expected exactly one module per .winmd file.");
     }
 
+    /// <summary>
+    /// Raised when the parallel work-item loop terminates without enumerating every work item
+    /// (typically indicates an unhandled control-flow signal coming back from a worker).
+    /// </summary>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException WorkItemLoopDidNotComplete()
+    {
+        return Exception(13, "The parallel projection work-item loop did not complete; one or more work items were not dispatched.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException(

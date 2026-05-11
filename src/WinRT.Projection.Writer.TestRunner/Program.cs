@@ -58,6 +58,7 @@ internal static class Program
         var exclude = new System.Collections.Generic.List<string>();
         string? outputFolder = null;
         bool component = false, internalMode = false;
+        int maxDegreesOfParallelism = -1;
         var tokens = new System.Collections.Generic.List<string>();
         foreach (string raw in text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
         {
@@ -84,6 +85,8 @@ internal static class Program
                 case "--component": component = true; break;
                 case "--internal": internalMode = true; break;
                 case "--reference-projection": refMode = true; break;
+                case "--max-degrees-of-parallelism": case "--mdop":
+                    if (next is not null && int.TryParse(next, out int mdop)) { maxDegreesOfParallelism = mdop; i++; } break;
                 case "--target-framework": if (next is not null) { i++; } break;
             }
         }
@@ -98,6 +101,7 @@ internal static class Program
                 Include = include, Exclude = exclude,
                 Component = component, Internal = internalMode,
                 ReferenceProjection = refMode, Verbose = false,
+                MaxDegreesOfParallelism = maxDegreesOfParallelism,
             });
         }
         catch (Exception ex) { Console.Error.WriteLine($"ERROR: {ex.Message}"); Console.Error.WriteLine(ex.StackTrace); return 1; }

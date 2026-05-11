@@ -37,6 +37,13 @@ internal sealed class Settings
     public Action<string>? Logger { get; init; }
 
     /// <summary>
+    /// Maximum number of parallel work items dispatched when generating projections.
+    /// Defaults to <c>-1</c> (let the runtime decide; typically <see cref="System.Environment.ProcessorCount"/>).
+    /// Set to <c>1</c> to force fully sequential execution.
+    /// </summary>
+    public int MaxDegreesOfParallelism { get; init; } = -1;
+
+    /// <summary>
     /// Gets the namespace prefixes to include in projection (when empty, all namespaces are included).
     /// </summary>
     public HashSet<string> Include { get; } = [];
