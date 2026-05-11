@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Win32;
@@ -135,9 +136,11 @@ public static partial class WindowsMetadataExpander
                 return p2;
             }
         }
-        catch
+        // Both views can fail with permission errors on hardened machines, or with I/O errors
+        // when the registry hive is being modified concurrently by an installer. Treat any of
+        // those as "no SDK detected" and let the caller fall back to the path-not-found error.
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
-            // Fall through
         }
         return string.Empty;
     }

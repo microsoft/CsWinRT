@@ -41,16 +41,8 @@ internal static partial class ClassMembersFactory
     internal static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
     {
         if (typeRef is TypeDefinition td) { return td; }
-        // Try the runtime context resolver first (handles cross-module references via the resolver)
-        try
-        {
-            TypeDefinition? resolved = typeRef.Resolve(cache.RuntimeContext);
-            if (resolved is not null) { return resolved; }
-        }
-        catch
-        {
-            // Fall through to local lookup
-        }
+        TypeDefinition? resolved = typeRef.TryResolve(cache.RuntimeContext);
+        if (resolved is not null) { return resolved; }
         // Fall back to local lookup by full name
         if (typeRef is TypeReference tr)
         {
