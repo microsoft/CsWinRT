@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Publish">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
@@ -35,5 +35,9 @@
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <!-- Build the merged AOT host. slnx/VS solution build calls Build (not Publish), so hook
+       Publish onto Build to drive the ILC pipeline. -->
+  <Target Name="_RunPublishAfterBuild" AfterTargets="Build" DependsOnTargets="Publish" />
 
 </Project>
