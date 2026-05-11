@@ -137,20 +137,18 @@ internal sealed partial class ProjectionGenerator
             // when the filter excludes them, because the projected static class members dispatch
             // through them.
             HashSet<TypeDefinition> factoryInterfacesInThisNs = [];
+            HashSet<TypeDefinition> factoryInterfacesAllNs = [];
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type)) { continue; }
                 if (TypeCategorization.GetCategory(type) != TypeCategory.Class) { continue; }
-                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
-                {
-                    AttributedType info = kv.Value;
-                    TypeDefinition? facType = info.Type;
-                    if (facType is null) { continue; }
-                    // Only consider factory interfaces in the same namespace as we're processing.
-                    string facNs = facType.Namespace?.Value ?? string.Empty;
-                    if (facNs != ns) { continue; }
-                    _ = factoryInterfacesInThisNs.Add(facType);
-                }
+                AddFactoryInterfacesForClass(type, factoryInterfacesAllNs);
+            }
+            foreach (TypeDefinition facType in factoryInterfacesAllNs)
+            {
+                // Only consider factory interfaces in the same namespace as we're processing.
+                string facNs = facType.Namespace?.Value ?? string.Empty;
+                if (facNs == ns) { _ = factoryInterfacesInThisNs.Add(facType); }
             }
 
             writer.WriteBeginAbiNamespace(context);
@@ -172,9 +170,9 @@ internal sealed partial class ProjectionGenerator
         }
 
         // Phase 4: Custom additions to namespaces
-        foreach ((string addNs, string resName) in Additions.All)
+        if (Additions.ByNamespace.TryGetValue(ns, out string[]? resourceNames) && _settings.AdditionFilter.Includes(ns))
         {
-            if (addNs == ns && _settings.AdditionFilter.Includes(ns))
+            foreach (string resName in resourceNames)
             {
                 using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
                 if (stream is null) { continue; }

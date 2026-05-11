@@ -45,11 +45,7 @@ internal sealed partial class ProjectionGenerator
                 (string clsNs, string clsNm) = type.Names();
                 MappedType? clsMapped = MappedTypes.Get(clsNs, clsNm);
                 if (clsMapped is { EmitAbi: false }) { continue; }
-                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
-                {
-                    TypeDefinition? facType = kv.Value.Type;
-                    if (facType is not null) { _ = factoryInterfacesGlobal.Add(facType); }
-                }
+                AddFactoryInterfacesForClass(type, factoryInterfacesGlobal);
             }
         }
 

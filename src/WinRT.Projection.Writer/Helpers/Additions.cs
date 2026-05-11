@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -43,4 +45,13 @@ internal static class Additions
         ("Windows.UI.Xaml.Media.Animation", "WindowsRuntime.ProjectionWriter.Resources.Additions.Windows.UI.Xaml.Media.Animation.Windows.UI.Xaml.Media.Animation.RepeatBehavior.cs"),
         ("Windows.UI.Xaml.Media.Media3D", "WindowsRuntime.ProjectionWriter.Resources.Additions.Windows.UI.Xaml.Media.Media3D.Windows.UI.Xaml.Media.Media3D.Matrix3D.cs"),
     ];
+
+    /// <summary>
+    /// Lookup of the manifest resource names for a given target namespace, in the same order they
+    /// appear in <see cref="All"/>. Lookups against this map replace per-namespace linear scans of
+    /// <see cref="All"/> in the per-namespace emission path.
+    /// </summary>
+    public static readonly FrozenDictionary<string, string[]> ByNamespace =
+        All.GroupBy(static x => x.Namespace)
+           .ToFrozenDictionary(static g => g.Key, static g => g.Select(x => x.ResourceName).ToArray());
 }

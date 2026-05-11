@@ -8,6 +8,7 @@ using System.Threading;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -105,6 +106,22 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw new UnhandledProjectionWriterException("emit", e);
+        }
+    }
+
+    /// <summary>
+    /// Adds the factory interfaces (Static / Activatable / Composable) referenced by
+    /// <paramref name="classType"/> to <paramref name="result"/>. Used by both the global
+    /// <c>GeneratedInterfaceIIDs.cs</c> walk and the per-namespace ABI-emission walk.
+    /// </summary>
+    /// <param name="classType">The runtime class definition to scan.</param>
+    /// <param name="result">The set the factory interface definitions are added to.</param>
+    private void AddFactoryInterfacesForClass(TypeDefinition classType, HashSet<TypeDefinition> result)
+    {
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, _cache))
+        {
+            TypeDefinition? facType = kv.Value.Type;
+            if (facType is not null) { _ = result.Add(facType); }
         }
     }
 }

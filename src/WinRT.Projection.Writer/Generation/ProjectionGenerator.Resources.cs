@@ -13,6 +13,12 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 internal sealed partial class ProjectionGenerator
 {
     /// <summary>
+    /// The embedded-resource manifest segment that identifies a "base" resource (i.e. one that
+    /// gets emitted verbatim into every projection output folder).
+    /// </summary>
+    private const string ResourcesBaseSegment = ".Resources.Base.";
+
+    /// <summary>
     /// Writes the embedded string resources (e.g., ComInteropExtensions.cs, InspectableVftbl.cs)
     /// to the output folder.
     /// </summary>
@@ -22,12 +28,12 @@ internal sealed partial class ProjectionGenerator
         foreach (string resName in asm.GetManifestResourceNames())
         {
             // Resource names look like 'WindowsRuntime.ProjectionWriter.Resources.Base.ComInteropExtensions.cs'
-            if (!resName.Contains(".Resources.Base."))
+            if (!resName.Contains(ResourcesBaseSegment))
             {
                 continue;
             }
             // Skip ComInteropExtensions if Windows is not included
-            string fileName = resName[(resName.IndexOf(".Resources.Base.", StringComparison.Ordinal) + ".Resources.Base.".Length)..];
+            string fileName = resName[(resName.IndexOf(ResourcesBaseSegment, StringComparison.Ordinal) + ResourcesBaseSegment.Length)..];
             if (fileName == "ComInteropExtensions.cs" && !_settings.Filter.Includes("Windows"))
             {
                 continue;
