@@ -176,7 +176,10 @@ internal static class AbiInterfaceFactory
                 AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
                 writer.Write("*");
 
-                if (includeParamNames) { writer.Write($" {retName}"); }
+                if (includeParamNames)
+                {
+                    writer.Write($" {retName}");
+                }
             }
         }
     }
@@ -591,7 +594,8 @@ internal static class AbiInterfaceFactory
         {
             if (AbiTypeHelpers.HasEmittableMembers(seg, segSkipEvents))
             {
-                hasAnyMember = true; break;
+                hasAnyMember = true;
+                break;
             }
         }
 

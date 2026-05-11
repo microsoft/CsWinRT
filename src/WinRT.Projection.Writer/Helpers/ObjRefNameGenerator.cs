@@ -85,7 +85,11 @@ internal static class ObjRefNameGenerator
 
             writer.Write(GlobalPrefix);
 
-            if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
+            if (!string.IsNullOrEmpty(ns))
+            {
+                writer.Write($"{ns}.");
+            }
+
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeReference tr)
@@ -101,7 +105,11 @@ internal static class ObjRefNameGenerator
 
             writer.Write(GlobalPrefix);
 
-            if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
+            if (!string.IsNullOrEmpty(ns))
+            {
+                writer.Write($"{ns}.");
+            }
+
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
@@ -118,7 +126,11 @@ internal static class ObjRefNameGenerator
 
             writer.Write(GlobalPrefix);
 
-            if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
+            if (!string.IsNullOrEmpty(ns))
+            {
+                writer.Write($"{ns}.");
+            }
+
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {

@@ -382,7 +382,10 @@ internal static partial class ConstructorFactory
                 firstPin = false;
                 writer.Write($"_{raw} = ");
 
-                if (isType) { writer.Write($"__{raw}"); }
+                if (isType)
+                {
+                    writer.Write($"__{raw}");
+                }
                 else if (isArr)
                 {
                     TypeSignature elemT = ((SzArrayTypeSignature)p.Type).BaseType;

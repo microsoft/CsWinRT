@@ -128,9 +128,18 @@ internal static partial class IidExpressionGenerator
         string fmt = lowerCase ? "x" : "X";
         // Format: %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x
         writer.Write($"{data1.ToString(fmt + "8", CultureInfo.InvariantCulture)}-{data2.ToString(fmt + "4", CultureInfo.InvariantCulture)}-{data3.ToString(fmt + "4", CultureInfo.InvariantCulture)}-");
-        for (int i = 0; i < 2; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
+
+        for (int i = 0; i < 2; i++)
+        {
+            writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture));
+        }
+
         writer.Write("-");
-        for (int i = 2; i < 8; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
+
+        for (int i = 2; i < 8; i++)
+        {
+            writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture));
+        }
     }
 
     /// <summary>
@@ -147,7 +156,11 @@ internal static partial class IidExpressionGenerator
         WriteByte(writer, (uint)((data2 >> 8) & 0xFF), false);
         WriteByte(writer, (uint)((data3 >> 0) & 0xFF), false);
         WriteByte(writer, (uint)((data3 >> 8) & 0xFF), false);
-        for (int i = 0; i < 8; i++) { WriteByte(writer, data4[i], false); }
+
+        for (int i = 0; i < 8; i++)
+        {
+            WriteByte(writer, data4[i], false);
+        }
     }
     private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {

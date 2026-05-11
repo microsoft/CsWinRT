@@ -186,7 +186,11 @@ internal static class AbiTypeWriter
                     (string rns, string rname) = r.Type.Names();
                     writer.Write(GlobalPrefix);
 
-                    if (!string.IsNullOrEmpty(rns)) { writer.Write($"{rns}."); }
+                    if (!string.IsNullOrEmpty(rns))
+                    {
+                        writer.Write($"{rns}.");
+                    }
+
                     writer.Write(IdentifierEscaping.StripBackticks(rname));
                     break;
                 }

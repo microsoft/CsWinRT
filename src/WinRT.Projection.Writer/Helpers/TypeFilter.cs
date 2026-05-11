@@ -107,7 +107,14 @@ internal sealed class TypeFilter
                 return pickInclude;
             }
 
-            if (pickInclude) { incIdx++; } else { excIdx++; }
+            if (pickInclude)
+            {
+                incIdx++;
+            }
+            else
+            {
+                excIdx++;
+            }
         }
 
         // No rule matched. If we have any include rules, default-exclude; else default-include.

@@ -178,7 +178,8 @@ internal static class AbiClassFactory
 
                 if (ifaceTd == type && impl.IsOverridable())
                 {
-                    hasOverridable = true; break;
+                    hasOverridable = true;
+                    break;
                 }
             }
             return hasOverridable;

@@ -75,7 +75,15 @@ internal static partial class ConstructorFactory
 
             writer.Write(visibility);
 
-            if (!isParameterless) { writer.Write(" unsafe "); } else { writer.Write(" "); }
+            if (!isParameterless)
+            {
+                writer.Write(" unsafe ");
+            }
+            else
+            {
+                writer.Write(" ");
+            }
+
             writer.Write($"{typeName}(");
             for (int i = 0; i < userParamCount; i++)
             {

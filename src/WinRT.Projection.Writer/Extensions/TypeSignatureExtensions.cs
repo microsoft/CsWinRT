@@ -144,12 +144,14 @@ internal static class TypeSignatureExtensions
             {
                 if (cur is CustomModifierTypeSignature cm)
                 {
-                    cur = cm.BaseType; continue;
+                    cur = cm.BaseType;
+                    continue;
                 }
 
                 if (cur is ByReferenceTypeSignature br)
                 {
-                    cur = br.BaseType; continue;
+                    cur = br.BaseType;
+                    continue;
                 }
 
                 break;

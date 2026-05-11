@@ -586,7 +586,8 @@ internal static partial class AbiMethodBodyFactory
 
             if (uOut.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsSystemType() || context.AbiTypeShapeResolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
             {
-                hasOutNeedsCleanup = true; break;
+                hasOutNeedsCleanup = true;
+                break;
             }
         }
         bool hasReceiveArray = false;
@@ -594,7 +595,8 @@ internal static partial class AbiMethodBodyFactory
         {
             if (ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]) == ParameterCategory.ReceiveArray)
             {
-                hasReceiveArray = true; break;
+                hasReceiveArray = true;
+                break;
             }
         }
         bool hasNonBlittablePassArray = false;
@@ -608,7 +610,8 @@ internal static partial class AbiMethodBodyFactory
                 && !context.AbiTypeShapeResolver.IsBlittablePrimitive(szArrCheck.BaseType) && !context.AbiTypeShapeResolver.IsAnyStruct(szArrCheck.BaseType)
                 && !context.AbiTypeShapeResolver.IsMappedAbiValueType(szArrCheck.BaseType))
             {
-                hasNonBlittablePassArray = true; break;
+                hasNonBlittablePassArray = true;
+                break;
             }
         }
         bool hasComplexStructInput = false;
@@ -707,7 +710,8 @@ internal static partial class AbiMethodBodyFactory
 
             if (p.Type.IsString() || p.Type.IsSystemType())
             {
-                hasAnyVoidStarPinnable = true; continue;
+                hasAnyVoidStarPinnable = true;
+                continue;
             }
 
             if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)

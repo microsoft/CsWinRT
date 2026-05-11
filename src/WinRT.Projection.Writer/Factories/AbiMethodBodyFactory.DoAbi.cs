@@ -31,7 +31,8 @@ internal static partial class AbiMethodBodyFactory
         {
             if (p.Type.IsString())
             {
-                hasStringParams = true; break;
+                hasStringParams = true;
+                break;
             }
         }
         bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi

@@ -398,12 +398,14 @@ internal static partial class AbiTypeHelpers
         {
             if (current is ByReferenceTypeSignature br)
             {
-                current = br.BaseType; continue;
+                current = br.BaseType;
+                continue;
             }
 
             if (current is CustomModifierTypeSignature cm)
             {
-                current = cm.BaseType; continue;
+                current = cm.BaseType;
+                continue;
             }
 
             return current;
