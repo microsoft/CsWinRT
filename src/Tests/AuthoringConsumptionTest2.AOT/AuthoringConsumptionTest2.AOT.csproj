@@ -5,11 +5,8 @@
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
 
-    <!-- Source generator emits the merged ABI.{AssemblyName}.ManagedExports.GetActivationFactory
-         dispatcher walking each referenced component's ManagedExports. -->
     <CsWinRTMergeReferencedActivationFactories>true</CsWinRTMergeReferencedActivationFactories>
 
-    <!-- AOT publish into a single self-contained native dll exporting DllGetActivationFactory. -->
     <PublishAot>true</PublishAot>
     <NativeLib>Shared</NativeLib>
     <SelfContained>true</SelfContained>
@@ -27,16 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- WebView2.Core.Projection.dll references the official signed Microsoft.Windows.SDK.NET,
-         which conflicts with our locally-built unsigned one. Exclude WebView2 from this csproj's
-         compile/runtime closure to avoid NETSDK1148. -->
     <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
-  <!-- Build the merged AOT host. slnx/VS solution build calls Build (not Publish), so hook
-       Publish onto Build to drive the ILC pipeline. -->
+  <!-- Solution-level Build invokes Build (not Publish); hook Publish onto Build to drive ILC. -->
   <Target Name="_RunPublishAfterBuild" AfterTargets="Build" DependsOnTargets="Publish" />
 
 </Project>
