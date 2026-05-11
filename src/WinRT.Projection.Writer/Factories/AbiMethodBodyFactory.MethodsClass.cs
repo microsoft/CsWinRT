@@ -40,13 +40,11 @@ internal static partial class AbiMethodBodyFactory
         // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
         // method in type.Methods (relative to the first method of the type) gives us the same value.
         Dictionary<MethodDefinition, int> methodSlot = [];
+        int idx = 0;
+        foreach (MethodDefinition m in type.Methods)
         {
-            int idx = 0;
-            foreach (MethodDefinition m in type.Methods)
-            {
-                methodSlot[m] = idx + startSlot;
-                idx++;
-            }
+            methodSlot[m] = idx + startSlot;
+            idx++;
         }
 
         // Emit non-special methods first (output order is unchanged from before; only the slot lookup changes).

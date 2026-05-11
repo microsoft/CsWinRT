@@ -330,9 +330,7 @@ internal static class AbiInterfaceFactory
         }
         else
         {
-            {
-                ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-            }
+            ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
 
             if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {

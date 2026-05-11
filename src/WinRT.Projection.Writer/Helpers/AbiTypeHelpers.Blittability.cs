@@ -304,15 +304,13 @@ internal static partial class AbiTypeHelpers
 
         // RequiresMarshaling, regardless of inner field layout. So for mapped types like
         // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
-        {
-            string sNs = td.Type?.Namespace?.Value ?? string.Empty;
-            string sName = td.Type?.Name?.Value ?? string.Empty;
-            MappedType? sMapped = MappedTypes.Get(sNs, sName);
+        string sNs = td.Type?.Namespace?.Value ?? string.Empty;
+        string sName = td.Type?.Name?.Value ?? string.Empty;
+        MappedType? sMapped = MappedTypes.Get(sNs, sName);
 
-            if (sMapped is not null)
-            {
-                return false;
-            }
+        if (sMapped is not null)
+        {
+            return false;
         }
 
         // A struct is "complex" if it has any field that is not a blittable primitive nor an

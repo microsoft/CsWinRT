@@ -59,15 +59,13 @@ internal static class ComponentFactory
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
         MetadataCache cache = context.Cache;
         List<TypeDefinition> factoryInterfaces = [];
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
         {
-            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
-            {
-                AttributedType info = kv.Value;
+            AttributedType info = kv.Value;
 
-                if ((info.Activatable || info.Statics) && info.Type is not null)
-                {
-                    factoryInterfaces.Add(info.Type);
-                }
+            if ((info.Activatable || info.Statics) && info.Type is not null)
+            {
+                factoryInterfaces.Add(info.Type);
             }
         }
 

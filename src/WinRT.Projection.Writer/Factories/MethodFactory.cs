@@ -103,19 +103,17 @@ internal static class MethodFactory
                 break;
             case ParameterCategory.ReceiveArray:
                 writer.Write("out ");
-                {
-                    SzArrayTypeSignature? sz = p.Type as SzArrayTypeSignature
-                        ?? (p.Type is ByReferenceTypeSignature br ? br.BaseType as SzArrayTypeSignature : null);
+                SzArrayTypeSignature? sz = p.Type as SzArrayTypeSignature
+                    ?? (p.Type is ByReferenceTypeSignature br ? br.BaseType as SzArrayTypeSignature : null);
 
-                    if (sz is not null)
-                    {
-                        TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                        writer.Write("[]");
-                    }
-                    else
-                    {
-                        WriteProjectedSignature(writer, context, p.Type, true);
-                    }
+                if (sz is not null)
+                {
+                    TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                    writer.Write("[]");
+                }
+                else
+                {
+                    WriteProjectedSignature(writer, context, p.Type, true);
                 }
                 break;
             default:
