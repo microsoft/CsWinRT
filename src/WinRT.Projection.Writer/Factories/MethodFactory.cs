@@ -66,11 +66,10 @@ internal static class MethodFactory
     /// <returns>The projected signature.</returns>
     public static string WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteProjectedSignature(writer, context, typeSig, isParameter);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>

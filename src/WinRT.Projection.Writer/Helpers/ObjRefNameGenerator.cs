@@ -143,11 +143,10 @@ internal static class ObjRefNameGenerator
     /// <returns>The emitted fully-qualified interface name.</returns>
     private static string WriteFullyQualifiedInterfaceName(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteFullyQualifiedInterfaceName(writer, context, ifaceType);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>
@@ -219,11 +218,10 @@ internal static class ObjRefNameGenerator
     /// <returns>The emitted IID expression.</returns>
     public static string WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteIidExpression(writer, context, ifaceType);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
     /// <summary>
     /// Builds the IID property name for a generic interface instantiation.
@@ -272,11 +270,10 @@ internal static class ObjRefNameGenerator
     /// <returns>The emitted [UnsafeAccessor] declaration.</returns>
     internal static string EmitUnsafeAccessorForIid(ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         EmitUnsafeAccessorForIid(writer, context, gi, isInNullableContext);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
     private static string EscapeIdentifier(string s)
     {
@@ -308,11 +305,10 @@ internal static class ObjRefNameGenerator
     /// <returns>The emitted IID reference expression.</returns>
     public static string WriteIidReferenceExpression(TypeDefinition type)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteIidReferenceExpression(writer, type);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
     /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on

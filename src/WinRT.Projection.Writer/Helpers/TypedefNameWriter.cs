@@ -131,11 +131,10 @@ internal static class TypedefNameWriter
     /// <returns>The emitted typedef name.</returns>
     public static string WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>
@@ -152,12 +151,11 @@ internal static class TypedefNameWriter
     /// <returns>The emitted typedef name + generic-parameter list.</returns>
     public static string WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
         WriteTypeParams(writer, type);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>
@@ -351,11 +349,10 @@ internal static class TypedefNameWriter
     /// <returns>The emitted type name.</returns>
     public static string WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>
@@ -368,11 +365,10 @@ internal static class TypedefNameWriter
     /// <returns>The emitted projected type name.</returns>
     public static string WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteProjectionType(writer, context, semantics);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>
@@ -393,11 +389,10 @@ internal static class TypedefNameWriter
     /// <returns>The emitted event handler type name.</returns>
     public static string WriteEventType(ProjectionEmitContext context, EventDefinition evt)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WriteEventType(writer, context, evt, null);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>

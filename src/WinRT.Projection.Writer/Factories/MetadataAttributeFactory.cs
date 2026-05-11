@@ -444,7 +444,8 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        IndentedTextWriter w = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter w = wOwner.Writer;
         WriteFileHeader(w);
         w.Write("""
             using System;
@@ -464,7 +465,6 @@ internal static class MetadataAttributeFactory
             }
             """, isMultiline: true);
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeDefaultInterfaces.cs"));
-        IndentedTextWriterPool.Return(w);
     }
 
     /// <summary>
@@ -477,7 +477,8 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        IndentedTextWriter w = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter w = wOwner.Writer;
         WriteFileHeader(w);
         w.Write("""
             using System;
@@ -497,6 +498,5 @@ internal static class MetadataAttributeFactory
             }
             """, isMultiline: true);
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeExclusiveToInterfaces.cs"));
-        IndentedTextWriterPool.Return(w);
     }
 }

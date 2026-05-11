@@ -78,10 +78,10 @@ internal sealed partial class ProjectionGenerator
         // the standard usings/pragmas prelude that per-namespace projection files emit, so this
         // path goes through MetadataAttributeFactory.WriteFileHeader rather than the
         // IndentedTextWriter extension that includes the full prelude.
-        IndentedTextWriter wm = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner wmOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter wm = wmOwner.Writer;
         MetadataAttributeFactory.WriteFileHeader(wm);
         ComponentFactory.WriteModuleActivationFactory(wm, componentByModule);
         wm.FlushToFile(Path.Combine(_settings.OutputFolder, "WinRT_Module.cs"));
-        IndentedTextWriterPool.Return(wm);
     }
 }

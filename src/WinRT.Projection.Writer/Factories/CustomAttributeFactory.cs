@@ -321,11 +321,10 @@ internal static class CustomAttributeFactory
     /// <returns>The emitted attribute, or <see cref="string.Empty"/> when none.</returns>
     public static string WritePlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
     {
-        IndentedTextWriter writer = IndentedTextWriterPool.GetOrCreate();
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
         WritePlatformAttribute(writer, context, member);
-        string result = writer.ToString();
-        IndentedTextWriterPool.Return(writer);
-        return result;
+        return writer.ToString();
     }
 
     /// <summary>
