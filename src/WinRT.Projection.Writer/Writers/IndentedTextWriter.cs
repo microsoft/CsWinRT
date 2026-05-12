@@ -23,7 +23,7 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// equivalent design.
 /// </para>
 /// <para>
-/// Indentation is applied per line: the first <see cref="Write(string, bool)"/> after a
+/// Indentation is applied per line: the first <see cref="Write(bool, string)"/> after a
 /// newline (or at buffer start) prepends the current indentation string; mid-line writes do not.
 /// Multiline content (passed with <c>isMultiline: true</c>) normalizes <c>CRLF</c> -> <c>LF</c>
 /// and indents each line via the current indentation level. Empty lines never receive
@@ -72,6 +72,7 @@ internal sealed partial class IndentedTextWriter
         _currentIndentation = string.Empty;
         _availableIndentations = new string[4];
         _availableIndentations[0] = string.Empty;
+
         for (int i = 1; i < _availableIndentations.Length; i++)
         {
             _availableIndentations[i] = _availableIndentations[i - 1] + DefaultIndentation;
@@ -100,6 +101,7 @@ internal sealed partial class IndentedTextWriter
     public void DecreaseIndent()
     {
         CurrentIndentLevel--;
+
         _currentIndentation = _availableIndentations[CurrentIndentLevel];
     }
 
@@ -113,7 +115,8 @@ internal sealed partial class IndentedTextWriter
     {
         WriteLine("{");
         IncreaseIndent();
-        return new Block(this);
+
+        return new(this);
     }
 
     /// <summary>
@@ -121,40 +124,61 @@ internal sealed partial class IndentedTextWriter
     /// at the start of each new line.
     /// </summary>
     /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
     public void Write([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler)
     {
         _ = this;
     }
 
     /// <summary>
-    /// Writes an interpolated expression to the underlying buffer, applying current indentation
-    /// at the start of each new line.
+    /// Writes an interpolated expression to the underlying buffer, applying current indentation at the start of each new line.
     /// </summary>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
     /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
     public void Write(bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
     {
         _ = this;
     }
 
     /// <summary>
-    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation
-    /// at the start of each new line.
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation at the start of each new line.
     /// </summary>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
-    public void Write(string content, bool isMultiline = false)
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void Write(string content)
     {
-        Write(content.AsSpan(), isMultiline);
+        Write(isMultiline: false, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation at the start of each new line.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void Write(bool isMultiline, string content)
+    {
+        Write(isMultiline, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation at the start of each new line.
+    /// </summary>
+    /// <param name="content">The content to write.</param>
+    public void Write(ReadOnlySpan<char> content)
+    {
+        Write(isMultiline: false, content);
     }
 
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation
     /// at the start of each new line.
     /// </summary>
-    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
-    public void Write(scoped ReadOnlySpan<char> content, bool isMultiline = false)
+    /// <param name="content">The content to write.</param>
+    public void Write(bool isMultiline, ReadOnlySpan<char> content)
     {
         if (isMultiline)
         {
@@ -202,12 +226,27 @@ internal sealed partial class IndentedTextWriter
     /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
-    public void WriteIf(bool condition, string content, bool isMultiline = false)
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, string content)
     {
         if (condition)
         {
-            Write(content.AsSpan(), isMultiline);
+            Write(isMultiline: false, content.AsSpan());
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, bool isMultiline, string content)
+    {
+        if (condition)
+        {
+            Write(isMultiline, content.AsSpan());
         }
     }
 
@@ -216,12 +255,27 @@ internal sealed partial class IndentedTextWriter
     /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
-    public void WriteIf(bool condition, scoped ReadOnlySpan<char> content, bool isMultiline = false)
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, ReadOnlySpan<char> content)
     {
         if (condition)
         {
-            Write(content, isMultiline);
+            Write(isMultiline: false, content);
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, bool isMultiline, ReadOnlySpan<char> content)
+    {
+        if (condition)
+        {
+            Write(isMultiline, content);
         }
     }
 
@@ -254,32 +308,66 @@ internal sealed partial class IndentedTextWriter
     }
 
     /// <summary>
-    /// Writes a newline to the underlying buffer unconditionally. Equivalent to
-    /// <c>WriteLine(skipIfPresent: false)</c>.
+    /// Writes an interpolated expression to the underlying buffer and appends a trailing newline.
     /// </summary>
-    public void WriteRawNewLine()
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler)
     {
-        _ = _buffer.Append(DefaultNewLine);
+        WriteLine();
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    {
+        WriteLine();
     }
 
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
     /// </summary>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
-    public void WriteLine(string content, bool isMultiline = false)
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(string content)
     {
-        WriteLine(content.AsSpan(), isMultiline);
+        WriteLine(isMultiline: false, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(bool isMultiline, string content)
+    {
+        WriteLine(isMultiline, content.AsSpan());
     }
 
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
     /// </summary>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
-    public void WriteLine(scoped ReadOnlySpan<char> content, bool isMultiline = false)
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(ReadOnlySpan<char> content)
     {
-        Write(content, isMultiline);
+        WriteLine(isMultiline: false, content);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(bool isMultiline, ReadOnlySpan<char> content)
+    {
+        Write(isMultiline, content);
         WriteLine();
     }
 
@@ -302,11 +390,12 @@ internal sealed partial class IndentedTextWriter
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
     public void WriteLineIf(bool condition, string content, bool isMultiline = false)
     {
         if (condition)
         {
-            WriteLine(content.AsSpan(), isMultiline);
+            WriteLine(isMultiline, content.AsSpan());
         }
     }
 
@@ -316,24 +405,14 @@ internal sealed partial class IndentedTextWriter
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
-    public void WriteLineIf(bool condition, scoped ReadOnlySpan<char> content, bool isMultiline = false)
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, ReadOnlySpan<char> content, bool isMultiline = false)
     {
         if (condition)
         {
-            Write(content, isMultiline);
+            Write(isMultiline, content);
             WriteLine();
         }
-    }
-
-    /// <summary>
-    /// Returns the current buffer contents (trimmed) and clears the buffer.
-    /// </summary>
-    /// <returns>The text accumulated so far, trimmed of leading/trailing whitespace.</returns>
-    public string ToStringAndClear()
-    {
-        string text = _buffer.ToString().Trim();
-        _ = _buffer.Clear();
-        return text;
     }
 
     /// <summary>
@@ -384,6 +463,7 @@ internal sealed partial class IndentedTextWriter
     public void Clear()
     {
         _ = _buffer.Clear();
+
         ResetIndent();
     }
 
@@ -439,20 +519,22 @@ internal sealed partial class IndentedTextWriter
     /// at the start of a new line.
     /// </summary>
     /// <param name="content">The raw text to write.</param>
-    private void WriteRawText(scoped ReadOnlySpan<char> content)
+    private void WriteRawText(ReadOnlySpan<char> content)
     {
-        // Skip writing indent for empty content so that empty lines never receive
-        // trailing whitespace from the indentation prefix.
+        // Skip writing indent for empty content so that empty lines never
+        // receive trailing whitespace from the indentation prefix.
         if (content.IsEmpty)
         {
             return;
         }
 
+        // Add the indentation if this is the very start of a new line
         if (_buffer.Length == 0 || _buffer[^1] == DefaultNewLine)
         {
             _ = _buffer.Append(_currentIndentation);
         }
 
+        // Append the content after the correct indentation
         _ = _buffer.Append(content);
     }
 
