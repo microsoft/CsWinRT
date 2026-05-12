@@ -44,13 +44,19 @@ internal sealed class WellKnownProjectionWriterException : Exception
         // a normal 'StringBuilder' for convenience, no need to micro-optimize things.
         StringBuilder builder = new();
 
+        // Always append the current exception info first
         _ = builder.Append($"""error {Id}: {Message}""");
 
+        // If we have an inner (not well-known) exception, append its info.
+        // We only do this if the inner exception is not the same as the
+        // parent exception. That can happen when re-throwing exceptions.
+        // In that case, we only show the parent exception info below.
         if (InnerException is Exception exception && exception != _outerException)
         {
             _ = builder.Append($""" Inner exception: '{exception.GetType().Name}': '{exception.Message}'.""");
         }
 
+        // If we have a parent well-known exception, append its info next
         if (_outerException is not null)
         {
             _ = builder.Append($""" Outer exception: '{_outerException.Id}': '{_outerException.Message}'.""");
@@ -80,6 +86,7 @@ internal sealed class WellKnownProjectionWriterException : Exception
         if (exception is WellKnownProjectionWriterException originalException)
         {
             originalException._outerException = this;
+
             ExceptionDispatchInfo.Throw(exception);
         }
 
