@@ -638,33 +638,32 @@ internal static class ClassFactory
             writer.WriteLine($$"""
                 {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
                 : base(nativeObjectReference)
-                {
                 """, isMultiline: true);
-            if (!type.IsSealed)
+            using (writer.WriteBlock())
             {
-                // For unsealed classes, the default interface objref needs to be initialized only
-                // when GetType() matches the projected class exactly (derived classes have their own
-                // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
-                ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-
-                if (defaultIface is not null)
+                if (!type.IsSealed)
                 {
-                    string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
-                    writer.WriteLine($$"""
-                        if (GetType() == typeof({{typeName}}))
+                    // For unsealed classes, the default interface objref needs to be initialized only
+                    // when GetType() matches the projected class exactly (derived classes have their own
+                    // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
+                    ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
+                    if (defaultIface is not null)
+                    {
+                        string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
+                        writer.WriteLine($"if (GetType() == typeof({typeName}))");
+                        using (writer.WriteBlock())
                         {
-                        {{defaultObjRefName}} = NativeObjectReference;
+                            writer.WriteLine($"{defaultObjRefName} = NativeObjectReference;");
                         }
-                        """, isMultiline: true);
+                    }
+                }
+
+                if (gcPressure > 0)
+                {
+                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
             }
-
-            if (gcPressure > 0)
-            {
-                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
-            }
-
-            writer.WriteLine("}");
         }
         else if (context.Cache is not null)
         {

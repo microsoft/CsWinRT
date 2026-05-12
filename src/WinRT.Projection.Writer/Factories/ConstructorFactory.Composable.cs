@@ -121,25 +121,25 @@ internal static partial class ConstructorFactory
                 writer.Write("))");
             }
 
-            writer.WriteLine($$"""
+            writer.WriteLine("""
                 )
-                {
-                if (GetType() == typeof({{typeName}}))
-                {
                 """, isMultiline: true);
-            if (!string.IsNullOrEmpty(defaultIfaceObjRef))
+            using (writer.WriteBlock())
             {
-                writer.WriteLine($"{defaultIfaceObjRef} = NativeObjectReference;");
+                writer.WriteLine($"if (GetType() == typeof({typeName}))");
+                using (writer.WriteBlock())
+                {
+                    if (!string.IsNullOrEmpty(defaultIfaceObjRef))
+                    {
+                        writer.WriteLine($"{defaultIfaceObjRef} = NativeObjectReference;");
+                    }
+                }
+
+                if (gcPressure > 0)
+                {
+                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
+                }
             }
-
-            writer.WriteLine("}");
-
-            if (gcPressure > 0)
-            {
-                writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
-            }
-
-            writer.WriteLine("}");
 
             // Emit args struct + callback class for parameterized composable factories.
             // skips both the args struct AND the callback class entirely in ref mode. The
@@ -170,49 +170,52 @@ internal static partial class ConstructorFactory
         writer.WriteLine($$"""
             protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
-            {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody))
+        using (writer.WriteBlock())
         {
-            writer.WriteLine(gcPressureBody);
+            if (!string.IsNullOrEmpty(gcPressureBody))
+            {
+                writer.WriteLine(gcPressureBody);
+            }
         }
 
+        writer.WriteLine();
         writer.WriteLine($$"""
-            }
-            
             protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
-            {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody))
+        using (writer.WriteBlock())
         {
-            writer.WriteLine(gcPressureBody);
+            if (!string.IsNullOrEmpty(gcPressureBody))
+            {
+                writer.WriteLine(gcPressureBody);
+            }
         }
 
+        writer.WriteLine();
         writer.WriteLine($$"""
-            }
-            
             protected {{typeName}}(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
               :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
-            {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody))
+        using (writer.WriteBlock())
         {
-            writer.WriteLine(gcPressureBody);
+            if (!string.IsNullOrEmpty(gcPressureBody))
+            {
+                writer.WriteLine(gcPressureBody);
+            }
         }
 
+        writer.WriteLine();
         writer.WriteLine($$"""
-            }
-            
             protected {{typeName}}(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
               :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
-            {
             """, isMultiline: true);
-        if (!string.IsNullOrEmpty(gcPressureBody))
+        using (writer.WriteBlock())
         {
-            writer.WriteLine(gcPressureBody);
+            if (!string.IsNullOrEmpty(gcPressureBody))
+            {
+                writer.WriteLine(gcPressureBody);
+            }
         }
-
-        writer.WriteLine("}");
     }
 }
