@@ -50,12 +50,10 @@ internal static class TypeCategorization
             return TypeCategory.Enum;
         }
 
-
         if (baseNs == "System" && baseName == "ValueType")
         {
             return TypeCategory.Struct;
         }
-
 
         if (baseNs == "System" && baseName == "MulticastDelegate")
         {

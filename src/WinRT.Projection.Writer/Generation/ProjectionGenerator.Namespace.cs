@@ -98,6 +98,7 @@ internal sealed partial class ProjectionGenerator
                         break;
                 }
             }
+
             MetadataAttributeFactory.WritePragmaRestoreIL2026(writer);
         }
 

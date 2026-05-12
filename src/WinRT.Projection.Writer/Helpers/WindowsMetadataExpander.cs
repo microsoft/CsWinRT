@@ -10,7 +10,6 @@ using System.Xml;
 using Microsoft.Win32;
 using WindowsRuntime.ProjectionWriter.Errors;
 
-
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -189,7 +188,6 @@ public static partial class WindowsMetadataExpander
             {
                 continue;
             }
-
 
             if (v > best)
             {

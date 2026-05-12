@@ -120,6 +120,7 @@ internal sealed class TypeFilter
         // No rule matched. If we have any include rules, default-exclude; else default-include.
         return _include.Count == 0;
     }
+
     private static bool Match(string typeNamespace, string typeName, string rule)
     {
         if (rule.Length <= typeNamespace.Length)

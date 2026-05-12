@@ -118,11 +118,14 @@ internal sealed class MetadataCache
         RuntimeContext runtimeContext = new(targetRuntime, resolver);
 
         MetadataCache cache = new(runtimeContext);
+
         foreach (string winmd in winmdFiles)
         {
             cache.LoadFile(winmd);
         }
+
         cache.SortMembersByName();
+
         return cache;
     }
 

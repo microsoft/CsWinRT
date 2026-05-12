@@ -116,12 +116,12 @@ internal sealed partial class ProjectionGenerator
                 }
             }
         }
+
         IidExpressionGenerator.WriteInterfaceIidsEnd(guidIndented);
 
         if (iidWritten)
         {
             guidIndented.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));
         }
-
     }
 }

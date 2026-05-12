@@ -54,20 +54,17 @@ internal static class AbiTypeWriter
                         break;
                     }
 
-
                     if (dNs == WindowsFoundation && dName == "TimeSpan")
                     {
                         writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
 
-
                     if (dNs == WindowsFoundation && dName == HResult)
                     {
                         writer.Write("global::ABI.System.Exception");
                         break;
                     }
-
 
                     if (dNs == WindowsUIXamlInterop && dName == TypeName)
                     {
@@ -110,13 +107,11 @@ internal static class AbiTypeWriter
                         break;
                     }
 
-
                     if (rns == WindowsFoundation && rname == "TimeSpan")
                     {
                         writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
-
 
                     if (rns == WindowsFoundation && rname == HResult)
                     {
@@ -135,7 +130,6 @@ internal static class AbiTypeWriter
                         }
                     }
 
-
                     if (rd is not null)
                     {
                         TypeCategory cat = TypeCategorization.GetCategory(rd);
@@ -146,7 +140,6 @@ internal static class AbiTypeWriter
                             TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             break;
                         }
-
 
                         if (cat == TypeCategory.Struct)
                         {
@@ -160,7 +153,6 @@ internal static class AbiTypeWriter
                                 writer.Write("global::ABI.System.Exception");
                                 break;
                             }
-
 
                             if (context.AbiTypeShapeResolver.IsAnyStruct(rd.ToTypeSignature()))
                             {
