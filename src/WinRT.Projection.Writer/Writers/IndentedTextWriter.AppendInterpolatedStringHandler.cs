@@ -112,7 +112,7 @@ internal partial class IndentedTextWriter
 
         /// <summary>Writes the specified character span to the handler.</summary>
         /// <param name="value">The span to write.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value)
+        public void AppendFormatted(scoped ReadOnlySpan<char> value)
         {
             _writer.Write(value, _isMultiline);
         }
