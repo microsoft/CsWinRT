@@ -7,6 +7,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace WindowsRuntime.ProjectionWriter.Writers;
@@ -29,7 +30,7 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// indentation, so raw multi-line literals with blank lines do not gain trailing whitespace.
 /// </para>
 /// </remarks>
-internal sealed class IndentedTextWriter
+internal sealed partial class IndentedTextWriter
 {
     /// <summary>
     /// The default indentation (4 spaces).
@@ -113,6 +114,27 @@ internal sealed class IndentedTextWriter
         WriteLine("{");
         IncreaseIndent();
         return new Block(this);
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer, applying current indentation
+    /// at the start of each new line.
+    /// </summary>
+    /// <param name="handler">The interpolated content to write.</param>
+    public void Write([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer, applying current indentation
+    /// at the start of each new line.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    public void Write(bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
     }
 
     /// <summary>
