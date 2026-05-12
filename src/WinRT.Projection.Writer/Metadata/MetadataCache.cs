@@ -95,6 +95,10 @@ internal sealed class MetadataCache
             }
         }
 
+        // Sort the file list (case-insensitive ordinal) so first-load-wins behavior in LoadFile
+        // is deterministic regardless of filesystem enumeration order.
+        winmdFiles.Sort(StringComparer.OrdinalIgnoreCase);
+
         // Set up a PathAssemblyResolver scoped to the input .winmd files
         // (and any sibling .winmd files in their directories) so type forwards and cross-references resolve.
         string[] searchDirectories = winmdFiles
@@ -170,7 +174,7 @@ internal sealed class MetadataCache
             // contract winmd and a 3rd-party WinMD that re-exports / forwards them). First-load-wins.
             string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
 
-            if (_typesByFullName.ContainsKey(fullName))
+            if (!_typesByFullName.TryAdd(fullName, type))
             {
                 continue;
             }
@@ -183,7 +187,6 @@ internal sealed class MetadataCache
 
             members.AddType(type);
 
-            _typesByFullName[fullName] = type;
             _typeToModulePath[type] = moduleFilePath;
         }
     }
