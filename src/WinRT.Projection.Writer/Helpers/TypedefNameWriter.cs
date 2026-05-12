@@ -85,6 +85,7 @@ internal static class TypedefNameWriter
         }
         else if (forceWriteNamespace ||
             typeNamespace != context.CurrentNamespace ||
+            (nameToWrite == TypedefNameType.Projected && (context.InAbiNamespace || context.InAbiImplNamespace)) ||
             nameToWrite == TypedefNameType.ABI ||
             nameToWrite == TypedefNameType.EventSource ||
             (nameToWrite == TypedefNameType.CCW && authoredType))
@@ -290,6 +291,7 @@ internal static class TypedefNameWriter
                     bool needsNsPrefix = !string.IsNullOrEmpty(ns) && (
                         forceWriteNamespace ||
                         ns != context.CurrentNamespace ||
+                        (nameType == TypedefNameType.Projected && (context.InAbiNamespace || context.InAbiImplNamespace)) ||
                         nameType == TypedefNameType.ABI ||
                         nameType == TypedefNameType.EventSource);
 

@@ -71,15 +71,22 @@ internal static class ProjectionWriterExtensions
                 {
                 """, isMultiline: true);
             writer.IncreaseIndent();
+            if (context.Settings.Component)
+            {
+                context.InAbiImplNamespace = true;
+            }
         }
 
         /// <summary>
-        /// Writes the closing <c>}</c> for the projected namespace.
+        /// Writes the closing <c>}</c> for the projected namespace and clears the active
+        /// <see cref="ProjectionEmitContext.InAbiImplNamespace"/> flag.
         /// </summary>
-        public void WriteEndProjectedNamespace()
+        /// <param name="context">The active emit context.</param>
+        public void WriteEndProjectedNamespace(ProjectionEmitContext context)
         {
             writer.DecreaseIndent();
             writer.WriteLine("}");
+            context.InAbiImplNamespace = false;
         }
 
         /// <summary>
@@ -96,19 +103,23 @@ internal static class ProjectionWriterExtensions
                 {
                 """, isMultiline: true);
             writer.IncreaseIndent();
+            context.InAbiNamespace = true;
         }
 
         /// <summary>
         /// Writes the closing <c>}</c> for the ABI namespace plus the matching
-        /// <c>#pragma warning restore CA1416</c>.
+        /// <c>#pragma warning restore CA1416</c> and clears the active
+        /// <see cref="ProjectionEmitContext.InAbiNamespace"/> flag.
         /// </summary>
-        public void WriteEndAbiNamespace()
+        /// <param name="context">The active emit context.</param>
+        public void WriteEndAbiNamespace(ProjectionEmitContext context)
         {
             writer.DecreaseIndent();
             writer.WriteLine("""
                 }
                 #pragma warning restore CA1416
                 """, isMultiline: true);
+            context.InAbiNamespace = false;
         }
     }
 }

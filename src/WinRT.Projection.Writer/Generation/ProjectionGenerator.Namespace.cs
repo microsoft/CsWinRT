@@ -148,7 +148,7 @@ internal sealed partial class ProjectionGenerator
             written = true;
         }
 
-        writer.WriteEndProjectedNamespace();
+        writer.WriteEndProjectedNamespace(context);
 
         if (!written)
         {
@@ -226,7 +226,7 @@ internal sealed partial class ProjectionGenerator
                 TypeCategory category = TypeCategorization.GetCategory(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, category);
             }
-            writer.WriteEndAbiNamespace();
+            writer.WriteEndAbiNamespace(context);
         }
 
         // Phase 4: Custom additions to namespaces

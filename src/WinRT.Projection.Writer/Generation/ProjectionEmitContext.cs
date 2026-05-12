@@ -32,6 +32,23 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     public string CurrentNamespace { get; } = currentNamespace;
 
     /// <summary>
+    /// Gets a value indicating whether the writer is currently emitting inside an
+    /// <c>ABI.&lt;Ns&gt;</c> namespace block. Set by
+    /// <see cref="ProjectionWriterExtensions.WriteBeginAbiNamespace"/> and reset by
+    /// <see cref="ProjectionWriterExtensions.WriteEndAbiNamespace"/>. Used by
+    /// <see cref="Helpers.TypedefNameWriter"/> to force the <c>global::&lt;Ns&gt;.</c> prefix on
+    /// projected type references inside the ABI block (the ABI section can't see the projected
+    /// namespace via using directives, so unqualified names would fail to resolve).
+    /// </summary>
+    public bool InAbiNamespace { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the writer is currently emitting inside an
+    /// <c>ABI.Impl.&lt;Ns&gt;</c> namespace block (component-mode authored projections).
+    /// </summary>
+    public bool InAbiImplNamespace { get; set; }
+
+    /// <summary>
     /// Gets the resolver used to classify type signatures by their ABI marshalling shape.
     /// </summary>
     public AbiTypeShapeResolver AbiTypeShapeResolver { get; } = new AbiTypeShapeResolver(cache);
