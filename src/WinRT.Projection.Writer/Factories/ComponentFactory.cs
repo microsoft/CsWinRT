@@ -79,7 +79,7 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypeParams(writer, iface);
         }
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             {
             static {{factoryTypeName}}()
             {
@@ -97,7 +97,7 @@ internal static class ComponentFactory
             
             public object ActivateInstance()
             {
-            """, isMultiline: true);
+            """);
         if (isActivatable)
         {
             writer.Write($"return new {projectedTypeName}();");
@@ -223,19 +223,19 @@ internal static class ComponentFactory
         writer.WriteLine();
         writer.Write("public ");
         WriteFactoryPropertyType(writer, context, prop);
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
              {{propName}}
             {
-            """, isMultiline: true);
+            """);
         if (getter is not null)
         {
             writer.WriteLine($"get => {projectedTypeName}.{propName};");
         }
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             set => {{projectedTypeName}}.{{propName}} = value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -253,13 +253,13 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
         }
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
              {{evtName}}
             {
             add => {{projectedTypeName}}.{{evtName}} += value;
             remove => {{projectedTypeName}}.{{evtName}} -= value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     private static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
@@ -331,7 +331,7 @@ internal static class ComponentFactory
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
             writer.WriteLine();
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 namespace ABI.{{kv.Key}}
                 {
                 public static class ManagedExports
@@ -340,7 +340,7 @@ internal static class ComponentFactory
                 {
                 switch (activatableClassId)
                 {
-                """, isMultiline: true);
+                """);
             // Sort by the type's metadata token / row index so cases appear in WinMD declaration order.
             List<TypeDefinition> orderedTypes = [.. kv.Value];
             orderedTypes.Sort((a, b) =>
@@ -352,19 +352,19 @@ internal static class ComponentFactory
             foreach (TypeDefinition type in orderedTypes)
             {
                 (string ns, string name) = type.Names();
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                     case "{{ns}}.{{name}}":
                         return global::ABI.Impl.{{ns}}.{{IdentifierEscaping.StripBackticks(name)}}ServerActivationFactory.Make();
-                    """, isMultiline: true);
+                    """);
             }
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 default:
                     return null;
                 }
                 }
                 }
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 }

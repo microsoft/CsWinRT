@@ -121,9 +121,9 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
-            """, isMultiline: true);
+            """);
         using (writer.WriteBlock())
         {
             foreach (FieldDefinition field in type.Fields)
@@ -230,11 +230,11 @@ internal static class ProjectionFileBuilder
             writer.Write(" partial");
         }
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
              struct {{projectionName}} : IEquatable<{{projectionName}}>
             {
             public {{projectionName}}(
-            """, isMultiline: true);
+            """);
         for (int i = 0; i < fields.Count; i++)
         {
             if (i > 0)
@@ -245,10 +245,10 @@ internal static class ProjectionFileBuilder
             writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             )
             {
-            """, isMultiline: true);
+            """);
         foreach ((string _, string name, string paramName, bool _) in fields)
         {
             // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
@@ -272,12 +272,12 @@ internal static class ProjectionFileBuilder
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
         {
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 public {{typeStr}} {{name}}
                 {
                 readonly get; set;
                 }
-                """, isMultiline: true);
+                """);
         }
 
         // ==
@@ -300,13 +300,13 @@ internal static class ProjectionFileBuilder
             }
         }
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             ;
             public static bool operator !=({{projectionName}} x, {{projectionName}} y) => !(x == y);
             public bool Equals({{projectionName}} other) => this == other;
             public override bool Equals(object obj) => obj is {{projectionName}} that && this == that;
             public override int GetHashCode() => 
-            """, isMultiline: true);
+            """);
         if (fields.Count == 0)
         {
             writer.Write("0");
@@ -324,10 +324,10 @@ internal static class ProjectionFileBuilder
             }
         }
 
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             ;
             }
-            """, isMultiline: true);
+            """);
         writer.WriteLine();
     }
 
@@ -345,11 +345,11 @@ internal static class ProjectionFileBuilder
 
         writer.WriteLine();
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             {{context.Settings.InternalAccessibility}} enum {{typeName}}
             {
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>

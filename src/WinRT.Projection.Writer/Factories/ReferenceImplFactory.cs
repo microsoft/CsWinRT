@@ -30,7 +30,7 @@ internal static class ReferenceImplFactory
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             {{visibility}} static unsafe class {{nameStripped}}ReferenceImpl
             {
                 [FixedAddressValueType]
@@ -49,7 +49,7 @@ internal static class ReferenceImplFactory
                 }
             
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            """, isMultiline: true);
+            """);
         bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
 
@@ -58,7 +58,7 @@ internal static class ReferenceImplFactory
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
             // Even bool/char fields work because their managed layout matches the WinRT ABI.
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
@@ -69,14 +69,14 @@ internal static class ReferenceImplFactory
                         try
                         {
                             var value = (
-                """, isMultiline: true);
+                """);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 )(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
                             *(
-                """, isMultiline: true);
+                """);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 *)result = value;
                             return 0;
                         }
@@ -85,13 +85,13 @@ internal static class ReferenceImplFactory
                             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
                         }
                     }
-                """, isMultiline: true);
+                """);
         }
         else if (isNonBlittableStructType)
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
@@ -102,21 +102,21 @@ internal static class ReferenceImplFactory
                         try
                         {
                             
-                """, isMultiline: true);
+                """);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
                             
-                """, isMultiline: true);
+                """);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                  value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue);
                             *(
-                """, isMultiline: true);
+                """);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 *)result = value;
                             return 0;
                         }
@@ -125,12 +125,12 @@ internal static class ReferenceImplFactory
                             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
                         }
                     }
-                """, isMultiline: true);
+                """);
         }
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
@@ -141,11 +141,11 @@ internal static class ReferenceImplFactory
                         try
                         {
                             
-                """, isMultiline: true);
+                """);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
                             void* value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
                             *(void**)result = value;
@@ -156,7 +156,7 @@ internal static class ReferenceImplFactory
                             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
                         }
                     }
-                """, isMultiline: true);
+                """);
         }
         else
         {
@@ -169,18 +169,18 @@ internal static class ReferenceImplFactory
 
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
         writer.WriteLine();
-        writer.Write("""
+        writer.Write(isMultiline: true, """
                 public static ref readonly Guid IID
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref global::ABI.InterfaceIIDs.
-            """, isMultiline: true);
+            """);
         IidExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             ;
                 }
             }
-            """, isMultiline: true);
+            """);
         writer.WriteLine();
     }
 }

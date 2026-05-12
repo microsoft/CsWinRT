@@ -264,10 +264,10 @@ internal static class ObjRefNameGenerator
     {
         string propName = BuildIidPropertyNameForGenericInterface(context, gi);
         string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
             static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
-            """, isMultiline: true);
+            """);
         if (isInNullableContext)
         {
             writer.Write("?");
@@ -457,7 +457,7 @@ internal static class ObjRefNameGenerator
 
             // Lazy CompareExchange pattern. For unsealed-class defaults, also emit 'init;' so the
             // constructor can assign NativeObjectReference for the exact-type case.
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 private WindowsRuntimeObjectReference {{objRefName}}
                 {
                     get
@@ -468,9 +468,9 @@ internal static class ObjRefNameGenerator
                             _ = global::System.Threading.Interlocked.CompareExchange(
                                 location1: ref field,
                                 value: NativeObjectReference.As(
-                """, isMultiline: true);
+                """);
             WriteIidExpression(writer, context, ifaceRef);
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 ),
                                 comparand: null);
                 
@@ -479,7 +479,7 @@ internal static class ObjRefNameGenerator
                 
                         return field ?? MakeObjectReference();
                     }
-                """, isMultiline: true);
+                """);
             if (isDefault)
             {
                 writer.WriteLine("    init;");

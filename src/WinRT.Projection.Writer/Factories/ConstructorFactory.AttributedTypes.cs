@@ -54,7 +54,7 @@ internal static partial class ConstructorFactory
             else
             {
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                     {
                         get
                         {
@@ -66,7 +66,7 @@ internal static partial class ConstructorFactory
                             return field = WindowsRuntimeObjectReference.GetActivationFactory("{{fullName}}");
                         }
                     }
-                    """, isMultiline: true);
+                    """);
             }
         }
 
@@ -127,10 +127,10 @@ internal static partial class ConstructorFactory
 
                 writer.Write($"public unsafe {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
-                writer.Write("""
+                writer.Write(isMultiline: true, """
                     )
                       :base(
-                    """, isMultiline: true);
+                    """);
                 if (sig.Parameters.Count == 0)
                 {
                     writer.Write("default");
@@ -151,10 +151,10 @@ internal static partial class ConstructorFactory
                     writer.Write("))");
                 }
 
-                writer.Write("""
+                writer.Write(isMultiline: true, """
                     )
                     {
-                    """, isMultiline: true);
+                    """);
                 if (gcPressure > 0)
                 {
                     writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
@@ -183,11 +183,11 @@ internal static partial class ConstructorFactory
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
 
             writer.WriteLine();
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 public {{typeName}}()
                   :base(default(WindowsRuntimeActivationTypes.DerivedSealed), {{objRefName}}, {{defaultIfaceIid}}, {{GetMarshalingTypeName(classType)}})
                 {
-                """, isMultiline: true);
+                """);
             if (gcPressure > 0)
             {
                 writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");

@@ -82,12 +82,12 @@ internal static class AbiClassFactory
         }
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedType}} value)
                 {
-            """, isMultiline: true);
+            """);
         if (defaultGenericInst is not null)
         {
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
@@ -101,7 +101,7 @@ internal static class AbiClassFactory
             }
         }
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
                     return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{defaultIfaceIid}});
                 }
             
@@ -110,7 +110,7 @@ internal static class AbiClassFactory
                     return ({{projectedType}}?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -145,11 +145,11 @@ internal static class AbiClassFactory
             writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{fullName}>\")]");
         }
 
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             [WindowsRuntimeMetadataTypeName("{{fullName}}")]
             [WindowsRuntimeMappedType(typeof({{projectedType}}))]
             file static class {{nameStripped}} {}
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -228,42 +228,42 @@ internal static class AbiClassFactory
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 
         // Public *Marshaller class
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
                 {
-            """, isMultiline: true);
+            """);
         if (isSealed)
         {
             // For projected sealed runtime classes, the RCW type is always unwrappable.
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                         if (value is not null)
                         {
                             return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
                         }
-                """, isMultiline: true);
+                """);
         }
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
             string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                         if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
                         {
                             return windowsRuntimeInterface.GetInterface();
                         }
-                """, isMultiline: true);
+                """);
         }
         else
         {
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                         if (value is not null)
                         {
                             return value.GetDefaultInterface();
                         }
-                """, isMultiline: true);
+                """);
         }
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
                     return default;
                 }
             
@@ -275,9 +275,9 @@ internal static class AbiClassFactory
             
             file sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
             {
-            """, isMultiline: true);
+            """);
         AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
                 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                 {
                     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -289,18 +289,18 @@ internal static class AbiClassFactory
                     return new {{fullProjected}}(valueReference);
                 }
             }
-            """, isMultiline: true);
+            """);
         writer.WriteLine();
 
         if (isSealed)
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
                 {
-                """, isMultiline: true);
+                """);
             AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                     {
                         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
@@ -312,20 +312,20 @@ internal static class AbiClassFactory
                         return new {{fullProjected}}(valueReference);
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
         else
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
             string nonProjectedRcn = $"{typeNs}.{nameStripped}";
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
                 {
-                """, isMultiline: true);
+                """);
             AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
 
             // TryCreateObject (non-projected runtime class name match)
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                     public static unsafe bool TryCreateObject(
                         void* value,
                         ReadOnlySpan<char> runtimeClassName,
@@ -360,7 +360,7 @@ internal static class AbiClassFactory
                         return new {{fullProjected}}(valueReference);
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 

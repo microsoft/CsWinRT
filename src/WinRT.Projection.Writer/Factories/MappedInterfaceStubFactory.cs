@@ -94,18 +94,18 @@ internal static class MappedInterfaceStubFactory
                 break;
             case "IBindableIterator":
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                     public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({{objRefName}});
                     public void Reset() => throw new NotSupportedException();
                     public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({{objRefName}});
-                    """, isMultiline: true);
+                    """);
                 break;
             case "IBindableVector":
                 EmitNonGenericList(writer, objRefName);
                 break;
             case "INotifyDataErrorInfo":
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                     public global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({{objRefName}}, propertyName);
                     public bool HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({{objRefName}}); }
                     public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
@@ -113,7 +113,7 @@ internal static class MappedInterfaceStubFactory
                         add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Subscribe(value);
                         remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Unsubscribe(value);
                     }
-                    """, isMultiline: true);
+                    """);
                 break;
         }
     }
@@ -162,13 +162,13 @@ internal static class MappedInterfaceStubFactory
         EmitUnsafeAccessor(writer, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public bool MoveNext() => {{prefix}}MoveNext(null, {{objRefName}});
             public void Reset() => throw new NotSupportedException();
             public void Dispose() {}
             public {{t}} Current => {{prefix}}Current(null, {{objRefName}});
             object global::System.Collections.IEnumerator.Current => Current!;
-            """, isMultiline: true);
+            """);
     }
 
     private static void EmitDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -216,7 +216,7 @@ internal static class MappedInterfaceStubFactory
         // Public member emission order matches the WinRT IMap<K,V> vtable order, NOT alphabetical.
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s own
         // EmitGenericEnumerable invocation.
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public ICollection<{{k}}> Keys => {{prefix}}Keys(null, {{objRefName}});
             public ICollection<{{v}}> Values => {{prefix}}Values(null, {{objRefName}});
             public int Count => {{prefix}}Count(null, {{objRefName}});
@@ -235,7 +235,7 @@ internal static class MappedInterfaceStubFactory
             public bool Contains({{kv}} item) => {{prefix}}Contains(null, {{objRefName}}, item);
             public void CopyTo({{kv}}[] array, int arrayIndex) => {{prefix}}CopyTo(null, {{objRefName}}, {{enumerableObjRefName}}, array, arrayIndex);
             bool ICollection<{{kv}}>.Remove({{kv}} item) => {{prefix}}Remove(null, {{objRefName}}, item);
-            """, isMultiline: true);
+            """);
     }
 
     private static void EmitReadOnlyDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -293,11 +293,11 @@ internal static class MappedInterfaceStubFactory
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // EmitGenericEnumerable invocation.
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
             public {{t}} this[int index] => {{prefix}}Item(null, {{objRefName}}, index);
             public int Count => {{prefix}}Count(null, {{objRefName}});
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -348,7 +348,7 @@ internal static class MappedInterfaceStubFactory
         // Public member emission order matches the WinRT IVector<T> vtable order mapped to IList<T>,
         // NOT alphabetical. GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // own EmitGenericEnumerable invocation.
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public int Count => {{prefix}}Count(null, {{objRefName}});
             public bool IsReadOnly => false;
             
@@ -366,7 +366,7 @@ internal static class MappedInterfaceStubFactory
             public bool Contains({{t}} item) => {{prefix}}Contains(null, {{objRefName}}, item);
             public void CopyTo({{t}}[] array, int arrayIndex) => {{prefix}}CopyTo(null, {{objRefName}}, array, arrayIndex);
             public bool Remove({{t}} item) => {{prefix}}Remove(null, {{objRefName}}, item);
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -375,17 +375,17 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams)
     {
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{accessName}}")]
             static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _, WindowsRuntimeObjectReference objRef{{extraParams}});
-            """, isMultiline: true);
+            """);
         writer.WriteLine();
     }
 
     private static void EmitNonGenericList(IndentedTextWriter writer, string objRefName)
     {
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             [global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
             public object this[int index]
             {
@@ -405,7 +405,7 @@ internal static class MappedInterfaceStubFactory
             public void Remove(object value) => global::ABI.System.Collections.IListMethods.Remove({{objRefName}}, value);
             public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({{objRefName}}, index);
             public void CopyTo(Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({{objRefName}}, array, index);
-            """, isMultiline: true);
+            """);
         // GetEnumerator is NOT emitted here -- it's handled separately by IBindableIterable's
         // EmitNonGenericEnumerable invocation.
     }

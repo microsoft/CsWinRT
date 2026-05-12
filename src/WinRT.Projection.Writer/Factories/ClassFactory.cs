@@ -402,24 +402,24 @@ internal static class ClassFactory
 
                 writer.Write("public static event ");
                 TypedefNameWriter.WriteEventType(writer, context, evt);
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                      {{evtName}}
                     {
-                    """, isMultiline: true);
+                    """);
                 if (context.Settings.ReferenceProjection)
                 {
                     // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.Write("""
+                    writer.Write(isMultiline: true, """
                             add => throw null;
                             remove => throw null;
-                        """, isMultiline: true);
+                        """);
                 }
                 else
                 {
-                    writer.Write($$"""
+                    writer.Write(isMultiline: true, $$"""
                             add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
                             remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
-                        """, isMultiline: true);
+                        """);
                 }
                 writer.WriteLine("}");
             }
@@ -547,23 +547,23 @@ internal static class ClassFactory
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             private static WindowsRuntimeObjectReference {{objRefName}}
             {
-            """, isMultiline: true);
+            """);
         if (context.Settings.ReferenceProjection)
         {
             // the static factory objref getter body is just 'throw null;'.
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                     get
                     {
                         throw null;
                     }
                 }
-                """, isMultiline: true);
+                """);
             return;
         }
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
                 get
                 {
                     var __{{objRefName}} = field;
@@ -572,13 +572,13 @@ internal static class ClassFactory
                         return __{{objRefName}};
                     }
                     return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", 
-            """, isMultiline: true);
+            """);
         ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             );
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -635,11 +635,11 @@ internal static class ClassFactory
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
             writer.WriteLine();
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
                 : base(nativeObjectReference)
                 {
-                """, isMultiline: true);
+                """);
             if (!type.IsSealed)
             {
                 // For unsealed classes, the default interface objref needs to be initialized only
@@ -650,12 +650,12 @@ internal static class ClassFactory
                 if (defaultIface is not null)
                 {
                     string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
-                    writer.Write($$"""
+                    writer.Write(isMultiline: true, $$"""
                         if (GetType() == typeof({{typeName}}))
                         {
                         {{defaultObjRefName}} = NativeObjectReference;
                         }
-                        """, isMultiline: true);
+                        """);
                 }
             }
 
@@ -711,12 +711,12 @@ internal static class ClassFactory
         // Conditional finalizer
         if (gcPressure > 0)
         {
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 ~{{typeName}}()
                 {
                 GC.RemoveMemoryPressure({{gcPressure.ToString(CultureInfo.InvariantCulture)}});
                 }
-                """, isMultiline: true);
+                """);
         }
 
         // Class members from interfaces (instance methods, properties, events).

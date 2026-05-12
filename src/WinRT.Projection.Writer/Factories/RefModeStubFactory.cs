@@ -20,14 +20,14 @@ internal static class RefModeStubFactory
     public static void EmitRefModeObjRefGetterBody(IndentedTextWriter writer)
     {
         writer.WriteLine();
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             {
                 get
                 {
                     throw null;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -49,10 +49,10 @@ internal static class RefModeStubFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void EmitRefModeInvokeBody(IndentedTextWriter writer)
     {
-        writer.Write("""
+        writer.Write(isMultiline: true, """
                     throw null;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 }
