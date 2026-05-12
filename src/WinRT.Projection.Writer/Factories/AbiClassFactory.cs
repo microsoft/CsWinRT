@@ -82,7 +82,7 @@ internal static class AbiClassFactory
         }
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedType}} value)
@@ -228,7 +228,7 @@ internal static class AbiClassFactory
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 
         // Public *Marshaller class
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
@@ -263,7 +263,7 @@ internal static class AbiClassFactory
                         }
                 """, isMultiline: true);
         }
-        writer.Write($$"""
+        writer.WriteLine($$"""
                     return default;
                 }
             
@@ -295,7 +295,7 @@ internal static class AbiClassFactory
         if (isSealed)
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
                 {
                 """, isMultiline: true);
@@ -318,7 +318,7 @@ internal static class AbiClassFactory
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
             string nonProjectedRcn = $"{typeNs}.{nameStripped}";
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
                 {
                 """, isMultiline: true);

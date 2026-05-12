@@ -490,7 +490,7 @@ internal static class AbiInterfaceIDicFactory
             string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.WriteLine();
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
                 {
                 """, isMultiline: true);

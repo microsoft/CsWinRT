@@ -91,7 +91,7 @@ internal static class ReferenceImplFactory
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            writer.Write("""
+            writer.WriteLine("""
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
@@ -130,7 +130,7 @@ internal static class ReferenceImplFactory
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            writer.Write("""
+            writer.WriteLine("""
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)

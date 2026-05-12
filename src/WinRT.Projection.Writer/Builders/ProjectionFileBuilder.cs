@@ -245,7 +245,7 @@ internal static class ProjectionFileBuilder
             writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
-        writer.Write("""
+        writer.WriteLine("""
             )
             {
             """, isMultiline: true);

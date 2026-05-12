@@ -40,7 +40,7 @@ internal static partial class ConstructorFactory
 
             MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
-        writer.Write("""
+        writer.WriteLine("""
             )
             {
             """, isMultiline: true);
@@ -91,7 +91,7 @@ internal static partial class ConstructorFactory
         {
             // Composable Invoke signature is multi-line and includes baseInterface (in) +
             // innerInterface (out).
-            writer.Write("""
+            writer.WriteLine("""
                     public override unsafe void Invoke(
                       WindowsRuntimeActivationArgsReference additionalParameters,
                       WindowsRuntimeObject baseInterface,
@@ -103,7 +103,7 @@ internal static partial class ConstructorFactory
         else
         {
             // Sealed Invoke signature is multi-line..
-            writer.Write("""
+            writer.WriteLine("""
                     public override unsafe void Invoke(
                       WindowsRuntimeActivationArgsReference additionalParameters,
                       out void* retval)
@@ -310,7 +310,7 @@ internal static partial class ConstructorFactory
 
         if (hasNonBlittableArray)
         {
-            writer.Write("""
+            writer.WriteLine("""
                         try
                         {
                 """, isMultiline: true);
@@ -409,7 +409,7 @@ internal static partial class ConstructorFactory
                     writer.Write(pname);
                 }
             }
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 )
                 {{indent}}{
                 """, isMultiline: true);
@@ -594,7 +594,7 @@ internal static partial class ConstructorFactory
         // Close try and emit finally with cleanup for non-blittable PassArray params.
         if (hasNonBlittableArray)
         {
-            writer.Write("""
+            writer.WriteLine("""
                         }
                         finally
                         {

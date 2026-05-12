@@ -163,7 +163,7 @@ internal static partial class AbiMethodBodyFactory
 
             // Emit the per-event ConditionalWeakTable static field.
             writer.WriteLine();
-            writer.Write($$"""
+            writer.WriteLine($$"""
                     private static ConditionalWeakTable<object, {{eventSourceProjectedFull}}> _{{evtName}}
                     {
                         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -310,7 +310,7 @@ internal static partial class AbiMethodBodyFactory
                     """, isMultiline: true);
                 }
             }
-            writer.Write("""
+            writer.WriteLine("""
                 try
                 {
                 """, isMultiline: true);
@@ -794,7 +794,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (hasNonBlittableArrayDoAbi)
             {
-                writer.Write("""
+                writer.WriteLine("""
                     finally
                     {
                     """, isMultiline: true);

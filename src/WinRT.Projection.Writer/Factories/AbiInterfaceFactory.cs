@@ -616,7 +616,7 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {{(useInternal ? "internal static class " : "public static class ")}}{{nameStripped}}Methods
             {
             """, isMultiline: true);

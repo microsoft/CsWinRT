@@ -151,7 +151,7 @@ internal static partial class ConstructorFactory
                     writer.Write("))");
                 }
 
-                writer.Write("""
+                writer.WriteLine("""
                     )
                     {
                     """, isMultiline: true);
@@ -183,7 +183,7 @@ internal static partial class ConstructorFactory
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
 
             writer.WriteLine();
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 public {{typeName}}()
                   :base(default(WindowsRuntimeActivationTypes.DerivedSealed), {{objRefName}}, {{defaultIfaceIid}}, {{GetMarshalingTypeName(classType)}})
                 {

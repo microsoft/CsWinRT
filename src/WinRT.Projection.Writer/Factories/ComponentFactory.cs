@@ -79,7 +79,7 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypeParams(writer, iface);
         }
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {
             static {{factoryTypeName}}()
             {
@@ -223,7 +223,7 @@ internal static class ComponentFactory
         writer.WriteLine();
         writer.Write("public ");
         WriteFactoryPropertyType(writer, context, prop);
-        writer.Write($$"""
+        writer.WriteLine($$"""
              {{propName}}
             {
             """, isMultiline: true);
@@ -331,7 +331,7 @@ internal static class ComponentFactory
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
             writer.WriteLine();
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 namespace ABI.{{kv.Key}}
                 {
                 public static class ManagedExports

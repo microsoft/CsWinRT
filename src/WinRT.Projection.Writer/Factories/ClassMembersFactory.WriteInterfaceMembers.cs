@@ -534,7 +534,7 @@ internal static partial class ClassMembersFactory
             if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     private {{eventSourceTypeFull}} _eventSource_{{name}}
                     {
                         get
@@ -590,7 +590,7 @@ internal static partial class ClassMembersFactory
 
             writer.Write($"{access}{methodSpec}event ");
             TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
-            writer.Write($$"""
+            writer.WriteLine($$"""
                  {{name}}
                 {
                 """, isMultiline: true);

@@ -402,7 +402,7 @@ internal static class ClassFactory
 
                 writer.Write("public static event ");
                 TypedefNameWriter.WriteEventType(writer, context, evt);
-                writer.Write($$"""
+                writer.WriteLine($$"""
                      {{evtName}}
                     {
                     """, isMultiline: true);
@@ -547,7 +547,7 @@ internal static class ClassFactory
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             private static WindowsRuntimeObjectReference {{objRefName}}
             {
             """, isMultiline: true);
@@ -635,7 +635,7 @@ internal static class ClassFactory
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
             writer.WriteLine();
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
                 : base(nativeObjectReference)
                 {

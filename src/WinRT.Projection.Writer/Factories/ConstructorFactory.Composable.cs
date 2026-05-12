@@ -121,7 +121,7 @@ internal static partial class ConstructorFactory
                 writer.Write("))");
             }
 
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 )
                 {
                 if (GetType() == typeof({{typeName}}))
@@ -167,7 +167,7 @@ internal static partial class ConstructorFactory
 
         // 1. WindowsRuntimeActivationTypes.DerivedComposed
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
               :base(_, activationFactoryObjectReference, in iid, marshalingType)
             {
@@ -177,7 +177,7 @@ internal static partial class ConstructorFactory
             writer.WriteLine(gcPressureBody);
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             }
             
             protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
@@ -189,7 +189,7 @@ internal static partial class ConstructorFactory
             writer.WriteLine(gcPressureBody);
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             }
             
             protected {{typeName}}(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
@@ -201,7 +201,7 @@ internal static partial class ConstructorFactory
             writer.WriteLine(gcPressureBody);
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             }
             
             protected {{typeName}}(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)

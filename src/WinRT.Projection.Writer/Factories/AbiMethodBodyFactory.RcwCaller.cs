@@ -634,7 +634,7 @@ internal static partial class AbiMethodBodyFactory
 
         if (needsTryFinally)
         {
-            writer.Write("""
+            writer.WriteLine("""
                         try
                         {
                 """, isMultiline: true);
@@ -815,7 +815,7 @@ internal static partial class AbiMethodBodyFactory
                     writer.Write(callName);
                 }
             }
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 )
                 {{indent}}{{new string(' ', fixedNesting * 4)}}{
                 """, isMultiline: true);
@@ -1374,7 +1374,7 @@ internal static partial class AbiMethodBodyFactory
 
         if (needsTryFinally)
         {
-            writer.Write("""
+            writer.WriteLine("""
                         }
                         finally
                         {

@@ -65,7 +65,7 @@ internal static class StructEnumMarshallerFactory
             isComplexStruct = false;
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
             """, isMultiline: true);
@@ -77,7 +77,7 @@ internal static class StructEnumMarshallerFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write(" ConvertToUnmanaged(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.WriteLine("""
                  value)
                     {
                         return new() {
@@ -215,7 +215,7 @@ internal static class StructEnumMarshallerFactory
             writer.WriteLine("    }");
             writer.Write("    public static void Dispose(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("""
+            writer.WriteLine("""
                  value)
                     {
                 """, isMultiline: true);
@@ -318,7 +318,7 @@ internal static class StructEnumMarshallerFactory
         }
         else if (isComplexStruct)
         {
-            writer.Write("""
+            writer.WriteLine("""
                 ? UnboxToManaged(void* value)
                     {
                         
