@@ -78,10 +78,12 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
             if (_settings.Verbose)
             {
                 Action<string> log = _settings.Logger ?? Console.Out.WriteLine;
+
                 foreach (string p in _settings.Input)
                 {
                     log($"input: {p}");
                 }
+
                 log($"output: {_settings.OutputFolder}");
             }
 

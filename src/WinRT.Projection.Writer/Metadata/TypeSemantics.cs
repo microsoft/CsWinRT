@@ -248,7 +248,7 @@ internal static class TypeSemanticsFactory
 }
 
 /// <summary>
-/// Type-name kind,.
+/// Type-name kind.
 /// </summary>
 internal enum TypedefNameType
 {

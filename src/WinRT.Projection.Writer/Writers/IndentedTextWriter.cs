@@ -57,6 +57,11 @@ internal sealed class IndentedTextWriter
     private string[] _availableIndentations;
 
     /// <summary>
+    /// Gets the current indent level (number of <see cref="Block"/>-equivalent units of indentation).
+    /// </summary>
+    public int CurrentIndentLevel { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="IndentedTextWriter"/> class with an empty buffer.
     /// </summary>
     public IndentedTextWriter()
@@ -397,11 +402,6 @@ internal sealed class IndentedTextWriter
     /// <param name="startIndex">The starting position to remove.</param>
     /// <param name="length">The number of characters to remove.</param>
     public void Remove(int startIndex, int length) => _buffer.Remove(startIndex, length);
-
-    /// <summary>
-    /// Returns the current indent level (number of <see cref="Block"/>-equivalent units of indentation).
-    /// </summary>
-    public int CurrentIndentLevel { get; private set; }
 
     /// <summary>
     /// Sets the indent level back to zero (for emergency reset; rarely needed).

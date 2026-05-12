@@ -53,10 +53,11 @@ internal static class AbiClassFactory
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-        // instantiation (e.g. IDictionary<K,V>), emit an UnsafeAccessor extern declaration
-        // inside ConvertToUnmanaged that fetches the IID via WinRT.Interop's InterfaceIIDs class
-        // (since the IID for a generic instantiation is computed at runtime). The IID expression
-        // in the call then becomes '<accessor>(null)' instead of a static InterfaceIIDs reference.
+        // If the default interface is a generic instantiation (e.g. IDictionary<K,V>), emit an
+        // UnsafeAccessor extern declaration inside ConvertToUnmanaged that fetches the IID via
+        // WinRT.Interop's InterfaceIIDs class (since the IID for a generic instantiation is computed
+        // at runtime). The IID expression in the call then becomes '<accessor>(null)' instead of a
+        // static InterfaceIIDs reference.
         GenericInstanceTypeSignature? defaultGenericInst = null;
 
         if (defaultIface is TypeSpecification spec
