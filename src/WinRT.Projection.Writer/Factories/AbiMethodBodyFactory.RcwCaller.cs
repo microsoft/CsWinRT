@@ -40,7 +40,7 @@ internal static partial class AbiMethodBodyFactory
         AbiTypeShapeKind returnShape = rt is null ? AbiTypeShapeKind.Unknown : context.AbiTypeShapeResolver.Resolve(rt).Kind;
 
         bool returnIsString = returnShape == AbiTypeShapeKind.String;
-        bool returnIsRefType = returnShape is AbiTypeShapeKind.RuntimeClassOrInterface or AbiTypeShapeKind.Delegate or AbiTypeShapeKind.Object or AbiTypeShapeKind.GenericInstance;
+        bool returnIsRefType = returnShape is AbiTypeShapeKind.RuntimeClassOrInterface or AbiTypeShapeKind.Delegate or AbiTypeShapeKind.Object or AbiTypeShapeKind.GenericInstance or AbiTypeShapeKind.NullableT;
         bool returnIsAnyStruct = returnShape is AbiTypeShapeKind.BlittableStruct or AbiTypeShapeKind.ComplexStruct;
         bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSzCheck

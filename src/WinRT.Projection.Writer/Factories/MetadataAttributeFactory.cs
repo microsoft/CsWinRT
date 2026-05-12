@@ -330,13 +330,13 @@ internal static class MetadataAttributeFactory
         }
 
         writer.WriteLine();
-        writer.WriteLine("""
+        writer.Write("""
             [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
                 source: typeof(
             """, isMultiline: true);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("""
+        writer.Write("""
             ),
                 proxy: typeof(
             """, isMultiline: true);
