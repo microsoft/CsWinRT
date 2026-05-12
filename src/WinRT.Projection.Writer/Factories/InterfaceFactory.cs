@@ -231,14 +231,13 @@ internal static class InterfaceFactory
             }
 
             MethodSignatureInfo sig = new(method);
-            writer.WriteLine();
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {method.Name?.Value ?? string.Empty}(");
             MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write(");");
+            writer.WriteLine(");");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
@@ -251,7 +250,6 @@ internal static class InterfaceFactory
                 && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.WriteLine();
             writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
 
             if (getter is not null || setter is not null)
@@ -264,15 +262,14 @@ internal static class InterfaceFactory
                 writer.Write(" set;");
             }
 
-            writer.Write(" }");
+            writer.WriteLine(" }");
         }
 
         foreach (EventDefinition evt in type.Events)
         {
-            writer.WriteLine();
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.Write($" {evt.Name?.Value ?? string.Empty};");
+            writer.WriteLine($" {evt.Name?.Value ?? string.Empty};");
         }
     }
 
