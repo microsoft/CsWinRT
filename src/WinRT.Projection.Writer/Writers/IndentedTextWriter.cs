@@ -467,36 +467,12 @@ internal sealed partial class IndentedTextWriter
     public override string ToString() => _buffer.ToString();
 
     /// <summary>
-    /// Gets the current length (in chars) of the underlying buffer.
-    /// </summary>
-    public int Length => _buffer.Length;
-
-    /// <summary>
-    /// Returns the last character written to the buffer, or <c>'\0'</c> if the buffer is empty.
-    /// </summary>
-    public char Back() => _buffer.Length == 0 ? '\0' : _buffer[^1];
-
-    /// <summary>
-    /// Returns the contents of a substring of the buffer (used for capture-and-restore patterns).
-    /// </summary>
-    /// <param name="startIndex">The starting position.</param>
-    /// <param name="length">The length of the substring to return.</param>
-    /// <returns>The substring of the buffer at the requested position.</returns>
-    public string GetSubstring(int startIndex, int length) => _buffer.ToString(startIndex, length);
-
-    /// <summary>
-    /// Removes a range of characters from the buffer.
-    /// </summary>
-    /// <param name="startIndex">The starting position to remove.</param>
-    /// <param name="length">The number of characters to remove.</param>
-    public void Remove(int startIndex, int length) => _buffer.Remove(startIndex, length);
-
-    /// <summary>
     /// Sets the indent level back to zero (for emergency reset; rarely needed).
     /// </summary>
     public void ResetIndent()
     {
         CurrentIndentLevel = 0;
+
         _currentIndentation = _availableIndentations[0];
     }
 
@@ -547,17 +523,6 @@ internal sealed partial class IndentedTextWriter
 
         File.WriteAllText(path, content);
         _ = _buffer.Clear();
-    }
-
-    /// <summary>
-    /// Flushes the current buffer contents to a string (without trimming) and clears the buffer.
-    /// </summary>
-    /// <returns>The full buffer contents, untrimmed.</returns>
-    public string FlushToString()
-    {
-        string text = _buffer.ToString();
-        _ = _buffer.Clear();
-        return text;
     }
 
     /// <summary>
