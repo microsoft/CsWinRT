@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.ProjectionWriter;
@@ -26,27 +25,16 @@ internal static class ITypeDefOrRefExtensions
 
         /// <summary>
         /// Attempts to resolve <paramref name="type"/> against <paramref name="context"/>, returning
-        /// <see langword="null"/> when the assembly that defines it cannot be located. This is the
-        /// safe alternative to <c>ITypeDescriptor.Resolve(RuntimeContext)</c> (which throws when
-        /// the assembly resolver fails) for best-effort cross-assembly resolution paths in the writer.
+        /// <see langword="null"/> when the type cannot be resolved (missing assembly, invalid reference,
+        /// missing type, etc.). This is the safe alternative to <c>ITypeDescriptor.Resolve(RuntimeContext)</c>
+        /// (which throws on failure) for best-effort cross-assembly resolution paths in the writer.
         /// </summary>
         /// <param name="context">The runtime context used to locate the type's assembly.</param>
         /// <returns>The resolved <see cref="TypeDefinition"/>, or <see langword="null"/> when the
         /// reference cannot be resolved.</returns>
         public TypeDefinition? TryResolve(RuntimeContext context)
         {
-            try
-            {
-                return type.Resolve(context);
-            }
-            catch (Exception)
-            {
-                // AsmResolver's Resolve throws when the assembly cannot be located by the configured
-                // resolver. The writer uses this from best-effort fallback paths (cross-assembly
-                // base-type / interface resolution) where the caller has a non-throwing fallback
-                // (e.g. a name-based lookup in the metadata cache) ready to take over.
-                return null;
-            }
+            return type.TryResolve(context, out TypeDefinition? definition) ? definition : null;
         }
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
@@ -56,8 +55,6 @@ internal sealed class MetadataCache
     /// </summary>
     /// <param name="inputs">The input paths.</param>
     /// <returns>The loaded metadata cache.</returns>
-    [SuppressMessage("Style", "IDE0028:Use collection expression",
-        Justification = "HashSet<string>(StringComparer.OrdinalIgnoreCase) cannot be expressed as a collection expression.")]
     public static MetadataCache Load(IEnumerable<string> inputs)
     {
         // Collect all .winmd files first so the resolver knows about all of them. Dedupe by canonical
@@ -66,7 +63,8 @@ internal sealed class MetadataCache
         // and one picked up by an enclosing directory scan) is only loaded once. Loading the same
         // .winmd twice causes duplicate types to be added to NamespaceMembers.Types and ultimately
         // emitted twice in the same output file (CS0101).
-        HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+        int capacity = inputs is ICollection<string> collection ? collection.Count : 0;
+        HashSet<string> seen = new(capacity, StringComparer.OrdinalIgnoreCase);
         List<string> winmdFiles = [];
         foreach (string input in inputs)
         {

@@ -439,6 +439,7 @@ internal sealed class IndentedTextWriter
     public void FlushToFile(string path)
     {
         string content = _buffer.ToString();
+
         if (File.Exists(path))
         {
             try
@@ -449,11 +450,12 @@ internal sealed class IndentedTextWriter
                     return;
                 }
             }
-            catch
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
                 // Intentional: see <remarks/> -- a failed read falls through to a fresh write.
             }
         }
+
         File.WriteAllText(path, content);
         _ = _buffer.Clear();
     }
