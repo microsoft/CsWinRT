@@ -40,12 +40,13 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a blittable WinRT primitive (the C# primitive
-    /// types whose layout matches the WinRT ABI directly).
+    /// types whose layout matches the WinRT ABI directly), OR a WinRT enum (whose ABI shape is its
+    /// underlying integer primitive).
     /// </summary>
     /// <param name="signature">The type signature to classify.</param>
-    /// <returns><see langword="true"/> if blittable; otherwise <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if blittable primitive or enum; otherwise <see langword="false"/>.</returns>
     public bool IsBlittablePrimitive(TypeSignature signature)
-        => Resolve(signature).Kind == AbiTypeShapeKind.BlittablePrimitive;
+        => Resolve(signature).Kind is AbiTypeShapeKind.BlittablePrimitive or AbiTypeShapeKind.Enum;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT enum (marshalled as its underlying integer).
@@ -56,13 +57,14 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         => Resolve(signature).Kind == AbiTypeShapeKind.Enum;
 
     /// <summary>
-    /// Returns whether <paramref name="signature"/> is any WinRT struct that flows across the ABI by value
-    /// (either a blittable struct or a complex struct that needs per-field marshalling).
+    /// Returns whether <paramref name="signature"/> is a WinRT struct that flows across the ABI by value
+    /// without per-field marshalling (i.e. blittable struct, including bool/char fields).
+    /// Complex structs (with reference fields requiring per-field marshalling) are <b>not</b> included.
     /// </summary>
     /// <param name="signature">The type signature to classify.</param>
-    /// <returns><see langword="true"/> if a struct; otherwise <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if a blittable struct; otherwise <see langword="false"/>.</returns>
     public bool IsAnyStruct(TypeSignature signature)
-        => Resolve(signature).Kind is AbiTypeShapeKind.BlittableStruct or AbiTypeShapeKind.ComplexStruct;
+        => Resolve(signature).Kind == AbiTypeShapeKind.BlittableStruct;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT struct that has at least one reference-type
