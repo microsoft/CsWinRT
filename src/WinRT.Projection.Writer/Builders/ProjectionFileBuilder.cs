@@ -230,104 +230,101 @@ internal static class ProjectionFileBuilder
             writer.Write(" partial");
         }
 
-        writer.Write($$"""
-             struct {{projectionName}} : IEquatable<{{projectionName}}>
-            {
-            public {{projectionName}}(
-            """, isMultiline: true);
-        for (int i = 0; i < fields.Count; i++)
+        writer.WriteLine($" struct {projectionName} : IEquatable<{projectionName}>");
+        using (writer.WriteBlock())
         {
-            if (i > 0)
+            writer.Write($"public {projectionName}(");
+            for (int i = 0; i < fields.Count; i++)
             {
-                writer.Write(", ");
+                if (i > 0)
+                {
+                    writer.Write(", ");
+                }
+
+                writer.Write($"{fields[i].TypeStr} ");
+                IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
             }
 
-            writer.Write($"{fields[i].TypeStr} ");
-            IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
-        }
-        writer.WriteLine("""
-            )
+            writer.WriteLine(")");
+            using (writer.WriteBlock())
             {
-            """, isMultiline: true);
-        foreach ((string _, string name, string paramName, bool _) in fields)
-        {
-            // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
-            // qualify with this. to disambiguate.
-            if (name == paramName)
+                foreach ((string _, string name, string paramName, bool _) in fields)
+                {
+                    // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
+                    // qualify with this. to disambiguate.
+                    if (name == paramName)
+                    {
+                        writer.Write($"this.{name} = ");
+                        IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
+                        writer.Write("; ");
+                    }
+                    else
+                    {
+                        writer.Write($"{name} = ");
+                        IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
+                        writer.Write("; ");
+                    }
+                }
+
+                writer.WriteLine();
+            }
+
+            // properties
+            foreach ((string typeStr, string name, string _, bool _) in fields)
             {
-                writer.Write($"this.{name} = ");
-                IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
-                writer.Write("; ");
+                writer.WriteLine($"public {typeStr} {name}");
+                using (writer.WriteBlock())
+                {
+                    writer.WriteLine("readonly get; set;");
+                }
+            }
+
+            // ==
+            writer.Write($"public static bool operator ==({projectionName} x, {projectionName} y) => ");
+
+            if (fields.Count == 0)
+            {
+                writer.Write("true");
             }
             else
             {
-                writer.Write($"{name} = ");
-                IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
-                writer.Write("; ");
-            }
-        }
-        writer.WriteLine();
-        writer.WriteLine("}");
-
-        // properties
-        foreach ((string typeStr, string name, string _, bool _) in fields)
-        {
-            writer.WriteLine($$"""
-                public {{typeStr}} {{name}}
+                for (int i = 0; i < fields.Count; i++)
                 {
-                readonly get; set;
+                    if (i > 0)
+                    {
+                        writer.Write(" && ");
+                    }
+
+                    writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
                 }
-                """, isMultiline: true);
-        }
+            }
 
-        // ==
-        writer.Write($"public static bool operator ==({projectionName} x, {projectionName} y) => ");
+            writer.WriteLine(";");
+            writer.WriteLine($"public static bool operator !=({projectionName} x, {projectionName} y) => !(x == y);");
+            writer.WriteLine($"public bool Equals({projectionName} other) => this == other;");
+            writer.WriteLine($"public override bool Equals(object obj) => obj is {projectionName} that && this == that;");
+            writer.Write("public override int GetHashCode() => ");
 
-        if (fields.Count == 0)
-        {
-            writer.Write("true");
-        }
-        else
-        {
-            for (int i = 0; i < fields.Count; i++)
+            if (fields.Count == 0)
             {
-                if (i > 0)
-                {
-                    writer.Write(" && ");
-                }
-
-                writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
+                writer.Write("0");
             }
-        }
-
-        writer.Write($$"""
-            ;
-            public static bool operator !=({{projectionName}} x, {{projectionName}} y) => !(x == y);
-            public bool Equals({{projectionName}} other) => this == other;
-            public override bool Equals(object obj) => obj is {{projectionName}} that && this == that;
-            public override int GetHashCode() => 
-            """, isMultiline: true);
-        if (fields.Count == 0)
-        {
-            writer.Write("0");
-        }
-        else
-        {
-            for (int i = 0; i < fields.Count; i++)
+            else
             {
-                if (i > 0)
+                for (int i = 0; i < fields.Count; i++)
                 {
-                    writer.Write(" ^ ");
-                }
+                    if (i > 0)
+                    {
+                        writer.Write(" ^ ");
+                    }
 
-                writer.Write($"{fields[i].Name}.GetHashCode()");
+                    writer.Write($"{fields[i].Name}.GetHashCode()");
+                }
             }
+
+            writer.WriteLine(";");
         }
 
-        writer.WriteLine("""
-            ;
-            }
-            """, isMultiline: true);
         writer.WriteLine();
     }
 
