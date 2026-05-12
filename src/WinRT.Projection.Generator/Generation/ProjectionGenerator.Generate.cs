@@ -228,6 +228,8 @@ internal partial class ProjectionGenerator
         if (isWindowsSdkMode && projectionReferenceAssemblies.Count == 0)
         {
             WriteWindowsSdkFilters(includes, excludes, args.WindowsUIXamlProjection);
+
+            hasTypesToProject = true;
         }
 
         // If we're not in Windows SDK mode, we exclude the Windows namespace to avoid

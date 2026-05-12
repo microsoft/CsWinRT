@@ -41,7 +41,7 @@ internal static partial class AbiMethodBodyFactory
 
         bool returnIsString = returnShape == AbiTypeShapeKind.String;
         bool returnIsRefType = returnShape is AbiTypeShapeKind.RuntimeClassOrInterface or AbiTypeShapeKind.Delegate or AbiTypeShapeKind.Object or AbiTypeShapeKind.GenericInstance or AbiTypeShapeKind.NullableT;
-        bool returnIsAnyStruct = returnShape is AbiTypeShapeKind.BlittableStruct or AbiTypeShapeKind.ComplexStruct;
+        bool returnIsAnyStruct = returnShape == AbiTypeShapeKind.BlittableStruct;
         bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSzCheck
             && (context.AbiTypeShapeResolver.IsBlittablePrimitive(retSzCheck.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(retSzCheck.BaseType)
