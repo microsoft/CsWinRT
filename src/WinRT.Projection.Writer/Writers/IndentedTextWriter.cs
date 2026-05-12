@@ -130,28 +130,10 @@ internal sealed class IndentedTextWriter
     /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation
     /// at the start of each new line.
     /// </summary>
-    /// <remarks>
-    /// If the buffer is mid-line (does not end with a newline) and the buffer's last character
-    /// is a brace (<c>{</c> or <c>}</c>), and the new content starts with whitespace (i.e. is
-    /// indented as a fresh code statement), a newline is inserted before the content is
-    /// processed. This prevents an indented code line from being jammed onto the same line as
-    /// a structural brace from a previous emission. The whitespace check distinguishes "fresh
-    /// indented statement" from "inline continuation" (e.g. emitting a GUID string like
-    /// <c>{1234ABCD-...}</c> via consecutive single-character writes, where the bytes after
-    /// <c>{</c> are not indented).
-    /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
     public void Write(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
-        if (content.Length > 0
-            && _buffer.Length > 0
-            && (_buffer[^1] == '{' || _buffer[^1] == '}')
-            && (isMultiline || content[0] == ' ' || content[0] == '\t'))
-        {
-            _ = _buffer.Append(DefaultNewLine);
-        }
-
         if (isMultiline)
         {
             while (content.Length > 0)
@@ -160,23 +142,9 @@ internal sealed class IndentedTextWriter
 
                 if (newLineIndex < 0)
                 {
-                    // No newline left -- write the rest as a single line.
+                    // No newline left -- write the rest as a single line. The caller is
+                    // responsible for emitting any trailing newline they need.
                     WriteRawText(content);
-
-                    // If the trailing chunk is a complete logical line, append a newline so
-                    // subsequent emissions start on a fresh line. This prevents a multi-line raw
-                    // string ending mid-line (raw `"""..."""` strings never include a trailing
-                    // newline before the closing token) from getting jammed against the next
-                    // single-line `Write` call. We treat as "complete" any chunk that ends with
-                    // a statement-terminator / block-closing character (`;`, `}`, `]`) OR is a
-                    // preprocessor directive (starts with `#`). The check is narrow enough to
-                    // avoid breaking inline-continuation patterns where the multi-line content
-                    // ends with `(`, `,`, `"`, `+`, etc. (where the next call is intended to
-                    // concatenate on the same line).
-                    if (content is [.., ';' or '}' or ']'] or ['#', ..])
-                    {
-                        WriteLine();
-                    }
 
                     break;
                 }
@@ -195,6 +163,7 @@ internal sealed class IndentedTextWriter
                 {
                     WriteRawText(line);
                 }
+
                 WriteLine();
 
                 content = content[(newLineIndex + 1)..];
@@ -237,16 +206,12 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Writes a newline to the underlying buffer.
     /// </summary>
-    /// <remarks>
-    /// To prevent runs of blank lines and unnecessary blank lines immediately after an
-    /// opening <c>{</c>, this method is idempotent: a newline is suppressed if the buffer
-    /// already ends with a blank line (<c>\n\n</c>) or with <c>{\n</c>. This makes
-    /// repeated <see cref="WriteLine()"/> calls (and multiline literals containing runs
-    /// of blank lines) collapse to a single blank-line separator automatically.
-    /// </remarks>
-    public void WriteLine()
+    /// <param name="skipIfPresent">When <see langword="true"/>, the newline is suppressed if the
+    /// buffer already ends with a blank line (<c>\n\n</c>) or with <c>{\n</c>. Used by callers
+    /// that want explicit blank-line collapse on a per-call basis. Defaults to <see langword="false"/>.</param>
+    public void WriteLine(bool skipIfPresent = false)
     {
-        if (_buffer.Length > 0)
+        if (skipIfPresent && _buffer.Length > 0)
         {
             int j = _buffer.Length - 1;
 
@@ -257,11 +222,7 @@ internal sealed class IndentedTextWriter
                 j--;
             }
 
-            if (j >= 1 && _buffer[j] == '\n' && _buffer[j - 1] == '\n')
-            {
-                return;
-            }
-            if (j >= 1 && _buffer[j] == '\n' && _buffer[j - 1] == '{')
+            if (j >= 1 && _buffer[j] == '\n' && (_buffer[j - 1] == '\n' || _buffer[j - 1] == '{'))
             {
                 return;
             }
@@ -271,9 +232,8 @@ internal sealed class IndentedTextWriter
     }
 
     /// <summary>
-    /// Writes a newline to the underlying buffer unconditionally (no idempotent
-    /// collapsing). Reserved for the rare case where the caller wants to force a
-    /// blank-line emission.
+    /// Writes a newline to the underlying buffer unconditionally. Equivalent to
+    /// <c>WriteLine(skipIfPresent: false)</c>.
     /// </summary>
     public void WriteRawNewLine()
     {
@@ -283,15 +243,6 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
     /// </summary>
-    /// <remarks>
-    /// If the buffer is mid-line (does not end with a newline) <em>and</em> the buffer's last
-    /// character is a brace (<c>{</c> or <c>}</c>), a newline is inserted before
-    /// <paramref name="content"/> is written so the line starts fresh. This prevents
-    /// <see cref="WriteLine(string, bool)"/> from jamming structural content onto the previous
-    /// line when the previous content was a multi-line raw string that ended with <c>{</c> or
-    /// <c>}</c> (raw <c>"""..."""</c> strings never include a trailing newline before the
-    /// closing token).
-    /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
     public void WriteLine(string content, bool isMultiline = false)
@@ -302,24 +253,10 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
     /// </summary>
-    /// <remarks>
-    /// If the buffer is mid-line (does not end with a newline) <em>and</em> the buffer's last
-    /// character is a brace (<c>{</c> or <c>}</c>), a newline is inserted before
-    /// <paramref name="content"/> is written so the line starts fresh. This prevents
-    /// <see cref="WriteLine(string, bool)"/> from jamming structural content onto the previous
-    /// line when the previous content was a multi-line raw string that ended with <c>{</c> or
-    /// <c>}</c> (raw <c>"""..."""</c> strings never include a trailing newline before the
-    /// closing token).
-    /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
     public void WriteLine(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
-        if (_buffer.Length > 0 && (_buffer[^1] == '}' || _buffer[^1] == '{'))
-        {
-            _ = _buffer.Append(DefaultNewLine);
-        }
-
         Write(content, isMultiline);
         WriteLine();
     }
@@ -328,11 +265,12 @@ internal sealed class IndentedTextWriter
     /// Writes a newline if <paramref name="condition"/> is <see langword="true"/>.
     /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes a newline; otherwise this call is a no-op.</param>
-    public void WriteLineIf(bool condition)
+    /// <param name="skipIfPresent">Forwarded to <see cref="WriteLine(bool)"/>.</param>
+    public void WriteLineIf(bool condition, bool skipIfPresent = false)
     {
         if (condition)
         {
-            WriteLine();
+            WriteLine(skipIfPresent);
         }
     }
 
