@@ -22,6 +22,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiInterfaceIDicFactory
 {
+    /// <summary>
+    /// Emits the IDIC (IDynamicInterfaceCastable) impl class that lets user types implement the projected interface via dynamic dispatch through the projected runtime class instance.
+    /// </summary>
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo)

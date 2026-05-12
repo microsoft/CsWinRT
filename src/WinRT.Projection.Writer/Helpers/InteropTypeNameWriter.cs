@@ -33,6 +33,9 @@ internal static class InteropTypeNameWriter
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Encodes an ABI interop type name for <paramref name="sig"/> into <paramref name="sb"/> using the format expected by <c>WindowsRuntime.InteropServices</c> attributes.
+    /// </summary>
     internal static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)
     {
         // Special case for System.Guid: emitted with assembly-qualified form.
@@ -82,6 +85,9 @@ internal static class InteropTypeNameWriter
         }
     }
 
+    /// <summary>
+    /// Encodes the interop type name for a fundamental corlib type into <paramref name="sb"/>.
+    /// </summary>
     internal static void EncodeFundamental(StringBuilder sb, CorLibTypeSignature corlib, TypedefNameType nameType)
     {
         switch (corlib.ElementType)

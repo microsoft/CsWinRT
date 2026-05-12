@@ -56,6 +56,9 @@ internal static partial class AbiTypeHelpers
         return "global::ABI.Object";
     }
 
+    /// <summary>
+    /// Returns the C# primitive keyword (e.g. <c>"bool"</c>, <c>"int"</c>) for an ABI corlib element type, or <see langword="null"/> when <paramref name="sig"/> is not a primitive.
+    /// </summary>
     internal static string GetAbiPrimitiveType(MetadataCache cache, TypeSignature sig)
     {
         if (sig is CorLibTypeSignature corlib)

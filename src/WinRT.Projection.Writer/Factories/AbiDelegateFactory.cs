@@ -20,6 +20,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiDelegateFactory
 {
+    /// <summary>
+    /// Emits the full ABI surface for a projected delegate type: marshaller class, vtable, native delegate, ComWrappers callback, interface entries, ComWrappers marshaller attribute, impl class, and IReference impl.
+    /// </summary>
     public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         //   write_delegate_marshaller

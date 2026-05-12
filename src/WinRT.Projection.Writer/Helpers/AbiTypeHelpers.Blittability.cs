@@ -339,6 +339,9 @@ internal static partial class AbiTypeHelpers
         return false;
     }
 
+    /// <summary>
+    /// Returns whether <paramref name="sig"/> resolves to a struct type (mapped or user-defined).
+    /// </summary>
     internal static bool IsAnyStruct(MetadataCache cache, TypeSignature sig)
     {
         if (sig is not TypeDefOrRefSignature td)

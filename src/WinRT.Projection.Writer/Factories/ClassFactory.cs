@@ -242,6 +242,9 @@ internal static class ClassFactory
         }
         return count;
     }
+    /// <summary>
+    /// Returns the GC-pressure cost (in bytes) declared by <c>[GCPressureAttribute]</c> on <paramref name="type"/>, or <c>0</c> if not annotated.
+    /// </summary>
     public static int GetGcPressureAmount(TypeDefinition type)
     {
         if (!type.IsSealed)

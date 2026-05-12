@@ -16,6 +16,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiClassFactory
 {
+    /// <summary>
+    /// Emits the full ABI surface for a projected runtime class: marshaller stub, ComWrappers callback, and authoring-metadata wrapper.
+    /// </summary>
     public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Static classes don't get a *Marshaller (no instances).
@@ -148,6 +151,9 @@ internal static class AbiClassFactory
             """, isMultiline: true);
     }
 
+    /// <summary>
+    /// Returns whether the ABI impl type for <paramref name="type"/> should be emitted in the current settings (component vs reference vs exclusive-to scope).
+    /// </summary>
     public static bool EmitImplType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.Component)

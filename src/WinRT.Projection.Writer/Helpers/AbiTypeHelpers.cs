@@ -378,6 +378,9 @@ internal static partial class AbiTypeHelpers
         return GetClassHierarchyIndex(cache, baseDef) + 1;
     }
 
+    /// <summary>
+    /// Returns whether two interface types refer to the same interface by namespace+name (used to compare interfaces across module boundaries).
+    /// </summary>
     internal static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
     {
         if (a == b)

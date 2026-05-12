@@ -21,6 +21,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiInterfaceFactory
 {
+    /// <summary>
+    /// Emits the full ABI surface for a projected interface type: marshaller stub, vtable, impl class, marshaller class, and ABI parameter-list helpers.
+    /// </summary>
     public static void WriteAbiInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Generic interfaces are handled by interopgen
@@ -44,6 +47,9 @@ internal static class AbiInterfaceFactory
         WriteInterfaceMarshaller(writer, context, type);
     }
 
+    /// <summary>
+    /// Writes the ABI parameter types for a vtable function pointer signature.
+    /// </summary>
     public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig)
     {
         WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: false);
@@ -184,6 +190,9 @@ internal static class AbiInterfaceFactory
         }
     }
 
+    /// <summary>
+    /// Emits the per-interface vtable struct (<c>{Name}Vftbl</c>) with IUnknown/IInspectable function pointer fields followed by one field per interface method.
+    /// </summary>
     public static void WriteInterfaceVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (!AbiClassFactory.EmitImplType(writer, context, type))
@@ -445,6 +454,9 @@ internal static class AbiInterfaceFactory
         }
     }
 
+    /// <summary>
+    /// Emits the per-interface marshaller class (<c>{Name}Marshaller</c>) with the boxing/unboxing helpers used by user code to marshal references across the ABI.
+    /// </summary>
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (TypeCategorization.IsExclusiveTo(type))

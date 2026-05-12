@@ -206,6 +206,9 @@ internal static class AbiTypeWriter
         }
     }
 
+    /// <summary>
+    /// Returns the ABI C# type name for a fundamental type (e.g. <c>"bool"</c> -&gt; <c>"byte"</c>, <c>"char"</c> -&gt; <c>"ushort"</c>).
+    /// </summary>
     internal static string GetAbiFundamentalType(FundamentalType t) => t switch
     {
         FundamentalType.Boolean => "bool",
