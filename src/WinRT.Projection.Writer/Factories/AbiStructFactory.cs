@@ -49,7 +49,7 @@ internal static class AbiStructFactory
 
             MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
             writer.Write($"{context.Settings.InternalAccessibility} unsafe struct ");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write(IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty));
             writer.WriteLine();
             using (writer.WriteBlock())
             {

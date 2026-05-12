@@ -45,7 +45,7 @@ internal static class AbiInterfaceIDicFactory
         InterfaceFactory.WriteGuidAttribute(writer, type);
         writer.WriteLine();
         writer.Write($"file interface {nameStripped} : ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.WriteLine();
         using (writer.WriteBlock())

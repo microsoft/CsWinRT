@@ -163,18 +163,21 @@ internal sealed class IndentedTextWriter
                     // No newline left -- write the rest as a single line.
                     WriteRawText(content);
 
-                    // If the trailing chunk ends with a statement-terminator or block-closing
-                    // character (`;`, `}`, `]`), append a newline so subsequent emissions start
-                    // on a fresh line. This prevents a multi-line raw string ending mid-line
-                    // (raw `"""..."""` strings never include a trailing newline) from getting
-                    // jammed against the next single-line `Write` call. The character check
-                    // is narrow enough to avoid breaking inline-continuation patterns where
-                    // the multi-line content ends with `(`, `,`, `"`, `+`, etc. (where the
-                    // next call is intended to concatenate on the same line).
-                    if (content is [.., ';' or '}' or ']'])
+                    // If the trailing chunk is a complete logical line, append a newline so
+                    // subsequent emissions start on a fresh line. This prevents a multi-line raw
+                    // string ending mid-line (raw `"""..."""` strings never include a trailing
+                    // newline before the closing token) from getting jammed against the next
+                    // single-line `Write` call. We treat as "complete" any chunk that ends with
+                    // a statement-terminator / block-closing character (`;`, `}`, `]`) OR is a
+                    // preprocessor directive (starts with `#`). The check is narrow enough to
+                    // avoid breaking inline-continuation patterns where the multi-line content
+                    // ends with `(`, `,`, `"`, `+`, etc. (where the next call is intended to
+                    // concatenate on the same line).
+                    if (content is [.., ';' or '}' or ']'] or ['#', ..])
                     {
                         WriteLine();
                     }
+
                     break;
                 }
 
