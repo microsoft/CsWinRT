@@ -266,18 +266,19 @@ internal static class AbiClassFactory
         writer.WriteLine($$"""
                     return default;
                 }
-            
+
                 public static {{fullProjected}}? ConvertToManaged(void* value)
                 {
                     return ({{fullProjected}}?){{(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}}.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
                 }
             }
-            
+
             file sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-            {
             """, isMultiline: true);
-        AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-        writer.WriteLine($$"""
+        using (writer.WriteBlock())
+        {
+            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
+            writer.WriteLine($$"""
                 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                 {
                     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -285,11 +286,12 @@ internal static class AbiClassFactory
                         iid: {{defaultIfaceIid}},
                         marshalingType: {{marshalingType}},
                         wrapperFlags: out wrapperFlags);
-            
+
                     return new {{fullProjected}}(valueReference);
                 }
-            }
-            """, isMultiline: true);
+                """, isMultiline: true);
+        }
+
         writer.WriteLine();
 
         if (isSealed)

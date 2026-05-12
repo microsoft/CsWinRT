@@ -209,7 +209,7 @@ internal static class AbiInterfaceFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
             """, isMultiline: true);

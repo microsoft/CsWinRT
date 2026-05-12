@@ -91,33 +91,21 @@ internal static class ReferenceImplFactory
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            writer.WriteLine("""
+            string projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+            string abiName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, type.ToTypeSignature());
+            writer.WriteLine($$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
                         {
                             return unchecked((int)0x80004003);
                         }
-                
+
                         try
                         {
-                            
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" unboxedValue = (");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine("""
-                )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-                            
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write($$"""
-                 value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue);
-                            *(
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine("""
-                *)result = value;
+                            {{projectedName}} unboxedValue = ({{projectedName}})ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+                            {{abiName}} value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue);
+                            *({{abiName}}*)result = value;
                             return 0;
                         }
                         catch (Exception e)
@@ -130,23 +118,18 @@ internal static class ReferenceImplFactory
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            writer.WriteLine("""
+            string projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+            writer.WriteLine($$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
                         {
                             return unchecked((int)0x80004003);
                         }
-                
+
                         try
                         {
-                            
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" unboxedValue = (");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine($$"""
-                )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+                            {{projectedName}} unboxedValue = ({{projectedName}})ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
                             void* value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
                             *(void**)result = value;
                             return 0;

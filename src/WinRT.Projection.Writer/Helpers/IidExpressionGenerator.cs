@@ -527,6 +527,7 @@ internal static partial class IidExpressionGenerator
     /// </summary>
     public static void WriteInterfaceIidsEnd(IndentedTextWriter writer)
     {
+        writer.DecreaseIndent();
         writer.WriteLine("}");
         writer.WriteLine();
     }

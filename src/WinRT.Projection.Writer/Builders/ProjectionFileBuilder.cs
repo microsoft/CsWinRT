@@ -340,7 +340,6 @@ internal static class ProjectionFileBuilder
 
         string typeName = type.Name?.Value ?? string.Empty;
 
-        writer.WriteLine();
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         writer.WriteLine($$"""
             {{context.Settings.InternalAccessibility}} enum {{typeName}}
