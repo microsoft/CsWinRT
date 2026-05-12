@@ -651,11 +651,12 @@ internal static class ClassFactory
                     if (defaultIface is not null)
                     {
                         string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
-                        writer.WriteLine($"if (GetType() == typeof({typeName}))");
-                        using (writer.WriteBlock())
-                        {
-                            writer.WriteLine($"{defaultObjRefName} = NativeObjectReference;");
-                        }
+                        writer.WriteLine($$"""
+                            if (GetType() == typeof({{typeName}}))
+                            {
+                                {{defaultObjRefName}} = NativeObjectReference;
+                            }
+                            """, isMultiline: true);
                     }
                 }
 

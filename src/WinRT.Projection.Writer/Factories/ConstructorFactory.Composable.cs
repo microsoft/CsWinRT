@@ -126,13 +126,22 @@ internal static partial class ConstructorFactory
                 """, isMultiline: true);
             using (writer.WriteBlock())
             {
-                writer.WriteLine($"if (GetType() == typeof({typeName}))");
-                using (writer.WriteBlock())
+                if (!string.IsNullOrEmpty(defaultIfaceObjRef))
                 {
-                    if (!string.IsNullOrEmpty(defaultIfaceObjRef))
-                    {
-                        writer.WriteLine($"{defaultIfaceObjRef} = NativeObjectReference;");
-                    }
+                    writer.WriteLine($$"""
+                        if (GetType() == typeof({{typeName}}))
+                        {
+                            {{defaultIfaceObjRef}} = NativeObjectReference;
+                        }
+                        """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine($$"""
+                        if (GetType() == typeof({{typeName}}))
+                        {
+                        }
+                        """, isMultiline: true);
                 }
 
                 if (gcPressure > 0)

@@ -100,11 +100,12 @@ internal static partial class ClassMembersFactory
                 writer.WriteLine();
                 writer.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
                 WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
-                writer.WriteLine(">.GetInterface()");
-                using (writer.WriteBlock())
-                {
-                    writer.WriteLine($"return {giObjRefName}.AsValue();");
-                }
+                writer.WriteLine($$"""
+                    >.GetInterface()
+                    {
+                        return {{giObjRefName}}.AsValue();
+                    }
+                    """, isMultiline: true);
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
@@ -133,11 +134,12 @@ internal static partial class ClassMembersFactory
                     writer.Write("new ");
                 }
 
-                writer.WriteLine("WindowsRuntimeObjectReferenceValue GetDefaultInterface()");
-                using (writer.WriteBlock())
-                {
-                    writer.WriteLine($"return {giObjRefName}.AsValue();");
-                }
+                writer.WriteLine($$"""
+                    WindowsRuntimeObjectReferenceValue GetDefaultInterface()
+                    {
+                        return {{giObjRefName}}.AsValue();
+                    }
+                    """, isMultiline: true);
             }
 
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
