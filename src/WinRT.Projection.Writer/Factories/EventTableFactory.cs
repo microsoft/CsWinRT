@@ -28,7 +28,7 @@ internal static class EventTableFactory
         string evtType = TypedefNameWriter.WriteEventType(context, evt);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             private static ConditionalWeakTable<{{ifaceFullName}}, EventRegistrationTokenTable<{{evtType}}>> _{{evName}}
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +66,7 @@ internal static class EventTableFactory
         bool isGeneric = evtTypeSig is GenericInstanceTypeSignature;
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {
                 *{{cookieName}} = default;
                 try
@@ -78,7 +78,7 @@ internal static class EventTableFactory
         {
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
-            writer.Write($$"""
+            writer.WriteLine($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                         static extern {{projectedTypeName}} ConvertToManaged([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
                         var __handler = ConvertToManaged(null, {{handlerRef}});
@@ -91,7 +91,7 @@ internal static class EventTableFactory
             writer.WriteLine($"Marshaller.ConvertToManaged({handlerRef});");
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
                     *{{cookieName}} = _{{evName}}.GetOrCreateValue(__this).AddEventHandler(__handler);
                     __this.{{evName}} += __handler;
                     return 0;
@@ -114,7 +114,7 @@ internal static class EventTableFactory
         string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {
                 try
                 {

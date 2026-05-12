@@ -277,7 +277,7 @@ internal static class StructEnumMarshallerFactory
                         return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{(hasReferenceFields ? "TrackerSupport" : "None")}}, in 
                 """, isMultiline: true);
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.Write("""
+            writer.WriteLine("""
                 );
                     }
                 """, isMultiline: true);
@@ -293,7 +293,7 @@ internal static class StructEnumMarshallerFactory
                         return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in 
                 """, isMultiline: true);
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.Write("""
+            writer.WriteLine("""
                 );
                     }
                 """, isMultiline: true);
@@ -311,7 +311,7 @@ internal static class StructEnumMarshallerFactory
                         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
                 """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.WriteLine("""
                 >(value);
                     }
                 """, isMultiline: true);
@@ -326,7 +326,7 @@ internal static class StructEnumMarshallerFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("""
+            writer.WriteLine("""
                 >(value);
                         return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
                     }
@@ -342,7 +342,7 @@ internal static class StructEnumMarshallerFactory
                         return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
                 """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.WriteLine("""
                 >(value);
                     }
                 """, isMultiline: true);
@@ -362,7 +362,7 @@ internal static class StructEnumMarshallerFactory
             string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
             // InterfaceEntriesImpl
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 file static class {{nameStripped}}InterfaceEntriesImpl
                 {
                     [FixedAddressValueType]
@@ -398,7 +398,7 @@ internal static class StructEnumMarshallerFactory
             }
 
             // ComWrappersMarshallerAttribute (full body)
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
                 {
                     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -429,7 +429,7 @@ internal static class StructEnumMarshallerFactory
                 writer.WriteLine($">(value, in {iidRefExpr});");
             }
 
-            writer.Write("""
+            writer.WriteLine("""
                     }
                 }
                 """, isMultiline: true);
@@ -437,7 +437,7 @@ internal static class StructEnumMarshallerFactory
         else
         {
             // Fallback: keep the placeholder class so consumer attribute references resolve.
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 internal sealed class {{nameStripped}}ComWrappersMarshallerAttribute : global::System.Attribute
                 {
                 }

@@ -121,7 +121,7 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
             """, isMultiline: true);
         using (writer.WriteBlock())
@@ -272,7 +272,7 @@ internal static class ProjectionFileBuilder
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
         {
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 public {{typeStr}} {{name}}
                 {
                 readonly get; set;
@@ -324,7 +324,7 @@ internal static class ProjectionFileBuilder
             }
         }
 
-        writer.Write("""
+        writer.WriteLine("""
             ;
             }
             """, isMultiline: true);
@@ -345,7 +345,7 @@ internal static class ProjectionFileBuilder
 
         writer.WriteLine();
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {{context.Settings.InternalAccessibility}} enum {{typeName}}
             {
             }

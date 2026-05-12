@@ -94,7 +94,7 @@ internal static class MappedInterfaceStubFactory
                 break;
             case "IBindableIterator":
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({{objRefName}});
                     public void Reset() => throw new NotSupportedException();
                     public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({{objRefName}});
@@ -105,7 +105,7 @@ internal static class MappedInterfaceStubFactory
                 break;
             case "INotifyDataErrorInfo":
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     public global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({{objRefName}}, propertyName);
                     public bool HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({{objRefName}}); }
                     public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
@@ -162,7 +162,7 @@ internal static class MappedInterfaceStubFactory
         EmitUnsafeAccessor(writer, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public bool MoveNext() => {{prefix}}MoveNext(null, {{objRefName}});
             public void Reset() => throw new NotSupportedException();
             public void Dispose() {}
@@ -216,7 +216,7 @@ internal static class MappedInterfaceStubFactory
         // Public member emission order matches the WinRT IMap<K,V> vtable order, NOT alphabetical.
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s own
         // EmitGenericEnumerable invocation.
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public ICollection<{{k}}> Keys => {{prefix}}Keys(null, {{objRefName}});
             public ICollection<{{v}}> Values => {{prefix}}Values(null, {{objRefName}});
             public int Count => {{prefix}}Count(null, {{objRefName}});
@@ -293,7 +293,7 @@ internal static class MappedInterfaceStubFactory
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // EmitGenericEnumerable invocation.
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
             public {{t}} this[int index] => {{prefix}}Item(null, {{objRefName}}, index);
             public int Count => {{prefix}}Count(null, {{objRefName}});
@@ -348,7 +348,7 @@ internal static class MappedInterfaceStubFactory
         // Public member emission order matches the WinRT IVector<T> vtable order mapped to IList<T>,
         // NOT alphabetical. GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // own EmitGenericEnumerable invocation.
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public int Count => {{prefix}}Count(null, {{objRefName}});
             public bool IsReadOnly => false;
             
@@ -375,7 +375,7 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams)
     {
-        writer.Write($$"""
+        writer.WriteLine($$"""
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{accessName}}")]
             static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _, WindowsRuntimeObjectReference objRef{{extraParams}});
             """, isMultiline: true);
@@ -385,7 +385,7 @@ internal static class MappedInterfaceStubFactory
     private static void EmitNonGenericList(IndentedTextWriter writer, string objRefName)
     {
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             [global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
             public object this[int index]
             {

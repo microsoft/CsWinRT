@@ -19,7 +19,7 @@ internal static class WellKnownInterfaceEntriesEmitter
     /// <param name="writer">The writer to emit to.</param>
     public static void EmitDelegateReferenceWellKnownEntries(IndentedTextWriter writer)
     {
-        writer.Write("""
+        writer.WriteLine("""
             Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
             Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
             Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;

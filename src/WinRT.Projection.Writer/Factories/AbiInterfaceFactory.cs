@@ -215,7 +215,7 @@ internal static class AbiInterfaceFactory
             """, isMultiline: true);
         using (writer.WriteBlock())
         {
-            writer.Write("""
+            writer.WriteLine("""
                 public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
                 public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
                 public delegate* unmanaged[MemberFunction]<void*, uint> Release;
@@ -256,7 +256,7 @@ internal static class AbiInterfaceFactory
         writer.WriteLine();
         writer.WriteLine($"public static unsafe class {nameStripped}Impl");
         using IndentedTextWriter.Block __implBlock = writer.WriteBlock();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             [FixedAddressValueType]
             private static readonly {{nameStripped}}Vftbl Vftbl;
             
@@ -278,7 +278,7 @@ internal static class AbiInterfaceFactory
                 get => ref 
             """, isMultiline: true);
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write("""
+        writer.WriteLine("""
             ;
             }
             
@@ -505,7 +505,7 @@ internal static class AbiInterfaceFactory
             """, isMultiline: true);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("""
+        writer.WriteLine("""
             ?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }

@@ -54,7 +54,7 @@ internal static partial class ConstructorFactory
             else
             {
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     {
                         get
                         {

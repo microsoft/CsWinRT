@@ -80,7 +80,7 @@ internal static partial class ConstructorFactory
             ? "WindowsRuntimeActivationFactoryCallback.DerivedComposed"
             : "WindowsRuntimeActivationFactoryCallback.DerivedSealed";
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             private sealed class {{callbackName}} : {{baseClass}}
             {
                 public static readonly {{callbackName}} Instance = new();
@@ -118,7 +118,7 @@ internal static partial class ConstructorFactory
             return;
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
                     using WindowsRuntimeObjectReferenceValue activationFactoryValue = {{factoryObjRefName}}.AsValue();
                     void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
                     ref readonly {{argsName}} args = ref additionalParameters.GetValueRefUnsafe<{{argsName}}>();
@@ -177,7 +177,7 @@ internal static partial class ConstructorFactory
 
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
-            writer.Write($$"""
+            writer.WriteLine($$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                         static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
                         using WindowsRuntimeObjectReferenceValue __{{raw}} = ConvertToUnmanaged_{{raw}}(null, {{pname}});
@@ -212,7 +212,7 @@ internal static partial class ConstructorFactory
         //   using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
         if (isComposable)
         {
-            writer.Write("""
+            writer.WriteLine("""
                         using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
                         void* __innerInterface = default;
                 """, isMultiline: true);
@@ -279,7 +279,7 @@ internal static partial class ConstructorFactory
             string raw = p.Parameter.Name ?? "param";
             string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.WriteLine();
-            writer.Write($$"""
+            writer.WriteLine($$"""
                         Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlineArray);
                         nint[] __{{raw}}_arrayFromPool = null;
                         Span<nint> __{{raw}}_span = {{callName}}.Length <= 16
@@ -290,7 +290,7 @@ internal static partial class ConstructorFactory
             if (szArr.BaseType.IsString())
             {
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                             Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{raw}}_inlineHeaderArray);
                             HStringHeader[] __{{raw}}_headerArrayFromPool = null;
                             Span<HStringHeader> __{{raw}}_headerSpan = {{callName}}.Length <= 16
@@ -460,7 +460,7 @@ internal static partial class ConstructorFactory
 
             if (szArr.BaseType.IsString())
             {
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
                     {{callIndent}}    source: {{pname}},
                     {{callIndent}}    hstringHeaders: (HStringHeader*) _{{raw}}_inlineHeaderArray,
@@ -473,7 +473,7 @@ internal static partial class ConstructorFactory
                 string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
                     {{callIndent}}static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, void** data);
                     {{callIndent}}CopyToUnmanaged_{{raw}}(null, {{pname}}, (uint){{pname}}.Length, (void**)_{{raw}});
@@ -573,7 +573,7 @@ internal static partial class ConstructorFactory
                   &__innerInterface
                 """, isMultiline: true);
         }
-        writer.Write("""
+        writer.WriteLine("""
             ,
               &__retval));
             """, isMultiline: true);
@@ -624,7 +624,7 @@ internal static partial class ConstructorFactory
                 if (szArr.BaseType.IsString())
                 {
                     writer.WriteLine();
-                    writer.Write($$"""
+                    writer.WriteLine($$"""
                                     HStringArrayMarshaller.Dispose(__{{raw}}_pinnedHandleSpan);
                         
                                     if (__{{raw}}_pinnedHandleArrayFromPool is not null)
@@ -643,7 +643,7 @@ internal static partial class ConstructorFactory
                     string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                     _ = elementInteropArg;
                     writer.WriteLine();
-                    writer.Write($$"""
+                    writer.WriteLine($$"""
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
                                     static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
                         
@@ -654,7 +654,7 @@ internal static partial class ConstructorFactory
                         """, isMultiline: true);
                 }
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                                 if (__{{raw}}_arrayFromPool is not null)
                                 {
                                     global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_arrayFromPool);
@@ -664,7 +664,7 @@ internal static partial class ConstructorFactory
             writer.WriteLine("        }");
         }
 
-        writer.Write("""
+        writer.WriteLine("""
                 }
             }
             """, isMultiline: true);

@@ -470,7 +470,7 @@ internal static class ObjRefNameGenerator
                                 value: NativeObjectReference.As(
                 """, isMultiline: true);
             WriteIidExpression(writer, context, ifaceRef);
-            writer.Write("""
+            writer.WriteLine("""
                 ),
                                 comparand: null);
                 

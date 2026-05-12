@@ -409,14 +409,14 @@ internal static class ClassFactory
                 if (context.Settings.ReferenceProjection)
                 {
                     // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.Write("""
+                    writer.WriteLine("""
                             add => throw null;
                             remove => throw null;
                         """, isMultiline: true);
                 }
                 else
                 {
-                    writer.Write($$"""
+                    writer.WriteLine($$"""
                             add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
                             remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
                         """, isMultiline: true);
@@ -554,7 +554,7 @@ internal static class ClassFactory
         if (context.Settings.ReferenceProjection)
         {
             // the static factory objref getter body is just 'throw null;'.
-            writer.Write("""
+            writer.WriteLine("""
                     get
                     {
                         throw null;
@@ -574,7 +574,7 @@ internal static class ClassFactory
                     return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", 
             """, isMultiline: true);
         ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
-        writer.Write("""
+        writer.WriteLine("""
             );
                 }
             }
@@ -650,7 +650,7 @@ internal static class ClassFactory
                 if (defaultIface is not null)
                 {
                     string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
-                    writer.Write($$"""
+                    writer.WriteLine($$"""
                         if (GetType() == typeof({{typeName}}))
                         {
                         {{defaultObjRefName}} = NativeObjectReference;
@@ -711,7 +711,7 @@ internal static class ClassFactory
         // Conditional finalizer
         if (gcPressure > 0)
         {
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 ~{{typeName}}()
                 {
                 GC.RemoveMemoryPressure({{gcPressure.ToString(CultureInfo.InvariantCulture)}});

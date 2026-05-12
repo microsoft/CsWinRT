@@ -30,7 +30,7 @@ internal static class ReferenceImplFactory
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             {{visibility}} static unsafe class {{nameStripped}}ReferenceImpl
             {
                 [FixedAddressValueType]
@@ -76,7 +76,7 @@ internal static class ReferenceImplFactory
                             *(
                 """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.WriteLine("""
                 *)result = value;
                             return 0;
                         }
@@ -106,7 +106,7 @@ internal static class ReferenceImplFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("""
+            writer.WriteLine("""
                 )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
                             
                 """, isMultiline: true);
@@ -116,7 +116,7 @@ internal static class ReferenceImplFactory
                             *(
                 """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("""
+            writer.WriteLine("""
                 *)result = value;
                             return 0;
                         }
@@ -145,7 +145,7 @@ internal static class ReferenceImplFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write($$"""
+            writer.WriteLine($$"""
                 )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
                             void* value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
                             *(void**)result = value;
@@ -176,7 +176,7 @@ internal static class ReferenceImplFactory
                     get => ref global::ABI.InterfaceIIDs.
             """, isMultiline: true);
         IidExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
-        writer.Write("""
+        writer.WriteLine("""
             ;
                 }
             }

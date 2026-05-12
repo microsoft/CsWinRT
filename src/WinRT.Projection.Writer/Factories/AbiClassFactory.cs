@@ -101,7 +101,7 @@ internal static class AbiClassFactory
             }
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
                     return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{defaultIfaceIid}});
                 }
             
@@ -145,7 +145,7 @@ internal static class AbiClassFactory
             writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{fullName}>\")]");
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             [WindowsRuntimeMetadataTypeName("{{fullName}}")]
             [WindowsRuntimeMappedType(typeof({{projectedType}}))]
             file static class {{nameStripped}} {}
@@ -237,7 +237,7 @@ internal static class AbiClassFactory
         if (isSealed)
         {
             // For projected sealed runtime classes, the RCW type is always unwrappable.
-            writer.Write("""
+            writer.WriteLine("""
                         if (value is not null)
                         {
                             return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
@@ -247,7 +247,7 @@ internal static class AbiClassFactory
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
             string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
-            writer.Write($$"""
+            writer.WriteLine($$"""
                         if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
                         {
                             return windowsRuntimeInterface.GetInterface();
@@ -256,7 +256,7 @@ internal static class AbiClassFactory
         }
         else
         {
-            writer.Write("""
+            writer.WriteLine("""
                         if (value is not null)
                         {
                             return value.GetDefaultInterface();
@@ -277,7 +277,7 @@ internal static class AbiClassFactory
             {
             """, isMultiline: true);
         AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-        writer.Write($$"""
+        writer.WriteLine($$"""
                 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                 {
                     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -300,7 +300,7 @@ internal static class AbiClassFactory
                 {
                 """, isMultiline: true);
             AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-            writer.Write($$"""
+            writer.WriteLine($$"""
                     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                     {
                         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
@@ -325,7 +325,7 @@ internal static class AbiClassFactory
             AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
 
             // TryCreateObject (non-projected runtime class name match)
-            writer.Write($$"""
+            writer.WriteLine($$"""
                     public static unsafe bool TryCreateObject(
                         void* value,
                         ReadOnlySpan<char> runtimeClassName,

@@ -232,7 +232,7 @@ internal static class ComponentFactory
             writer.WriteLine($"get => {projectedTypeName}.{propName};");
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             set => {{projectedTypeName}}.{{propName}} = value;
             }
             """, isMultiline: true);
@@ -253,7 +253,7 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
              {{evtName}}
             {
             add => {{projectedTypeName}}.{{evtName}} += value;
@@ -352,12 +352,12 @@ internal static class ComponentFactory
             foreach (TypeDefinition type in orderedTypes)
             {
                 (string ns, string name) = type.Names();
-                writer.Write($$"""
+                writer.WriteLine($$"""
                     case "{{ns}}.{{name}}":
                         return global::ABI.Impl.{{ns}}.{{IdentifierEscaping.StripBackticks(name)}}ServerActivationFactory.Make();
                     """, isMultiline: true);
             }
-            writer.Write("""
+            writer.WriteLine("""
                 default:
                     return null;
                 }

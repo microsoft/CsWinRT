@@ -186,7 +186,7 @@ internal static partial class AbiMethodBodyFactory
                 """, isMultiline: true);
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
-                writer.Write($$"""
+                writer.WriteLine($$"""
                             [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
                             [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
                             static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
@@ -200,7 +200,7 @@ internal static partial class AbiMethodBodyFactory
             else
             {
                 // Non-generic delegate: directly construct.
-                writer.Write($$"""
+                writer.WriteLine($$"""
                             return _{{evtName}}.GetOrAdd(
                                 key: thisObject,
                                 valueFactory: static (_, thisReference) => new {{eventSourceProjectedFull}}(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}}),

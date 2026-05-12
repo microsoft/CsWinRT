@@ -109,7 +109,7 @@ internal static class AbiDelegateFactory
 
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
                 public static ref readonly Guid IID
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,7 +148,7 @@ internal static class AbiDelegateFactory
                 public delegate* unmanaged[MemberFunction]<
             """, isMultiline: true);
         AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig);
-        writer.Write("""
+        writer.WriteLine("""
             , int> Invoke;
             }
             """, isMultiline: true);
@@ -211,7 +211,7 @@ internal static class AbiDelegateFactory
         string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             file static class {{nameStripped}}InterfaceEntriesImpl
             {
                 [FixedAddressValueType]
@@ -229,7 +229,7 @@ internal static class AbiDelegateFactory
         WellKnownInterfaceEntriesEmitter.EmitDelegateReferenceWellKnownEntries(writer);
         writer.DecreaseIndent();
         writer.DecreaseIndent();
-        writer.Write("""
+        writer.WriteLine("""
                 }
             }
             """, isMultiline: true);
@@ -350,7 +350,7 @@ internal static class AbiDelegateFactory
             string raw = sig.Parameters[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
-        writer.Write("""
+        writer.WriteLine("""
             );
                     }
                 }
@@ -373,7 +373,7 @@ internal static class AbiDelegateFactory
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
@@ -407,7 +407,7 @@ internal static class AbiDelegateFactory
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             file abstract unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
             {
                 /// <inheritdoc/>
@@ -436,7 +436,7 @@ internal static class AbiDelegateFactory
         string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine($$"""
             internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
             {
                 /// <inheritdoc/>

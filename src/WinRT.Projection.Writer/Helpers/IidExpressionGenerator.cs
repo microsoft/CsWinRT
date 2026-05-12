@@ -209,7 +209,7 @@ internal static partial class IidExpressionGenerator
             """, isMultiline: true);
         WriteGuidBytes(writer, type);
         writer.WriteLine();
-        writer.Write("""
+        writer.WriteLine("""
                     ];
                     return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
                 }
@@ -427,7 +427,7 @@ internal static partial class IidExpressionGenerator
             writer.Write($"0x{bytes[i].ToString("X", CultureInfo.InvariantCulture)}");
         }
         writer.WriteLine();
-        writer.Write("""
+        writer.WriteLine("""
                     ];
                     return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
                 }

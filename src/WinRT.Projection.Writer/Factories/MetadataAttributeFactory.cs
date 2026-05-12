@@ -224,7 +224,7 @@ internal static class MetadataAttributeFactory
             writer.Write(projectionName);
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             ),
                 trimTarget: typeof({{projectionName}}))]
             """, isMultiline: true);
@@ -284,7 +284,7 @@ internal static class MetadataAttributeFactory
             writer.Write(projectionName);
         }
 
-        writer.Write($$"""
+        writer.WriteLine($$"""
             ),
                 trimTarget: typeof({{projectionName}}))]
             """, isMultiline: true);
@@ -330,13 +330,13 @@ internal static class MetadataAttributeFactory
         }
 
         writer.WriteLine();
-        writer.Write("""
+        writer.WriteLine("""
             [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
                 source: typeof(
             """, isMultiline: true);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("""
+        writer.WriteLine("""
             ),
                 proxy: typeof(
             """, isMultiline: true);
