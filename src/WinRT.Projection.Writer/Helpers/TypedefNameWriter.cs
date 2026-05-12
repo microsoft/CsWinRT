@@ -86,9 +86,10 @@ internal static class TypedefNameWriter
         else if (forceWriteNamespace ||
             typeNamespace != context.CurrentNamespace ||
             (nameToWrite == TypedefNameType.Projected && (context.InAbiNamespace || context.InAbiImplNamespace)) ||
-            nameToWrite == TypedefNameType.ABI ||
-            nameToWrite == TypedefNameType.EventSource ||
-            (nameToWrite == TypedefNameType.CCW && authoredType))
+            (nameToWrite == TypedefNameType.ABI && !context.InAbiNamespace) ||
+            (nameToWrite == TypedefNameType.EventSource && !context.InAbiNamespace) ||
+            (nameToWrite == TypedefNameType.CCW && authoredType && !context.InAbiImplNamespace) ||
+            (nameToWrite == TypedefNameType.CCW && !authoredType && (context.InAbiNamespace || context.InAbiImplNamespace)))
         {
             writer.Write(GlobalPrefix);
 
