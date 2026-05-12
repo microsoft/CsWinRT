@@ -26,7 +26,7 @@ internal static class StructEnumMarshallerFactory
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
-        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeShapeResolver.IsAnyStruct(sig));
+        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeShapeResolver.IsBlittableStruct(sig));
         bool isEnum = cat == TypeCategory.Enum;
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
         bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;

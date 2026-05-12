@@ -5,8 +5,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.ComWrappers;
 using Windows.Foundation;
+using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WindowsRuntime.InteropServices;
 

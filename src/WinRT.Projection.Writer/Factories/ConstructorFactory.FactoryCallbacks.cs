@@ -270,7 +270,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
             {
                 continue;
             }
@@ -389,7 +389,7 @@ internal static partial class ConstructorFactory
                 else if (isArr)
                 {
                     TypeSignature elemT = ((SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(elemT) || context.AbiTypeShapeResolver.IsAnyStruct(elemT);
+                    bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(elemT) || context.AbiTypeShapeResolver.IsBlittableStruct(elemT);
                     bool isStringElem = elemT.IsString();
 
                     if (isBlittableElem)
@@ -450,7 +450,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
             {
                 continue;
             }
@@ -614,7 +614,7 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsAnyStruct(szArr.BaseType))
+                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
                 {
                     continue;
                 }

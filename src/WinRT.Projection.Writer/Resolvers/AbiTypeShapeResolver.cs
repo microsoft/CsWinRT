@@ -63,8 +63,17 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// </summary>
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if a blittable struct; otherwise <see langword="false"/>.</returns>
-    public bool IsAnyStruct(TypeSignature signature)
+    public bool IsBlittableStruct(TypeSignature signature)
         => Resolve(signature).Kind == AbiTypeShapeKind.BlittableStruct;
+
+    /// <summary>
+    /// Returns whether <paramref name="signature"/> is any WinRT struct that flows across the ABI by value
+    /// (either a blittable struct or a complex struct that needs per-field marshalling).
+    /// </summary>
+    /// <param name="signature">The type signature to classify.</param>
+    /// <returns><see langword="true"/> if a struct; otherwise <see langword="false"/>.</returns>
+    public bool IsAnyStruct(TypeSignature signature)
+        => Resolve(signature).Kind is AbiTypeShapeKind.BlittableStruct or AbiTypeShapeKind.ComplexStruct;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT struct that has at least one reference-type
