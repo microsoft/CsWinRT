@@ -966,7 +966,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                writer.WriteLine($$"""
+                writer.Write($$"""
                     ,
                       (uint){{callName}}.Length, _{{localName}}
                     """, isMultiline: true);
@@ -976,7 +976,7 @@ internal static partial class AbiMethodBodyFactory
             if (cat == ParameterCategory.Out)
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                writer.WriteLine($$"""
+                writer.Write($$"""
                     ,
                       &__{{localName}}
                     """, isMultiline: true);
@@ -1001,7 +1001,7 @@ internal static partial class AbiMethodBodyFactory
                 if (context.AbiTypeShapeResolver.IsComplexStruct(uRefArg))
                 {
                     // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
-                    writer.WriteLine($$"""
+                    writer.Write($$"""
                         ,
                           &__{{localName}}
                         """, isMultiline: true);
@@ -1009,7 +1009,7 @@ internal static partial class AbiMethodBodyFactory
                 else
                 {
                     // 'in T' projected param: pass the pinned pointer.
-                    writer.WriteLine($$"""
+                    writer.Write($$"""
                         ,
                           _{{localName}}
                         """, isMultiline: true);
