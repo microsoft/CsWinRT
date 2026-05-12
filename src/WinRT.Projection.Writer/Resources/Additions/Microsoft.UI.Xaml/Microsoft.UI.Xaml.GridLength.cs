@@ -32,7 +32,8 @@ namespace Microsoft.UI.Xaml
             {
                 throw new ArgumentException(SR.DirectUI_InvalidArgument, nameof(value));
             }
-            if (type is not (GridUnitType.Auto or GridUnitType.Pixel) && type != GridUnitType.Star)
+
+            if (type is not (GridUnitType.Auto or GridUnitType.Pixel or GridUnitType.Star))
             {
                 throw new ArgumentException(SR.DirectUI_InvalidArgument, nameof(type));
             }
