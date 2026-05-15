@@ -22,7 +22,9 @@ internal static class IIndentedTextWriterCallbackExtensions
         where T : struct, IIndentedTextWriterCallback
     {
         using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
+
         callback.Write(owner.Writer);
+
         return owner.Writer.ToString();
     }
 }
