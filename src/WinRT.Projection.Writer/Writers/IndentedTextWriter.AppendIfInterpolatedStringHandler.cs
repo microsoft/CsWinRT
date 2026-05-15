@@ -112,10 +112,20 @@ internal partial class IndentedTextWriter
                 return;
             }
 
-            // Handle custom callbacks first (these are only value types)
+            // Handle custom callbacks first. The value-type fast path lets the JIT specialize
+            // the dispatch when 'T' is the concrete callback struct (e.g. WriteIidGuidReferenceCallback).
             if (typeof(T).IsValueType && value is IIndentedTextWriterCallback)
             {
                 ((IIndentedTextWriterCallback)value).Write(_writer);
+
+                return;
+            }
+
+            // Polymorphic fallback for callers that declare the local as the interface type
+            // (e.g. to assign one of several concrete callback structs based on a condition).
+            if (value is IIndentedTextWriterCallback callback)
+            {
+                callback.Write(_writer);
 
                 return;
             }
