@@ -457,41 +457,23 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
+        WriteTypedefNameCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
+        WriteTypeParamsCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
         WriteIidGuidReferenceCallback iid = AbiTypeHelpers.WriteIidGuidReference(context, type);
 
         writer.WriteLine();
-        writer.Write(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $$"""
             #nullable enable
             public static unsafe class {{nameStripped}}Marshaller
             {
-                public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
-            """);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(isMultiline: true, """
-             value)
+                public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{typedefName}}{{typeParams}} value)
                 {
-                    return WindowsRuntimeInterfaceMarshaller<
-            """);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write($$"""
-            >.ConvertToUnmanaged(value, {{iid}});
+                    return WindowsRuntimeInterfaceMarshaller<{{typedefName}}{{typeParams}}>.ConvertToUnmanaged(value, {{iid}});
                 }
-            
-                public static 
-            """);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(isMultiline: true, """
-            ? ConvertToManaged(void* value)
+
+                public static {{typedefName}}{{typeParams}}? ConvertToManaged(void* value)
                 {
-                    return (
-            """);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine(isMultiline: true, """
-            ?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+                    return ({{typedefName}}{{typeParams}}?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
             #nullable disable
