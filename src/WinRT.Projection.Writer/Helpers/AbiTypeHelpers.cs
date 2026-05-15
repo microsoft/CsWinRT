@@ -194,15 +194,7 @@ internal static partial class AbiTypeHelpers
         return map;
     }
 
-    /// <summary>
-    /// Returns a <see cref="WriteIidGuidReferenceCallback"/> that, when used as an interpolation
-    /// hole in an interpolated raw string, writes the IID GUID literal expression for the given
-    /// runtime type. Use this overload when emitting the IID inline as part of a larger
-    /// interpolated raw string (e.g. inside a property declaration or a method invocation),
-    /// rather than as a standalone write.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="type">The runtime type whose IID GUID literal is being written.</param>
+    /// <inheritdoc cref="WriteIidGuidReference(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
     public static WriteIidGuidReferenceCallback WriteIidGuidReference(ProjectionEmitContext context, TypeDefinition type)
     {

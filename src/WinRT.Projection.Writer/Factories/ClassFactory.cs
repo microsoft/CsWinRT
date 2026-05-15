@@ -10,7 +10,6 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
@@ -330,12 +329,7 @@ internal static class ClassFactory
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
-            string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true);
-
-            if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-            {
-                abiClass = GlobalPrefix + abiClass;
-            }
+            string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true).Format();
 
             // Emit the lazy static objref field (mirrors truth's pattern) once per static iface.
             if (emittedObjRefs.Add(objRef))

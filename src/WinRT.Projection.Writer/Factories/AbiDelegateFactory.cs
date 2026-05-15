@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -9,7 +8,6 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -100,12 +98,7 @@ internal static class AbiDelegateFactory
         // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
         // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
         // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
-        string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-        if (!projectedDelegateForBody.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            projectedDelegateForBody = GlobalPrefix + projectedDelegateForBody;
-        }
+        string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
         writer.WriteLine();
@@ -262,12 +255,7 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         // Compute the projected type name (with global::) used as the generic argument.
-        string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-        if (!projectedName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            projectedName = GlobalPrefix + projectedName;
-        }
+        string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
