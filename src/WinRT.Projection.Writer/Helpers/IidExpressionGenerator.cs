@@ -174,7 +174,7 @@ internal static partial class IidExpressionGenerator
     /// </summary>
     public static void WriteIidGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true), true, true);
+        string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true).Format(), true, true);
         writer.Write($"IID_{name}");
     }
 
@@ -183,7 +183,7 @@ internal static partial class IidExpressionGenerator
     /// </summary>
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true), true, true);
+        string name = EscapeTypeNameForIdentifier(TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true).Format(), true, true);
         writer.Write($"IID_{name}Reference");
     }
 
