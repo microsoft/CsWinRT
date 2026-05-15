@@ -201,6 +201,9 @@ internal static class AbiInterfaceIDicFactory
         string target = $"((global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
+        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
+        string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
+
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             ICollection<{{keyText}}> {{self}}Keys => {{target}}.Keys;
@@ -223,12 +226,7 @@ internal static class AbiInterfaceIDicFactory
             bool ICollection<KeyValuePair<{{keyText}}, {{valueText}}>>.Remove(KeyValuePair<{{keyText}}, {{valueText}}> item) => {{target}}.Remove(item);
             IEnumerator<KeyValuePair<{{keyText}}, {{valueText}}>> IEnumerable<KeyValuePair<{{keyText}}, {{valueText}}>>.GetEnumerator() => {{target}}.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            """);
-        // IObservableMap.MapChanged event forwarder.
-        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
-        string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
-        writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
+
             event global::Windows.Foundation.Collections.MapChangedEventHandler<{{keyText}}, {{valueText}}> {{obsSelf}}MapChanged
             {
             add => {{obsTarget}}.MapChanged += value;
@@ -248,6 +246,9 @@ internal static class AbiInterfaceIDicFactory
         string target = $"((global::System.Collections.Generic.IList<{elementText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IList<{elementText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
+        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
+        string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
+
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             int {{icoll}}Count => {{target}}.Count;
@@ -267,12 +268,7 @@ internal static class AbiInterfaceIDicFactory
             bool {{icoll}}Remove({{elementText}} item) => {{target}}.Remove(item);
             IEnumerator<{{elementText}}> IEnumerable<{{elementText}}>.GetEnumerator() => {{target}}.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            """);
-        // IObservableVector.VectorChanged event forwarder.
-        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
-        string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
-        writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
+
             event global::Windows.Foundation.Collections.VectorChangedEventHandler<{{elementText}}> {{obsSelf}}VectorChanged
             {
             add => {{obsTarget}}.VectorChanged += value;
