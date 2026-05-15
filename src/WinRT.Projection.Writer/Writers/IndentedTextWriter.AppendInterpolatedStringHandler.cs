@@ -58,7 +58,7 @@ internal partial class IndentedTextWriter
         /// <param name="value">The string to write.</param>
         public void AppendLiteral(string value)
         {
-            _writer.Write(value, _isMultiline);
+            _writer.Write(_isMultiline, value);
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -75,7 +75,7 @@ internal partial class IndentedTextWriter
             // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
             if (value is string text)
             {
-                _writer.Write(text, _isMultiline);
+                _writer.Write(_isMultiline, text);
             }
             else
             {
@@ -98,7 +98,7 @@ internal partial class IndentedTextWriter
             // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
             if (value is string text)
             {
-                _writer.Write(text, _isMultiline);
+                _writer.Write(_isMultiline, text);
             }
             else
             {
@@ -114,7 +114,7 @@ internal partial class IndentedTextWriter
         /// <param name="value">The span to write.</param>
         public void AppendFormatted(scoped ReadOnlySpan<char> value)
         {
-            _writer.Write(value, _isMultiline);
+            _writer.Write(_isMultiline, value);
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -126,7 +126,7 @@ internal partial class IndentedTextWriter
                 return;
             }
 
-            _writer.Write(value, _isMultiline);
+            _writer.Write(_isMultiline, value);
         }
     }
 }
