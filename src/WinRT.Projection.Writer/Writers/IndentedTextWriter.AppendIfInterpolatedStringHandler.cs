@@ -23,7 +23,7 @@ internal partial class IndentedTextWriter
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [InterpolatedStringHandler]
-    public readonly ref struct TryAppendInterpolatedStringHandler
+    public readonly ref struct AppendIfInterpolatedStringHandler
     {
         /// <summary>The associated <see cref="IndentedTextWriter"/> to which to append.</summary>
         private readonly IndentedTextWriter _writer;
@@ -38,7 +38,7 @@ internal partial class IndentedTextWriter
         /// <param name="condition">When <see langword="true"/>, writes the content, otherwise it does nothing.</param>
         /// <param name="shouldAppend">Whether the handler is enabled.</param>
         /// <remarks>This is intended to be called only by compiler-generated code. Arguments are not validated as they'd otherwise be for members intended to be used directly.</remarks>
-        public TryAppendInterpolatedStringHandler(
+        public AppendIfInterpolatedStringHandler(
             int literalLength,
             int formattedCount,
             IndentedTextWriter writer,
@@ -71,7 +71,7 @@ internal partial class IndentedTextWriter
         /// <param name="isMultiline">When <see langword="true"/>, treats the content as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
         /// <param name="shouldAppend">Whether the handler is enabled.</param>
         /// <remarks>This is intended to be called only by compiler-generated code. Arguments are not validated as they'd otherwise be for members intended to be used directly.</remarks>
-        public TryAppendInterpolatedStringHandler(
+        public AppendIfInterpolatedStringHandler(
             int literalLength,
             int formattedCount,
             IndentedTextWriter writer,
