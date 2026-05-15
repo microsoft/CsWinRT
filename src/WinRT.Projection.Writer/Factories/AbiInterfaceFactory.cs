@@ -209,20 +209,20 @@ internal static class AbiInterfaceFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
-            """, isMultiline: true);
+            """);
         using (writer.WriteBlock())
         {
-            writer.WriteLine("""
+            writer.WriteLine(isMultiline: true, """
                 public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
                 public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
                 public delegate* unmanaged[MemberFunction]<void*, uint> Release;
                 public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
                 public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
                 public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
-                """, isMultiline: true);
+                """);
 
             foreach (MethodDefinition method in type.Methods)
             {
@@ -256,29 +256,29 @@ internal static class AbiInterfaceFactory
         writer.WriteLine();
         writer.WriteLine($"public static unsafe class {nameStripped}Impl");
         using IndentedTextWriter.Block __implBlock = writer.WriteBlock();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [FixedAddressValueType]
             private static readonly {{nameStripped}}Vftbl Vftbl;
             
             static {{nameStripped}}Impl()
             {
                 *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
-            """, isMultiline: true);
+            """);
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
             writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
         }
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             }
             
             public static ref readonly Guid IID
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ref 
-            """, isMultiline: true);
+            """);
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             ;
             }
             
@@ -287,7 +287,7 @@ internal static class AbiInterfaceFactory
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => (nint)Unsafe.AsPointer(in Vftbl);
             }
-            """, isMultiline: true);
+            """);
         writer.WriteLine();
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
@@ -385,10 +385,10 @@ internal static class AbiInterfaceFactory
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
                 private static unsafe int Do_Abi_{{vm}}(
-                """, isMultiline: true);
+                """);
             WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
             writer.Write(")");
 
@@ -473,44 +473,44 @@ internal static class AbiInterfaceFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             #nullable enable
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
-            """, isMultiline: true);
+            """);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("""
+        writer.Write(isMultiline: true, """
              value)
                 {
                     return WindowsRuntimeInterfaceMarshaller<
-            """, isMultiline: true);
+            """);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(">.ConvertToUnmanaged(value, ");
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             );
                 }
             
                 public static 
-            """, isMultiline: true);
+            """);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("""
+        writer.Write(isMultiline: true, """
             ? ConvertToManaged(void* value)
                 {
                     return (
-            """, isMultiline: true);
+            """);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             ?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
             #nullable disable
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -616,10 +616,10 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             {{(useInternal ? "internal static class " : "public static class ")}}{{nameStripped}}Methods
             {
-            """, isMultiline: true);
+            """);
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {

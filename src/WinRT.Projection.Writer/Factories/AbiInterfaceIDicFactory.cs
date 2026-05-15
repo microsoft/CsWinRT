@@ -204,7 +204,7 @@ internal static class AbiInterfaceIDicFactory
         string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             ICollection<{{keyText}}> {{self}}Keys => {{target}}.Keys;
             ICollection<{{valueText}}> {{self}}Values => {{target}}.Values;
             int {{icoll}}Count => {{target}}.Count;
@@ -225,18 +225,18 @@ internal static class AbiInterfaceIDicFactory
             bool ICollection<KeyValuePair<{{keyText}}, {{valueText}}>>.Remove(KeyValuePair<{{keyText}}, {{valueText}}> item) => {{target}}.Remove(item);
             IEnumerator<KeyValuePair<{{keyText}}, {{valueText}}>> IEnumerable<KeyValuePair<{{keyText}}, {{valueText}}>>.GetEnumerator() => {{target}}.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            """, isMultiline: true);
+            """);
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             event global::Windows.Foundation.Collections.MapChangedEventHandler<{{keyText}}, {{valueText}}> {{obsSelf}}MapChanged
             {
             add => {{obsTarget}}.MapChanged += value;
             remove => {{obsTarget}}.MapChanged -= value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ internal static class AbiInterfaceIDicFactory
         string self = $"global::System.Collections.Generic.IList<{elementText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             int {{icoll}}Count => {{target}}.Count;
             bool {{icoll}}IsReadOnly => {{target}}.IsReadOnly;
             {{elementText}} {{self}}this[int index]
@@ -269,18 +269,18 @@ internal static class AbiInterfaceIDicFactory
             bool {{icoll}}Remove({{elementText}} item) => {{target}}.Remove(item);
             IEnumerator<{{elementText}}> IEnumerable<{{elementText}}>.GetEnumerator() => {{target}}.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            """, isMultiline: true);
+            """);
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             event global::Windows.Foundation.Collections.VectorChangedEventHandler<{{elementText}}> {{obsSelf}}VectorChanged
             {
             add => {{obsTarget}}.VectorChanged += value;
             remove => {{obsTarget}}.VectorChanged -= value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -365,13 +365,13 @@ internal static class AbiInterfaceIDicFactory
             writer.WriteLine();
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                  {{ccwIfaceName}}.{{evtName}}
                 {
                     add => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} += value;
                     remove => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} -= value;
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 
@@ -396,7 +396,7 @@ internal static class AbiInterfaceIDicFactory
             case "IBindableVector":
                 // IList covers IList, ICollection, and IEnumerable members.
                 writer.WriteLine();
-                writer.WriteLine("""
+                writer.WriteLine(isMultiline: true, """
                     int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;
                     bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;
                     object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;
@@ -418,7 +418,7 @@ internal static class AbiInterfaceIDicFactory
                     void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);
                     
                     IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();
-                    """, isMultiline: true);
+                    """);
                 break;
             case "IBindableIterable":
                 writer.WriteLine();
@@ -460,12 +460,12 @@ internal static class AbiInterfaceIDicFactory
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {ccwIfaceName}.{mname}(");
             MethodFactory.WriteParameterList(writer, context, sig);
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 )
                 {
                     var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                     
-                """, isMultiline: true);
+                """);
             if (sig.ReturnType is not null)
             {
                 writer.Write("return ");
@@ -477,10 +477,10 @@ internal static class AbiInterfaceIDicFactory
                 writer.Write(", ");
                 ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
             }
-            writer.WriteLine("""
+            writer.WriteLine(isMultiline: true, """
                 );
                 }
-                """, isMultiline: true);
+                """);
         }
 
         foreach (PropertyDefinition prop in type.Properties)
@@ -490,19 +490,19 @@ internal static class AbiInterfaceIDicFactory
             string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.WriteLine();
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
                 {
-                """, isMultiline: true);
+                """);
             if (getter is not null)
             {
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                         get
                         {
                             var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                             return {{abiClass}}.{{pname}}(_obj);
                         }
-                    """, isMultiline: true);
+                    """);
             }
 
             if (setter is not null)
@@ -523,13 +523,13 @@ internal static class AbiInterfaceIDicFactory
                     }
                 }
 
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                         set
                         {
                             var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                             {{abiClass}}.{{pname}}(_obj, value);
                         }
-                    """, isMultiline: true);
+                    """);
             }
             writer.WriteLine("}");
         }
@@ -542,7 +542,7 @@ internal static class AbiInterfaceIDicFactory
             writer.WriteLine();
             writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                  {{ccwIfaceName}}.{{evtName}}
                 {
                     add
@@ -556,7 +556,7 @@ internal static class AbiInterfaceIDicFactory
                         {{abiClass}}.{{evtName}}((WindowsRuntimeObject)this, _obj).Unsubscribe(value);
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 

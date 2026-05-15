@@ -58,10 +58,10 @@ internal static partial class AbiMethodBodyFactory
             string mname = method.Name?.Value ?? string.Empty;
             MethodSignatureInfo sig = new(method);
 
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                     [MethodImpl(MethodImplOptions.NoInlining)]
                     public static unsafe 
-                """, isMultiline: true);
+                """);
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {mname}(WindowsRuntimeObjectReference thisReference");
 
@@ -91,20 +91,20 @@ internal static partial class AbiMethodBodyFactory
             if (gMethod is not null)
             {
                 MethodSignatureInfo getSig = new(gMethod);
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
-                    """, isMultiline: true);
+                    """);
                 EmitAbiMethodBodyIfSimple(writer, context, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
             }
 
             if (sMethod is not null)
             {
                 MethodSignatureInfo setSig = new(sMethod);
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
-                    """, isMultiline: true);
+                    """);
                 EmitAbiMethodBodyIfSimple(writer, context, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
             }
         }
@@ -163,7 +163,7 @@ internal static partial class AbiMethodBodyFactory
 
             // Emit the per-event ConditionalWeakTable static field.
             writer.WriteLine();
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                     private static ConditionalWeakTable<object, {{eventSourceProjectedFull}}> _{{evtName}}
                     {
                         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,10 +183,10 @@ internal static partial class AbiMethodBodyFactory
                 
                     public static {{eventSourceProjectedFull}} {{evtName}}(object thisObject, WindowsRuntimeObjectReference thisReference)
                     {
-                """, isMultiline: true);
+                """);
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                             [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
                             [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
                             static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
@@ -195,17 +195,17 @@ internal static partial class AbiMethodBodyFactory
                                 key: thisObject,
                                 valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}})),
                                 factoryArgument: thisReference);
-                    """, isMultiline: true);
+                    """);
             }
             else
             {
                 // Non-generic delegate: directly construct.
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                             return _{{evtName}}.GetOrAdd(
                                 key: thisObject,
                                 valueFactory: static (_, thisReference) => new {{eventSourceProjectedFull}}(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}}),
                                 factoryArgument: thisReference);
-                    """, isMultiline: true);
+                    """);
             }
             writer.WriteLine("    }");
         }
