@@ -222,6 +222,29 @@ internal sealed partial class IndentedTextWriter
     }
 
     /// <summary>
+    /// Writes an interpolated expression to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>; otherwise this call is a no-op.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
     /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
@@ -381,6 +404,32 @@ internal sealed partial class IndentedTextWriter
         if (condition)
         {
             WriteLine(skipIfPresent);
+        }
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer followed by a newline if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer followed by a newline if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    {
+        if (condition)
+        {
+            WriteLine();
         }
     }
 
