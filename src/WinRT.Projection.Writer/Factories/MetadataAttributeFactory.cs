@@ -206,7 +206,7 @@ internal static class MetadataAttributeFactory
         }
 
         // Capture the projected type name as a string by writing into a scratch writer at indent 0.
-        string projectionName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
+        string projectionName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true).Format();
 
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
@@ -254,7 +254,7 @@ internal static class MetadataAttributeFactory
     /// <param name="isValueType">When <see langword="true"/>, wraps the projected type in <c>Windows.Foundation.IReference`1&lt;...&gt;</c>.</param>
     public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool isValueType)
     {
-        string projectionName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
+        string projectionName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true).Format();
 
         writer.WriteLine();
         writer.Write(isMultiline: true, """

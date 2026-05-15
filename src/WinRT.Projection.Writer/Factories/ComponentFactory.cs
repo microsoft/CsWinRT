@@ -36,9 +36,9 @@ internal static class ComponentFactory
             return;
         }
 
-        string typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        string typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true).Format();
 
-        string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true);
+        string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true).Format();
 
         _ = map.TryAdd(typeName, metadataTypeName);
     }

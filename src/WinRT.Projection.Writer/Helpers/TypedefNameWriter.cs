@@ -121,24 +121,27 @@ internal static class TypedefNameWriter
     }
 
     /// <summary>
-    /// Convenience helper that emits the typedef name immediately followed by the generic
-    /// parameter list (e.g. <c>Foo&lt;T0, T1&gt;</c>) into a pooled writer and returns the
-    /// resulting string. Equivalent to calling
+    /// Writes the typedef name immediately followed by the generic parameter list
+    /// (e.g. <c>Foo&lt;T0, T1&gt;</c>). Equivalent to calling
     /// <see cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
     /// followed by <see cref="WriteTypeParams(IndentedTextWriter, TypeDefinition)"/>.
     /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The (potentially generic) type definition.</param>
     /// <param name="nameType">The kind of name to emit.</param>
     /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
-    /// <returns>The emitted typedef name + generic-parameter list.</returns>
-    public static string WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
+    public static void WriteTypedefNameWithTypeParams(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
         WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
         WriteTypeParams(writer, type);
-        return writer.ToString();
+    }
+
+    /// <inheritdoc cref="WriteTypedefNameWithTypeParams(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
+    /// <returns>A callback that writes the typedef name + generic-parameter list to the writer it's appended to.</returns>
+    public static WriteTypedefNameWithTypeParamsCallback WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
+    {
+        return new(context, type, nameType, forceWriteNamespace);
     }
 
     /// <inheritdoc cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
