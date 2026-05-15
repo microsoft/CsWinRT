@@ -389,9 +389,23 @@ internal sealed partial class IndentedTextWriter
     /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
     /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
-    public void WriteLineIf(bool condition, string content, bool isMultiline = false)
+    public void WriteLineIf(bool condition, string content)
+    {
+        if (condition)
+        {
+            WriteLine(isMultiline: false, content.AsSpan());
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, bool isMultiline, string content)
     {
         if (condition)
         {
@@ -404,14 +418,27 @@ internal sealed partial class IndentedTextWriter
     /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
-    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
     /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
-    public void WriteLineIf(bool condition, ReadOnlySpan<char> content, bool isMultiline = false)
+    public void WriteLineIf(bool condition, ReadOnlySpan<char> content)
     {
         if (condition)
         {
-            Write(isMultiline, content);
-            WriteLine();
+            WriteLine(isMultiline: false, content);
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, bool isMultiline, ReadOnlySpan<char> content)
+    {
+        if (condition)
+        {
+            WriteLine(isMultiline, content);
         }
     }
 
