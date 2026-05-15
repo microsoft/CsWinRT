@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -263,17 +264,13 @@ internal static class AbiInterfaceFactory
             string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
             writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
         }
-        writer.Write(isMultiline: true, """
+        writer.Write(isMultiline: true, $$"""
             }
             
             public static ref readonly Guid IID
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref 
-            """);
-        AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.WriteLine(isMultiline: true, """
-            ;
+                get => ref {{AbiTypeHelpers.WriteIidGuidReference(context, type)}};
             }
             
             public static nint Vtable
@@ -466,6 +463,8 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
+        WriteIidGuidReferenceCallback iid = AbiTypeHelpers.WriteIidGuidReference(context, type);
+
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
             #nullable enable
@@ -482,10 +481,8 @@ internal static class AbiInterfaceFactory
             """);
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(">.ConvertToUnmanaged(value, ");
-        AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write(isMultiline: true, """
-            );
+        writer.Write($$"""
+            >.ConvertToUnmanaged(value, {{iid}});
                 }
             
                 public static 

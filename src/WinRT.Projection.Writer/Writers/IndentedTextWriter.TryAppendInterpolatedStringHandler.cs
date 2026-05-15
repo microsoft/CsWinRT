@@ -6,6 +6,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+#pragma warning disable IDE0038
+
 namespace WindowsRuntime.ProjectionWriter.Writers;
 
 /// <inheritdoc cref="IndentedTextWriter"/>
@@ -107,6 +109,14 @@ internal partial class IndentedTextWriter
         {
             if (value is null)
             {
+                return;
+            }
+
+            // Handle custom callbacks first (these are only value types)
+            if (typeof(T).IsValueType && value is IIndentedTextWriterCallback)
+            {
+                ((IIndentedTextWriterCallback)value).Write(_writer);
+
                 return;
             }
 
