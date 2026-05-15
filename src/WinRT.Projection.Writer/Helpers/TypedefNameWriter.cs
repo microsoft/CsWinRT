@@ -173,10 +173,7 @@ internal static class TypedefNameWriter
         writer.Write("<");
         for (int i = 0; i < type.GenericParameters.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             string? gpName = type.GenericParameters[i].Name?.Value;
             writer.Write(gpName ?? $"T{i}");
@@ -217,10 +214,7 @@ internal static class TypedefNameWriter
                 writer.Write("<");
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     // Generic args ALWAYS use Projected, regardless of parent's nameType.
                     WriteTypeName(writer, context, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
@@ -246,10 +240,7 @@ internal static class TypedefNameWriter
                     {
                         writer.Write(GlobalPrefix);
 
-                        if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
-                        {
-                            writer.Write("ABI.");
-                        }
+                        writer.WriteIf(nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource, "ABI.");
 
                         writer.Write($"{ns}.");
                     }
@@ -268,10 +259,7 @@ internal static class TypedefNameWriter
                     writer.Write("<");
                     for (int i = 0; i < gir.GenericArgs.Count; i++)
                     {
-                        if (i > 0)
-                        {
-                            writer.Write(", ");
-                        }
+                        writer.WriteIf(i > 0, ", ");
 
                         WriteTypeName(writer, context, gir.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                     }
@@ -300,10 +288,7 @@ internal static class TypedefNameWriter
                     {
                         writer.Write(GlobalPrefix);
 
-                        if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
-                        {
-                            writer.Write("ABI.");
-                        }
+                        writer.WriteIf(nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource, "ABI.");
 
                         writer.Write($"{ns}.");
                     }

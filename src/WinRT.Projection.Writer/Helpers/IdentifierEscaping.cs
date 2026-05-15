@@ -30,10 +30,7 @@ internal static class IdentifierEscaping
     /// <param name="identifier">The identifier to write.</param>
     public static void WriteEscapedIdentifier(IndentedTextWriter writer, string identifier)
     {
-        if (CSharpKeywords.IsKeyword(identifier))
-        {
-            writer.Write("@");
-        }
+        writer.WriteIf(CSharpKeywords.IsKeyword(identifier), "@");
 
         writer.Write(identifier);
     }

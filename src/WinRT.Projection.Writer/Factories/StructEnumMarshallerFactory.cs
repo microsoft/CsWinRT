@@ -93,10 +93,7 @@ internal static class StructEnumMarshallerFactory
                 string fname = field.Name?.Value ?? "";
                 TypeSignature ft = field.Signature.FieldType;
 
-                if (!first)
-                {
-                    writer.WriteLine(",");
-                }
+                writer.WriteLineIf(!first, ",");
 
                 first = false;
                 writer.Write($"            {fname} = ");
@@ -165,10 +162,7 @@ internal static class StructEnumMarshallerFactory
                 string fname = field.Name?.Value ?? "";
                 TypeSignature ft = field.Signature.FieldType;
 
-                if (!first)
-                {
-                    writer.WriteLine(",");
-                }
+                writer.WriteLineIf(!first, ",");
 
                 first = false;
                 writer.Write("            ");

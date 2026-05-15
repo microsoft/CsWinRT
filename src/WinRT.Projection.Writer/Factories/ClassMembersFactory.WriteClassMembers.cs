@@ -73,10 +73,7 @@ internal static partial class ClassMembersFactory
                 setterPlat = string.Empty;
             }
 
-            if (!string.IsNullOrEmpty(propertyPlat))
-            {
-                writer.Write(propertyPlat);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(propertyPlat), propertyPlat);
 
             writer.Write($"{s.Access}{s.MethodSpec}{s.PropTypeText} {kvp.Key}");
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'

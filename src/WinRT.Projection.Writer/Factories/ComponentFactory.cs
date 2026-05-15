@@ -300,10 +300,7 @@ internal static class ComponentFactory
 
         for (int i = 0; i < sig.ParameterTypes.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             ParameterDefinition? p = method.Parameters.Count > i ? method.Parameters[i].Definition : null;
             string paramName = p?.Name?.Value ?? $"arg{i}";

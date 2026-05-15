@@ -129,10 +129,7 @@ internal static partial class ClassMembersFactory
                 writer.WriteLine();
                 writer.Write("internal ");
 
-                if (hasBaseType)
-                {
-                    writer.Write("new ");
-                }
+                writer.WriteIf(hasBaseType, "new ");
 
                 writer.WriteLine(isMultiline: true, $$"""
                     WindowsRuntimeObjectReferenceValue GetDefaultInterface()
@@ -330,10 +327,7 @@ internal static partial class ClassMembersFactory
                 writer.WriteLine(");");
                 // string to each public method emission. In ref mode this produces e.g.
                 // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 writer.Write($"{access}{methodSpecForThis}");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
@@ -360,10 +354,7 @@ internal static partial class ClassMembersFactory
             {
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 writer.Write($"{access}{methodSpecForThis}");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
@@ -392,10 +383,7 @@ internal static partial class ClassMembersFactory
             if (isOverridable)
             {
                 // impl as well (since it shares the same originating interface).
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
@@ -405,10 +393,7 @@ internal static partial class ClassMembersFactory
                 writer.Write($") => {name}(");
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
                 }
@@ -583,10 +568,7 @@ internal static partial class ClassMembersFactory
             writer.WriteLine();
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-            if (!string.IsNullOrEmpty(platformAttribute))
-            {
-                writer.Write(platformAttribute);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
             writer.Write($"{access}{methodSpec}event ");
             TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);

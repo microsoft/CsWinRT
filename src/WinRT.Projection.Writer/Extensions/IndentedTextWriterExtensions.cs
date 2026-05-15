@@ -30,10 +30,7 @@ internal static class IndentedTextWriterExtensions
             bool first = true;
             foreach (T item in items)
             {
-                if (!first)
-                {
-                    writer.Write(separator);
-                }
+                writer.WriteIf(!first, separator);
 
                 writeItem(writer, item);
                 first = false;

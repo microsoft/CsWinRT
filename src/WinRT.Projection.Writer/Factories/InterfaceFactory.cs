@@ -179,10 +179,7 @@ internal static class InterfaceFactory
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 // Pass forceWriteNamespace=false so type args also respect the current namespace.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
@@ -252,15 +249,9 @@ internal static class InterfaceFactory
             string propType = WritePropType(context, prop);
             writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
 
-            if (getter is not null || setter is not null)
-            {
-                writer.Write(" get;");
-            }
+            writer.WriteIf(getter is not null || setter is not null, " get;");
 
-            if (setter is not null)
-            {
-                writer.Write(" set;");
-            }
+            writer.WriteIf(setter is not null, " set;");
 
             writer.WriteLine(" }");
         }
@@ -427,10 +418,7 @@ internal static class InterfaceFactory
                 writer.Write("(");
                 for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     object? val = attr.Signature.FixedArguments[i].Element;
 

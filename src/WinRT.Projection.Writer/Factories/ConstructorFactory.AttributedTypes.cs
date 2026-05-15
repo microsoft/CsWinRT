@@ -120,10 +120,7 @@ internal static partial class ConstructorFactory
                 // Emit the public constructor.
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 writer.Write($"public unsafe {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
@@ -140,10 +137,7 @@ internal static partial class ConstructorFactory
                     writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
                     for (int i = 0; i < sig.Parameters.Count; i++)
                     {
-                        if (i > 0)
-                        {
-                            writer.Write(", ");
-                        }
+                        writer.WriteIf(i > 0, ", ");
 
                         string raw = sig.Parameters[i].Parameter.Name ?? "param";
                         writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);

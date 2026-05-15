@@ -65,10 +65,7 @@ internal static partial class AbiMethodBodyFactory
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {mname}(WindowsRuntimeObjectReference thisReference");
 
-            if (sig.Parameters.Count > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(sig.Parameters.Count > 0, ", ");
 
             MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(")");
