@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -333,12 +332,7 @@ internal static class AbiInterfaceFactory
         }
         else
         {
-            ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-            if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-            {
-                ifaceFullName = GlobalPrefix + ifaceFullName;
-            }
+            ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
         }
 
         // Build a map of event add/remove methods to their event so we can emit the table field

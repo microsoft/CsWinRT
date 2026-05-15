@@ -226,12 +226,7 @@ internal static partial class ClassMembersFactory
         // — note this is the ungenerified Methods class for generic interfaces
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
-        string abiClass = TypedefNameWriter.WriteTypedefName(context, abiInterface, TypedefNameType.StaticAbiClass, true);
-
-        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            abiClass = GlobalPrefix + abiClass;
-        }
+        string abiClass = TypedefNameWriter.WriteTypedefName(context, abiInterface, TypedefNameType.StaticAbiClass, true).Format();
 
         string objRef = ObjRefNameGenerator.GetObjRefName(context, abiInterfaceRef);
 

@@ -4,6 +4,7 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -120,24 +121,6 @@ internal static class TypedefNameWriter
     }
 
     /// <summary>
-    /// Convenience overload of <see cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the typedef name into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="type">The type definition to emit the name of.</param>
-    /// <param name="nameType">The kind of name to emit (projected, non-projected, ABI, etc.).</param>
-    /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
-    /// <returns>The emitted typedef name.</returns>
-    public static string WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
-    {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
-        return writer.ToString();
-    }
-
-    /// <summary>
     /// Convenience helper that emits the typedef name immediately followed by the generic
     /// parameter list (e.g. <c>Foo&lt;T0, T1&gt;</c>) into a pooled writer and returns the
     /// resulting string. Equivalent to calling
@@ -156,6 +139,13 @@ internal static class TypedefNameWriter
         WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
         WriteTypeParams(writer, type);
         return writer.ToString();
+    }
+
+    /// <inheritdoc cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
+    /// <returns>A callback that writes the typedef name to the writer it's appended to.</returns>
+    public static WriteTypedefNameCallback WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
+    {
+        return new(context, type, nameType, forceWriteNamespace);
     }
 
     /// <summary>
@@ -179,6 +169,13 @@ internal static class TypedefNameWriter
             writer.Write(gpName ?? $"T{i}");
         }
         writer.Write(">");
+    }
+
+    /// <inheritdoc cref="WriteTypeParams(IndentedTextWriter, TypeDefinition)"/>
+    /// <returns>A callback that writes the generic-parameter list to the writer it's appended to.</returns>
+    public static WriteTypeParamsCallback WriteTypeParams(TypeDefinition type)
+    {
+        return new(type);
     }
 
     /// <summary>

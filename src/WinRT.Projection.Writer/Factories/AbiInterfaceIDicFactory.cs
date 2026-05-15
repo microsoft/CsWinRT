@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -10,7 +9,6 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -293,12 +291,7 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
-        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            ccwIfaceName = GlobalPrefix + ccwIfaceName;
-        }
+        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
         foreach (MethodDefinition method in type.Methods)
         {
@@ -427,20 +420,10 @@ internal static class AbiInterfaceIDicFactory
     internal static void WriteInterfaceIdicImplMembersForInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
-        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            ccwIfaceName = GlobalPrefix + ccwIfaceName;
-        }
+        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
         // The static ABI Methods class name.
-        string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true);
-
-        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            abiClass = GlobalPrefix + abiClass;
-        }
+        string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true).Format();
 
         foreach (MethodDefinition method in type.Methods)
         {
