@@ -8,6 +8,7 @@ using System.Reflection;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Builders;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -116,10 +117,9 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The type definition.</param>
     public static void WriteWinRTMetadataTypeNameAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        writer.Write("[WindowsRuntimeMetadataTypeName(\"");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("\")]");
+        WriteTypedefNameWithTypeParamsCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
+
+        writer.WriteLine($"""[WindowsRuntimeMetadataTypeName("{typeName}")]""");
     }
 
     /// <summary>
@@ -130,10 +130,9 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The type definition.</param>
     public static void WriteWinRTMappedTypeAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        writer.Write("[WindowsRuntimeMappedType(typeof(");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("))]");
+        WriteTypedefNameWithTypeParamsCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+
+        writer.WriteLine($"[WindowsRuntimeMappedType(typeof({typeName}))]");
     }
 
     /// <summary>
@@ -166,10 +165,9 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        writer.Write("[WindowsRuntimeReferenceType(typeof(");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("?))]");
+        WriteTypedefNameWithTypeParamsCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+
+        writer.WriteLine($"[WindowsRuntimeReferenceType(typeof({typeName}?))]");
     }
 
     /// <summary>
@@ -208,38 +206,27 @@ internal static class MetadataAttributeFactory
         // Capture the projected type name as a string by writing into a scratch writer at indent 0.
         string projectionName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true).Format();
 
+        // The 'target:' slot is the ABI typedef name in component mode, otherwise the projected name.
+        WriteTypedefNameWithTypeParamsCallback target = context.Settings.Component
+            ? TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true)
+            : TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
+
         writer.WriteLine();
-        writer.Write(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
                 value: "{{projectionName}}",
-                target: typeof(
-            """);
-        if (context.Settings.Component)
-        {
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            TypedefNameWriter.WriteTypeParams(writer, type);
-        }
-        else
-        {
-            writer.Write(projectionName);
-        }
-
-        writer.WriteLine(isMultiline: true, $$"""
-            ),
+                target: typeof({{target}}),
                 trimTarget: typeof({{projectionName}}))]
             """);
 
         if (context.Settings.Component)
         {
             writer.WriteLine();
-            writer.Write(isMultiline: true, $$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
                     source: typeof({{projectionName}}),
-                    proxy: typeof(
+                    proxy: typeof({{target}}))]
                 """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            TypedefNameWriter.WriteTypeParams(writer, type);
-            writer.WriteLine("))]");
             writer.WriteLine();
         }
     }
@@ -256,36 +243,19 @@ internal static class MetadataAttributeFactory
     {
         string projectionName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true).Format();
 
+        // The 'value:' slot is wrapped in 'Windows.Foundation.IReference`1<...>' for value types.
+        string value = isValueType ? $"Windows.Foundation.IReference`1<{projectionName}>" : projectionName;
+
+        // The 'target:' slot is the ABI typedef name in component mode, otherwise the projected name.
+        WriteTypedefNameWithTypeParamsCallback target = context.Settings.Component
+            ? TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true)
+            : TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
+
         writer.WriteLine();
-        writer.Write(isMultiline: true, """
-            [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
-                value: "
-            """);
-        if (isValueType)
-        {
-            writer.Write($"Windows.Foundation.IReference`1<{projectionName}>");
-        }
-        else
-        {
-            writer.Write(projectionName);
-        }
-
-        writer.Write(isMultiline: true, """
-            ",
-                target: typeof(
-            """);
-        if (context.Settings.Component)
-        {
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            TypedefNameWriter.WriteTypeParams(writer, type);
-        }
-        else
-        {
-            writer.Write(projectionName);
-        }
-
         writer.WriteLine(isMultiline: true, $$"""
-            ),
+            [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
+                value: "{{value}}",
+                target: typeof({{target}}),
                 trimTarget: typeof({{projectionName}}))]
             """);
 
@@ -295,14 +265,11 @@ internal static class MetadataAttributeFactory
         if (cat is not (TypeCategory.Interface or TypeCategory.Struct) && context.Settings.Component)
         {
             writer.WriteLine();
-            writer.Write(isMultiline: true, $$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
                     source: typeof({{projectionName}}),
-                    proxy: typeof(
+                    proxy: typeof({{target}}))]
                 """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            TypedefNameWriter.WriteTypeParams(writer, type);
-            writer.WriteLine("))]");
             writer.WriteLine();
         }
     }
@@ -329,20 +296,15 @@ internal static class MetadataAttributeFactory
             return;
         }
 
+        WriteTypedefNameWithTypeParamsCallback source = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        WriteTypedefNameWithTypeParamsCallback proxy = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true);
+
         writer.WriteLine();
-        writer.Write(isMultiline: true, """
+        writer.WriteLine(isMultiline: true, $$"""
             [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
-                source: typeof(
+                source: typeof({{source}}),
+                proxy: typeof({{proxy}}))]
             """);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(isMultiline: true, """
-            ),
-                proxy: typeof(
-            """);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("))]");
         writer.WriteLine();
     }
 
