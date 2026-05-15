@@ -73,7 +73,7 @@ internal static class AbiDelegateFactory
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             internal static unsafe class {{nameStripped}}Impl
             {
                 [FixedAddressValueType]
@@ -93,7 +93,7 @@ internal static class AbiDelegateFactory
             
             [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             private static int Invoke(
-            """, isMultiline: true);
+            """);
         AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
         writer.Write(")");
 
@@ -109,14 +109,14 @@ internal static class AbiDelegateFactory
 
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
                 public static ref readonly Guid IID
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref {{iidExpr}};
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     private static void WriteDelegateVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -138,7 +138,7 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
             {
@@ -146,12 +146,12 @@ internal static class AbiDelegateFactory
                 public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
                 public delegate* unmanaged[MemberFunction]<void*, uint> Release;
                 public delegate* unmanaged[MemberFunction]<
-            """, isMultiline: true);
+            """);
         AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig);
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             , int> Invoke;
             }
-            """, isMultiline: true);
+            """);
     }
 
     private static void WriteNativeDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -173,11 +173,11 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}NativeDelegate
             {
                 public static unsafe 
-            """, isMultiline: true);
+            """);
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
 
@@ -211,7 +211,7 @@ internal static class AbiDelegateFactory
         string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             file static class {{nameStripped}}InterfaceEntriesImpl
             {
                 [FixedAddressValueType]
@@ -223,16 +223,16 @@ internal static class AbiDelegateFactory
                     Entries.Delegate.Vtable = {{nameStripped}}Impl.Vtable;
                     Entries.DelegateReference.IID = {{iidRefExpr}};
                     Entries.DelegateReference.Vtable = {{nameStripped}}ReferenceImpl.Vtable;
-            """, isMultiline: true);
+            """);
         writer.IncreaseIndent();
         writer.IncreaseIndent();
         WellKnownInterfaceEntriesEmitter.EmitDelegateReferenceWellKnownEntries(writer);
         writer.DecreaseIndent();
         writer.DecreaseIndent();
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -273,7 +273,7 @@ internal static class AbiDelegateFactory
         }
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public sealed unsafe class {{nameStripped}}EventSource : EventSource<{{projectedName}}>
             {
                 /// <inheritdoc cref="EventSource{T}.EventSource"/>
@@ -306,7 +306,7 @@ internal static class AbiDelegateFactory
                     protected override {{projectedName}} GetEventInvoke()
                     {
                         return (
-            """, isMultiline: true);
+            """);
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             if (i > 0)
@@ -350,12 +350,12 @@ internal static class AbiDelegateFactory
             string raw = sig.Parameters[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             );
                     }
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -373,7 +373,7 @@ internal static class AbiDelegateFactory
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
@@ -388,7 +388,7 @@ internal static class AbiDelegateFactory
                 }
             #nullable disable
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -407,7 +407,7 @@ internal static class AbiDelegateFactory
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             file abstract unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
             {
                 /// <inheritdoc/>
@@ -421,7 +421,7 @@ internal static class AbiDelegateFactory
                     return new {{fullProjected}}(valueReference.{{nameStripped}}Invoke);
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -436,7 +436,7 @@ internal static class AbiDelegateFactory
         string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
             {
                 /// <inheritdoc/>
@@ -460,7 +460,7 @@ internal static class AbiDelegateFactory
                     return WindowsRuntimeDelegateMarshaller.UnboxToManaged<{{nameStripped}}ComWrappersCallback>(value, in {{iidRefExpr}})!;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
 }

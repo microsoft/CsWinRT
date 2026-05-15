@@ -100,12 +100,12 @@ internal static partial class ClassMembersFactory
                 writer.WriteLine();
                 writer.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
                 WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     >.GetInterface()
                     {
                         return {{giObjRefName}}.AsValue();
                     }
-                    """, isMultiline: true);
+                    """);
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
@@ -134,12 +134,12 @@ internal static partial class ClassMembersFactory
                     writer.Write("new ");
                 }
 
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     WindowsRuntimeObjectReferenceValue GetDefaultInterface()
                     {
                         return {{giObjRefName}}.AsValue();
                     }
-                    """, isMultiline: true);
+                    """);
             }
 
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
@@ -316,10 +316,10 @@ internal static partial class ClassMembersFactory
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
                 writer.WriteLine();
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
                     static extern 
-                    """, isMultiline: true);
+                    """);
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write($" {accessorName}([UnsafeAccessorType(\"{genericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference");
                 for (int i = 0; i < sig.Parameters.Count; i++)
@@ -534,29 +534,29 @@ internal static partial class ClassMembersFactory
             if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
                 writer.WriteLine();
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     private {{eventSourceTypeFull}} _eventSource_{{name}}
                     {
                         get
                         {
-                    """, isMultiline: true);
+                    """);
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
-                    writer.WriteLine($$"""
+                    writer.WriteLine(isMultiline: true, $$"""
                                 [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
                                 [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
                                 static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
-                        """, isMultiline: true);
+                        """);
                     writer.WriteLine();
                 }
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                             [MethodImpl(MethodImplOptions.NoInlining)]
                             {{eventSourceTypeFull}} MakeEventSource()
                             {
                                 _ = global::System.Threading.Interlocked.CompareExchange(
                                     location1: ref field,
                                     value: 
-                    """, isMultiline: true);
+                    """);
                 if (isGenericEvent)
                 {
                     writer.Write($"Unsafe.As<{eventSourceTypeFull}>(ctor({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)}))");
@@ -566,7 +566,7 @@ internal static partial class ClassMembersFactory
                     writer.Write($"new {eventSourceTypeFull}({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)})");
                 }
 
-                writer.WriteLine("""
+                writer.WriteLine(isMultiline: true, """
                     ,
                                     comparand: null);
                     
@@ -576,7 +576,7 @@ internal static partial class ClassMembersFactory
                             return field ?? MakeEventSource();
                         }
                     }
-                    """, isMultiline: true);
+                    """);
             }
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
@@ -590,23 +590,23 @@ internal static partial class ClassMembersFactory
 
             writer.Write($"{access}{methodSpec}event ");
             TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                  {{name}}
                 {
-                """, isMultiline: true);
+                """);
             if (context.Settings.ReferenceProjection)
             {
-                writer.WriteLine("""
+                writer.WriteLine(isMultiline: true, """
                         add => throw null;
                         remove => throw null;
-                    """, isMultiline: true);
+                    """);
             }
             else if (inlineEventSourceField)
             {
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                         add => _eventSource_{{name}}.Subscribe(value);
                         remove => _eventSource_{{name}}.Unsubscribe(value);
-                    """, isMultiline: true);
+                    """);
             }
             else
             {
@@ -615,10 +615,10 @@ internal static partial class ClassMembersFactory
                 // inline_event_source_field is false (the default helper-based path).
                 // Example: Simple.Event0 (on ISimple5) becomes
                 //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                         add => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Subscribe(value);
                         remove => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Unsubscribe(value);
-                    """, isMultiline: true);
+                    """);
             }
             writer.WriteLine("}");
         }
