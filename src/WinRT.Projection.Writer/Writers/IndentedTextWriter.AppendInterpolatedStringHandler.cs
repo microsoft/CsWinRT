@@ -6,6 +6,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+#pragma warning disable IDE0038
+
 namespace WindowsRuntime.ProjectionWriter.Writers;
 
 /// <inheritdoc cref="IndentedTextWriter"/>
@@ -71,6 +73,14 @@ internal partial class IndentedTextWriter
                 return;
             }
 
+            // Handle custom callbacks first (these are only value types)
+            if (typeof(T).IsValueType && value is IIndentedTextWriterCallback)
+            {
+                ((IIndentedTextWriterCallback)value).Write(_writer);
+
+                return;
+            }
+
             // If the value is a 'string', write it while preserving the multiline semantics.
             // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
             if (value is string text)
@@ -130,3 +140,4 @@ internal partial class IndentedTextWriter
         }
     }
 }
+
