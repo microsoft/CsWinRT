@@ -68,10 +68,7 @@ internal static partial class ConstructorFactory
 
             writer.WriteLine();
 
-            if (!string.IsNullOrEmpty(platformAttribute))
-            {
-                writer.Write(platformAttribute);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
             writer.Write(visibility);
 
@@ -87,10 +84,7 @@ internal static partial class ConstructorFactory
             writer.Write($"{typeName}(");
             for (int i = 0; i < userParamCount; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
             }
@@ -110,10 +104,7 @@ internal static partial class ConstructorFactory
                 writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
                 for (int i = 0; i < userParamCount; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     string raw = sig.Parameters[i].Parameter.Name ?? "param";
                     writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
@@ -171,10 +162,7 @@ internal static partial class ConstructorFactory
             """);
         using (writer.WriteBlock())
         {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
-            }
+            writer.WriteLineIf(!string.IsNullOrEmpty(gcPressureBody), gcPressureBody);
         }
 
         writer.WriteLine();
@@ -184,10 +172,7 @@ internal static partial class ConstructorFactory
             """);
         using (writer.WriteBlock())
         {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
-            }
+            writer.WriteLineIf(!string.IsNullOrEmpty(gcPressureBody), gcPressureBody);
         }
 
         writer.WriteLine();
@@ -197,10 +182,7 @@ internal static partial class ConstructorFactory
             """);
         using (writer.WriteBlock())
         {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
-            }
+            writer.WriteLineIf(!string.IsNullOrEmpty(gcPressureBody), gcPressureBody);
         }
 
         writer.WriteLine();
@@ -210,10 +192,7 @@ internal static partial class ConstructorFactory
             """);
         using (writer.WriteBlock())
         {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
-            }
+            writer.WriteLineIf(!string.IsNullOrEmpty(gcPressureBody), gcPressureBody);
         }
     }
 }

@@ -47,10 +47,7 @@ internal static class ClassFactory
             return;
         }
 
-        if (type.IsSealed)
-        {
-            writer.Write("sealed ");
-        }
+        writer.WriteIf(type.IsSealed, "sealed ");
     }
 
     /// <summary>
@@ -362,10 +359,7 @@ internal static class ClassFactory
                 string mname = method.Name?.Value ?? string.Empty;
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 writer.Write("public static ");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
@@ -395,10 +389,7 @@ internal static class ClassFactory
                 string evtName = evt.Name?.Value ?? string.Empty;
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 writer.Write("public static event ");
                 TypedefNameWriter.WriteEventType(writer, context, evt);
@@ -476,10 +467,7 @@ internal static class ClassFactory
                 setterPlat = string.Empty;
             }
 
-            if (!string.IsNullOrEmpty(propertyPlat))
-            {
-                writer.Write(propertyPlat);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(propertyPlat), propertyPlat);
 
             writer.Write($"public static {s.PropTypeText} {kv.Key}");
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
@@ -504,10 +492,7 @@ internal static class ClassFactory
                 {
                     if (s.HasGetter)
                     {
-                        if (!string.IsNullOrEmpty(getterPlat))
-                        {
-                            writer.Write(getterPlat);
-                        }
+                        writer.WriteIf(!string.IsNullOrEmpty(getterPlat), getterPlat);
 
                         if (context.Settings.ReferenceProjection)
                         {
@@ -521,10 +506,7 @@ internal static class ClassFactory
 
                     if (s.HasSetter)
                     {
-                        if (!string.IsNullOrEmpty(setterPlat))
-                        {
-                            writer.Write(setterPlat);
-                        }
+                        writer.WriteIf(!string.IsNullOrEmpty(setterPlat), setterPlat);
 
                         if (context.Settings.ReferenceProjection)
                         {
@@ -754,10 +736,7 @@ internal static class ClassFactory
                     continue;
                 }
 
-                if (!firstClause)
-                {
-                    writer.Write(" || ");
-                }
+                writer.WriteIf(!firstClause, " || ");
 
                 firstClause = false;
                 ObjRefNameGenerator.WriteIidExpression(writer, context, implRef);
@@ -771,19 +750,13 @@ internal static class ClassFactory
 
             if (hasBaseClass)
             {
-                if (!firstClause)
-                {
-                    writer.Write(" || ");
-                }
+                writer.WriteIf(!firstClause, " || ");
 
                 writer.Write("base.IsOverridableInterface(in iid)");
                 firstClause = false;
             }
 
-            if (firstClause)
-            {
-                writer.Write("false");
-            }
+            writer.WriteIf(firstClause, "false");
 
             writer.WriteLine(";");
         }

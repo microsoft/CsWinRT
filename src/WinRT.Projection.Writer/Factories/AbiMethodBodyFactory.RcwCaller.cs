@@ -774,10 +774,7 @@ internal static partial class AbiMethodBodyFactory
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
 
-                if (!first)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(!first, ", ");
 
                 first = false;
                 writer.Write($"_{localName} = ");
@@ -1519,10 +1516,7 @@ internal static partial class AbiMethodBodyFactory
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
                                     static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
                         """);
-                    if (!disposeDataParamType.EndsWith("data", StringComparison.Ordinal))
-                    {
-                        writer.Write(" data");
-                    }
+                    writer.WriteIf(!disposeDataParamType.EndsWith("data", StringComparison.Ordinal), " data");
 
                     writer.WriteLine(isMultiline: true, $$"""
                         );

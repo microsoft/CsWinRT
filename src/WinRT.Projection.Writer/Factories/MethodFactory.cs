@@ -131,10 +131,7 @@ internal static class MethodFactory
     {
         string name = p.Parameter.Name ?? "param";
 
-        if (CSharpKeywords.IsKeyword(name))
-        {
-            writer.Write("@");
-        }
+        writer.WriteIf(CSharpKeywords.IsKeyword(name), "@");
 
         writer.Write(name);
     }
@@ -181,10 +178,7 @@ internal static class MethodFactory
     {
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }

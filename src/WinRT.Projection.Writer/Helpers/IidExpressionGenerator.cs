@@ -164,10 +164,7 @@ internal static partial class IidExpressionGenerator
     }
     private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {
-        if (!first)
-        {
-            writer.Write(", ");
-        }
+        writer.WriteIf(!first, ", ");
 
         writer.Write($"0x{(b & 0xFF).ToString("X", CultureInfo.InvariantCulture)}");
     }
@@ -261,10 +258,7 @@ internal static partial class IidExpressionGenerator
                 writer.Write("};");
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(";");
-                    }
+                    writer.WriteIf(i > 0, ";");
 
                     WriteGuidSignature(writer, context, gi.GenericArgs[i]);
                 }
@@ -291,10 +285,7 @@ internal static partial class IidExpressionGenerator
                         writer.Write("};");
                         for (int i = 0; i < gir.GenericArgs.Count; i++)
                         {
-                            if (i > 0)
-                            {
-                                writer.Write(";");
-                            }
+                            writer.WriteIf(i > 0, ";");
 
                             WriteGuidSignature(writer, context, gir.GenericArgs[i]);
                         }
@@ -352,10 +343,7 @@ internal static partial class IidExpressionGenerator
                         continue;
                     }
 
-                    if (!first)
-                    {
-                        writer.Write(";");
-                    }
+                    writer.WriteIf(!first, ";");
 
                     first = false;
                     WriteGuidSignature(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
@@ -419,10 +407,7 @@ internal static partial class IidExpressionGenerator
             """);
         for (int i = 0; i < 16; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             writer.Write($"0x{bytes[i].ToString("X", CultureInfo.InvariantCulture)}");
         }

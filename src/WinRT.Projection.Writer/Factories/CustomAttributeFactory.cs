@@ -424,10 +424,7 @@ internal static class CustomAttributeFactory
                 writer.Write("(");
                 for (int i = 0; i < kv.Value.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     writer.Write(kv.Value[i]);
                 }

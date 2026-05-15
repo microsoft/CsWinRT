@@ -317,10 +317,7 @@ internal static class AbiInterfaceIDicFactory
             writer.Write($") => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
             }
@@ -466,10 +463,7 @@ internal static class AbiInterfaceIDicFactory
                     var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                     
                 """);
-            if (sig.ReturnType is not null)
-            {
-                writer.Write("return ");
-            }
+            writer.WriteIf(sig.ReturnType is not null, "return ");
 
             writer.Write($"{abiClass}.{mname}(_obj");
             for (int i = 0; i < sig.Parameters.Count; i++)

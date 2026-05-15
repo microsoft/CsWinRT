@@ -181,10 +181,7 @@ internal static class AbiDelegateFactory
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
 
-        if (sig.Parameters.Count > 0)
-        {
-            writer.Write(", ");
-        }
+        writer.WriteIf(sig.Parameters.Count > 0, ", ");
 
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(")");
@@ -309,10 +306,7 @@ internal static class AbiDelegateFactory
             """);
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
 
@@ -331,10 +325,7 @@ internal static class AbiDelegateFactory
         writer.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
 

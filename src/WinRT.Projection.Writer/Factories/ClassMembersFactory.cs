@@ -157,10 +157,7 @@ internal static partial class ClassMembersFactory
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }

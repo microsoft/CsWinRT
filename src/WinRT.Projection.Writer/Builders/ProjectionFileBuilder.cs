@@ -110,10 +110,7 @@ internal static class ProjectionFileBuilder
 
         writer.WriteLine();
 
-        if (isFlags)
-        {
-            writer.WriteLine("[Flags]");
-        }
+        writer.WriteLineIf(isFlags, "[Flags]");
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
@@ -225,10 +222,7 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
 
-        if (hasAddition)
-        {
-            writer.Write(" partial");
-        }
+        writer.WriteIf(hasAddition, " partial");
 
         writer.WriteLine($" struct {projectionName} : IEquatable<{projectionName}>");
         using (writer.WriteBlock())
@@ -236,10 +230,7 @@ internal static class ProjectionFileBuilder
             writer.Write($"public {projectionName}(");
             for (int i = 0; i < fields.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 writer.Write($"{fields[i].TypeStr} ");
                 IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
@@ -290,10 +281,7 @@ internal static class ProjectionFileBuilder
             {
                 for (int i = 0; i < fields.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(" && ");
-                    }
+                    writer.WriteIf(i > 0, " && ");
 
                     writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
                 }
@@ -313,10 +301,7 @@ internal static class ProjectionFileBuilder
             {
                 for (int i = 0; i < fields.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(" ^ ");
-                    }
+                    writer.WriteIf(i > 0, " ^ ");
 
                     writer.Write($"{fields[i].Name}.GetHashCode()");
                 }

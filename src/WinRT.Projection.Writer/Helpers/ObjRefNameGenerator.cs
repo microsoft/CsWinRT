@@ -134,10 +134,7 @@ internal static class ObjRefNameGenerator
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 // forceWriteNamespace=true so generic args also get global:: prefix.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
@@ -268,10 +265,7 @@ internal static class ObjRefNameGenerator
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
             static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
             """);
-        if (isInNullableContext)
-        {
-            writer.Write("?");
-        }
+        writer.WriteIf(isInNullableContext, "?");
 
         writer.WriteLine(" _);");
     }
@@ -480,10 +474,7 @@ internal static class ObjRefNameGenerator
                         return field ?? MakeObjectReference();
                     }
                 """);
-            if (isDefault)
-            {
-                writer.WriteLine("    init;");
-            }
+            writer.WriteLineIf(isDefault, "    init;");
 
             writer.WriteLine("}");
         }

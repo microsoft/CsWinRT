@@ -64,10 +64,7 @@ internal static class AbiInterfaceFactory
         // void* thisPtr, then each param's ABI type, then return type pointer
         writer.Write("void*");
 
-        if (includeParamNames)
-        {
-            writer.Write(" thisPtr");
-        }
+        writer.WriteIf(includeParamNames, " thisPtr");
 
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
@@ -142,10 +139,7 @@ internal static class AbiInterfaceFactory
             {
                 AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
 
-                if (cat is ParameterCategory.Out or ParameterCategory.Ref)
-                {
-                    writer.Write("*");
-                }
+                writer.WriteIf(cat is ParameterCategory.Out or ParameterCategory.Ref, "*");
 
                 if (includeParamNames)
                 {

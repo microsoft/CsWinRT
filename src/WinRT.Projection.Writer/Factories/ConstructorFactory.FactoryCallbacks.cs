@@ -33,10 +33,7 @@ internal static partial class ConstructorFactory
         writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
@@ -374,10 +371,7 @@ internal static partial class ConstructorFactory
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
 
-                if (!firstPin)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(!firstPin, ", ");
 
                 firstPin = false;
                 writer.Write($"_{raw} = ");
