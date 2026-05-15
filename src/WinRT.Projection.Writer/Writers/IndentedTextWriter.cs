@@ -227,7 +227,7 @@ internal sealed partial class IndentedTextWriter
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>; otherwise this call is a no-op.</param>
     /// <param name="handler">The interpolated content to write.</param>
     /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
-    public void WriteIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref AppendInterpolatedStringHandler handler)
+    public void WriteIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref TryAppendInterpolatedStringHandler handler)
     {
         _ = this;
     }
@@ -239,7 +239,7 @@ internal sealed partial class IndentedTextWriter
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
     /// <param name="handler">The interpolated content to write.</param>
     /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
-    public void WriteIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    public void WriteIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref TryAppendInterpolatedStringHandler handler)
     {
         _ = this;
     }
@@ -413,7 +413,7 @@ internal sealed partial class IndentedTextWriter
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="handler">The interpolated content to write.</param>
     /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
-    public void WriteLineIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref AppendInterpolatedStringHandler handler)
+    public void WriteLineIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref TryAppendInterpolatedStringHandler handler)
     {
         _ = this;
     }
@@ -425,7 +425,7 @@ internal sealed partial class IndentedTextWriter
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
     /// <param name="handler">The interpolated content to write.</param>
     /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
-    public void WriteLineIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    public void WriteLineIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref TryAppendInterpolatedStringHandler handler)
     {
         if (condition)
         {
