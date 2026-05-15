@@ -54,6 +54,70 @@ internal partial class IndentedTextWriter
             _isMultiline = isMultiline;
         }
 
+        /// <summary>Creates a handler used to append an interpolated string into a <see cref="IndentedTextWriter"/>.</summary>
+        /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="writer">The associated <see cref="IndentedTextWriter"/> to which to append.</param>
+        /// <param name="condition">When <see langword="true"/>, writes the content, otherwise it does nothing.</param>
+        /// <param name="shouldAppend">Whether the handler is enabled.</param>
+        /// <remarks>This is intended to be called only by compiler-generated code. Arguments are not validated as they'd otherwise be for members intended to be used directly.</remarks>
+        public AppendInterpolatedStringHandler(
+            int literalLength,
+            int formattedCount,
+            IndentedTextWriter writer,
+            bool condition,
+            out bool shouldAppend)
+        {
+            if (condition)
+            {
+                _writer = writer;
+                _isMultiline = false;
+
+                shouldAppend = true;
+            }
+            else
+            {
+                // We're intentionally suppressing the warning here: the writer shouldn't ever be
+                // used if the handler is disabled, this just further validates it (it would throw).
+                _writer = null!;
+                _isMultiline = false;
+
+                shouldAppend = false;
+            }
+        }
+
+        /// <summary>Creates a handler used to append an interpolated string into a <see cref="IndentedTextWriter"/>.</summary>
+        /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="writer">The associated <see cref="IndentedTextWriter"/> to which to append.</param>
+        /// <param name="condition">When <see langword="true"/>, writes the content, otherwise it does nothing.</param>
+        /// <param name="isMultiline">When <see langword="true"/>, treats the content as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
+        /// <param name="shouldAppend">Whether the handler is enabled.</param>
+        /// <remarks>This is intended to be called only by compiler-generated code. Arguments are not validated as they'd otherwise be for members intended to be used directly.</remarks>
+        public AppendInterpolatedStringHandler(
+            int literalLength,
+            int formattedCount,
+            IndentedTextWriter writer,
+            bool condition,
+            bool isMultiline,
+            out bool shouldAppend)
+        {
+            if (condition)
+            {
+                _writer = writer;
+                _isMultiline = isMultiline;
+
+                shouldAppend = true;
+            }
+            else
+            {
+                _writer = null!;
+                _isMultiline = false;
+
+                shouldAppend = false;
+            }
+        }
+
         /// <summary>Writes the specified string to the handler.</summary>
         /// <param name="value">The string to write.</param>
         public void AppendLiteral(string value)
