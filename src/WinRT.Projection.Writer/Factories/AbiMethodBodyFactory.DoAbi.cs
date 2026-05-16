@@ -5,6 +5,7 @@ using System;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Errors;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -77,7 +78,7 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
             {
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
+                WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -107,7 +108,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.Parameter.Name ?? "param";
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
+                WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -179,17 +180,17 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (returnIsRefType)
                 {
-                    string projected = MethodFactory.WriteProjectedSignature(context, rt, false);
+                    WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
                 else if (returnIsReceiveArrayDoAbi)
                 {
-                    string projected = MethodFactory.WriteProjectedSignature(context, rt, false);
+                    WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
                 else
                 {
-                    string projected = MethodFactory.WriteProjectedSignature(context, rt, false);
+                    WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
             }
@@ -241,7 +242,7 @@ internal static partial class AbiMethodBodyFactory
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                string projected = MethodFactory.WriteProjectedSignature(context, underlying, false);
+                WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, underlying, false);
                 writer.WriteLine($"{projected} __{raw} = default;");
             }
 
@@ -391,7 +392,7 @@ internal static partial class AbiMethodBodyFactory
                     string rawName = p.Parameter.Name ?? "param";
                     string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                    string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+                    WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.WriteLine(isMultiline: true, $$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                             static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);

@@ -85,7 +85,7 @@ internal static class ReferenceImplFactory
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            string projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+            WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
             string abiName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, type.ToTypeSignature());
             writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
@@ -112,7 +112,7 @@ internal static class ReferenceImplFactory
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            string projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+            WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
             writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {

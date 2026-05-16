@@ -174,7 +174,7 @@ internal static partial class ConstructorFactory
             }
 
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-            string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+            WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
             writer.WriteLine(isMultiline: true, $$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                         static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);

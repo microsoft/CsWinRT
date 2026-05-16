@@ -56,21 +56,11 @@ internal static class MethodFactory
         TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteProjectedSignature(IndentedTextWriter, ProjectionEmitContext, TypeSignature, bool)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the projected signature into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="typeSig">The signature to project.</param>
-    /// <param name="isParameter">When <see langword="true"/>, projects SZ-arrays as <see cref="System.ReadOnlySpan{T}"/> (parameter convention) instead of <c>T[]</c>.</param>
-    /// <returns>The projected signature.</returns>
-    public static string WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
+    /// <inheritdoc cref="WriteProjectedSignature(IndentedTextWriter, ProjectionEmitContext, TypeSignature, bool)"/>
+    /// <returns>A callback that writes the projected signature to the writer it's appended to.</returns>
+    public static WriteProjectedSignatureCallback WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteProjectedSignature(writer, context, typeSig, isParameter);
-        return writer.ToString();
+        return new(context, typeSig, isParameter);
     }
 
     /// <summary>
