@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -58,7 +59,8 @@ internal static class ReferenceImplFactory
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
             // Even bool/char fields work because their managed layout matches the WinRT ABI.
-            writer.Write(isMultiline: true, """
+            WriteTypedefNameCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+            writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {
                         if (result is null)
@@ -68,16 +70,8 @@ internal static class ReferenceImplFactory
                 
                         try
                         {
-                            var value = (
-                """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(isMultiline: true, """
-                )(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
-                            *(
-                """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(isMultiline: true, """
-                *)result = value;
+                            var value = ({{projected}})(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+                            *({{projected}}*)result = value;
                             return 0;
                         }
                         catch (Exception e)
