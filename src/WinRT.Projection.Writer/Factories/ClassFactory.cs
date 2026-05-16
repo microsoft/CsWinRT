@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -287,10 +288,8 @@ internal static class ClassFactory
         {
             MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
             CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-            writer.Write($"{context.Settings.InternalAccessibility} static class ");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-            TypedefNameWriter.WriteTypeParams(writer, type);
-            writer.WriteLine();
+            WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+            writer.WriteLine($"{context.Settings.InternalAccessibility} static class {name}");
             using (writer.WriteBlock())
             {
                 WriteStaticClassMembers(writer, context, type);

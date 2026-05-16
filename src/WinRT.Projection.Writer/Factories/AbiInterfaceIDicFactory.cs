@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -37,15 +38,13 @@ internal static class AbiInterfaceIDicFactory
 
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
+        WriteTypedefNameWithTypeParamsCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
 
         writer.WriteLine();
         writer.WriteLine("[DynamicInterfaceCastableImplementation]");
         InterfaceFactory.WriteGuidAttribute(writer, type);
         writer.WriteLine();
-        writer.Write($"file interface {nameStripped} : ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine();
+        writer.WriteLine($"file interface {nameStripped} : {parent}");
         using (writer.WriteBlock())
         {
             // Emit DIM bodies that dispatch through the static ABI Methods class.
