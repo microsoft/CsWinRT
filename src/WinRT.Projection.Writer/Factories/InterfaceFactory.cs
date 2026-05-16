@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -125,6 +126,13 @@ internal static class InterfaceFactory
                 writer.Write(">");
             }
         }
+    }
+
+    /// <inheritdoc cref="WriteTypeInheritance(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool, bool)"/>
+    /// <returns>A callback that writes the inheritance clause to the writer it's appended to.</returns>
+    public static WriteTypeInheritanceCallback WriteTypeInheritance(ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
+    {
+        return new(context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
     }
 
     /// <summary>
@@ -471,11 +479,9 @@ internal static class InterfaceFactory
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
                           TypeCategorization.IsProjectionInternal(type);
-        writer.Write($"{(isInternal ? "internal" : "public")} interface ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        WriteTypeInheritance(writer, context, type, false, false);
-        writer.WriteLine();
+        WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, false);
+        WriteTypeInheritanceCallback inheritance = WriteTypeInheritance(context, type, false, false);
+        writer.WriteLine($"{(isInternal ? "internal" : "public")} interface {name}{inheritance}");
         using (writer.WriteBlock())
         {
             WriteInterfaceMemberSignatures(writer, context, type);

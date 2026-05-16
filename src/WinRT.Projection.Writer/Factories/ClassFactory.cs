@@ -590,14 +590,12 @@ internal static class ClassFactory
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
-        writer.Write($"{(context.Settings.Internal ? "internal" : "public")} ");
-        WriteClassModifiers(writer, type);
+        string accessibility = context.Settings.Internal ? "internal" : "public";
         // are emitted as plain (non-partial) classes.
-        writer.Write("class ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
-        writer.WriteLine();
+        string modifiers = TypeCategorization.IsStatic(type) ? "static " : type.IsSealed ? "sealed " : "";
+        WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+        WriteTypeInheritanceCallback inheritance = InterfaceFactory.WriteTypeInheritance(context, type, false, true);
+        writer.WriteLine($"{accessibility} {modifiers}class {name}{inheritance}");
         using IndentedTextWriter.Block __classBlock = writer.WriteBlock();
 
         // ObjRef field definitions for each implemented interface.
