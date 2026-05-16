@@ -66,6 +66,9 @@ internal static class StructEnumMarshallerFactory
             isComplexStruct = false;
         }
 
+        WriteTypedefNameCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
+        WriteTypedefNameCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+
         writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
@@ -73,9 +76,6 @@ internal static class StructEnumMarshallerFactory
 
         if (isComplexStruct)
         {
-            WriteTypedefNameCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
-            WriteTypedefNameCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
             writer.WriteLine(isMultiline: true, $$"""
                     public static {{abi}} ConvertToUnmanaged({{projected}} value)
@@ -247,87 +247,42 @@ internal static class StructEnumMarshallerFactory
             writer.WriteLine("    }");
         }
 
-        // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
+        // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex, mapped struct).
         // Truth uses CreateComInterfaceFlags.TrackerSupport when the struct has reference type
         // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
-        writer.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+        // Mapped struct (Duration/KeyTime/etc.) variants always use None — the public projected
+        // type still routes through this marshaller (it just lacks per-field
+        // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
+        string boxFlags = (isEnum || almostBlittable || isComplexStruct) && hasReferenceFields ? "TrackerSupport" : "None";
+        string boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
-        if (isEnum || almostBlittable || isComplexStruct)
-        {
-            writer.Write(isMultiline: true, $$"""
-                ? value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{(hasReferenceFields ? "TrackerSupport" : "None")}}, in 
-                """);
-            ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.WriteLine(isMultiline: true, """
-                );
-                    }
-                """);
-        }
-        else
-        {
-            // Mapped struct (Duration/KeyTime/etc.): BoxToUnmanaged is still required because the
-            // public projected type still routes through this marshaller (it just lacks per-field
-            // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-            writer.Write(isMultiline: true, """
-                ? value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in 
-                """);
-            ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.WriteLine(isMultiline: true, """
-                );
-                    }
-                """);
-        }
+        writer.WriteLine(isMultiline: true, $$"""
+                public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged({{projected}}? value)
+                {
+                    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{boxFlags}}, in {{boxIidRef}});
+                }
+            """);
 
-        // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
-        writer.Write("    public static ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-
-        if (isEnum || almostBlittable)
+        // UnboxToManaged: simple for almost-blittable and mapped structs; for complex, unbox to
+        // ABI struct then ConvertToManaged. Mapped struct unboxes directly to projected type (no
+        // per-field ConvertToManaged needed because the projected struct's field layout matches
+        // the WinMD struct layout).
+        if (isComplexStruct)
         {
-            writer.Write(isMultiline: true, """
-                ? UnboxToManaged(void* value)
+            writer.WriteLine(isMultiline: true, $$"""
+                    public static {{projected}}? UnboxToManaged(void* value)
                     {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
-                """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(isMultiline: true, """
-                >(value);
-                    }
-                """);
-        }
-        else if (isComplexStruct)
-        {
-            writer.WriteLine(isMultiline: true, """
-                ? UnboxToManaged(void* value)
-                    {
-                        
-                """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine(isMultiline: true, """
-                >(value);
+                        {{abi}}? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{abi}}>(value);
                         return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
                     }
                 """);
         }
         else
         {
-            // Mapped struct: unbox directly to projected type (no per-field ConvertToManaged needed
-            // because the projected struct's field layout matches the WinMD struct layout).
-            writer.Write(isMultiline: true, """
-                ? UnboxToManaged(void* value)
+            writer.WriteLine(isMultiline: true, $$"""
+                    public static {{projected}}? UnboxToManaged(void* value)
                     {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
-                """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(isMultiline: true, """
-                >(value);
+                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{projected}}>(value);
                     }
                 """);
         }
@@ -402,15 +357,12 @@ internal static class StructEnumMarshallerFactory
                 """);
             if (isComplexStruct)
             {
-                writer.Write($"        return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
-                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-                writer.WriteLine($">(value, in {iidRefExpr}));");
+                WriteTypedefNameCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
+                writer.WriteLine($"        return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
             }
             else
             {
-                writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
-                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-                writer.WriteLine($">(value, in {iidRefExpr});");
+                writer.WriteLine($"        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{projected}>(value, in {iidRefExpr});");
             }
 
             writer.WriteLine(isMultiline: true, """
