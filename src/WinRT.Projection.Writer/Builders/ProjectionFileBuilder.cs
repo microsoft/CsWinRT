@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -232,8 +233,8 @@ internal static class ProjectionFileBuilder
             {
                 writer.WriteIf(i > 0, ", ");
 
-                writer.Write($"{fields[i].TypeStr} ");
-                IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
+                WriteEscapedIdentifierCallback name = IdentifierEscaping.WriteEscapedIdentifier(fields[i].ParamName);
+                writer.Write($"{fields[i].TypeStr} {name}");
             }
 
             writer.WriteLine(")");
@@ -243,17 +244,14 @@ internal static class ProjectionFileBuilder
                 {
                     // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
                     // qualify with this. to disambiguate.
+                    WriteEscapedIdentifierCallback paramRef = IdentifierEscaping.WriteEscapedIdentifier(paramName);
                     if (name == paramName)
                     {
-                        writer.Write($"this.{name} = ");
-                        IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
-                        writer.Write("; ");
+                        writer.Write($"this.{name} = {paramRef}; ");
                     }
                     else
                     {
-                        writer.Write($"{name} = ");
-                        IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
-                        writer.Write("; ");
+                        writer.Write($"{name} = {paramRef}; ");
                     }
                 }
 

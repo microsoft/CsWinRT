@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -196,6 +197,13 @@ internal static class AbiTypeWriter
                 writer.Write("void*");
                 break;
         }
+    }
+
+    /// <inheritdoc cref="WriteAbiType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
+    /// <returns>A callback that writes the ABI type to the writer it's appended to.</returns>
+    public static WriteAbiTypeCallback WriteAbiType(ProjectionEmitContext context, TypeSemantics semantics)
+    {
+        return new(context, semantics);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -33,6 +34,13 @@ internal static class IdentifierEscaping
         writer.WriteIf(CSharpKeywords.IsKeyword(identifier), "@");
 
         writer.Write(identifier);
+    }
+
+    /// <inheritdoc cref="WriteEscapedIdentifier(IndentedTextWriter, string)"/>
+    /// <returns>A callback that writes the escaped identifier to the writer it's appended to.</returns>
+    public static WriteEscapedIdentifierCallback WriteEscapedIdentifier(string identifier)
+    {
+        return new(identifier);
     }
 
     /// <summary>
