@@ -254,7 +254,7 @@ internal static class StructEnumMarshallerFactory
         // type still routes through this marshaller (it just lacks per-field
         // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
         string boxFlags = (isEnum || almostBlittable || isComplexStruct) && hasReferenceFields ? "TrackerSupport" : "None";
-        string boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        WriteIidReferenceExpressionCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine(isMultiline: true, $$"""
                 public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged({{projected}}? value)
@@ -298,7 +298,7 @@ internal static class StructEnumMarshallerFactory
         // unboxing to the ABI struct.
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+            WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
             // InterfaceEntriesImpl
             writer.WriteLine(isMultiline: true, $$"""
