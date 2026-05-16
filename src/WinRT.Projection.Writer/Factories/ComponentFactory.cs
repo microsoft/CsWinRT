@@ -168,12 +168,10 @@ internal static class ComponentFactory
         }
 
         string methodName = method.Name?.Value ?? string.Empty;
+        WriteFactoryMethodParametersCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
+        WriteFactoryMethodParametersCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
         writer.WriteLine();
-        writer.Write($"public {projectedTypeName} {methodName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
-        writer.Write($") => new {projectedTypeName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
-        writer.WriteLine(");");
+        writer.WriteLine($"public {projectedTypeName} {methodName}({typedParams}) => new {projectedTypeName}({nameOnlyParams});");
     }
 
     /// <summary>
@@ -188,14 +186,11 @@ internal static class ComponentFactory
         }
 
         string methodName = method.Name?.Value ?? string.Empty;
+        WriteFactoryReturnTypeCallback retType = WriteFactoryReturnType(context, method);
+        WriteFactoryMethodParametersCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
+        WriteFactoryMethodParametersCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
         writer.WriteLine();
-        writer.Write("public ");
-        WriteFactoryReturnType(writer, context, method);
-        writer.Write($" {methodName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
-        writer.Write($") => {projectedTypeName}.{methodName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
-        writer.WriteLine(");");
+        writer.WriteLine($"public {retType} {methodName}({typedParams}) => {projectedTypeName}.{methodName}({nameOnlyParams});");
     }
 
     /// <summary>
@@ -257,7 +252,17 @@ internal static class ComponentFactory
             """);
     }
 
-    private static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
+    /// <inheritdoc cref="WriteFactoryReturnType(IndentedTextWriter, ProjectionEmitContext, MethodDefinition)"/>
+    /// <returns>A callback emitting the projected return type of <paramref name="method"/>.</returns>
+    public static WriteFactoryReturnTypeCallback WriteFactoryReturnType(ProjectionEmitContext context, MethodDefinition method)
+    {
+        return new(context, method);
+    }
+
+    /// <summary>
+    /// Writes the projected return type for a static-factory forwarding method.
+    /// </summary>
+    public static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
     {
         TypeSignature? returnType = method.Signature?.ReturnType;
 
@@ -284,7 +289,19 @@ internal static class ComponentFactory
         TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
 
-    private static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
+    /// <inheritdoc cref="WriteFactoryMethodParameters(IndentedTextWriter, ProjectionEmitContext, MethodDefinition, bool)"/>
+    /// <returns>A callback emitting the factory-method parameter list.</returns>
+    public static WriteFactoryMethodParametersCallback WriteFactoryMethodParameters(ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
+    {
+        return new(context, method, includeTypes);
+    }
+
+    /// <summary>
+    /// Writes the parameter list for a factory wrapper/forwarding method. When
+    /// <paramref name="includeTypes"/> is <see langword="true"/>, emits 'Type name'
+    /// pairs; otherwise emits names only (for forwarding call sites).
+    /// </summary>
+    public static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
     {
         MethodSignature? sig = method.Signature;
 
