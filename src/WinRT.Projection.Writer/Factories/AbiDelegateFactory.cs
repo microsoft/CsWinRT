@@ -196,7 +196,7 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
-        string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -410,7 +410,7 @@ internal static class AbiDelegateFactory
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""

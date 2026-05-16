@@ -299,19 +299,11 @@ internal static class ObjRefNameGenerator
         writer.Write($"global::ABI.InterfaceIIDs.IID_{id}Reference");
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteIidReferenceExpression(IndentedTextWriter, TypeDefinition)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the IID reference expression into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="type">The value type whose IReference&lt;T&gt; IID expression is emitted.</param>
-    /// <returns>The emitted IID reference expression.</returns>
-    public static string WriteIidReferenceExpression(TypeDefinition type)
+    /// <inheritdoc cref="WriteIidReferenceExpression(IndentedTextWriter, TypeDefinition)"/>
+    /// <returns>A callback that writes the IID reference expression to the writer it's appended to.</returns>
+    public static WriteIidReferenceExpressionCallback WriteIidReferenceExpression(TypeDefinition type)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteIidReferenceExpression(writer, type);
-        return writer.ToString();
+        return new(type);
     }
 
     /// <summary>
