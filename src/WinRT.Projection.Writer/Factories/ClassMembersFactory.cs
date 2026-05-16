@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -163,5 +164,12 @@ internal static partial class ClassMembersFactory
             }
             writer.Write(">");
         }
+    }
+
+    /// <inheritdoc cref="WriteInterfaceTypeNameForCcw(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// <returns>A callback that writes the CCW interface type name to the writer it's appended to.</returns>
+    internal static WriteInterfaceTypeNameForCcwCallback WriteInterfaceTypeNameForCcw(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    {
+        return new(context, ifaceType);
     }
 }
