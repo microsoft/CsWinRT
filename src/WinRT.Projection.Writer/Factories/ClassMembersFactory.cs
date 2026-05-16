@@ -86,6 +86,13 @@ internal static partial class ClassMembersFactory
         return null;
     }
 
+    /// <inheritdoc cref="WriteParameterNameWithModifier(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
+    /// <returns>A callback emitting the parameter name with its modifier.</returns>
+    internal static WriteParameterNameWithModifierCallback WriteParameterNameWithModifier(ProjectionEmitContext context, ParameterInfo p)
+    {
+        return new(context, p);
+    }
+
     /// <summary>
     /// Writes a parameter name prefixed with its modifier (in/out/ref) for use as a call argument.
     /// </summary>
