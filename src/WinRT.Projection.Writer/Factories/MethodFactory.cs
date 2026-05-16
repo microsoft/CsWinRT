@@ -4,6 +4,7 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Builders;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -168,6 +169,13 @@ internal static class MethodFactory
         WriteProjectedSignature(writer, context, rt, false);
     }
 
+    /// <inheritdoc cref="WriteProjectionReturnType(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo)"/>
+    /// <returns>A callback that writes the projected return type to the writer it's appended to.</returns>
+    public static WriteProjectionReturnTypeCallback WriteProjectionReturnType(ProjectionEmitContext context, MethodSignatureInfo sig)
+    {
+        return new(context, sig);
+    }
+
     /// <summary>
     /// Writes a comma-separated parameter list.
     /// </summary>
@@ -182,6 +190,13 @@ internal static class MethodFactory
 
             WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
+    }
+
+    /// <inheritdoc cref="WriteParameterList(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo)"/>
+    /// <returns>A callback that writes the parameter list to the writer it's appended to.</returns>
+    public static WriteParameterListCallback WriteParameterList(ProjectionEmitContext context, MethodSignatureInfo sig)
+    {
+        return new(context, sig);
     }
 
     /// <summary>

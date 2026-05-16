@@ -7,6 +7,7 @@ using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -308,12 +309,11 @@ internal static partial class ClassMembersFactory
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
                 writer.WriteLine();
+                WriteProjectionReturnTypeCallback unsafeRet = MethodFactory.WriteProjectionReturnType(context, sig);
                 writer.Write(isMultiline: true, $$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
-                    static extern 
+                    static extern {{unsafeRet}} {{accessorName}}([UnsafeAccessorType("{{genericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference
                     """);
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {accessorName}([UnsafeAccessorType(\"{genericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference");
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     writer.Write(", ");
@@ -324,10 +324,11 @@ internal static partial class ClassMembersFactory
                 // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write($"{access}{methodSpecForThis}");
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {name}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
+                {
+                    WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                    WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                    writer.Write($"{access}{methodSpecForThis}{ret} {name}({parms}");
+                }
 
                 if (context.Settings.ReferenceProjection)
                 {
@@ -351,10 +352,9 @@ internal static partial class ClassMembersFactory
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write($"{access}{methodSpecForThis}");
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {name}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
+                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                writer.Write($"{access}{methodSpecForThis}{ret} {name}({parms}");
 
                 if (context.Settings.ReferenceProjection)
                 {
@@ -380,12 +380,11 @@ internal static partial class ClassMembersFactory
                 // impl as well (since it shares the same originating interface).
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write(" ");
+                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                writer.Write($"{ret} ");
                 WriteInterfaceTypeNameForCcw(writer, context, originalInterface);
-                writer.Write($".{name}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
-                writer.Write($") => {name}(");
+                writer.Write($".{name}({parms}) => {name}(");
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     writer.WriteIf(i > 0, ", ");
