@@ -195,7 +195,7 @@ internal static class ProjectionFileBuilder
             }
 
             TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
-            string fieldType = TypedefNameWriter.WriteProjectionType(context, semantics);
+            string fieldType = TypedefNameWriter.WriteProjectionType(context, semantics).Format();
             string fieldName = field.Name?.Value ?? string.Empty;
             string paramName = IdentifierEscaping.ToCamelCase(fieldName);
             bool isInterface = false;
@@ -408,9 +408,8 @@ internal static class ProjectionFileBuilder
                     continue;
                 }
 
-                writer.Write("public ");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
-                writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
+                WriteProjectionTypeCallback fieldType = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(field.Signature.FieldType));
+                writer.WriteLine($"public {fieldType} {field.Name?.Value ?? string.Empty};");
             }
         }
     }

@@ -329,20 +329,11 @@ internal static class TypedefNameWriter
         return new(context, semantics, nameType, forceWriteNamespace);
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the projected type name into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="semantics">The semantic representation of the type.</param>
-    /// <returns>The emitted projected type name.</returns>
-    public static string WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
+    /// <inheritdoc cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
+    /// <returns>A callback that writes the projected type name to the writer it's appended to.</returns>
+    public static WriteProjectionTypeCallback WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteProjectionType(writer, context, semantics);
-        return writer.ToString();
+        return new(context, semantics);
     }
 
     /// <summary>
