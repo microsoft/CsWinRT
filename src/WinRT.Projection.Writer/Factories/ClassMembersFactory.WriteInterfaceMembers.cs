@@ -339,8 +339,8 @@ internal static partial class ClassMembersFactory
                     writer.Write($") => {accessorName}(null, {objRef}");
                     for (int i = 0; i < sig.Parameters.Count; i++)
                     {
-                        writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
+                        WriteParameterNameWithModifierCallback p = WriteParameterNameWithModifier(context, sig.Parameters[i]);
+                        writer.Write($", {p}");
                     }
                     writer.WriteLine(");");
                 }
@@ -365,8 +365,8 @@ internal static partial class ClassMembersFactory
                     writer.Write($") => {abiClass}.{name}({objRef}");
                     for (int i = 0; i < sig.Parameters.Count; i++)
                     {
-                        writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
+                        WriteParameterNameWithModifierCallback p = WriteParameterNameWithModifier(context, sig.Parameters[i]);
+                        writer.Write($", {p}");
                     }
                     writer.WriteLine(");");
                 }
@@ -385,9 +385,8 @@ internal static partial class ClassMembersFactory
                 writer.Write($"{ret} {iface}.{name}({parms}) => {name}(");
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
-                    writer.WriteIf(i > 0, ", ");
-
-                    WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
+                    WriteParameterNameWithModifierCallback p = WriteParameterNameWithModifier(context, sig.Parameters[i]);
+                    writer.Write($"{(i > 0 ? ", " : "")}{p}");
                 }
                 writer.WriteLine(");");
             }
