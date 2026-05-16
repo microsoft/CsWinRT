@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -307,9 +308,8 @@ internal static class ComponentFactory
 
             if (includeTypes)
             {
-                TypeSemantics semantics = TypeSemanticsFactory.Get(sig.ParameterTypes[i]);
-                TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
-                writer.Write($" {paramName}");
+                WriteTypeNameCallback projectedType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(sig.ParameterTypes[i]), TypedefNameType.Projected, true);
+                writer.Write($"{projectedType} {paramName}");
             }
             else
             {

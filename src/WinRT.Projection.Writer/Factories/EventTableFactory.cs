@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -86,9 +87,8 @@ internal static class EventTableFactory
         }
         else
         {
-            writer.Write("        var __handler = ");
-            TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
-            writer.WriteLine($"Marshaller.ConvertToManaged({handlerRef});");
+            WriteTypeNameCallback abiTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+            writer.WriteLine($"        var __handler = {abiTypeName}Marshaller.ConvertToManaged({handlerRef});");
         }
 
         writer.WriteLine(isMultiline: true, $$"""
