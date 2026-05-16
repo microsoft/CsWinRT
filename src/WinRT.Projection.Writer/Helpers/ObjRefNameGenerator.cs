@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -220,20 +221,11 @@ internal static class ObjRefNameGenerator
         }
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteIidExpression(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the IID expression into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="ifaceType">The interface type whose IID expression is emitted.</param>
-    /// <returns>The emitted IID expression.</returns>
-    public static string WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    /// <inheritdoc cref="WriteIidExpression(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
+    public static WriteIidExpressionCallback WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteIidExpression(writer, context, ifaceType);
-        return writer.ToString();
+        return new(context, ifaceType);
     }
 
     /// <summary>

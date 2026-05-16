@@ -676,7 +676,7 @@ internal static partial class ConstructorFactory
             return "default(global::System.Guid)";
         }
 
-        string result = ObjRefNameGenerator.WriteIidExpression(context, defaultIface);
+        string result = ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format();
         return result;
     }
 }
