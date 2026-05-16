@@ -79,6 +79,9 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
             TypedefNameWriter.WriteTypeParams(writer, iface);
         }
+        string activateBody = isActivatable
+            ? $"return new {projectedTypeName}();"
+            : "throw new NotImplementedException();";
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             {
@@ -98,18 +101,9 @@ internal static class ComponentFactory
             
             public object ActivateInstance()
             {
+            {{activateBody}}
+            }
             """);
-        if (isActivatable)
-        {
-            writer.Write($"return new {projectedTypeName}();");
-        }
-        else
-        {
-            writer.Write("throw new NotImplementedException();");
-        }
-
-        writer.WriteLine();
-        writer.WriteLine("}");
 
         // Emit factory-class members: forwarding methods/properties/events for static factory
         // interfaces, and constructor wrappers for activatable factory interfaces.
