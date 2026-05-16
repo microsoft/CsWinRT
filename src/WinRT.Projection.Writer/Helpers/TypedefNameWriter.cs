@@ -353,20 +353,18 @@ internal static class TypedefNameWriter
     public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt)
         => WriteEventType(writer, context, evt, null);
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the event handler type into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="evt">The event definition whose handler type is emitted.</param>
-    /// <returns>The emitted event handler type name.</returns>
-    public static string WriteEventType(ProjectionEmitContext context, EventDefinition evt)
+    /// <inheritdoc cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition)"/>
+    /// <returns>A callback that writes the event handler type to the writer it's appended to.</returns>
+    public static WriteEventTypeCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteEventType(writer, context, evt, null);
-        return writer.ToString();
+        return new(context, evt, null);
+    }
+
+    /// <inheritdoc cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition, GenericInstanceTypeSignature?)"/>
+    /// <returns>A callback that writes the event handler type to the writer it's appended to.</returns>
+    public static WriteEventTypeCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt, GenericInstanceTypeSignature? currentInstance)
+    {
+        return new(context, evt, currentInstance);
     }
 
     /// <summary>

@@ -26,7 +26,7 @@ internal static class EventTableFactory
     internal static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        string evtType = TypedefNameWriter.WriteEventType(context, evt);
+        WriteEventTypeCallback evtType = TypedefNameWriter.WriteEventType(context, evt);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""

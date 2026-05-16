@@ -265,9 +265,8 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            writer.Write("event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.WriteLine($" {evt.Name?.Value ?? string.Empty};");
+            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            writer.WriteLine($"event {eventType} {evt.Name?.Value ?? string.Empty};");
         }
     }
 

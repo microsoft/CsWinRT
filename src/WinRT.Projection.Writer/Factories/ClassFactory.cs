@@ -383,10 +383,9 @@ internal static class ClassFactory
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write("public static event ");
-                TypedefNameWriter.WriteEventType(writer, context, evt);
+                WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
                 writer.WriteLine(isMultiline: true, $$"""
-                     {{evtName}}
+                    public static event {{eventType}} {{evtName}}
                     {
                     """);
                 if (context.Settings.ReferenceProjection)

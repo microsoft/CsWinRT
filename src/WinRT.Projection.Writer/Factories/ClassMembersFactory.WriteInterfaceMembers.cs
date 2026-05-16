@@ -564,10 +564,9 @@ internal static partial class ClassMembersFactory
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
             writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-            writer.Write($"{access}{methodSpec}event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
+            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt, currentInstance);
             writer.WriteLine(isMultiline: true, $$"""
-                 {{name}}
+                {{access}}{{methodSpec}}event {{eventType}} {{name}}
                 {
                 """);
             if (context.Settings.ReferenceProjection)
