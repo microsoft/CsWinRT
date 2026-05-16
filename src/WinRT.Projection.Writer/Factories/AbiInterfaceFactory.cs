@@ -71,14 +71,15 @@ internal static class AbiInterfaceFactory
             writer.Write(", ");
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            string paramName = p.Parameter.Name ?? "param";
+            WriteEscapedIdentifierCallback name = IdentifierEscaping.WriteEscapedIdentifier(paramName);
 
             if (p.Type is SzArrayTypeSignature)
             {
                 // length pointer + value pointer.
                 if (includeParamNames)
                 {
-                    writer.Write($"uint __{p.Parameter.Name ?? "param"}Size, void* ");
-                    IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
+                    writer.Write($"uint __{paramName}Size, void* {name}");
                 }
                 else
                 {
@@ -91,60 +92,55 @@ internal static class AbiInterfaceFactory
                 if (br.BaseType is SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
                     bool isRefElemBr = brSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
+                    WriteAbiTypeCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(brSz.BaseType));
 
                     if (includeParamNames)
                     {
-                        writer.Write($"uint* __{p.Parameter.Name ?? "param"}Size, ");
-
                         if (isRefElemBr)
                         {
-                            writer.Write("void*** ");
+                            writer.Write($"uint* __{paramName}Size, void*** {name}");
                         }
                         else
                         {
-                            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
-                            writer.Write("** ");
+                            writer.Write($"uint* __{paramName}Size, {elemAbi}** {name}");
                         }
-
-                        IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                     }
                     else
                     {
-                        writer.Write("uint*, ");
-
                         if (isRefElemBr)
                         {
-                            writer.Write("void***");
+                            writer.Write("uint*, void***");
                         }
                         else
                         {
-                            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
-                            writer.Write("**");
+                            writer.Write($"uint*, {elemAbi}**");
                         }
                     }
                 }
                 else
                 {
-                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
-                    writer.Write("*");
-
+                    WriteAbiTypeCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(br.BaseType));
                     if (includeParamNames)
                     {
-                        writer.Write(" ");
-                        IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
+                        writer.Write($"{abi}* {name}");
+                    }
+                    else
+                    {
+                        writer.Write($"{abi}*");
                     }
                 }
             }
             else
             {
-                AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
-
-                writer.WriteIf(cat is ParameterCategory.Out or ParameterCategory.Ref, "*");
-
+                WriteAbiTypeCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
+                string ptr = cat is ParameterCategory.Out or ParameterCategory.Ref ? "*" : "";
                 if (includeParamNames)
                 {
-                    writer.Write(" ");
-                    IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
+                    writer.Write($"{abi}{ptr} {name}");
+                }
+                else
+                {
+                    writer.Write($"{abi}{ptr}");
                 }
             }
         }
@@ -158,27 +154,26 @@ internal static class AbiInterfaceFactory
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
             if (sig.ReturnType is SzArrayTypeSignature retSz)
             {
+                WriteAbiTypeCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(retSz.BaseType));
                 if (includeParamNames)
                 {
-                    writer.Write($"uint* {retSizeName}, ");
-                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                    writer.Write($"** {retName}");
+                    writer.Write($"uint* {retSizeName}, {elemAbi}** {retName}");
                 }
                 else
                 {
-                    writer.Write("uint*, ");
-                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                    writer.Write("**");
+                    writer.Write($"uint*, {elemAbi}**");
                 }
             }
             else
             {
-                AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
-                writer.Write("*");
-
+                WriteAbiTypeCallback retAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(sig.ReturnType));
                 if (includeParamNames)
                 {
-                    writer.Write($" {retName}");
+                    writer.Write($"{retAbi}* {retName}");
+                }
+                else
+                {
+                    writer.Write($"{retAbi}*");
                 }
             }
         }

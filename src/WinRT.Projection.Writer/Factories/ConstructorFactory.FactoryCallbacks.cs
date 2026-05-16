@@ -5,6 +5,7 @@ using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -487,8 +488,8 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
-            writer.Write(", ");
+            WriteAbiTypeCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
+            writer.Write($"{abi}, ");
         }
 
         if (isComposable)
