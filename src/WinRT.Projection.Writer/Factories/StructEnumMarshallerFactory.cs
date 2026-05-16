@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -72,13 +73,12 @@ internal static class StructEnumMarshallerFactory
 
         if (isComplexStruct)
         {
+            WriteTypedefNameCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
+            WriteTypedefNameCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
-            writer.Write("    public static ");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write(" ConvertToUnmanaged(");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(isMultiline: true, """
-                 value)
+            writer.WriteLine(isMultiline: true, $$"""
+                    public static {{abi}} ConvertToUnmanaged({{projected}} value)
                     {
                         return new() {
                 """);
@@ -130,27 +130,19 @@ internal static class StructEnumMarshallerFactory
                     writer.Write($"value.{fname}");
                 }
             }
-            writer.WriteLine();
-            writer.Write(isMultiline: true, """
-                        };
-                    }
-                    public static 
-                """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" ConvertToManaged(");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             // - In component mode: emit object initializer with named field assignments
             //   (positional ctor not always available on authored types).
             // - In non-component mode: emit positional constructor (matches the auto-generated
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
-            writer.Write(isMultiline: true, """
-                 value)
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                        };
+                    }
+                    public static {{projected}} ConvertToManaged({{abi}} value)
                     {
-                        return new 
+                        return new {{projected}}{{(useObjectInitializer ? "(){" : "(")}}
                 """);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(useObjectInitializer ? "(){" : "(");
             first = true;
             foreach (FieldDefinition field in type.Fields)
             {
@@ -207,10 +199,8 @@ internal static class StructEnumMarshallerFactory
             writer.WriteLine();
             writer.WriteLine(useObjectInitializer ? "        };" : "        );");
             writer.WriteLine("    }");
-            writer.Write("    public static void Dispose(");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine(isMultiline: true, """
-                 value)
+            writer.WriteLine(isMultiline: true, $$"""
+                    public static void Dispose({{abi}} value)
                     {
                 """);
             foreach (FieldDefinition field in type.Fields)
