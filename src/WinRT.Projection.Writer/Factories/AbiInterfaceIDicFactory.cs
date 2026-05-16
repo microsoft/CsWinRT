@@ -347,10 +347,9 @@ internal static class AbiInterfaceIDicFactory
         {
             string evtName = evt.Name?.Value ?? string.Empty;
             writer.WriteLine();
-            writer.Write("event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt);
+            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine(isMultiline: true, $$"""
-                 {{ccwIfaceName}}.{{evtName}}
+                event {{eventType}} {{ccwIfaceName}}.{{evtName}}
                 {
                     add => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} += value;
                     remove => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} -= value;
@@ -511,10 +510,9 @@ internal static class AbiInterfaceIDicFactory
         {
             string evtName = evt.Name?.Value ?? string.Empty;
             writer.WriteLine();
-            writer.Write("event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt);
+            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine(isMultiline: true, $$"""
-                 {{ccwIfaceName}}.{{evtName}}
+                event {{eventType}} {{ccwIfaceName}}.{{evtName}}
                 {
                     add
                     {
