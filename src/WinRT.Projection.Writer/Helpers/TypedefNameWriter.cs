@@ -322,22 +322,11 @@ internal static class TypedefNameWriter
         WriteTypeName(writer, context, semantics, TypedefNameType.Projected, false);
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the type name into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="semantics">The semantic representation of the type.</param>
-    /// <param name="nameType">The kind of name to emit.</param>
-    /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
-    /// <returns>The emitted type name.</returns>
-    public static string WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
+    /// <inheritdoc cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>
+    /// <returns>A callback that writes the type name to the writer it's appended to.</returns>
+    public static WriteTypeNameCallback WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
-        return writer.ToString();
+        return new(context, semantics, nameType, forceWriteNamespace);
     }
 
     /// <summary>

@@ -244,7 +244,7 @@ internal static class ObjRefNameGenerator
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
         return "IID_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(
-            TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true),
+            TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true).Format(),
             stripGlobal: true, stripGlobalABI: true);
     }
 

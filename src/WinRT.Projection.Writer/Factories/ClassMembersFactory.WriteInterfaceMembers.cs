@@ -237,7 +237,7 @@ internal static partial class ClassMembersFactory
 
         if (isGenericInterface && currentInstance is not null)
         {
-            string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
+            string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true).Format();
             genericParentEncoded = IidExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
@@ -479,7 +479,7 @@ internal static partial class ClassMembersFactory
             }
             else
             {
-                eventSourceType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
+                eventSourceType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false).Format();
             }
 
             string eventSourceTypeFull = eventSourceType;
