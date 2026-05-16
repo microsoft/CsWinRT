@@ -39,12 +39,14 @@ internal static class AbiInterfaceIDicFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         WriteTypedefNameWithTypeParamsCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        WriteGuidAttributeCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
 
         writer.WriteLine();
-        writer.WriteLine("[DynamicInterfaceCastableImplementation]");
-        InterfaceFactory.WriteGuidAttribute(writer, type);
-        writer.WriteLine();
-        writer.WriteLine($"file interface {nameStripped} : {parent}");
+        writer.WriteLine(isMultiline: true, $$"""
+            [DynamicInterfaceCastableImplementation]
+            {{guidAttr}}
+            file interface {{nameStripped}} : {{parent}}
+            """);
         using (writer.WriteBlock())
         {
             // Emit DIM bodies that dispatch through the static ABI Methods class.

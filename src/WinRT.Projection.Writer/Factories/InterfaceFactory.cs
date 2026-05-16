@@ -21,6 +21,13 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class InterfaceFactory
 {
+    /// <inheritdoc cref="WriteGuidAttribute(IndentedTextWriter, TypeDefinition)"/>
+    /// <returns>A callback emitting the <c>[Guid("...")]</c> attribute.</returns>
+    public static WriteGuidAttributeCallback WriteGuidAttribute(TypeDefinition type)
+    {
+        return new(type);
+    }
+
     /// <summary>
     /// Writes the <c>[Guid("...")]</c> attribute for a type.
     /// </summary>
@@ -471,8 +478,8 @@ internal static class InterfaceFactory
 
         writer.WriteLine();
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteGuidAttribute(writer, type);
-        writer.WriteLine();
+        WriteGuidAttributeCallback guidAttr = WriteGuidAttribute(type);
+        writer.WriteLine($"{guidAttr}");
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
