@@ -374,28 +374,8 @@ internal static partial class AbiMethodBodyFactory
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        ");
 
-            if (uOut.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsGenericInstance())
-            {
-                writer.Write("void*");
-            }
-            else if (uOut.IsSystemType())
-            {
-                writer.Write("global::ABI.System.Type");
-            }
-            else if (context.AbiTypeShapeResolver.IsComplexStruct(uOut))
-            {
-                writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uOut));
-            }
-            else if (context.AbiTypeShapeResolver.IsBlittableStruct(uOut))
-            {
-                writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uOut));
-            }
-            else
-            {
-                writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut));
-            }
-
-            writer.WriteLine($" __{localName} = default;");
+            string abi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, uOut);
+            writer.WriteLine($"{abi} __{localName} = default;");
         }
 
         // Declare locals for ReceiveArray params (uint length + element pointer).
@@ -417,24 +397,8 @@ internal static partial class AbiMethodBodyFactory
                 """);
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
-            if (sza.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject())
-            {
-                writer.Write("void*");
-            }
-            else if (context.AbiTypeShapeResolver.IsComplexStruct(sza.BaseType))
-            {
-                writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType));
-            }
-            else if (context.AbiTypeShapeResolver.IsBlittableStruct(sza.BaseType))
-            {
-                writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType));
-            }
-            else
-            {
-                writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType));
-            }
-
-            writer.WriteLine($"* __{localName}_data = default;");
+            string elemAbi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, sza.BaseType);
+            writer.WriteLine($"{elemAbi}* __{localName}_data = default;");
         }
 
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
@@ -511,32 +475,8 @@ internal static partial class AbiMethodBodyFactory
                         uint __retval_length = default;
                         
                 """);
-            if (retSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject())
-            {
-                writer.Write("void*");
-            }
-            else if (context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType))
-            {
-                writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType));
-            }
-            else if (retSz.BaseType.IsHResultException())
-            {
-                writer.Write("global::ABI.System.Exception");
-            }
-            else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(retSz.BaseType))
-            {
-                writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType));
-            }
-            else if (context.AbiTypeShapeResolver.IsBlittableStruct(retSz.BaseType))
-            {
-                writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType));
-            }
-            else
-            {
-                writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
-            }
-
-            writer.WriteLine("* __retval_data = default;");
+            string retElemAbi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, retSz.BaseType);
+            writer.WriteLine($"{retElemAbi}* __retval_data = default;");
         }
         else if (returnIsHResultException)
         {
