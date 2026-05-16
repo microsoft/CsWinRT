@@ -305,7 +305,7 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static string WriteTypeNameToString(ProjectionEmitContext context, TypeSemantics arg, TypedefNameType nameType, bool forceQualified)
     {
-        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified);
+        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified).Format();
         return result;
     }
 

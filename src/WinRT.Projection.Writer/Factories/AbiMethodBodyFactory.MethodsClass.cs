@@ -132,7 +132,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (isGenericEvent)
             {
-                eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+                eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true).Format();
 
                 if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
                 {

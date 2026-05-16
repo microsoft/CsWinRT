@@ -344,7 +344,7 @@ internal static class MetadataAttributeFactory
 
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true);
+        string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true).Format();
 
         _ = entries.TryAdd(className, interfaceName);
     }
@@ -409,7 +409,7 @@ internal static class MetadataAttributeFactory
                     }
                 }
 
-                string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true);
+                string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true).Format();
                 entries.Add(new KeyValuePair<string, string>(className, interfaceName));
             }
         }

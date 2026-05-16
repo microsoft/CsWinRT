@@ -129,8 +129,8 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
-                    string keyText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
-                    string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
+                    string keyText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true).Format();
+                    string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
@@ -156,7 +156,7 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
-                    string elementText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string elementText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
