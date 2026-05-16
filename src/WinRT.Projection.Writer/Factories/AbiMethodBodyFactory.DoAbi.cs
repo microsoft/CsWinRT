@@ -178,18 +178,10 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.WriteLine($"string {retLocalName} = default;");
                 }
-                else if (returnIsRefType)
-                {
-                    WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
-                    writer.WriteLine($"{projected} {retLocalName} = default;");
-                }
-                else if (returnIsReceiveArrayDoAbi)
-                {
-                    WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
-                    writer.WriteLine($"{projected} {retLocalName} = default;");
-                }
                 else
                 {
+                    // returnIsRefType, returnIsReceiveArrayDoAbi, and the default branch all emit
+                    // the same projected type for the default-initialized return local.
                     WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
@@ -532,46 +524,34 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                writer.Write($"    *{ptr} = ");
+                string rhs;
                 // String: HStringMarshaller.ConvertToUnmanaged
                 if (underlying.IsString())
                 {
-                    writer.Write($"HStringMarshaller.ConvertToUnmanaged(__{raw})");
+                    rhs = $"HStringMarshaller.ConvertToUnmanaged(__{raw})";
                 }
 
                 // Object/runtime class: <Marshaller>.ConvertToUnmanaged(...).DetachThisPtrUnsafe()
                 else if (underlying.IsObject())
                 {
-                    writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
+                    rhs = $"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()";
                 }
                 else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(underlying))
                 {
-                    writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
+                    rhs = $"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()";
                 }
 
                 // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
                 // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
                 else if (underlying.IsGenericInstance())
                 {
-                    writer.Write($"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()");
+                    rhs = $"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()";
                 }
 
                 // For enums, function pointer signature uses the projected enum type, no cast needed.
                 // For bool, cast to byte. For char, cast to ushort.
-                else if (context.AbiTypeShapeResolver.IsEnumType(underlying))
-                {
-                    writer.Write($"__{raw}");
-                }
-                else if (underlying is CorLibTypeSignature corlibBool &&
-                         corlibBool.ElementType == ElementType.Boolean)
-                {
-                    writer.Write($"__{raw}");
-                }
-                else if (underlying is CorLibTypeSignature corlibChar &&
-                         corlibChar.ElementType == ElementType.Char)
-                {
-                    writer.Write($"__{raw}");
-                }
+                // For the local managed value, marshal through <Type>Marshaller.ConvertToUnmanaged
+                // before writing it into the *out ABI struct slot.
 
                 // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
                 // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
@@ -579,13 +559,14 @@ internal static partial class AbiMethodBodyFactory
                 //: "Marshaller.ConvertToUnmanaged(local)".
                 else if (context.AbiTypeShapeResolver.IsComplexStruct(underlying))
                 {
-                    writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw})");
+                    rhs = $"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw})";
                 }
                 else
                 {
-                    writer.Write($"__{raw}");
+                    // Enums, bool, char, and primitives: the local __<raw> is already the ABI form.
+                    rhs = $"__{raw}";
                 }
-                writer.WriteLine(";");
+                writer.WriteLine($"    *{ptr} = {rhs};");
             }
 
             // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
