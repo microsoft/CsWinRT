@@ -55,6 +55,13 @@ internal static class AbiInterfaceFactory
         WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: false);
     }
 
+    /// <inheritdoc cref="WriteAbiParameterTypesPointer(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, bool)"/>
+    /// <returns>A callback emitting the ABI parameter types.</returns>
+    public static WriteAbiParameterTypesPointerCallback WriteAbiParameterTypesPointer(ProjectionEmitContext context, MethodSignatureInfo sig, bool includeParamNames = false)
+    {
+        return new(context, sig, includeParamNames);
+    }
+
     /// <summary>
     /// Writes the ABI parameter types for a vtable function pointer signature, optionally
     /// including parameter names (for method declarations vs. function pointer type lists).
@@ -217,9 +224,8 @@ internal static class AbiInterfaceFactory
             {
                 string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
                 MethodSignatureInfo sig = new(method);
-                writer.Write("public delegate* unmanaged[MemberFunction]<");
-                WriteAbiParameterTypesPointer(writer, context, sig);
-                writer.WriteLine($", int> {vm};");
+                WriteAbiParameterTypesPointerCallback abiParams = WriteAbiParameterTypesPointer(context, sig);
+                writer.WriteLine($"public delegate* unmanaged[MemberFunction]<{abiParams}, int> {vm};");
             }
         }
     }
@@ -365,12 +371,11 @@ internal static class AbiInterfaceFactory
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
+            WriteAbiParameterTypesPointerCallback doAbiParams = WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
             writer.Write(isMultiline: true, $$"""
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-                private static unsafe int Do_Abi_{{vm}}(
+                private static unsafe int Do_Abi_{{vm}}({{doAbiParams}})
                 """);
-            WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
-            writer.Write(")");
 
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt2))
             {

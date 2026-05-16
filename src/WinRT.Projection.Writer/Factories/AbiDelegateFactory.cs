@@ -71,6 +71,7 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
+        WriteAbiParameterTypesPointerCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
             internal static unsafe class {{nameStripped}}Impl
@@ -91,10 +92,8 @@ internal static class AbiDelegateFactory
                 }
             
             [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            private static int Invoke(
+            private static int Invoke({{invokeParams}})
             """);
-        AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
-        writer.Write(")");
 
         // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
         // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
@@ -131,19 +130,16 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
+        WriteAbiParameterTypesPointerCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig);
         writer.WriteLine();
-        writer.Write(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
             {
                 public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
                 public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
                 public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-                public delegate* unmanaged[MemberFunction]<
-            """);
-        AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig);
-        writer.WriteLine(isMultiline: true, """
-            , int> Invoke;
+                public delegate* unmanaged[MemberFunction]<{{invokeParams}}, int> Invoke;
             }
             """);
     }
