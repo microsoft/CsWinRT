@@ -563,23 +563,20 @@ internal static partial class ClassMembersFactory
             writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
             WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt, currentInstance);
-            writer.WriteLine(isMultiline: true, $$"""
-                {{access}}{{methodSpec}}event {{eventType}} {{name}}
-                {
-                """);
+            string accessors;
             if (context.Settings.ReferenceProjection)
             {
-                writer.WriteLine(isMultiline: true, """
+                accessors = """
                         add => throw null;
                         remove => throw null;
-                    """);
+                    """;
             }
             else if (inlineEventSourceField)
             {
-                writer.WriteLine(isMultiline: true, $$"""
+                accessors = $$"""
                         add => _eventSource_{{name}}.Subscribe(value);
                         remove => _eventSource_{{name}}.Unsubscribe(value);
-                    """);
+                    """;
             }
             else
             {
@@ -588,12 +585,17 @@ internal static partial class ClassMembersFactory
                 // inline_event_source_field is false (the default helper-based path).
                 // Example: Simple.Event0 (on ISimple5) becomes
                 //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
-                writer.WriteLine(isMultiline: true, $$"""
+                accessors = $$"""
                         add => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Subscribe(value);
                         remove => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Unsubscribe(value);
-                    """);
+                    """;
             }
-            writer.WriteLine("}");
+            writer.WriteLine(isMultiline: true, $$"""
+                {{access}}{{methodSpec}}event {{eventType}} {{name}}
+                {
+                {{accessors}}
+                }
+                """);
         }
     }
 }

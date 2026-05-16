@@ -384,26 +384,21 @@ internal static class ClassFactory
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+                string accessors = context.Settings.ReferenceProjection
+                    ? """
+                            add => throw null;
+                            remove => throw null;
+                        """
+                    : $$"""
+                            add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
+                            remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
+                        """;
                 writer.WriteLine(isMultiline: true, $$"""
                     public static event {{eventType}} {{evtName}}
                     {
+                    {{accessors}}
+                    }
                     """);
-                if (context.Settings.ReferenceProjection)
-                {
-                    // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.WriteLine(isMultiline: true, """
-                            add => throw null;
-                            remove => throw null;
-                        """);
-                }
-                else
-                {
-                    writer.WriteLine(isMultiline: true, $$"""
-                            add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
-                            remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
-                        """);
-                }
-                writer.WriteLine("}");
             }
 
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
