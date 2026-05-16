@@ -98,11 +98,10 @@ internal static partial class ClassMembersFactory
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
+                WriteInterfaceTypeNameForCcwCallback iface = WriteInterfaceTypeNameForCcw(context, substitutedInterface);
                 writer.WriteLine();
-                writer.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
-                WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
                 writer.WriteLine(isMultiline: true, $$"""
-                    >.GetInterface()
+                    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<{{iface}}>.GetInterface()
                     {
                         return {{giObjRefName}}.AsValue();
                     }
@@ -382,9 +381,8 @@ internal static partial class ClassMembersFactory
 
                 WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
                 WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
-                writer.Write($"{ret} ");
-                WriteInterfaceTypeNameForCcw(writer, context, originalInterface);
-                writer.Write($".{name}({parms}) => {name}(");
+                WriteInterfaceTypeNameForCcwCallback iface = WriteInterfaceTypeNameForCcw(context, originalInterface);
+                writer.Write($"{ret} {iface}.{name}({parms}) => {name}(");
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     writer.WriteIf(i > 0, ", ");

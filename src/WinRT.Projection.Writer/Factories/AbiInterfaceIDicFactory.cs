@@ -487,9 +487,8 @@ internal static class AbiInterfaceIDicFactory
 
                     if (baseIfaceWithGetter is not null)
                     {
-                        writer.Write("    get { return ((");
-                        ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
-                        writer.WriteLine($")(WindowsRuntimeObject)this).{pname}; }}");
+                        WriteInterfaceTypeNameForCcwCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
+                        writer.WriteLine($"    get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
                     }
                 }
 
