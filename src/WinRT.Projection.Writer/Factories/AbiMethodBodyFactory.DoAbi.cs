@@ -131,7 +131,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.Parameter.Name ?? "param";
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -152,7 +152,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
                 string elementAbi = retSzHoist.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSzHoist.BaseType)
@@ -262,7 +262,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
                 writer.WriteLine(isMultiline: true, $$"""
                 *{{ptr}} = default;
                     *__{{raw}}Size = default;
@@ -291,7 +291,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
                 bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(sz.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(sz.BaseType);
 
                 if (isBlittableElem)
@@ -342,7 +342,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -633,7 +633,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -820,7 +820,7 @@ internal static partial class AbiMethodBodyFactory
                     }
 
                     string raw = p.Parameter.Name ?? "param";
-                    string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                    WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                         if (__{{raw}}_arrayFromPool is not null)

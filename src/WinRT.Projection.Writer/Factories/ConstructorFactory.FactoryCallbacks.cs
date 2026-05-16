@@ -134,15 +134,13 @@ internal static partial class ConstructorFactory
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
             if (cat == ParameterCategory.PassArray)
             {
-                writer.Write("ReadOnlySpan<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                writer.Write($"ReadOnlySpan<{elem}>");
             }
             else if (cat == ParameterCategory.FillArray)
             {
-                writer.Write("Span<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                writer.Write($"Span<{elem}>");
             }
             else
             {
@@ -465,7 +463,7 @@ internal static partial class ConstructorFactory
             }
             else
             {
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;
                 writer.WriteLine(isMultiline: true, $$"""

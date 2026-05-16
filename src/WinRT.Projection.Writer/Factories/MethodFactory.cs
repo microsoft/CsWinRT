@@ -32,16 +32,14 @@ internal static class MethodFactory
         {
             // SZ arrays project as ReadOnlySpan<T> (matches the property setter parameter
             // convention; pass_array semantics).
+            WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
             if (isParameter)
             {
-                writer.Write("ReadOnlySpan<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                writer.Write(">");
+                writer.Write($"ReadOnlySpan<{elem}>");
             }
             else
             {
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                writer.Write("[]");
+                writer.Write($"{elem}[]");
             }
 
             return;
@@ -83,14 +81,16 @@ internal static class MethodFactory
                 WriteProjectedSignature(writer, context, p.Type, true);
                 break;
             case ParameterCategory.PassArray:
-                writer.Write("ReadOnlySpan<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                {
+                    WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                    writer.Write($"ReadOnlySpan<{elem}>");
+                }
                 break;
             case ParameterCategory.FillArray:
-                writer.Write("Span<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                {
+                    WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                    writer.Write($"Span<{elem}>");
+                }
                 break;
             case ParameterCategory.ReceiveArray:
                 writer.Write("out ");
@@ -99,8 +99,8 @@ internal static class MethodFactory
 
                 if (sz is not null)
                 {
-                    TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                    writer.Write("[]");
+                    WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
+                    writer.Write($"{elem}[]");
                 }
                 else
                 {
