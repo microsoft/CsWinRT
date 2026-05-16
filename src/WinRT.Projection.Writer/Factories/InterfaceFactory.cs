@@ -219,7 +219,7 @@ internal static class InterfaceFactory
             typeSig = typeSig.InstantiateGenericTypes(genericContext.Value);
         }
 
-        string result = MethodFactory.WriteProjectedSignature(context, typeSig, isSetProperty);
+        string result = MethodFactory.WriteProjectedSignature(context, typeSig, isSetProperty).Format();
         return result;
     }
 

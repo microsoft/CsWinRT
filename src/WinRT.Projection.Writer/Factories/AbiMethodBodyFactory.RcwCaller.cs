@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -282,7 +283,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+                WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                 writer.WriteLine(isMultiline: true, $$"""
                             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
@@ -1164,7 +1165,7 @@ internal static partial class AbiMethodBodyFactory
             if (uOut.IsGenericInstance())
             {
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
+                WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 writer.WriteLine(isMultiline: true, $$"""
                     {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                     {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -1304,7 +1305,7 @@ internal static partial class AbiMethodBodyFactory
                 else if (rt.IsGenericInstance())
                 {
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
-                    string projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt, false);
+                    WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine(isMultiline: true, $$"""
                         {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                         {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_retval([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
@@ -1349,7 +1350,7 @@ internal static partial class AbiMethodBodyFactory
             else
             {
                 writer.Write($"{callIndent}return ");
-                string projected = MethodFactory.WriteProjectedSignature(context, rt!, false);
+                string projected = MethodFactory.WriteProjectedSignature(context, rt!, false).Format();
                 string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!);
 
                 if (projected == abiType)

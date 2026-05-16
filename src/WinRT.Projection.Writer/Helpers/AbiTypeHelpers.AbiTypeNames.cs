@@ -25,7 +25,7 @@ internal static partial class AbiTypeHelpers
             return GetMappedAbiTypeName(sig);
         }
 
-        string result = MethodFactory.WriteProjectedSignature(context, sig, false);
+        string result = MethodFactory.WriteProjectedSignature(context, sig, false).Format();
         return result;
     }
 
