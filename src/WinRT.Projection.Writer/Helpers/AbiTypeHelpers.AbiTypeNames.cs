@@ -15,6 +15,54 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 internal static partial class AbiTypeHelpers
 {
     /// <summary>
+    /// Returns the ABI C# type name for a local variable that holds the ABI value of a parameter
+    /// or return type. Encapsulates the type-selection dispatch that's repeated across the RcwCaller
+    /// out-parameter, ReceiveArray-element, and SzArray-return code paths: reference types
+    /// (string/interface/object/generic instance) → <c>void*</c>; system type → <c>global::ABI.System.Type</c>;
+    /// HResult/Exception → <c>global::ABI.System.Exception</c>; complex struct → ABI struct name;
+    /// mapped value type (DateTime/TimeSpan/etc.) → mapped ABI name; blittable struct → projected
+    /// name; primitive → fundamental C# keyword.
+    /// </summary>
+    /// <param name="writer">The writer (carried through for the struct-name helpers that accept it; not used to emit).</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The type signature whose ABI local type name is requested.</param>
+    /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
+    internal static string GetAbiLocalTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
+    {
+        if (sig.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sig) || sig.IsObject() || sig.IsGenericInstance())
+        {
+            return "void*";
+        }
+
+        if (sig.IsSystemType())
+        {
+            return "global::ABI.System.Type";
+        }
+
+        if (sig.IsHResultException())
+        {
+            return "global::ABI.System.Exception";
+        }
+
+        if (context.AbiTypeShapeResolver.IsComplexStruct(sig))
+        {
+            return GetAbiStructTypeName(writer, context, sig);
+        }
+
+        if (IsMappedAbiValueType(sig))
+        {
+            return GetMappedAbiTypeName(sig);
+        }
+
+        if (context.AbiTypeShapeResolver.IsBlittableStruct(sig))
+        {
+            return GetBlittableStructAbiType(writer, context, sig);
+        }
+
+        return GetAbiPrimitiveType(context.Cache, sig);
+    }
+
+    /// <summary>
     /// Returns the ABI type name for a blittable struct (the projected type name).
     /// </summary>
     internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
