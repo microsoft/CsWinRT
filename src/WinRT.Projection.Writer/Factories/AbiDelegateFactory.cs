@@ -69,7 +69,7 @@ internal static class AbiDelegateFactory
         MethodSignatureInfo sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
@@ -195,7 +195,7 @@ internal static class AbiDelegateFactory
 
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
         string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
@@ -347,7 +347,7 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -381,7 +381,7 @@ internal static class AbiDelegateFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""

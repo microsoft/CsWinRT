@@ -537,7 +537,8 @@ internal static class ClassFactory
                 """);
             return;
         }
-        writer.Write(isMultiline: true, $$"""
+        WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
+        writer.WriteLine(isMultiline: true, $$"""
                 get
                 {
                     var __{{objRefName}} = field;
@@ -545,11 +546,7 @@ internal static class ClassFactory
                     {
                         return __{{objRefName}};
                     }
-                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", 
-            """);
-        ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
-        writer.WriteLine(isMultiline: true, """
-            );
+                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
                 }
             }
             """);
@@ -729,8 +726,8 @@ internal static class ClassFactory
                 writer.WriteIf(!firstClause, " || ");
 
                 firstClause = false;
-                ObjRefNameGenerator.WriteIidExpression(writer, context, implRef);
-                writer.Write(" == iid");
+                WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, implRef);
+                writer.Write($"{iid} == iid");
             }
 
             // base call when type has a non-object base class

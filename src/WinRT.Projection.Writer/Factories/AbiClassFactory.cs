@@ -77,7 +77,7 @@ internal static class AbiClassFactory
         else
         {
             defaultIfaceIid = defaultIface is not null
-                ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface)
+                ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format()
                 : "default(global::System.Guid)";
         }
 
@@ -213,7 +213,7 @@ internal static class AbiClassFactory
         // Get the IID expression for the default interface (used by CreateObject).
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
         string defaultIfaceIid = defaultIface is not null
-            ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface)
+            ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format()
             : "default(global::System.Guid)";
 
         // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute].
