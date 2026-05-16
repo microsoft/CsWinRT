@@ -299,10 +299,9 @@ internal static class AbiInterfaceIDicFactory
             string mname = method.Name?.Value ?? string.Empty;
 
             writer.WriteLine();
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {ccwIfaceName}.{mname}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write($") => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
+            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+            writer.Write($"{ret} {ccwIfaceName}.{mname}({parms}) => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 writer.WriteIf(i > 0, ", ");
@@ -432,9 +431,9 @@ internal static class AbiInterfaceIDicFactory
 
             writer.WriteLine();
             writer.Write("unsafe ");
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {ccwIfaceName}.{mname}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
+            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+            writer.Write($"{ret} {ccwIfaceName}.{mname}({parms}");
             writer.WriteLine(isMultiline: true, $$"""
                 )
                 {

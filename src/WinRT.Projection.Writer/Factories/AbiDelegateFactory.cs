@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -171,13 +172,10 @@ internal static class AbiDelegateFactory
             {
                 public static unsafe 
             """);
-        MethodFactory.WriteProjectionReturnType(writer, context, sig);
-        writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
-
-        writer.WriteIf(sig.Parameters.Count > 0, ", ");
-
-        MethodFactory.WriteParameterList(writer, context, sig);
-        writer.Write(")");
+        WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+        WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+        string comma = sig.Parameters.Count > 0 ? ", " : "";
+        writer.Write($"{ret} {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
         // Reuse the interface caller body emitter. Delegate Invoke is at vtable slot 3
         // (after QI/AddRef/Release). Functionally equivalent to the truth's

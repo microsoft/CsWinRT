@@ -239,10 +239,9 @@ internal static class InterfaceFactory
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {method.Name?.Value ?? string.Empty}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.WriteLine(");");
+            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+            writer.WriteLine($"{ret} {method.Name?.Value ?? string.Empty}({parms});");
         }
 
         foreach (PropertyDefinition prop in type.Properties)

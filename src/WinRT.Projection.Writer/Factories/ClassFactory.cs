@@ -354,10 +354,9 @@ internal static class ClassFactory
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write("public static ");
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {mname}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
+                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                writer.Write($"public static {ret} {mname}({parms}");
 
                 if (context.Settings.ReferenceProjection)
                 {
