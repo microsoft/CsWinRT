@@ -315,8 +315,8 @@ internal static partial class ClassMembersFactory
                     """);
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
-                    writer.Write(", ");
-                    MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
+                    WriteProjectionParameterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+                    writer.Write($", {p}");
                 }
                 writer.WriteLine(");");
                 // string to each public method emission. In ref mode this produces e.g.

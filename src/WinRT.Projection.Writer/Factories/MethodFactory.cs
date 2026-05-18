@@ -113,6 +113,13 @@ internal static class MethodFactory
         }
     }
 
+    /// <inheritdoc cref="WriteProjectionParameterType(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
+    /// <returns>A callback that writes the projected parameter type to the writer it's appended to.</returns>
+    public static WriteProjectionParameterTypeCallback WriteProjectionParameterType(ProjectionEmitContext context, ParameterInfo p)
+    {
+        return new(context, p);
+    }
+
     /// <summary>
     /// Writes the parameter name (escaped if it would clash with a C# keyword).
     /// </summary>
@@ -138,6 +145,13 @@ internal static class MethodFactory
         WriteProjectionParameterType(writer, context, p);
         writer.Write(" ");
         WriteParameterName(writer, p);
+    }
+
+    /// <inheritdoc cref="WriteProjectionParameter(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
+    /// <returns>A callback that writes the parameter (type + name) to the writer it's appended to.</returns>
+    public static WriteProjectionParameterCallback WriteProjectionParameter(ProjectionEmitContext context, ParameterInfo p)
+    {
+        return new(context, p);
     }
 
     /// <summary>
