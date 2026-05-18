@@ -8,6 +8,7 @@ using System.Text;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -436,7 +437,8 @@ internal static class CustomAttributeFactory
     }
 
     /// <summary>
-    /// Writes the type-level custom attributes for <paramref name="type"/>.
+    /// Writes the projected type-level custom attributes for <paramref name="type"/>. Each emitted
+    /// attribute is on its own line, terminated with a newline. If no attributes apply, emits nothing.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -447,4 +449,29 @@ internal static class CustomAttributeFactory
         WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
     }
 
+    /// <inheritdoc cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>
+    /// <returns>A callback emitting each applicable attribute on its own line. The trailing newline of the last attribute is dropped so the callback can be interpolated into a multiline template line without producing a stray blank line.</returns>
+    public static WriteTypeCustomAttributesCallback WriteTypeCustomAttributes(ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
+    {
+        return new(context, type, enablePlatformAttrib);
+    }
+
+    /// <summary>
+    /// Writes just the attribute lines (no trailing newline on the last one) for
+    /// <see cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>.
+    /// Used by the callback variant so the callback can be inlined inside a multiline raw-string
+    /// template — the surrounding template line's own newline becomes the trailing newline.
+    /// </summary>
+    internal static void WriteTypeCustomAttributesBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
+    {
+        int before = writer.Length;
+        WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
+        // If anything was written, the buffer ends with a trailing newline that came from the
+        // last attribute's WriteLine. Trim it so the callback can be inlined into a multiline
+        // template line without producing a stray blank line.
+        if (writer.Length > before && writer.Length > 0 && writer.Back() == '\n')
+        {
+            writer.Remove(writer.Length - 1, 1);
+        }
+    }
 }

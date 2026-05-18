@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -37,20 +38,16 @@ internal static class AbiStructFactory
             // In component mode emit the [WindowsRuntimeMetadataTypeName]/[WindowsRuntimeMappedType]
             // attribute pair; otherwise emit the [ComWrappersMarshaller] attribute. Both branches
             // then emit [WindowsRuntimeClassName] + the struct definition with public ABI fields.
-            if (context.Settings.Component)
-            {
-                MetadataAttributeFactory.WriteWinRTMetadataTypeNameAttribute(writer, context, type);
-                MetadataAttributeFactory.WriteWinRTMappedTypeAttribute(writer, context, type);
-            }
-            else
-            {
-                MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
-            }
-
-            MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-            writer.Write($"{context.Settings.InternalAccessibility} unsafe struct ");
-            writer.Write(IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty));
-            writer.WriteLine();
+            string nameStripped = type.GetStrippedName();
+            string marshallerOrTypeAttrs = context.Settings.Component
+                ? $"{MetadataAttributeFactory.WriteWinRTMetadataTypeNameAttribute(context, type).Format()}\n{MetadataAttributeFactory.WriteWinRTMappedTypeAttribute(context, type).Format()}"
+                : MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type).Format();
+            WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
+            writer.WriteLine(isMultiline: true, $$"""
+                {{marshallerOrTypeAttrs}}
+                {{valueTypeAttr}}
+                {{context.Settings.InternalAccessibility}} unsafe struct {{nameStripped}}
+                """);
             using (writer.WriteBlock())
             {
                 foreach (FieldDefinition field in type.Fields)

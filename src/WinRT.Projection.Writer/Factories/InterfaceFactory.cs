@@ -425,9 +425,12 @@ internal static class InterfaceFactory
         }
 
         writer.WriteLine();
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
         WriteGuidAttributeCallback guidAttr = WriteGuidAttribute(type);
-        writer.WriteLine($"{guidAttr}");
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{guidAttr}}
+            """);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
