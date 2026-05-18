@@ -58,31 +58,8 @@ internal static class AbiStructFactory
                     }
 
                     TypeSignature ft = field.Signature.FieldType;
-                    writer.Write("public ");
-                    // Truth uses void* for string and Nullable<T> fields, the ABI type for mapped value
-                    // types (DateTime/TimeSpan), and the projected type for everything else (including
-                    // enums and bool — their C# layout matches the WinRT ABI directly).
-                    if (ft.IsString() || AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
-                    {
-                        writer.Write("void*");
-                    }
-                    else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
-                    {
-                        writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(ft));
-                    }
-                    else if (ft is TypeDefOrRefSignature tdr
-                             && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
-                             && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
-                             && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))
-                    {
-                        TypedefNameWriter.WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
-                    }
-                    else
-                    {
-                        MethodFactory.WriteProjectedSignature(writer, context, ft, false);
-                    }
-
-                    writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
+                    string fieldType = GetAbiFieldType(context, ft);
+                    writer.WriteLine($"public {fieldType} {field.Name?.Value ?? string.Empty};");
                 }
             }
             writer.WriteLine();
@@ -96,5 +73,38 @@ internal static class AbiStructFactory
 
         StructEnumMarshallerFactory.WriteStructEnumMarshallerClass(writer, context, type);
         ReferenceImplFactory.WriteReferenceImpl(writer, context, type);
+    }
+
+    /// <summary>
+    /// Returns the projected ABI field type for an unblittable / unmapped struct field.
+    /// Truth uses <c>void*</c> for string and <c>Nullable&lt;T&gt;</c> fields, the mapped ABI
+    /// type for mapped value types (DateTime/TimeSpan), the ABI typedef for nested non-blittable
+    /// structs, and the projected C# type for everything else (including enums and bool — their
+    /// C# layout matches the WinRT ABI directly).
+    /// </summary>
+    private static string GetAbiFieldType(ProjectionEmitContext context, TypeSignature ft)
+    {
+        if (ft.IsString() || AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
+        {
+            return "void*";
+        }
+
+        if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+        {
+            return AbiTypeHelpers.GetMappedAbiTypeName(ft);
+        }
+
+        if (ft is TypeDefOrRefSignature tdr
+            && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
+            && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
+            && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))
+        {
+            return TypedefNameWriter.WriteTypedefName(context, fieldTd, TypedefNameType.ABI, false).Format();
+        }
+
+        // Default: emit the projected C# type via the signature writer.
+        using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
+        MethodFactory.WriteProjectedSignature(owner.Writer, context, ft, false);
+        return owner.Writer.ToString();
     }
 }
