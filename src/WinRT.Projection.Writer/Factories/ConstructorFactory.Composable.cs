@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
@@ -84,9 +85,8 @@ internal static partial class ConstructorFactory
             writer.Write($"{typeName}(");
             for (int i = 0; i < userParamCount; i++)
             {
-                writer.WriteIf(i > 0, ", ");
-
-                MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
+                WriteProjectionParameterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+                writer.Write($"{(i > 0 ? ", " : "")}{p}");
             }
 
             writer.Write(isMultiline: true, """

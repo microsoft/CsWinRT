@@ -34,9 +34,8 @@ internal static partial class ConstructorFactory
         writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
-            writer.WriteIf(i > 0, ", ");
-
-            MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
+            WriteProjectionParameterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+            writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
         writer.WriteLine(isMultiline: true, """
             )
@@ -45,13 +44,9 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            string raw = p.Parameter.Name ?? "param";
-            string pname = IdentifierEscaping.EscapeIdentifier(raw);
-            writer.Write("    public readonly ");
-            // Use the parameter's projected type (matches the constructor parameter type, including
-            // ReadOnlySpan<T>/Span<T> for array params).
-            MethodFactory.WriteProjectionParameterType(writer, context, p);
-            writer.WriteLine($" {pname} = {pname};");
+            string pname = p.GetEscapedName();
+            WriteProjectionParameterTypeCallback paramType = MethodFactory.WriteProjectionParameterType(context, p);
+            writer.WriteLine($"    public readonly {paramType} {pname} = {pname};");
         }
         writer.WriteLine("}");
     }
