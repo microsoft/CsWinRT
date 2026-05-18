@@ -200,29 +200,24 @@ internal static class ComponentFactory
     {
         string propName = prop.Name?.Value ?? string.Empty;
         (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+        string propType = GetFactoryPropertyType(context, prop);
+
         // Single-line form when no setter is present.
         if (setter is null)
         {
             writer.WriteLine();
-            writer.Write("public ");
-            WriteFactoryPropertyType(writer, context, prop);
-            writer.WriteLine($" {propName} => {projectedTypeName}.{propName};");
+            writer.WriteLine($"public {propType} {propName} => {projectedTypeName}.{propName};");
             return;
         }
 
+        string getterLine = getter is not null
+            ? $"get => {projectedTypeName}.{propName};"
+            : string.Empty;
         writer.WriteLine();
-        writer.Write("public ");
-        WriteFactoryPropertyType(writer, context, prop);
         writer.WriteLine(isMultiline: true, $$"""
-             {{propName}}
+            public {{propType}} {{propName}}
             {
-            """);
-        if (getter is not null)
-        {
-            writer.WriteLine($"get => {projectedTypeName}.{propName};");
-        }
-
-        writer.WriteLine(isMultiline: true, $$"""
+            {{getterLine}}
             set => {{projectedTypeName}}.{{propName}} = value;
             }
             """);
@@ -234,17 +229,13 @@ internal static class ComponentFactory
     private static void WriteStaticFactoryEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string projectedTypeName)
     {
         string evtName = evt.Name?.Value ?? string.Empty;
+        string evtType = evt.EventType is null
+            ? string.Empty
+            : TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, false).Format();
+
         writer.WriteLine();
-        writer.Write("public event ");
-
-        if (evt.EventType is not null)
-        {
-            TypeSemantics evtSemantics = TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType);
-            TypedefNameWriter.WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
-        }
-
         writer.WriteLine(isMultiline: true, $$"""
-             {{evtName}}
+            public event {{evtType}} {{evtName}}
             {
             add => {{projectedTypeName}}.{{evtName}} += value;
             remove => {{projectedTypeName}}.{{evtName}} -= value;
@@ -276,17 +267,17 @@ internal static class ComponentFactory
         TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
 
-    private static void WriteFactoryPropertyType(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop)
+    private static string GetFactoryPropertyType(ProjectionEmitContext context, PropertyDefinition prop)
     {
         TypeSignature? sig = prop.Signature?.ReturnType;
 
         if (sig is null)
         {
-            writer.Write("object"); return;
+            return "object";
         }
 
         TypeSemantics semantics = TypeSemanticsFactory.Get(sig);
-        TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
+        return TypedefNameWriter.WriteTypeName(context, semantics, TypedefNameType.Projected, true).Format();
     }
 
     /// <inheritdoc cref="WriteFactoryMethodParameters(IndentedTextWriter, ProjectionEmitContext, MethodDefinition, bool)"/>
