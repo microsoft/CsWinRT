@@ -286,10 +286,14 @@ internal static class ClassFactory
     {
         using (context.EnterPlatformSuppressionScope(string.Empty))
         {
-            MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-            CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
+            WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+            WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
             WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
-            writer.WriteLine($"{context.Settings.InternalAccessibility} static class {name}");
+            writer.WriteLine(isMultiline: true, $$"""
+                {{metadataAttr}}
+                {{customAttrs}}
+                {{context.Settings.InternalAccessibility}} static class {{name}}
+                """);
             using (writer.WriteBlock())
             {
                 WriteStaticClassMembers(writer, context, type);
@@ -570,17 +574,22 @@ internal static class ClassFactory
         string typeName = type.Name?.Value ?? string.Empty;
         int gcPressure = GetGcPressureAmount(type);
 
-        // Header attributes
-        writer.WriteLine();
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
+        // Header attributes + class declaration as a single multiline template.
+        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
         string accessibility = context.Settings.Internal ? "internal" : "public";
         // are emitted as plain (non-partial) classes.
         string modifiers = TypeCategorization.IsStatic(type) ? "static " : type.IsSealed ? "sealed " : "";
         WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
         WriteTypeInheritanceCallback inheritance = InterfaceFactory.WriteTypeInheritance(context, type, false, true);
-        writer.WriteLine($"{accessibility} {modifiers}class {name}{inheritance}");
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{customAttrs}}
+            {{comWrappersAttr}}
+            {{accessibility}} {{modifiers}}class {{name}}{{inheritance}}
+            """);
         using IndentedTextWriter.Block __classBlock = writer.WriteBlock();
 
         // ObjRef field definitions for each implemented interface.

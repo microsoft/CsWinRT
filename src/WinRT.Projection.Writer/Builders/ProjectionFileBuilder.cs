@@ -109,17 +109,22 @@ internal static class ProjectionFileBuilder
         string accessibility = context.Settings.Internal ? "internal" : "public";
         string typeName = type.Name?.Value ?? string.Empty;
 
+        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
+        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        WriteWinRTReferenceTypeAttributeCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
+
         writer.WriteLine();
 
         writer.WriteLineIf(isFlags, "[Flags]");
 
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
-        MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
-
         writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{valueTypeAttr}}
+            {{customAttrs}}
+            {{comWrappersAttr}}
+            {{refTypeAttr}}
             {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
             """);
         using (writer.WriteBlock())
@@ -215,17 +220,21 @@ internal static class ProjectionFileBuilder
         string projectionName = type.Name?.Value ?? string.Empty;
         bool hasAddition = AdditionTypes.HasAdditionToType(type.Namespace?.Value ?? string.Empty, projectionName);
 
-        // Header attributes
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
-        MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
-        writer.Write("public");
-
-        writer.WriteIf(hasAddition, " partial");
-
-        writer.WriteLine($" struct {projectionName} : IEquatable<{projectionName}>");
+        // Header attributes + struct declaration as a single multiline template.
+        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
+        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        WriteWinRTReferenceTypeAttributeCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
+        string partial = hasAddition ? " partial" : "";
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{valueTypeAttr}}
+            {{customAttrs}}
+            {{comWrappersAttr}}
+            {{refTypeAttr}}
+            public{{partial}} struct {{projectionName}} : IEquatable<{{projectionName}}>
+            """);
         using (writer.WriteBlock())
         {
             writer.Write($"public {projectionName}(");
@@ -380,10 +389,15 @@ internal static class ProjectionFileBuilder
     {
         string typeName = type.Name?.Value ?? string.Empty;
 
+        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+
         writer.WriteLine();
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.WriteLine($"{context.Settings.InternalAccessibility} sealed class {typeName} : Attribute");
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{customAttrs}}
+            {{context.Settings.InternalAccessibility}} sealed class {{typeName}} : Attribute
+            """);
         using (writer.WriteBlock())
         {
             // Constructors
