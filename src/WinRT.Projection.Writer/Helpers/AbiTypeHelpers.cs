@@ -148,7 +148,7 @@ internal static partial class AbiTypeHelpers
             return "__return_value__";
         }
 
-        return CSharpKeywords.IsKeyword(n) ? "@" + n : n;
+        return IdentifierEscaping.EscapeIdentifier(n);
     }
 
     /// <summary>
@@ -434,7 +434,7 @@ internal static partial class AbiTypeHelpers
     internal static string GetParamName(ParameterInfo p, string? paramNameOverride)
     {
         string name = paramNameOverride ?? p.Parameter.Name ?? "param";
-        return CSharpKeywords.IsKeyword(name) ? "@" + name : name;
+        return IdentifierEscaping.EscapeIdentifier(name);
     }
 
     /// <summary>

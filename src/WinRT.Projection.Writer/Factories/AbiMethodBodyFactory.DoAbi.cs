@@ -202,7 +202,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"*{ptr} = default;");
             }
             for (int i = 0; i < sig.Parameters.Count; i++)
@@ -237,7 +237,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
                 writer.WriteLine(isMultiline: true, $$"""
@@ -267,7 +267,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
                 bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(sz.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(sz.BaseType);
 
@@ -318,7 +318,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
                 // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
@@ -356,7 +356,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
                     string rawName = p.Parameter.Name ?? "param";
-                    string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
+                    string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     TypeSignature inner = p.Type.GetNullableInnerType()!;
                     string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                     writer.WriteLine($"    var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
@@ -364,7 +364,7 @@ internal static partial class AbiMethodBodyFactory
                 else if (p.Type.IsGenericInstance())
                 {
                     string rawName = p.Parameter.Name ?? "param";
-                    string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
+                    string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                     WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.WriteLine(isMultiline: true, $$"""
@@ -436,7 +436,7 @@ internal static partial class AbiMethodBodyFactory
                         // side it's projected as 'in T'. Read directly from *<name> via the appropriate
                         // marshaller — DO NOT zero or write back.
                         string raw = p.Parameter.Name ?? "param";
-                        string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                        string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                         TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
                         if (uRef.IsString())
@@ -504,7 +504,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 string rhs;
                 // String: HStringMarshaller.ConvertToUnmanaged
@@ -564,7 +564,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
             }
 
@@ -595,7 +595,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
                 // Determine the ABI element type for the data pointer cast.
                 // - Strings / runtime classes / objects: void**
@@ -781,7 +781,7 @@ internal static partial class AbiMethodBodyFactory
     internal static void EmitDoAbiParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
         string rawName = p.Parameter.Name ?? "param";
-        string pname = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
+        string pname = IdentifierEscaping.EscapeIdentifier(rawName);
 
         if (p.Type is CorLibTypeSignature corlib &&
             corlib.ElementType == ElementType.Boolean)
