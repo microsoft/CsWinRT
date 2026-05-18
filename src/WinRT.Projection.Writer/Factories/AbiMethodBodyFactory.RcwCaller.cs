@@ -264,9 +264,8 @@ internal static partial class AbiMethodBodyFactory
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-                writer.Write($"        using WindowsRuntimeObjectReferenceValue __{localName} = ");
-                EmitMarshallerConvertToUnmanaged(writer, context, p.Type, callName);
-                writer.WriteLine(";");
+                EmitMarshallerConvertToUnmanagedCallback cvt = EmitMarshallerConvertToUnmanaged(context, p.Type, callName);
+                writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = {cvt};");
             }
             else if (p.Type.IsNullableT())
             {
@@ -1242,9 +1241,8 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else
                 {
-                    writer.Write($"{callIndent}return ");
-                    EmitMarshallerConvertToManaged(writer, context, rt, "__retval");
-                    writer.WriteLine(";");
+                    EmitMarshallerConvertToManagedCallback cvt = EmitMarshallerConvertToManaged(context, rt, "__retval");
+                    writer.WriteLine($"{callIndent}return {cvt};");
                 }
             }
             else if (rt is not null && context.AbiTypeShapeResolver.IsMappedAbiValueType(rt))

@@ -662,9 +662,8 @@ internal static partial class AbiMethodBodyFactory
                     }
                     else
                     {
-                        writer.Write($"    *{retParamName} = ");
-                        EmitMarshallerConvertToUnmanaged(writer, context, rt!, retLocalName);
-                        writer.WriteLine(".DetachThisPtrUnsafe();");
+                        EmitMarshallerConvertToUnmanagedCallback cvt = EmitMarshallerConvertToUnmanaged(context, rt!, retLocalName);
+                        writer.WriteLine($"    *{retParamName} = {cvt}.DetachThisPtrUnsafe();");
                     }
                 }
                 else if (returnIsReceiveArrayDoAbi)
