@@ -359,27 +359,25 @@ internal static class ProjectionFileBuilder
 
         MethodSignatureInfo sig = new(invoke);
 
+        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, false);
+        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        string guidAttr = context.Settings.ReferenceProjection
+            ? string.Empty
+            : $"[Guid(\"{IidExpressionGenerator.FormatGuid(type, lowerCase: false)}\")]";
+        WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+        WriteTypedefNameCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
+        WriteTypeParamsCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
+        WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+
         writer.WriteLine();
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
-
-        if (!context.Settings.ReferenceProjection)
-        {
-            // GUID attribute
-            writer.Write("[Guid(\"");
-            IidExpressionGenerator.WriteGuid(writer, type, false);
-            writer.WriteLine("\")]");
-        }
-
-        writer.Write($"{context.Settings.InternalAccessibility} delegate ");
-        MethodFactory.WriteProjectionReturnType(writer, context, sig);
-        writer.Write(" ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("(");
-        MethodFactory.WriteParameterList(writer, context, sig);
-        writer.WriteLine(");");
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{customAttrs}}
+            {{comWrappersAttr}}
+            {{guidAttr}}
+            {{context.Settings.InternalAccessibility}} delegate {{ret}} {{typedefName}}{{typeParams}}({{parms}});
+            """);
     }
 
     /// <summary>
