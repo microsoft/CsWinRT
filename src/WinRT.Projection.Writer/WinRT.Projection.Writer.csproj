@@ -49,6 +49,10 @@
     <PackageReference Include="AsmResolver.DotNet" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="WinRT.Projection.Writer.TestRunner" />
+  </ItemGroup>
+
   <!-- Embed the resource files used for additions and base strings -->
   <ItemGroup>
     <EmbeddedResource Include="Resources\**\*.cs" />
