@@ -715,27 +715,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else
                 {
-                    writer.Write($"    *{retParamName} = ");
-
-                    if (rt is CorLibTypeSignature corlib &&
-                        corlib.ElementType == ElementType.Boolean)
-                    {
-                        writer.WriteLine($"{retLocalName};");
-                    }
-                    else if (rt is CorLibTypeSignature corlib2 &&
-                             corlib2.ElementType == ElementType.Char)
-                    {
-                        writer.WriteLine($"{retLocalName};");
-                    }
-                    else if (context.AbiTypeShapeResolver.IsEnumType(rt))
-                    {
-                        // Enum: function pointer signature uses the projected enum type, no cast needed.
-                        writer.WriteLine($"{retLocalName};");
-                    }
-                    else
-                    {
-                        writer.WriteLine($"{retLocalName};");
-                    }
+                    writer.WriteLine($"    *{retParamName} = {retLocalName};");
                 }
             }
 
