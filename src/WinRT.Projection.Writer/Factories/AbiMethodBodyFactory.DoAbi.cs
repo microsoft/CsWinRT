@@ -124,13 +124,7 @@ internal static partial class AbiMethodBodyFactory
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-                string elementAbi = sza.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
-                    ? "void*"
-                    : context.AbiTypeShapeResolver.IsComplexStruct(sza.BaseType)
-                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
-                        : context.AbiTypeShapeResolver.IsBlittableStruct(sza.BaseType)
-                            ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
-                            : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
+                string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, sza.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern void ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
@@ -141,13 +135,7 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
-                string elementAbi = retSzHoist.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
-                    ? "void*"
-                    : context.AbiTypeShapeResolver.IsComplexStruct(retSzHoist.BaseType)
-                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSzHoist.BaseType)
-                        : context.AbiTypeShapeResolver.IsBlittableStruct(retSzHoist.BaseType)
-                            ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
-                            : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
+                string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, retSzHoist.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
