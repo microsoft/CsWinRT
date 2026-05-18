@@ -66,8 +66,7 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         WriteAbiParameterTypesPointerCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
@@ -126,8 +125,7 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         WriteAbiParameterTypesPointerCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig);
         writer.WriteLine();
@@ -158,8 +156,7 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
@@ -188,8 +185,7 @@ internal static class AbiDelegateFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
         WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
@@ -244,8 +240,7 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         // Compute the projected type name (with global::) used as the generic argument.
         string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
@@ -309,8 +304,7 @@ internal static class AbiDelegateFactory
     /// </summary>
     private static void WriteDelegateMarshallerOnly(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
@@ -343,8 +337,7 @@ internal static class AbiDelegateFactory
     /// </summary>
     private static void WriteDelegateComWrappersCallback(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
@@ -374,8 +367,7 @@ internal static class AbiDelegateFactory
     /// </summary>
     private static void WriteDelegateComWrappersMarshallerAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();

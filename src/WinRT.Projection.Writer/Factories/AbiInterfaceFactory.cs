@@ -201,8 +201,7 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -245,8 +244,7 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         writer.WriteLine();
         writer.WriteLine($"public static unsafe class {nameStripped}Impl");
@@ -454,8 +452,7 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         WriteTypedefNameCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
         WriteTypeParamsCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
@@ -487,8 +484,7 @@ internal static class AbiInterfaceFactory
     /// </summary>
     private static void WriteInterfaceMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
         bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)

@@ -21,8 +21,7 @@ internal static class StructEnumMarshallerFactory
     /// </summary>
     internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         TypeCategory cat = TypeCategorization.GetCategory(type);
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).

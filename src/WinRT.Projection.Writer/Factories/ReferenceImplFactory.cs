@@ -25,8 +25,7 @@ internal static class ReferenceImplFactory
     /// <param name="type">The type definition.</param>
     public static void WriteReferenceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         string visibility = context.Settings.Component ? "public" : "file";
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 

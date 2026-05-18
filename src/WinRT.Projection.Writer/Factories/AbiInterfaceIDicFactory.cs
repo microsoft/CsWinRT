@@ -36,8 +36,7 @@ internal static class AbiInterfaceIDicFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         WriteTypedefNameWithTypeParamsCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
         WriteGuidAttributeCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
 
