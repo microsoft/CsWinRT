@@ -469,9 +469,7 @@ internal static class AbiInterfaceIDicFactory
                 // to the base interface where the getter actually lives
                 if (getter is null)
                 {
-                    TypeDefinition? baseIfaceWithGetter = InterfaceFactory.FindPropertyInterfaceInBases(context.Cache, type, pname);
-
-                    if (baseIfaceWithGetter is not null)
+                    if (InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
                     {
                         WriteInterfaceTypeNameForCcwCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
                         writer.WriteLine($"    get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -258,7 +259,7 @@ internal static class InterfaceFactory
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
             string newKeyword = (getter is null && setter is not null
-                && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
+                && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty, out _))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
             writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
@@ -281,20 +282,22 @@ internal static class InterfaceFactory
     /// Recursively walks the base interfaces of <paramref name="type"/> looking for a property
     /// with the given <paramref name="propName"/>. Returns true if any base interface declares
     /// a property with that name (used to decide whether a setter-only property in a derived
-    /// interface needs the <c>new</c> modifier to hide the base getter).
+    /// interface needs the <c>new</c> modifier to hide the base getter). When found, the base
+    /// interface where the property was declared is returned via <paramref name="foundInterface"/>.
     /// </summary>
-    private static bool FindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName)
+    internal static bool TryFindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName, [NotNullWhen(true)] out TypeDefinition? foundInterface)
     {
         if (string.IsNullOrEmpty(propName))
         {
+            foundInterface = null;
             return false;
         }
 
         HashSet<TypeDefinition> visited = [];
-        return FindPropertyInBaseInterfacesRecursive(cache, type, propName, visited);
+        return TryFindPropertyInBaseInterfacesRecursive(cache, type, propName, visited, out foundInterface);
     }
 
-    private static bool FindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited)
+    private static bool TryFindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited, [NotNullWhen(true)] out TypeDefinition? foundInterface)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -325,74 +328,19 @@ internal static class InterfaceFactory
             {
                 if ((prop.Name?.Value ?? string.Empty) == propName)
                 {
+                    foundInterface = baseIface;
                     return true;
                 }
             }
 
-            if (FindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, visited))
+            if (TryFindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, visited, out foundInterface))
             {
                 return true;
             }
         }
+
+        foundInterface = null;
         return false;
-    }
-
-    /// <summary>
-    /// Like <see cref="FindPropertyInBaseInterfaces"/> but returns the base interface where the
-    /// property was found (or <c>null</c> if not found).
-    /// </summary>
-    internal static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
-    {
-        if (string.IsNullOrEmpty(propName))
-        {
-            return null;
-        }
-
-        HashSet<TypeDefinition> visited = [];
-        return FindPropertyInterfaceInBasesRecursive(cache, type, propName, visited);
-    }
-
-    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited)
-    {
-        foreach (InterfaceImplementation impl in type.Interfaces)
-        {
-            if (impl.Interface is null)
-            {
-                continue;
-            }
-
-            TypeDefinition? baseIface = ClassMembersFactory.ResolveInterface(cache, impl.Interface);
-
-            if (baseIface is null)
-            {
-                continue;
-            }
-
-            if (baseIface == type)
-            {
-                continue;
-            }
-
-            if (!visited.Add(baseIface))
-            {
-                continue;
-            }
-
-            foreach (PropertyDefinition prop in baseIface.Properties)
-            {
-                if ((prop.Name?.Value ?? string.Empty) == propName)
-                {
-                    return baseIface;
-                }
-            }
-            TypeDefinition? deeper = FindPropertyInterfaceInBasesRecursive(cache, baseIface, propName, visited);
-
-            if (deeper is not null)
-            {
-                return deeper;
-            }
-        }
-        return null;
     }
 
     /// <summary>
