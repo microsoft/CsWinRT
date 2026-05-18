@@ -287,13 +287,8 @@ internal static class AbiInterfaceIDicFactory
             writer.WriteLine();
             WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
             WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
-            writer.Write($"{ret} {ccwIfaceName}.{mname}({parms}) => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
-                writer.Write($"{(i > 0 ? ", " : "")}{p}");
-            }
-            writer.WriteLine(");");
+            WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+            writer.WriteLine($"{ret} {ccwIfaceName}.{mname}({parms}) => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}({args});");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
@@ -426,12 +421,8 @@ internal static class AbiInterfaceIDicFactory
                 """);
             writer.WriteIf(sig.ReturnType is not null, "return ");
 
-            writer.Write($"{abiClass}.{mname}(_obj");
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
-                writer.Write($", {p}");
-            }
+            WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+            writer.Write($"{abiClass}.{mname}(_obj{args}");
             writer.WriteLine(isMultiline: true, """
                 );
                 }

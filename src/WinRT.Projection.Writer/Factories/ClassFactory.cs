@@ -365,13 +365,8 @@ internal static class ClassFactory
                 }
                 else
                 {
-                    writer.Write($") => {abiClass}.{mname}({objRef}");
-                    for (int i = 0; i < sig.Parameters.Count; i++)
-                    {
-                        WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
-                        writer.Write($", {p}");
-                    }
-                    writer.WriteLine(");");
+                    WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    writer.WriteLine($") => {abiClass}.{mname}({objRef}{args});");
                 }
             }
 
