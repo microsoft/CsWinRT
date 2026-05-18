@@ -205,8 +205,7 @@ internal static class AbiClassFactory
     /// </summary>
     internal static void WriteClassMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
 
