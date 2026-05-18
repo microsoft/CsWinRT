@@ -7,7 +7,6 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -288,40 +287,14 @@ internal static class AbiDelegateFactory
             """);
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            writer.WriteIf(i > 0, ", ");
-
-            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
-
-            if (pc == ParameterCategory.Ref)
-            {
-                writer.Write("in ");
-            }
-            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray)
-            {
-                writer.Write("out ");
-            }
-
-            string raw = sig.Parameters[i].Parameter.Name ?? "p";
-            writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
+            WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
+            writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
         writer.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            writer.WriteIf(i > 0, ", ");
-
-            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
-
-            if (pc == ParameterCategory.Ref)
-            {
-                writer.Write("in ");
-            }
-            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray)
-            {
-                writer.Write("out ");
-            }
-
-            string raw = sig.Parameters[i].Parameter.Name ?? "p";
-            writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
+            WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
+            writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
         writer.WriteLine(isMultiline: true, """
             );
