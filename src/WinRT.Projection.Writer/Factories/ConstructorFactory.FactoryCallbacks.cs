@@ -193,9 +193,8 @@ internal static partial class ConstructorFactory
 
             string raw = p.Parameter.Name ?? "param";
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
-            writer.Write($"        using WindowsRuntimeObjectReferenceValue __{raw} = ");
-            AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
-            writer.WriteLine(";");
+            EmitMarshallerConvertToUnmanagedCallback cvt = AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(context, p.Type, pname);
+            writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{raw} = {cvt};");
         }
 
         // For composable factories, marshal the additional `baseInterface` (which is a
