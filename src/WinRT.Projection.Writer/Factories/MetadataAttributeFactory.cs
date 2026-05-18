@@ -401,37 +401,29 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
-        if (sortedEntries.Count == 0)
-        {
-            return;
-        }
-
-        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter w = wOwner.Writer;
-        WriteFileHeader(w);
-        w.WriteLine("using System;");
-        w.WriteLine("using WindowsRuntime;");
-        w.WriteLine();
-        w.WriteLine("#pragma warning disable CSWINRT3001");
-        w.WriteLine();
-        w.WriteLine("namespace ABI");
-        using (w.WriteBlock())
-        {
-            foreach (KeyValuePair<string, string> kv in sortedEntries)
-            {
-                w.WriteLine($"[WindowsRuntimeDefaultInterface(typeof({kv.Key}), typeof({kv.Value}))]");
-            }
-
-            w.WriteLine("internal static class WindowsRuntimeDefaultInterfaces;");
-        }
-
-        w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeDefaultInterfaces.cs"));
+        WriteInterfaceMapClass(settings, sortedEntries, "WindowsRuntimeDefaultInterface", "WindowsRuntimeDefaultInterfaces", "WindowsRuntimeDefaultInterfaces.cs");
     }
 
     /// <summary>
     /// Writes the generated WindowsRuntimeExclusiveToInterfaces.cs file.
     /// </summary>
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
+    {
+        WriteInterfaceMapClass(settings, sortedEntries, "WindowsRuntimeExclusiveToInterface", "WindowsRuntimeExclusiveToInterfaces", "WindowsRuntimeExclusiveToInterfaces.cs");
+    }
+
+    /// <summary>
+    /// Shared template for emitting an <c>ABI</c> namespace-level static class decorated with one
+    /// <paramref name="attributeName"/> per entry from <paramref name="sortedEntries"/> (mapping
+    /// projected type names to interface or proxy type names). Used by both
+    /// <see cref="WriteDefaultInterfacesClass"/> and <see cref="WriteExclusiveToInterfacesClass"/>.
+    /// </summary>
+    private static void WriteInterfaceMapClass(
+        Settings settings,
+        IReadOnlyList<KeyValuePair<string, string>> sortedEntries,
+        string attributeName,
+        string className,
+        string fileName)
     {
         if (sortedEntries.Count == 0)
         {
@@ -451,12 +443,12 @@ internal static class MetadataAttributeFactory
         {
             foreach (KeyValuePair<string, string> kv in sortedEntries)
             {
-                w.WriteLine($"[WindowsRuntimeExclusiveToInterface(typeof({kv.Key}), typeof({kv.Value}))]");
+                w.WriteLine($"[{attributeName}(typeof({kv.Key}), typeof({kv.Value}))]");
             }
 
-            w.WriteLine("internal static class WindowsRuntimeExclusiveToInterfaces;");
+            w.WriteLine($"internal static class {className};");
         }
 
-        w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeExclusiveToInterfaces.cs"));
+        w.FlushToFile(Path.Combine(settings.OutputFolder, fileName));
     }
 }
