@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -307,38 +308,22 @@ internal static partial class ClassMembersFactory
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
-                writer.WriteLine();
                 WriteProjectionReturnTypeCallback unsafeRet = MethodFactory.WriteProjectionReturnType(context, sig);
-                writer.Write(isMultiline: true, $$"""
+                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                string accessorParams = string.Concat(sig.Parameters.Select(p => $", {MethodFactory.WriteProjectionParameter(context, p).Format()}"));
+                string body = context.Settings.ReferenceProjection
+                    ? "throw null;"
+                    : $"{accessorName}(null, {objRef}{MethodFactory.WriteCallArguments(context, sig, leadingComma: true).Format()});";
+                string platformTrimmed = platformAttribute.TrimEnd('\r', '\n');
+
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, $$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
-                    static extern {{unsafeRet}} {{accessorName}}([UnsafeAccessorType("{{genericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference
+                    static extern {{unsafeRet}} {{accessorName}}([UnsafeAccessorType("{{genericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference{{accessorParams}});
+                    {{platformTrimmed}}
+                    {{access}}{{methodSpecForThis}}{{ret}} {{name}}({{parms}}) => {{body}}
                     """);
-                for (int i = 0; i < sig.Parameters.Count; i++)
-                {
-                    WriteProjectionParameterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
-                    writer.Write($", {p}");
-                }
-                writer.WriteLine(");");
-                // string to each public method emission. In ref mode this produces e.g.
-                // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
-
-                {
-                    WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-                    WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
-                    writer.Write($"{access}{methodSpecForThis}{ret} {name}({parms}");
-                }
-
-                if (context.Settings.ReferenceProjection)
-                {
-                    // which emits 'throw null' in reference projection mode.
-                    writer.WriteLine(") => throw null;");
-                }
-                else
-                {
-                    WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
-                    writer.WriteLine($") => {accessorName}(null, {objRef}{args});");
-                }
             }
             else
             {
