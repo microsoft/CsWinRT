@@ -687,22 +687,9 @@ internal static class ClassFactory
         // be emitted BEFORE the public members.
         if (!context.Settings.ReferenceProjection)
         {
-            writer.WriteLine();
-            writer.Write("protected override bool HasUnwrappableNativeObjectReference => ");
+            string unwrappable = type.IsSealed ? "true" : $"GetType() == typeof({typeName});";
 
-            if (!type.IsSealed)
-            {
-                writer.Write($"GetType() == typeof({typeName});");
-            }
-            else
-            {
-                writer.Write("true;");
-            }
-
-            writer.WriteLine();
-            writer.WriteLine();
-            writer.Write("protected override bool IsOverridableInterface(in Guid iid) => ");
-            bool firstClause = true;
+            List<string> overridableClauses = [];
             foreach (InterfaceImplementation impl in type.Interfaces)
             {
                 if (!impl.IsOverridable())
@@ -717,11 +704,8 @@ internal static class ClassFactory
                     continue;
                 }
 
-                writer.WriteIf(!firstClause, " || ");
-
-                firstClause = false;
                 WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, implRef);
-                writer.Write($"{iid} == iid");
+                overridableClauses.Add($"{iid.Format()} == iid");
             }
 
             // base call when type has a non-object base class
@@ -731,15 +715,19 @@ internal static class ClassFactory
 
             if (hasBaseClass)
             {
-                writer.WriteIf(!firstClause, " || ");
-
-                writer.Write("base.IsOverridableInterface(in iid)");
-                firstClause = false;
+                overridableClauses.Add("base.IsOverridableInterface(in iid)");
             }
 
-            writer.WriteIf(firstClause, "false");
+            string overridableExpr = overridableClauses.Count == 0
+                ? "false"
+                : string.Join(" || ", overridableClauses);
 
-            writer.WriteLine(";");
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                protected override bool HasUnwrappableNativeObjectReference => {{unwrappable}}{{(type.IsSealed ? ";" : "")}}
+
+                protected override bool IsOverridableInterface(in Guid iid) => {{overridableExpr}};
+                """);
         }
 
         ClassMembersFactory.WriteClassMembers(writer, context, type);
