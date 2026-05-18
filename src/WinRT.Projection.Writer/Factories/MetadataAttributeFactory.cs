@@ -24,25 +24,6 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static class MetadataAttributeFactory
 {
     /// <summary>
-    /// Writes <c>#pragma warning disable IL2026</c>.
-    /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
-    public static void WritePragmaDisableIL2026(IndentedTextWriter writer)
-    {
-        writer.WriteLine("#pragma warning disable IL2026");
-    }
-
-    /// <summary>
-    /// Writes <c>#pragma warning restore IL2026</c>.
-    /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
-    public static void WritePragmaRestoreIL2026(IndentedTextWriter writer)
-    {
-        writer.WriteLine();
-        writer.WriteLine("#pragma warning restore IL2026");
-    }
-
-    /// <summary>
     /// Returns the version string embedded in the banner comment of generated files.
     /// MSBuild and defaults to <c>0.0.0-private.0</c>).
     /// We read the writer assembly's <see cref="AssemblyInformationalVersionAttribute"/>

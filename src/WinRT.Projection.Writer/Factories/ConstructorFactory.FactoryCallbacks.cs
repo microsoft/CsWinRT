@@ -464,8 +464,6 @@ internal static partial class ConstructorFactory
             else
             {
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                _ = elementInteropArg;
                 writer.WriteLine(isMultiline: true, $$"""
                     {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
                     {{callIndent}}static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, void** data);
@@ -633,8 +631,6 @@ internal static partial class ConstructorFactory
                 }
                 else
                 {
-                    string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                    _ = elementInteropArg;
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]

@@ -843,9 +843,6 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
                 // element is the ABI struct type; the data pointer parameter type uses that
                 // ABI struct. The fixed() opens with void* (per truth's pattern), so a cast
@@ -1043,9 +1040,6 @@ internal static partial class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
-            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
-
-            _ = elementInteropArg;
             // Determine the ABI element type for the data pointer parameter.
             // - Strings / runtime classes / objects: void**
             // - HResult exception: global::ABI.System.Exception*
@@ -1187,9 +1181,6 @@ internal static partial class AbiMethodBodyFactory
                     : context.AbiTypeShapeResolver.IsBlittableStruct(sza.BaseType)
                         ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
                         : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
-            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-
-            _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
             writer.WriteLine(isMultiline: true, $$"""
                 {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
@@ -1215,9 +1206,6 @@ internal static partial class AbiMethodBodyFactory
                                 : context.AbiTypeShapeResolver.IsBlittableStruct(retSz.BaseType)
                                     ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType)
                                     : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 writer.WriteLine(isMultiline: true, $$"""
                     {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
                     {{callIndent}}static extern {{elementProjected}}[] ConvertToManaged_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
@@ -1449,10 +1437,6 @@ internal static partial class AbiMethodBodyFactory
                         fixedPtrType = "void*";
                         disposeCastType = "(void**)";
                     }
-
-                    string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-
-                    _ = elementInteropArg;
                     writer.WriteLine(isMultiline: true, $$"""
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
                                     static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
@@ -1539,9 +1523,6 @@ internal static partial class AbiMethodBodyFactory
                         : context.AbiTypeShapeResolver.IsBlittableStruct(sza.BaseType)
                             ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
                             : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
                                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
@@ -1583,9 +1564,6 @@ internal static partial class AbiMethodBodyFactory
                                 : context.AbiTypeShapeResolver.IsBlittableStruct(retSz.BaseType)
                                     ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType)
                                     : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 writer.WriteLine(isMultiline: true, $$"""
                                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
                                 static extern void Free_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);

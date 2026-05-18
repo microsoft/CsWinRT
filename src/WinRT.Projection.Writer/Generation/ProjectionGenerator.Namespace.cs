@@ -38,7 +38,7 @@ internal sealed partial class ProjectionGenerator
         if (!_settings.ReferenceProjection)
         {
             writer.WriteLine();
-            MetadataAttributeFactory.WritePragmaDisableIL2026(writer);
+            writer.WriteLine("#pragma warning disable IL2026");
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type))
@@ -99,7 +99,8 @@ internal sealed partial class ProjectionGenerator
                 }
             }
 
-            MetadataAttributeFactory.WritePragmaRestoreIL2026(writer);
+            writer.WriteLine();
+            writer.WriteLine("#pragma warning restore IL2026");
         }
 
         // Phase 2: Projected types
