@@ -190,6 +190,34 @@ internal static class MethodFactory
     }
 
     /// <summary>
+    /// Writes a comma-separated argument-forwarding list (parameter names with in/out modifiers).
+    /// When <paramref name="leadingComma"/> is <see langword="true"/>, the list is preceded by
+    /// <c>", "</c> (so it can be appended to a call site that already passed one or more args);
+    /// otherwise, the comma separator appears only between elements.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The method signature whose parameters to forward.</param>
+    /// <param name="leadingComma">When <see langword="true"/>, emits a leading <c>", "</c> before the first element.</param>
+    public static void WriteCallArguments(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, bool leadingComma)
+    {
+        for (int i = 0; i < sig.Parameters.Count; i++)
+        {
+            WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
+            string sep = (leadingComma || i > 0) ? ", " : "";
+
+            writer.Write($"{sep}{p}");
+        }
+    }
+
+    /// <inheritdoc cref="WriteCallArguments(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, bool)"/>
+    /// <returns>A callback that writes the call-argument list to the writer it's appended to.</returns>
+    public static WriteCallArgumentsCallback WriteCallArguments(ProjectionEmitContext context, MethodSignatureInfo sig, bool leadingComma)
+    {
+        return new(context, sig, leadingComma);
+    }
+
+    /// <summary>
     /// Returns the C# literal text for a constant field's value (or empty when no constant).
     /// </summary>
     /// <param name="field">The field definition.</param>

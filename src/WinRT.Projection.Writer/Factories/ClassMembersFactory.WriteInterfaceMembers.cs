@@ -336,13 +336,8 @@ internal static partial class ClassMembersFactory
                 }
                 else
                 {
-                    writer.Write($") => {accessorName}(null, {objRef}");
-                    for (int i = 0; i < sig.Parameters.Count; i++)
-                    {
-                        WriteParameterNameWithModifierCallback p = WriteParameterNameWithModifier(context, sig.Parameters[i]);
-                        writer.Write($", {p}");
-                    }
-                    writer.WriteLine(");");
+                    WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    writer.WriteLine($") => {accessorName}(null, {objRef}{args});");
                 }
             }
             else
@@ -362,13 +357,8 @@ internal static partial class ClassMembersFactory
                 }
                 else
                 {
-                    writer.Write($") => {abiClass}.{name}({objRef}");
-                    for (int i = 0; i < sig.Parameters.Count; i++)
-                    {
-                        WriteParameterNameWithModifierCallback p = WriteParameterNameWithModifier(context, sig.Parameters[i]);
-                        writer.Write($", {p}");
-                    }
-                    writer.WriteLine(");");
+                    WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    writer.WriteLine($") => {abiClass}.{name}({objRef}{args});");
                 }
             }
 
@@ -382,13 +372,8 @@ internal static partial class ClassMembersFactory
                 WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
                 WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
                 WriteInterfaceTypeNameForCcwCallback iface = WriteInterfaceTypeNameForCcw(context, originalInterface);
-                writer.Write($"{ret} {iface}.{name}({parms}) => {name}(");
-                for (int i = 0; i < sig.Parameters.Count; i++)
-                {
-                    WriteParameterNameWithModifierCallback p = WriteParameterNameWithModifier(context, sig.Parameters[i]);
-                    writer.Write($"{(i > 0 ? ", " : "")}{p}");
-                }
-                writer.WriteLine(");");
+                WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+                writer.WriteLine($"{ret} {iface}.{name}({parms}) => {name}({args});");
             }
         }
 
