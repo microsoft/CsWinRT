@@ -46,7 +46,7 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             writer.Write("    public readonly ");
             // Use the parameter's projected type (matches the constructor parameter type, including
             // ReadOnlySpan<T>/Span<T> for array params).
@@ -128,7 +128,7 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             writer.Write("        ");
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
@@ -161,7 +161,7 @@ internal static partial class ConstructorFactory
             }
 
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
 
             if (p.Type.IsNullableT())
             {
@@ -197,7 +197,7 @@ internal static partial class ConstructorFactory
             }
 
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             writer.Write($"        using WindowsRuntimeObjectReferenceValue __{raw} = ");
             AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
             writer.WriteLine(";");
@@ -225,7 +225,7 @@ internal static partial class ConstructorFactory
             }
 
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             string abiType = AbiTypeHelpers.GetMappedAbiTypeName(p.Type);
             string marshaller = AbiTypeHelpers.GetMappedMarshallerName(p.Type);
             writer.WriteLine($"        {abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
@@ -244,7 +244,7 @@ internal static partial class ConstructorFactory
             }
 
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             writer.WriteLine($"        global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
@@ -273,7 +273,7 @@ internal static partial class ConstructorFactory
 
             hasNonBlittableArray = true;
             string raw = p.Parameter.Name ?? "param";
-            string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string callName = IdentifierEscaping.EscapeIdentifier(raw);
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
                         Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlineArray);
@@ -325,7 +325,7 @@ internal static partial class ConstructorFactory
             }
 
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             writer.WriteLine($"{baseIndent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({pname}, out TypeReference __{raw});");
         }
 
@@ -368,7 +368,7 @@ internal static partial class ConstructorFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string pname = IdentifierEscaping.EscapeIdentifier(raw);
 
                 writer.WriteIf(!firstPin, ", ");
 
@@ -420,7 +420,7 @@ internal static partial class ConstructorFactory
                 }
 
                 string raw = p.Parameter.Name ?? "param";
-                string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string pname = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"{innerIndent}HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{raw}, {pname}?.Length, out HStringReference __{raw});");
             }
         }
@@ -449,7 +449,7 @@ internal static partial class ConstructorFactory
             }
 
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
 
             if (szArr.BaseType.IsString())
             {
@@ -500,7 +500,7 @@ internal static partial class ConstructorFactory
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
             string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             writer.Write(isMultiline: true, """
                 ,
                   

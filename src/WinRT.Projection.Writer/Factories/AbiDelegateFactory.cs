@@ -302,7 +302,7 @@ internal static class AbiDelegateFactory
             }
 
             string raw = sig.Parameters[i].Parameter.Name ?? "p";
-            writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
+            writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
         }
         writer.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Parameters.Count; i++)
@@ -321,7 +321,7 @@ internal static class AbiDelegateFactory
             }
 
             string raw = sig.Parameters[i].Parameter.Name ?? "p";
-            writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
+            writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
         }
         writer.WriteLine(isMultiline: true, """
             );
