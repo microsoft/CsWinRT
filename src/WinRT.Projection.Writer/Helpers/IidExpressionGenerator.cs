@@ -122,6 +122,9 @@ internal static partial class IidExpressionGenerator
     /// <summary>
     /// Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.
     /// </summary>
+    /// <summary>
+    /// Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.
+    /// </summary>
     public static void WriteGuid(IndentedTextWriter writer, TypeDefinition type, bool lowerCase)
     {
         (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
@@ -140,6 +143,15 @@ internal static partial class IidExpressionGenerator
         {
             writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture));
         }
+    }
+
+    /// <inheritdoc cref="WriteGuid(IndentedTextWriter, TypeDefinition, bool)"/>
+    /// <returns>The formatted GUID as a string.</returns>
+    public static string FormatGuid(TypeDefinition type, bool lowerCase)
+    {
+        using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
+        WriteGuid(owner.Writer, type, lowerCase);
+        return owner.Writer.ToString();
     }
 
     /// <summary>
