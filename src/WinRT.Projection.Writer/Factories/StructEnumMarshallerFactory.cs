@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
@@ -16,6 +17,23 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class StructEnumMarshallerFactory
 {
+    /// <summary>
+    /// Returns the instance fields of <paramref name="type"/> (skipping static fields and fields
+    /// without a signature). Used by the 4 places in this file that loop over a struct's fields.
+    /// </summary>
+    private static IEnumerable<FieldDefinition> GetInstanceFields(TypeDefinition type)
+    {
+        foreach (FieldDefinition field in type.Fields)
+        {
+            if (field.IsStatic || field.Signature is null)
+            {
+                continue;
+            }
+
+            yield return field;
+        }
+    }
+
     /// <summary>
     /// Writes a marshaller class for a struct or enum.
     /// </summary>
@@ -36,14 +54,9 @@ internal static class StructEnumMarshallerFactory
 
         if (isComplexStruct)
         {
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
                 if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
@@ -82,15 +95,10 @@ internal static class StructEnumMarshallerFactory
                         return new() {
                 """);
             bool first = true;
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
                 string fname = field.Name?.Value ?? "";
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
                 writer.WriteLineIf(!first, ",");
 
@@ -143,15 +151,10 @@ internal static class StructEnumMarshallerFactory
                         return new {{projected}}{{(useObjectInitializer ? "(){" : "(")}}
                 """);
             first = true;
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
                 string fname = field.Name?.Value ?? "";
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
                 writer.WriteLineIf(!first, ",");
 
@@ -202,15 +205,10 @@ internal static class StructEnumMarshallerFactory
                     public static void Dispose({{abi}} value)
                     {
                 """);
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
                 string fname = field.Name?.Value ?? "";
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
                 if (ft.IsString())
                 {
