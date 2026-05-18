@@ -427,6 +427,7 @@
   <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+  <Project Path="WinRT.Projection.Writer.PerfRunner/WinRT.Projection.Writer.PerfRunner.csproj" />
   <Project Path="WinRT.Projection.Writer/WinRT.Projection.Writer.csproj" />
   <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
   <Project Path="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
