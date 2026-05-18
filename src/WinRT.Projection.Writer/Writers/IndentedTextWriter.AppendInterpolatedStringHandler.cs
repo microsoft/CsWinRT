@@ -16,15 +16,32 @@ internal partial class IndentedTextWriter
     /// <summary>
     /// Provides a handler used by the language compiler to append interpolated strings into <see cref="IndentedTextWriter"/> instances.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// In multiline mode, the handler automatically suppresses blank lines that exist in the
+    /// template only because every interpolation hole on that line expanded to empty content
+    /// (e.g. an attribute callback that early-returns based on build configuration). Literal
+    /// blank lines in the source template (consecutive newlines not separated by an interpolation
+    /// hole) are always preserved unchanged. Both LF and CRLF source line endings are handled.
+    /// </para>
+    /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [InterpolatedStringHandler]
-    public readonly ref struct AppendInterpolatedStringHandler
+    public ref struct AppendInterpolatedStringHandler
     {
         /// <summary>The associated <see cref="IndentedTextWriter"/> to which to append.</summary>
         private readonly IndentedTextWriter _writer;
 
         /// <summary>When <see langword="true"/>, treats the content as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</summary>
         private readonly bool _isMultiline;
+
+        /// <summary>
+        /// Tracks whether any <c>AppendFormatted</c> call between the previous and the next <c>AppendLiteral</c>
+        /// emitted any content. Reset to <see langword="false"/> at every <c>AppendLiteral</c>, set to
+        /// <see langword="true"/> by <c>AppendFormatted</c> calls that grow the buffer. Used by the blank-line
+        /// suppression rule to decide whether a literal segment's leading newline can be dropped.
+        /// </summary>
+        private bool _anyContentBetweenLiterals;
 
         /// <summary>Creates a handler used to append an interpolated string into a <see cref="IndentedTextWriter"/>.</summary>
         /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
@@ -38,6 +55,7 @@ internal partial class IndentedTextWriter
         {
             _writer = writer;
             _isMultiline = false;
+            _anyContentBetweenLiterals = false;
         }
 
         /// <summary>Creates a handler used to append an interpolated string into a <see cref="IndentedTextWriter"/>.</summary>
@@ -54,13 +72,49 @@ internal partial class IndentedTextWriter
         {
             _writer = writer;
             _isMultiline = isMultiline;
+            _anyContentBetweenLiterals = false;
         }
 
         /// <summary>Writes the specified string to the handler.</summary>
         /// <param name="value">The string to write.</param>
         public void AppendLiteral(string value)
         {
-            _writer.Write(_isMultiline, value);
+            ReadOnlySpan<char> span = value;
+
+            // Blank-line suppression rule: a literal segment that begins with a newline (LF or
+            // CRLF) immediately after one or more empty interpolation holes whose surrounding
+            // literals also ended in '\n' would emit a stray blank line. Strip the leading
+            // newline to collapse the would-be blank line.
+            //
+            // The rule fires only when:
+            //   1. The previous content in the buffer ended with '\n' (the line is "fresh"), AND
+            //   2. No 'AppendFormatted' call since the previous literal emitted any content, AND
+            //   3. This literal starts with a newline (matched as either '\n' or '\r\n', since
+            //      raw-string literals inherit the source file's line endings, i.e. CRLF on
+            //      Windows, LF on Unix). CR-only line endings are not supported.
+            //
+            // Literal blank lines (e.g. "...\n\n...") within a single 'AppendLiteral' are always
+            // preserved because they are emitted by the multiline parser in one streaming pass
+            // without the rule getting a chance to fire between them.
+            if (span.Length > 0 &&
+                !_anyContentBetweenLiterals &&
+                _writer._buffer.Length > 0 &&
+                _writer._buffer[^1] == DefaultNewLine)
+            {
+                if (span[0] == '\n')
+                {
+                    span = span[1..];
+                }
+                else if (span.Length > 1 && span[0] == '\r' && span[1] == '\n')
+                {
+                    span = span[2..];
+                }
+            }
+
+            _writer.Write(_isMultiline, span);
+
+            // We just wrote a literal, so reset the "any content between literals" flag for next time
+            _anyContentBetweenLiterals = false;
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -73,33 +127,35 @@ internal partial class IndentedTextWriter
                 return;
             }
 
+            int beforeLength = _writer._buffer.Length;
+
             // Handle custom callbacks first. The value-type fast path lets the JIT specialize
             // the dispatch when 'T' is the concrete callback struct (e.g. WriteIidGuidReferenceCallback).
             if (typeof(T).IsValueType && value is IIndentedTextWriterCallback)
             {
                 ((IIndentedTextWriterCallback)value).Write(_writer);
-
-                return;
             }
-
-            // Polymorphic fallback for callers that declare the local as the interface type
-            // (e.g. to assign one of several concrete callback structs based on a condition).
-            if (value is IIndentedTextWriterCallback callback)
+            else if (value is IIndentedTextWriterCallback callback)
             {
+                // Polymorphic fallback for callers that declare the local as the interface type
+                // (e.g. to assign one of several concrete callback structs based on a condition).
                 callback.Write(_writer);
-
-                return;
             }
-
-            // If the value is a 'string', write it while preserving the multiline semantics.
-            // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
-            if (value is string text)
+            else if (value is string text)
             {
+                // If the value is a 'string', write it while preserving the multiline semantics.
                 _writer.Write(_isMultiline, text);
             }
             else
             {
+                // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
                 _ = _writer._buffer.Append($"{value}");
+            }
+
+            // Track whether we actually wrote any content as part of this interpolation hole
+            if (_writer._buffer.Length > beforeLength)
+            {
+                _anyContentBetweenLiterals = true;
             }
         }
 
@@ -113,6 +169,8 @@ internal partial class IndentedTextWriter
             {
                 return;
             }
+
+            int beforeLength = _writer._buffer.Length;
 
             // If the value is a 'string', write it while preserving the multiline semantics.
             // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
@@ -128,13 +186,27 @@ internal partial class IndentedTextWriter
 
                 _ = _writer._buffer.Append(ref handler);
             }
+
+            // Track the interpolation result (see above)
+            if (_writer._buffer.Length > beforeLength)
+            {
+                _anyContentBetweenLiterals = true;
+            }
         }
 
         /// <summary>Writes the specified character span to the handler.</summary>
         /// <param name="value">The span to write.</param>
         public void AppendFormatted(scoped ReadOnlySpan<char> value)
         {
+            int beforeLength = _writer._buffer.Length;
+
             _writer.Write(_isMultiline, value);
+
+            // Track the interpolation result (see above)
+            if (_writer._buffer.Length > beforeLength)
+            {
+                _anyContentBetweenLiterals = true;
+            }
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -146,7 +218,15 @@ internal partial class IndentedTextWriter
                 return;
             }
 
+            int beforeLength = _writer._buffer.Length;
+
             _writer.Write(_isMultiline, value);
+
+            // Track the interpolation result (see above)
+            if (_writer._buffer.Length > beforeLength)
+            {
+                _anyContentBetweenLiterals = true;
+            }
         }
     }
 }
