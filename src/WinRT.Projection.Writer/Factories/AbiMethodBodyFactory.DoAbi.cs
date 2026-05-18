@@ -26,16 +26,6 @@ internal static partial class AbiMethodBodyFactory
     {
         TypeSignature? rt = sig.ReturnType;
 
-        // String params drive whether we need HString header allocation in the body.
-        bool hasStringParams = false;
-        foreach (ParameterInfo p in sig.Parameters)
-        {
-            if (p.Type.IsString())
-            {
-                hasStringParams = true;
-                break;
-            }
-        }
         bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi
             && (context.AbiTypeShapeResolver.IsBlittablePrimitive(retSzAbi.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(retSzAbi.BaseType)
                 || retSzAbi.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSzAbi.BaseType) || retSzAbi.BaseType.IsObject()
@@ -132,9 +122,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
-                _ = elementInteropArg;
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 string elementAbi = sza.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
                     ? "void*"
@@ -160,9 +148,6 @@ internal static partial class AbiMethodBodyFactory
                         : context.AbiTypeShapeResolver.IsBlittableStruct(retSzHoist.BaseType)
                             ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
                             : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
@@ -335,9 +320,6 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
                 // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
                 // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
@@ -615,9 +597,6 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.Parameter.Name ?? "param";
                 string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
-
-                _ = elementInteropArg;
                 // Determine the ABI element type for the data pointer cast.
                 // - Strings / runtime classes / objects: void**
                 // - HResult exception: global::ABI.System.Exception*
@@ -794,7 +773,6 @@ internal static partial class AbiMethodBodyFactory
             }
         }
         writer.WriteLine();
-        _ = hasStringParams;
     }
 
     /// <summary>

@@ -29,16 +29,6 @@ internal static class TypedefNameWriter
     }
 
     /// <summary>
-    /// Writes a fundamental (primitive) type's non-projected (.NET BCL) name.
-    /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
-    /// <param name="t">The fundamental type.</param>
-    public static void WriteFundamentalNonProjectedType(IndentedTextWriter writer, FundamentalType t)
-    {
-        writer.Write(FundamentalTypes.ToDotNetType(t));
-    }
-
-    /// <summary>
     /// Writes the C# type name for a typed reference.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>

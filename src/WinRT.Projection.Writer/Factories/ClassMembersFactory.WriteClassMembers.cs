@@ -80,7 +80,6 @@ internal static partial class ClassMembersFactory
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
             // In ref mode, all property bodies emit '=> throw null;'
-            //, 1697).
             bool getterOnly = s.HasGetter && !s.HasSetter;
 
             if (getterOnly)
@@ -118,7 +117,7 @@ internal static partial class ClassMembersFactory
                     {
                         if (!string.IsNullOrEmpty(getterPlat))
                         {
-                            writer.Write($"{getterPlat}");
+                            writer.Write(getterPlat);
                         }
 
                         if (context.Settings.ReferenceProjection)
@@ -146,7 +145,7 @@ internal static partial class ClassMembersFactory
                     {
                         if (!string.IsNullOrEmpty(setterPlat))
                         {
-                            writer.Write($"{setterPlat}");
+                            writer.Write(setterPlat);
                         }
 
                         if (context.Settings.ReferenceProjection)
