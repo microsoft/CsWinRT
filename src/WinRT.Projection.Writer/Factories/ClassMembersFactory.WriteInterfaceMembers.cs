@@ -248,7 +248,7 @@ internal static partial class ClassMembersFactory
         // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
         // immediately if not ref)
-        string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, ifaceType);
+        string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, ifaceType);
 
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)

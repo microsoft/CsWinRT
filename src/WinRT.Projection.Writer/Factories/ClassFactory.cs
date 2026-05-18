@@ -342,7 +342,7 @@ internal static class ClassFactory
 
             // Compute the platform attribute string from the static factory interface's
             // [ContractVersion] attribute
-            string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, staticIface);
+            string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, staticIface);
 
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)

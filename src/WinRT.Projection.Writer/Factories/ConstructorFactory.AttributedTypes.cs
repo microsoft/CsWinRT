@@ -104,7 +104,7 @@ internal static partial class ConstructorFactory
             string marshalingType = GetMarshalingTypeName(classType);
             // Compute the platform attribute string from the activation factory interface's
             // [ContractVersion] attribute
-            string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, factoryType);
+            string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, factoryType);
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
