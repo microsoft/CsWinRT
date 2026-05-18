@@ -44,7 +44,7 @@ internal static partial class ConstructorFactory
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
         // [ContractVersion] attribute
-        string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, composableType);
+        string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, composableType);
 
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
