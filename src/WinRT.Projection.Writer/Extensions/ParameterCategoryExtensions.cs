@@ -10,23 +10,26 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static class ParameterCategoryExtensions
 {
-    extension(ParameterCategory cat)
+    /// <param name="category">The input parameter category.</param>
+    extension(ParameterCategory category)
     {
         /// <summary>
-        /// Returns whether <paramref name="cat"/> is an input-side array category
+        /// Returns whether the input category is an input-side array category
         /// (<see cref="ParameterCategory.PassArray"/> or <see cref="ParameterCategory.FillArray"/>).
         /// </summary>
         public bool IsArrayInput()
-            => cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
+        {
+            return category is ParameterCategory.PassArray or ParameterCategory.FillArray;
+        }
 
         /// <summary>
-        /// Returns whether <paramref name="cat"/> is any of the array-shaped categories
+        /// Returns whether the input category is any of the array-shaped categories
         /// (<see cref="ParameterCategory.PassArray"/>, <see cref="ParameterCategory.FillArray"/>,
         /// or <see cref="ParameterCategory.ReceiveArray"/>).
         /// </summary>
         public bool IsAnyArray()
-            => cat is ParameterCategory.PassArray
-                or ParameterCategory.FillArray
-                or ParameterCategory.ReceiveArray;
+        {
+            return category is ParameterCategory.PassArray or ParameterCategory.FillArray or ParameterCategory.ReceiveArray;
+        }
     }
 }

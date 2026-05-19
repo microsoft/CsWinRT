@@ -16,7 +16,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <remarks>
 /// Predicates that need cross-module type resolution (e.g. <c>IsBlittablePrimitive</c>
 /// with cross-module enum lookup, <c>IsAnyStruct</c>, <c>IsComplexStruct</c>) live in
-/// <see cref="Helpers.AbiTypeHelpers"/> and the <see cref="Resolvers.AbiTypeShapeResolver"/>;
+/// <see cref="Helpers.AbiTypeHelpers"/> and the <see cref="AbiTypeShapeResolver"/>;
 /// they are intentionally not included here.
 /// </remarks>
 internal static class TypeSignatureExtensions
@@ -24,9 +24,9 @@ internal static class TypeSignatureExtensions
     extension(TypeSignature sig)
     {
         /// <summary>
-        /// Returns whether the signature is the corlib <see cref="System.String"/> primitive.
+        /// Returns whether the signature is the corlib <see cref="string"/> primitive.
         /// </summary>
-        /// <returns><see langword="true"/> if the signature is <c>System.String</c>; otherwise <see langword="false"/>.</returns>
+        /// <returns><see langword="true"/> if the signature is <see cref="string"/>; otherwise <see langword="false"/>.</returns>
         public bool IsString()
         {
             return sig is CorLibTypeSignature corlib && corlib.ElementType == ElementType.String;
@@ -35,7 +35,7 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Returns whether the signature is the corlib <see cref="object"/> primitive.
         /// </summary>
-        /// <returns><see langword="true"/> if the signature is <c>System.Object</c>; otherwise <see langword="false"/>.</returns>
+        /// <returns><see langword="true"/> if the signature is <see cref="object"/>; otherwise <see langword="false"/>.</returns>
         public bool IsObject()
         {
             return sig is CorLibTypeSignature corlib && corlib.ElementType == ElementType.Object;
@@ -46,7 +46,7 @@ internal static class TypeSignatureExtensions
         /// that resolves to it, including the WinRT <c>Windows.UI.Xaml.Interop.TypeName</c> struct
         /// that is mapped to it).
         /// </summary>
-        /// <returns><see langword="true"/> if the signature is the projected <c>System.Type</c>; otherwise <see langword="false"/>.</returns>
+        /// <returns><see langword="true"/> if the signature is the projected <see cref="System.Type"/>; otherwise <see langword="false"/>.</returns>
         public bool IsSystemType()
         {
             if (sig is TypeDefOrRefSignature td && td.Type is { } t)
@@ -69,7 +69,7 @@ internal static class TypeSignatureExtensions
 
         /// <summary>
         /// Returns whether the signature is a WinRT <c>IReference&lt;T&gt;</c> or a
-        /// <see cref="System.Nullable{T}"/> instantiation (both project to <c>Nullable&lt;T&gt;</c> in C#).
+        /// <see cref="System.Nullable{T}"/> instantiation (both project to <see cref="System.Nullable{T}"/> in C#).
         /// </summary>
         /// <returns><see langword="true"/> if the signature is a Nullable-shaped generic instantiation; otherwise <see langword="false"/>.</returns>
         public bool IsNullableT()
@@ -88,7 +88,7 @@ internal static class TypeSignatureExtensions
         /// <summary>
         /// Returns the single type argument of a generic instance type signature, or <see langword="null"/>
         /// if the signature is not a single-arg generic instance. Used to peel the inner <c>T</c> from
-        /// <c>Nullable&lt;T&gt;</c> / <c>IReference&lt;T&gt;</c>.
+        /// <see cref="System.Nullable{T}"/> / <c>IReference&lt;T&gt;</c>.
         /// </summary>
         /// <returns>The inner type argument, or <see langword="null"/>.</returns>
         public TypeSignature? GetNullableInnerType()
@@ -112,11 +112,11 @@ internal static class TypeSignatureExtensions
         }
 
         /// <summary>
-        /// Returns whether the signature is the special <c>System.Exception</c> /
+        /// Returns whether the signature is the special <see cref="System.Exception"/> /
         /// <c>Windows.Foundation.HResult</c> pair (which uses an HResult struct as its ABI form
         /// and requires custom marshalling via <c>ABI.System.ExceptionMarshaller</c>).
         /// </summary>
-        /// <returns><see langword="true"/> if the signature is the projected <c>HResult</c>/<c>Exception</c>; otherwise <see langword="false"/>.</returns>
+        /// <returns><see langword="true"/> if the signature is the projected <c>HResult</c>/<see cref="System.Exception"/>; otherwise <see langword="false"/>.</returns>
         public bool IsHResultException()
         {
             if (sig is not TypeDefOrRefSignature td || td.Type is null)
@@ -213,7 +213,7 @@ internal static class TypeSignatureExtensions
         }
 
         /// <summary>
-        /// Strips byref + custom modifiers from <paramref name="sig"/> and returns the result
+        /// Strips byref + custom modifiers from the input signature and returns the result
         /// as an <see cref="SzArrayTypeSignature"/> if the underlying type is one; otherwise
         /// returns <see langword="null"/>.
         /// </summary>
