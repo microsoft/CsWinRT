@@ -260,13 +260,8 @@ internal static class AbiInterfaceIDicFactory
         // delegating thunks we cast through this same projected interface type.
         string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
-        foreach (MethodDefinition method in type.Methods)
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
@@ -384,13 +379,8 @@ internal static class AbiInterfaceIDicFactory
         // The static ABI Methods class name.
         string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true).Format();
 
-        foreach (MethodDefinition method in type.Methods)
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             MethodSignatureInfo sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 

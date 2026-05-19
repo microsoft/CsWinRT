@@ -345,13 +345,8 @@ internal static class ClassFactory
             string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, staticIface);
 
             // Methods
-            foreach (MethodDefinition method in staticIface.Methods)
+            foreach (MethodDefinition method in staticIface.GetNonSpecialMethods())
             {
-                if (method.IsSpecial())
-                {
-                    continue;
-                }
-
                 MethodSignatureInfo sig = new(method);
                 string mname = method.Name?.Value ?? string.Empty;
                 writer.WriteLine();

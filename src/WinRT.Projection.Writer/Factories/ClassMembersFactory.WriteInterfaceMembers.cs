@@ -251,13 +251,8 @@ internal static partial class ClassMembersFactory
         string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, ifaceType);
 
         // Methods
-        foreach (MethodDefinition method in ifaceType.Methods)
+        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             string name = method.Name?.Value ?? string.Empty;
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).

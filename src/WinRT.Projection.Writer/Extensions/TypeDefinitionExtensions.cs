@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -14,6 +15,22 @@ internal static class TypeDefinitionExtensions
 {
     extension(TypeDefinition type)
     {
+        /// <summary>
+        /// Returns the type's methods filtered to exclude special-name methods (property accessors,
+        /// event accessors, and runtime-special methods like <c>.ctor</c>).
+        /// </summary>
+        /// <returns>The non-special methods in declaration order.</returns>
+        public IEnumerable<MethodDefinition> GetNonSpecialMethods()
+        {
+            foreach (MethodDefinition method in type.Methods)
+            {
+                if (!method.IsSpecial())
+                {
+                    yield return method;
+                }
+            }
+        }
+
         /// <summary>
         /// Returns the <c>[Default]</c> interface of the type (the interface whose vtable backs the
         /// type's <c>IInspectable</c> identity), or <see langword="null"/> if the type does not declare one.

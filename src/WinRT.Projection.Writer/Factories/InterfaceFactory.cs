@@ -236,13 +236,8 @@ internal static class InterfaceFactory
     /// </summary>
     public static void WriteInterfaceMemberSignatures(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        foreach (MethodDefinition method in type.Methods)
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             MethodSignatureInfo sig = new(method);
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
