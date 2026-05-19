@@ -144,19 +144,17 @@ internal static class ReferenceImplFactory
         }
 
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
+        WriteIidReferenceGuidPropertyNameCallback name = IidExpressionGenerator.WriteIidReferenceGuidPropertyName(context, type);
+
         writer.WriteLine();
-        writer.Write(isMultiline: true, """
-                public static ref readonly Guid IID
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref global::ABI.InterfaceIIDs.
-            """);
-        IidExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
-        writer.WriteLine(isMultiline: true, """
-            ;
+        writer.WriteLine(isMultiline: true, $$"""
+                    public static ref readonly Guid IID
+                    {
+                        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                        get => ref global::ABI.InterfaceIIDs.{{name}};
+                    }
                 }
-            }
-            """);
+                """);
         writer.WriteLine();
     }
 }

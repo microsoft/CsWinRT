@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -172,6 +174,50 @@ internal static class TypeDefinitionExtensions
         {
             CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute(VersionAttribute);
             return attr is not null && attr.TryGetFixedArgument(0, out int v) ? v : null;
+        }
+
+        /// <summary>
+        /// Tries to read the <c>[Windows.Foundation.Metadata.GuidAttribute]</c> on the type and reconstructs
+        /// it as a <see cref="Guid"/> value. Returns <see langword="null"/> if the attribute
+        /// is missing or its 11 positional fields (<c>uint</c>, <c>ushort</c>, <c>ushort</c>, then
+        /// 8 × <c>byte</c>) cannot be read.
+        /// </summary>
+        /// <param name="guid">The parsed <see cref="Guid"/> value, if successfully retrieved.</param>
+        /// <returns><see langword="true"/> if the GUID was successfully retrieved; otherwise <see langword="false"/>.</returns>
+        public bool TryGetWindowsRuntimeGuid(out Guid guid)
+        {
+            CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute("GuidAttribute");
+
+            if (attr is null || attr.Signature is null)
+            {
+                guid = default;
+
+                return false;
+            }
+
+            IList<CustomAttributeArgument> args = attr.Signature.FixedArguments;
+
+            if (args.Count < 11)
+            {
+                guid = default;
+
+                return false;
+            }
+
+            guid = new Guid(
+                a: Convert.ToUInt32(args[0].Element, CultureInfo.InvariantCulture),
+                b: Convert.ToUInt16(args[1].Element, CultureInfo.InvariantCulture),
+                c: Convert.ToUInt16(args[2].Element, CultureInfo.InvariantCulture),
+                d: Convert.ToByte(args[3].Element, CultureInfo.InvariantCulture),
+                e: Convert.ToByte(args[4].Element, CultureInfo.InvariantCulture),
+                f: Convert.ToByte(args[5].Element, CultureInfo.InvariantCulture),
+                g: Convert.ToByte(args[6].Element, CultureInfo.InvariantCulture),
+                h: Convert.ToByte(args[7].Element, CultureInfo.InvariantCulture),
+                i: Convert.ToByte(args[8].Element, CultureInfo.InvariantCulture),
+                j: Convert.ToByte(args[9].Element, CultureInfo.InvariantCulture),
+                k: Convert.ToByte(args[10].Element, CultureInfo.InvariantCulture));
+
+            return true;
         }
     }
 }
