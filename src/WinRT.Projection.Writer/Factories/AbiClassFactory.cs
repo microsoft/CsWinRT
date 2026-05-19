@@ -53,24 +53,24 @@ internal static class AbiClassFactory
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
         // If the default interface is a generic instantiation (e.g. IDictionary<K,V>), emit an
         // UnsafeAccessor extern declaration inside ConvertToUnmanaged that fetches the IID via
         // WinRT.Interop's InterfaceIIDs class (since the IID for a generic instantiation is computed
         // at runtime). The IID expression in the call then becomes '<accessor>(null)' instead of a
         // static InterfaceIIDs reference.
-        GenericInstanceTypeSignature? defaultGenericInst = null;
-
-        if (defaultIface is TypeSpecification spec
-            && spec.Signature is GenericInstanceTypeSignature gi)
+        if (defaultIface?.TryGetGenericInstance(out GenericInstanceTypeSignature? defaultGenericInst) is not true)
         {
-            defaultGenericInst = gi;
+            defaultGenericInst = null;
         }
 
         string defaultIfaceIid;
 
+        // If the type is generic, we need to invoke the unsafe accessor (because the IID will be generated
+        // in the 'WinRT.Interop.dll' assembly, whereas if not we can directly use the local IID property.
         if (defaultGenericInst is not null)
         {
-            // Call the accessor: '<IID_<EscapedName>>(null)'.
+            // Call the accessor: '<IID_<EscapedName>>(null)'
             string accessorName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst);
             defaultIfaceIid = accessorName + "(null)";
         }
@@ -88,17 +88,12 @@ internal static class AbiClassFactory
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedType}} value)
                 {
             """);
+
+        // Emit the '[UnsafeAccessor]' declaration (uses 'object?' since component-mode
+        // marshallers run inside #nullable enable) if the type is a generic type.
         if (defaultGenericInst is not null)
         {
-            // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
-            // marshallers run inside #nullable enable).
-            string accessorBlock = ObjRefNameGenerator.EmitUnsafeAccessorForIid(context, defaultGenericInst, isInNullableContext: true);
-            // Re-emit each line indented by 8 spaces.
-            string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
-            foreach (string accessorLine in accessorLines)
-            {
-                writer.WriteLine($"        {accessorLine}");
-            }
+            ObjRefNameGenerator.EmitUnsafeAccessorForIid(writer, context, defaultGenericInst, isInNullableContext: true);
         }
 
         writer.WriteLine(isMultiline: true, $$"""
@@ -148,7 +143,7 @@ internal static class AbiClassFactory
         writer.WriteLine(isMultiline: true, $$"""
             [WindowsRuntimeMetadataTypeName("{{fullName}}")]
             [WindowsRuntimeMappedType(typeof({{projectedType}}))]
-            file static class {{nameStripped}} {}
+            file static class {{nameStripped}};
             """);
     }
 

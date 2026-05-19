@@ -167,7 +167,7 @@ internal static class MappedInterfaceStubFactory
         writer.WriteLine(isMultiline: true, $$"""
             public bool MoveNext() => {{prefix}}MoveNext(null, {{objRefName}});
             public void Reset() => throw new NotSupportedException();
-            public void Dispose() {}
+            public void Dispose() { }
             public {{t}} Current => {{prefix}}Current(null, {{objRefName}});
             object global::System.Collections.IEnumerator.Current => Current!;
             """);
