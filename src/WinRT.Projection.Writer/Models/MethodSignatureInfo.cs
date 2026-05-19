@@ -102,6 +102,32 @@ internal sealed class MethodSignatureInfo
         => ReturnParameter?.Name?.Value ?? defaultName;
 
     /// <summary>
+    /// Bundles the three derived return-parameter names commonly needed during marshalling code
+    /// emission:
+    /// <list type="bullet">
+    ///   <item><see cref="ValuePointer"/>: the (escaped) name of the return-value out-pointer parameter.</item>
+    ///   <item><see cref="SizePointer"/>: the corresponding size out-pointer parameter for receive-array returns.</item>
+    ///   <item><see cref="Local"/>: the conventional <c>__&lt;name&gt;</c> local-variable name for the unmarshalled return value.</item>
+    /// </list>
+    /// </summary>
+    /// <param name="ValuePointer">The return-value pointer parameter name (e.g. <c>__return_value__</c>).</param>
+    /// <param name="SizePointer">The return-value size pointer parameter name (e.g. <c>____return_value__Size</c>).</param>
+    /// <param name="Local">The local-variable name (e.g. <c>____return_value__</c>).</param>
+    public readonly record struct ReturnNameInfo(string ValuePointer, string SizePointer, string Local);
+
+    /// <summary>
+    /// Returns the trio of derived return-parameter names used by Do_Abi / RcwCaller bodies.
+    /// </summary>
+    public ReturnNameInfo GetReturnNameInfo()
+    {
+        string valuePointer = Helpers.AbiTypeHelpers.GetReturnParamName(this);
+        return new ReturnNameInfo(
+            ValuePointer: valuePointer,
+            SizePointer: "__" + valuePointer + "Size",
+            Local: "__" + valuePointer);
+    }
+
+    /// <summary>
     /// Returns a deduplication key for a method named <paramref name="name"/> with this signature:
     /// the method name followed by a comma-separated list of parameter type full names enclosed in
     /// parentheses. Used to detect duplicate overloads across interface walks.

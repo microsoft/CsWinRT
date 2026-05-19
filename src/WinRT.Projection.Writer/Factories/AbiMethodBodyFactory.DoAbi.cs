@@ -55,12 +55,13 @@ internal static partial class AbiMethodBodyFactory
         writer.WriteLine();
         using (writer.WriteBlock())
         {
-            string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
-            string retSizeParamName = AbiTypeHelpers.GetReturnSizeParamName(sig);
+            MethodSignatureInfo.ReturnNameInfo retNames = sig.GetReturnNameInfo();
+            string retParamName = retNames.ValuePointer;
+            string retSizeParamName = retNames.SizePointer;
             // The local name for the unmarshalled return value uses the standard pattern
             // of prefixing '__' to the param name. For the default '__return_value__' param
             // this becomes '____return_value__'.
-            string retLocalName = "__" + retParamName;
+            string retLocalName = retNames.Local;
             // at the TOP of the method body (before local declarations and the try block). The
             // actual call sites later in the body just reference the already-declared accessor.
             // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
@@ -346,8 +347,7 @@ internal static partial class AbiMethodBodyFactory
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
                     string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
-                    TypeSignature inner = p.Type.GetNullableInnerType()!;
-                    string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                    (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
                     writer.WriteLine($"    var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
                 }
                 else if (p.Type.IsGenericInstance())
@@ -639,8 +639,7 @@ internal static partial class AbiMethodBodyFactory
                     if (rt is not null && rt.IsNullableT())
                     {
                         // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
-                        TypeSignature inner = rt.GetNullableInnerType()!;
-                        string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                        (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, rt);
                         writer.WriteLine($"    *{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
                     }
                     else if (returnIsGenericInstance)

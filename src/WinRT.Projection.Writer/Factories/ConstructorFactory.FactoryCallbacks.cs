@@ -160,8 +160,7 @@ internal static partial class ConstructorFactory
 
             if (p.Type.IsNullableT())
             {
-                TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
                 writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{raw} = {innerMarshaller}.BoxToUnmanaged({pname});");
                 continue;
             }

@@ -77,6 +77,24 @@ internal static partial class AbiTypeHelpers
         return false;
     }
 
+    /// <summary>
+    /// Bundles the inner type of a <see cref="System.Nullable{T}"/> instantiation together with
+    /// the ABI marshaller name for that inner type. Returned by
+    /// <see cref="GetNullableInnerInfo(IndentedTextWriter, ProjectionEmitContext, TypeSignature)"/>.
+    /// </summary>
+    internal readonly record struct NullableInnerInfo(TypeSignature Inner, string MarshallerName);
+
+    /// <summary>
+    /// Returns the inner type T of <c>Nullable&lt;T&gt;</c> together with its ABI marshaller name.
+    /// Caller must have verified <paramref name="nullableSig"/> is a <c>Nullable&lt;T&gt;</c>
+    /// instantiation (e.g. via <c>IsNullableT</c>).
+    /// </summary>
+    internal static NullableInnerInfo GetNullableInnerInfo(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature nullableSig)
+    {
+        TypeSignature inner = nullableSig.GetNullableInnerType()!;
+        return new NullableInnerInfo(inner, GetNullableInnerMarshallerName(writer, context, inner));
+    }
+
     /// <summary>Returns the marshaller name for the inner type T of <c>Nullable&lt;T&gt;</c>.
     ///.: e.g. for <c>Nullable&lt;DateTimeOffset&gt;</c> returns
     /// <c>global::ABI.System.DateTimeOffsetMarshaller</c>; for primitives like <c>Nullable&lt;int&gt;</c>

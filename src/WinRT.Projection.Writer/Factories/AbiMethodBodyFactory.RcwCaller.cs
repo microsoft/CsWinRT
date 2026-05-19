@@ -274,8 +274,7 @@ internal static partial class AbiMethodBodyFactory
                 // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged.
                 string localName = p.GetParamLocalName(paramNameOverride);
                 string callName = p.GetParamName(paramNameOverride);
-                TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
                 writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = {innerMarshaller}.BoxToUnmanaged({callName});");
             }
             else if (p.Type.IsGenericInstance())
@@ -1227,8 +1226,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     // Nullable<T> return: use <T>Marshaller.UnboxToManaged.;
                     // there is no Nullable<T>Marshaller, the inner-T marshaller has UnboxToManaged.
-                    TypeSignature inner = rt.GetNullableInnerType()!;
-                    string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                    (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, rt);
                     writer.WriteLine($"{callIndent}return {innerMarshaller}.UnboxToManaged(__retval);");
                 }
                 else if (rt.IsGenericInstance())
