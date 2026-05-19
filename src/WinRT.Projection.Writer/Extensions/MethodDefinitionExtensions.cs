@@ -66,6 +66,11 @@ internal static class MethodDefinitionExtensions
         public bool IsNoExcept => method.IsRemover || method.HasWindowsFoundationMetadataAttribute(NoExceptionAttribute);
 
         /// <summary>
+        /// Returns whether the method is the special <c>Invoke</c> method (used for delegates).
+        /// </summary>
+        public bool IsInvoke => method.IsSpecialName && method.Name is { } name && name.AsSpan().SequenceEqual("Invoke"u8);
+
+        /// <summary>
         /// Returns the method's raw metadata name, falling back to <see cref="string.Empty"/> when
         /// the metadata name is <see langword="null"/>. Convenience for the
         /// <c>method.Name?.Value ?? string.Empty</c> pattern that appears at many sites.

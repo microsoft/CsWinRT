@@ -399,7 +399,7 @@ internal static class ClassFactory
             foreach (PropertyDefinition prop in staticIface.Properties)
             {
                 string propName = prop.Name?.Value ?? string.Empty;
-                (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+                (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
                 string propType = InterfaceFactory.WritePropType(context, prop);
 
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
@@ -708,7 +708,7 @@ internal static class ClassFactory
             }
 
             // base call when type has a non-object base class
-            bool hasBaseClass = type.HasNonProjectionBaseClass();
+            bool hasBaseClass = type.HasNonObjectBaseType();
 
             if (hasBaseClass)
             {

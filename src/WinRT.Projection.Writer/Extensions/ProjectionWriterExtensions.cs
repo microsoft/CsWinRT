@@ -65,12 +65,14 @@ internal static class ProjectionWriterExtensions
         public void WriteBeginProjectedNamespace(ProjectionEmitContext context)
         {
             string nsPrefix = context.Settings.Component ? "ABI.Impl." : string.Empty;
+
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
                 namespace {{nsPrefix}}{{context.CurrentNamespace}}
                 {
                 """);
             writer.IncreaseIndent();
+
             if (context.Settings.Component)
             {
                 context.InAbiImplNamespace = true;
@@ -86,6 +88,7 @@ internal static class ProjectionWriterExtensions
         {
             writer.DecreaseIndent();
             writer.WriteLine("}");
+
             context.InAbiImplNamespace = false;
         }
 
@@ -103,6 +106,7 @@ internal static class ProjectionWriterExtensions
                 {
                 """);
             writer.IncreaseIndent();
+
             context.InAbiNamespace = true;
         }
 
@@ -119,6 +123,7 @@ internal static class ProjectionWriterExtensions
                 }
                 #pragma warning restore CA1416
                 """);
+
             context.InAbiNamespace = false;
         }
     }

@@ -199,7 +199,7 @@ internal static class ComponentFactory
     private static void WriteStaticFactoryProperty(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop, string projectedTypeName)
     {
         string propName = prop.Name?.Value ?? string.Empty;
-        (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+        (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
         string propType = GetFactoryPropertyType(context, prop);
 
         // Single-line form when no setter is present.

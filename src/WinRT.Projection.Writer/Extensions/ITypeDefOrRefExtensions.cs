@@ -16,17 +16,6 @@ internal static class ITypeDefOrRefExtensions
     extension(ITypeDefOrRef type)
     {
         /// <summary>
-        /// Returns the namespace and name of the type as a tuple, with both fields
-        /// guaranteed to be non-<see langword="null"/>: a missing namespace becomes <see cref="string.Empty"/>
-        /// and a missing name becomes <see cref="string.Empty"/>.
-        /// </summary>
-        /// <returns>A tuple of (namespace, name) with both fields non-<see langword="null"/>.</returns>
-        public (string Namespace, string Name) Names()
-        {
-            return (type.Namespace?.Value ?? string.Empty, type.Name?.Value ?? string.Empty);
-        }
-
-        /// <summary>
         /// Attempts to resolve <paramref name="type"/> against <paramref name="context"/>, returning
         /// <see langword="null"/> when the type cannot be resolved (missing assembly, invalid reference,
         /// missing type, etc.). This is the safe alternative to <c>ITypeDescriptor.Resolve(RuntimeContext)</c>
@@ -74,17 +63,6 @@ internal static class ITypeDefOrRefExtensions
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Returns whether <paramref name="type"/>'s namespace and name match
-        /// (<paramref name="ns"/>, <paramref name="name"/>).
-        /// </summary>
-        /// <param name="ns">The expected namespace.</param>
-        /// <param name="name">The expected unqualified type name.</param>
-        public bool MatchesName(string ns, string name)
-        {
-            return type.Namespace?.Value == ns && type.Name?.Value == name;
         }
 
         /// <summary>

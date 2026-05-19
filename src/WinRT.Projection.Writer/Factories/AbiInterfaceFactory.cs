@@ -341,7 +341,7 @@ internal static class AbiInterfaceFactory
         // Build sets of property accessors and event accessors so the first loop below can
         // iterate "regular" methods (non-property, non-event) only. Do_Abi bodies are emitted in
         // this order: methods first, then properties (setter before getter), then events.
-        HashSet<MethodDefinition> propertyAccessors = type.GetPropertyAccessorSet();
+        HashSet<MethodDefinition> propertyAccessors = [.. type.GetPropertyAccessors()];
 
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
         void EmitOneDoAbi(MethodDefinition method)

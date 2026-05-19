@@ -231,7 +231,7 @@ internal static class InterfaceFactory
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
             // Add 'new' when this interface has a setter-only property AND a property of the same
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.

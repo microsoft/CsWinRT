@@ -71,31 +71,26 @@ internal static partial class AbiMethodBodyFactory
         foreach (PropertyDefinition prop in type.Properties)
         {
             string pname = prop.Name?.Value ?? string.Empty;
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string propType = InterfaceFactory.WritePropType(context, prop);
-            (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
-            // accessors of the property (the attribute is on the property itself, not on the
-            // individual accessors).
-            bool propIsNoExcept = prop.IsNoExcept();
 
-            if (gMethod is not null)
+            if (prop.GetMethod is { } getter)
             {
-                MethodSignatureInfo getSig = new(gMethod);
                 writer.Write(isMultiline: true, $$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
                     """);
-                EmitAbiMethodBodyIfSimple(writer, context, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
+
+                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(getter), methodSlot[getter], isNoExcept: prop.IsNoExcept);
             }
 
-            if (sMethod is not null)
+            if (prop.SetMethod is { } setter)
             {
-                MethodSignatureInfo setSig = new(sMethod);
                 writer.Write(isMultiline: true, $$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
                     """);
-                EmitAbiMethodBodyIfSimple(writer, context, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
+
+                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(setter), methodSlot[setter], paramNameOverride: "value", isNoExcept: prop.IsNoExcept);
             }
         }
 

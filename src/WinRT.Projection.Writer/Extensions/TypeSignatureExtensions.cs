@@ -49,22 +49,22 @@ internal static class TypeSignatureExtensions
         /// <returns><see langword="true"/> if the signature is the projected <see cref="System.Type"/>; otherwise <see langword="false"/>.</returns>
         public bool IsSystemType()
         {
-            if (sig is TypeDefOrRefSignature td && td.Type is { } t)
-            {
-                (string ns, string name) = t.Names();
+            (string ns, string name) = sig.Names();
 
-                if (ns == "System" && name == "Type")
-                {
-                    return true;
-                }
+            return (ns == "System" && name == "Type") || (ns == WindowsUIXamlInterop && name == TypeName);
+        }
 
-                if (ns == WindowsUIXamlInterop && name == TypeName)
-                {
-                    return true;
-                }
-            }
+        /// <summary>
+        /// Returns whether the signature is the special <see cref="System.Exception"/> /
+        /// <c>Windows.Foundation.HResult</c> pair (which uses an HResult struct as its ABI form
+        /// and requires custom marshalling via <c>ABI.System.ExceptionMarshaller</c>).
+        /// </summary>
+        /// <returns><see langword="true"/> if the signature is the projected <c>HResult</c>/<see cref="System.Exception"/>; otherwise <see langword="false"/>.</returns>
+        public bool IsHResultException()
+        {
+            (string ns, string name) = sig.Names();
 
-            return false;
+            return (ns == "System" && name == "Exception") || (ns == WindowsFoundation && name == HResult);
         }
 
         /// <summary>
@@ -79,10 +79,9 @@ internal static class TypeSignatureExtensions
                 return false;
             }
 
-            string ns = gi.GenericType?.Namespace?.Value ?? string.Empty;
-            string name = gi.GenericType?.Name?.Value ?? string.Empty;
-            return (ns == WindowsFoundation && name == IReferenceGeneric)
-                || (ns == "System" && name == NullableGeneric);
+            (string ns, string name) = gi.GenericType.Names();
+
+            return (ns == WindowsFoundation && name == IReferenceGeneric) || (ns == "System" && name == NullableGeneric);
         }
 
         /// <summary>
@@ -93,9 +92,9 @@ internal static class TypeSignatureExtensions
         /// <returns>The inner type argument, or <see langword="null"/>.</returns>
         public TypeSignature? GetNullableInnerType()
         {
-            if (sig is GenericInstanceTypeSignature gi && gi.TypeArguments.Count == 1)
+            if (sig is GenericInstanceTypeSignature { TypeArguments: [var arg] })
             {
-                return gi.TypeArguments[0];
+                return arg;
             }
 
             return null;
@@ -110,24 +109,6 @@ internal static class TypeSignatureExtensions
         {
             return sig is GenericInstanceTypeSignature;
         }
-
-        /// <summary>
-        /// Returns whether the signature is the special <see cref="System.Exception"/> /
-        /// <c>Windows.Foundation.HResult</c> pair (which uses an HResult struct as its ABI form
-        /// and requires custom marshalling via <c>ABI.System.ExceptionMarshaller</c>).
-        /// </summary>
-        /// <returns><see langword="true"/> if the signature is the projected <c>HResult</c>/<see cref="System.Exception"/>; otherwise <see langword="false"/>.</returns>
-        public bool IsHResultException()
-        {
-            if (sig is not TypeDefOrRefSignature td || td.Type is null)
-            {
-                return false;
-            }
-
-            (string ns, string name) = td.Type.Names();
-            return (ns == "System" && name == "Exception")
-                || (ns == WindowsFoundation && name == HResult);
-        }
     }
 
     extension(TypeSignature? sig)
@@ -141,22 +122,26 @@ internal static class TypeSignatureExtensions
         public TypeSignature? StripByRefAndCustomModifiers()
         {
             TypeSignature? cur = sig;
+
             while (true)
             {
                 if (cur is CustomModifierTypeSignature cm)
                 {
                     cur = cm.BaseType;
+
                     continue;
                 }
 
                 if (cur is ByReferenceTypeSignature br)
                 {
                     cur = br.BaseType;
+
                     continue;
                 }
 
                 break;
             }
+
             return cur;
         }
 
@@ -168,10 +153,12 @@ internal static class TypeSignatureExtensions
         public bool IsByRefType()
         {
             TypeSignature? cur = sig;
+
             while (cur is CustomModifierTypeSignature cm)
             {
                 cur = cm.BaseType;
             }
+
             return cur is ByReferenceTypeSignature;
         }
 

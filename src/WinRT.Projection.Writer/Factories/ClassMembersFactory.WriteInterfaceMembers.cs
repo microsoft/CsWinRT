@@ -360,7 +360,7 @@ internal static partial class ClassMembersFactory
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
             string name = prop.Name?.Value ?? string.Empty;
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
 
             if (!propertyState.TryGetValue(name, out PropertyAccessorState? state))
             {

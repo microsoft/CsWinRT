@@ -16,15 +16,13 @@ internal static class PropertyDefinitionExtensions
         /// <summary>
         /// Returns whether the property carries the <c>[NoExceptionAttribute]</c>.
         /// </summary>
-        /// <returns><see langword="true"/> if the property is documented to never throw; otherwise <see langword="false"/>.</returns>
-        public bool IsNoExcept()
-            => property.HasWindowsFoundationMetadataAttribute(NoExceptionAttribute);
+        public bool IsNoExcept => property.HasWindowsFoundationMetadataAttribute(NoExceptionAttribute);
 
         /// <summary>
         /// Returns the (getter, setter) accessor pair of the property.
         /// </summary>
         /// <returns>A tuple of (Getter, Setter) accessor methods, either of which may be <see langword="null"/>.</returns>
-        public (MethodDefinition? Getter, MethodDefinition? Setter) GetPropertyMethods()
+        public (MethodDefinition? Getter, MethodDefinition? Setter) GetMethods()
             => (property.GetMethod, property.SetMethod);
     }
 }

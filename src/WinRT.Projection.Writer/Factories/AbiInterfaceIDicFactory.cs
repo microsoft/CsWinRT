@@ -257,7 +257,7 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = InterfaceFactory.WritePropType(context, prop);
 
@@ -390,7 +390,7 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = InterfaceFactory.WritePropType(context, prop);
 

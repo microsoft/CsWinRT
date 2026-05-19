@@ -3,6 +3,9 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
 namespace WindowsRuntime.ProjectionWriter;
@@ -31,28 +34,24 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Returns the set of property accessor methods (get and set) declared by the type's
+        /// Returns the property accessor methods (get and set) declared by the type's
         /// properties. Used to filter "regular" methods (non-property, non-event) when emitting
         /// per-method code in interface bodies.
         /// </summary>
-        public HashSet<MethodDefinition> GetPropertyAccessorSet()
+        public IEnumerable<MethodDefinition> GetPropertyAccessors()
         {
-            HashSet<MethodDefinition> accessors = [];
-
             foreach (PropertyDefinition prop in type.Properties)
             {
                 if (prop.GetMethod is MethodDefinition g)
                 {
-                    _ = accessors.Add(g);
+                    yield return g;
                 }
 
                 if (prop.SetMethod is MethodDefinition s)
                 {
-                    _ = accessors.Add(s);
+                    yield return s;
                 }
             }
-
-            return accessors;
         }
 
         /// <summary>
@@ -64,7 +63,7 @@ internal static class TypeDefinitionExtensions
         /// <param name="cache">The metadata cache used to resolve interface references.</param>
         /// <param name="visited">The accumulator set to which resolved required interface
         /// definitions are added.</param>
-        public void MarkRequiredInterfacesVisited(Metadata.MetadataCache cache, HashSet<TypeDefinition> visited)
+        public void MarkRequiredInterfacesVisited(MetadataCache cache, HashSet<TypeDefinition> visited)
         {
             foreach (InterfaceImplementation impl in type.Interfaces)
             {
@@ -89,6 +88,7 @@ internal static class TypeDefinitionExtensions
                     return impl.Interface;
                 }
             }
+
             return null;
         }
 
@@ -101,11 +101,12 @@ internal static class TypeDefinitionExtensions
         {
             foreach (MethodDefinition m in type.Methods)
             {
-                if (m.IsSpecialName && m.Name == "Invoke")
+                if (m.IsInvoke)
                 {
                     return m;
                 }
             }
+
             return null;
         }
 
@@ -122,27 +123,17 @@ internal static class TypeDefinitionExtensions
                     return true;
                 }
             }
+
             return false;
         }
 
         /// <summary>
-        /// Returns whether the type has a base type that is not <see cref="System.Object"/>
+        /// Returns whether the type has a base type that is not <see cref="object"/>
         /// (i.e. the type derives from a real WinRT/.NET class).
         /// </summary>
         public bool HasNonObjectBaseType()
         {
-            return type.BaseType is { } bt && !bt.MatchesName("System", "Object");
-        }
-
-        /// <summary>
-        /// Returns whether the type has a base type that is neither <see cref="System.Object"/>
-        /// nor the projection's <c>WindowsRuntime.WindowsRuntimeObject</c> root.
-        /// </summary>
-        public bool HasNonProjectionBaseClass()
-        {
-            return type.BaseType is { } bt
-                && !bt.MatchesName("System", "Object")
-                && !bt.MatchesName("WindowsRuntime", "WindowsRuntimeObject");
+            return type.BaseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object });
         }
 
         /// <summary>
