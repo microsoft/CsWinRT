@@ -45,7 +45,7 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsBlittableStruct = returnShape == AbiTypeShapeKind.BlittableStruct;
         bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSzCheck
-            && (context.AbiTypeShapeResolver.IsBlittablePrimitive(retSzCheck.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(retSzCheck.BaseType)
+            && (context.AbiTypeShapeResolver.IsBlittableAbiElement(retSzCheck.BaseType)
                 || retSzCheck.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                 || context.AbiTypeShapeResolver.IsComplexStruct(retSzCheck.BaseType)
                 || retSzCheck.BaseType.IsHResultException()
@@ -418,7 +418,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
+            if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 continue;
             }
@@ -547,7 +547,7 @@ internal static partial class AbiMethodBodyFactory
 
             if ((cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
                 && p.Type is SzArrayTypeSignature szArrCheck
-                && !context.AbiTypeShapeResolver.IsBlittablePrimitive(szArrCheck.BaseType) && !context.AbiTypeShapeResolver.IsBlittableStruct(szArrCheck.BaseType)
+                && !context.AbiTypeShapeResolver.IsBlittableAbiElement(szArrCheck.BaseType)
                 && !context.AbiTypeShapeResolver.IsMappedAbiValueType(szArrCheck.BaseType))
             {
                 hasNonBlittablePassArray = true;
@@ -726,7 +726,7 @@ internal static partial class AbiMethodBodyFactory
                 else if (isPassArray)
                 {
                     TypeSignature elemT = ((SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(elemT) || context.AbiTypeShapeResolver.IsBlittableStruct(elemT);
+                    bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittableAbiElement(elemT);
                     bool isStringElem = elemT.IsString();
 
                     if (isBlittableElem)
@@ -804,7 +804,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
+            if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 continue;
             }
@@ -1031,7 +1031,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szFA.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szFA.BaseType))
+            if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szFA.BaseType))
             {
                 continue;
             }
@@ -1353,7 +1353,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
+                if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
                 {
                     continue;
                 }

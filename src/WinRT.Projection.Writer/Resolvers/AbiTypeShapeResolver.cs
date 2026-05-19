@@ -103,6 +103,15 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         => Resolve(signature).Kind == AbiTypeShapeKind.MappedAbiValueType;
 
     /// <summary>
+    /// Returns whether <paramref name="signature"/> is a blittable element shape suitable for
+    /// direct pinning when carried as an SZ-array element (a blittable primitive or a blittable struct).
+    /// </summary>
+    /// <param name="signature">The type signature to classify.</param>
+    /// <returns><see langword="true"/> when the type is blittable in the array-element sense; otherwise <see langword="false"/>.</returns>
+    public bool IsBlittableAbiElement(TypeSignature signature)
+        => IsBlittablePrimitive(signature) || IsBlittableStruct(signature);
+
+    /// <summary>
     /// Inner classification routine. Returns the resolved <see cref="AbiTypeShapeKind"/> for
     /// <paramref name="signature"/>; returns <see cref="AbiTypeShapeKind.Unknown"/> when the
     /// signature does not match any known WinRT marshalling shape (typically because of an
