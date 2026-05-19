@@ -59,6 +59,36 @@ internal static class MappedTypes
     /// <returns><see langword="true"/> if there is at least one mapping in this namespace.</returns>
     public static bool HasNamespace(string typeNamespace) => TypeMappings.ContainsKey(typeNamespace);
 
+    /// <summary>
+    /// Returns whether a mapping exists for the type identified by
+    /// (<paramref name="typeNamespace"/>, <paramref name="typeName"/>).
+    /// </summary>
+    /// <param name="typeNamespace">The Windows Runtime namespace.</param>
+    /// <param name="typeName">The Windows Runtime type name.</param>
+    /// <returns><see langword="true"/> if a mapping exists; otherwise <see langword="false"/>.</returns>
+    public static bool IsMapped(string typeNamespace, string typeName)
+        => Get(typeNamespace, typeName) is not null;
+
+    /// <summary>
+    /// Applies the type mapping in-place if one exists: when a mapping is found for the type
+    /// identified by (<paramref name="typeNamespace"/>, <paramref name="typeName"/>), replaces
+    /// both fields with the mapped namespace and name. Does nothing if no mapping exists.
+    /// </summary>
+    /// <param name="typeNamespace">The Windows Runtime namespace; replaced with the mapped namespace on a hit.</param>
+    /// <param name="typeName">The Windows Runtime type name; replaced with the mapped name on a hit.</param>
+    /// <returns><see langword="true"/> if a mapping was applied; otherwise <see langword="false"/>.</returns>
+    public static bool ApplyMapping(ref string typeNamespace, ref string typeName)
+    {
+        if (Get(typeNamespace, typeName) is { } m)
+        {
+            typeNamespace = m.MappedNamespace;
+            typeName = m.MappedName;
+            return true;
+        }
+
+        return false;
+    }
+
     private static FrozenDictionary<string, FrozenDictionary<string, MappedType>> Build()
     {
         Dictionary<string, Dictionary<string, MappedType>> result = [];

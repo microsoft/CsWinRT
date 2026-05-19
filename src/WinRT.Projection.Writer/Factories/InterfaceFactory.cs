@@ -67,13 +67,7 @@ internal static class InterfaceFactory
             // only emit 'global::' when the base class lives in a different namespace.
             ITypeDefOrRef baseType = type.BaseType!;
             (string ns, string name) = baseType.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
@@ -158,13 +152,7 @@ internal static class InterfaceFactory
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m1)
-            {
-                ns = m1.MappedNamespace;
-                name = m1.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             // Only emit the global:: prefix when the namespace doesn't match the current emit
             // namespace (mirrors WriteTypedefName behavior -- same-namespace stays unqualified).
@@ -179,13 +167,7 @@ internal static class InterfaceFactory
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m2)
-            {
-                ns = m2.MappedNamespace;
-                name = m2.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {

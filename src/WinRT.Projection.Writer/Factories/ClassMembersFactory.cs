@@ -140,13 +140,7 @@ internal static partial class ClassMembersFactory
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
         }
@@ -154,13 +148,7 @@ internal static partial class ClassMembersFactory
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)

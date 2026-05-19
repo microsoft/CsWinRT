@@ -32,26 +32,14 @@ internal static class ObjRefNameGenerator
         if (ifaceType is TypeDefinition td)
         {
             (string ns, string name) = td.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
@@ -76,13 +64,7 @@ internal static class ObjRefNameGenerator
         if (ifaceType is TypeDefinition td)
         {
             (string ns, string name) = td.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write(GlobalPrefix);
 
@@ -96,13 +78,7 @@ internal static class ObjRefNameGenerator
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write(GlobalPrefix);
 
@@ -117,13 +93,7 @@ internal static class ObjRefNameGenerator
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write(GlobalPrefix);
 
@@ -183,13 +153,13 @@ internal static class ObjRefNameGenerator
         {
             ns = td.Namespace?.Value ?? string.Empty;
             name = td.Name?.Value ?? string.Empty;
-            isMapped = MappedTypes.Get(ns, name) is not null;
+            isMapped = MappedTypes.IsMapped(ns, name);
         }
         else if (ifaceType is TypeReference tr)
         {
             ns = tr.Namespace?.Value ?? string.Empty;
             name = tr.Name?.Value ?? string.Empty;
-            isMapped = MappedTypes.Get(ns, name) is not null;
+            isMapped = MappedTypes.IsMapped(ns, name);
         }
         else
         {

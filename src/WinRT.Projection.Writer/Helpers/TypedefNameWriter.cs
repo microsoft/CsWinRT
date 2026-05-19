@@ -214,13 +214,7 @@ internal static class TypedefNameWriter
             case TypeSemantics.GenericInstanceRef gir:
                 {
                     (string ns, string name) = gir.GenericType.Names();
-                    MappedType? mapped = MappedTypes.Get(ns, name);
-
-                    if (mapped is { } m)
-                    {
-                        ns = m.MappedNamespace;
-                        name = m.MappedName;
-                    }
+                    _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
                     if (nameType == TypedefNameType.EventSource && ns == "System")
                     {
@@ -259,13 +253,7 @@ internal static class TypedefNameWriter
             case TypeSemantics.Reference r:
                 {
                     (string ns, string name) = r.Type.Names();
-                    MappedType? mapped = MappedTypes.Get(ns, name);
-
-                    if (mapped is { } m)
-                    {
-                        ns = m.MappedNamespace;
-                        name = m.MappedName;
-                    }
+                    _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
                     bool needsNsPrefix = !string.IsNullOrEmpty(ns) && (
                         forceWriteNamespace ||

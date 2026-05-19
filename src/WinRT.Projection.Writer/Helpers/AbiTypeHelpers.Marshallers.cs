@@ -124,13 +124,7 @@ internal static partial class AbiTypeHelpers
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
             // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             return GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name) + MarshallerSuffix;
         }
