@@ -30,6 +30,7 @@ internal static class CustomAttributeExtensions
             if (attr.Signature is null || index < 0 || index >= attr.Signature.FixedArguments.Count)
             {
                 value = default;
+
                 return false;
             }
 
@@ -38,18 +39,21 @@ internal static class CustomAttributeExtensions
             if (element is T t)
             {
                 value = t;
+
                 return true;
             }
 
-            // Standard coercion: uint -> int (WinMD often stores numeric metadata values as uint
-            // in the fixed-args list, but most call sites consume them as int).
+            // Standard coercion: 'uint' -> 'int' (WinMD often stores numeric metadata values as 'uint'
+            // in the fixed-args list, but most call sites consume them as 'int').
             if (typeof(T) == typeof(int) && element is uint u)
             {
                 value = (T)(object)(int)u;
+
                 return true;
             }
 
             value = default;
+
             return false;
         }
     }

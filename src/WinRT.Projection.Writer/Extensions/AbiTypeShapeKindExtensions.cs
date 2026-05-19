@@ -10,18 +10,21 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static class AbiTypeShapeKindExtensions
 {
+    /// <param name="kind">The input ABI type kind.</param>
     extension(AbiTypeShapeKind kind)
     {
         /// <summary>
-        /// Returns whether the shape is a reference-type marshalling kind: WinRT runtime classes/interfaces,
+        /// Returns whether the shape is a reference-type marshalling kind: Windows Runtime classes/interfaces,
         /// delegates, generic instantiations, the corlib <see cref="object"/> primitive, or
         /// <see cref="System.Nullable{T}"/>/<c>IReference&lt;T&gt;</c> instantiations.
         /// </summary>
         public bool IsReferenceType()
-            => kind is AbiTypeShapeKind.RuntimeClassOrInterface
+        {
+            return kind is AbiTypeShapeKind.RuntimeClassOrInterface
                 or AbiTypeShapeKind.Delegate
                 or AbiTypeShapeKind.Object
                 or AbiTypeShapeKind.GenericInstance
                 or AbiTypeShapeKind.NullableT;
+        }
     }
 }

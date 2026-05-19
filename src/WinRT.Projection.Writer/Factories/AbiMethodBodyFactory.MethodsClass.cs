@@ -114,7 +114,7 @@ internal static partial class AbiMethodBodyFactory
             bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
 
             // Use the add method's WinMD slot (events project as the add_X method's vmethod_index).
-            (MethodDefinition? addMethod, MethodDefinition? _) = evt.GetEventMethods();
+            MethodDefinition? addMethod = evt.AddMethod;
             int eventSlot = addMethod is not null && methodSlot.TryGetValue(addMethod, out int es) ? es : 0;
 
             // Build the projected event source type name. For non-generic delegate handlers, the

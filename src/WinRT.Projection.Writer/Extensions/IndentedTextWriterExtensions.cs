@@ -28,11 +28,13 @@ internal static class IndentedTextWriterExtensions
         public void WriteSeparated<T>(IEnumerable<T> items, string separator, Action<IndentedTextWriter, T> writeItem)
         {
             bool first = true;
+
             foreach (T item in items)
             {
                 writer.WriteIf(!first, separator);
 
                 writeItem(writer, item);
+
                 first = false;
             }
         }
