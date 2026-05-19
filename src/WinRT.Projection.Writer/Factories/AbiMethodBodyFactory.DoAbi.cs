@@ -12,6 +12,8 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using WindowsRuntime.ProjectionWriter.References;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
@@ -599,7 +601,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (szFA.BaseType.IsHResultException())
                 {
-                    dataParamType = "global::ABI.System.Exception* data";
+                    dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointerData;
                     dataCastType = "(global::ABI.System.Exception*)";
                 }
                 else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(szFA.BaseType))

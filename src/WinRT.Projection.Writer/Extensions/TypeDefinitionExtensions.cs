@@ -81,6 +81,26 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Returns whether the type has a base type that is not <see cref="System.Object"/>
+        /// (i.e. the type derives from a real WinRT/.NET class).
+        /// </summary>
+        public bool HasNonObjectBaseType()
+        {
+            return type.BaseType is { } bt && !bt.MatchesName("System", "Object");
+        }
+
+        /// <summary>
+        /// Returns whether the type has a base type that is neither <see cref="System.Object"/>
+        /// nor the projection's <c>WindowsRuntime.WindowsRuntimeObject</c> root.
+        /// </summary>
+        public bool HasNonProjectionBaseClass()
+        {
+            return type.BaseType is { } bt
+                && !bt.MatchesName("System", "Object")
+                && !bt.MatchesName("WindowsRuntime", "WindowsRuntimeObject");
+        }
+
+        /// <summary>
         /// Returns the second positional argument (a <see cref="uint"/>) of
         /// <c>[Windows.Foundation.Metadata.ContractVersionAttribute]</c> on the type, or
         /// <see langword="null"/> if the attribute is missing or the argument cannot be read.

@@ -11,6 +11,8 @@ using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
+using WindowsRuntime.ProjectionWriter.References;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -51,19 +53,19 @@ internal static class AbiTypeWriter
                     // (DateTime/TimeSpan -> ABI.System.DateTimeOffset/TimeSpan).
                     if (dNs == WindowsFoundation && dName == "DateTime")
                     {
-                        writer.Write("global::ABI.System.DateTimeOffset");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemDateTimeOffset);
                         break;
                     }
 
                     if (dNs == WindowsFoundation && dName == "TimeSpan")
                     {
-                        writer.Write("global::ABI.System.TimeSpan");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemTimeSpan);
                         break;
                     }
 
                     if (dNs == WindowsFoundation && dName == HResult)
                     {
-                        writer.Write("global::ABI.System.Exception");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemException);
                         break;
                     }
 
@@ -71,7 +73,7 @@ internal static class AbiTypeWriter
                     {
                         // System.Type ABI struct: maps to global::ABI.System.Type, not the
                         // ABI.Windows.UI.Xaml.Interop.TypeName form.
-                        writer.Write("global::ABI.System.Type");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemType);
                         break;
                     }
 
@@ -104,19 +106,19 @@ internal static class AbiTypeWriter
                     // Special case: mapped value types that require ABI marshalling.
                     if (rns == WindowsFoundation && rname == "DateTime")
                     {
-                        writer.Write("global::ABI.System.DateTimeOffset");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemDateTimeOffset);
                         break;
                     }
 
                     if (rns == WindowsFoundation && rname == "TimeSpan")
                     {
-                        writer.Write("global::ABI.System.TimeSpan");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemTimeSpan);
                         break;
                     }
 
                     if (rns == WindowsFoundation && rname == HResult)
                     {
-                        writer.Write("global::ABI.System.Exception");
+                        writer.Write(WellKnownAbiTypeNames.AbiSystemException);
                         break;
                     }
 
@@ -151,7 +153,7 @@ internal static class AbiTypeWriter
 
                             if (rdNs == WindowsFoundation && rdName == HResult)
                             {
-                                writer.Write("global::ABI.System.Exception");
+                                writer.Write(WellKnownAbiTypeNames.AbiSystemException);
                                 break;
                             }
 

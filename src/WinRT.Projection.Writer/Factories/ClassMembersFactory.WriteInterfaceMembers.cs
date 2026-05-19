@@ -121,9 +121,7 @@ internal static partial class ClassMembersFactory
 
                 if (classType.BaseType is not null)
                 {
-                    string? baseNs = classType.BaseType.Namespace?.Value;
-                    string? baseName = classType.BaseType.Name?.Value;
-                    hasBaseType = !(baseNs == "System" && baseName == "Object");
+                    hasBaseType = classType.HasNonObjectBaseType();
                 }
 
                 writer.WriteLine();

@@ -74,5 +74,16 @@ internal static class ITypeDefOrRefExtensions
 
             return null;
         }
+
+        /// <summary>
+        /// Returns whether <paramref name="type"/>'s namespace and name match
+        /// (<paramref name="ns"/>, <paramref name="name"/>).
+        /// </summary>
+        /// <param name="ns">The expected namespace.</param>
+        /// <param name="name">The expected unqualified type name.</param>
+        public bool MatchesName(string ns, string name)
+        {
+            return type.Namespace?.Value == ns && type.Name?.Value == name;
+        }
     }
 }

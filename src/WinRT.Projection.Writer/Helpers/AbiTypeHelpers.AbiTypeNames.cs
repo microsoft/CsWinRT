@@ -10,6 +10,8 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
+using WindowsRuntime.ProjectionWriter.References;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
@@ -36,12 +38,12 @@ internal static partial class AbiTypeHelpers
 
         if (sig.IsSystemType())
         {
-            return "global::ABI.System.Type";
+            return WellKnownAbiTypeNames.AbiSystemType;
         }
 
         if (sig.IsHResultException())
         {
-            return "global::ABI.System.Exception";
+            return WellKnownAbiTypeNames.AbiSystemException;
         }
 
         if (context.AbiTypeShapeResolver.IsComplexStruct(sig))

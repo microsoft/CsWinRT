@@ -708,9 +708,7 @@ internal static class ClassFactory
             }
 
             // base call when type has a non-object base class
-            bool hasBaseClass = type.BaseType is not null
-                && !(type.BaseType.Namespace?.Value == "System" && type.BaseType.Name?.Value == "Object")
-                && !(type.BaseType.Namespace?.Value == "WindowsRuntime" && type.BaseType.Name?.Value == "WindowsRuntimeObject");
+            bool hasBaseClass = type.HasNonProjectionBaseClass();
 
             if (hasBaseClass)
             {

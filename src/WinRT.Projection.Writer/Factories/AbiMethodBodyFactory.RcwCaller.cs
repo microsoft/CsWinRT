@@ -15,6 +15,8 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using WindowsRuntime.ProjectionWriter.References;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
@@ -76,7 +78,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (uOut.IsSystemType())
                 {
-                    _ = fp.Append("global::ABI.System.Type*");
+                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemTypePointer);
                 }
                 else if (context.AbiTypeShapeResolver.IsComplexStruct(uOut))
                 {
@@ -126,7 +128,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (sza.BaseType.IsHResultException())
                 {
-                    _ = fp.Append("global::ABI.System.Exception");
+                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemException);
                 }
                 else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(sza.BaseType))
                 {
@@ -151,7 +153,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (p.Type.IsHResultException())
             {
-                _ = fp.Append("global::ABI.System.Exception");
+                _ = fp.Append(WellKnownAbiTypeNames.AbiSystemException);
             }
             else if (p.Type.IsAbiRefLike(context.AbiTypeShapeResolver))
             {
@@ -159,7 +161,7 @@ internal static partial class AbiMethodBodyFactory
             }
             else if (p.Type.IsSystemType())
             {
-                _ = fp.Append("global::ABI.System.Type");
+                _ = fp.Append(WellKnownAbiTypeNames.AbiSystemType);
             }
             else if (context.AbiTypeShapeResolver.IsBlittableStruct(p.Type))
             {
@@ -194,7 +196,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (retSz.BaseType.IsHResultException())
                 {
-                    _ = fp.Append("global::ABI.System.Exception");
+                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemException);
                 }
                 else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(retSz.BaseType))
                 {
@@ -225,7 +227,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (rt is not null && rt.IsSystemType())
                 {
-                    _ = fp.Append("global::ABI.System.Type*");
+                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemTypePointer);
                 }
                 else if (returnIsBlittableStruct)
                 {
@@ -434,7 +436,7 @@ internal static partial class AbiMethodBodyFactory
                 : context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType)
                     ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType)
                     : szArr.BaseType.IsHResultException()
-                        ? "global::ABI.System.Exception"
+                        ? WellKnownAbiTypeNames.AbiSystemException
                         : "nint";
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
@@ -856,7 +858,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (szArr.BaseType.IsHResultException())
                 {
-                    dataParamType = "global::ABI.System.Exception*";
+                    dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointer;
                     dataCastType = "(global::ABI.System.Exception*)";
                 }
                 else if (context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType))
@@ -1054,7 +1056,7 @@ internal static partial class AbiMethodBodyFactory
             }
             else if (szFA.BaseType.IsHResultException())
             {
-                dataParamType = "global::ABI.System.Exception* data";
+                dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointerData;
                 dataCastType = "(global::ABI.System.Exception*)";
             }
             else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(szFA.BaseType))
@@ -1199,7 +1201,7 @@ internal static partial class AbiMethodBodyFactory
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType)
                         : retSz.BaseType.IsHResultException()
-                            ? "global::ABI.System.Exception"
+                            ? WellKnownAbiTypeNames.AbiSystemException
                             : context.AbiTypeShapeResolver.IsMappedAbiValueType(retSz.BaseType)
                                 ? AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType)
                                 : context.AbiTypeShapeResolver.IsBlittableStruct(retSz.BaseType)
@@ -1556,7 +1558,7 @@ internal static partial class AbiMethodBodyFactory
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType)
                         : retSz.BaseType.IsHResultException()
-                            ? "global::ABI.System.Exception"
+                            ? WellKnownAbiTypeNames.AbiSystemException
                             : context.AbiTypeShapeResolver.IsMappedAbiValueType(retSz.BaseType)
                                 ? AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType)
                                 : context.AbiTypeShapeResolver.IsBlittableStruct(retSz.BaseType)
