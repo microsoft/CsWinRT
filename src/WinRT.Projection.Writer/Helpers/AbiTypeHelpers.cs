@@ -340,7 +340,7 @@ internal static partial class AbiTypeHelpers
         if (baseDef is null)
         {
             baseDef = classType.BaseType.TryResolve(cache.RuntimeContext);
-            baseDef ??= cache.Find(string.IsNullOrEmpty(ns) ? nm : (ns + "." + nm));
+            baseDef ??= cache.Find(ns, nm);
         }
 
         if (baseDef is null)

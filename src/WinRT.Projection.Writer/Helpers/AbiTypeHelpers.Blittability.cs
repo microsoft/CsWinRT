@@ -105,7 +105,7 @@ internal static partial class AbiTypeHelpers
             if (todr.Type is TypeReference tr)
             {
                 (string ns, string name) = tr.Names();
-                TypeDefinition? resolved = cache.Find(ns + "." + name);
+                TypeDefinition? resolved = cache.Find(ns, name);
 
                 if (resolved is not null)
                 {
@@ -135,7 +135,7 @@ internal static partial class AbiTypeHelpers
         if (tdr.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            return cache.Find(ns + "." + name);
+            return cache.Find(ns, name);
         }
 
         return null;
@@ -159,7 +159,7 @@ internal static partial class AbiTypeHelpers
         if (td.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            TypeDefinition? resolved = cache.Find(ns + "." + name);
+            TypeDefinition? resolved = cache.Find(ns, name);
             return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum;
         }
 
@@ -195,7 +195,7 @@ internal static partial class AbiTypeHelpers
 
             if (cache is not null)
             {
-                TypeDefinition? resolved = cache.Find(ns + "." + name);
+                TypeDefinition? resolved = cache.Find(ns, name);
 
                 if (resolved is not null)
                 {
@@ -250,7 +250,7 @@ internal static partial class AbiTypeHelpers
             if (td.Type is TypeReference tr)
             {
                 (string ns, string name) = tr.Names();
-                TypeDefinition? resolved = cache.Find(ns + "." + name);
+                TypeDefinition? resolved = cache.Find(ns, name);
 
                 if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum)
                 {
@@ -287,7 +287,7 @@ internal static partial class AbiTypeHelpers
                 return false;
             }
 
-            def = cache.Find(ns + "." + name);
+            def = cache.Find(ns, name);
         }
 
         if (def is null)
@@ -360,7 +360,7 @@ internal static partial class AbiTypeHelpers
                 return true;
             }
 
-            def = cache.Find(ns + "." + name);
+            def = cache.Find(ns, name);
         }
 
         if (def is null)

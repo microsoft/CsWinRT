@@ -69,7 +69,7 @@ internal static class ITypeDefOrRefExtensions
             if (type is TypeReference tr)
             {
                 (string ns, string nm) = tr.Names();
-                return cache.Find(string.IsNullOrEmpty(ns) ? nm : ns + "." + nm);
+                return cache.Find(ns, nm);
             }
 
             return null;

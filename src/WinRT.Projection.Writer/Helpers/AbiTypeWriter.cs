@@ -121,13 +121,13 @@ internal static class AbiTypeWriter
                     }
 
                     // Look up the type by its ORIGINAL (unmapped) name in the cache.
-                    TypeDefinition? rd = context.Cache.Find(rns + "." + rname);
+                    TypeDefinition? rd = context.Cache.Find(rns, rname);
                     // If not found, try the mapped name (for cases where the mapping target is in the cache).
                     if (rd is null)
                     {
                         if (MappedTypes.Get(rns, rname) is { } rmapped)
                         {
-                            rd = context.Cache.Find(rmapped.MappedNamespace + "." + rmapped.MappedName);
+                            rd = context.Cache.Find(rmapped.MappedNamespace, rmapped.MappedName);
                         }
                     }
 

@@ -255,7 +255,7 @@ internal static partial class IidExpressionGenerator
                     if (context.Cache is not null)
                     {
                         resolved = r.Type.TryResolve(context.Cache.RuntimeContext)
-                            ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                            ?? context.Cache.Find(ns, name);
                     }
 
                     if (resolved is not null)
@@ -287,7 +287,7 @@ internal static partial class IidExpressionGenerator
                     if (context.Cache is not null)
                     {
                         resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext)
-                            ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                            ?? context.Cache.Find(ns, name);
                     }
 
                     if (resolved is not null)
@@ -489,7 +489,7 @@ internal static partial class IidExpressionGenerator
     }
     private static TypeDefinition? ResolveCrossModuleType(MetadataCache cache, string ns, string name)
     {
-        return cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+        return cache.Find(ns, name);
     }
 
     /// <summary>

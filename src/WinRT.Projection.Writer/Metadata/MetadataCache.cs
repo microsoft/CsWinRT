@@ -18,7 +18,7 @@ internal sealed class MetadataCache
     /// <summary>Backing field for <see cref="Namespaces"/>.</summary>
     private readonly Dictionary<string, NamespaceMembers> _namespaces = [];
 
-    /// <summary>Backing field for the global type-by-full-name index used by <see cref="Find"/>.</summary>
+    /// <summary>Backing field for the global type-by-full-name index used by <see cref="Find(string)"/>.</summary>
     private readonly Dictionary<string, TypeDefinition> _typesByFullName = [];
 
     /// <summary>Backing field for the type-to-source-module-path index used by <see cref="GetSourcePath"/>.</summary>
@@ -208,6 +208,24 @@ internal sealed class MetadataCache
     public TypeDefinition? Find(string fullName)
     {
         return _typesByFullName.TryGetValue(fullName, out TypeDefinition? type) ? type : null;
+    }
+
+    /// <summary>
+    /// Looks up a type by its namespace and name; the namespace can be empty for global types.
+    /// Centralises the empty-namespace handling that is otherwise open-coded inconsistently.
+    /// </summary>
+    public TypeDefinition? Find(string typeNamespace, string typeName)
+    {
+        return Find(string.IsNullOrEmpty(typeNamespace) ? typeName : typeNamespace + "." + typeName);
+    }
+
+    /// <summary>
+    /// Looks up a type by its namespace and name extracted from <paramref name="type"/>.
+    /// </summary>
+    public TypeDefinition? Find(ITypeDefOrRef type)
+    {
+        (string ns, string name) = type.Names();
+        return Find(ns, name);
     }
 
     /// <summary>

@@ -121,7 +121,7 @@ internal static partial class AbiTypeHelpers
             if (def is null && td.Type is TypeReference tr)
             {
                 (string ns, string name) = tr.Names();
-                def = cache.Find(ns + "." + name);
+                def = cache.Find(ns, name);
             }
 
             if (def is not null && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
