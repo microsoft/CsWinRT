@@ -124,7 +124,7 @@ internal static class ProjectionFileBuilder
                 string fieldName = field.Name?.Value ?? string.Empty;
                 string constantValue = field.Constant.FormatLiteral();
 
-                // Emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
+                // Emits per-enum-field '[SupportedOSPlatform]' when the field has a '[ContractVersion]'
                 CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
 
                 writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");

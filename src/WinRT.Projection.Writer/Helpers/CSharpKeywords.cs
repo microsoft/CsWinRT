@@ -10,8 +10,11 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class CSharpKeywords
 {
-    private static readonly FrozenSet<string> Keywords = new[]
-    {
+    /// <summary>
+    /// The set of well-known C# keywords.
+    /// </summary>
+    private static readonly FrozenSet<string> Keywords =
+    [
         "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue",
         "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally",
         "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long",
@@ -19,7 +22,7 @@ internal static class CSharpKeywords
         "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch",
         "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void",
         "volatile", "while"
-    }.ToFrozenSet();
+    ];
 
     /// <summary>
     /// Returns whether <paramref name="identifier"/> is a reserved C# language keyword.

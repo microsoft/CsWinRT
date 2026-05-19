@@ -94,9 +94,11 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     {
         bool prevCheck = CheckPlatform;
         string prevPlatform = Platform;
+
         CheckPlatform = true;
         Platform = platform;
-        return new PlatformSuppressionScope(this, prevCheck, prevPlatform);
+
+        return new(this, prevCheck, prevPlatform);
     }
 
     /// <summary>
@@ -108,7 +110,7 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
         private readonly bool _prevCheck;
         private readonly string _prevPlatform;
 
-        internal PlatformSuppressionScope(ProjectionEmitContext context, bool prevCheck, string prevPlatform)
+        public PlatformSuppressionScope(ProjectionEmitContext context, bool prevCheck, string prevPlatform)
         {
             _context = context;
             _prevCheck = prevCheck;
@@ -124,6 +126,7 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
             {
                 context.CheckPlatform = _prevCheck;
                 context.Platform = _prevPlatform;
+
                 _context = null;
             }
         }
