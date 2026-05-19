@@ -360,15 +360,9 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-            if (cat != ParameterCategory.Out)
-            {
-                continue;
-            }
+        {
 
             string localName = p.GetParamLocalName(paramNameOverride);
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -379,15 +373,9 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // Declare locals for ReceiveArray params (uint length + element pointer).
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
 
-            if (cat != ParameterCategory.ReceiveArray)
-            {
-                continue;
-            }
+        {
 
             string localName = p.GetParamLocalName(paramNameOverride);
             SzArrayTypeSignature sza = p.Type.AsSzArray()!;
@@ -514,16 +502,8 @@ internal static partial class AbiMethodBodyFactory
         // return or Out runtime class params). Input string params no longer need try/finally —
         // they use the HString fast-path (stack-allocated HStringReference, no free needed).
         bool hasOutNeedsCleanup = false;
-        for (int i = 0; i < sig.Parameters.Count; i++)
+        foreach ((int i, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
         {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-
-            if (cat != ParameterCategory.Out)
-            {
-                continue;
-            }
-
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
             if (uOut.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver) || uOut.IsSystemType() || context.AbiTypeShapeResolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
@@ -1019,15 +999,9 @@ internal static partial class AbiMethodBodyFactory
         // store it in the user's Span.write_marshal_from_abi
         // Blittable element types (primitives and almost-blittable structs) don't need this
         // because the user's Span wraps the same memory the native side wrote to.
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.FillArray))
 
-            if (cat != ParameterCategory.FillArray)
-            {
-                continue;
-            }
+        {
 
             if (p.Type is not SzArrayTypeSignature szFA)
             {
@@ -1082,15 +1056,9 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // After call: write back Out params to caller's 'out' var.
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-            if (cat != ParameterCategory.Out)
-            {
-                continue;
-            }
+        {
 
             string callName = p.GetParamName(paramNameOverride);
             string localName = p.GetParamLocalName(paramNameOverride);
@@ -1160,15 +1128,9 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // Writeback for ReceiveArray params: emit a UnsafeAccessor + assign to the out param.
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
 
-            if (cat != ParameterCategory.ReceiveArray)
-            {
-                continue;
-            }
+        {
 
             string callName = p.GetParamName(paramNameOverride);
             string localName = p.GetParamLocalName(paramNameOverride);
@@ -1472,15 +1434,9 @@ internal static partial class AbiMethodBodyFactory
             }
 
             // 2. Free Out string/object/runtime-class params.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-                if (cat != ParameterCategory.Out)
-                {
-                    continue;
-                }
+            {
 
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 string localName = p.GetParamLocalName(paramNameOverride);
@@ -1504,15 +1460,9 @@ internal static partial class AbiMethodBodyFactory
             }
 
             // 3. Free ReceiveArray params via UnsafeAccessor.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
 
-                if (cat != ParameterCategory.ReceiveArray)
-                {
-                    continue;
-                }
+            {
 
                 string localName = p.GetParamLocalName(paramNameOverride);
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;

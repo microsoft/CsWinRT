@@ -81,15 +81,9 @@ internal static partial class AbiMethodBodyFactory
             // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
             // ConvertToUnmanaged_<name> wraps the projected value into a WindowsRuntimeObjectReferenceValue.
             // The body's writeback later references these already-declared accessors.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-                if (cat != ParameterCategory.Out)
-                {
-                    continue;
-                }
+            {
 
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
@@ -111,15 +105,9 @@ internal static partial class AbiMethodBodyFactory
             // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
             // top of the method body, before locals and the try block. The actual call sites later
             // in the body reference these already-declared accessors.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
 
-                if (cat != ParameterCategory.ReceiveArray)
-                {
-                    continue;
-                }
+            {
 
                 string raw = p.GetRawName();
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
@@ -181,29 +169,17 @@ internal static partial class AbiMethodBodyFactory
             // NOTE: Ref params (WinRT 'in T' / 'ref const T') are READ-ONLY inputs from the caller's
             // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
             // (we read directly via *<name>).
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-                if (cat != ParameterCategory.Out)
-                {
-                    continue;
-                }
+            {
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"*{ptr} = default;");
             }
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-                if (cat != ParameterCategory.Out)
-                {
-                    continue;
-                }
+            {
 
                 string raw = p.GetRawName();
                 // Use the projected (non-ABI) type for the local variable.
@@ -216,15 +192,9 @@ internal static partial class AbiMethodBodyFactory
             // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
             // and declare a managed array local. The managed call passes 'out __<name>' and after
             // the call we copy to the ABI buffer via UnsafeAccessor.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
 
-                if (cat != ParameterCategory.ReceiveArray)
-                {
-                    continue;
-                }
+            {
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
@@ -287,15 +257,9 @@ internal static partial class AbiMethodBodyFactory
             // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
             // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
             // fills — the post-call writeback loop handles that.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.PassArray))
 
-                if (cat != ParameterCategory.PassArray)
-                {
-                    continue;
-                }
+            {
 
                 if (p.Type is not SzArrayTypeSignature szArr)
                 {
@@ -482,15 +446,9 @@ internal static partial class AbiMethodBodyFactory
 
             // After call: write back out params to caller's pointer.
             // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
-                if (cat != ParameterCategory.Out)
-                {
-                    continue;
-                }
+            {
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
@@ -542,15 +500,9 @@ internal static partial class AbiMethodBodyFactory
 
             // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
             // [UnsafeAccessor] declaration was hoisted to the top of the method body).
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
 
-                if (cat != ParameterCategory.ReceiveArray)
-                {
-                    continue;
-                }
+            {
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
@@ -562,15 +514,9 @@ internal static partial class AbiMethodBodyFactory
             // native ABI buffer..
             // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
             // Blittable element types don't need this — the Span wraps the native buffer directly.
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.FillArray))
 
-                if (cat != ParameterCategory.FillArray)
-                {
-                    continue;
-                }
+            {
 
                 if (p.Type is not SzArrayTypeSignature szFA)
                 {
