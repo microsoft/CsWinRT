@@ -232,9 +232,9 @@ internal sealed partial class ProjectionGenerator
 
         // Phase 4: Custom additions to namespaces
         _token.ThrowIfCancellationRequested();
-        if (Additions.ByNamespace.TryGetValue(ns, out string[]? resourceNames) && _settings.AdditionFilter.Includes(ns))
+        if (_settings.AdditionFilter.Includes(ns))
         {
-            foreach (string resName in resourceNames)
+            foreach (string resName in Additions.EnumerateByNamespace(ns))
             {
                 using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
 
