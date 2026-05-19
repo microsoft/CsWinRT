@@ -163,7 +163,7 @@ internal static class InterfaceFactory
 
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();

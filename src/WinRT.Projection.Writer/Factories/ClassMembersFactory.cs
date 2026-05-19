@@ -78,7 +78,7 @@ internal static partial class ClassMembersFactory
             return cache.Find(fullName);
         }
 
-        if (typeRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (typeRef.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             return ResolveInterface(cache, gi.GenericType);
         }
@@ -144,7 +144,7 @@ internal static partial class ClassMembersFactory
 
             writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();

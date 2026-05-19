@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -84,6 +85,18 @@ internal static class ITypeDefOrRefExtensions
         public bool MatchesName(string ns, string name)
         {
             return type.Namespace?.Value == ns && type.Name?.Value == name;
+        }
+
+        /// <summary>
+        /// Attempts to extract the <see cref="GenericInstanceTypeSignature"/> from
+        /// <paramref name="type"/> when it is a <see cref="TypeSpecification"/> whose signature
+        /// is a generic instance. Returns <see langword="false"/> otherwise.
+        /// </summary>
+        /// <param name="genericInstance">The extracted signature when this returns <see langword="true"/>; otherwise <see langword="null"/>.</param>
+        public bool TryGetGenericInstance([NotNullWhen(true)] out GenericInstanceTypeSignature? genericInstance)
+        {
+            genericInstance = (type as TypeSpecification)?.Signature as GenericInstanceTypeSignature;
+            return genericInstance is not null;
         }
     }
 }

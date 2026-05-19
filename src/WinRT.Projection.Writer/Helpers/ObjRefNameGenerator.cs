@@ -88,7 +88,7 @@ internal static class ObjRefNameGenerator
 
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
@@ -137,7 +137,7 @@ internal static class ObjRefNameGenerator
     public static void WriteIidExpression(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
         // Generic instantiation: use the UnsafeAccessor extern method declared above the field.
-        if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             string propName = BuildIidPropertyNameForGenericInterface(context, gi);
             writer.Write($"{propName}(null)");
@@ -449,7 +449,7 @@ internal static class ObjRefNameGenerator
         // Compute a substitution context if the parent is a closed generic instance.
         GenericContext? ctx = null;
 
-        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (ifaceRef.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ctx = new GenericContext(gi, null);
         }

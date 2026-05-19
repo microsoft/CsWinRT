@@ -59,7 +59,7 @@ internal static partial class ClassMembersFactory
             ITypeDefOrRef substitutedInterface = impl.Interface;
             GenericInstanceTypeSignature? nextInstance = null;
 
-            if (impl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+            if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
             {
                 if (currentInstance is not null)
                 {

@@ -25,7 +25,7 @@ internal static partial class AbiMethodBodyFactory
     /// </summary>
     internal static void EmitUnsafeAccessorForDefaultIfaceIfGeneric(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef? defaultIface)
     {
-        if (defaultIface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ObjRefNameGenerator.EmitUnsafeAccessorForIid(writer, context, gi);
         }
