@@ -17,33 +17,18 @@ using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
-/// Helpers for emitting WinRT GUID / IID expressions: signature characters for the GUID
-/// hash algorithm, the canonical hyphenated string form of a type's <c>[Guid]</c>, and the
-/// <c>byte</c>-list form used when initializing native IID storage.
+/// Helpers for emitting WinRT GUID / IID expressions: the canonical hyphenated string form of a
+/// type's <c>[Guid]</c>, the <c>byte</c>-list form used when initializing native IID storage, and
+/// the <c>IID_X</c> / <c>IID_XReference</c> property emissions on the generated <c>InterfaceIIDs</c>
+/// static class.
 /// </summary>
+/// <remarks>
+/// The WinRT parametric signature generation that drives the IID hash for generic instances
+/// lives in <see cref="SignatureGenerator"/>; <see cref="WriteIidGuidPropertyFromSignature"/>
+/// is the only consumer of it from this file.
+/// </remarks>
 internal static partial class IidExpressionGenerator
 {
-    /// <summary>
-    /// Returns the GUID-signature character code for a fundamental WinRT type.
-    /// </summary>
-    public static string GetFundamentalTypeGuidSignature(FundamentalType t) => t switch
-    {
-        FundamentalType.Boolean => "b1",
-        FundamentalType.Char => "c2",
-        FundamentalType.Int8 => "i1",
-        FundamentalType.UInt8 => "u1",
-        FundamentalType.Int16 => "i2",
-        FundamentalType.UInt16 => "u2",
-        FundamentalType.Int32 => "i4",
-        FundamentalType.UInt32 => "u4",
-        FundamentalType.Int64 => "i8",
-        FundamentalType.UInt64 => "u8",
-        FundamentalType.Float => "f4",
-        FundamentalType.Double => "f8",
-        FundamentalType.String => "string",
-        _ => throw WellKnownProjectionWriterExceptions.UnknownFundamentalType()
-    };
-
     [GeneratedRegex(@"[ :<>`,.]")]
     private static partial Regex TypeNameEscapeRegex();
 
@@ -119,11 +104,12 @@ internal static partial class IidExpressionGenerator
     }
 
     /// <summary>
-    /// Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.
+    /// Writes the GUID for <paramref name="type"/> in canonical hyphenated string form
+    /// (e.g. <c>00000000-0000-0000-0000-000000000000</c>).
     /// </summary>
-    /// <summary>
-    /// Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.
-    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="type">The type whose <c>[Guid]</c> attribute is read.</param>
+    /// <param name="lowerCase">When <see langword="true"/>, hex digits are lower-case; otherwise upper-case.</param>
     public static void WriteGuid(IndentedTextWriter writer, TypeDefinition type, bool lowerCase)
     {
         (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
@@ -154,8 +140,12 @@ internal static partial class IidExpressionGenerator
     }
 
     /// <summary>
-    /// Writes the GUID bytes for <paramref name="type"/> as a hex byte list.
+    /// Writes the GUID bytes for <paramref name="type"/> as a hex byte list (e.g.
+    /// <c>0x00, 0x00, ..., 0x00</c>), formatted for embedding inside a C# collection
+    /// expression that initializes a <c>ReadOnlySpan&lt;byte&gt;</c>.
     /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="type">The type whose <c>[Guid]</c> attribute is read.</param>
     public static void WriteGuidBytes(IndentedTextWriter writer, TypeDefinition type)
     {
         (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
@@ -173,6 +163,13 @@ internal static partial class IidExpressionGenerator
             WriteByte(writer, data4[i], false);
         }
     }
+
+    /// <summary>
+    /// Writes a single byte as <c>0xXX</c> (or <c>, 0xXX</c> when not the first byte in a list).
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="b">The byte value (only the low 8 bits are used).</param>
+    /// <param name="first">When <see langword="true"/>, omits the leading <c>", "</c> separator.</param>
     private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {
         writer.WriteIf(!first, ", ");
@@ -199,8 +196,14 @@ internal static partial class IidExpressionGenerator
     }
 
     /// <summary>
-    /// Writes a static IID property whose body is built from the [Guid] attribute bytes.
+    /// Writes a static IID property whose body is built from the <c>[Guid]</c> attribute bytes
+    /// of <paramref name="type"/>. The property is named <c>IID_X</c> (see
+    /// <see cref="WriteIidGuidPropertyName"/>) and returns a <c>ref readonly Guid</c> backed by
+    /// a stack-allocated <c>ReadOnlySpan&lt;byte&gt;</c>.
     /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type whose <c>[Guid]</c> attribute is read.</param>
     public static void WriteIidGuidPropertyFromType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         writer.Write("public static ref readonly Guid ");
@@ -227,179 +230,17 @@ internal static partial class IidExpressionGenerator
     }
 
     /// <summary>
-    /// Writes the WinRT GUID parametric signature string for a type semantics.
+    /// Writes a static IID property whose body is built from the parametric GUID signature
+    /// (computed via <see cref="SignatureGenerator.WriteGuidSignature(ProjectionEmitContext, TypeSemantics)"/>
+    /// for the type, then wrapped in the <c>Windows.Foundation.IReference&lt;T&gt;</c>
+    /// pinterface to produce the <c>IID_XReference</c> hashed GUID).
     /// </summary>
-    public static void WriteGuidSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
-    {
-        switch (semantics)
-        {
-            case TypeSemantics.GuidType:
-                writer.Write("g16");
-                break;
-            case TypeSemantics.ObjectType:
-                writer.Write("cinterface(IInspectable)");
-                break;
-            case TypeSemantics.Fundamental f:
-                writer.Write(GetFundamentalTypeGuidSignature(f.Type));
-                break;
-            case TypeSemantics.Definition d:
-                WriteGuidSignatureForType(writer, context, d.Type);
-                break;
-            case TypeSemantics.Reference r:
-                {
-                    // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
-                    (string ns, string name) = r.Type.Names();
-                    TypeDefinition? resolved = null;
-
-                    if (context.Cache is not null)
-                    {
-                        resolved = r.Type.TryResolve(context.Cache.RuntimeContext)
-                            ?? context.Cache.Find(ns, name);
-                    }
-
-                    if (resolved is not null)
-                    {
-                        WriteGuidSignatureForType(writer, context, resolved);
-                    }
-                }
-                break;
-            case TypeSemantics.GenericInstance gi:
-                writer.Write("pinterface({");
-                WriteGuid(writer, gi.GenericType, true);
-                writer.Write("};");
-                for (int i = 0; i < gi.GenericArgs.Count; i++)
-                {
-                    writer.WriteIf(i > 0, ";");
-
-                    WriteGuidSignature(writer, context, gi.GenericArgs[i]);
-                }
-                writer.Write(")");
-                break;
-            case TypeSemantics.GenericInstanceRef gir:
-                {
-                    // Cross-module generic instance (e.g. Windows.Foundation.IReference<UInt64>
-                    // appearing as a struct field). Resolve the generic type to a TypeDefinition
-                    // so we can extract its [Guid]; recurse on each type argument.
-                    (string ns, string name) = gir.GenericType.Names();
-                    TypeDefinition? resolved = null;
-
-                    if (context.Cache is not null)
-                    {
-                        resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext)
-                            ?? context.Cache.Find(ns, name);
-                    }
-
-                    if (resolved is not null)
-                    {
-                        writer.Write("pinterface({");
-                        WriteGuid(writer, resolved, true);
-                        writer.Write("};");
-                        for (int i = 0; i < gir.GenericArgs.Count; i++)
-                        {
-                            writer.WriteIf(i > 0, ";");
-
-                            WriteGuidSignature(writer, context, gir.GenericArgs[i]);
-                        }
-                        writer.Write(")");
-                    }
-                }
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Convenience overload of <see cref="WriteGuidSignature(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the GUID signature into it, and returns the resulting string.
-    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
-    /// <param name="semantics">The type semantics whose GUID signature is emitted.</param>
-    /// <returns>The emitted GUID signature.</returns>
-    public static string WriteGuidSignature(ProjectionEmitContext context, TypeSemantics semantics)
-    {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteGuidSignature(writer, context, semantics);
-        return writer.ToString();
-    }
-
-    private static void WriteGuidSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-    {
-        TypeCategory cat = TypeCategorization.GetCategory(type);
-        switch (cat)
-        {
-            case TypeCategory.Enum:
-                writer.Write("enum(");
-                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-                TypedefNameWriter.WriteTypeParams(writer, type);
-                writer.Write(";");
-                writer.Write(TypeCategorization.IsFlagsEnum(type) ? "u4" : "i4");
-                writer.Write(")");
-                break;
-            case TypeCategory.Struct:
-                writer.Write("struct(");
-                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-                TypedefNameWriter.WriteTypeParams(writer, type);
-                writer.Write(";");
-                bool first = true;
-                foreach (FieldDefinition field in type.Fields)
-                {
-                    if (field.IsStatic)
-                    {
-                        continue;
-                    }
-
-                    if (field.Signature is null)
-                    {
-                        continue;
-                    }
-
-                    writer.WriteIf(!first, ";");
-
-                    first = false;
-                    WriteGuidSignature(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
-                }
-                writer.Write(")");
-                break;
-            case TypeCategory.Delegate:
-                writer.Write("delegate({");
-                WriteGuid(writer, type, true);
-                writer.Write("})");
-                break;
-            case TypeCategory.Interface:
-                writer.Write("{");
-                WriteGuid(writer, type, true);
-                writer.Write("}");
-                break;
-            case TypeCategory.Class:
-                ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-
-                if (defaultIface is TypeDefinition di)
-                {
-                    writer.Write("rc(");
-                    TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-                    TypedefNameWriter.WriteTypeParams(writer, type);
-                    writer.Write(";");
-                    WriteGuidSignature(writer, context, new TypeSemantics.Definition(di));
-                    writer.Write(")");
-                }
-                else
-                {
-                    writer.Write("{");
-                    WriteGuid(writer, type, true);
-                    writer.Write("}");
-                }
-
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Writes a static IID property whose body is built from the parametric GUID signature.
-    /// </summary>
+    /// <param name="type">The type whose <c>IReference&lt;T&gt;</c> IID is emitted.</param>
     public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string guidSig = WriteGuidSignature(context, new TypeSemantics.Definition(type));
+        string guidSig = SignatureGenerator.WriteGuidSignature(context, new TypeSemantics.Definition(type));
         string ireferenceGuidSig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guidSig + ")";
         Guid guidValue = GuidGenerator.Generate(ireferenceGuidSig);
         byte[] bytes = guidValue.ToByteArray();
