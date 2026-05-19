@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -35,6 +37,42 @@ internal static class ITypeDefOrRefExtensions
         public TypeDefinition? TryResolve(RuntimeContext context)
         {
             return type.TryResolve(context, out TypeDefinition? definition) ? definition : null;
+        }
+
+        /// <summary>
+        /// Resolves <paramref name="type"/> to a <see cref="TypeDefinition"/>, handling the three
+        /// shapes that can appear as an interface implementation's <see cref="InterfaceImplementation.Interface"/>:
+        /// <list type="bullet">
+        ///   <item>If it is already a <see cref="TypeDefinition"/>, returns it directly.</item>
+        ///   <item>If it is a <see cref="TypeSpecification"/> whose signature is a generic instance,
+        ///         recurses on the generic's open form (<see cref="GenericInstanceTypeSignature.GenericType"/>).</item>
+        ///   <item>If it is a <see cref="TypeReference"/>, looks it up via
+        ///         <see cref="MetadataCache.Find(string)"/> on its qualified name.</item>
+        /// </list>
+        /// Returns <see langword="null"/> when the type cannot be resolved.
+        /// </summary>
+        /// <param name="cache">The metadata cache used for cross-module type-reference resolution.</param>
+        /// <returns>The resolved <see cref="TypeDefinition"/>, or <see langword="null"/> on failure.</returns>
+        public TypeDefinition? ResolveAsTypeDefinition(MetadataCache cache)
+        {
+            if (type is TypeDefinition td)
+            {
+                return td;
+            }
+
+            if (type is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+            {
+                ITypeDefOrRef? gen = gi.GenericType;
+                return gen?.ResolveAsTypeDefinition(cache);
+            }
+
+            if (type is TypeReference tr)
+            {
+                (string ns, string nm) = tr.Names();
+                return cache.Find(string.IsNullOrEmpty(ns) ? nm : ns + "." + nm);
+            }
+
+            return null;
         }
     }
 }

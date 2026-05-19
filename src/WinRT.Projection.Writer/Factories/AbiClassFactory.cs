@@ -181,7 +181,7 @@ internal static class AbiClassFactory
                     continue;
                 }
 
-                TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? ifaceTd = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
                 if (ifaceTd == type && impl.IsOverridable())
                 {
@@ -223,7 +223,7 @@ internal static class AbiClassFactory
 
         // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
         // exclusive-to.
-        TypeDefinition? defaultIfaceTd = defaultIface is null ? null : AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, defaultIface);
+        TypeDefinition? defaultIfaceTd = defaultIface?.ResolveAsTypeDefinition(context.Cache);
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 
         // Public *Marshaller class

@@ -524,7 +524,7 @@ internal static class AbiInterfaceFactory
             {
                 foreach (InterfaceImplementation impl in classType.Interfaces)
                 {
-                    TypeDefinition? implDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface!);
+                    TypeDefinition? implDef = impl.Interface!.ResolveAsTypeDefinition(context.Cache);
 
                     if (implDef is not null && implDef == type)
                     {

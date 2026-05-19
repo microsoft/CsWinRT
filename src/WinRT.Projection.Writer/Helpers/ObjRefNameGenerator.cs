@@ -348,7 +348,7 @@ internal static class ObjRefNameGenerator
 
             if (!isDefault && ClassFactory.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
@@ -376,7 +376,7 @@ internal static class ObjRefNameGenerator
 
             if (!isDefault2 && ClassFactory.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
@@ -470,7 +470,7 @@ internal static class ObjRefNameGenerator
     private static void EmitTransitiveInterfaceObjRefs(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted)
     {
         // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
-        TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, ifaceRef);
+        TypeDefinition? ifaceTd = ifaceRef.ResolveAsTypeDefinition(context.Cache);
 
         if (ifaceTd is null)
         {

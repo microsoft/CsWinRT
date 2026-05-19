@@ -77,7 +77,7 @@ internal static class AbiInterfaceIDicFactory
                 continue;
             }
 
-            TypeDefinition? required = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+            TypeDefinition? required = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
             if (required is null)
             {
@@ -166,7 +166,7 @@ internal static class AbiInterfaceIDicFactory
                 continue;
             }
 
-            TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
+            TypeDefinition? r2 = impl2.Interface.ResolveAsTypeDefinition(context.Cache);
 
             if (r2 is not null)
             {

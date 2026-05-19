@@ -77,41 +77,6 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>
-    /// Resolves an InterfaceImpl's interface reference to a TypeDefinition (same module or via metadata cache).
-    /// </summary>
-    internal static TypeDefinition? ResolveInterfaceTypeDef(MetadataCache cache, ITypeDefOrRef ifaceRef)
-    {
-        if (ifaceRef is TypeDefinition td)
-        {
-            return td;
-        }
-
-        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
-        {
-            ITypeDefOrRef? gen = gi.GenericType;
-
-            if (gen is TypeDefinition gtd)
-            {
-                return gtd;
-            }
-
-            if (gen is TypeReference gtr)
-            {
-                (string ns, string nm) = gtr.Names();
-                return cache.Find(ns + "." + nm);
-            }
-        }
-
-        if (ifaceRef is TypeReference tr)
-        {
-            (string ns, string nm) = tr.Names();
-            return cache.Find(ns + "." + nm);
-        }
-
-        return null;
-    }
-
-    /// <summary>
     /// Returns the unique virtual-method name used to refer to <paramref name="method"/> on
     /// <paramref name="type"/>'s vtable: the method's metadata name suffixed with its zero-based
     /// index in the type's method list, so overloads disambiguate (e.g. <c>get_Item_4</c>).

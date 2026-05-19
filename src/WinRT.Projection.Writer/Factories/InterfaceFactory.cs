@@ -474,7 +474,7 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            TypeDefinition? implDef = ResolveInterfaceTypeDefForExclusiveCheck(cache, implRef);
+            TypeDefinition? implDef = implRef.ResolveAsTypeDefinition(cache);
 
             if (implDef is not null && implDef == iface)
             {
@@ -482,27 +482,5 @@ internal static class InterfaceFactory
             }
         }
         return false;
-    }
-
-    private static TypeDefinition? ResolveInterfaceTypeDefForExclusiveCheck(MetadataCache cache, ITypeDefOrRef ifaceRef)
-    {
-        if (ifaceRef is TypeDefinition td)
-        {
-            return td;
-        }
-
-        if (ifaceRef is TypeReference tr)
-        {
-            (string ns, string nm) = tr.Names();
-            return cache.Find(ns + "." + nm);
-        }
-
-        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
-        {
-            ITypeDefOrRef? gen = gi.GenericType;
-            return gen is null ? null : ResolveInterfaceTypeDefForExclusiveCheck(cache, gen);
-        }
-
-        return null;
     }
 }
