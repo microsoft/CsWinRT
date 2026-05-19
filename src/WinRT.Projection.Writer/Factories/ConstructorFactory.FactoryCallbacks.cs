@@ -337,7 +337,7 @@ internal static partial class ConstructorFactory
             {
                 pinnableCount++;
             }
-            else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            else if (cat.IsArrayInput())
             {
                 pinnableCount++;
             }
@@ -354,7 +354,7 @@ internal static partial class ConstructorFactory
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 bool isStr = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
-                bool isArr = cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
+                bool isArr = cat.IsArrayInput();
 
                 if (!isStr && !isType && !isArr)
                 {
@@ -472,7 +472,7 @@ internal static partial class ConstructorFactory
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 writer.Write("uint, void*, ");
                 continue;
@@ -499,7 +499,7 @@ internal static partial class ConstructorFactory
                 ,
                   
                 """);
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 writer.Write($"(uint){pname}.Length, _{raw}");
                 continue;

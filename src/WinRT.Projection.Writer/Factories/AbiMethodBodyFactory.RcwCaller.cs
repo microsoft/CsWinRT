@@ -59,7 +59,7 @@ internal static partial class AbiMethodBodyFactory
         {
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 _ = fp.Append(", uint, void*");
                 continue;
@@ -117,7 +117,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.ReceiveArray)
             {
-                SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 _ = fp.Append(", uint*, ");
 
                 if (sza.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
@@ -389,7 +389,7 @@ internal static partial class AbiMethodBodyFactory
             }
 
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            SzArrayTypeSignature sza = p.Type.AsSzArray()!;
             writer.WriteLine(isMultiline: true, $$"""
                         uint __{{localName}}_length = default;
                         
@@ -545,7 +545,7 @@ internal static partial class AbiMethodBodyFactory
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-            if ((cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput()
                 && p.Type is SzArrayTypeSignature szArrCheck
                 && !context.AbiTypeShapeResolver.IsBlittableAbiElement(szArrCheck.BaseType)
                 && !context.AbiTypeShapeResolver.IsMappedAbiValueType(szArrCheck.BaseType))
@@ -654,7 +654,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 // All PassArrays (including complex structs) go in the void* combined block,
                 // matching truth's pattern. Complex structs use a (T*) cast at the call site.
@@ -704,7 +704,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
                 bool isString = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
-                bool isPassArray = cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
+                bool isPassArray = cat.IsArrayInput();
 
                 if (!isString && !isType && !isPassArray)
                 {
@@ -896,7 +896,7 @@ internal static partial class AbiMethodBodyFactory
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -1168,7 +1168,7 @@ internal static partial class AbiMethodBodyFactory
 
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            SzArrayTypeSignature sza = p.Type.AsSzArray()!;
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
@@ -1511,7 +1511,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
                 // primitive ABI otherwise. (Same categorization as the ConvertToManaged_<name> path.)
                 string elementAbi = sza.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)

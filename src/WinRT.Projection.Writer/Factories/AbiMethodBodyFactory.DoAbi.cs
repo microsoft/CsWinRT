@@ -119,7 +119,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.GetRawName();
-                SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
@@ -225,7 +225,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
                 writer.WriteLine(isMultiline: true, $$"""
                 *{{ptr}} = default;
@@ -460,7 +460,7 @@ internal static partial class AbiMethodBodyFactory
                             writer.Write($"*{ptr}");
                         }
                     }
-                    else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+                    else if (cat.IsArrayInput())
                     {
                         string raw = p.GetRawName();
                         writer.Write($"__{raw}");

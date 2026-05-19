@@ -215,7 +215,7 @@ internal static partial class AbiTypeHelpers
         {
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 if (p.Type is SzArrayTypeSignature szP)
                 {

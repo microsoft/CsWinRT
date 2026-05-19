@@ -211,5 +211,25 @@ internal static class TypeSignatureExtensions
                 || resolver.IsRuntimeClassOrInterface(sig!)
                 || (sig is CorLibTypeSignature corlibObj && corlibObj.ElementType == ElementType.Object);
         }
+
+        /// <summary>
+        /// Strips byref + custom modifiers from <paramref name="sig"/> and returns the result
+        /// as an <see cref="SzArrayTypeSignature"/> if the underlying type is one; otherwise
+        /// returns <see langword="null"/>.
+        /// </summary>
+        public SzArrayTypeSignature? AsSzArray()
+        {
+            return Helpers.AbiTypeHelpers.StripByRefAndCustomModifiers(sig!) as SzArrayTypeSignature;
+        }
+
+        /// <summary>
+        /// Returns the element type of the underlying SZ-array (after stripping byref +
+        /// custom modifiers), or <see langword="null"/> if the underlying type is not an
+        /// <see cref="SzArrayTypeSignature"/>.
+        /// </summary>
+        public TypeSignature? SzArrayElement()
+        {
+            return (Helpers.AbiTypeHelpers.StripByRefAndCustomModifiers(sig!) as SzArrayTypeSignature)?.BaseType;
+        }
     }
 }
