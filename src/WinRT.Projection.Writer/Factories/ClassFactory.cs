@@ -33,7 +33,7 @@ internal static class ClassFactory
     {
         // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
         // netstandard_compat gate -- it was always false in the C# port.)
-        return type.HasAttribute(WindowsFoundationMetadata, FastAbiAttribute);
+        return type.HasWindowsFoundationMetadataAttribute(FastAbiAttribute);
     }
 
     /// <summary>
@@ -249,7 +249,7 @@ internal static class ClassFactory
             return 0;
         }
 
-        CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GCPressureAttribute");
+        CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute("GCPressureAttribute");
 
         if (attr is null || attr.Signature is null)
         {

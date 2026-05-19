@@ -53,5 +53,21 @@ internal static class IHasCustomAttributeExtensions
             }
             return null;
         }
+
+        /// <summary>
+        /// Convenience for <c>HasAttribute(ns, name)</c> with the namespace fixed to
+        /// <c>Windows.Foundation.Metadata</c>.
+        /// </summary>
+        /// <param name="name">The unqualified name of the <c>Windows.Foundation.Metadata</c> attribute.</param>
+        public bool HasWindowsFoundationMetadataAttribute(string name)
+            => member.HasAttribute(References.WellKnownNamespaces.WindowsFoundationMetadata, name);
+
+        /// <summary>
+        /// Convenience for <c>GetAttribute(ns, name)</c> with the namespace fixed to
+        /// <c>Windows.Foundation.Metadata</c>.
+        /// </summary>
+        /// <param name="name">The unqualified name of the <c>Windows.Foundation.Metadata</c> attribute.</param>
+        public CustomAttribute? GetWindowsFoundationMetadataAttribute(string name)
+            => member.GetAttribute(References.WellKnownNamespaces.WindowsFoundationMetadata, name);
     }
 }

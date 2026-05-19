@@ -8,7 +8,6 @@ using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
@@ -46,8 +45,8 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (type.HasAttribute(WindowsFoundationMetadata, ActivatableAttribute) ||
-                    type.HasAttribute(WindowsFoundationMetadata, StaticAttribute))
+                if (type.HasWindowsFoundationMetadataAttribute(ActivatableAttribute) ||
+                    type.HasWindowsFoundationMetadataAttribute(StaticAttribute))
                 {
                     _ = componentActivatable.Add(type);
                     string moduleName = Path.GetFileNameWithoutExtension(_cache.GetSourcePath(type));

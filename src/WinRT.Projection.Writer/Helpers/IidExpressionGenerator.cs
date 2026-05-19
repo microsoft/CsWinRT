@@ -13,7 +13,6 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -73,7 +72,7 @@ internal static partial class IidExpressionGenerator
     /// </summary>
     public static (uint Data1, ushort Data2, ushort Data3, byte[] Data4)? GetGuidFields(TypeDefinition type)
     {
-        CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GuidAttribute");
+        CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute("GuidAttribute");
 
         if (attr is null || attr.Signature is null)
         {

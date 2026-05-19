@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Errors;
@@ -36,10 +35,10 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsGenericInstance = rt is not null && rt.IsGenericInstance();
         bool returnIsBlittableStruct = rt is not null && context.AbiTypeShapeResolver.IsBlittableStruct(rt);
 
-        bool isGetter = methodName.StartsWith("get_", StringComparison.Ordinal);
-        bool isSetter = methodName.StartsWith("put_", StringComparison.Ordinal);
-        bool isAddEvent = methodName.StartsWith("add_", StringComparison.Ordinal);
-        bool isRemoveEvent = methodName.StartsWith("remove_", StringComparison.Ordinal);
+        bool isGetter = sig.Method.IsGetter();
+        bool isSetter = sig.Method.IsSetter();
+        bool isAddEvent = sig.Method.IsAdder();
+        bool isRemoveEvent = sig.Method.IsRemover();
 
         if (isAddEvent || isRemoveEvent)
         {

@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -89,7 +88,7 @@ internal static class TypeDefinitionExtensions
         /// <returns>The contract version, or <see langword="null"/>.</returns>
         public int? GetContractVersion()
         {
-            CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, ContractVersionAttribute);
+            CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute(ContractVersionAttribute);
 
             if (attr is null)
             {
@@ -122,7 +121,7 @@ internal static class TypeDefinitionExtensions
         /// <returns>The version, or <see langword="null"/>.</returns>
         public int? GetVersion()
         {
-            CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, VersionAttribute);
+            CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute(VersionAttribute);
 
             if (attr is null)
             {

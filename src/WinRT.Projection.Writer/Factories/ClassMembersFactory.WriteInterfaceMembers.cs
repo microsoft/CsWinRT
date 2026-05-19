@@ -15,7 +15,6 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -50,7 +49,7 @@ internal static partial class ClassMembersFactory
             _ = writtenInterfaces.Add(ifaceType);
 
             bool isOverridable = impl.IsOverridable();
-            bool isProtected = impl.HasAttribute(WindowsFoundationMetadata, "ProtectedAttribute");
+            bool isProtected = impl.HasWindowsFoundationMetadataAttribute("ProtectedAttribute");
 
             // Substitute generic type arguments using the current generic context BEFORE emitting
             // any references to this interface. This is critical for nested recursion: e.g. when
