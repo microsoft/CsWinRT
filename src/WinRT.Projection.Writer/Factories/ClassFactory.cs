@@ -292,7 +292,7 @@ internal static class ClassFactory
             writer.WriteLine(isMultiline: true, $$"""
                 {{metadataAttr}}
                 {{customAttrs}}
-                {{(context.Settings.Internal ? "internal" : "public")}} static class {{name}}
+                public static class {{name}}
                 """);
             using (writer.WriteBlock())
             {
@@ -573,7 +573,6 @@ internal static class ClassFactory
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
         WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
         WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
-        string accessibility = context.Settings.Internal ? "internal" : "public";
         // are emitted as plain (non-partial) classes.
         string modifiers = TypeCategorization.IsStatic(type) ? "static " : type.IsSealed ? "sealed " : "";
         WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
@@ -583,7 +582,7 @@ internal static class ClassFactory
             {{metadataAttr}}
             {{customAttrs}}
             {{comWrappersAttr}}
-            {{accessibility}} {{modifiers}}class {{name}}{{inheritance}}
+            public {{modifiers}}class {{name}}{{inheritance}}
             """);
         using IndentedTextWriter.Block __classBlock = writer.WriteBlock();
 

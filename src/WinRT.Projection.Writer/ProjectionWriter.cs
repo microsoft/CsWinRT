@@ -47,7 +47,6 @@ public static class ProjectionWriter
                 Logger = options.Logger,
                 MaxDegreesOfParallelism = options.MaxDegreesOfParallelism,
                 Component = options.Component,
-                Internal = options.Internal,
                 PublicExclusiveTo = options.PublicExclusiveTo,
                 IdicExclusiveTo = options.IdicExclusiveTo,
                 ReferenceProjection = options.ReferenceProjection,

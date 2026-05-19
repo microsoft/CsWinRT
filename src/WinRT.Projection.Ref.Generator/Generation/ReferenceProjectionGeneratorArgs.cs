@@ -46,13 +46,6 @@ internal sealed partial class ReferenceProjectionGeneratorArgs
     [CommandLineArgumentName("--component")]
     public bool Component { get; init; }
 
-    /// <summary>
-    /// Gets whether to generate a private (<c>internal</c>) projection.
-    /// CsWinRT 3.0 leftover; preserved for OLD-target parity.
-    /// </summary>
-    [CommandLineArgumentName("--internal")]
-    public bool Internal { get; init; }
-
     /// <summary>Gets whether to make exclusive-to interfaces public in the projection.</summary>
     [CommandLineArgumentName("--public-exclusive-to")]
     public bool PublicExclusiveTo { get; init; }

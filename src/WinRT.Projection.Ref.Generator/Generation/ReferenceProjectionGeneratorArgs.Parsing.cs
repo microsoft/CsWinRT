@@ -87,7 +87,6 @@ internal partial class ReferenceProjectionGeneratorArgs
             AdditionExcludeNamespaces = GetOptionalStringArrayArgument(argsMap, nameof(AdditionExcludeNamespaces)),
             Verbose = GetOptionalBoolArgument(argsMap, nameof(Verbose)),
             Component = GetOptionalBoolArgument(argsMap, nameof(Component)),
-            Internal = GetOptionalBoolArgument(argsMap, nameof(Internal)),
             PublicExclusiveTo = GetOptionalBoolArgument(argsMap, nameof(PublicExclusiveTo)),
             IdicExclusiveTo = GetOptionalBoolArgument(argsMap, nameof(IdicExclusiveTo)),
             ReferenceProjection = GetOptionalBoolArgument(argsMap, nameof(ReferenceProjection)),

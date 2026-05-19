@@ -47,11 +47,6 @@ public sealed class ProjectionWriterOptions
     public bool Component { get; init; }
 
     /// <summary>
-    /// Generate an internal (non-public) projection.
-    /// </summary>
-    public bool Internal { get; init; }
-
-    /// <summary>
     /// Make exclusive-to interfaces public in the projection (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

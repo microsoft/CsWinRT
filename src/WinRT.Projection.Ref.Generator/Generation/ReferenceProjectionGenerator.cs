@@ -103,7 +103,6 @@ internal static class ReferenceProjectionGenerator
             AdditionExclude = args.AdditionExcludeNamespaces,
             Verbose = args.Verbose,
             Component = args.Component,
-            Internal = args.Internal,
             PublicExclusiveTo = args.PublicExclusiveTo,
             IdicExclusiveTo = args.IdicExclusiveTo,
             ReferenceProjection = args.ReferenceProjection,

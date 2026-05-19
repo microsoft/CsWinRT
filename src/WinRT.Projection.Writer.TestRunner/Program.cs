@@ -61,7 +61,7 @@ internal static class Program
         var include = new System.Collections.Generic.List<string>();
         var exclude = new System.Collections.Generic.List<string>();
         string? outputFolder = null;
-        bool component = false, internalMode = false;
+        bool component = false;
         int maxDegreesOfParallelism = -1;
         var tokens = new System.Collections.Generic.List<string>();
         foreach (string raw in text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
@@ -87,7 +87,6 @@ internal static class Program
                 case "--exclude-namespaces": case "--exclude":
                     if (next is not null) { exclude.AddRange(next.Split(',', StringSplitOptions.RemoveEmptyEntries)); i++; } break;
                 case "--component": component = true; break;
-                case "--internal": internalMode = true; break;
                 case "--reference-projection": refMode = true; break;
                 case "--max-degrees-of-parallelism": case "--mdop":
                     if (next is not null && int.TryParse(next, out int mdop)) { maxDegreesOfParallelism = mdop; i++; } break;
@@ -103,7 +102,7 @@ internal static class Program
             {
                 InputPaths = inputs, OutputFolder = outputFolder,
                 Include = include, Exclude = exclude,
-                Component = component, Internal = internalMode,
+                Component = component,
                 ReferenceProjection = refMode, Verbose = false,
                 MaxDegreesOfParallelism = maxDegreesOfParallelism,
             });

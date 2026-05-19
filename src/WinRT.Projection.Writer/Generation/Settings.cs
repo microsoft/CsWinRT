@@ -103,11 +103,6 @@ internal sealed class Settings
     public bool Component { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether projected types are emitted as <c>internal</c> rather than <c>public</c>.
-    /// </summary>
-    public bool Internal { get; init; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

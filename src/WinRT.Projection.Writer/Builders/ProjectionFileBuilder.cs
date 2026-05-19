@@ -93,7 +93,6 @@ internal static class ProjectionFileBuilder
 
         bool isFlags = TypeCategorization.IsFlagsEnum(type);
         string enumUnderlyingType = isFlags ? "uint" : "int";
-        string accessibility = context.Settings.Internal ? "internal" : "public";
         string typeName = type.Name?.Value ?? string.Empty;
 
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
@@ -110,7 +109,7 @@ internal static class ProjectionFileBuilder
             {{customAttrs}}
             {{comWrappersAttr}}
             {{refTypeAttr}}
-            {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
+            public enum {{typeName}} : {{enumUnderlyingType}}
             """);
 
         using (writer.WriteBlock())
@@ -302,7 +301,7 @@ internal static class ProjectionFileBuilder
 
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
-        writer.WriteLine($"{(context.Settings.Internal ? "internal" : "public")} enum {typeName};");
+        writer.WriteLine($"public enum {typeName};");
     }
 
     /// <summary>
@@ -339,7 +338,7 @@ internal static class ProjectionFileBuilder
             {{customAttrs}}
             {{comWrappersAttr}}
             {{guidAttr}}
-            {{(context.Settings.Internal ? "internal" : "public")}} delegate {{ret}} {{typedefName}}{{typeParams}}({{parms}});
+            public delegate {{ret}} {{typedefName}}{{typeParams}}({{parms}});
             """);
     }
 
@@ -357,7 +356,7 @@ internal static class ProjectionFileBuilder
         writer.WriteLine(isMultiline: true, $$"""
             {{metadataAttr}}
             {{customAttrs}}
-            {{(context.Settings.Internal ? "internal" : "public")}} sealed class {{typeName}} : Attribute
+            public sealed class {{typeName}} : Attribute
             """);
 
         using (writer.WriteBlock())

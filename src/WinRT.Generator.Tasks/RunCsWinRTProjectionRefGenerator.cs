@@ -74,12 +74,6 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool Component { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to generate a private (internal) projection. Mirrors the C++ '-internal' arg.
-    /// CsWinRT 3.0 leftover; preserved for OLD-target parity.
-    /// </summary>
-    public bool InternalProjection { get; set; }
-
-    /// <summary>
     /// Gets or sets whether to make exclusive-to interfaces public in the projection
     /// (default is internal). Mirrors the C++ '-public_exclusiveto' arg.
     /// </summary>
@@ -243,11 +237,6 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         if (Component)
         {
             AppendResponseFileCommand(args, "--component", "true");
-        }
-
-        if (InternalProjection)
-        {
-            AppendResponseFileCommand(args, "--internal", "true");
         }
 
         if (PublicExclusiveTo)
