@@ -7,10 +7,10 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.References;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-
-using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -25,11 +25,10 @@ internal static partial class AbiTypeHelpers
     /// mapped value type (DateTime/TimeSpan/etc.) → mapped ABI name; blittable struct → projected
     /// name; primitive → fundamental C# keyword.
     /// </summary>
-    /// <param name="writer">The writer (carried through for the struct-name helpers that accept it; not used to emit).</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The type signature whose ABI local type name is requested.</param>
     /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
-    internal static string GetAbiLocalTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
+    public static string GetAbiLocalTypeName(ProjectionEmitContext context, TypeSignature sig)
     {
         if (sig.IsAbiRefLike(context.AbiTypeShapeResolver))
         {
@@ -48,7 +47,7 @@ internal static partial class AbiTypeHelpers
 
         if (context.AbiTypeShapeResolver.IsComplexStruct(sig))
         {
-            return GetAbiStructTypeName(writer, context, sig);
+            return GetAbiStructTypeName(context, sig);
         }
 
         if (IsMappedAbiValueType(sig))
@@ -58,16 +57,65 @@ internal static partial class AbiTypeHelpers
 
         if (context.AbiTypeShapeResolver.IsBlittableStruct(sig))
         {
-            return GetBlittableStructAbiType(writer, context, sig);
+            return GetBlittableStructAbiType(context, sig);
         }
 
         return GetAbiPrimitiveType(context.Cache, sig);
     }
 
     /// <summary>
-    /// Returns the ABI type name for a blittable struct (the projected type name).
+    /// Returns the ABI C# type name for a single SZ-array element appearing as the <c>data</c>
+    /// parameter in array-marshaller <c>UnsafeAccessor</c> signatures (e.g. <c>ConvertToManaged_X</c>,
+    /// <c>Free_X</c>). Dispatched by <see cref="Resolvers.AbiTypeShapeResolver.ClassifyArrayElement"/>:
+    /// reference-pointer → <c>void*</c>, HResult → <c>global::ABI.System.Exception</c>, mapped value
+    /// type → mapped ABI name, complex struct → ABI struct name, blittable struct → blittable ABI
+    /// struct, primitive → primitive ABI type.
     /// </summary>
-    internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
+    /// <param name="context">The active emit context.</param>
+    /// <param name="elementType">The SZ-array element type.</param>
+    /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
+    public static string GetArrayElementAbiType(ProjectionEmitContext context, TypeSignature elementType)
+    {
+        return context.AbiTypeShapeResolver.ClassifyArrayElement(elementType) switch
+        {
+            AbiArrayElementKind.RefLikeVoidStar => "void*",
+            AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
+            AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
+            AbiArrayElementKind.ComplexStruct => GetAbiStructTypeName(context, elementType),
+            AbiArrayElementKind.BlittableStruct => GetBlittableStructAbiType(context, elementType),
+            _ => GetAbiPrimitiveType(context.Cache, elementType),
+        };
+    }
+
+    /// <summary>
+    /// Returns the C# type name used for the <c>InlineArray16&lt;T&gt;</c> / <c>ArrayPool&lt;T&gt;</c>
+    /// storage <c>T</c> backing a non-blittable PassArray / FillArray parameter. Strings,
+    /// runtime classes, and objects all collapse to <c>nint</c> (HSTRING handles / IInspectable
+    /// pointers); HResult uses <c>global::ABI.System.Exception</c>; mapped value types and
+    /// complex structs use their ABI struct name.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="elementType">The SZ-array element type.</param>
+    /// <returns>The storage C# type name as a string (no trailing punctuation).</returns>
+    public static string GetArrayElementStorageType(ProjectionEmitContext context, TypeSignature elementType)
+    {
+        return context.AbiTypeShapeResolver.ClassifyArrayElement(elementType) switch
+        {
+            AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
+            AbiArrayElementKind.ComplexStruct => GetAbiStructTypeName(context, elementType),
+            AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
+            _ => "nint",
+        };
+    }
+
+    /// <summary>
+    /// Returns the ABI type name for a blittable struct (the projected type name; mapped value
+    /// types like <c>DateTime</c> / <c>TimeSpan</c> return their mapped ABI name instead).
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The blittable struct type signature.</param>
+    /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
+    public static string GetBlittableStructAbiType(ProjectionEmitContext context, TypeSignature sig)
     {
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig))
@@ -79,11 +127,16 @@ internal static partial class AbiTypeHelpers
         return result;
     }
 
-    /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).
-    /// When the writer is currently in the matching ABI namespace, returns just the
-    /// short type name (e.g. <c>HttpProgress</c>) to mirror the original code which uses the
-    /// unqualified name in same-namespace contexts.</summary>
-    internal static string GetAbiStructTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
+    /// <summary>
+    /// Returns the ABI struct type name for a complex struct
+    /// (e.g. <c>global::ABI.Windows.Web.Http.HttpProgress</c>). Mapped structs route through
+    /// their mapped namespace+name (e.g. <c>Windows.UI.Xaml.Interop.TypeName</c> →
+    /// <c>global::ABI.System.Type</c>).
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The complex struct type signature.</param>
+    /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
+    public static string GetAbiStructTypeName(ProjectionEmitContext context, TypeSignature sig)
     {
         if (sig is TypeDefOrRefSignature td)
         {
@@ -103,7 +156,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the C# primitive keyword (e.g. <c>"bool"</c>, <c>"int"</c>) for an ABI corlib element type, or <see langword="null"/> when <paramref name="sig"/> is not a primitive.
     /// </summary>
-    internal static string GetAbiPrimitiveType(MetadataCache cache, TypeSignature sig)
+    public static string GetAbiPrimitiveType(MetadataCache cache, TypeSignature sig)
     {
         if (sig is CorLibTypeSignature corlib)
         {

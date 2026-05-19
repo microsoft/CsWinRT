@@ -12,8 +12,6 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
-using WindowsRuntime.ProjectionWriter.References;
-
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
@@ -114,7 +112,7 @@ internal static partial class AbiMethodBodyFactory
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-                string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, sza.BaseType);
+                string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern void ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
@@ -125,7 +123,7 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
-                string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(writer, context, retSzHoist.BaseType);
+                string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSzHoist.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
@@ -283,7 +281,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType))
                 {
-                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
+                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                     dataParamType = abiStructName + "* data";
                     dataCastExpr = "(" + abiStructName + "*)" + ptr;
                 }
@@ -532,41 +530,15 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
-                // Determine the ABI element type for the data pointer cast.
-                // - Strings / runtime classes / objects: void**
-                // - HResult exception: global::ABI.System.Exception*
-                // - Mapped value types (DateTime/TimeSpan): global::ABI.System.{DateTimeOffset/TimeSpan}*
-                // - Complex structs: <ABI struct>*
-                string dataParamType;
-                string dataCastType;
-
-                if (szFA.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
-                {
-                    dataParamType = "void** data";
-                    dataCastType = "(void**)";
-                }
-                else if (szFA.BaseType.IsHResultException())
-                {
-                    dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointerData;
-                    dataCastType = "(global::ABI.System.Exception*)";
-                }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(szFA.BaseType))
-                {
-                    string abiName = AbiTypeHelpers.GetMappedAbiTypeName(szFA.BaseType);
-                    dataParamType = abiName + "* data";
-                    dataCastType = "(" + abiName + "*)";
-                }
-                else
-                {
-                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szFA.BaseType);
-                    dataParamType = abiStructName + "* data";
-                    dataCastType = "(" + abiStructName + "*)";
-                }
+                // Determine the ABI element type for the data pointer cast (e.g. "void*" for
+                // ref-like elements -> "void** data"/"(void**)", or "global::ABI.Foo.Bar" for
+                // complex structs -> "global::ABI.Foo.Bar* data"/"(global::ABI.Foo.Bar*)").
+                string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szFA.BaseType);
 
                 writer.WriteLine(isMultiline: true, $$"""
                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                        static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{dataParamType}});
-                        CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, {{dataCastType}}{{ptr}});
+                        static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
+                        CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
                 """);
             }
 

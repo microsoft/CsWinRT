@@ -85,7 +85,7 @@ internal static class ReferenceImplFactory
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
             WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
-            string abiName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, type.ToTypeSignature());
+            string abiName = AbiTypeHelpers.GetAbiStructTypeName(context, type.ToTypeSignature());
             writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {
