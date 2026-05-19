@@ -53,13 +53,6 @@ internal sealed partial class ReferenceProjectionGeneratorArgs
     [CommandLineArgumentName("--internal")]
     public bool Internal { get; init; }
 
-    /// <summary>
-    /// Gets whether to emit enums as public when used with the embedded option.
-    /// CsWinRT 3.0 leftover; preserved for OLD-target parity.
-    /// </summary>
-    [CommandLineArgumentName("--public-enums")]
-    public bool PublicEnums { get; init; }
-
     /// <summary>Gets whether to make exclusive-to interfaces public in the projection.</summary>
     [CommandLineArgumentName("--public-exclusive-to")]
     public bool PublicExclusiveTo { get; init; }

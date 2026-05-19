@@ -80,13 +80,6 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool InternalProjection { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to emit enums as public when used with the embedded option.
-    /// Mirrors the C++ '-public_enums' arg.
-    /// CsWinRT 3.0 leftover; preserved for OLD-target parity.
-    /// </summary>
-    public bool PublicEnums { get; set; }
-
-    /// <summary>
     /// Gets or sets whether to make exclusive-to interfaces public in the projection
     /// (default is internal). Mirrors the C++ '-public_exclusiveto' arg.
     /// </summary>
@@ -255,11 +248,6 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         if (InternalProjection)
         {
             AppendResponseFileCommand(args, "--internal", "true");
-        }
-
-        if (PublicEnums)
-        {
-            AppendResponseFileCommand(args, "--public-enums", "true");
         }
 
         if (PublicExclusiveTo)

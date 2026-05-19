@@ -108,11 +108,6 @@ internal sealed class Settings
     public bool Internal { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether projected enums are forced to <c>public</c> visibility (overrides <see cref="Internal"/>).
-    /// </summary>
-    public bool PublicEnums { get; init; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

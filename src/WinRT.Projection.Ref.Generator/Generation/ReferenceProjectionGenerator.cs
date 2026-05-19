@@ -104,7 +104,6 @@ internal static class ReferenceProjectionGenerator
             Verbose = args.Verbose,
             Component = args.Component,
             Internal = args.Internal,
-            PublicEnums = args.PublicEnums,
             PublicExclusiveTo = args.PublicExclusiveTo,
             IdicExclusiveTo = args.IdicExclusiveTo,
             ReferenceProjection = args.ReferenceProjection,

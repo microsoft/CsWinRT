@@ -52,11 +52,6 @@ public sealed class ProjectionWriterOptions
     public bool Internal { get; init; }
 
     /// <summary>
-    /// If <c>true</c> with embedded option, generate enums as public.
-    /// </summary>
-    public bool PublicEnums { get; init; }
-
-    /// <summary>
     /// Make exclusive-to interfaces public in the projection (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

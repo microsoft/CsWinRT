@@ -48,7 +48,6 @@ public static class ProjectionWriter
                 MaxDegreesOfParallelism = options.MaxDegreesOfParallelism,
                 Component = options.Component,
                 Internal = options.Internal,
-                PublicEnums = options.PublicEnums,
                 PublicExclusiveTo = options.PublicExclusiveTo,
                 IdicExclusiveTo = options.IdicExclusiveTo,
                 ReferenceProjection = options.ReferenceProjection,

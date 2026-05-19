@@ -287,8 +287,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </CsWinRTPrivateIncludeWinRTInterop>
 
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
-      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
-      <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
       <CsWinRTPublicExclusiveTo Condition="'$(CsWinRTPublicExclusiveToInterfaces)' == 'true'">-public_exclusiveto</CsWinRTPublicExclusiveTo>
       <CsWinRTDynamicallyInterfaceCastableExclusiveTo Condition="'$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)' == 'true'">-idic_exclusiveto</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
       <CsWinRTReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">-reference_projection</CsWinRTReferenceProjection>
@@ -301,8 +299,6 @@ $(CsWinRTWindowsMetadataInput)
 -output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTFilters)
 $(CsWinRTIncludeWinRTInterop)
-$(CsWinRTEmbeddedProjection)
-$(CsWinRTEmbeddedEnums)
 $(CsWinRTPublicExclusiveTo)
 $(CsWinRTDynamicallyInterfaceCastableExclusiveTo)
 $(CsWinRTReferenceProjection)
@@ -405,7 +401,6 @@ $(CsWinRTInternalProjection)
         ExcludeNamespaces="@(_CsWinRTRefExcludes)"
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
-        PublicEnums="$(CsWinRTEmbeddedPublicEnums)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"

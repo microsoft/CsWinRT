@@ -88,7 +88,6 @@ internal partial class ReferenceProjectionGeneratorArgs
             Verbose = GetOptionalBoolArgument(argsMap, nameof(Verbose)),
             Component = GetOptionalBoolArgument(argsMap, nameof(Component)),
             Internal = GetOptionalBoolArgument(argsMap, nameof(Internal)),
-            PublicEnums = GetOptionalBoolArgument(argsMap, nameof(PublicEnums)),
             PublicExclusiveTo = GetOptionalBoolArgument(argsMap, nameof(PublicExclusiveTo)),
             IdicExclusiveTo = GetOptionalBoolArgument(argsMap, nameof(IdicExclusiveTo)),
             ReferenceProjection = GetOptionalBoolArgument(argsMap, nameof(ReferenceProjection)),
