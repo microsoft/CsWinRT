@@ -117,28 +117,15 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 _ = fp.Append(", uint*, ");
 
-                if (sza.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
+                _ = fp.Append(context.AbiTypeShapeResolver.ClassifyArrayElement(sza.BaseType) switch
                 {
-                    _ = fp.Append("void*");
-                }
-                else if (sza.BaseType.IsHResultException())
-                {
-                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemException);
-                }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(sza.BaseType))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(sza.BaseType));
-                }
-                else if (context.AbiTypeShapeResolver.IsComplexStruct(sza.BaseType))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType));
-                }
-                else
-                {
-                    _ = fp.Append(context.AbiTypeShapeResolver.IsBlittableStruct(sza.BaseType)
-                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
-                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType));
-                }
+                    AbiArrayElementKind.RefLikeVoidStar => "void*",
+                    AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
+                    AbiArrayElementKind.MappedValueType => AbiTypeHelpers.GetMappedAbiTypeName(sza.BaseType),
+                    AbiArrayElementKind.ComplexStruct => AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType),
+                    AbiArrayElementKind.BlittableStruct => AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType),
+                    _ => AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType),
+                });
 
                 _ = fp.Append("**");
                 continue;
@@ -181,30 +168,15 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt;
                 _ = fp.Append(", uint*, ");
 
-                if (retSz.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
+                _ = fp.Append(context.AbiTypeShapeResolver.ClassifyArrayElement(retSz.BaseType) switch
                 {
-                    _ = fp.Append("void*");
-                }
-                else if (context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType));
-                }
-                else if (retSz.BaseType.IsHResultException())
-                {
-                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemException);
-                }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(retSz.BaseType))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType));
-                }
-                else if (context.AbiTypeShapeResolver.IsBlittableStruct(retSz.BaseType))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType));
-                }
-                else
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
-                }
+                    AbiArrayElementKind.RefLikeVoidStar => "void*",
+                    AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
+                    AbiArrayElementKind.MappedValueType => AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType),
+                    AbiArrayElementKind.ComplexStruct => AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType),
+                    AbiArrayElementKind.BlittableStruct => AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType),
+                    _ => AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType),
+                });
 
                 _ = fp.Append("**");
             }

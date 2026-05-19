@@ -112,6 +112,45 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         => IsBlittablePrimitive(signature) || IsBlittableStruct(signature);
 
     /// <summary>
+    /// Classifies <paramref name="elementType"/> into one of the six
+    /// <see cref="AbiArrayElementKind"/> values used by the per-element pointer-type ladders.
+    /// This is the discriminator-only form -- callers translate the kind into the per-site
+    /// emission output.
+    /// </summary>
+    /// <param name="elementType">The SZ-array element type to classify.</param>
+    /// <returns>The classification kind. <see cref="AbiArrayElementKind.BlittablePrimitive"/>
+    /// is the default for shapes that don't match any of the other branches.</returns>
+    public AbiArrayElementKind ClassifyArrayElement(TypeSignature elementType)
+    {
+        if (elementType.IsAbiArrayElementRefLike(this))
+        {
+            return AbiArrayElementKind.RefLikeVoidStar;
+        }
+
+        if (elementType.IsHResultException())
+        {
+            return AbiArrayElementKind.HResultException;
+        }
+
+        if (IsMappedAbiValueType(elementType))
+        {
+            return AbiArrayElementKind.MappedValueType;
+        }
+
+        if (IsComplexStruct(elementType))
+        {
+            return AbiArrayElementKind.ComplexStruct;
+        }
+
+        if (IsBlittableStruct(elementType))
+        {
+            return AbiArrayElementKind.BlittableStruct;
+        }
+
+        return AbiArrayElementKind.BlittablePrimitive;
+    }
+
+    /// <summary>
     /// Inner classification routine. Returns the resolved <see cref="AbiTypeShapeKind"/> for
     /// <paramref name="signature"/>; returns <see cref="AbiTypeShapeKind.Unknown"/> when the
     /// signature does not match any known WinRT marshalling shape (typically because of an
