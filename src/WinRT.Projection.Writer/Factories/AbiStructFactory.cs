@@ -59,7 +59,7 @@ internal static class AbiStructFactory
 
                     TypeSignature ft = field.Signature.FieldType;
                     string fieldType = GetAbiFieldType(context, ft);
-                    writer.WriteLine($"public {fieldType} {field.Name?.Value ?? string.Empty};");
+                    writer.WriteLine($"public {fieldType} {field.Name?.Value};");
                 }
             }
             writer.WriteLine();

@@ -489,7 +489,9 @@ internal static class CustomAttributeFactory
     internal static void WriteTypeCustomAttributesBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
     {
         int before = writer.Length;
+
         WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
+
         // If anything was written, the buffer ends with a trailing newline that came from the
         // last attribute's WriteLine. Trim it so the callback can be inlined into a multiline
         // template line without producing a stray blank line.

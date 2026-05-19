@@ -34,6 +34,20 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Returns the constructors for the current type.
+        /// </summary>
+        public IEnumerable<MethodDefinition> GetConstructors()
+        {
+            foreach (MethodDefinition method in type.Methods)
+            {
+                if (method.IsConstructor)
+                {
+                    yield return method;
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the property accessor methods (get and set) declared by the type's
         /// properties. Used to filter "regular" methods (non-property, non-event) when emitting
         /// per-method code in interface bodies.

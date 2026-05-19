@@ -239,7 +239,7 @@ internal static class InterfaceFactory
                 && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty, out _))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
+            writer.Write($"{newKeyword}{propType} {prop.Name?.Value} {{");
 
             writer.WriteIf(getter is not null || setter is not null, " get;");
 
@@ -251,7 +251,7 @@ internal static class InterfaceFactory
         foreach (EventDefinition evt in type.Events)
         {
             WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
-            writer.WriteLine($"event {eventType} {evt.Name?.Value ?? string.Empty};");
+            writer.WriteLine($"event {eventType} {evt.Name?.Value};");
         }
     }
 
