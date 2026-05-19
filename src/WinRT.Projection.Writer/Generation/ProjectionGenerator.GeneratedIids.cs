@@ -37,7 +37,7 @@ internal sealed partial class ProjectionGenerator
         {
             foreach (TypeDefinition type in nsMembers.Classes)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }
@@ -76,7 +76,7 @@ internal sealed partial class ProjectionGenerator
             {
                 bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
 
-                if (!_settings.Filter.Includes(type) && !isFactoryInterface)
+                if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
                 {
                     continue;
                 }

@@ -316,9 +316,10 @@ internal static partial class IidExpressionGenerator
             }
 
             // Only emit if the interface is not in the projection (otherwise it'll be emitted naturally)
-            if (!context.Settings.Filter.Includes(ifaceType))
+            if (!context.Settings.Filter.Includes(ifaceType.FullName))
             {
                 WriteIidGuidPropertyFromType(writer, context, ifaceType);
+
                 _ = interfacesEmitted.Add(ifaceType);
             }
         }

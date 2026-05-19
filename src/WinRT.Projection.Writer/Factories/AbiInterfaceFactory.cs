@@ -495,7 +495,7 @@ internal static class AbiInterfaceFactory
         {
             TypeDefinition? owningClass = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
-            if (owningClass is not null && !context.Settings.Filter.Includes(owningClass))
+            if (owningClass is not null && !context.Settings.Filter.Includes(owningClass.FullName))
             {
                 return;
             }

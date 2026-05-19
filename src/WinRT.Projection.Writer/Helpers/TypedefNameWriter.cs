@@ -38,7 +38,7 @@ internal static class TypedefNameWriter
     /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
     public static void WriteTypedefName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
     {
-        bool authoredType = context.Settings.Component && context.Settings.Filter.Includes(type);
+        bool authoredType = context.Settings.Component && context.Settings.Filter.Includes(type.FullName);
         (string typeNamespace, string typeName) = type.Names();
 
         if (nameType == TypedefNameType.NonProjected)

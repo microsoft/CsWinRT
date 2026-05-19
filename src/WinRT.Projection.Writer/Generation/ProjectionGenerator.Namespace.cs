@@ -41,7 +41,7 @@ internal sealed partial class ProjectionGenerator
             writer.WriteLine("#pragma warning disable IL2026");
             foreach (TypeDefinition type in members.Types)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }
@@ -109,7 +109,7 @@ internal sealed partial class ProjectionGenerator
 
         foreach (TypeDefinition type in members.Types)
         {
-            if (!_settings.Filter.Includes(type))
+            if (!_settings.Filter.Includes(type.FullName))
             {
                 continue;
             }
@@ -168,7 +168,7 @@ internal sealed partial class ProjectionGenerator
             HashSet<TypeDefinition> factoryInterfacesAllNs = [];
             foreach (TypeDefinition type in members.Types)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }
@@ -196,7 +196,7 @@ internal sealed partial class ProjectionGenerator
             {
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
 
-                if (!_settings.Filter.Includes(type) && !isFactoryInterface)
+                if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
                 {
                     continue;
                 }

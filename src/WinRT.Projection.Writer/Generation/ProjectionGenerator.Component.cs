@@ -40,7 +40,7 @@ internal sealed partial class ProjectionGenerator
         {
             foreach (TypeDefinition type in members.Classes)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }

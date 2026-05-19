@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AsmResolver;
-using AsmResolver.DotNet;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -141,36 +139,5 @@ internal sealed class TypeFilter
         // The rest of the rule (after 'namespace.') is matched as a prefix against typeName.
         string rest = rule[(typeNamespace.Length + 1)..];
         return typeName.StartsWith(rest, StringComparison.Ordinal);
-    }
-
-    /// <summary>
-    /// Returns whether the given <paramref name="type"/> passes the include/exclude filter.
-    /// Computes the type's full name (<c>namespace.typeName</c>) and delegates to
-    /// <see cref="Includes(string)"/>.
-    /// </summary>
-    /// <param name="type">The type definition to test.</param>
-    /// <returns><see langword="true"/> if the type's full name is included.</returns>
-    public bool Includes(TypeDefinition type)
-    {
-        return Includes(GetFullName(type));
-    }
-
-    /// <summary>
-    /// Returns the full name of <paramref name="type"/> in the <c>namespace.typeName</c> form
-    /// (or just the type name when the namespace is empty).
-    /// </summary>
-    /// <param name="type">The type definition to format.</param>
-    /// <returns>The fully-qualified type name.</returns>
-    public static string GetFullName(TypeDefinition type)
-    {
-        Utf8String? ns = type.Namespace;
-        Utf8String? name = type.Name;
-
-        if (ns is null || ns.Length == 0)
-        {
-            return name?.Value ?? string.Empty;
-        }
-
-        return ns + "." + (name?.Value ?? string.Empty);
     }
 }
