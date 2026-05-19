@@ -247,9 +247,7 @@ internal static class CustomAttributeFactory
         };
         int contractVersion = (int)(versionRaw >> 16);
 
-        string platform = ContractPlatforms.GetPlatform(contractName, contractVersion);
-
-        if (string.IsNullOrEmpty(platform))
+        if (!ContractPlatforms.TryGetPlatform(contractName, contractVersion, out string? platform))
         {
             return string.Empty;
         }
