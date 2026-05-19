@@ -173,7 +173,6 @@ internal static class ProjectionFileBuilder
         }
 
         string projectionName = type.Name?.Value ?? string.Empty;
-        bool hasAddition = AdditionTypes.HasAdditionToType(type.Namespace?.Value ?? string.Empty, projectionName);
 
         // Header attributes + struct declaration as a single multiline template.
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
@@ -182,14 +181,16 @@ internal static class ProjectionFileBuilder
         WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
         WriteWinRTReferenceTypeAttributeCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
 
-        string partial = hasAddition ? " partial" : "";
+        // We are generating all types as 'partial' so that if they have any
+        // custom additions, they can be added without issues. This is much
+        // simpler than having logic to check that (the metadata is the same).
         writer.WriteLine(isMultiline: true, $$"""
             {{metadataAttr}}
             {{valueTypeAttr}}
             {{customAttrs}}
             {{comWrappersAttr}}
             {{refTypeAttr}}
-            public{{partial}} struct {{projectionName}} : IEquatable<{{projectionName}}>
+            public partial struct {{projectionName}} : IEquatable<{{projectionName}}>
             """);
 
         using (writer.WriteBlock())
