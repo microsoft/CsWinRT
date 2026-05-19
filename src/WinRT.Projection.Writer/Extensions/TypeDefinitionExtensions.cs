@@ -72,7 +72,7 @@ internal static class TypeDefinitionExtensions
         {
             foreach (MethodDefinition m in type.Methods)
             {
-                if (m.IsRuntimeSpecialName && m.Name == ".ctor" && m.Parameters.Count == 0)
+                if (m.IsDefaultConstructor())
                 {
                     return true;
                 }

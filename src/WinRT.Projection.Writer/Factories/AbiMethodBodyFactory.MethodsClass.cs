@@ -51,7 +51,7 @@ internal static partial class AbiMethodBodyFactory
         // Emit non-special methods first (output order is unchanged from before; only the slot lookup changes).
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
             MethodSignatureInfo sig = new(method);
 
             writer.Write(isMultiline: true, """

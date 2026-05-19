@@ -250,7 +250,7 @@ internal static partial class ClassMembersFactory
         // Methods
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
-            string name = method.Name?.Value ?? string.Empty;
+            string name = method.GetRawName();
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
             MethodSignatureInfo sig = new(method, genericContext);

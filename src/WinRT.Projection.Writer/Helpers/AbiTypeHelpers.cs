@@ -97,7 +97,7 @@ internal static partial class AbiTypeHelpers
 
             index++;
         }
-        return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(CultureInfo.InvariantCulture);
+        return method.GetRawName() + "_" + index.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <summary>

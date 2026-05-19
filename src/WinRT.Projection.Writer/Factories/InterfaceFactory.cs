@@ -226,7 +226,7 @@ internal static class InterfaceFactory
             WriteMethodCustomAttributes(writer, method);
             WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
             WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
-            writer.WriteLine($"{ret} {method.Name?.Value ?? string.Empty}({parms});");
+            writer.WriteLine($"{ret} {method.GetRawName()}({parms});");
         }
 
         foreach (PropertyDefinition prop in type.Properties)

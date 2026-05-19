@@ -348,7 +348,7 @@ internal static class ClassFactory
             foreach (MethodDefinition method in staticIface.GetNonSpecialMethods())
             {
                 MethodSignatureInfo sig = new(method);
-                string mname = method.Name?.Value ?? string.Empty;
+                string mname = method.GetRawName();
                 writer.WriteLine();
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);

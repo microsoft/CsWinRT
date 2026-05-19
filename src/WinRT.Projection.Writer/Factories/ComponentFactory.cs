@@ -167,7 +167,7 @@ internal static class ComponentFactory
             return;
         }
 
-        string methodName = method.Name?.Value ?? string.Empty;
+        string methodName = method.GetRawName();
         WriteFactoryMethodParametersCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
         WriteFactoryMethodParametersCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
         writer.WriteLine();
@@ -185,7 +185,7 @@ internal static class ComponentFactory
             return;
         }
 
-        string methodName = method.Name?.Value ?? string.Empty;
+        string methodName = method.GetRawName();
         WriteFactoryReturnTypeCallback retType = WriteFactoryReturnType(context, method);
         WriteFactoryMethodParametersCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
         WriteFactoryMethodParametersCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);

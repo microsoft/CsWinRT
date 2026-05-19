@@ -263,7 +263,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
             MethodSignatureInfo sig = new(method);
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
 
             writer.WriteLine();
             WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
@@ -382,7 +382,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
             MethodSignatureInfo sig = new(method);
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
 
             writer.WriteLine();
             writer.Write("unsafe ");

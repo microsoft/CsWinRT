@@ -360,7 +360,7 @@ internal static class AbiInterfaceFactory
         {
             string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
             MethodSignatureInfo sig = new(method);
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
 
             // If this method is an event add accessor, emit the per-event ConditionalWeakTable
             // before the Do_Abi method.

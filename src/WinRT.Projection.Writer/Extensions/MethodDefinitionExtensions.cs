@@ -66,6 +66,27 @@ internal static class MethodDefinitionExtensions
         public bool IsRemover() => method.IsRemoveOverload();
 
         /// <summary>
+        /// Returns whether the method declares no parameters.
+        /// </summary>
+        public bool IsParameterless()
+            => method.Parameters.Count == 0;
+
+        /// <summary>
+        /// Returns whether the method is a parameterless instance constructor (i.e. a default
+        /// constructor): runtime-special, name <c>.ctor</c>, no parameters.
+        /// </summary>
+        public bool IsDefaultConstructor()
+            => method.IsConstructor() && method.IsParameterless();
+
+        /// <summary>
+        /// Returns the method's raw metadata name, falling back to <see cref="string.Empty"/> when
+        /// the metadata name is <see langword="null"/>. Convenience for the
+        /// <c>method.Name?.Value ?? string.Empty</c> pattern that appears at many sites.
+        /// </summary>
+        public string GetRawName()
+            => method.Name?.Value ?? string.Empty;
+
+        /// <summary>
         /// Returns whether the method carries the <c>[NoExceptionAttribute]</c> or is a
         /// <see cref="IsRemoveOverload"/> (event removers are implicitly no-throw).
         /// </summary>
