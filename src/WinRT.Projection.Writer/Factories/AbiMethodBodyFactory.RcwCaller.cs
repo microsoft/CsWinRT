@@ -40,19 +40,14 @@ internal static partial class AbiMethodBodyFactory
     {
         TypeSignature? rt = sig.ReturnType;
 
-        AbiTypeShapeKind returnShape = rt is null ? AbiTypeShapeKind.Unknown : context.AbiTypeShapeResolver.Resolve(rt).Kind;
+        MethodSignatureMarshallingFacts facts = MethodSignatureMarshallingFacts.From(sig, context.AbiTypeShapeResolver);
 
-        bool returnIsString = returnShape == AbiTypeShapeKind.String;
-        bool returnIsRefType = returnShape.IsReferenceType();
-        bool returnIsBlittableStruct = returnShape == AbiTypeShapeKind.BlittableStruct;
-        bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
-        bool returnIsReceiveArray = rt is SzArrayTypeSignature retSzCheck
-            && (context.AbiTypeShapeResolver.IsBlittableAbiElement(retSzCheck.BaseType)
-                || retSzCheck.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
-                || context.AbiTypeShapeResolver.IsComplexStruct(retSzCheck.BaseType)
-                || retSzCheck.BaseType.IsHResultException()
-                || context.AbiTypeShapeResolver.IsMappedAbiValueType(retSzCheck.BaseType));
-        bool returnIsHResultException = returnShape == AbiTypeShapeKind.HResultException;
+        bool returnIsString = facts.ReturnIsString;
+        bool returnIsRefType = facts.ReturnIsRefType;
+        bool returnIsBlittableStruct = facts.ReturnIsBlittableStruct;
+        bool returnIsComplexStruct = facts.ReturnIsComplexStruct;
+        bool returnIsReceiveArray = facts.ReturnIsReceiveArray;
+        bool returnIsHResultException = facts.ReturnIsHResultException;
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         StringBuilder fp = new();
@@ -501,58 +496,7 @@ internal static partial class AbiMethodBodyFactory
         // Determine if we need a try/finally (for cleanup of string/refType return or receive array
         // return or Out runtime class params). Input string params no longer need try/finally —
         // they use the HString fast-path (stack-allocated HStringReference, no free needed).
-        bool hasOutNeedsCleanup = false;
-        foreach ((int i, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
-        {
-            TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-
-            if (uOut.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver) || uOut.IsSystemType() || context.AbiTypeShapeResolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
-            {
-                hasOutNeedsCleanup = true;
-                break;
-            }
-        }
-        bool hasReceiveArray = false;
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            if (ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]) == ParameterCategory.ReceiveArray)
-            {
-                hasReceiveArray = true;
-                break;
-            }
-        }
-        bool hasNonBlittablePassArray = false;
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-
-            if (cat.IsArrayInput()
-                && p.Type is SzArrayTypeSignature szArrCheck
-                && !context.AbiTypeShapeResolver.IsBlittableAbiElement(szArrCheck.BaseType)
-                && !context.AbiTypeShapeResolver.IsMappedAbiValueType(szArrCheck.BaseType))
-            {
-                hasNonBlittablePassArray = true;
-                break;
-            }
-        }
-        bool hasComplexStructInput = false;
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-
-            if ((cat is ParameterCategory.In or ParameterCategory.Ref) && context.AbiTypeShapeResolver.IsComplexStruct(AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type)))
-            {
-                hasComplexStructInput = true;
-                break;
-            }
-        }
-
-        // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
-        // after marshalling to managed System.Type, otherwise the HSTRING leaks.
-        bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
-        bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput || returnIsSystemTypeForCleanup;
+        bool needsTryFinally = facts.NeedsTryFinally;
 
         if (needsTryFinally)
         {
@@ -1497,7 +1441,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 writer.WriteLine($"            {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.Dispose(__retval);");
             }
-            else if (returnIsSystemTypeForCleanup)
+            else if (facts.ReturnIsSystemTypeForCleanup)
             {
                 // System.Type return: dispose the ABI.System.Type's HSTRING fields.
                 writer.WriteLine("            global::ABI.System.TypeMarshaller.Dispose(__retval);");
