@@ -114,38 +114,6 @@ internal static class TypeSignatureExtensions
     extension(TypeSignature? sig)
     {
         /// <summary>
-        /// Strips trailing <see cref="ByReferenceTypeSignature"/> and <see cref="CustomModifierTypeSignature"/>
-        /// wrappers from the signature, returning the underlying signature (or <see langword="null"/>
-        /// if the input is <see langword="null"/>).
-        /// </summary>
-        /// <returns>The underlying signature with byref + custom-modifier wrappers stripped.</returns>
-        public TypeSignature? StripByRefAndCustomModifiers()
-        {
-            TypeSignature? cur = sig;
-
-            while (true)
-            {
-                if (cur is CustomModifierTypeSignature cm)
-                {
-                    cur = cm.BaseType;
-
-                    continue;
-                }
-
-                if (cur is ByReferenceTypeSignature br)
-                {
-                    cur = br.BaseType;
-
-                    continue;
-                }
-
-                break;
-            }
-
-            return cur;
-        }
-
-        /// <summary>
         /// Returns whether the signature represents a by-reference type, peeling any
         /// custom-modifier wrappers (e.g. <c>modreq[InAttribute]</c>) before checking.
         /// </summary>

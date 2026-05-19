@@ -9,7 +9,6 @@ using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -25,7 +24,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the parent class for an interface marked <c>[ExclusiveToAttribute(typeof(T))]</c>.
     /// </summary>
-    internal static TypeDefinition? GetExclusiveToType(MetadataCache cache, TypeDefinition iface)
+    public static TypeDefinition? GetExclusiveToType(MetadataCache cache, TypeDefinition iface)
     {
         for (int i = 0; i < iface.CustomAttributes.Count; i++)
         {
@@ -104,7 +103,7 @@ internal static partial class AbiTypeHelpers
     /// Returns the metadata-derived name for the return parameter, or the conventional
     /// <c>__return_value__</c> placeholder when the metadata does not name it.
     /// </summary>
-    internal static string GetReturnParamName(MethodSignatureInfo sig)
+    public static string GetReturnParamName(MethodSignatureInfo sig)
     {
         string? n = sig.ReturnParameter?.Name?.Value;
 
@@ -120,7 +119,7 @@ internal static partial class AbiTypeHelpers
     /// Returns the local-variable name for the return parameter on the server side.
     /// <c>abi_marshaler::get_marshaler_local()</c> which prefixes <c>__</c> to the param name.
     /// </summary>
-    internal static string GetReturnLocalName(MethodSignatureInfo sig)
+    public static string GetReturnLocalName(MethodSignatureInfo sig)
     {
         return "__" + GetReturnParamName(sig);
     }
@@ -128,7 +127,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.
     /// </summary>
-    internal static string GetReturnSizeParamName(MethodSignatureInfo sig)
+    public static string GetReturnSizeParamName(MethodSignatureInfo sig)
     {
         return "__" + GetReturnParamName(sig) + "Size";
     }
@@ -136,7 +135,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Build a method-to-event map for add/remove accessors of a type.
     /// </summary>
-    internal static Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
+    public static Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
     {
         if (type.Events.Count == 0)
         {
@@ -192,102 +191,9 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>
-    /// True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.
-    /// </summary>
-    internal static bool IsDelegateInvokeNativeSupported(MetadataCache cache, MethodSignatureInfo sig)
-    {
-        TypeSignature? rt = sig.ReturnType;
-
-        if (rt is not null)
-        {
-            if (rt.IsHResultException())
-            {
-                return false;
-            }
-
-            if (!(IsBlittablePrimitive(cache, rt) || IsAnyStruct(cache, rt) || rt.IsString() || IsRuntimeClassOrInterface(cache, rt) || rt.IsObject() || rt.IsGenericInstance() || IsComplexStruct(cache, rt)))
-            {
-                return false;
-            }
-        }
-
-        foreach (ParameterInfo p in sig.Parameters)
-        {
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-
-            if (cat.IsArrayInput())
-            {
-                if (p.Type is SzArrayTypeSignature szP)
-                {
-                    if (IsBlittablePrimitive(cache, szP.BaseType))
-                    {
-                        continue;
-                    }
-
-                    if (IsAnyStruct(cache, szP.BaseType))
-                    {
-                        continue;
-                    }
-                }
-
-                return false;
-            }
-
-            if (cat != ParameterCategory.In)
-            {
-                return false;
-            }
-
-            if (p.Type.IsHResultException())
-            {
-                return false;
-            }
-
-            if (IsBlittablePrimitive(cache, p.Type))
-            {
-                continue;
-            }
-
-            if (IsAnyStruct(cache, p.Type))
-            {
-                continue;
-            }
-
-            if (p.Type.IsString())
-            {
-                continue;
-            }
-
-            if (IsRuntimeClassOrInterface(cache, p.Type))
-            {
-                continue;
-            }
-
-            if (p.Type.IsObject())
-            {
-                continue;
-            }
-
-            if (p.Type.IsGenericInstance())
-            {
-                continue;
-            }
-
-            if (IsComplexStruct(cache, p.Type))
-            {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /// <summary>
     /// True if the interface has at least one non-special method, property, or non-skipped event.
     /// </summary>
-    internal static bool HasEmittableMembers(TypeDefinition iface, bool skipExclusiveEvents)
+    public static bool HasEmittableMembers(TypeDefinition iface, bool skipExclusiveEvents)
     {
         foreach (MethodDefinition m in iface.Methods)
         {
@@ -313,7 +219,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the number of methods (including special accessors) on the interface.
     /// </summary>
-    internal static int CountMethods(TypeDefinition iface)
+    public static int CountMethods(TypeDefinition iface)
     {
         return iface.Methods.Count;
     }
@@ -321,7 +227,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the number of base classes between <paramref name="classType"/> and <see cref="object"/>.
     /// </summary>
-    internal static int GetClassHierarchyIndex(MetadataCache cache, TypeDefinition classType)
+    public static int GetClassHierarchyIndex(MetadataCache cache, TypeDefinition classType)
     {
         if (classType.BaseType is null)
         {
@@ -354,7 +260,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns whether two interface types refer to the same interface by namespace+name (used to compare interfaces across module boundaries).
     /// </summary>
-    internal static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
+    public static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
     {
         if (a == b)
         {
@@ -365,22 +271,29 @@ internal static partial class AbiTypeHelpers
             && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
     }
 
-    /// <summary>Strips <c>ByReferenceTypeSignature</c> and <c>CustomModifierTypeSignature</c> wrappers
-    /// to get the underlying type signature.</summary>
-    internal static TypeSignature StripByRefAndCustomModifiers(TypeSignature sig)
+    /// <summary>
+    /// Strips trailing <see cref="ByReferenceTypeSignature"/> and <see cref="CustomModifierTypeSignature"/>
+    /// wrappers from the signature, returning the underlying signature (or <see langword="null"/>
+    /// if the input is <see langword="null"/>).
+    /// </summary>
+    /// <returns>The underlying signature with byref + custom-modifier wrappers stripped.</returns>
+    public static TypeSignature StripByRefAndCustomModifiers(TypeSignature sig)
     {
         TypeSignature current = sig;
+
         while (true)
         {
             if (current is ByReferenceTypeSignature br)
             {
                 current = br.BaseType;
+
                 continue;
             }
 
             if (current is CustomModifierTypeSignature cm)
             {
                 current = cm.BaseType;
+
                 continue;
             }
 
