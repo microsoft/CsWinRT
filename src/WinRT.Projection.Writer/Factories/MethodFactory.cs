@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -229,20 +227,5 @@ internal static class MethodFactory
     public static WriteCallArgumentsCallback WriteCallArguments(ProjectionEmitContext context, MethodSignatureInfo sig, bool leadingComma)
     {
         return new(context, sig, leadingComma);
-    }
-
-    /// <summary>
-    /// Returns the C# literal text for a constant field's value (or empty when no constant).
-    /// </summary>
-    /// <param name="field">The field definition.</param>
-    /// <returns>The formatted constant value, or an empty string.</returns>
-    public static string FormatField(FieldDefinition field)
-    {
-        if (field.Constant is null)
-        {
-            return string.Empty;
-        }
-
-        return ProjectionFileBuilder.FormatConstant(field.Constant);
     }
 }
