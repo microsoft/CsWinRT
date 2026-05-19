@@ -34,6 +34,19 @@ internal static class InteropTypeNameWriter
     }
 
     /// <summary>
+    /// Returns the assembly-qualified form of <see cref="EncodeInteropTypeName(TypeSignature, TypedefNameType)"/>,
+    /// suffixed with <c>", WinRT.Interop"</c>. This is the canonical value passed to
+    /// <c>[UnsafeAccessorType]</c> arguments.
+    /// </summary>
+    /// <param name="sig">The type signature to encode.</param>
+    /// <param name="nameType">Indicates whether to use the projected (no ABI prefix) form or
+    /// the ABI-prefixed marshaller form. Defaults to <see cref="TypedefNameType.ABI"/>.</param>
+    public static string GetInteropAssemblyQualifiedName(TypeSignature sig, TypedefNameType nameType = TypedefNameType.ABI)
+    {
+        return EncodeInteropTypeName(sig, nameType) + ", WinRT.Interop";
+    }
+
+    /// <summary>
     /// Encodes an ABI interop type name for <paramref name="sig"/> into <paramref name="sb"/> using the format expected by <c>WindowsRuntime.InteropServices</c> attributes.
     /// </summary>
     internal static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)

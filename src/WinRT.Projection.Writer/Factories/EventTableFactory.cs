@@ -77,7 +77,7 @@ internal static class EventTableFactory
 
         if (isGeneric)
         {
-            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
+            string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
             WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
             writer.WriteLine(isMultiline: true, $$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
