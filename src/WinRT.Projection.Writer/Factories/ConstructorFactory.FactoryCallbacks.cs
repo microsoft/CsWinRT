@@ -267,30 +267,31 @@ internal static partial class ConstructorFactory
             hasNonBlittableArray = true;
             string raw = p.GetRawName();
             string callName = IdentifierEscaping.EscapeIdentifier(raw);
+            ArrayTempNames names = new(raw);
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                        Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlineArray);
-                        nint[] __{{raw}}_arrayFromPool = null;
-                        Span<nint> __{{raw}}_span = {{callName}}.Length <= 16
-                            ? __{{raw}}_inlineArray[..{{callName}}.Length]
-                            : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                        Unsafe.SkipInit(out InlineArray16<nint> {{names.InlineArray}});
+                        nint[] {{names.ArrayFromPool}} = null;
+                        Span<nint> {{names.Span}} = {{callName}}.Length <= 16
+                            ? {{names.InlineArray}}[..{{callName}}.Length]
+                            : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
                 """);
 
             if (szArr.BaseType.IsString())
             {
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                            Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{raw}}_inlineHeaderArray);
-                            HStringHeader[] __{{raw}}_headerArrayFromPool = null;
-                            Span<HStringHeader> __{{raw}}_headerSpan = {{callName}}.Length <= 16
-                                ? __{{raw}}_inlineHeaderArray[..{{callName}}.Length]
-                                : (__{{raw}}_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+                            Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
+                            HStringHeader[] {{names.HeaderArrayFromPool}} = null;
+                            Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
+                                ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
+                                : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
                     
-                            Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlinePinnedHandleArray);
-                            nint[] __{{raw}}_pinnedHandleArrayFromPool = null;
-                            Span<nint> __{{raw}}_pinnedHandleSpan = {{callName}}.Length <= 16
-                                ? __{{raw}}_inlinePinnedHandleArray[..{{callName}}.Length]
-                                : (__{{raw}}_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                            Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
+                            nint[] {{names.PinnedHandleArrayFromPool}} = null;
+                            Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
+                                ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
+                                : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
                     """);
             }
         }
@@ -443,6 +444,7 @@ internal static partial class ConstructorFactory
 
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            ArrayTempNames names = new(raw);
 
             if (szArr.BaseType.IsString())
             {
@@ -450,8 +452,8 @@ internal static partial class ConstructorFactory
                     {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
                     {{callIndent}}    source: {{pname}},
                     {{callIndent}}    hstringHeaders: (HStringHeader*) _{{raw}}_inlineHeaderArray,
-                    {{callIndent}}    hstrings: __{{raw}}_span,
-                    {{callIndent}}    pinnedGCHandles: __{{raw}}_pinnedHandleSpan);
+                    {{callIndent}}    hstrings: {{names.Span}},
+                    {{callIndent}}    pinnedGCHandles: {{names.PinnedHandleSpan}});
                     """);
             }
             else
@@ -604,21 +606,22 @@ internal static partial class ConstructorFactory
                 }
 
                 string raw = p.GetRawName();
+                ArrayTempNames names = new(raw);
 
                 if (szArr.BaseType.IsString())
                 {
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                                    HStringArrayMarshaller.Dispose(__{{raw}}_pinnedHandleSpan);
+                                    HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
                         
-                                    if (__{{raw}}_pinnedHandleArrayFromPool is not null)
+                                    if ({{names.PinnedHandleArrayFromPool}} is not null)
                                     {
-                                        global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_pinnedHandleArrayFromPool);
+                                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
                                     }
                         
-                                    if (__{{raw}}_headerArrayFromPool is not null)
+                                    if ({{names.HeaderArrayFromPool}} is not null)
                                     {
-                                        global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{{raw}}_headerArrayFromPool);
+                                        global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
                                     }
                         """);
                 }
@@ -629,17 +632,17 @@ internal static partial class ConstructorFactory
                                     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
                                     static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
                         
-                                    fixed(void* _{{raw}} = __{{raw}}_span)
+                                    fixed(void* _{{raw}} = {{names.Span}})
                                     {
-                                        Dispose_{{raw}}(null, (uint) __{{raw}}_span.Length, (void**)_{{raw}});
+                                        Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, (void**)_{{raw}});
                                     }
                         """);
                 }
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                                if (__{{raw}}_arrayFromPool is not null)
+                                if ({{names.ArrayFromPool}} is not null)
                                 {
-                                    global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_arrayFromPool);
+                                    global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
                                 }
                     """);
             }

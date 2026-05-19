@@ -430,6 +430,7 @@ internal static partial class AbiMethodBodyFactory
             // struct type. For everything else (runtime classes, objects, strings), use nint.
             string localName = p.GetParamLocalName(paramNameOverride);
             string callName = p.GetParamName(paramNameOverride);
+            ArrayTempNames names = new(localName);
             string storageT = context.AbiTypeShapeResolver.IsMappedAbiValueType(szArr.BaseType)
                 ? AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType)
                 : context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType)
@@ -439,11 +440,11 @@ internal static partial class AbiMethodBodyFactory
                         : "nint";
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                        Unsafe.SkipInit(out InlineArray16<{{storageT}}> __{{localName}}_inlineArray);
-                        {{storageT}}[] __{{localName}}_arrayFromPool = null;
-                        Span<{{storageT}}> __{{localName}}_span = {{callName}}.Length <= 16
-                            ? __{{localName}}_inlineArray[..{{callName}}.Length]
-                            : (__{{localName}}_arrayFromPool = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
+                        Unsafe.SkipInit(out InlineArray16<{{storageT}}> {{names.InlineArray}});
+                        {{storageT}}[] {{names.ArrayFromPool}} = null;
+                        Span<{{storageT}}> {{names.Span}} = {{callName}}.Length <= 16
+                            ? {{names.InlineArray}}[..{{callName}}.Length]
+                            : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
                 """);
 
             if (szArr.BaseType.IsString() && cat == ParameterCategory.PassArray)
@@ -453,17 +454,17 @@ internal static partial class AbiMethodBodyFactory
                 // fills HSTRING handles directly into the nint storage.
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                            Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{localName}}_inlineHeaderArray);
-                            HStringHeader[] __{{localName}}_headerArrayFromPool = null;
-                            Span<HStringHeader> __{{localName}}_headerSpan = {{callName}}.Length <= 16
-                                ? __{{localName}}_inlineHeaderArray[..{{callName}}.Length]
-                                : (__{{localName}}_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+                            Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
+                            HStringHeader[] {{names.HeaderArrayFromPool}} = null;
+                            Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
+                                ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
+                                : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
                     
-                            Unsafe.SkipInit(out InlineArray16<nint> __{{localName}}_inlinePinnedHandleArray);
-                            nint[] __{{localName}}_pinnedHandleArrayFromPool = null;
-                            Span<nint> __{{localName}}_pinnedHandleSpan = {{callName}}.Length <= 16
-                                ? __{{localName}}_inlinePinnedHandleArray[..{{callName}}.Length]
-                                : (__{{localName}}_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                            Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
+                            nint[] {{names.PinnedHandleArrayFromPool}} = null;
+                            Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
+                                ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
+                                : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
                     """);
             }
         }
@@ -812,6 +813,7 @@ internal static partial class AbiMethodBodyFactory
 
             string callName = p.GetParamName(paramNameOverride);
             string localName = p.GetParamLocalName(paramNameOverride);
+            ArrayTempNames names = new(localName);
 
             if (szArr.BaseType.IsString())
             {
@@ -826,8 +828,8 @@ internal static partial class AbiMethodBodyFactory
                     {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
                     {{callIndent}}    source: {{callName}},
                     {{callIndent}}    hstringHeaders: (HStringHeader*) _{{localName}}_inlineHeaderArray,
-                    {{callIndent}}    hstrings: __{{localName}}_span,
-                    {{callIndent}}    pinnedGCHandles: __{{localName}}_pinnedHandleSpan);
+                    {{callIndent}}    hstrings: {{names.Span}},
+                    {{callIndent}}    pinnedGCHandles: {{names.PinnedHandleSpan}});
                     """);
             }
             else
@@ -1039,6 +1041,7 @@ internal static partial class AbiMethodBodyFactory
 
             string callName = p.GetParamName(paramNameOverride);
             string localName = p.GetParamLocalName(paramNameOverride);
+            ArrayTempNames names = new(localName);
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
             // Determine the ABI element type for the data pointer parameter.
             // - Strings / runtime classes / objects: void**
@@ -1074,7 +1077,7 @@ internal static partial class AbiMethodBodyFactory
             writer.WriteLine(isMultiline: true, $$"""
                 {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
                 {{callIndent}}static extern void CopyToManaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
-                {{callIndent}}CopyToManaged_{{localName}}(null, (uint)__{{localName}}_span.Length, {{dataCastType}}_{{localName}}, {{callName}});
+                {{callIndent}}CopyToManaged_{{localName}}(null, (uint){{names.Span}}.Length, {{dataCastType}}_{{localName}}, {{callName}});
                 """);
         }
 
@@ -1379,6 +1382,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
                 string localName = p.GetParamLocalName(paramNameOverride);
+                ArrayTempNames names = new(localName);
 
                 if (szArr.BaseType.IsString())
                 {
@@ -1389,16 +1393,16 @@ internal static partial class AbiMethodBodyFactory
                     if (cat == ParameterCategory.PassArray)
                     {
                         writer.WriteLine(isMultiline: true, $$"""
-                                        HStringArrayMarshaller.Dispose(__{{localName}}_pinnedHandleSpan);
+                                        HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
                             
-                                        if (__{{localName}}_pinnedHandleArrayFromPool is not null)
+                                        if ({{names.PinnedHandleArrayFromPool}} is not null)
                                         {
-                                            global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{localName}}_pinnedHandleArrayFromPool);
+                                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
                                         }
                             
-                                        if (__{{localName}}_headerArrayFromPool is not null)
+                                        if ({{names.HeaderArrayFromPool}} is not null)
                                         {
-                                            global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{{localName}}_headerArrayFromPool);
+                                            global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
                                         }
                             """);
                     }
@@ -1406,9 +1410,9 @@ internal static partial class AbiMethodBodyFactory
                     // Both PassArray and FillArray need the inline-array's nint pool returned.
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                                    if (__{{localName}}_arrayFromPool is not null)
+                                    if ({{names.ArrayFromPool}} is not null)
                                     {
-                                        global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{localName}}_arrayFromPool);
+                                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
                                     }
                         """);
                 }
@@ -1444,9 +1448,9 @@ internal static partial class AbiMethodBodyFactory
                     writer.WriteLine(isMultiline: true, $$"""
                         );
                         
-                                    fixed({{fixedPtrType}} _{{localName}} = __{{localName}}_span)
+                                    fixed({{fixedPtrType}} _{{localName}} = {{names.Span}})
                                     {
-                                        Dispose_{{localName}}(null, (uint) __{{localName}}_span.Length, {{disposeCastType}}_{{localName}});
+                                        Dispose_{{localName}}(null, (uint) {{names.Span}}.Length, {{disposeCastType}}_{{localName}});
                                     }
                         """);
                 }
@@ -1460,9 +1464,9 @@ internal static partial class AbiMethodBodyFactory
                         : "nint";
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                                if (__{{localName}}_arrayFromPool is not null)
+                                if ({{names.ArrayFromPool}} is not null)
                                 {
-                                    global::System.Buffers.ArrayPool<{{poolStorageT}}>.Shared.Return(__{{localName}}_arrayFromPool);
+                                    global::System.Buffers.ArrayPool<{{poolStorageT}}>.Shared.Return({{names.ArrayFromPool}});
                                 }
                     """);
             }
