@@ -89,28 +89,7 @@ internal static class TypeDefinitionExtensions
         public int? GetContractVersion()
         {
             CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute(ContractVersionAttribute);
-
-            if (attr is null)
-            {
-                return null;
-            }
-
-            if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 1)
-            {
-                object? v = attr.Signature.FixedArguments[1].Element;
-
-                if (v is uint u)
-                {
-                    return (int)u;
-                }
-
-                if (v is int i)
-                {
-                    return i;
-                }
-            }
-
-            return null;
+            return attr is not null && attr.TryGetFixedArgument(1, out int v) ? v : null;
         }
 
         /// <summary>
@@ -122,28 +101,7 @@ internal static class TypeDefinitionExtensions
         public int? GetVersion()
         {
             CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute(VersionAttribute);
-
-            if (attr is null)
-            {
-                return null;
-            }
-
-            if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
-            {
-                object? v = attr.Signature.FixedArguments[0].Element;
-
-                if (v is uint u)
-                {
-                    return (int)u;
-                }
-
-                if (v is int i)
-                {
-                    return i;
-                }
-            }
-
-            return null;
+            return attr is not null && attr.TryGetFixedArgument(0, out int v) ? v : null;
         }
     }
 }
