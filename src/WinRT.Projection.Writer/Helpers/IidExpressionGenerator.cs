@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -231,7 +232,7 @@ internal static partial class IidExpressionGenerator
 
     /// <summary>
     /// Writes a static IID property whose body is built from the parametric GUID signature
-    /// (computed via <see cref="SignatureGenerator.WriteGuidSignature(ProjectionEmitContext, TypeSemantics)"/>
+    /// (computed via <see cref="SignatureGenerator.GetSignature(ProjectionEmitContext, TypeSemantics)"/>
     /// for the type, then wrapped in the <c>Windows.Foundation.IReference&lt;T&gt;</c>
     /// pinterface to produce the <c>IID_XReference</c> hashed GUID).
     /// </summary>
@@ -240,10 +241,21 @@ internal static partial class IidExpressionGenerator
     /// <param name="type">The type whose <c>IReference&lt;T&gt;</c> IID is emitted.</param>
     public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string guidSig = SignatureGenerator.WriteGuidSignature(context, new TypeSemantics.Definition(type));
-        string ireferenceGuidSig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guidSig + ")";
-        Guid guidValue = GuidGenerator.Generate(ireferenceGuidSig);
-        byte[] bytes = guidValue.ToByteArray();
+        string signature = SignatureGenerator.GetSignature(context, new TypeSemantics.Definition(type));
+        Guid guid;
+
+        // We can use an interpolated handler here to avoid allocating the 'string' for the full signature.
+        // The additional scope here is to ensure that the rest of the method never reuses this handler.
+        {
+            DefaultInterpolatedStringHandler handler = $$"""pinterface({61c17706-2d65-11e0-9ae8-d48564015472};{{signature}})""";
+
+            guid = GuidGenerator.Generate(handler.Text);
+
+            // Don't forget to clear the handler after we used it, so its rented buffer can be returned
+            handler.Clear();
+        }
+
+        byte[] bytes = guid.ToByteArray();
 
         writer.Write("public static ref readonly Guid ");
         WriteIidReferenceGuidPropertyName(writer, context, type);
