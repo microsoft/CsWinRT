@@ -46,7 +46,7 @@ internal static class AbiStructFactory
             writer.WriteLine(isMultiline: true, $$"""
                 {{marshallerOrTypeAttrs}}
                 {{valueTypeAttr}}
-                {{context.Settings.InternalAccessibility}} unsafe struct {{nameStripped}}
+                {{(context.Settings.Internal ? "internal" : "public")}} unsafe struct {{nameStripped}}
                 """);
             using (writer.WriteBlock())
             {

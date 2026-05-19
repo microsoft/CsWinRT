@@ -52,11 +52,6 @@ public sealed class ProjectionWriterOptions
     public bool Internal { get; init; }
 
     /// <summary>
-    /// Generate an embedded projection.
-    /// </summary>
-    public bool Embedded { get; init; }
-
-    /// <summary>
     /// If <c>true</c> with embedded option, generate enums as public.
     /// </summary>
     public bool PublicEnums { get; init; }

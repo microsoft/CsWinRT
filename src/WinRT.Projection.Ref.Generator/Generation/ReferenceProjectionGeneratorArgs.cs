@@ -54,13 +54,6 @@ internal sealed partial class ReferenceProjectionGeneratorArgs
     public bool Internal { get; init; }
 
     /// <summary>
-    /// Gets whether to generate an embedded projection.
-    /// CsWinRT 3.0 leftover; preserved for OLD-target parity.
-    /// </summary>
-    [CommandLineArgumentName("--embedded")]
-    public bool Embedded { get; init; }
-
-    /// <summary>
     /// Gets whether to emit enums as public when used with the embedded option.
     /// CsWinRT 3.0 leftover; preserved for OLD-target parity.
     /// </summary>

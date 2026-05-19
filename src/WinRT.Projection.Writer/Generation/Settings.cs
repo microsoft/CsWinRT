@@ -108,11 +108,6 @@ internal sealed class Settings
     public bool Internal { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the projection is embedded into a consuming assembly (forces <c>internal</c> visibility).
-    /// </summary>
-    public bool Embedded { get; init; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether projected enums are forced to <c>public</c> visibility (overrides <see cref="Internal"/>).
     /// </summary>
     public bool PublicEnums { get; init; }

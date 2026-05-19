@@ -302,7 +302,7 @@ internal static class ProjectionFileBuilder
 
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
-        writer.WriteLine($"{context.Settings.InternalAccessibility} enum {typeName};");
+        writer.WriteLine($"{(context.Settings.Internal ? "internal" : "public")} enum {typeName};");
     }
 
     /// <summary>
@@ -339,7 +339,7 @@ internal static class ProjectionFileBuilder
             {{customAttrs}}
             {{comWrappersAttr}}
             {{guidAttr}}
-            {{context.Settings.InternalAccessibility}} delegate {{ret}} {{typedefName}}{{typeParams}}({{parms}});
+            {{(context.Settings.Internal ? "internal" : "public")}} delegate {{ret}} {{typedefName}}{{typeParams}}({{parms}});
             """);
     }
 
@@ -357,7 +357,7 @@ internal static class ProjectionFileBuilder
         writer.WriteLine(isMultiline: true, $$"""
             {{metadataAttr}}
             {{customAttrs}}
-            {{context.Settings.InternalAccessibility}} sealed class {{typeName}} : Attribute
+            {{(context.Settings.Internal ? "internal" : "public")}} sealed class {{typeName}} : Attribute
             """);
 
         using (writer.WriteBlock())

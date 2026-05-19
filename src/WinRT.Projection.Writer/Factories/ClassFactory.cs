@@ -292,7 +292,7 @@ internal static class ClassFactory
             writer.WriteLine(isMultiline: true, $$"""
                 {{metadataAttr}}
                 {{customAttrs}}
-                {{context.Settings.InternalAccessibility}} static class {{name}}
+                {{(context.Settings.Internal ? "internal" : "public")}} static class {{name}}
                 """);
             using (writer.WriteBlock())
             {

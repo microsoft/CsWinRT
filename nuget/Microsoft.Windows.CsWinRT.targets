@@ -405,7 +405,6 @@ $(CsWinRTInternalProjection)
         ExcludeNamespaces="@(_CsWinRTRefExcludes)"
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
-        Embedded="$(CsWinRTEmbedded)"
         PublicEnums="$(CsWinRTEmbeddedPublicEnums)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
