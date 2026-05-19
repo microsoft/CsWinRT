@@ -176,12 +176,10 @@ internal static class AbiClassFactory
             bool hasOverridable = false;
             foreach (InterfaceImplementation impl in exclusiveToType.Interfaces)
             {
-                if (impl.Interface is null)
+                if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceTd))
                 {
                     continue;
                 }
-
-                TypeDefinition? ifaceTd = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
                 if (ifaceTd == type && impl.IsOverridable())
                 {

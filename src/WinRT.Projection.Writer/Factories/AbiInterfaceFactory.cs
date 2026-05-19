@@ -524,9 +524,7 @@ internal static class AbiInterfaceFactory
             {
                 foreach (InterfaceImplementation impl in classType.Interfaces)
                 {
-                    TypeDefinition? implDef = impl.Interface!.ResolveAsTypeDefinition(context.Cache);
-
-                    if (implDef is not null && implDef == type)
+                    if (impl.TryResolveTypeDef(context.Cache, out TypeDefinition? implDef) && implDef == type)
                     {
                         skipExclusiveEvents = true;
                         break;

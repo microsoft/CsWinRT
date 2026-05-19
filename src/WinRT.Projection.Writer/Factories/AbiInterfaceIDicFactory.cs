@@ -72,14 +72,7 @@ internal static class AbiInterfaceIDicFactory
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null)
-            {
-                continue;
-            }
-
-            TypeDefinition? required = impl.Interface.ResolveAsTypeDefinition(context.Cache);
-
-            if (required is null)
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? required))
             {
                 continue;
             }
@@ -161,14 +154,7 @@ internal static class AbiInterfaceIDicFactory
     {
         foreach (InterfaceImplementation impl2 in required.Interfaces)
         {
-            if (impl2.Interface is null)
-            {
-                continue;
-            }
-
-            TypeDefinition? r2 = impl2.Interface.ResolveAsTypeDefinition(context.Cache);
-
-            if (r2 is not null)
+            if (impl2.TryResolveTypeDef(context.Cache, out TypeDefinition? r2))
             {
                 _ = visited.Add(r2);
             }
