@@ -433,7 +433,7 @@ internal static partial class AbiTypeHelpers
     /// <returns>The escaped parameter name.</returns>
     internal static string GetParamName(ParameterInfo p, string? paramNameOverride)
     {
-        string name = paramNameOverride ?? p.Parameter.Name ?? "param";
+        string name = paramNameOverride ?? p.GetRawName();
         return IdentifierEscaping.EscapeIdentifier(name);
     }
 
@@ -447,6 +447,6 @@ internal static partial class AbiTypeHelpers
     /// <returns>The unescaped local-variable name.</returns>
     internal static string GetParamLocalName(ParameterInfo p, string? paramNameOverride)
     {
-        return paramNameOverride ?? p.Parameter.Name ?? "param";
+        return paramNameOverride ?? p.GetRawName();
     }
 }

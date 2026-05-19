@@ -1580,7 +1580,7 @@ internal static partial class AbiMethodBodyFactory
     /// </summary>
     internal static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p, string? paramNameOverride = null)
     {
-        string pname = paramNameOverride ?? p.Parameter.Name ?? "param";
+        string pname = paramNameOverride ?? p.GetRawName();
         // bool: ABI is 'bool' directly; pass as-is.
         if (p.Type is CorLibTypeSignature corlib &&
             corlib.ElementType == ElementType.Boolean)

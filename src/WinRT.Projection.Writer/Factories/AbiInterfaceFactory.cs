@@ -78,7 +78,7 @@ internal static class AbiInterfaceFactory
             writer.Write(", ");
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            string paramName = p.Parameter.Name ?? "param";
+            string paramName = p.GetRawName();
             WriteEscapedIdentifierCallback name = IdentifierEscaping.WriteEscapedIdentifier(paramName);
 
             if (p.Type is SzArrayTypeSignature)

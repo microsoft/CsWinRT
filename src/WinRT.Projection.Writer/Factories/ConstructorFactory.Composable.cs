@@ -106,7 +106,7 @@ internal static partial class ConstructorFactory
                 {
                     writer.WriteIf(i > 0, ", ");
 
-                    string raw = sig.Parameters[i].Parameter.Name ?? "param";
+                    string raw = sig.Parameters[i].GetRawName();
                     writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
                 }
                 writer.Write("))");

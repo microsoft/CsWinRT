@@ -96,7 +96,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 writer.WriteLine(isMultiline: true, $$"""
@@ -119,7 +119,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
@@ -189,7 +189,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"*{ptr} = default;");
             }
@@ -203,7 +203,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -224,7 +224,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
@@ -254,7 +254,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
                 bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittableAbiElement(sz.BaseType);
@@ -305,7 +305,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
@@ -343,7 +343,7 @@ internal static partial class AbiMethodBodyFactory
                 if (p.Type.IsNullableT())
                 {
                     // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
-                    string rawName = p.Parameter.Name ?? "param";
+                    string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     TypeSignature inner = p.Type.GetNullableInnerType()!;
                     string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
@@ -351,7 +351,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (p.Type.IsGenericInstance())
                 {
-                    string rawName = p.Parameter.Name ?? "param";
+                    string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                     WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
@@ -414,7 +414,7 @@ internal static partial class AbiMethodBodyFactory
 
                     if (cat == ParameterCategory.Out)
                     {
-                        string raw = p.Parameter.Name ?? "param";
+                        string raw = p.GetRawName();
                         writer.Write($"out __{raw}");
                     }
                     else if (cat == ParameterCategory.Ref)
@@ -423,7 +423,7 @@ internal static partial class AbiMethodBodyFactory
                         // (pointer to a value the native caller owns). On the C# delegate / interface
                         // side it's projected as 'in T'. Read directly from *<name> via the appropriate
                         // marshaller — DO NOT zero or write back.
-                        string raw = p.Parameter.Name ?? "param";
+                        string raw = p.GetRawName();
                         string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                         TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
@@ -463,12 +463,12 @@ internal static partial class AbiMethodBodyFactory
                     }
                     else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
                     {
-                        string raw = p.Parameter.Name ?? "param";
+                        string raw = p.GetRawName();
                         writer.Write($"__{raw}");
                     }
                     else if (cat == ParameterCategory.ReceiveArray)
                     {
-                        string raw = p.Parameter.Name ?? "param";
+                        string raw = p.GetRawName();
                         writer.Write($"out __{raw}");
                     }
                     else
@@ -491,7 +491,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 string rhs;
@@ -551,7 +551,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
             }
@@ -582,7 +582,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
                 // Determine the ABI element type for the data pointer cast.
@@ -746,7 +746,7 @@ internal static partial class AbiMethodBodyFactory
                         continue;
                     }
 
-                    string raw = p.Parameter.Name ?? "param";
+                    string raw = p.GetRawName();
                     WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
@@ -767,7 +767,7 @@ internal static partial class AbiMethodBodyFactory
     /// </summary>
     internal static void EmitDoAbiParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        string rawName = p.Parameter.Name ?? "param";
+        string rawName = p.GetRawName();
         string pname = IdentifierEscaping.EscapeIdentifier(rawName);
 
         if (p.Type is CorLibTypeSignature corlib &&

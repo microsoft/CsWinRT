@@ -127,7 +127,7 @@ internal static class MethodFactory
     /// <param name="p">The parameter info.</param>
     public static void WriteParameterName(IndentedTextWriter writer, ParameterInfo p)
     {
-        string name = p.Parameter.Name ?? "param";
+        string name = p.GetRawName();
 
         writer.WriteIf(CSharpKeywords.IsKeyword(name), "@");
 
