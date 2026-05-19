@@ -37,10 +37,10 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsGenericInstance = rt is not null && rt.IsGenericInstance();
         bool returnIsBlittableStruct = rt is not null && context.AbiTypeShapeResolver.IsBlittableStruct(rt);
 
-        bool isGetter = sig.Method.IsGetter();
-        bool isSetter = sig.Method.IsSetter();
-        bool isAddEvent = sig.Method.IsAdder();
-        bool isRemoveEvent = sig.Method.IsRemover();
+        bool isGetter = sig.Method.IsGetter;
+        bool isSetter = sig.Method.IsSetter;
+        bool isAddEvent = sig.Method.IsAdder;
+        bool isRemoveEvent = sig.Method.IsRemover;
 
         if (isAddEvent || isRemoveEvent)
         {

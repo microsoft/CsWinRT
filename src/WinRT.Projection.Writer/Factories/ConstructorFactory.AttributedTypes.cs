@@ -108,9 +108,11 @@ internal static partial class ConstructorFactory
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
-                if (method.IsSpecial())
+                if (method.IsSpecial)
                 {
-                    methodIndex++; continue;
+                    methodIndex++;
+
+                    continue;
                 }
 
                 MethodSignatureInfo sig = new(method);

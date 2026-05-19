@@ -49,9 +49,11 @@ internal static partial class ConstructorFactory
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
         {
-            if (method.IsSpecial())
+            if (method.IsSpecial)
             {
-                methodIndex++; continue;
+                methodIndex++;
+
+                continue;
             }
 
             // Composable factory methods have signature like:

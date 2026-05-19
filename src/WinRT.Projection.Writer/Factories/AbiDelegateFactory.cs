@@ -173,7 +173,7 @@ internal static class AbiDelegateFactory
         // (after QI/AddRef/Release). Functionally equivalent to the truth's
         // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;' form, just routed
         // through the slot-indexed dispatch shared with interface CCW callers.
-        AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
+        AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept);
 
         writer.WriteLine("}");
     }

@@ -291,7 +291,7 @@ internal static partial class AbiTypeHelpers
     {
         foreach (MethodDefinition m in iface.Methods)
         {
-            if (!m.IsSpecial())
+            if (!m.IsSpecial)
             {
                 return true;
             }

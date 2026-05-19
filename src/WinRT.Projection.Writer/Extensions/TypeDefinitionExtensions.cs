@@ -23,7 +23,7 @@ internal static class TypeDefinitionExtensions
         {
             foreach (MethodDefinition method in type.Methods)
             {
-                if (!method.IsSpecial())
+                if (!method.IsSpecial)
                 {
                     yield return method;
                 }
@@ -117,7 +117,7 @@ internal static class TypeDefinitionExtensions
         {
             foreach (MethodDefinition m in type.Methods)
             {
-                if (m.IsDefaultConstructor())
+                if (m.IsDefaultConstructor)
                 {
                     return true;
                 }

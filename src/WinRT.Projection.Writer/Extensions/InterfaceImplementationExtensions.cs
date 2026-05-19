@@ -21,7 +21,9 @@ internal static class InterfaceImplementationExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the interface is the default interface; otherwise <see langword="false"/>.</returns>
         public bool IsDefaultInterface()
-            => impl.HasWindowsFoundationMetadataAttribute(DefaultAttribute);
+        {
+            return impl.HasWindowsFoundationMetadataAttribute(DefaultAttribute);
+        }
 
         /// <summary>
         /// Returns whether the implemented interface is marked <c>[Overridable]</c> (i.e. derived
@@ -29,7 +31,9 @@ internal static class InterfaceImplementationExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the interface is overridable; otherwise <see langword="false"/>.</returns>
         public bool IsOverridable()
-            => impl.HasWindowsFoundationMetadataAttribute(OverridableAttribute);
+        {
+            return impl.HasWindowsFoundationMetadataAttribute(OverridableAttribute);
+        }
 
         /// <summary>
         /// Attempts to resolve the implemented interface to a <see cref="TypeDefinition"/>, handling
@@ -48,10 +52,12 @@ internal static class InterfaceImplementationExtensions
             if (impl.Interface is null)
             {
                 definition = null;
+
                 return false;
             }
 
             definition = impl.Interface.ResolveAsTypeDefinition(cache);
+
             return definition is not null;
         }
     }

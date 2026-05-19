@@ -61,15 +61,15 @@ internal static class ITypeDefOrRefExtensions
                 return td;
             }
 
-            if (type is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+            if (type is TypeSpecification { Signature: GenericInstanceTypeSignature gi })
             {
-                ITypeDefOrRef? gen = gi.GenericType;
-                return gen?.ResolveAsTypeDefinition(cache);
+                return gi.GenericType.ResolveAsTypeDefinition(cache);
             }
 
             if (type is TypeReference tr)
             {
                 (string ns, string nm) = tr.Names();
+
                 return cache.Find(ns, nm);
             }
 
@@ -96,6 +96,7 @@ internal static class ITypeDefOrRefExtensions
         public bool TryGetGenericInstance([NotNullWhen(true)] out GenericInstanceTypeSignature? genericInstance)
         {
             genericInstance = (type as TypeSpecification)?.Signature as GenericInstanceTypeSignature;
+
             return genericInstance is not null;
         }
     }

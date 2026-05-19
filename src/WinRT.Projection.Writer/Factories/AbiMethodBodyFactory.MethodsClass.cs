@@ -64,7 +64,7 @@ internal static partial class AbiMethodBodyFactory
             writer.Write($"{ret} {mname}(WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
-            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept());
+            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept);
         }
 
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
