@@ -31,6 +31,51 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Returns the set of property accessor methods (get and set) declared by the type's
+        /// properties. Used to filter "regular" methods (non-property, non-event) when emitting
+        /// per-method code in interface bodies.
+        /// </summary>
+        public HashSet<MethodDefinition> GetPropertyAccessorSet()
+        {
+            HashSet<MethodDefinition> accessors = [];
+
+            foreach (PropertyDefinition prop in type.Properties)
+            {
+                if (prop.GetMethod is MethodDefinition g)
+                {
+                    _ = accessors.Add(g);
+                }
+
+                if (prop.SetMethod is MethodDefinition s)
+                {
+                    _ = accessors.Add(s);
+                }
+            }
+
+            return accessors;
+        }
+
+        /// <summary>
+        /// Adds all directly-required interfaces of <paramref name="type"/> to
+        /// <paramref name="visited"/> so they aren't re-emitted as forwarders. Used by the DIC
+        /// shim emitters that already cover their inherited interface members transitively
+        /// (e.g. <c>IBindableVector</c> already includes <c>IBindableIterable</c>'s members).
+        /// </summary>
+        /// <param name="cache">The metadata cache used to resolve interface references.</param>
+        /// <param name="visited">The accumulator set to which resolved required interface
+        /// definitions are added.</param>
+        public void MarkRequiredInterfacesVisited(Metadata.MetadataCache cache, HashSet<TypeDefinition> visited)
+        {
+            foreach (InterfaceImplementation impl in type.Interfaces)
+            {
+                if (impl.TryResolveTypeDef(cache, out TypeDefinition? required))
+                {
+                    _ = visited.Add(required);
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the <c>[Default]</c> interface of the type (the interface whose vtable backs the
         /// type's <c>IInspectable</c> identity), or <see langword="null"/> if the type does not declare one.
         /// </summary>

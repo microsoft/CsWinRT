@@ -254,7 +254,7 @@ internal static partial class ClassMembersFactory
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
             MethodSignatureInfo sig = new(method, genericContext);
-            string key = BuildMethodSignatureKey(name, sig);
+            string key = sig.GetDedupeKey(name);
 
             if (!writtenMethods.Add(key))
             {

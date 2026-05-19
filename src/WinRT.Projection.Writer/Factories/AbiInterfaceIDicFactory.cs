@@ -97,7 +97,7 @@ internal static class AbiInterfaceIDicFactory
                 // required interfaces so any other (deeper) inherited mapped interface is covered.
                 if (rName == "IBindableVector")
                 {
-                    MarkAllRequiredInterfacesVisited(context, required, visited);
+                    required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
 
                 continue;
@@ -114,7 +114,7 @@ internal static class AbiInterfaceIDicFactory
                     string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
-                    MarkAllRequiredInterfacesVisited(context, required, visited);
+                    required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
 
                 continue;
@@ -126,7 +126,7 @@ internal static class AbiInterfaceIDicFactory
                 {
                     string elementText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
-                    MarkAllRequiredInterfacesVisited(context, required, visited);
+                    required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
 
                 continue;
@@ -141,23 +141,6 @@ internal static class AbiInterfaceIDicFactory
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
             WriteInterfaceIdicImplMembersForRequiredInterfaces(writer, context, required, visited);
             WriteInterfaceIdicImplMembersForInheritedInterface(writer, context, required);
-        }
-    }
-
-    /// <summary>
-    /// Adds all directly-required interfaces of <paramref name="required"/> to <paramref name="visited"/>
-    /// so they aren't re-emitted as forwarders. Used by the shim emitters that already cover their
-    /// inherited interface members transitively (e.g. <c>IBindableVector</c> already includes
-    /// <c>IBindableIterable</c>'s members).
-    /// </summary>
-    private static void MarkAllRequiredInterfacesVisited(ProjectionEmitContext context, TypeDefinition required, HashSet<TypeDefinition> visited)
-    {
-        foreach (InterfaceImplementation impl2 in required.Interfaces)
-        {
-            if (impl2.TryResolveTypeDef(context.Cache, out TypeDefinition? r2))
-            {
-                _ = visited.Add(r2);
-            }
         }
     }
 

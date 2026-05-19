@@ -197,22 +197,4 @@ internal static partial class ClassMembersFactory
         // GetInterface() / GetDefaultInterface() impls are emitted per-interface inside
         // WriteInterfaceMembersRecursive (matches the original code's per-interface ordering).
     }
-
-    private static string BuildMethodSignatureKey(string name, MethodSignatureInfo sig)
-    {
-        System.Text.StringBuilder sb = new();
-        _ = sb.Append(name);
-        _ = sb.Append('(');
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            if (i > 0)
-            {
-                _ = sb.Append(',');
-            }
-
-            _ = sb.Append(sig.Parameters[i].Type?.FullName ?? "?");
-        }
-        _ = sb.Append(')');
-        return sb.ToString();
-    }
 }

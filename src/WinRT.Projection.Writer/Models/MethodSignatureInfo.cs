@@ -100,4 +100,30 @@ internal sealed class MethodSignatureInfo
     /// <returns>The return parameter name (or default).</returns>
     public string ReturnParameterName(string defaultName = ProjectionNames.DefaultReturnParameterName)
         => ReturnParameter?.Name?.Value ?? defaultName;
+
+    /// <summary>
+    /// Returns a deduplication key for a method named <paramref name="name"/> with this signature:
+    /// the method name followed by a comma-separated list of parameter type full names enclosed in
+    /// parentheses. Used to detect duplicate overloads across interface walks.
+    /// </summary>
+    /// <param name="name">The method's local (un-mangled) name.</param>
+    public string GetDedupeKey(string name)
+    {
+        System.Text.StringBuilder sb = new();
+        _ = sb.Append(name);
+        _ = sb.Append('(');
+
+        for (int i = 0; i < Parameters.Count; i++)
+        {
+            if (i > 0)
+            {
+                _ = sb.Append(',');
+            }
+
+            _ = sb.Append(Parameters[i].Type?.FullName ?? "?");
+        }
+
+        _ = sb.Append(')');
+        return sb.ToString();
+    }
 }
