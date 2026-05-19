@@ -262,16 +262,16 @@ internal static partial class AbiMethodBodyFactory
 
             if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject())
             {
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
+                string callName = p.GetParamName(paramNameOverride);
                 EmitMarshallerConvertToUnmanagedCallback cvt = EmitMarshallerConvertToUnmanaged(context, p.Type, callName);
                 writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = {cvt};");
             }
             else if (p.Type.IsNullableT())
             {
                 // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged.
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
+                string callName = p.GetParamName(paramNameOverride);
                 TypeSignature inner = p.Type.GetNullableInnerType()!;
                 string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                 writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = {innerMarshaller}.BoxToUnmanaged({callName});");
@@ -279,8 +279,8 @@ internal static partial class AbiMethodBodyFactory
             else if (p.Type.IsGenericInstance())
             {
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
+                string callName = p.GetParamName(paramNameOverride);
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                 writer.WriteLine(isMultiline: true, $$"""
@@ -308,8 +308,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
             writer.WriteLine($"        global::ABI.System.Exception __{localName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({callName});");
         }
 
@@ -328,8 +328,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
             writer.WriteLine($"        {AbiTypeHelpers.GetMappedAbiTypeName(p.Type)} __{localName} = {AbiTypeHelpers.GetMappedMarshallerName(p.Type)}.ConvertToUnmanaged({callName});");
         }
 
@@ -354,7 +354,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
             writer.WriteLine($"        {AbiTypeHelpers.GetAbiStructTypeName(writer, context, pType)} __{localName} = default;");
         }
 
@@ -369,7 +369,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        ");
 
@@ -388,7 +388,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
             SzArrayTypeSignature sza = p.Type.AsSzArray()!;
             writer.WriteLine(isMultiline: true, $$"""
                         uint __{{localName}}_length = default;
@@ -427,8 +427,8 @@ internal static partial class AbiMethodBodyFactory
             // For mapped value types (DateTime/TimeSpan), use the ABI struct type.
             // For complex structs (e.g. authored BasicStruct with reference fields), use the ABI
             // struct type. For everything else (runtime classes, objects, strings), use nint.
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
             string storageT = context.AbiTypeShapeResolver.IsMappedAbiValueType(szArr.BaseType)
                 ? AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType)
                 : context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType)
@@ -602,8 +602,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
             writer.WriteLine($"{indent}__{localName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.ConvertToUnmanaged({callName});");
         }
 
@@ -623,8 +623,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
             writer.WriteLine($"{indent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({callName}, out TypeReference __{localName});");
         }
 
@@ -680,8 +680,8 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string callName = p.GetParamName(paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 TypeSignature uRef = uRefSkip;
                 string abiType = context.AbiTypeShapeResolver.IsBlittableStruct(uRef) ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uRef) : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef);
                 writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}fixed({abiType}* _{localName} = &{callName})");
@@ -711,8 +711,8 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string callName = p.GetParamName(paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
 
                 writer.WriteIf(!first, ", ");
 
@@ -765,8 +765,8 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string callName = AbiTypeHelpers.GetParamName(sig.Parameters[i], paramNameOverride);
-                string localName = AbiTypeHelpers.GetParamLocalName(sig.Parameters[i], paramNameOverride);
+                string callName = sig.Parameters[i].GetParamName(paramNameOverride);
+                string localName = sig.Parameters[i].GetParamLocalName(paramNameOverride);
                 writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{localName}, {callName}?.Length, out HStringReference __{localName});");
             }
             stringPinnablesEmitted = true;
@@ -809,8 +809,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
 
             if (szArr.BaseType.IsString())
             {
@@ -898,8 +898,8 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat.IsArrayInput())
             {
-                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string callName = p.GetParamName(paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 writer.Write(isMultiline: true, $$"""
                     ,
                       (uint){{callName}}.Length, _{{localName}}
@@ -909,7 +909,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.Out)
             {
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 writer.Write(isMultiline: true, $$"""
                     ,
                       &__{{localName}}
@@ -919,7 +919,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.ReceiveArray)
             {
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 writer.Write(isMultiline: true, $$"""
                     ,
                       &__{{localName}}_length, &__{{localName}}_data
@@ -929,7 +929,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.Ref)
             {
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 TypeSignature uRefArg = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
                 if (context.AbiTypeShapeResolver.IsComplexStruct(uRefArg))
@@ -956,34 +956,34 @@ internal static partial class AbiMethodBodyFactory
                 """);
             if (p.Type.IsHResultException())
             {
-                writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}");
+                writer.Write($"__{p.GetParamLocalName(paramNameOverride)}");
             }
             else if (p.Type.IsString())
             {
-                writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}.HString");
+                writer.Write($"__{p.GetParamLocalName(paramNameOverride)}.HString");
             }
             else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
             {
-                writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}.GetThisPtrUnsafe()");
+                writer.Write($"__{p.GetParamLocalName(paramNameOverride)}.GetThisPtrUnsafe()");
             }
             else if (p.Type.IsSystemType())
             {
                 // System.Type input: pass the pre-converted ABI Type struct (via the local set up before the call).
-                writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}.ConvertToUnmanagedUnsafe()");
+                writer.Write($"__{p.GetParamLocalName(paramNameOverride)}.ConvertToUnmanagedUnsafe()");
             }
             else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
             {
                 // Mapped value-type input: pass the pre-converted ABI local.
-                writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}");
+                writer.Write($"__{p.GetParamLocalName(paramNameOverride)}");
             }
             else if (context.AbiTypeShapeResolver.IsComplexStruct(p.Type))
             {
                 // Complex struct input: pass the pre-converted ABI struct local.
-                writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}");
+                writer.Write($"__{p.GetParamLocalName(paramNameOverride)}");
             }
             else if (context.AbiTypeShapeResolver.IsBlittableStruct(p.Type))
             {
-                writer.Write(AbiTypeHelpers.GetParamName(p, paramNameOverride));
+                writer.Write(p.GetParamName(paramNameOverride));
             }
             else
             {
@@ -1036,8 +1036,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
             // Determine the ABI element type for the data pointer parameter.
             // - Strings / runtime classes / objects: void**
@@ -1088,8 +1088,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
             // For Out generic instance: emit inline UnsafeAccessor to ConvertToManaged_<name>
@@ -1166,8 +1166,8 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
-            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = p.GetParamName(paramNameOverride);
+            string localName = p.GetParamLocalName(paramNameOverride);
             SzArrayTypeSignature sza = p.Type.AsSzArray()!;
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
@@ -1329,7 +1329,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 writer.WriteLine($"            {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.Dispose(__{localName});");
             }
 
@@ -1368,7 +1368,7 @@ internal static partial class AbiMethodBodyFactory
                     // HResultException ABI is just an int; per-element Dispose is a no-op (mirror
                     // the truth: no Dispose_<name> emitted). Just return the inline-array's pool
                     // using the correct element type (ABI.System.Exception, not nint).
-                    string localNameH = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                    string localNameH = p.GetParamLocalName(paramNameOverride);
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                                     if (__{{localNameH}}_arrayFromPool is not null)
@@ -1378,7 +1378,7 @@ internal static partial class AbiMethodBodyFactory
                         """);
                     continue;
                 }
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
 
                 if (szArr.BaseType.IsString())
                 {
@@ -1479,7 +1479,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
 
                 if (uOut.IsString())
                 {
@@ -1510,7 +1510,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string localName = p.GetParamLocalName(paramNameOverride);
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
                 // primitive ABI otherwise. (Same categorization as the ConvertToManaged_<name> path.)

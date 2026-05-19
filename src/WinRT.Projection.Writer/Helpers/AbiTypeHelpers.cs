@@ -387,31 +387,4 @@ internal static partial class AbiTypeHelpers
             return current;
         }
     }
-
-    /// <summary>
-    /// Returns the C#-callsite name for <paramref name="p"/> (the metadata name, escaped with
-    /// <c>@</c> when it collides with a C# keyword). When <paramref name="paramNameOverride"/> is
-    /// non-<see langword="null"/>, it replaces the metadata name.
-    /// </summary>
-    /// <param name="p">The parameter to name.</param>
-    /// <param name="paramNameOverride">Optional override (FastAbi-merged Methods classes use this to inject a synthesized name).</param>
-    /// <returns>The escaped parameter name.</returns>
-    internal static string GetParamName(ParameterInfo p, string? paramNameOverride)
-    {
-        string name = paramNameOverride ?? p.GetRawName();
-        return IdentifierEscaping.EscapeIdentifier(name);
-    }
-
-    /// <summary>
-    /// Returns the local-variable name for <paramref name="p"/> (the metadata name without
-    /// the C#-keyword <c>@</c> escape, since helper local names like <c>__event</c> are valid
-    /// even when the underlying parameter name is a C# keyword).
-    /// </summary>
-    /// <param name="p">The parameter to name.</param>
-    /// <param name="paramNameOverride">Optional override.</param>
-    /// <returns>The unescaped local-variable name.</returns>
-    internal static string GetParamLocalName(ParameterInfo p, string? paramNameOverride)
-    {
-        return paramNameOverride ?? p.GetRawName();
-    }
 }

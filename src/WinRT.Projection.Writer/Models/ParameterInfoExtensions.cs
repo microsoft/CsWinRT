@@ -35,4 +35,31 @@ internal static class ParameterInfoExtensions
     {
         return Helpers.IdentifierEscaping.EscapeIdentifier(parameter.Parameter.Name ?? defaultName);
     }
+
+    /// <summary>
+    /// Returns the C#-escaped parameter name, allowing the caller to inject a synthesized
+    /// override (e.g. FastAbi-merged Methods classes). When <paramref name="paramNameOverride"/>
+    /// is non-<see langword="null"/>, it replaces the metadata name as the source for escaping.
+    /// </summary>
+    /// <param name="parameter">The parameter to name.</param>
+    /// <param name="paramNameOverride">Optional override; takes precedence over the metadata name when non-<see langword="null"/>.</param>
+    /// <returns>The escaped parameter name (with <c>@</c> prefix for C# keywords).</returns>
+    public static string GetParamName(this ParameterInfo parameter, string? paramNameOverride)
+    {
+        string name = paramNameOverride ?? parameter.GetRawName();
+        return Helpers.IdentifierEscaping.EscapeIdentifier(name);
+    }
+
+    /// <summary>
+    /// Returns the local-variable name for <paramref name="parameter"/>: the raw metadata
+    /// name (no C#-keyword <c>@</c> escape, since helper locals like <c>__event</c> remain
+    /// valid identifiers even when the underlying parameter name is a C# keyword).
+    /// </summary>
+    /// <param name="parameter">The parameter to name.</param>
+    /// <param name="paramNameOverride">Optional override; takes precedence over the metadata name when non-<see langword="null"/>.</param>
+    /// <returns>The unescaped local-variable name.</returns>
+    public static string GetParamLocalName(this ParameterInfo parameter, string? paramNameOverride)
+    {
+        return paramNameOverride ?? parameter.GetRawName();
+    }
 }
