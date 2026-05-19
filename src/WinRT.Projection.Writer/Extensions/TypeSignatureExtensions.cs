@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
@@ -172,6 +173,43 @@ internal static class TypeSignatureExtensions
                 cur = cm.BaseType;
             }
             return cur is ByReferenceTypeSignature;
+        }
+
+        /// <summary>
+        /// Returns whether the signature has the "ABI reference-pointer" shape: it crosses the
+        /// ABI as a <c>void*</c> / <c>IInspectable*</c>. That covers <see cref="string"/> (HSTRING),
+        /// any WinRT runtime class or interface (resolved via <paramref name="resolver"/>),
+        /// <see cref="object"/>, and any generic instance (e.g. <c>IList&lt;T&gt;</c>).
+        /// </summary>
+        /// <param name="resolver">The active <see cref="AbiTypeShapeResolver"/> (needed for runtime-class/interface resolution).</param>
+        /// <returns><see langword="true"/> if the signature flows as a <c>void*</c> across the ABI; otherwise <see langword="false"/>.</returns>
+        /// <remarks>
+        /// Use this variant for parameter/return types. For SZ-array element types (where generic
+        /// instances cannot appear as elements), use <see cref="IsAbiArrayElementRefLike"/> instead.
+        /// </remarks>
+        public bool IsAbiRefLike(AbiTypeShapeResolver resolver)
+        {
+            return (sig is CorLibTypeSignature corlibStr && corlibStr.ElementType == ElementType.String)
+                || resolver.IsRuntimeClassOrInterface(sig!)
+                || (sig is CorLibTypeSignature corlibObj && corlibObj.ElementType == ElementType.Object)
+                || sig is GenericInstanceTypeSignature;
+        }
+
+        /// <summary>
+        /// Returns whether the signature has the "ABI array-element reference-pointer" shape:
+        /// it crosses the ABI as a <c>void*</c> when carried as an element of an SZ-array.
+        /// That covers <see cref="string"/>, WinRT runtime classes/interfaces, and
+        /// <see cref="object"/> — the 3-way variant of <see cref="IsAbiRefLike"/>
+        /// without the <c>IsGenericInstance</c> case, because generic instances cannot
+        /// appear as array elements in metadata.
+        /// </summary>
+        /// <param name="resolver">The active <see cref="AbiTypeShapeResolver"/> (needed for runtime-class/interface resolution).</param>
+        /// <returns><see langword="true"/> if the signature flows as a <c>void*</c> when used as an SZ-array element; otherwise <see langword="false"/>.</returns>
+        public bool IsAbiArrayElementRefLike(AbiTypeShapeResolver resolver)
+        {
+            return (sig is CorLibTypeSignature corlibStr && corlibStr.ElementType == ElementType.String)
+                || resolver.IsRuntimeClassOrInterface(sig!)
+                || (sig is CorLibTypeSignature corlibObj && corlibObj.ElementType == ElementType.Object);
         }
     }
 }

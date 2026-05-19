@@ -28,7 +28,7 @@ internal static partial class AbiMethodBodyFactory
 
         bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi
             && (context.AbiTypeShapeResolver.IsBlittablePrimitive(retSzAbi.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(retSzAbi.BaseType)
-                || retSzAbi.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSzAbi.BaseType) || retSzAbi.BaseType.IsObject()
+                || retSzAbi.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                 || context.AbiTypeShapeResolver.IsComplexStruct(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && rt.IsHResultException();
         bool returnIsString = rt is not null && rt.IsString();
@@ -593,7 +593,7 @@ internal static partial class AbiMethodBodyFactory
                 string dataParamType;
                 string dataCastType;
 
-                if (szFA.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(szFA.BaseType) || szFA.BaseType.IsObject())
+                if (szFA.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
                 {
                     dataParamType = "void** data";
                     dataCastType = "(void**)";

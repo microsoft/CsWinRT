@@ -29,7 +29,7 @@ internal static partial class AbiTypeHelpers
     /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
     internal static string GetAbiLocalTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
     {
-        if (sig.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sig) || sig.IsObject() || sig.IsGenericInstance())
+        if (sig.IsAbiRefLike(context.AbiTypeShapeResolver))
         {
             return "void*";
         }

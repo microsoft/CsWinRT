@@ -46,7 +46,7 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSzCheck
             && (context.AbiTypeShapeResolver.IsBlittablePrimitive(retSzCheck.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(retSzCheck.BaseType)
-                || retSzCheck.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSzCheck.BaseType) || retSzCheck.BaseType.IsObject()
+                || retSzCheck.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                 || context.AbiTypeShapeResolver.IsComplexStruct(retSzCheck.BaseType)
                 || retSzCheck.BaseType.IsHResultException()
                 || context.AbiTypeShapeResolver.IsMappedAbiValueType(retSzCheck.BaseType));
@@ -70,7 +70,7 @@ internal static partial class AbiMethodBodyFactory
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 _ = fp.Append(", ");
 
-                if (uOut.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsGenericInstance())
+                if (uOut.IsAbiRefLike(context.AbiTypeShapeResolver))
                 {
                     _ = fp.Append("void**");
                 }
@@ -120,7 +120,7 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 _ = fp.Append(", uint*, ");
 
-                if (sza.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject())
+                if (sza.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
                 {
                     _ = fp.Append("void*");
                 }
@@ -153,7 +153,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 _ = fp.Append("global::ABI.System.Exception");
             }
-            else if (p.Type.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (p.Type.IsAbiRefLike(context.AbiTypeShapeResolver))
             {
                 _ = fp.Append("void*");
             }
@@ -184,7 +184,7 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt;
                 _ = fp.Append(", uint*, ");
 
-                if (retSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject())
+                if (retSz.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
                 {
                     _ = fp.Append("void*");
                 }
@@ -524,7 +524,7 @@ internal static partial class AbiMethodBodyFactory
 
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
-            if (uOut.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsSystemType() || context.AbiTypeShapeResolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
+            if (uOut.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver) || uOut.IsSystemType() || context.AbiTypeShapeResolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
             {
                 hasOutNeedsCleanup = true;
                 break;
@@ -1047,7 +1047,7 @@ internal static partial class AbiMethodBodyFactory
             string dataParamType;
             string dataCastType;
 
-            if (szFA.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(szFA.BaseType) || szFA.BaseType.IsObject())
+            if (szFA.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver))
             {
                 dataParamType = "void** data";
                 dataCastType = "(void**)";
@@ -1173,7 +1173,7 @@ internal static partial class AbiMethodBodyFactory
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
             // blittable structs; primitive ABI otherwise.
-            string elementAbi = sza.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
+            string elementAbi = sza.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                 ? "void*"
                 : context.AbiTypeShapeResolver.IsComplexStruct(sza.BaseType)
                     ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
@@ -1194,7 +1194,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt;
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSz.BaseType));
-                string elementAbi = retSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject()
+                string elementAbi = retSz.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType)
@@ -1514,7 +1514,7 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature sza = (SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
                 // primitive ABI otherwise. (Same categorization as the ConvertToManaged_<name> path.)
-                string elementAbi = sza.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
+                string elementAbi = sza.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(sza.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
@@ -1551,7 +1551,7 @@ internal static partial class AbiMethodBodyFactory
             else if (returnIsReceiveArray)
             {
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt!;
-                string elementAbi = retSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject()
+                string elementAbi = retSz.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
                     ? "void*"
                     : context.AbiTypeShapeResolver.IsComplexStruct(retSz.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType)
