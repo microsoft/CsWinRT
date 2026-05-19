@@ -3,15 +3,14 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
+using WindowsRuntime.ProjectionWriter.References;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
-
-using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
