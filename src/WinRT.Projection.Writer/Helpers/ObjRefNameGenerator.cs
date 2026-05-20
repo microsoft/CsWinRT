@@ -207,44 +207,6 @@ internal static class ObjRefNameGenerator
             stripGlobal: true, stripGlobalABI: true);
     }
 
-    /// <summary>
-    /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
-    /// interface instantiation.
-    /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is
-    /// <c>object?</c> (used inside <c>#nullable enable</c> regions); otherwise <c>object</c>.</param>
-    internal static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
-    {
-        string propName = BuildIidPropertyNameForGenericInterface(context, gi);
-        string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
-        writer.Write(isMultiline: true, $$"""
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
-            static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
-            """);
-        writer.WriteIf(isInNullableContext, "?");
-
-        writer.WriteLine(" _);");
-    }
-
-    /// <summary>
-    /// Convenience overload of <see cref="EmitUnsafeAccessorForIid(IndentedTextWriter, ProjectionEmitContext, GenericInstanceTypeSignature, bool)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the [UnsafeAccessor] declaration into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is <c>object?</c>; otherwise <c>object</c>.</param>
-    /// <returns>The emitted [UnsafeAccessor] declaration.</returns>
-    internal static string EmitUnsafeAccessorForIid(ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
-    {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        EmitUnsafeAccessorForIid(writer, context, gi, isInNullableContext);
-        return writer.ToString();
-    }
     private static string EscapeIdentifier(string s)
     {
         System.Text.StringBuilder sb = new(s.Length);
@@ -390,7 +352,7 @@ internal static class ObjRefNameGenerator
             // constructor for the default interface.
             if (gi is not null)
             {
-                EmitUnsafeAccessorForIid(writer, context, gi);
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
             }
         }
         else
@@ -398,7 +360,7 @@ internal static class ObjRefNameGenerator
             // Emit the unsafe accessor BEFORE the lazy field so it's referenced inside the As(...) call.
             if (gi is not null)
             {
-                EmitUnsafeAccessorForIid(writer, context, gi);
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
             }
 
             // Lazy CompareExchange pattern. For unsealed-class defaults, also emit 'init;' so the

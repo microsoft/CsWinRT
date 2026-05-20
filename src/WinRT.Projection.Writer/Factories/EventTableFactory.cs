@@ -80,11 +80,18 @@ internal static class EventTableFactory
         {
             string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
             WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
-            writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                        static extern {{projectedTypeName}} ConvertToManaged([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                        var __handler = ConvertToManaged(null, {{handlerRef}});
-                """);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
+            UnsafeAccessorFactory.EmitStaticMethod(
+                writer,
+                accessName: "ConvertToManaged",
+                returnType: projectedTypeName.Format(),
+                functionName: "ConvertToManaged",
+                interopType: interopTypeName,
+                parameterList: ", void* value");
+            writer.WriteLine($"var __handler = ConvertToManaged(null, {handlerRef});");
+            writer.DecreaseIndent();
+            writer.DecreaseIndent();
         }
         else
         {

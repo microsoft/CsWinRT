@@ -310,9 +310,14 @@ internal static partial class ClassMembersFactory
                 string platformTrimmed = platformAttribute.TrimEnd('\r', '\n');
 
                 writer.WriteLine();
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: name,
+                    returnType: unsafeRet.Format(),
+                    functionName: accessorName,
+                    interopType: genericInteropType,
+                    parameterList: $", WindowsRuntimeObjectReference thisReference{accessorParams}");
                 writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
-                    static extern {{unsafeRet}} {{accessorName}}([UnsafeAccessorType("{{genericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference{{accessorParams}});
                     {{platformTrimmed}}
                     {{access}}{{methodSpecForThis}}{{ret}} {{name}}({{parms}}) => {{body}}
                     """);
@@ -480,11 +485,15 @@ internal static partial class ClassMembersFactory
                     """);
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
-                    writer.WriteLine(isMultiline: true, $$"""
-                                [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-                                [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
-                                static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
-                        """);
+                    writer.IncreaseIndent();
+                    writer.IncreaseIndent();
+                    UnsafeAccessorFactory.EmitConstructorReturningObject(
+                        writer,
+                        interopType: eventSourceInteropType,
+                        functionName: "ctor",
+                        parameterList: "WindowsRuntimeObjectReference nativeObjectReference, int index");
+                    writer.DecreaseIndent();
+                    writer.DecreaseIndent();
                     writer.WriteLine();
                 }
                 writer.Write(isMultiline: true, $$"""

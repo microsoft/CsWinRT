@@ -44,19 +44,25 @@ internal static partial class ClassMembersFactory
             if (s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
             {
                 writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{kvp.Key}}")]
-                    static extern {{s.GetterPropTypeText}} {{s.GetterGenericAccessorName}}([UnsafeAccessorType("{{s.GetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference);
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: kvp.Key,
+                    returnType: s.GetterPropTypeText,
+                    functionName: s.GetterGenericAccessorName,
+                    interopType: s.GetterGenericInteropType,
+                    parameterList: ", WindowsRuntimeObjectReference thisReference");
             }
 
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
                 writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{kvp.Key}}")]
-                    static extern void {{s.SetterGenericAccessorName}}([UnsafeAccessorType("{{s.SetterGenericInteropType}}")] object _, WindowsRuntimeObjectReference thisReference, {{s.SetterPropTypeText}} value);
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: kvp.Key,
+                    returnType: "void",
+                    functionName: s.SetterGenericAccessorName,
+                    interopType: s.SetterGenericInteropType,
+                    parameterList: $", WindowsRuntimeObjectReference thisReference, {s.SetterPropTypeText} value");
             }
 
             writer.WriteLine();

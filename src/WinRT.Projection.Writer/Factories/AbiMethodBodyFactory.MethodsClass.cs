@@ -27,7 +27,7 @@ internal static partial class AbiMethodBodyFactory
     {
         if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
-            ObjRefNameGenerator.EmitUnsafeAccessorForIid(writer, context, gi);
+            UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
         }
     }
 
@@ -171,16 +171,22 @@ internal static partial class AbiMethodBodyFactory
                 """);
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
+                writer.IncreaseIndent();
+                writer.IncreaseIndent();
+                UnsafeAccessorFactory.EmitConstructorReturningObject(
+                    writer,
+                    interopType: eventSourceInteropType,
+                    functionName: "ctor",
+                    parameterList: "WindowsRuntimeObjectReference nativeObjectReference, int index");
+                writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                            [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-                            [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
-                            static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
-                    
-                            return _{{evtName}}.GetOrAdd(
-                                key: thisObject,
-                                valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}})),
-                                factoryArgument: thisReference);
+                    return _{{evtName}}.GetOrAdd(
+                        key: thisObject,
+                        valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}})),
+                        factoryArgument: thisReference);
                     """);
+                writer.DecreaseIndent();
+                writer.DecreaseIndent();
             }
             else
             {

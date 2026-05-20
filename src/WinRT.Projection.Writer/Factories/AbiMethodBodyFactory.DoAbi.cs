@@ -71,10 +71,13 @@ internal static partial class AbiMethodBodyFactory
             {
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt!, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToUnmanaged",
+                    returnType: "WindowsRuntimeObjectReferenceValue",
+                    functionName: $"ConvertToUnmanaged_{retParamName}",
+                    interopType: interopTypeName,
+                    parameterList: $", {projectedTypeName.Format()} value");
                 writer.WriteLine();
             }
 
@@ -94,10 +97,13 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.GetRawName();
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToUnmanaged",
+                    returnType: "WindowsRuntimeObjectReferenceValue",
+                    functionName: $"ConvertToUnmanaged_{raw}",
+                    interopType: interopTypeName,
+                    parameterList: $", {projectedTypeName.Format()} value");
                 writer.WriteLine();
             }
 
@@ -113,10 +119,13 @@ internal static partial class AbiMethodBodyFactory
 
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                    static extern void ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToUnmanaged",
+                    returnType: "void",
+                    functionName: $"ConvertToUnmanaged_{raw}",
+                    interopType: marshallerPath,
+                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, out uint length, out {elementAbi}* data");
                 writer.WriteLine();
             }
 
@@ -125,10 +134,13 @@ internal static partial class AbiMethodBodyFactory
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSzHoist.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                    static extern void ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToUnmanaged",
+                    returnType: "void",
+                    functionName: $"ConvertToUnmanaged_{retParamName}",
+                    interopType: marshallerPath,
+                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, out uint length, out {elementAbi}* data");
                 writer.WriteLine();
             }
 

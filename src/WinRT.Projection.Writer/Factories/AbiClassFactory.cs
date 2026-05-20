@@ -93,7 +93,7 @@ internal static class AbiClassFactory
         // marshallers run inside #nullable enable) if the type is a generic type.
         if (defaultGenericInst is not null)
         {
-            ObjRefNameGenerator.EmitUnsafeAccessorForIid(writer, context, defaultGenericInst, isInNullableContext: true);
+            UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst, isInNullableContext: true);
         }
 
         writer.WriteLine(isMultiline: true, $$"""

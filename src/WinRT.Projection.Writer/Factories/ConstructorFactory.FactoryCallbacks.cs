@@ -173,11 +173,14 @@ internal static partial class ConstructorFactory
 
             string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
             WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
-            writer.WriteLine(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                using WindowsRuntimeObjectReferenceValue __{{raw}} = ConvertToUnmanaged_{{raw}}(null, {{pname}});
-                """);
+            UnsafeAccessorFactory.EmitStaticMethod(
+                writer,
+                accessName: "ConvertToUnmanaged",
+                returnType: "WindowsRuntimeObjectReferenceValue",
+                functionName: $"ConvertToUnmanaged_{raw}",
+                interopType: interopTypeName,
+                parameterList: $", {projectedTypeName.Format()} value");
+            writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = ConvertToUnmanaged_{raw}(null, {pname});");
         }
 
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
@@ -465,11 +468,14 @@ internal static partial class ConstructorFactory
             else
             {
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                    static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, void** data);
-                    CopyToUnmanaged_{{raw}}(null, {{pname}}, (uint){{pname}}.Length, (void**)_{{raw}});
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "CopyToUnmanaged",
+                    returnType: "void",
+                    functionName: $"CopyToUnmanaged_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, uint length, void** data");
+                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, (void**)_{raw});");
             }
         }
 
@@ -636,10 +642,15 @@ internal static partial class ConstructorFactory
                 else
                 {
                     writer.WriteLine();
+                    UnsafeAccessorFactory.EmitStaticMethod(
+                        writer,
+                        accessName: "Dispose",
+                        returnType: "void",
+                        functionName: $"Dispose_{raw}",
+                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                        parameterList: ", uint length, void** data");
+                    writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-                        static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
-
                         fixed(void* _{{raw}} = {{names.Span}})
                         {
                             Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, (void**)_{{raw}});

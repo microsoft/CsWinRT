@@ -384,10 +384,13 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams)
     {
-        writer.WriteLine(isMultiline: true, $$"""
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{accessName}}")]
-            static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _, WindowsRuntimeObjectReference objRef{{extraParams}});
-            """);
+        UnsafeAccessorFactory.EmitStaticMethod(
+            writer,
+            accessName: accessName,
+            returnType: returnType,
+            functionName: functionName,
+            interopType: interopType,
+            parameterList: $", WindowsRuntimeObjectReference objRef{extraParams}");
         writer.WriteLine();
     }
 
