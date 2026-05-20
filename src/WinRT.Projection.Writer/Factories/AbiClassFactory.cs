@@ -50,7 +50,7 @@ internal static class AbiClassFactory
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedType = $"global::{typeNs}.{nameStripped}";
+        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
 
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
@@ -116,7 +116,7 @@ internal static class AbiClassFactory
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedType = string.IsNullOrEmpty(typeNs) ? $"global::{nameStripped}" : $"global::{typeNs}.{nameStripped}";
+        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
         TypeCategory category = TypeCategorization.GetCategory(type);
 
@@ -200,7 +200,7 @@ internal static class AbiClassFactory
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string fullProjected = $"global::{typeNs}.{nameStripped}";
+        string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
 
         // Get the IID expression for the default interface (used by CreateObject).
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();

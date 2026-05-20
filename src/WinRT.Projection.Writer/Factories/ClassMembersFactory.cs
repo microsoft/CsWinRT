@@ -142,7 +142,7 @@ internal static partial class ClassMembersFactory
             (string ns, string name) = tr.Names();
             _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
-            writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
+            writer.Write(TypedefNameWriter.BuildGlobalQualifiedName(ns, IdentifierEscaping.StripBackticks(name)));
         }
         else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
@@ -150,7 +150,7 @@ internal static partial class ClassMembersFactory
             (string ns, string name) = gt.Names();
             _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
-            writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}<");
+            writer.Write($"{TypedefNameWriter.BuildGlobalQualifiedName(ns, IdentifierEscaping.StripBackticks(name))}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
                 writer.WriteIf(i > 0, ", ");

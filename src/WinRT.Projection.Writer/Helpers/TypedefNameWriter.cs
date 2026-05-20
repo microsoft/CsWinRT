@@ -19,6 +19,17 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 internal static class TypedefNameWriter
 {
     /// <summary>
+    /// Builds the fully-qualified <c>global::Ns.Name</c> form for a type, handling the empty-namespace case.
+    /// </summary>
+    /// <param name="ns">The type's namespace (may be <see langword="null"/> or empty for top-level types).</param>
+    /// <param name="name">The type's name (already stripped of backticks if applicable).</param>
+    /// <returns>The string <c>global::Name</c> when <paramref name="ns"/> is null/empty, otherwise <c>global::Ns.Name</c>.</returns>
+    public static string BuildGlobalQualifiedName(string? ns, string name)
+    {
+        return string.IsNullOrEmpty(ns) ? $"global::{name}" : $"global::{ns}.{name}";
+    }
+
+    /// <summary>
     /// Writes a fundamental (primitive) type's projected name.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>

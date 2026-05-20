@@ -313,7 +313,7 @@ internal static class AbiDelegateFactory
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string fullProjected = $"global::{typeNs}.{nameStripped}";
+        string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
@@ -346,7 +346,7 @@ internal static class AbiDelegateFactory
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string fullProjected = $"global::{typeNs}.{nameStripped}";
+        string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
