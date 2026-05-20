@@ -103,14 +103,14 @@ internal static class ClassFactory
             return false;
         }
 
-        if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface))
+        if (fastAbi.Value.Default is not null && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, iface))
         {
             return false;
         }
 
         foreach (TypeDefinition other in fastAbi.Value.Others)
         {
-            if (InterfacesEqual(other, iface))
+            if (AbiTypeHelpers.InterfacesEqualByName(other, iface))
             {
                 return true;
             }
@@ -130,18 +130,7 @@ internal static class ClassFactory
             return false;
         }
 
-        return fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface);
-    }
-
-    private static bool InterfacesEqual(TypeDefinition a, TypeDefinition b)
-    {
-        if (a == b)
-        {
-            return true;
-        }
-
-        return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
-            && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
+        return fastAbi.Value.Default is not null && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, iface);
     }
 
     // We don't have direct access to the active Settings from a static helper that only takes
