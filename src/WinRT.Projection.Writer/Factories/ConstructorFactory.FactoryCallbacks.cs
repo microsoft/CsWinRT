@@ -98,7 +98,7 @@ internal static partial class ConstructorFactory
         }
         else
         {
-            // Sealed Invoke signature is multi-line..
+            // Sealed Invoke signature is multi-line
             writer.WriteLine(isMultiline: true, """
                 public override unsafe void Invoke(
                   WindowsRuntimeActivationArgsReference additionalParameters,
