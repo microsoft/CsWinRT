@@ -111,11 +111,12 @@ internal static partial class ConstructorFactory
             return;
         }
 
-        writer.WriteLine(isMultiline: true, $$"""
-                    using WindowsRuntimeObjectReferenceValue activationFactoryValue = {{factoryObjRefName}}.AsValue();
-                    void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
-                    ref readonly {{argsName}} args = ref additionalParameters.GetValueRefUnsafe<{{argsName}}>();
-            """);
+        writer.IncreaseIndent();
+        writer.IncreaseIndent();
+
+        writer.WriteLine($"using WindowsRuntimeObjectReferenceValue activationFactoryValue = {factoryObjRefName}.AsValue();");
+        writer.WriteLine("void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();");
+        writer.WriteLine($"ref readonly {argsName} args = ref additionalParameters.GetValueRefUnsafe<{argsName}>();");
 
         // Bind each arg from the args struct to a local of its ABI-marshalable input type.
         // Bind arg locals.
@@ -125,7 +126,7 @@ internal static partial class ConstructorFactory
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
             ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            writer.Write("        ");
+
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
             if (cat == ParameterCategory.PassArray)
             {
@@ -161,17 +162,15 @@ internal static partial class ConstructorFactory
             if (p.Type.IsNullableT())
             {
                 (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
-                writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{raw} = {innerMarshaller}.BoxToUnmanaged({pname});");
+                writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = {innerMarshaller}.BoxToUnmanaged({pname});");
                 continue;
             }
 
             string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
             WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
-            writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                        using WindowsRuntimeObjectReferenceValue __{{raw}} = ConvertToUnmanaged_{{raw}}(null, {{pname}});
-                """);
+            writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
+            writer.WriteLine($"static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{raw}([UnsafeAccessorType(\"{interopTypeName}\")] object _, {projectedTypeName} value);");
+            writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = ConvertToUnmanaged_{raw}(null, {pname});");
         }
 
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
@@ -193,7 +192,7 @@ internal static partial class ConstructorFactory
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
             EmitMarshallerConvertToUnmanagedCallback cvt = AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(context, p.Type, pname);
-            writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{raw} = {cvt};");
+            writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = {cvt};");
         }
 
         // For composable factories, marshal the additional `baseInterface` (which is a
@@ -201,10 +200,8 @@ internal static partial class ConstructorFactory
         //   using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
         if (isComposable)
         {
-            writer.WriteLine(isMultiline: true, """
-                        using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
-                        void* __innerInterface = default;
-                """);
+            writer.WriteLine("using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);");
+            writer.WriteLine("void* __innerInterface = default;");
         }
 
         // For mapped value-type params (DateTime, TimeSpan), emit ABI local + marshaller conversion.
@@ -221,7 +218,7 @@ internal static partial class ConstructorFactory
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
             string abiType = AbiTypeHelpers.GetMappedAbiTypeName(p.Type);
             string marshaller = AbiTypeHelpers.GetMappedMarshallerName(p.Type);
-            writer.WriteLine($"        {abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
+            writer.WriteLine($"{abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
         }
 
         // For HResultException params, emit ABI local + ExceptionMarshaller conversion.
@@ -238,7 +235,7 @@ internal static partial class ConstructorFactory
 
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
-            writer.WriteLine($"        global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
+            writer.WriteLine($"global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
@@ -269,43 +266,37 @@ internal static partial class ConstructorFactory
             string callName = IdentifierEscaping.EscapeIdentifier(raw);
             ArrayTempNames names = new(raw);
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                        Unsafe.SkipInit(out InlineArray16<nint> {{names.InlineArray}});
-                        nint[] {{names.ArrayFromPool}} = null;
-                        Span<nint> {{names.Span}} = {{callName}}.Length <= 16
-                            ? {{names.InlineArray}}[..{{callName}}.Length]
-                            : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
-                """);
+            writer.WriteLine($"Unsafe.SkipInit(out InlineArray16<nint> {names.InlineArray});");
+            writer.WriteLine($"nint[] {names.ArrayFromPool} = null;");
+            writer.WriteLine($"Span<nint> {names.Span} = {callName}.Length <= 16");
+            writer.WriteLine($"    ? {names.InlineArray}[..{callName}.Length]");
+            writer.WriteLine($"    : ({names.ArrayFromPool} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({callName}.Length));");
 
             if (szArr.BaseType.IsString())
             {
                 writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                            Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
-                            HStringHeader[] {{names.HeaderArrayFromPool}} = null;
-                            Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
-                                ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
-                                : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
-                    
-                            Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
-                            nint[] {{names.PinnedHandleArrayFromPool}} = null;
-                            Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
-                                ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
-                                : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
-                    """);
+                writer.WriteLine($"Unsafe.SkipInit(out InlineArray16<HStringHeader> {names.InlineHeaderArray});");
+                writer.WriteLine($"HStringHeader[] {names.HeaderArrayFromPool} = null;");
+                writer.WriteLine($"Span<HStringHeader> {names.HeaderSpan} = {callName}.Length <= 16");
+                writer.WriteLine($"    ? {names.InlineHeaderArray}[..{callName}.Length]");
+                writer.WriteLine($"    : ({names.HeaderArrayFromPool} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({callName}.Length));");
+                writer.WriteLine();
+                writer.WriteLine($"Unsafe.SkipInit(out InlineArray16<nint> {names.InlinePinnedHandleArray});");
+                writer.WriteLine($"nint[] {names.PinnedHandleArrayFromPool} = null;");
+                writer.WriteLine($"Span<nint> {names.PinnedHandleSpan} = {callName}.Length <= 16");
+                writer.WriteLine($"    ? {names.InlinePinnedHandleArray}[..{callName}.Length]");
+                writer.WriteLine($"    : ({names.PinnedHandleArrayFromPool} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({callName}.Length));");
             }
         }
 
-        writer.WriteLine("        void* __retval = default;");
+        writer.WriteLine("void* __retval = default;");
 
         if (hasNonBlittableArray)
         {
-            writer.WriteLine(isMultiline: true, """
-                        try
-                        {
-                """);
+            writer.WriteLine("try");
+            writer.WriteLine("{");
+            writer.IncreaseIndent();
         }
-        string baseIndent = hasNonBlittableArray ? "            " : "        ";
 
         // For System.Type params, pre-marshal to TypeReference (must be declared OUTSIDE the
         // fixed() block since the fixed block pins the resulting reference).
@@ -320,7 +311,7 @@ internal static partial class ConstructorFactory
 
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
-            writer.WriteLine($"{baseIndent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({pname}, out TypeReference __{raw});");
+            writer.WriteLine($"global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({pname}, out TypeReference __{raw});");
         }
 
         // Open ONE combined "fixed(void* _a = ..., _b = ..., ...)" block for ALL pinnable
@@ -345,8 +336,7 @@ internal static partial class ConstructorFactory
 
         if (pinnableCount > 0)
         {
-            string indent = baseIndent;
-            writer.Write($"{indent}fixed(void* ");
+            writer.Write("fixed(void* ");
             bool firstPin = true;
             for (int i = 0; i < paramCount; i++)
             {
@@ -383,7 +373,10 @@ internal static partial class ConstructorFactory
                     {
                         writer.Write(pname);
                     }
-                    else { writer.Write($"__{raw}_span"); }
+                    else
+                    {
+                        writer.Write($"__{raw}_span");
+                    }
 
                     if (isStringElem)
                     {
@@ -396,14 +389,14 @@ internal static partial class ConstructorFactory
                     writer.Write(pname);
                 }
             }
-            writer.WriteLine(isMultiline: true, $$"""
-                )
-                {{indent}}{
-                """);
+
+            writer.WriteLine(")");
+            writer.WriteLine("{");
+            writer.IncreaseIndent();
             fixedNesting = 1;
+
             // Inside the block: emit HStringMarshaller.ConvertToUnmanagedUnsafe for each
             // string input. The HStringReference local lives stack-only.
-            string innerIndent = baseIndent + new string(' ', fixedNesting * 4);
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -415,11 +408,9 @@ internal static partial class ConstructorFactory
 
                 string raw = p.GetRawName();
                 string pname = IdentifierEscaping.EscapeIdentifier(raw);
-                writer.WriteLine($"{innerIndent}HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{raw}, {pname}?.Length, out HStringReference __{raw});");
+                writer.WriteLine($"HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{raw}, {pname}?.Length, out HStringReference __{raw});");
             }
         }
-
-        string callIndent = baseIndent + new string(' ', fixedNesting * 4);
 
         // Emit CopyToUnmanaged for non-blittable PassArray params.
         for (int i = 0; i < paramCount; i++)
@@ -448,26 +439,22 @@ internal static partial class ConstructorFactory
 
             if (szArr.BaseType.IsString())
             {
-                writer.WriteLine(isMultiline: true, $$"""
-                    {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
-                    {{callIndent}}    source: {{pname}},
-                    {{callIndent}}    hstringHeaders: (HStringHeader*) _{{raw}}_inlineHeaderArray,
-                    {{callIndent}}    hstrings: {{names.Span}},
-                    {{callIndent}}    pinnedGCHandles: {{names.PinnedHandleSpan}});
-                    """);
+                writer.WriteLine("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(");
+                writer.WriteLine($"    source: {pname},");
+                writer.WriteLine($"    hstringHeaders: (HStringHeader*) _{raw}_inlineHeaderArray,");
+                writer.WriteLine($"    hstrings: {names.Span},");
+                writer.WriteLine($"    pinnedGCHandles: {names.PinnedHandleSpan});");
             }
             else
             {
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                writer.WriteLine(isMultiline: true, $$"""
-                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                    {{callIndent}}static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, void** data);
-                    {{callIndent}}CopyToUnmanaged_{{raw}}(null, {{pname}}, (uint){{pname}}.Length, (void**)_{{raw}});
-                    """);
+                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
+                writer.WriteLine($"static extern void CopyToUnmanaged_{raw}([UnsafeAccessorType(\"{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}\")] object _, ReadOnlySpan<{elementProjected}> span, uint length, void** data);");
+                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, (void**)_{raw});");
             }
         }
 
-        writer.Write($"{callIndent}RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
+        writer.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
@@ -565,26 +552,26 @@ internal static partial class ConstructorFactory
             """);
         if (isComposable)
         {
-            writer.WriteLine($"{callIndent}innerInterface = __innerInterface;");
+            writer.WriteLine("innerInterface = __innerInterface;");
         }
 
-        writer.WriteLine($"{callIndent}retval = __retval;");
+        writer.WriteLine("retval = __retval;");
 
         // Close fixed blocks (innermost first).
-        for (int i = fixedNesting - 1; i >= 0; i--)
+        for (int i = 0; i < fixedNesting; i++)
         {
-            string indent = baseIndent + new string(' ', i * 4);
-            writer.WriteLine($"{indent}}}");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
         // Close try and emit finally with cleanup for non-blittable PassArray params.
         if (hasNonBlittableArray)
         {
-            writer.WriteLine(isMultiline: true, """
-                        }
-                        finally
-                        {
-                """);
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
+            writer.WriteLine("finally");
+            writer.WriteLine("{");
+            writer.IncreaseIndent();
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -611,44 +598,49 @@ internal static partial class ConstructorFactory
                 if (szArr.BaseType.IsString())
                 {
                     writer.WriteLine();
-                    writer.WriteLine(isMultiline: true, $$"""
-                                    HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
-                        
-                                    if ({{names.PinnedHandleArrayFromPool}} is not null)
-                                    {
-                                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
-                                    }
-                        
-                                    if ({{names.HeaderArrayFromPool}} is not null)
-                                    {
-                                        global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
-                                    }
-                        """);
+                    writer.WriteLine($"HStringArrayMarshaller.Dispose({names.PinnedHandleSpan});");
+                    writer.WriteLine();
+                    writer.WriteLine($"if ({names.PinnedHandleArrayFromPool} is not null)");
+                    writer.WriteLine("{");
+                    writer.IncreaseIndent();
+                    writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.PinnedHandleArrayFromPool});");
+                    writer.DecreaseIndent();
+                    writer.WriteLine("}");
+                    writer.WriteLine();
+                    writer.WriteLine($"if ({names.HeaderArrayFromPool} is not null)");
+                    writer.WriteLine("{");
+                    writer.IncreaseIndent();
+                    writer.WriteLine($"global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({names.HeaderArrayFromPool});");
+                    writer.DecreaseIndent();
+                    writer.WriteLine("}");
                 }
                 else
                 {
                     writer.WriteLine();
-                    writer.WriteLine(isMultiline: true, $$"""
-                                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-                                    static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
-                        
-                                    fixed(void* _{{raw}} = {{names.Span}})
-                                    {
-                                        Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, (void**)_{{raw}});
-                                    }
-                        """);
+                    writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]");
+                    writer.WriteLine($"static extern void Dispose_{raw}([UnsafeAccessorType(\"{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}\")] object _, uint length, void** data);");
+                    writer.WriteLine();
+                    writer.WriteLine($"fixed(void* _{raw} = {names.Span})");
+                    writer.WriteLine("{");
+                    writer.IncreaseIndent();
+                    writer.WriteLine($"Dispose_{raw}(null, (uint) {names.Span}.Length, (void**)_{raw});");
+                    writer.DecreaseIndent();
+                    writer.WriteLine("}");
                 }
                 writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                                if ({{names.ArrayFromPool}} is not null)
-                                {
-                                    global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
-                                }
-                    """);
+                writer.WriteLine($"if ({names.ArrayFromPool} is not null)");
+                writer.WriteLine("{");
+                writer.IncreaseIndent();
+                writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.ArrayFromPool});");
+                writer.DecreaseIndent();
+                writer.WriteLine("}");
             }
-            writer.WriteLine("        }");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
+        writer.DecreaseIndent();
+        writer.DecreaseIndent();
         writer.WriteLine(isMultiline: true, """
                 }
             }
