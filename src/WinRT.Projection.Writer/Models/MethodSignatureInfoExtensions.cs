@@ -46,39 +46,5 @@ internal static class MethodSignatureInfoExtensions
                 }
             }
         }
-
-        /// <summary>
-        /// Yields each (index, parameter, category) triple whose resolved category is one of
-        /// the array shapes (<see cref="ParameterCategory.PassArray"/>,
-        /// <see cref="ParameterCategory.FillArray"/>, <see cref="ParameterCategory.ReceiveArray"/>).
-        /// </summary>
-        public IEnumerable<(int Index, ParameterInfo Parameter, ParameterCategory Category)> ArrayParameters()
-        {
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
-
-                if (cat.IsAnyArray())
-                {
-                    yield return (i, p, cat);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns whether any parameter has the given <paramref name="category"/>.
-        /// </summary>
-        public bool HasParameterOfCategory(ParameterCategory category)
-        {
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                if (ParameterCategoryResolver.Resolve(sig.Parameters[i]) == category)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
     }
 }
