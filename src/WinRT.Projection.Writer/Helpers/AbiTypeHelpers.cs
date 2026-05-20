@@ -225,15 +225,7 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     public static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
     {
-        if (a == b)
-        {
-            return true;
-        }
-
-        (string aNs, string aName) = a.Names();
-        (string bNs, string bName) = b.Names();
-
-        return aNs == bNs && aName == bName;
+        return a == b || a.Names() == b.Names();
     }
 
 }
