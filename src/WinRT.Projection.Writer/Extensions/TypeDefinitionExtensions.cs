@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
@@ -149,7 +148,14 @@ internal static class TypeDefinitionExtensions
         /// </summary>
         public bool HasNonObjectBaseType()
         {
-            return type.BaseType is not (null or CorLibTypeSignature { ElementType: ElementType.Object });
+            if (type.BaseType is not { } baseType)
+            {
+                return false;
+            }
+
+            (string ns, string name) = baseType.Names();
+
+            return !(ns == "System" && name == "Object");
         }
 
         /// <summary>
