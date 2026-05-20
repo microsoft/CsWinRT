@@ -617,18 +617,16 @@ internal static partial class ConstructorFactory
                     writer.WriteLine($"HStringArrayMarshaller.Dispose({names.PinnedHandleSpan});");
                     writer.WriteLine();
                     writer.WriteLine($"if ({names.PinnedHandleArrayFromPool} is not null)");
-                    writer.WriteLine("{");
-                    writer.IncreaseIndent();
-                    writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.PinnedHandleArrayFromPool});");
-                    writer.DecreaseIndent();
-                    writer.WriteLine("}");
+                    using (writer.WriteBlock())
+                    {
+                        writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.PinnedHandleArrayFromPool});");
+                    }
                     writer.WriteLine();
                     writer.WriteLine($"if ({names.HeaderArrayFromPool} is not null)");
-                    writer.WriteLine("{");
-                    writer.IncreaseIndent();
-                    writer.WriteLine($"global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({names.HeaderArrayFromPool});");
-                    writer.DecreaseIndent();
-                    writer.WriteLine("}");
+                    using (writer.WriteBlock())
+                    {
+                        writer.WriteLine($"global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({names.HeaderArrayFromPool});");
+                    }
                 }
                 else
                 {
@@ -639,19 +637,17 @@ internal static partial class ConstructorFactory
 
                         fixed(void* _{{raw}} = {{names.Span}})
                         """);
-                    writer.WriteLine("{");
-                    writer.IncreaseIndent();
-                    writer.WriteLine($"Dispose_{raw}(null, (uint) {names.Span}.Length, (void**)_{raw});");
-                    writer.DecreaseIndent();
-                    writer.WriteLine("}");
+                    using (writer.WriteBlock())
+                    {
+                        writer.WriteLine($"Dispose_{raw}(null, (uint) {names.Span}.Length, (void**)_{raw});");
+                    }
                 }
                 writer.WriteLine();
                 writer.WriteLine($"if ({names.ArrayFromPool} is not null)");
-                writer.WriteLine("{");
-                writer.IncreaseIndent();
-                writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.ArrayFromPool});");
-                writer.DecreaseIndent();
-                writer.WriteLine("}");
+                using (writer.WriteBlock())
+                {
+                    writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.ArrayFromPool});");
+                }
             }
             writer.DecreaseIndent();
             writer.WriteLine("}");

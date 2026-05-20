@@ -85,15 +85,18 @@ internal static class StructEnumMarshallerFactory
             public static unsafe class {{nameStripped}}Marshaller
             {
             """);
+        writer.IncreaseIndent();
 
         if (isComplexStruct)
         {
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
             writer.WriteLine(isMultiline: true, $$"""
-                    public static {{abi}} ConvertToUnmanaged({{projected}} value)
-                    {
-                        return new() {
+                public static {{abi}} ConvertToUnmanaged({{projected}} value)
+                {
+                    return new() {
                 """);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
             bool first = true;
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
@@ -103,7 +106,7 @@ internal static class StructEnumMarshallerFactory
                 writer.WriteLineIf(!first, ",");
 
                 first = false;
-                writer.Write($"            {fname} = ");
+                writer.Write($"{fname} = ");
 
                 if (ft.IsString())
                 {
@@ -143,13 +146,17 @@ internal static class StructEnumMarshallerFactory
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
             writer.WriteLine();
+            writer.DecreaseIndent();
+            writer.WriteLine("};");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
             writer.WriteLine(isMultiline: true, $$"""
-                        };
-                    }
-                    public static {{projected}} ConvertToManaged({{abi}} value)
-                    {
-                        return new {{projected}}{{(useObjectInitializer ? "(){" : "(")}}
+                public static {{projected}} ConvertToManaged({{abi}} value)
+                {
+                    return new {{projected}}{{(useObjectInitializer ? "(){" : "(")}}
                 """);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
             first = true;
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
@@ -159,7 +166,7 @@ internal static class StructEnumMarshallerFactory
                 writer.WriteLineIf(!first, ",");
 
                 first = false;
-                writer.Write(useObjectInitializer ? $"            {fname} = " : "            ");
+                writer.Write(useObjectInitializer ? $"{fname} = " : "");
 
                 if (ft.IsString())
                 {
@@ -194,12 +201,15 @@ internal static class StructEnumMarshallerFactory
                 }
             }
             writer.WriteLine();
-            writer.WriteLine(useObjectInitializer ? "        };" : "        );");
-            writer.WriteLine("    }");
+            writer.DecreaseIndent();
+            writer.WriteLine(useObjectInitializer ? "};" : ");");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
             writer.WriteLine(isMultiline: true, $$"""
-                    public static void Dispose({{abi}} value)
-                    {
+                public static void Dispose({{abi}} value)
+                {
                 """);
+            writer.IncreaseIndent();
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
                 string fname = field.Name?.Value ?? "";
@@ -207,7 +217,7 @@ internal static class StructEnumMarshallerFactory
 
                 if (ft.IsString())
                 {
-                    writer.WriteLine($"        HStringMarshaller.Free(value.{fname});");
+                    writer.WriteLine($"HStringMarshaller.Free(value.{fname});");
                 }
                 else if (ft.IsHResultException())
                 {
@@ -229,14 +239,15 @@ internal static class StructEnumMarshallerFactory
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
                     string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
                     string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
-                    writer.WriteLine($"        global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
+                    writer.WriteLine($"global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
-                    writer.WriteLine($"        WindowsRuntimeUnknownMarshaller.Free(value.{fname});");
+                    writer.WriteLine($"WindowsRuntimeUnknownMarshaller.Free(value.{fname});");
                 }
             }
-            writer.WriteLine("    }");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
         // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex, mapped struct).
@@ -249,10 +260,10 @@ internal static class StructEnumMarshallerFactory
         WriteIidReferenceExpressionCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine(isMultiline: true, $$"""
-                public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged({{projected}}? value)
-                {
-                    return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{boxFlags}}, in {{boxIidRef}});
-                }
+            public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged({{projected}}? value)
+            {
+                return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{boxFlags}}, in {{boxIidRef}});
+            }
             """);
 
         // UnboxToManaged: simple for almost-blittable and mapped structs; for complex, unbox to
@@ -262,23 +273,24 @@ internal static class StructEnumMarshallerFactory
         if (isComplexStruct)
         {
             writer.WriteLine(isMultiline: true, $$"""
-                    public static {{projected}}? UnboxToManaged(void* value)
-                    {
-                        {{abi}}? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{abi}}>(value);
-                        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
-                    }
+                public static {{projected}}? UnboxToManaged(void* value)
+                {
+                    {{abi}}? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{abi}}>(value);
+                    return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
+                }
                 """);
         }
         else
         {
             writer.WriteLine(isMultiline: true, $$"""
-                    public static {{projected}}? UnboxToManaged(void* value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{projected}}>(value);
-                    }
+                public static {{projected}}? UnboxToManaged(void* value)
+                {
+                    return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{projected}}>(value);
+                }
                 """);
         }
 
+        writer.DecreaseIndent();
         writer.WriteLine("}");
         writer.WriteLine();
 
@@ -347,20 +359,21 @@ internal static class StructEnumMarshallerFactory
                     {
                         wrapperFlags = CreatedWrapperFlags.NonWrapping;
                 """);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
             if (isComplexStruct)
             {
                 WriteTypedefNameCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
-                writer.WriteLine($"        return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
+                writer.WriteLine($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
             }
             else
             {
-                writer.WriteLine($"        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{projected}>(value, in {iidRefExpr});");
+                writer.WriteLine($"return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{projected}>(value, in {iidRefExpr});");
             }
-
-            writer.WriteLine(isMultiline: true, """
-                    }
-                }
-                """);
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
         else
         {

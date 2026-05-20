@@ -673,11 +673,10 @@ internal static partial class AbiMethodBodyFactory
                     WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
                     writer.WriteLine($"if (__{raw}_arrayFromPool is not null)");
-                    writer.WriteLine("{");
-                    writer.IncreaseIndent();
-                    writer.WriteLine($"global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Return(__{raw}_arrayFromPool);");
-                    writer.DecreaseIndent();
-                    writer.WriteLine("}");
+                    using (writer.WriteBlock())
+                    {
+                        writer.WriteLine($"global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Return(__{raw}_arrayFromPool);");
+                    }
                 }
                 writer.DecreaseIndent();
                 writer.WriteLine("}");
