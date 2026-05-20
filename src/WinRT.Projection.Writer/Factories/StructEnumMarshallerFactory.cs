@@ -159,12 +159,7 @@ internal static class StructEnumMarshallerFactory
                 writer.WriteLineIf(!first, ",");
 
                 first = false;
-                writer.Write("            ");
-
-                if (useObjectInitializer)
-                {
-                    writer.Write($"{fname} = ");
-                }
+                writer.Write(useObjectInitializer ? $"            {fname} = " : "            ");
 
                 if (ft.IsString())
                 {
