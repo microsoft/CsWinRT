@@ -314,7 +314,7 @@ internal static class AbiInterfaceFactory
 
         if (exclusiveToOwner is not null && !exclusiveIsFactoryOrStatic)
         {
-            string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
+            string ownerNs = exclusiveToOwner.Names().Namespace;
             string ownerNm = exclusiveToOwner.GetStrippedName();
             ifaceFullName = string.IsNullOrEmpty(ownerNs)
                 ? GlobalPrefix + ownerNm
@@ -324,7 +324,7 @@ internal static class AbiInterfaceFactory
         {
             // Factory/static interfaces in authoring mode are implemented by the generated
             // 'global::ABI.Impl.<NS>.<InterfaceName>' type that the activation factory CCW exposes.
-            string ifaceNs = type.Namespace?.Value ?? string.Empty;
+            string ifaceNs = type.Names().Namespace;
             string ifaceNm = type.GetStrippedName();
             ifaceFullName = string.IsNullOrEmpty(ifaceNs)
                 ? "global::ABI.Impl." + ifaceNm

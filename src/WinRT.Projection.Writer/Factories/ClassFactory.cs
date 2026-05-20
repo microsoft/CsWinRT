@@ -200,15 +200,15 @@ internal static class ClassFactory
                 return aV.Value.CompareTo(bV.Value);
             }
 
-            string aNs = a.Namespace?.Value ?? string.Empty;
-            string bNs = b.Namespace?.Value ?? string.Empty;
+            (string aNs, string aName) = a.Names();
+            (string bNs, string bName) = b.Names();
 
             if (aNs != bNs)
             {
                 return StringComparer.Ordinal.Compare(aNs, bNs);
             }
 
-            return StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+            return StringComparer.Ordinal.Compare(aName, bName);
         });
         return (defaultIface, exclusiveIfaces);
     }
@@ -348,7 +348,7 @@ internal static class ClassFactory
             // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
             {
-                string evtName = evt.Name?.Value ?? string.Empty;
+                string evtName = evt.GetRawName();
                 writer.WriteLine();
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
@@ -374,7 +374,7 @@ internal static class ClassFactory
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
             foreach (PropertyDefinition prop in staticIface.Properties)
             {
-                string propName = prop.Name?.Value ?? string.Empty;
+                string propName = prop.GetRawName();
                 (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
                 string propType = InterfaceFactory.WritePropType(context, prop);
 
@@ -544,7 +544,7 @@ internal static class ClassFactory
 
     private static void WriteClassCore(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string typeName = type.Name?.Value ?? string.Empty;
+        string typeName = type.GetRawName();
         int gcPressure = GetGcPressureAmount(type);
 
         // Header attributes + class declaration as a single multiline template.

@@ -24,5 +24,15 @@ internal static class PropertyDefinitionExtensions
         /// <returns>A tuple of (Getter, Setter) accessor methods, either of which may be <see langword="null"/>.</returns>
         public (MethodDefinition? Getter, MethodDefinition? Setter) GetMethods()
             => (property.GetMethod, property.SetMethod);
+
+        /// <summary>
+        /// Returns the property's raw metadata name, falling back to <see cref="string.Empty"/> when
+        /// the metadata name is <see langword="null"/>. Convenience for the
+        /// <c>property.Name?.Value ?? string.Empty</c> pattern that appears at many sites.
+        /// </summary>
+        public string GetRawName()
+        {
+            return property.Name?.Value ?? string.Empty;
+        }
     }
 }

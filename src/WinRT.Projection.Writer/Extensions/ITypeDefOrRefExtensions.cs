@@ -24,7 +24,7 @@ internal static class ITypeDefOrRefExtensions
         /// <returns>The type's stripped name.</returns>
         public string GetStrippedName()
         {
-            return IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
+            return IdentifierEscaping.StripBackticks(type.GetRawName());
         }
 
         /// <summary>

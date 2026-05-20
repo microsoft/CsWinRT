@@ -364,7 +364,7 @@ internal static partial class ClassMembersFactory
         // class on the right _objRef_ field.
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
-            string name = prop.Name?.Value ?? string.Empty;
+            string name = prop.GetRawName();
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
 
             if (!propertyState.TryGetValue(name, out PropertyAccessorState? state))
@@ -410,7 +410,7 @@ internal static partial class ClassMembersFactory
         // handler type.
         foreach (EventDefinition evt in ifaceType.Events)
         {
-            string name = evt.Name?.Value ?? string.Empty;
+            string name = evt.GetRawName();
 
             if (!writtenEvents.Add(name))
             {

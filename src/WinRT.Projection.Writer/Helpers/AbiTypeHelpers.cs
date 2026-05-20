@@ -230,8 +230,10 @@ internal static partial class AbiTypeHelpers
             return true;
         }
 
-        return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
-            && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
+        (string aNs, string aName) = a.Names();
+        (string bNs, string bName) = b.Names();
+
+        return aNs == bNs && aName == bName;
     }
 
 }

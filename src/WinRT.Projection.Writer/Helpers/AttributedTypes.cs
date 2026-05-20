@@ -70,7 +70,7 @@ internal static class AttributedTypes
                     continue;
             }
 
-            string key = info.Type?.Name?.Value ?? string.Empty;
+            string key = info.Type?.GetRawName() ?? string.Empty;
             result[key] = info;
         }
 

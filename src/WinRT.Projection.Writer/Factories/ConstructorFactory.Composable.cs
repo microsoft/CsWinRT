@@ -26,7 +26,7 @@ internal static partial class ConstructorFactory
             return;
         }
 
-        string typeName = classType.Name?.Value ?? string.Empty;
+        string typeName = classType.GetRawName();
 
         // Emit the factory objref + IIDs at the top so the parameterized ctors can reference it.
         if (composableType.Methods.Count > 0)

@@ -314,7 +314,7 @@ internal static class CustomAttributeFactory
                 continue;
             }
 
-            string name = attrType.Name?.Value ?? string.Empty;
+            string name = attrType.GetRawName();
 
             if (name.EndsWith("Attribute", StringComparison.Ordinal))
             {

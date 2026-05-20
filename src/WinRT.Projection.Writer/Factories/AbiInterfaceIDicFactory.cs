@@ -260,7 +260,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
-            string pname = prop.Name?.Value ?? string.Empty;
+            string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.WriteLine();
@@ -291,7 +291,7 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            string evtName = evt.Name?.Value ?? string.Empty;
+            string evtName = evt.GetRawName();
             writer.WriteLine();
             WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine(isMultiline: true, $$"""
@@ -395,7 +395,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
-            string pname = prop.Name?.Value ?? string.Empty;
+            string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.WriteLine();
@@ -444,7 +444,7 @@ internal static class AbiInterfaceIDicFactory
         // dispatch through the static ABI Methods class's event accessor (returns an EventSource).
         foreach (EventDefinition evt in type.Events)
         {
-            string evtName = evt.Name?.Value ?? string.Empty;
+            string evtName = evt.GetRawName();
             writer.WriteLine();
             WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine(isMultiline: true, $$"""

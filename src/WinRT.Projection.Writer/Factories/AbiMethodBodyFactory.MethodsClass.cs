@@ -70,7 +70,7 @@ internal static partial class AbiMethodBodyFactory
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
         foreach (PropertyDefinition prop in type.Properties)
         {
-            string pname = prop.Name?.Value ?? string.Empty;
+            string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
             if (prop.GetMethod is { } getter)
@@ -104,7 +104,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string evtName = evt.Name?.Value ?? string.Empty;
+            string evtName = evt.GetRawName();
             TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
 
@@ -135,7 +135,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (evtSig is TypeDefOrRefSignature td)
                 {
-                    delegateName = td.Type?.Name?.Value ?? string.Empty;
+                    delegateName = td.Type.GetRawName();
                     delegateName = IdentifierEscaping.StripBackticks(delegateName);
                 }
 

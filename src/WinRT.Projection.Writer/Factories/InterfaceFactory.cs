@@ -237,10 +237,10 @@ internal static class InterfaceFactory
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
             string newKeyword = (getter is null && setter is not null
-                && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty, out _))
+                && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.GetRawName(), out _))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.Write($"{newKeyword}{propType} {prop.Name?.Value} {{");
+            writer.Write($"{newKeyword}{propType} {prop.GetRawName()} {{");
 
             writer.WriteIf(getter is not null || setter is not null, " get;");
 
@@ -302,7 +302,7 @@ internal static class InterfaceFactory
 
             foreach (PropertyDefinition prop in baseIface.Properties)
             {
-                if ((prop.Name?.Value ?? string.Empty) == propName)
+                if (prop.GetRawName() == propName)
                 {
                     foundInterface = baseIface;
                     return true;

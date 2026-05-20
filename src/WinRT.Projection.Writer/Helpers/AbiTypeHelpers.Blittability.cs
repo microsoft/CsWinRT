@@ -79,8 +79,7 @@ internal static partial class AbiTypeHelpers
         // For TypeRef/TypeDef, resolve and check blittability.
         if (sig is TypeDefOrRefSignature todr)
         {
-            string fNs = todr.Type?.Namespace?.Value ?? string.Empty;
-            string fName = todr.Type?.Name?.Value ?? string.Empty;
+            (string fNs, string fName) = todr.Type.Names();
 
             // System.Guid is a fundamental blittable type .
             // Same applies to System.IntPtr / UIntPtr (used in some struct layouts).
@@ -290,8 +289,7 @@ internal static partial class AbiTypeHelpers
 
         // RequiresMarshaling, regardless of inner field layout. So for mapped types like
         // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
-        string sNs = td.Type?.Namespace?.Value ?? string.Empty;
-        string sName = td.Type?.Name?.Value ?? string.Empty;
+        (string sNs, string sName) = td.Type.Names();
         MappedType? sMapped = MappedTypes.Get(sNs, sName);
 
         if (sMapped is not null)
@@ -360,8 +358,7 @@ internal static partial class AbiTypeHelpers
         // (only applies to actual structs, not mapped interfaces like IAsyncAction).
         if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
         {
-            string sNs = td.Type?.Namespace?.Value ?? string.Empty;
-            string sName = td.Type?.Name?.Value ?? string.Empty;
+            (string sNs, string sName) = td.Type.Names();
             MappedType? sMapped = MappedTypes.Get(sNs, sName);
 
             if (sMapped is { } sMappedVal)

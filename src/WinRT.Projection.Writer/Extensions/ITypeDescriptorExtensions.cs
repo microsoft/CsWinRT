@@ -22,5 +22,15 @@ internal static class ITypeDescriptorExtensions
         {
             return (type.Namespace ?? string.Empty, type.Name ?? string.Empty);
         }
+
+        /// <summary>
+        /// Returns the type's raw metadata name, falling back to <see cref="string.Empty"/> when
+        /// the metadata name is <see langword="null"/>. More efficient than the <c>Names</c> tuple
+        /// when only the name is needed (avoids allocating the namespace string).
+        /// </summary>
+        public string GetRawName()
+        {
+            return type.Name ?? string.Empty;
+        }
     }
 }

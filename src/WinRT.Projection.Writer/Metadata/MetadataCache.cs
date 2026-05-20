@@ -137,7 +137,7 @@ internal sealed class MetadataCache
     {
         foreach (NamespaceMembers members in _namespaces.Values)
         {
-            static int Compare(TypeDefinition a, TypeDefinition b) => StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+            static int Compare(TypeDefinition a, TypeDefinition b) => StringComparer.Ordinal.Compare(a.GetRawName(), b.GetRawName());
             members.Types.Sort(Compare);
             members.Interfaces.Sort(Compare);
             members.Classes.Sort(Compare);

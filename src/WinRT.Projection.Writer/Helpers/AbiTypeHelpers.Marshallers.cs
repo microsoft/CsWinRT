@@ -27,8 +27,7 @@ internal static partial class AbiTypeHelpers
         }
 
         ITypeDefOrRef gt = gi.GenericType;
-        string ns = gt?.Namespace?.Value ?? string.Empty;
-        string name = gt?.Name?.Value ?? string.Empty;
+        (string ns, string name) = gt.Names();
 
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
         // (It only later gets projected to System.Nullable<T> by the projection layer.)
@@ -140,8 +139,7 @@ internal static partial class AbiTypeHelpers
     {
         if (sig is TypeDefOrRefSignature td)
         {
-            string ns = td.Type?.Namespace?.Value ?? string.Empty;
-            string name = td.Type?.Name?.Value ?? string.Empty;
+            (string ns, string name) = td.Type.Names();
 
             // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
             _ = MappedTypes.ApplyMapping(ref ns, ref name);

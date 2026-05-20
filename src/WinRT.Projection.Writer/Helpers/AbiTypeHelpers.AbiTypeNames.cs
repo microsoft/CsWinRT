@@ -140,8 +140,7 @@ internal static partial class AbiTypeHelpers
     {
         if (sig is TypeDefOrRefSignature td)
         {
-            string ns = td.Type?.Namespace?.Value ?? string.Empty;
-            string name = td.Type?.Name?.Value ?? string.Empty;
+            (string ns, string name) = td.Type.Names();
 
             // If this struct is mapped, use the mapped namespace+name (e.g.
             // 'Windows.UI.Xaml.Interop.TypeName' is mapped to 'System.Type', so the ABI struct

@@ -90,7 +90,7 @@ internal static partial class ConstructorFactory
     /// </summary>
     public static void WriteFactoryConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? factoryType, TypeDefinition classType)
     {
-        string typeName = classType.Name?.Value ?? string.Empty;
+        string typeName = classType.GetRawName();
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
 
         if (factoryType is not null)

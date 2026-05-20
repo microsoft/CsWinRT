@@ -49,8 +49,7 @@ internal static class ComponentFactory
     /// </summary>
     public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string typeName = type.Name?.Value ?? string.Empty;
-        string typeNs = type.Namespace?.Value ?? string.Empty;
+        (string typeNs, string typeName) = type.Names();
         string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
         string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
         bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
@@ -197,7 +196,7 @@ internal static class ComponentFactory
     /// </summary>
     private static void WriteStaticFactoryProperty(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop, string projectedTypeName)
     {
-        string propName = prop.Name?.Value ?? string.Empty;
+        string propName = prop.GetRawName();
         (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
         string propType = GetFactoryPropertyType(context, prop);
 
@@ -227,7 +226,7 @@ internal static class ComponentFactory
     /// </summary>
     private static void WriteStaticFactoryEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string projectedTypeName)
     {
-        string evtName = evt.Name?.Value ?? string.Empty;
+        string evtName = evt.GetRawName();
         string evtType = evt.EventType is null
             ? string.Empty
             : TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, false).Format();

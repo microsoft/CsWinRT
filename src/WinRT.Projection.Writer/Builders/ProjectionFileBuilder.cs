@@ -93,7 +93,7 @@ internal static class ProjectionFileBuilder
 
         bool isFlags = TypeCategorization.IsFlagsEnum(type);
         string enumUnderlyingType = isFlags ? "uint" : "int";
-        string typeName = type.Name?.Value ?? string.Empty;
+        string typeName = type.GetRawName();
 
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
         WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
@@ -121,7 +121,7 @@ internal static class ProjectionFileBuilder
                     continue;
                 }
 
-                string fieldName = field.Name?.Value ?? string.Empty;
+                string fieldName = field.GetRawName();
                 string constantValue = field.Constant.FormatLiteral();
 
                 // Emits per-enum-field '[SupportedOSPlatform]' when the field has a '[ContractVersion]'
@@ -156,7 +156,7 @@ internal static class ProjectionFileBuilder
 
             TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
             string fieldType = TypedefNameWriter.WriteProjectionType(context, semantics).Format();
-            string fieldName = field.Name?.Value ?? string.Empty;
+            string fieldName = field.GetRawName();
             string paramName = IdentifierEscaping.ToCamelCase(fieldName);
             bool isInterface = false;
 
@@ -172,7 +172,7 @@ internal static class ProjectionFileBuilder
             fields.Add((fieldType, fieldName, paramName, isInterface));
         }
 
-        string projectionName = type.Name?.Value ?? string.Empty;
+        string projectionName = type.GetRawName();
 
         // Header attributes + struct declaration as a single multiline template.
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
@@ -298,7 +298,7 @@ internal static class ProjectionFileBuilder
             return;
         }
 
-        string typeName = type.Name?.Value ?? string.Empty;
+        string typeName = type.GetRawName();
 
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
@@ -348,7 +348,7 @@ internal static class ProjectionFileBuilder
     /// </summary>
     private static void WriteAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string typeName = type.Name?.Value ?? string.Empty;
+        string typeName = type.GetRawName();
 
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
         WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);

@@ -49,7 +49,7 @@ internal static class AbiClassFactory
     internal static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string typeNs = type.Names().Namespace;
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
 
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
@@ -115,7 +115,7 @@ internal static class AbiClassFactory
     internal static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string typeNs = type.Names().Namespace;
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
         TypeCategory category = TypeCategorization.GetCategory(type);
@@ -199,7 +199,7 @@ internal static class AbiClassFactory
     internal static void WriteClassMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string typeNs = type.Names().Namespace;
         string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
 
         // Get the IID expression for the default interface (used by CreateObject).
