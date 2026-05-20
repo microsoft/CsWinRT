@@ -887,7 +887,7 @@ internal static partial class AbiMethodBodyFactory
         // ABI-format buffer (_<name>) which is separate from the user's Span<T>; we need to
         // CopyToManaged_<name> to convert each ABI element back to the projected form and
         // store it in the user's Span.write_marshal_from_abi
-        // Blittable element types (primitives and almost-blittable structs) don't need this
+        // Blittable element types (primitives and blittable structs) don't need this
         // because the user's Span wraps the same memory the native side wrote to.
         foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.FillArray))
 

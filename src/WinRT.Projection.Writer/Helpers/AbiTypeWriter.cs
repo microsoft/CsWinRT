@@ -79,10 +79,10 @@ internal static class AbiTypeWriter
 
                     TypeSignature dts = d.Type.ToTypeSignature();
 
-                    // "Almost-blittable" structs (with bool/char fields but no reference-type
-                    // fields) can pass through using the projected type since the C# layout
-                    // matches the WinRT ABI directly. Truly complex structs (with string/object/
-                    // Nullable<T> fields) need the ABI struct.
+                    // Blittable structs (whose projected layout matches the WinRT ABI
+                    // representation, including ones with bool/char fields) can pass through
+                    // using the projected type. Complex structs (with string/object/runtime-class/
+                    // Nullable<T>/marshalling-mapped fields) need the ABI struct.
                     if (context.AbiTypeKindResolver.IsBlittableStruct(dts))
                     {
                         TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);

@@ -90,7 +90,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
             return AbiTypeKind.ComplexStruct;
         }
 
-        if (AbiTypeHelpers.IsAnyStruct(Cache, signature))
+        if (AbiTypeHelpers.IsBlittableStruct(Cache, signature))
         {
             return AbiTypeKind.BlittableStruct;
         }

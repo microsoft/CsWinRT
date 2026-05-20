@@ -252,13 +252,23 @@ internal static partial class AbiTypeHelpers
         return false;
     }
 
-    /// <summary>True for any struct type that can be passed directly across the WinRT ABI
-    /// (no per-field marshalling required). This includes blittable structs and "almost-blittable"
-    /// structs that have only primitive fields like bool/char (whose C# layout matches the WinRT ABI).
-    /// Excludes structs with reference type fields (string/object/runtime classes/etc.).</summary>
-    /// <summary>True for structs that have at least one reference type field (string, generic
-    /// instance Nullable&lt;T&gt;, etc.). These need per-field marshalling via the *Marshaller class
-    /// (ConvertToUnmanaged/ConvertToManaged/Dispose).</summary>
+    /// <summary>
+    /// Returns whether <paramref name="sig"/> is a WinRT struct that needs per-field marshalling
+    /// via a generated <c>*Marshaller</c> class (<c>ConvertToUnmanaged</c> / <c>ConvertToManaged</c>
+    /// / <c>Dispose</c>). This is the inverse of <see cref="IsBlittableStruct"/> restricted to
+    /// non-mapped structs.
+    /// </summary>
+    /// <remarks>
+    /// A struct is "complex" iff:
+    /// <list type="bullet">
+    ///   <item>it is NOT custom-mapped (mapped structs use a hand-written ABI helper, not a
+    ///     per-field marshaller); and</item>
+    ///   <item>it has at least one instance field that is not a blittable primitive (or enum)
+    ///     and not a nested blittable struct (i.e. a <see cref="string"/>, <see cref="object"/>,
+    ///     runtime class, generic instance, custom-mapped marshalling field, or a nested
+    ///     complex struct).</item>
+    /// </list>
+    /// </remarks>
     internal static bool IsComplexStruct(MetadataCache cache, TypeSignature sig)
     {
         if (sig is not TypeDefOrRefSignature td)
@@ -280,25 +290,25 @@ internal static partial class AbiTypeHelpers
             return false;
         }
 
-        TypeCategory cat = TypeCategorization.GetCategory(def);
-
-        if (cat != TypeCategory.Struct)
+        if (TypeCategorization.GetCategory(def) != TypeCategory.Struct)
         {
             return false;
         }
 
-        // RequiresMarshaling, regardless of inner field layout. So for mapped types like
-        // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
+        // Custom-mapped structs are short-circuited up front: they go through a hand-written
+        // ABI helper (not a per-field marshaller) regardless of inner field layout. Mapped
+        // structs like Duration / KeyTime / RepeatBehavior (RequiresMarshaling=false) are
+        // therefore never "complex".
         (string sNs, string sName) = td.Type.Names();
-        MappedType? sMapped = MappedTypes.Get(sNs, sName);
 
-        if (sMapped is not null)
+        if (MappedTypes.Get(sNs, sName) is not null)
         {
             return false;
         }
 
-        // A struct is "complex" if it has any field that is not a blittable primitive nor an
-        // almost-blittable struct (i.e. has a string/object/Nullable<T>/etc. field).
+        // A struct is "complex" if it has any field that is not a blittable primitive nor a
+        // (recursively) blittable struct — i.e. it has a string/object/runtime class/generic
+        // instance/marshalling-mapped/complex-nested-struct field.
         foreach (FieldDefinition field in def.Fields)
         {
             if (field.IsStatic || field.Signature is null)
@@ -313,20 +323,36 @@ internal static partial class AbiTypeHelpers
                 continue;
             }
 
-            if (IsAnyStruct(cache, ft))
+            if (IsBlittableStruct(cache, ft))
             {
                 continue;
             }
 
             return true;
         }
+
         return false;
     }
 
     /// <summary>
-    /// Returns whether <paramref name="sig"/> resolves to a struct type (mapped or user-defined).
+    /// Returns whether <paramref name="sig"/> is a WinRT struct that flows across the ABI
+    /// by value with no per-field marshalling (the projected struct's memory layout matches
+    /// the ABI representation byte-for-byte).
     /// </summary>
-    internal static bool IsAnyStruct(MetadataCache cache, TypeSignature sig)
+    /// <remarks>
+    /// A struct qualifies as blittable iff:
+    /// <list type="bullet">
+    ///   <item>it is custom-mapped with <c>RequiresMarshaling=false</c> (e.g. self-mapped XAML
+    ///     structs such as <c>Duration</c>, <c>KeyTime</c>, <c>RepeatBehavior</c>); or</item>
+    ///   <item>every instance field is itself a blittable primitive (or enum), or a nested
+    ///     blittable struct.</item>
+    /// </list>
+    /// Reference-typed fields (<see cref="string"/>, <see cref="object"/>, runtime classes,
+    /// generic instances, nested complex structs, custom-mapped fields with
+    /// <c>RequiresMarshaling=true</c> such as <c>TimeSpan</c> or <c>DateTimeOffset</c>) all
+    /// disqualify the containing struct. Complex structs are handled by <see cref="IsComplexStruct"/>.
+    /// </remarks>
+    internal static bool IsBlittableStruct(MetadataCache cache, TypeSignature sig)
     {
         if (sig is not TypeDefOrRefSignature td)
         {
@@ -359,22 +385,20 @@ internal static partial class AbiTypeHelpers
         if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
         {
             (string sNs, string sName) = td.Type.Names();
-            MappedType? sMapped = MappedTypes.Get(sNs, sName);
 
-            if (sMapped is { } sMappedVal)
+            if (MappedTypes.Get(sNs, sName) is MappedType mappedType)
             {
-                return !sMappedVal.RequiresMarshaling;
+                return !mappedType.RequiresMarshaling;
             }
         }
 
-        TypeCategory cat = TypeCategorization.GetCategory(def);
-
-        if (cat != TypeCategory.Struct)
+        // If the type isn't a struct type, then by definition it isn't blittable
+        if (TypeCategorization.GetCategory(def) != TypeCategory.Struct)
         {
             return false;
         }
 
-        // Reject if any instance field is a reference type (string/object/runtime class/etc.).
+        // Reject if any instance field is a reference type (string/object/runtime class/etc.)
         foreach (FieldDefinition field in def.Fields)
         {
             if (field.IsStatic || field.Signature is null)
@@ -384,28 +408,31 @@ internal static partial class AbiTypeHelpers
 
             TypeSignature ft = field.Signature.FieldType;
 
+            // 'string' and 'object' are the only primitive types that aren't blittable
             if (ft is CorLibTypeSignature corlibField)
             {
-                if (corlibField.ElementType is
-                    ElementType.String or
-                    ElementType.Object)
-                { return false; }
+                if (corlibField.ElementType is ElementType.String or ElementType.Object)
+                {
+                    return false;
+                }
+
                 continue;
             }
 
-            // Recurse: nested struct must also pass IsAnyStruct, otherwise reject.
+            // Recurse: a nested struct must also be blittable, otherwise reject
             if (IsBlittablePrimitive(cache, ft))
             {
                 continue;
             }
 
-            if (IsAnyStruct(cache, ft))
+            if (IsBlittableStruct(cache, ft))
             {
                 continue;
             }
 
             return false;
         }
+
         return true;
     }
 }

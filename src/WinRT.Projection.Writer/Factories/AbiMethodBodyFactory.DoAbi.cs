@@ -428,7 +428,7 @@ internal static partial class AbiMethodBodyFactory
                         }
                         else if (context.AbiTypeKindResolver.IsBlittableStruct(uRef) || context.AbiTypeKindResolver.IsBlittablePrimitive(uRef) || context.AbiTypeKindResolver.IsEnumType(uRef))
                         {
-                            // Blittable/almost-blittable: ABI layout matches projected layout.
+                            // Blittable: ABI layout matches projected layout.
                             writer.Write($"*{ptr}");
                         }
                         else
@@ -747,7 +747,7 @@ internal static partial class AbiMethodBodyFactory
         }
         else if (context.AbiTypeKindResolver.IsBlittableStruct(p.Type))
         {
-            // Blittable / almost-blittable struct: pass directly (projected type == ABI type).
+            // Blittable struct: pass directly (projected type == ABI type).
             writer.Write(pname);
         }
         else if (context.AbiTypeKindResolver.IsEnumType(p.Type))

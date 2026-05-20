@@ -42,14 +42,18 @@ internal static class StructEnumMarshallerFactory
         string nameStripped = type.GetStrippedName();
         TypeCategory cat = TypeCategorization.GetCategory(type);
 
-        // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
-        // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
+        // A struct field is "blittable" when its projected and ABI layouts match (no per-field
+        // marshalling). Detect that via AbiTypeKindResolver.IsBlittableStruct: it returns true
+        // for self-mapped structs with RequiresMarshaling=false and for user structs whose
+        // fields are all blittable.
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
-        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
+        bool blittableStruct = cat == TypeCategory.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
         bool isEnum = cat == TypeCategory.Enum;
 
-        // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
-        bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
+        // Complex structs are the remaining (non-blittable, non-mapped) structs that need a
+        // per-field marshaller class because at least one field is a reference type, generic
+        // instance, or marshalling-mapped value.
+        bool isComplexStruct = cat == TypeCategory.Struct && !blittableStruct;
 
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
@@ -254,13 +258,13 @@ internal static class StructEnumMarshallerFactory
             writer.WriteLine("}");
         }
 
-        // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex, mapped struct).
+        // BoxToUnmanaged: same pattern for all (enum, blittable struct, complex struct, mapped struct).
         // Truth uses CreateComInterfaceFlags.TrackerSupport when the struct has reference type
         // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
         // Mapped struct (Duration/KeyTime/etc.) variants always use None — the public projected
         // type still routes through this marshaller (it just lacks per-field
         // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-        string boxFlags = (isEnum || almostBlittable || isComplexStruct) && hasReferenceFields ? "TrackerSupport" : "None";
+        string boxFlags = (isEnum || blittableStruct || isComplexStruct) && hasReferenceFields ? "TrackerSupport" : "None";
         WriteIidReferenceExpressionCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine(isMultiline: true, $$"""
@@ -270,7 +274,7 @@ internal static class StructEnumMarshallerFactory
             }
             """);
 
-        // UnboxToManaged: simple for almost-blittable and mapped structs; for complex, unbox to
+        // UnboxToManaged: simple for blittable and mapped structs; for complex, unbox to
         // ABI struct then ConvertToManaged. Mapped struct unboxes directly to projected type (no
         // per-field ConvertToManaged needed because the projected struct's field layout matches
         // the WinMD struct layout).
@@ -300,11 +304,11 @@ internal static class StructEnumMarshallerFactory
 
         // Emit the InterfaceEntriesImpl static class and the proper ComWrappersMarshallerAttribute
         // class derived from WindowsRuntimeComWrappersMarshallerAttribute (matches truth).
-        // For enums and almost-blittable structs, GetOrCreateComInterfaceForObject uses None.
+        // For enums and blittable structs, GetOrCreateComInterfaceForObject uses None.
         // For complex structs (with reference fields), it uses TrackerSupport.
         // For complex structs, CreateObject converts via the *Marshaller.ConvertToManaged after
         // unboxing to the ABI struct.
-        if (isEnum || almostBlittable || isComplexStruct)
+        if (isEnum || blittableStruct || isComplexStruct)
         {
             WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
