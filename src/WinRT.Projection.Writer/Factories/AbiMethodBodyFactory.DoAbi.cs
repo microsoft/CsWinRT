@@ -284,7 +284,7 @@ internal static partial class AbiMethodBodyFactory
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
-                // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
+                // For non-blittable structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
                 // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
                 // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
                 // the data param is void** and the cast is (void**).
@@ -320,7 +320,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (p.Type.IsNullableT())
                 {
-                    // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
+                    // Nullable<T> param: use <T>Marshaller.UnboxToManaged.
                     string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
@@ -543,7 +543,7 @@ internal static partial class AbiMethodBodyFactory
 
                 // Determine the ABI element type for the data pointer cast (e.g. "void*" for
                 // ref-like elements -> "void** data"/"(void**)", or "global::ABI.Foo.Bar" for
-                // complex structs -> "global::ABI.Foo.Bar* data"/"(global::ABI.Foo.Bar*)").
+                // on-blittable structs -> "global::ABI.Foo.Bar* data"/"(global::ABI.Foo.Bar*)").
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szFA.BaseType);
 
                 writer.IncreaseIndent();
@@ -569,7 +569,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     if (rt is not null && rt.IsNullableT())
                     {
-                        // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
+                        // Nullable<T> return: use <T>Marshaller.BoxToUnmanaged.
                         (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, rt);
                         writer.WriteLine($"*{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
                     }
@@ -598,12 +598,12 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (rt.IsSystemType())
                 {
-                    // System.Type return (server-side): convert managed System.Type to ABI Type struct.
+                    // System.Type return: convert managed System.Type to ABI Type struct.
                     writer.WriteLine($"*{retParamName} = global::ABI.System.TypeMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (context.AbiTypeKindResolver.IsNonBlittableStruct(rt))
                 {
-                    // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
+                    // Non-blittable struct return: convert managed struct to ABI struct via marshaller.
                     writer.WriteLine($"*{retParamName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt)}.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (returnIsBlittableStruct)
@@ -737,12 +737,12 @@ internal static partial class AbiMethodBodyFactory
         }
         else if (p.Type.IsSystemType())
         {
-            // System.Type input (server-side): convert ABI Type struct to System.Type.
+            // System.Type input: convert ABI Type struct to System.Type.
             writer.Write($"global::ABI.System.TypeMarshaller.ConvertToManaged({pname})");
         }
         else if (context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
         {
-            // Complex struct input (server-side): convert ABI struct to managed via marshaller.
+            // Non-blittable struct input: convert ABI struct to managed via marshaller.
             writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type)}.ConvertToManaged({pname})");
         }
         else if (context.AbiTypeKindResolver.IsBlittableStruct(p.Type))
