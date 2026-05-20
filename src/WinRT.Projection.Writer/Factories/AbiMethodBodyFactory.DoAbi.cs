@@ -213,7 +213,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                if (!cat.IsArrayInput())
                 {
                     continue;
                 }
@@ -621,7 +621,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                if (!cat.IsArrayInput())
                 {
                     continue;
                 }
@@ -652,7 +652,7 @@ internal static partial class AbiMethodBodyFactory
                     ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
 
-                    if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                    if (!cat.IsArrayInput())
                     {
                         continue;
                     }
