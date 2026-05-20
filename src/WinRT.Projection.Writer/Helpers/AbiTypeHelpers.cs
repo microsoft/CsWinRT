@@ -11,7 +11,6 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -26,53 +25,14 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     public static TypeDefinition? GetExclusiveToType(MetadataCache cache, TypeDefinition iface)
     {
-        for (int i = 0; i < iface.CustomAttributes.Count; i++)
+        CustomAttribute? attr = iface.GetWindowsFoundationMetadataAttribute(ExclusiveToAttribute);
+
+        if (attr is null || !attr.TryGetFixedArgument(0, out TypeSignature? sig))
         {
-            CustomAttribute attr = iface.CustomAttributes[i];
-            ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
-
-            if (attrType is null)
-            {
-                continue;
-            }
-
-            if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
-                attrType.Name?.Value != ExclusiveToAttribute)
-            {
-                continue;
-            }
-
-            if (attr.Signature is null)
-            {
-                continue;
-            }
-
-            for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
-            {
-                CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
-
-                if (arg.Element is TypeSignature sig)
-                {
-                    string fullName = sig.FullName ?? string.Empty;
-                    TypeDefinition? td = cache.Find(fullName);
-
-                    if (td is not null)
-                    {
-                        return td;
-                    }
-                }
-                else if (arg.Element is string s)
-                {
-                    TypeDefinition? td = cache.Find(s);
-
-                    if (td is not null)
-                    {
-                        return td;
-                    }
-                }
-            }
+            return null;
         }
-        return null;
+
+        return cache.Find(sig.FullName ?? string.Empty);
     }
 
     /// <summary>
