@@ -47,6 +47,14 @@ internal static class TypeSignatureExtensions
         /// that resolves to it, including the WinRT <c>Windows.UI.Xaml.Interop.TypeName</c> struct
         /// that is mapped to it).
         /// </summary>
+        /// <remarks>
+        /// The <c>System.Type</c> branch is live (not dead, despite appearances): per the ECMA-335
+        /// custom-attribute blob encoding rules, attribute constructor / field parameters typed as
+        /// <c>Type</c> are emitted as TypeRefs to <c>System.Type</c> directly, not to the WinRT
+        /// <c>Windows.UI.Xaml.Interop.TypeName</c> struct. The Windows Foundation metadata winmd
+        /// (<c>ActivatableAttribute</c>, <c>ComposableAttribute</c>, <c>StyleTypedPropertyAttribute</c>,
+        /// etc.) is the primary source of these signatures.
+        /// </remarks>
         /// <returns><see langword="true"/> if the signature is the projected <see cref="System.Type"/>; otherwise <see langword="false"/>.</returns>
         public bool IsSystemType()
         {
@@ -65,7 +73,7 @@ internal static class TypeSignatureExtensions
         {
             (string ns, string name) = sig.Names();
 
-            return (ns == "System" && name == "Exception") || (ns == WindowsFoundation && name == HResult);
+            return ns == WindowsFoundation && name == HResult;
         }
 
         /// <summary>
@@ -82,7 +90,7 @@ internal static class TypeSignatureExtensions
 
             (string ns, string name) = gi.GenericType.Names();
 
-            return (ns == WindowsFoundation && name == IReferenceGeneric) || (ns == "System" && name == NullableGeneric);
+            return ns == WindowsFoundation && name == IReferenceGeneric;
         }
 
         /// <summary>

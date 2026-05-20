@@ -31,9 +31,8 @@ internal static partial class AbiTypeHelpers
         string name = gt?.Name?.Value ?? string.Empty;
 
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
-        // It only later gets projected to System.Nullable<T> by the projection layer.
-        bool isNullable = (ns == "System" && name == NullableGeneric)
-            || (ns == WindowsFoundation && name == IReferenceGeneric);
+        // (It only later gets projected to System.Nullable<T> by the projection layer.)
+        bool isNullable = ns == WindowsFoundation && name == IReferenceGeneric;
 
         if (!isNullable)
         {
