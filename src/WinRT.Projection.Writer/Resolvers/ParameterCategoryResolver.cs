@@ -17,7 +17,7 @@ internal static class ParameterCategoryResolver
     /// </summary>
     /// <param name="p">The parameter to classify.</param>
     /// <returns>The classified parameter category.</returns>
-    public static ParameterCategory GetParamCategory(ParameterInfo p)
+    public static ParameterCategory Resolve(ParameterInfo p)
     {
         bool isArray = p.Type is SzArrayTypeSignature;
         bool isOut = p.Parameter.Definition?.IsOut == true;

@@ -223,7 +223,7 @@ internal static partial class AbiMethodBodyFactory
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                 if (!cat.IsArrayInput())
                 {
@@ -385,7 +385,7 @@ internal static partial class AbiMethodBodyFactory
                         """);
                     }
                     ParameterInfo p = sig.Parameters[i];
-                    ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                    ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                     if (cat == ParameterCategory.Out)
                     {
@@ -631,7 +631,7 @@ internal static partial class AbiMethodBodyFactory
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                 if (!cat.IsArrayInput())
                 {
@@ -662,7 +662,7 @@ internal static partial class AbiMethodBodyFactory
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     ParameterInfo p = sig.Parameters[i];
-                    ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                    ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                     if (!cat.IsArrayInput())
                     {

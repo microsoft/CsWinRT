@@ -53,7 +53,7 @@ internal static partial class AbiMethodBodyFactory
         _ = fp.Append("void*");
         foreach (ParameterInfo p in sig.Parameters)
         {
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (cat.IsArrayInput())
             {
@@ -250,7 +250,7 @@ internal static partial class AbiMethodBodyFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (ParameterCategoryResolver.GetParamCategory(p) != ParameterCategory.In)
+            if (ParameterCategoryResolver.Resolve(p) != ParameterCategory.In)
             {
                 continue;
             }
@@ -270,7 +270,7 @@ internal static partial class AbiMethodBodyFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (ParameterCategoryResolver.GetParamCategory(p) != ParameterCategory.In)
+            if (ParameterCategoryResolver.Resolve(p) != ParameterCategory.In)
             {
                 continue;
             }
@@ -292,7 +292,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (!cat.IsScalarInput())
             {
@@ -343,7 +343,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (!cat.IsArrayInput())
             {
@@ -458,7 +458,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (!cat.IsScalarInput())
             {
@@ -483,7 +483,7 @@ internal static partial class AbiMethodBodyFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (ParameterCategoryResolver.GetParamCategory(p) != ParameterCategory.In)
+            if (ParameterCategoryResolver.Resolve(p) != ParameterCategory.In)
             {
                 continue;
             }
@@ -516,7 +516,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (p.Type.IsString() || p.Type.IsSystemType())
             {
@@ -539,7 +539,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (cat == ParameterCategory.Ref)
             {
@@ -571,7 +571,7 @@ internal static partial class AbiMethodBodyFactory
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
                 bool isString = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
                 bool isPassArray = cat.IsArrayInput();
@@ -661,7 +661,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (!cat.IsArrayInput())
             {
@@ -767,7 +767,7 @@ internal static partial class AbiMethodBodyFactory
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (cat.IsArrayInput())
             {
@@ -1144,7 +1144,7 @@ internal static partial class AbiMethodBodyFactory
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                 if (!cat.IsScalarInput())
                 {
@@ -1170,7 +1170,7 @@ internal static partial class AbiMethodBodyFactory
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                 if (!cat.IsArrayInput())
                 {

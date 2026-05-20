@@ -77,7 +77,7 @@ internal static class AbiInterfaceFactory
         {
             writer.Write(", ");
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
             string paramName = p.GetRawName();
             WriteEscapedIdentifierCallback name = IdentifierEscaping.WriteEscapedIdentifier(paramName);
 

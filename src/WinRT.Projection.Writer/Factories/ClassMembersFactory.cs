@@ -67,7 +67,7 @@ internal static partial class ClassMembersFactory
     /// </summary>
     internal static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
         switch (cat)
         {
             case ParameterCategory.Out:

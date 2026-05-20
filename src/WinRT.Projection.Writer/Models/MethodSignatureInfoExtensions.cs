@@ -26,7 +26,7 @@ internal static class MethodSignatureInfoExtensions
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                yield return (i, p, ParameterCategoryResolver.GetParamCategory(p));
+                yield return (i, p, ParameterCategoryResolver.Resolve(p));
             }
         }
 
@@ -40,7 +40,7 @@ internal static class MethodSignatureInfoExtensions
             {
                 ParameterInfo p = sig.Parameters[i];
 
-                if (ParameterCategoryResolver.GetParamCategory(p) == category)
+                if (ParameterCategoryResolver.Resolve(p) == category)
                 {
                     yield return (i, p);
                 }
@@ -57,7 +57,7 @@ internal static class MethodSignatureInfoExtensions
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                 if (cat.IsAnyArray())
                 {
@@ -73,7 +73,7 @@ internal static class MethodSignatureInfoExtensions
         {
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
-                if (ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]) == category)
+                if (ParameterCategoryResolver.Resolve(sig.Parameters[i]) == category)
                 {
                     return true;
                 }

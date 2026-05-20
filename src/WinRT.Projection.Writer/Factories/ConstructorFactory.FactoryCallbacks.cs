@@ -130,7 +130,7 @@ internal static partial class ConstructorFactory
             ParameterInfo p = sig.Parameters[i];
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
             if (cat == ParameterCategory.PassArray)
@@ -254,7 +254,7 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (!cat.IsArrayInput())
             {
@@ -338,7 +338,7 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (p.Type.IsString() || p.Type.IsSystemType())
             {
@@ -357,7 +357,7 @@ internal static partial class ConstructorFactory
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
                 bool isStr = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
                 bool isArr = cat.IsArrayInput();
@@ -434,7 +434,7 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (!cat.IsArrayInput())
             {
@@ -483,7 +483,7 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (cat.IsArrayInput())
             {
@@ -505,7 +505,7 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
             writer.Write(isMultiline: true, """
@@ -602,7 +602,7 @@ internal static partial class ConstructorFactory
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
                 if (!cat.IsArrayInput())
                 {

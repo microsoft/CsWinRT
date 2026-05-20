@@ -67,7 +67,7 @@ internal static class MethodFactory
     /// <param name="p">The parameter info.</param>
     public static void WriteProjectionParameterType(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
         switch (cat)
         {
             case ParameterCategory.Out:
