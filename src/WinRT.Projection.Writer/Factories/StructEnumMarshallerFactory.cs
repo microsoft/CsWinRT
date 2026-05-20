@@ -132,7 +132,7 @@ internal static class StructEnumMarshallerFactory
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
-                    writer.Write($"{IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty)}Marshaller.ConvertToUnmanaged(value.{fname})");
+                    writer.Write($"{fieldStructTd.GetStrippedName()}Marshaller.ConvertToUnmanaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
@@ -193,7 +193,7 @@ internal static class StructEnumMarshallerFactory
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
-                    writer.Write($"{IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty)}Marshaller.ConvertToManaged(value.{fname})");
+                    writer.Write($"{fieldStructTd2.GetStrippedName()}Marshaller.ConvertToManaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
@@ -242,7 +242,7 @@ internal static class StructEnumMarshallerFactory
                 {
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
                     string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
-                    string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
+                    string nestedNm = fieldStructTd3.GetStrippedName();
                     writer.WriteLine($"global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))

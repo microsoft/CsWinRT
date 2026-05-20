@@ -48,7 +48,7 @@ internal static class AbiClassFactory
     /// </summary>
     internal static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
+        string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
@@ -114,7 +114,7 @@ internal static class AbiClassFactory
     /// </summary>
     internal static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
+        string nameStripped = type.GetStrippedName();
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string projectedType = string.IsNullOrEmpty(typeNs) ? $"global::{nameStripped}" : $"global::{typeNs}.{nameStripped}";
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
