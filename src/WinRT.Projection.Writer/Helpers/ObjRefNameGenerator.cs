@@ -150,14 +150,12 @@ internal static class ObjRefNameGenerator
 
         if (ifaceType is TypeDefinition td)
         {
-            ns = td.Namespace?.Value ?? string.Empty;
-            name = td.Name?.Value ?? string.Empty;
+            (ns, name) = td.Names();
             isMapped = MappedTypes.IsMapped(ns, name);
         }
         else if (ifaceType is TypeReference tr)
         {
-            ns = tr.Namespace?.Value ?? string.Empty;
-            name = tr.Name?.Value ?? string.Empty;
+            (ns, name) = tr.Names();
             isMapped = MappedTypes.IsMapped(ns, name);
         }
         else

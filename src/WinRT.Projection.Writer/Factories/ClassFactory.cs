@@ -291,7 +291,7 @@ internal static class ClassFactory
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
         HashSet<string> emittedObjRefs = [];
 
-        string runtimeClassFullName = (type.Namespace?.Value ?? string.Empty) + "." + (type.Name?.Value ?? string.Empty);
+        string runtimeClassFullName = type.FullName ?? string.Empty;
 
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {

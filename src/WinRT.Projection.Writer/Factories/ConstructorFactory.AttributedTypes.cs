@@ -41,7 +41,7 @@ internal static partial class ConstructorFactory
 
         if (needsClassObjRef)
         {
-            string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + (classType.Name?.Value ?? string.Empty);
+            string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
             writer.WriteLine();
             writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
@@ -96,7 +96,7 @@ internal static partial class ConstructorFactory
         if (factoryType is not null)
         {
             // Emit the factory objref property (lazy-initialized).
-            string factoryRuntimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string factoryRuntimeClassFullName = classType.FullName ?? string.Empty;
             string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, factoryType);
             ClassFactory.WriteStaticFactoryObjRef(writer, context, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
 
@@ -173,7 +173,7 @@ internal static partial class ConstructorFactory
             // No factory type means [Activatable(uint version)] - emit a default ctor that calls
             // the WindowsRuntimeObject base constructor with the activation factory objref.
             // The default interface IID is needed too.
-            string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
 
             // Find the default interface IID to use.

@@ -31,7 +31,7 @@ internal static partial class ConstructorFactory
         // Emit the factory objref + IIDs at the top so the parameterized ctors can reference it.
         if (composableType.Methods.Count > 0)
         {
-            string runtimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string runtimeClassFullName = classType.FullName ?? string.Empty;
             string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, composableType);
             ClassFactory.WriteStaticFactoryObjRef(writer, context, composableType, runtimeClassFullName, factoryObjRefName);
         }
