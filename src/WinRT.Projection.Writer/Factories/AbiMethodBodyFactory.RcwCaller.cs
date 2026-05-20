@@ -197,11 +197,11 @@ internal static partial class AbiMethodBodyFactory
         _ = fp.Append(", int");
 
         writer.WriteLine();
-        writer.WriteLine(isMultiline: true, """
-                {
-                    using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
-                    void* ThisPtr = thisValue.GetThisPtrUnsafe();
-            """);
+        writer.IncreaseIndent();
+        writer.WriteLine("{");
+        writer.IncreaseIndent();
+        writer.WriteLine("using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
+        writer.WriteLine("void* ThisPtr = thisValue.GetThisPtrUnsafe();");
 
         // Declare 'using' marshaller values for ref-type parameters (these need disposing).
         for (int i = 0; i < sig.Parameters.Count; i++)
@@ -213,7 +213,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = p.GetParamLocalName(paramNameOverride);
                 string callName = p.GetParamName(paramNameOverride);
                 EmitMarshallerConvertToUnmanagedCallback cvt = EmitMarshallerConvertToUnmanaged(context, p.Type, callName);
-                writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = {cvt};");
+                writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{localName} = {cvt};");
             }
             else if (p.Type.IsNullableT())
             {
@@ -221,7 +221,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = p.GetParamLocalName(paramNameOverride);
                 string callName = p.GetParamName(paramNameOverride);
                 (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
-                writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = {innerMarshaller}.BoxToUnmanaged({callName});");
+                writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{localName} = {innerMarshaller}.BoxToUnmanaged({callName});");
             }
             else if (p.Type.IsGenericInstance())
             {
@@ -231,9 +231,9 @@ internal static partial class AbiMethodBodyFactory
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                 writer.WriteLine(isMultiline: true, $$"""
-                            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                            static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                            using WindowsRuntimeObjectReferenceValue __{{localName}} = ConvertToUnmanaged_{{localName}}(null, {{callName}});
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
+                    using WindowsRuntimeObjectReferenceValue __{{localName}} = ConvertToUnmanaged_{{localName}}(null, {{callName}});
                     """);
             }
         }
@@ -257,7 +257,7 @@ internal static partial class AbiMethodBodyFactory
 
             string localName = p.GetParamLocalName(paramNameOverride);
             string callName = p.GetParamName(paramNameOverride);
-            writer.WriteLine($"        global::ABI.System.Exception __{localName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({callName});");
+            writer.WriteLine($"global::ABI.System.Exception __{localName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({callName});");
         }
 
         // Declare locals for mapped value-type input parameters (DateTime/TimeSpan): convert via marshaller up-front.
@@ -277,7 +277,7 @@ internal static partial class AbiMethodBodyFactory
 
             string localName = p.GetParamLocalName(paramNameOverride);
             string callName = p.GetParamName(paramNameOverride);
-            writer.WriteLine($"        {AbiTypeHelpers.GetMappedAbiTypeName(p.Type)} __{localName} = {AbiTypeHelpers.GetMappedMarshallerName(p.Type)}.ConvertToUnmanaged({callName});");
+            writer.WriteLine($"{AbiTypeHelpers.GetMappedAbiTypeName(p.Type)} __{localName} = {AbiTypeHelpers.GetMappedMarshallerName(p.Type)}.ConvertToUnmanaged({callName});");
         }
 
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
@@ -302,7 +302,7 @@ internal static partial class AbiMethodBodyFactory
             }
 
             string localName = p.GetParamLocalName(paramNameOverride);
-            writer.WriteLine($"        {AbiTypeHelpers.GetAbiStructTypeName(context, pType)} __{localName} = default;");
+            writer.WriteLine($"{AbiTypeHelpers.GetAbiStructTypeName(context, pType)} __{localName} = default;");
         }
 
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
@@ -312,8 +312,6 @@ internal static partial class AbiMethodBodyFactory
 
             string localName = p.GetParamLocalName(paramNameOverride);
             TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            writer.Write("        ");
-
             string abi = AbiTypeHelpers.GetAbiLocalTypeName(context, uOut);
             writer.WriteLine($"{abi} __{localName} = default;");
         }
@@ -325,10 +323,8 @@ internal static partial class AbiMethodBodyFactory
 
             string localName = p.GetParamLocalName(paramNameOverride);
             SzArrayTypeSignature sza = p.Type.AsSzArray()!;
-            writer.WriteLine(isMultiline: true, $$"""
-                        uint __{{localName}}_length = default;
-                        
-                """);
+            writer.WriteLine($"uint __{localName}_length = default;");
+            writer.WriteLine();
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
             string elemAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
@@ -368,11 +364,11 @@ internal static partial class AbiMethodBodyFactory
             string storageT = AbiTypeHelpers.GetArrayElementStorageType(context, szArr.BaseType);
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                        Unsafe.SkipInit(out InlineArray16<{{storageT}}> {{names.InlineArray}});
-                        {{storageT}}[] {{names.ArrayFromPool}} = null;
-                        Span<{{storageT}}> {{names.Span}} = {{callName}}.Length <= 16
-                            ? {{names.InlineArray}}[..{{callName}}.Length]
-                            : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
+                Unsafe.SkipInit(out InlineArray16<{{storageT}}> {{names.InlineArray}});
+                {{storageT}}[] {{names.ArrayFromPool}} = null;
+                Span<{{storageT}}> {{names.Span}} = {{callName}}.Length <= 16
+                    ? {{names.InlineArray}}[..{{callName}}.Length]
+                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
                 """);
 
             if (szArr.BaseType.IsString() && cat == ParameterCategory.PassArray)
@@ -382,17 +378,17 @@ internal static partial class AbiMethodBodyFactory
                 // fills HSTRING handles directly into the nint storage.
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                            Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
-                            HStringHeader[] {{names.HeaderArrayFromPool}} = null;
-                            Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
-                                ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
-                                : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+                    Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
+                    HStringHeader[] {{names.HeaderArrayFromPool}} = null;
+                    Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
+                        ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
+                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
                     
-                            Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
-                            nint[] {{names.PinnedHandleArrayFromPool}} = null;
-                            Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
-                                ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
-                                : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                    Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
+                    nint[] {{names.PinnedHandleArrayFromPool}} = null;
+                    Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
+                        ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
+                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
                     """);
             }
         }
@@ -400,42 +396,40 @@ internal static partial class AbiMethodBodyFactory
         if (returnIsReceiveArray)
         {
             SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt!;
-            writer.WriteLine(isMultiline: true, """
-                        uint __retval_length = default;
-                        
-                """);
+            writer.WriteLine("uint __retval_length = default;");
+            writer.WriteLine();
             string retElemAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSz.BaseType);
             writer.WriteLine($"{retElemAbi}* __retval_data = default;");
         }
         else if (returnIsHResultException)
         {
-            writer.WriteLine("        global::ABI.System.Exception __retval = default;");
+            writer.WriteLine("global::ABI.System.Exception __retval = default;");
         }
         else if (returnIsString || returnIsRefType)
         {
-            writer.WriteLine("        void* __retval = default;");
+            writer.WriteLine("void* __retval = default;");
         }
         else if (returnIsBlittableStruct)
         {
-            writer.WriteLine($"        {AbiTypeHelpers.GetBlittableStructAbiType(context, rt!)} __retval = default;");
+            writer.WriteLine($"{AbiTypeHelpers.GetBlittableStructAbiType(context, rt!)} __retval = default;");
         }
         else if (returnIsComplexStruct)
         {
-            writer.WriteLine($"        {AbiTypeHelpers.GetAbiStructTypeName(context, rt!)} __retval = default;");
+            writer.WriteLine($"{AbiTypeHelpers.GetAbiStructTypeName(context, rt!)} __retval = default;");
         }
         else if (rt is not null && context.AbiTypeShapeResolver.IsMappedAbiValueType(rt))
         {
             // Mapped value type return (e.g. DateTime/TimeSpan): use the ABI struct as __retval.
-            writer.WriteLine($"        {AbiTypeHelpers.GetMappedAbiTypeName(rt)} __retval = default;");
+            writer.WriteLine($"{AbiTypeHelpers.GetMappedAbiTypeName(rt)} __retval = default;");
         }
         else if (rt is not null && rt.IsSystemType())
         {
             // System.Type return: use ABI Type struct as __retval.
-            writer.WriteLine("        global::ABI.System.Type __retval = default;");
+            writer.WriteLine("global::ABI.System.Type __retval = default;");
         }
         else if (rt is not null)
         {
-            writer.WriteLine($"        {AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt)} __retval = default;");
+            writer.WriteLine($"{AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt)} __retval = default;");
         }
 
         // Determine if we need a try/finally (for cleanup of string/refType return or receive array
@@ -445,13 +439,10 @@ internal static partial class AbiMethodBodyFactory
 
         if (needsTryFinally)
         {
-            writer.WriteLine(isMultiline: true, """
-                        try
-                        {
-                """);
+            writer.WriteLine("try");
+            writer.WriteLine("{");
+            writer.IncreaseIndent();
         }
-
-        string indent = needsTryFinally ? "            " : "        ";
 
         // Inside try (if applicable): assign complex-struct input locals via marshaller.
         //.: '__value = ProfileUsageMarshaller.ConvertToUnmanaged(value);'
@@ -475,7 +466,7 @@ internal static partial class AbiMethodBodyFactory
 
             string localName = p.GetParamLocalName(paramNameOverride);
             string callName = p.GetParamName(paramNameOverride);
-            writer.WriteLine($"{indent}__{localName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.ConvertToUnmanaged({callName});");
+            writer.WriteLine($"__{localName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.ConvertToUnmanaged({callName});");
         }
 
         // Type input params: set up TypeReference locals before the fixed block:
@@ -496,7 +487,7 @@ internal static partial class AbiMethodBodyFactory
 
             string localName = p.GetParamLocalName(paramNameOverride);
             string callName = p.GetParamName(paramNameOverride);
-            writer.WriteLine($"{indent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({callName}, out TypeReference __{localName});");
+            writer.WriteLine($"global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({callName}, out TypeReference __{localName});");
         }
 
         // Open a SINGLE fixed-block for ALL pinnable inputs:
@@ -555,7 +546,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = p.GetParamLocalName(paramNameOverride);
                 TypeSignature uRef = uRefSkip;
                 string abiType = context.AbiTypeShapeResolver.IsBlittableStruct(uRef) ? AbiTypeHelpers.GetBlittableStructAbiType(context, uRef) : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef);
-                writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}fixed({abiType}* _{localName} = &{callName})");
+                writer.WriteLine($"fixed({abiType}* _{localName} = &{callName})");
                 typedFixedCount++;
             }
         }
@@ -567,7 +558,7 @@ internal static partial class AbiMethodBodyFactory
 
         if (hasAnyVoidStarPinnable)
         {
-            writer.Write($"{indent}{new string(' ', fixedNesting * 4)}fixed(void* ");
+            writer.Write("fixed(void* ");
             bool first = true;
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
@@ -623,11 +614,10 @@ internal static partial class AbiMethodBodyFactory
                     writer.Write(callName);
                 }
             }
-            writer.WriteLine(isMultiline: true, $$"""
-                )
-                {{indent}}{{new string(' ', fixedNesting * 4)}}{
-                """);
+            writer.WriteLine(")");
+            writer.WriteLine("{");
             fixedNesting++;
+            writer.IncreaseIndent();
             // Inside the body: emit HStringMarshaller calls for input string params.
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
@@ -638,7 +628,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string callName = sig.Parameters[i].GetParamName(paramNameOverride);
                 string localName = sig.Parameters[i].GetParamLocalName(paramNameOverride);
-                writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{localName}, {callName}?.Length, out HStringReference __{localName});");
+                writer.WriteLine($"HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{localName}, {callName}?.Length, out HStringReference __{localName});");
             }
             stringPinnablesEmitted = true;
         }
@@ -646,14 +636,13 @@ internal static partial class AbiMethodBodyFactory
         {
             // Typed fixed lines exist but no void* combined block - we need a body block
             // to host them. Open a brace block after the last typed fixed line.
-            writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}{{");
+            writer.WriteLine("{");
             fixedNesting++;
+            writer.IncreaseIndent();
         }
 
         // Suppress unused variable warning when block above doesn't fire.
         _ = stringPinnablesEmitted;
-
-        string callIndent = indent + new string(' ', fixedNesting * 4);
 
         // For non-blittable PassArray params, emit CopyToUnmanaged_<name> (UnsafeAccessor) and call
         // it to populate the inline/pooled storage from the user-supplied span. For string arrays,
@@ -694,11 +683,11 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 writer.WriteLine(isMultiline: true, $$"""
-                    {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
-                    {{callIndent}}    source: {{callName}},
-                    {{callIndent}}    hstringHeaders: (HStringHeader*) _{{localName}}_inlineHeaderArray,
-                    {{callIndent}}    hstrings: {{names.Span}},
-                    {{callIndent}}    pinnedGCHandles: {{names.PinnedHandleSpan}});
+                    HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
+                        source: {{callName}},
+                        hstringHeaders: (HStringHeader*) _{{localName}}_inlineHeaderArray,
+                        hstrings: {{names.Span}},
+                        pinnedGCHandles: {{names.PinnedHandleSpan}});
                     """);
             }
             else
@@ -744,14 +733,13 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 writer.WriteLine(isMultiline: true, $$"""
-                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                    {{callIndent}}static extern void CopyToUnmanaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{dataParamType}} data);
-                    {{callIndent}}CopyToUnmanaged_{{localName}}(null, {{callName}}, (uint){{callName}}.Length, {{dataCastType}}_{{localName}});
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                    static extern void CopyToUnmanaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{dataParamType}} data);
+                    CopyToUnmanaged_{{localName}}(null, {{callName}}, (uint){{callName}}.Length, {{dataCastType}}_{{localName}});
                     """);
             }
         }
 
-        writer.Write(callIndent);
         // method/property is [NoException] (its HRESULT is contractually S_OK).
         if (!isNoExcept)
         {
@@ -912,9 +900,9 @@ internal static partial class AbiMethodBodyFactory
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szFA.BaseType);
 
             writer.WriteLine(isMultiline: true, $$"""
-                {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
-                {{callIndent}}static extern void CopyToManaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, uint length, {{elementAbi}}* data, Span<{{elementProjected}}> span);
-                {{callIndent}}CopyToManaged_{{localName}}(null, (uint){{names.Span}}.Length, ({{elementAbi}}*)_{{localName}}, {{callName}});
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+                static extern void CopyToManaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, uint length, {{elementAbi}}* data, Span<{{elementProjected}}> span);
+                CopyToManaged_{{localName}}(null, (uint){{names.Span}}.Length, ({{elementAbi}}*)_{{localName}}, {{callName}});
                 """);
         }
 
@@ -935,14 +923,14 @@ internal static partial class AbiMethodBodyFactory
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 writer.WriteLine(isMultiline: true, $$"""
-                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                    {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                    {{callIndent}}{{callName}} = ConvertToManaged_{{localName}}(null, __{{localName}});
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                    static extern {{projectedTypeName}} ConvertToManaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                    {{callName}} = ConvertToManaged_{{localName}}(null, __{{localName}});
                     """);
                 continue;
             }
 
-            writer.Write($"{callIndent}{callName} = ");
+            writer.Write($"{callName} = ");
 
             if (uOut.IsString())
             {
@@ -1004,9 +992,9 @@ internal static partial class AbiMethodBodyFactory
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
             writer.WriteLine(isMultiline: true, $$"""
-                {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                {{callIndent}}static extern {{elementProjected}}[] ConvertToManaged_{{localName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, uint length, {{elementAbi}}* data);
-                {{callIndent}}{{callName}} = ConvertToManaged_{{localName}}(null, __{{localName}}_length, __{{localName}}_data);
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                static extern {{elementProjected}}[] ConvertToManaged_{{localName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, uint length, {{elementAbi}}* data);
+                {{callName}} = ConvertToManaged_{{localName}}(null, __{{localName}}_length, __{{localName}}_data);
                 """);
         }
 
@@ -1018,18 +1006,18 @@ internal static partial class AbiMethodBodyFactory
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSz.BaseType));
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, retSz.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
-                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                    {{callIndent}}static extern {{elementProjected}}[] ConvertToManaged_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
-                    {{callIndent}}return ConvertToManaged_retval(null, __retval_length, __retval_data);
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                    static extern {{elementProjected}}[] ConvertToManaged_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
+                    return ConvertToManaged_retval(null, __retval_length, __retval_data);
                     """);
             }
             else if (returnIsHResultException)
             {
-                writer.WriteLine($"{callIndent}return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);");
+                writer.WriteLine("return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);");
             }
             else if (returnIsString)
             {
-                writer.WriteLine($"{callIndent}return HStringMarshaller.ConvertToManaged(__retval);");
+                writer.WriteLine("return HStringMarshaller.ConvertToManaged(__retval);");
             }
             else if (returnIsRefType)
             {
@@ -1038,38 +1026,36 @@ internal static partial class AbiMethodBodyFactory
                     // Nullable<T> return: use <T>Marshaller.UnboxToManaged.;
                     // there is no Nullable<T>Marshaller, the inner-T marshaller has UnboxToManaged.
                     (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, rt);
-                    writer.WriteLine($"{callIndent}return {innerMarshaller}.UnboxToManaged(__retval);");
+                    writer.WriteLine($"return {innerMarshaller}.UnboxToManaged(__retval);");
                 }
                 else if (rt.IsGenericInstance())
                 {
                     string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt, TypedefNameType.ABI);
                     WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine(isMultiline: true, $$"""
-                        {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                        {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_retval([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                        {{callIndent}}return ConvertToManaged_retval(null, __retval);
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                        static extern {{projectedTypeName}} ConvertToManaged_retval([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                        return ConvertToManaged_retval(null, __retval);
                         """);
                 }
                 else
                 {
                     EmitMarshallerConvertToManagedCallback cvt = EmitMarshallerConvertToManaged(context, rt, "__retval");
-                    writer.WriteLine($"{callIndent}return {cvt};");
+                    writer.WriteLine($"return {cvt};");
                 }
             }
             else if (rt is not null && context.AbiTypeShapeResolver.IsMappedAbiValueType(rt))
             {
                 // Mapped value type return (e.g. DateTime/TimeSpan): convert ABI struct back via marshaller.
-                writer.WriteLine($"{callIndent}return {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToManaged(__retval);");
+                writer.WriteLine($"return {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToManaged(__retval);");
             }
             else if (rt is not null && rt.IsSystemType())
             {
                 // System.Type return: convert ABI Type struct back to System.Type via TypeMarshaller.
-                writer.WriteLine($"{callIndent}return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);");
+                writer.WriteLine("return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);");
             }
             else if (returnIsBlittableStruct)
             {
-                writer.Write(callIndent);
-
                 if (rt is not null && context.AbiTypeShapeResolver.IsMappedAbiValueType(rt))
                 {
                     // Mapped value type return: convert ABI struct back to projected via marshaller.
@@ -1082,11 +1068,11 @@ internal static partial class AbiMethodBodyFactory
             }
             else if (returnIsComplexStruct)
             {
-                writer.WriteLine($"{callIndent}return {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.ConvertToManaged(__retval);");
+                writer.WriteLine($"return {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.ConvertToManaged(__retval);");
             }
             else
             {
-                writer.Write($"{callIndent}return ");
+                writer.Write("return ");
                 string projected = MethodFactory.WriteProjectedSignature(context, rt!, false).Format();
                 string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!);
 
@@ -1104,16 +1090,16 @@ internal static partial class AbiMethodBodyFactory
         // Close fixed blocks (innermost first).
         for (int i = fixedNesting - 1; i >= 0; i--)
         {
-            writer.WriteLine($"{indent}{new string(' ', i * 4)}}}");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
         if (needsTryFinally)
         {
-            writer.WriteLine(isMultiline: true, """
-                        }
-                        finally
-                        {
-                """);
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
+            writer.WriteLine("finally");
+            using IndentedTextWriter.Block __finallyBlock = writer.WriteBlock();
 
             // Order matches truth:
             // 0. Complex-struct input param Dispose (e.g. ProfileUsageMarshaller.Dispose(__value))
@@ -1141,7 +1127,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string localName = p.GetParamLocalName(paramNameOverride);
-                writer.WriteLine($"            {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.Dispose(__{localName});");
+                writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.Dispose(__{localName});");
             }
 
             // 1. Cleanup non-blittable PassArray/FillArray params:
@@ -1182,10 +1168,10 @@ internal static partial class AbiMethodBodyFactory
                     string localNameH = p.GetParamLocalName(paramNameOverride);
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                                    if (__{{localNameH}}_arrayFromPool is not null)
-                                    {
-                                        global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__{{localNameH}}_arrayFromPool);
-                                    }
+                        if (__{{localNameH}}_arrayFromPool is not null)
+                        {
+                            global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__{{localNameH}}_arrayFromPool);
+                        }
                         """);
                     continue;
                 }
@@ -1201,27 +1187,27 @@ internal static partial class AbiMethodBodyFactory
                     if (cat == ParameterCategory.PassArray)
                     {
                         writer.WriteLine(isMultiline: true, $$"""
-                                        HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
+                            HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
                             
-                                        if ({{names.PinnedHandleArrayFromPool}} is not null)
-                                        {
-                                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
-                                        }
+                            if ({{names.PinnedHandleArrayFromPool}} is not null)
+                            {
+                                global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
+                            }
                             
-                                        if ({{names.HeaderArrayFromPool}} is not null)
-                                        {
-                                            global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
-                                        }
+                            if ({{names.HeaderArrayFromPool}} is not null)
+                            {
+                                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
+                            }
                             """);
                     }
 
                     // Both PassArray and FillArray need the inline-array's nint pool returned.
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                                    if ({{names.ArrayFromPool}} is not null)
-                                    {
-                                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
-                                    }
+                        if ({{names.ArrayFromPool}} is not null)
+                        {
+                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
+                        }
                         """);
                 }
                 else
@@ -1248,18 +1234,18 @@ internal static partial class AbiMethodBodyFactory
                         disposeCastType = "(void**)";
                     }
                     writer.WriteLine(isMultiline: true, $$"""
-                                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-                                    static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+                        static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
                         """);
                     writer.WriteIf(!disposeDataParamType.EndsWith("data", StringComparison.Ordinal), " data");
 
                     writer.WriteLine(isMultiline: true, $$"""
                         );
                         
-                                    fixed({{fixedPtrType}} _{{localName}} = {{names.Span}})
-                                    {
-                                        Dispose_{{localName}}(null, (uint) {{names.Span}}.Length, {{disposeCastType}}_{{localName}});
-                                    }
+                        fixed({{fixedPtrType}} _{{localName}} = {{names.Span}})
+                        {
+                            Dispose_{{localName}}(null, (uint) {{names.Span}}.Length, {{disposeCastType}}_{{localName}});
+                        }
                         """);
                 }
 
@@ -1269,10 +1255,10 @@ internal static partial class AbiMethodBodyFactory
                 string poolStorageT = AbiTypeHelpers.GetArrayElementStorageType(context, szArr.BaseType);
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                                if ({{names.ArrayFromPool}} is not null)
-                                {
-                                    global::System.Buffers.ArrayPool<{{poolStorageT}}>.Shared.Return({{names.ArrayFromPool}});
-                                }
+                    if ({{names.ArrayFromPool}} is not null)
+                    {
+                        global::System.Buffers.ArrayPool<{{poolStorageT}}>.Shared.Return({{names.ArrayFromPool}});
+                    }
                     """);
             }
 
@@ -1286,19 +1272,19 @@ internal static partial class AbiMethodBodyFactory
 
                 if (uOut.IsString())
                 {
-                    writer.WriteLine($"            HStringMarshaller.Free(__{localName});");
+                    writer.WriteLine($"HStringMarshaller.Free(__{localName});");
                 }
                 else if (uOut.IsObject() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsGenericInstance())
                 {
-                    writer.WriteLine($"            WindowsRuntimeUnknownMarshaller.Free(__{localName});");
+                    writer.WriteLine($"WindowsRuntimeUnknownMarshaller.Free(__{localName});");
                 }
                 else if (uOut.IsSystemType())
                 {
-                    writer.WriteLine($"            global::ABI.System.TypeMarshaller.Dispose(__{localName});");
+                    writer.WriteLine($"global::ABI.System.TypeMarshaller.Dispose(__{localName});");
                 }
                 else if (context.AbiTypeShapeResolver.IsComplexStruct(uOut))
                 {
-                    writer.WriteLine($"            {AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut)}.Dispose(__{localName});");
+                    writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut)}.Dispose(__{localName});");
                 }
             }
 
@@ -1313,46 +1299,47 @@ internal static partial class AbiMethodBodyFactory
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
-                                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
-                                static extern void Free_{{localName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, uint length, {{elementAbi}}* data);
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
+                    static extern void Free_{{localName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, uint length, {{elementAbi}}* data);
                     
-                                Free_{{localName}}(null, __{{localName}}_length, __{{localName}}_data);
+                    Free_{{localName}}(null, __{{localName}}_length, __{{localName}}_data);
                     """);
             }
 
             // 4. Free return value (__retval) — emitted last to match truth ordering.
             if (returnIsString)
             {
-                writer.WriteLine("            HStringMarshaller.Free(__retval);");
+                writer.WriteLine("HStringMarshaller.Free(__retval);");
             }
             else if (returnIsRefType)
             {
-                writer.WriteLine("            WindowsRuntimeUnknownMarshaller.Free(__retval);");
+                writer.WriteLine("WindowsRuntimeUnknownMarshaller.Free(__retval);");
             }
             else if (returnIsComplexStruct)
             {
-                writer.WriteLine($"            {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.Dispose(__retval);");
+                writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.Dispose(__retval);");
             }
             else if (facts.ReturnIsSystemTypeForCleanup)
             {
                 // System.Type return: dispose the ABI.System.Type's HSTRING fields.
-                writer.WriteLine("            global::ABI.System.TypeMarshaller.Dispose(__retval);");
+                writer.WriteLine("global::ABI.System.TypeMarshaller.Dispose(__retval);");
             }
             else if (returnIsReceiveArray)
             {
                 SzArrayTypeSignature retSz = (SzArrayTypeSignature)rt!;
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, retSz.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
-                                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
-                                static extern void Free_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
-                                Free_retval(null, __retval_length, __retval_data);
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
+                    static extern void Free_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
+                    Free_retval(null, __retval_length, __retval_data);
                     """);
             }
 
-            writer.WriteLine("        }");
         }
 
-        writer.WriteLine("    }");
+        writer.DecreaseIndent();
+        writer.WriteLine("}");
+        writer.DecreaseIndent();
     }
 
     /// <summary>
