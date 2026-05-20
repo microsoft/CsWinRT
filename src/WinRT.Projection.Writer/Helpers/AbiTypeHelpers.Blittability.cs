@@ -269,7 +269,7 @@ internal static partial class AbiTypeHelpers
     ///     complex struct).</item>
     /// </list>
     /// </remarks>
-    internal static bool IsComplexStruct(MetadataCache cache, TypeSignature sig)
+    internal static bool IsNonBlittableStruct(MetadataCache cache, TypeSignature sig)
     {
         if (sig is not TypeDefOrRefSignature td)
         {
@@ -350,7 +350,7 @@ internal static partial class AbiTypeHelpers
     /// Reference-typed fields (<see cref="string"/>, <see cref="object"/>, runtime classes,
     /// generic instances, nested complex structs, custom-mapped fields with
     /// <c>RequiresMarshaling=true</c> such as <c>TimeSpan</c> or <c>DateTimeOffset</c>) all
-    /// disqualify the containing struct. Complex structs are handled by <see cref="IsComplexStruct"/>.
+    /// disqualify the containing struct. Complex structs are handled by <see cref="IsNonBlittableStruct"/>.
     /// </remarks>
     internal static bool IsBlittableStruct(MetadataCache cache, TypeSignature sig)
     {

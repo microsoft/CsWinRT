@@ -16,7 +16,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 /// <remarks>
 /// Predicates that need cross-module type resolution (e.g. <c>IsBlittablePrimitive</c>
-/// with cross-module enum lookup, <c>IsBlittableStruct</c>, <c>IsComplexStruct</c>) live in
+/// with cross-module enum lookup, <c>IsBlittableStruct</c>, <c>IsNonBlittableStruct</c>) live in
 /// <see cref="Helpers.AbiTypeHelpers"/> and the <see cref="AbiTypeKindResolver"/>;
 /// they are intentionally not included here.
 /// </remarks>

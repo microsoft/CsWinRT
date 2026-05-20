@@ -20,7 +20,7 @@ internal enum AbiArrayElementKind
     MappedValueType,
 
     /// <summary>The element is a complex struct (has reference-typed fields that require per-field marshalling).</summary>
-    ComplexStruct,
+    NonBlittableStruct,
 
     /// <summary>The element is a blittable struct (all fields are primitives or blittable structs).</summary>
     BlittableStruct,

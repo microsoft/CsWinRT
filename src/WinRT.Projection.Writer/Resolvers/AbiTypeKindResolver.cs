@@ -85,9 +85,9 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
                 : AbiTypeKind.Enum;
         }
 
-        if (AbiTypeHelpers.IsComplexStruct(Cache, signature))
+        if (AbiTypeHelpers.IsNonBlittableStruct(Cache, signature))
         {
-            return AbiTypeKind.ComplexStruct;
+            return AbiTypeKind.NonBlittableStruct;
         }
 
         if (AbiTypeHelpers.IsBlittableStruct(Cache, signature))
@@ -144,8 +144,8 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     /// </summary>
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if a complex struct; otherwise <see langword="false"/>.</returns>
-    public bool IsComplexStruct(TypeSignature signature)
-        => Resolve(signature) == AbiTypeKind.ComplexStruct;
+    public bool IsNonBlittableStruct(TypeSignature signature)
+        => Resolve(signature) == AbiTypeKind.NonBlittableStruct;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT runtime class, interface, or delegate
@@ -203,7 +203,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     /// <list type="bullet">
     ///   <item>Blittable element (primitive or blittable struct) — see <see cref="IsBlittableAbiElement"/></item>
     ///   <item>Ref-like (string / runtime class / interface / object) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
-    ///   <item>Complex struct — see <see cref="IsComplexStruct"/></item>
+    ///   <item>Complex struct — see <see cref="IsNonBlittableStruct"/></item>
     ///   <item><see cref="System.Exception"/> (mapped from WinRT <c>HResult</c>) — see <see cref="TypeSignatureExtensions.IsHResultException"/></item>
     ///   <item>Mapped value type (e.g. WinRT <c>DateTime</c> / <c>TimeSpan</c>) — see <see cref="IsMappedAbiValueType"/></item>
     /// </list>
@@ -215,7 +215,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     public bool IsRecognizedReceiveArrayElement(TypeSignature signature)
         => IsBlittableAbiElement(signature)
             || signature.IsAbiArrayElementRefLike(this)
-            || IsComplexStruct(signature)
+            || IsNonBlittableStruct(signature)
             || signature.IsHResultException()
             || IsMappedAbiValueType(signature);
 
@@ -226,7 +226,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     /// <list type="bullet">
     ///   <item>SZ-array element ref-like types (HSTRING / IInspectable* slots) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
     ///   <item><see cref="System.Type"/> (whose ABI form is an HSTRING that must be freed) — see <see cref="TypeSignatureExtensions.IsSystemType"/></item>
-    ///   <item>Complex structs (per-field cleanup via the <c>*Marshaller</c>) — see <see cref="IsComplexStruct"/></item>
+    ///   <item>Complex structs (per-field cleanup via the <c>*Marshaller</c>) — see <see cref="IsNonBlittableStruct"/></item>
     ///   <item>Generic instances (need <c>WindowsRuntimeObjectReferenceValue</c> dispose) — see <see cref="TypeSignatureExtensions.IsGenericInstance"/></item>
     /// </list>
     /// Callers should pass the already-stripped parameter type (via <see cref="TypeSignatureExtensions.StripByRefAndCustomModifiers"/>).
@@ -236,7 +236,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     public bool RequiresOutParameterCleanup(TypeSignature signature)
         => signature.IsAbiArrayElementRefLike(this)
             || signature.IsSystemType()
-            || IsComplexStruct(signature)
+            || IsNonBlittableStruct(signature)
             || signature.IsGenericInstance();
 
     /// <summary>
@@ -265,9 +265,9 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
             return AbiArrayElementKind.MappedValueType;
         }
 
-        if (IsComplexStruct(elementType))
+        if (IsNonBlittableStruct(elementType))
         {
-            return AbiArrayElementKind.ComplexStruct;
+            return AbiArrayElementKind.NonBlittableStruct;
         }
 
         if (IsBlittableStruct(elementType))

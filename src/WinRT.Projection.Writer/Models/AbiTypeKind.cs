@@ -32,7 +32,7 @@ internal enum AbiTypeKind
     /// <summary>
     /// A WinRT struct with at least one reference-type field (string, generic instance, runtime class, etc.) that needs per-field marshalling via a generated <c>*Marshaller</c>.
     /// </summary>
-    ComplexStruct,
+    NonBlittableStruct,
 
     /// <summary>
     /// A WinRT struct that is mapped to a BCL value type and requires explicit marshalling (e.g. <c>Windows.Foundation.DateTime</c> -> <see cref="System.DateTimeOffset"/>).

@@ -53,13 +53,13 @@ internal static class StructEnumMarshallerFactory
         // Complex structs are the remaining (non-blittable, non-mapped) structs that need a
         // per-field marshaller class because at least one field is a reference type, generic
         // instance, or marshalling-mapped value.
-        bool isComplexStruct = cat == TypeCategory.Struct && !blittableStruct;
+        bool isNonBlittableStruct = cat == TypeCategory.Struct && !blittableStruct;
 
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
         bool hasReferenceFields = false;
 
-        if (isComplexStruct)
+        if (isNonBlittableStruct)
         {
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
@@ -78,11 +78,11 @@ internal static class StructEnumMarshallerFactory
         // public fields don't match the WinMD field layout. The truth marshaller for these
         // contains only BoxToUnmanaged/UnboxToManaged.
         (string typeNs, string typeNm) = type.Names();
-        bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
+        bool isMappedStruct = isNonBlittableStruct && MappedTypes.Get(typeNs, typeNm) is not null;
 
         if (isMappedStruct)
         {
-            isComplexStruct = false;
+            isNonBlittableStruct = false;
         }
 
         WriteTypedefNameCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
@@ -94,7 +94,7 @@ internal static class StructEnumMarshallerFactory
             """);
         writer.IncreaseIndent();
 
-        if (isComplexStruct)
+        if (isNonBlittableStruct)
         {
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
             writer.WriteLine(isMultiline: true, $$"""
@@ -264,7 +264,7 @@ internal static class StructEnumMarshallerFactory
         // Mapped struct (Duration/KeyTime/etc.) variants always use None — the public projected
         // type still routes through this marshaller (it just lacks per-field
         // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-        string boxFlags = (isEnum || blittableStruct || isComplexStruct) && hasReferenceFields ? "TrackerSupport" : "None";
+        string boxFlags = (isEnum || blittableStruct || isNonBlittableStruct) && hasReferenceFields ? "TrackerSupport" : "None";
         WriteIidReferenceExpressionCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine(isMultiline: true, $$"""
@@ -278,7 +278,7 @@ internal static class StructEnumMarshallerFactory
         // ABI struct then ConvertToManaged. Mapped struct unboxes directly to projected type (no
         // per-field ConvertToManaged needed because the projected struct's field layout matches
         // the WinMD struct layout).
-        if (isComplexStruct)
+        if (isNonBlittableStruct)
         {
             writer.WriteLine(isMultiline: true, $$"""
                 public static {{projected}}? UnboxToManaged(void* value)
@@ -308,7 +308,7 @@ internal static class StructEnumMarshallerFactory
         // For complex structs (with reference fields), it uses TrackerSupport.
         // For complex structs, CreateObject converts via the *Marshaller.ConvertToManaged after
         // unboxing to the ABI struct.
-        if (isEnum || blittableStruct || isComplexStruct)
+        if (isEnum || blittableStruct || isNonBlittableStruct)
         {
             WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
@@ -370,7 +370,7 @@ internal static class StructEnumMarshallerFactory
                 """);
             writer.IncreaseIndent();
             writer.IncreaseIndent();
-            if (isComplexStruct)
+            if (isNonBlittableStruct)
             {
                 WriteTypedefNameCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
                 writer.WriteLine($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");

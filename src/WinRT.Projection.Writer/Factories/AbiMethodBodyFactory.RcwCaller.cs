@@ -44,7 +44,7 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsString = facts.ReturnIsString;
         bool returnIsRefType = facts.ReturnIsRefType;
         bool returnIsBlittableStruct = facts.ReturnIsBlittableStruct;
-        bool returnIsComplexStruct = facts.ReturnIsComplexStruct;
+        bool returnIsNonBlittableStruct = facts.ReturnIsNonBlittableStruct;
         bool returnIsReceiveArray = facts.ReturnIsReceiveArray;
         bool returnIsHResultException = facts.ReturnIsHResultException;
 
@@ -74,7 +74,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     _ = fp.Append(WellKnownAbiTypeNames.AbiSystemTypePointer);
                 }
-                else if (context.AbiTypeKindResolver.IsComplexStruct(uOut))
+                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
                 {
                     _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(context, uOut)); _ = fp.Append('*');
                 }
@@ -95,7 +95,7 @@ internal static partial class AbiMethodBodyFactory
                 TypeSignature uRef = p.Type.StripByRefAndCustomModifiers();
                 _ = fp.Append(", ");
 
-                if (context.AbiTypeKindResolver.IsComplexStruct(uRef))
+                if (context.AbiTypeKindResolver.IsNonBlittableStruct(uRef))
                 {
                     _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(context, uRef)); _ = fp.Append('*');
                 }
@@ -144,7 +144,7 @@ internal static partial class AbiMethodBodyFactory
             }
             else
             {
-                _ = fp.Append(context.AbiTypeKindResolver.IsComplexStruct(p.Type)
+                _ = fp.Append(context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type)
                     ? AbiTypeHelpers.GetAbiStructTypeName(context, p.Type)
                     : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, p.Type));
             }
@@ -179,7 +179,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(context, rt!)); _ = fp.Append('*');
                 }
-                else if (returnIsComplexStruct)
+                else if (returnIsNonBlittableStruct)
                 {
                     _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(context, rt!)); _ = fp.Append('*');
                 }
@@ -301,7 +301,7 @@ internal static partial class AbiMethodBodyFactory
 
             TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
 
-            if (!context.AbiTypeKindResolver.IsComplexStruct(pType))
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(pType))
             {
                 continue;
             }
@@ -419,7 +419,7 @@ internal static partial class AbiMethodBodyFactory
         {
             writer.WriteLine($"{AbiTypeHelpers.GetBlittableStructAbiType(context, rt!)} __retval = default;");
         }
-        else if (returnIsComplexStruct)
+        else if (returnIsNonBlittableStruct)
         {
             writer.WriteLine($"{AbiTypeHelpers.GetAbiStructTypeName(context, rt!)} __retval = default;");
         }
@@ -467,7 +467,7 @@ internal static partial class AbiMethodBodyFactory
 
             TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
 
-            if (!context.AbiTypeKindResolver.IsComplexStruct(pType))
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(pType))
             {
                 continue;
             }
@@ -533,7 +533,7 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // Emit typed fixed lines for Ref params.
-        // Skip Ref+ComplexStruct: those are marshalled via __local (no fixed needed) and
+        // Skip Ref+NonBlittableStruct: those are marshalled via __local (no fixed needed) and
         // passed as &__local at the call site (the is-value-type-in path).
         int typedFixedCount = 0;
         for (int i = 0; i < sig.Parameters.Count; i++)
@@ -545,7 +545,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 TypeSignature uRefSkip = p.Type.StripByRefAndCustomModifiers();
 
-                if (context.AbiTypeKindResolver.IsComplexStruct(uRefSkip))
+                if (context.AbiTypeKindResolver.IsNonBlittableStruct(uRefSkip))
                 {
                     continue;
                 }
@@ -730,7 +730,7 @@ internal static partial class AbiMethodBodyFactory
                     dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointer;
                     dataCastType = "(global::ABI.System.Exception*)";
                 }
-                else if (context.AbiTypeKindResolver.IsComplexStruct(szArr.BaseType))
+                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
                 {
                     string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                     dataParamType = abiStructName + "*";
@@ -805,7 +805,7 @@ internal static partial class AbiMethodBodyFactory
                 string localName = p.GetParamLocalName(paramNameOverride);
                 TypeSignature uRefArg = p.Type.StripByRefAndCustomModifiers();
 
-                if (context.AbiTypeKindResolver.IsComplexStruct(uRefArg))
+                if (context.AbiTypeKindResolver.IsNonBlittableStruct(uRefArg))
                 {
                     // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
                     writer.Write(isMultiline: true, $$"""
@@ -849,7 +849,7 @@ internal static partial class AbiMethodBodyFactory
                 // Mapped value-type input: pass the pre-converted ABI local.
                 writer.Write($"__{p.GetParamLocalName(paramNameOverride)}");
             }
-            else if (context.AbiTypeKindResolver.IsComplexStruct(p.Type))
+            else if (context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
             {
                 // Complex struct input: pass the pre-converted ABI struct local.
                 writer.Write($"__{p.GetParamLocalName(paramNameOverride)}");
@@ -968,7 +968,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 writer.Write($"global::ABI.System.TypeMarshaller.ConvertToManaged(__{localName})");
             }
-            else if (context.AbiTypeKindResolver.IsComplexStruct(uOut))
+            else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
             {
                 writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut)}.ConvertToManaged(__{localName})");
             }
@@ -1096,7 +1096,7 @@ internal static partial class AbiMethodBodyFactory
                     writer.WriteLine("return __retval;");
                 }
             }
-            else if (returnIsComplexStruct)
+            else if (returnIsNonBlittableStruct)
             {
                 writer.WriteLine($"return {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.ConvertToManaged(__retval);");
             }
@@ -1153,7 +1153,7 @@ internal static partial class AbiMethodBodyFactory
 
                 TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
 
-                if (!context.AbiTypeKindResolver.IsComplexStruct(pType))
+                if (!context.AbiTypeKindResolver.IsNonBlittableStruct(pType))
                 {
                     continue;
                 }
@@ -1252,7 +1252,7 @@ internal static partial class AbiMethodBodyFactory
                     string fixedPtrType;
                     string disposeCastType;
 
-                    if (context.AbiTypeKindResolver.IsComplexStruct(szArr.BaseType))
+                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
                     {
                         string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                         disposeDataParamType = abiStructName + "*";
@@ -1314,7 +1314,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.WriteLine($"global::ABI.System.TypeMarshaller.Dispose(__{localName});");
                 }
-                else if (context.AbiTypeKindResolver.IsComplexStruct(uOut))
+                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
                 {
                     writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut)}.Dispose(__{localName});");
                 }
@@ -1351,7 +1351,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 writer.WriteLine("WindowsRuntimeUnknownMarshaller.Free(__retval);");
             }
-            else if (returnIsComplexStruct)
+            else if (returnIsNonBlittableStruct)
             {
                 writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!)}.Dispose(__retval);");
             }

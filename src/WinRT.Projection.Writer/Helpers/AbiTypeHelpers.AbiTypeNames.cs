@@ -45,7 +45,7 @@ internal static partial class AbiTypeHelpers
             return WellKnownAbiTypeNames.AbiSystemException;
         }
 
-        if (context.AbiTypeKindResolver.IsComplexStruct(sig))
+        if (context.AbiTypeKindResolver.IsNonBlittableStruct(sig))
         {
             return GetAbiStructTypeName(context, sig);
         }
@@ -81,7 +81,7 @@ internal static partial class AbiTypeHelpers
             AbiArrayElementKind.RefLikeVoidStar => "void*",
             AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
             AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
-            AbiArrayElementKind.ComplexStruct => GetAbiStructTypeName(context, elementType),
+            AbiArrayElementKind.NonBlittableStruct => GetAbiStructTypeName(context, elementType),
             AbiArrayElementKind.BlittableStruct => GetBlittableStructAbiType(context, elementType),
             _ => GetAbiPrimitiveType(context.Cache, elementType),
         };
@@ -102,7 +102,7 @@ internal static partial class AbiTypeHelpers
         return context.AbiTypeKindResolver.ClassifyArrayElement(elementType) switch
         {
             AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
-            AbiArrayElementKind.ComplexStruct => GetAbiStructTypeName(context, elementType),
+            AbiArrayElementKind.NonBlittableStruct => GetAbiStructTypeName(context, elementType),
             AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
             _ => "nint",
         };
