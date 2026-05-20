@@ -51,7 +51,7 @@ internal static class ComponentFactory
     {
         string typeName = type.Name?.Value ?? string.Empty;
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, IdentifierEscaping.StripBackticks(typeName));
+        string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
         string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
         bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
 

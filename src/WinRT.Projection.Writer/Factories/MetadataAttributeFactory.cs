@@ -423,7 +423,7 @@ internal static class MetadataAttributeFactory
         }
 
         (string typeNs, string typeName) = type.Names();
-        string className = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, IdentifierEscaping.StripBackticks(typeName));
+        string className = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
 
         // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
@@ -457,7 +457,7 @@ internal static class MetadataAttributeFactory
         }
 
         (string typeNs, string typeName) = type.Names();
-        string className = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, IdentifierEscaping.StripBackticks(typeName));
+        string className = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
 
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
