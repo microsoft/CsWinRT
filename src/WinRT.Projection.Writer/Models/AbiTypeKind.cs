@@ -40,7 +40,7 @@ internal enum AbiTypeKind
     MappedAbiValueType,
 
     /// <summary>
-    /// The corlib <see cref="System.String"/> primitive (marshalled via HSTRING).
+    /// The corlib <see cref="string"/> primitive (marshalled via HSTRING).
     /// </summary>
     String,
 

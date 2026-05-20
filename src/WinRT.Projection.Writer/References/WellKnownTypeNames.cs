@@ -44,7 +44,7 @@ internal static class WellKnownTypeNames
     public const string Exception = "Exception";
 
     /// <summary>
-    /// The BCL <see cref="System.Object"/> type name.
+    /// The BCL <see cref="object"/> type name.
     /// </summary>
     public const string Object = "Object";
 

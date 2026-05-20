@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter.Metadata;
 
 /// <summary>
 /// Identifies a fundamental WinRT primitive type (those whose ABI representation matches a C#
-/// primitive type, plus <see cref="System.String"/>).
+/// primitive type, plus <see cref="string"/>).
 /// </summary>
 internal enum FundamentalType
 {
@@ -52,7 +52,7 @@ internal enum FundamentalType
     /// <summary><see cref="double"/>.</summary>
     Double,
 
-    /// <summary><see cref="System.String"/>.</summary>
+    /// <summary><see cref="string"/>.</summary>
     String,
 }
 
@@ -70,7 +70,7 @@ internal abstract record TypeSemantics
     public sealed record Fundamental(FundamentalType Type) : TypeSemantics;
 
     /// <summary>
-    /// The corlib <see cref="System.Object"/> type.
+    /// The corlib <see cref="object"/> type.
     /// </summary>
     public sealed record ObjectType : TypeSemantics;
 
@@ -153,7 +153,7 @@ internal static class TypeSemanticsFactory
 
     /// <summary>
     /// Resolves an <see cref="ITypeDefOrRef"/> into the corresponding <see cref="TypeSemantics"/>.
-    /// Recognizes the special-cased corlib types (<see cref="System.Object"/>, <see cref="System.Guid"/>,
+    /// Recognizes the special-cased corlib types (<see cref="object"/>, <see cref="System.Guid"/>,
     /// <see cref="System.Type"/>) and falls back to <see cref="TypeSemantics.Definition"/> /
     /// <see cref="TypeSemantics.Reference"/> for everything else.
     /// </summary>

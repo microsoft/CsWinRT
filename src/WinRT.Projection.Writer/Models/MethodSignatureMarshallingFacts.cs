@@ -13,7 +13,7 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// needs to walk the parameter list once instead of re-deriving each flag inline.
 /// </summary>
 /// <param name="ReturnShape">The resolved <see cref="AbiTypeKind"/> of the return type, or <see cref="AbiTypeKind.Unknown"/> when the method returns void.</param>
-/// <param name="ReturnIsString">True when the return type is <see cref="System.String"/>.</param>
+/// <param name="ReturnIsString">True when the return type is <see cref="string"/>.</param>
 /// <param name="ReturnIsRefType">True when the return type's shape is reference-typed (per <see cref="AbiTypeKindExtensions"/>).</param>
 /// <param name="ReturnIsBlittableStruct">True when the return type is a blittable struct.</param>
 /// <param name="ReturnIsNonBlittableStruct">True when the return type is a complex struct.</param>
