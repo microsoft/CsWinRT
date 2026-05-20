@@ -34,9 +34,7 @@ internal static partial class ClassMembersFactory
             }
 
             // Resolve TypeRef to TypeDef using our cache
-            TypeDefinition? ifaceType = ResolveInterface(context.Cache, impl.Interface);
-
-            if (ifaceType is null)
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
             {
                 continue;
             }

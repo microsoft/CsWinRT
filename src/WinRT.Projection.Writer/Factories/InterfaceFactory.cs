@@ -103,9 +103,7 @@ internal static class InterfaceFactory
             }
             else
             {
-                TypeDefinition? resolved = ClassMembersFactory.ResolveInterface(context.Cache, impl.Interface);
-
-                if (resolved is not null)
+                if (impl.TryResolveTypeDef(context.Cache, out TypeDefinition? resolved))
                 {
                     isExclusive = TypeCategorization.IsExclusiveTo(resolved);
                 }
@@ -286,9 +284,7 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            TypeDefinition? baseIface = ClassMembersFactory.ResolveInterface(cache, impl.Interface);
-
-            if (baseIface is null)
+            if (!impl.TryResolveTypeDef(cache, out TypeDefinition? baseIface))
             {
                 continue;
             }

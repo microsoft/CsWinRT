@@ -47,43 +47,12 @@ internal static partial class ClassMembersFactory
             return true;
         }
 
-        TypeDefinition? td = ResolveInterface(cache, impl.Interface);
-
-        if (td is null)
+        if (!impl.TryResolveTypeDef(cache, out TypeDefinition? td))
         {
             return true;
         }
 
         return !TypeCategorization.IsExclusiveTo(td);
-    }
-    internal static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
-    {
-        if (typeRef is TypeDefinition td)
-        {
-            return td;
-        }
-
-        TypeDefinition? resolved = typeRef.TryResolve(cache.RuntimeContext);
-
-        if (resolved is not null)
-        {
-            return resolved;
-        }
-
-        // Fall back to local lookup by full name
-        if (typeRef is TypeReference tr)
-        {
-            (string ns, string name) = tr.Names();
-            string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
-            return cache.Find(fullName);
-        }
-
-        if (typeRef.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
-        {
-            return ResolveInterface(cache, gi.GenericType);
-        }
-
-        return null;
     }
 
     /// <inheritdoc cref="WriteParameterNameWithModifier(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
