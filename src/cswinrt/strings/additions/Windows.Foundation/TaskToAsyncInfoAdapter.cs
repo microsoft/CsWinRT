@@ -93,6 +93,12 @@ namespace System.Threading.Tasks
         /// <summary>The token source used to cancel running operations.</summary>
         private CancellationTokenSource _cancelTokenSource = null;
 
+        /// <summary>
+        /// Whether this instance owns <see cref="_cancelTokenSource"/> and is therefore responsible for disposing it.
+        /// Only set when we create the CTS ourselves (i.e. via a task provider that takes a CancellationToken).
+        /// </summary>
+        private bool _ownsCancelTokenSource;
+
         /// <summary>The async info's ID. InvalidAsyncId stands for not yet been initialised.</summary>
         private uint _id = AsyncInfoIdGenerator.InvalidId;
 
@@ -644,6 +650,12 @@ namespace System.Threading.Tasks
             int terminalState = TransitionToTerminalState();
             Debug.Assert(IsInTerminalState);
 
+            // No further progress reports can be raised once the underlying task is terminal.
+            // Release the user-provided progress handler eagerly so we don't keep its captures
+            // (including any CCW pinning a marshalled delegate across the WinRT boundary) alive
+            // until Close() or the finalizer runs.
+            Volatile.Write(ref _progressHandler, null);
+
             // We transitioned into a terminal state, so it became legal to close us concurrently.
             // So we use data from this stack and not m_state to get the completion status.
             // On this code path we will also fetch m_completedHandler, however that race is benign because in CLOSED the handler
@@ -772,6 +784,7 @@ namespace System.Threading.Tasks
             if (funcCTokTask != null)
             {
                 _cancelTokenSource = new CancellationTokenSource();
+                _ownsCancelTokenSource = true;
                 return funcCTokTask(_cancelTokenSource.Token);
             }
 
@@ -785,6 +798,7 @@ namespace System.Threading.Tasks
             if (funcCTokIPrgrTask != null)
             {
                 _cancelTokenSource = new CancellationTokenSource();
+                _ownsCancelTokenSource = true;
                 return funcCTokIPrgrTask(_cancelTokenSource.Token, this);
             }
 
@@ -808,7 +822,16 @@ namespace System.Threading.Tasks
             bool ignore;
             SetAsyncState(STATE_CLOSED, 0, useCondition: false, conditionFailed: out ignore);
 
-            _cancelTokenSource = null;
+            // Dispose the CTS only when we created it ourselves; an externally supplied CTS
+            // (via the (Task, CTS, Progress) constructor) is owned by the caller and disposing
+            // it here would be a behavioral break.
+            var cts = Interlocked.Exchange(ref _cancelTokenSource, null);
+            if (cts != null && _ownsCancelTokenSource)
+            {
+                try { cts.Dispose(); }
+                catch (ObjectDisposedException) { }
+            }
+
             _dataContainer = null;
             _error = null;
             _completedHandler = null;
@@ -894,8 +917,10 @@ namespace System.Threading.Tasks
 
                 Interlocked.Exchange(ref _progressHandler, value);
 
-                // We transitioned into CLOSED after the above check, we will need to null out m_progressHandler:
-                if (IsInClosedState)
+                // We may have transitioned into a terminal (or closed) state concurrently with the
+                // assignment above. In either case no progress can ever fire from here on, so drop
+                // the reference rather than retaining the handler (and its captures) indefinitely.
+                if (IsInTerminalState || IsInClosedState)
                     Interlocked.Exchange(ref _progressHandler, null);
             }
         }
@@ -912,8 +937,15 @@ namespace System.Threading.Tasks
 
             if (!stateWasNotStarted)
             {  // i.e. if state was different from STATE_STARTED:
-                if (_cancelTokenSource != null)
-                    _cancelTokenSource.Cancel();
+                // Snapshot the field so a concurrent TransitionToClosed (e.g. from the finalizer)
+                // can't null it between the check and the call, and tolerate the case where
+                // TransitionToClosed has already disposed the owned CTS.
+                var cts = _cancelTokenSource;
+                if (cts != null)
+                {
+                    try { cts.Cancel(); }
+                    catch (ObjectDisposedException) { }
+                }
             }
         }
 
@@ -940,6 +972,9 @@ namespace System.Threading.Tasks
             }
 
             TransitionToClosed();
+
+            // We just performed deterministic cleanup; no need for the finalizer to redo it.
+            GC.SuppressFinalize(this);
         }
 
 
