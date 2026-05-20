@@ -70,9 +70,9 @@ internal static partial class AbiMethodBodyFactory
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt!, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
                 writer.WriteLine(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                """);
+                    """);
                 writer.WriteLine();
             }
 
@@ -80,7 +80,6 @@ internal static partial class AbiMethodBodyFactory
             // ConvertToUnmanaged_<name> wraps the projected value into a WindowsRuntimeObjectReferenceValue.
             // The body's writeback later references these already-declared accessors.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
-
             {
 
                 TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -94,9 +93,9 @@ internal static partial class AbiMethodBodyFactory
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
                 WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 writer.WriteLine(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                """);
+                    """);
                 writer.WriteLine();
             }
 
@@ -104,7 +103,6 @@ internal static partial class AbiMethodBodyFactory
             // top of the method body, before locals and the try block. The actual call sites later
             // in the body reference these already-declared accessors.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
-
             {
 
                 string raw = p.GetRawName();
@@ -114,9 +112,9 @@ internal static partial class AbiMethodBodyFactory
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern void ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
-                """);
+                    """);
                 writer.WriteLine();
             }
 
@@ -126,9 +124,9 @@ internal static partial class AbiMethodBodyFactory
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSzHoist.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
                 writer.WriteLine(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
                     static extern void ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
-                """);
+                    """);
                 writer.WriteLine();
             }
 
@@ -153,9 +151,9 @@ internal static partial class AbiMethodBodyFactory
                 if (returnIsReceiveArrayDoAbi)
                 {
                     writer.WriteLine(isMultiline: true, $$"""
-                    *{{retParamName}} = default;
+                        *{{retParamName}} = default;
                         *{{retSizeParamName}} = default;
-                    """);
+                        """);
                 }
                 else
                 {
@@ -168,15 +166,14 @@ internal static partial class AbiMethodBodyFactory
             // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
             // (we read directly via *<name>).
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
-
             {
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 writer.WriteLine($"*{ptr} = default;");
             }
-            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
 
+            foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
             {
 
                 string raw = p.GetRawName();
@@ -191,7 +188,6 @@ internal static partial class AbiMethodBodyFactory
             // and declare a managed array local. The managed call passes 'out __<name>' and after
             // the call we copy to the ABI buffer via UnsafeAccessor.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
-
             {
 
                 string raw = p.GetRawName();
@@ -238,12 +234,12 @@ internal static partial class AbiMethodBodyFactory
                     // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                    Unsafe.SkipInit(out InlineArray16<{{elementProjected}}> __{{raw}}_inlineArray);
-                        {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
-                        Span<{{elementProjected}}> __{{raw}} = __{{raw}}Size <= 16
-                            ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
-                            : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size));
-                    """);
+                        Unsafe.SkipInit(out InlineArray16<{{elementProjected}}> __{{raw}}_inlineArray);
+                            {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
+                            Span<{{elementProjected}}> __{{raw}} = __{{raw}}Size <= 16
+                                ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
+                                : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size));
+                        """);
                 }
             }
             writer.WriteLine(isMultiline: true, """
@@ -257,7 +253,6 @@ internal static partial class AbiMethodBodyFactory
             // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
             // fills — the post-call writeback loop handles that.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.PassArray))
-
             {
 
                 if (p.Type is not SzArrayTypeSignature szArr)
@@ -446,7 +441,6 @@ internal static partial class AbiMethodBodyFactory
             // After call: write back out params to caller's pointer.
             // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
-
             {
 
                 string raw = p.GetRawName();
@@ -500,7 +494,6 @@ internal static partial class AbiMethodBodyFactory
             // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
             // [UnsafeAccessor] declaration was hoisted to the top of the method body).
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.ReceiveArray))
-
             {
 
                 string raw = p.GetRawName();
@@ -537,7 +530,7 @@ internal static partial class AbiMethodBodyFactory
 
                 writer.IncreaseIndent();
                 writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
                         static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
                         CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
                     """);
