@@ -246,10 +246,9 @@ internal static partial class AbiMethodBodyFactory
                     """);
                 }
             }
-            writer.WriteLine(isMultiline: true, """
-                try
-                {
-                """);
+            writer.WriteLine("try");
+            writer.WriteLine("{");
+            writer.IncreaseIndent();
 
             // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
             // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
@@ -292,10 +291,10 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
-                        static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
-                        CopyToManaged_{{raw}}(null, __{{raw}}Size, {{dataCastExpr}}, __{{raw}});
-                """);
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+                            static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
+                            CopyToManaged_{{raw}}(null, __{{raw}}Size, {{dataCastExpr}}, __{{raw}});
+                    """);
             }
 
             // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
@@ -310,7 +309,7 @@ internal static partial class AbiMethodBodyFactory
                     string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
-                    writer.WriteLine($"    var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
+                    writer.WriteLine($"var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
                 }
                 else if (p.Type.IsGenericInstance())
                 {
@@ -319,33 +318,29 @@ internal static partial class AbiMethodBodyFactory
                     string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
                     WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                            static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                            var __arg_{{rawName}} = ConvertToManaged_arg_{{rawName}}(null, {{callName}});
-                    """);
+                            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                                static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                                var __arg_{{rawName}} = ConvertToManaged_arg_{{rawName}}(null, {{callName}});
+                        """);
                 }
             }
 
             if (returnIsString)
             {
-                writer.Write($"    {retLocalName} = ");
+                writer.Write($"{retLocalName} = ");
             }
             else if (returnIsRefType)
             {
-                writer.Write($"    {retLocalName} = ");
+                writer.Write($"{retLocalName} = ");
             }
             else if (returnIsReceiveArrayDoAbi)
             {
                 // For T[] return: assign to existing local.
-                writer.Write($"    {retLocalName} = ");
+                writer.Write($"{retLocalName} = ");
             }
             else if (rt is not null)
             {
-                writer.Write($"    {retLocalName} = ");
-            }
-            else
-            {
-                writer.Write("    ");
+                writer.Write($"{retLocalName} = ");
             }
 
             if (isGetter)
@@ -493,7 +488,7 @@ internal static partial class AbiMethodBodyFactory
                     // Enums, bool, char, and primitives: the local __<raw> is already the ABI form.
                     rhs = $"__{raw}";
                 }
-                writer.WriteLine($"    *{ptr} = {rhs};");
+                writer.WriteLine($"*{ptr} = {rhs};");
             }
 
             // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
@@ -504,7 +499,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
+                writer.WriteLine($"ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
             }
 
             // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
@@ -536,21 +531,21 @@ internal static partial class AbiMethodBodyFactory
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szFA.BaseType);
 
                 writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                        static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
-                        CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
-                """);
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                            static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
+                            CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
+                    """);
             }
 
             if (rt is not null)
             {
                 if (returnIsHResultExceptionDoAbi)
                 {
-                    writer.WriteLine($"    *{retParamName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({retLocalName});");
+                    writer.WriteLine($"*{retParamName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (returnIsString)
                 {
-                    writer.WriteLine($"    *{retParamName} = HStringMarshaller.ConvertToUnmanaged({retLocalName});");
+                    writer.WriteLine($"*{retParamName} = HStringMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (returnIsRefType)
                 {
@@ -558,59 +553,60 @@ internal static partial class AbiMethodBodyFactory
                     {
                         // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
                         (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, rt);
-                        writer.WriteLine($"    *{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
+                        writer.WriteLine($"*{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
                     }
                     else if (returnIsGenericInstance)
                     {
                         // Generic instance return: use the UnsafeAccessor static local function declared at
                         // the top of the method body via the M12 hoisting pass; just emit the call here.
-                        writer.WriteLine($"    *{retParamName} = ConvertToUnmanaged_{retParamName}(null, {retLocalName}).DetachThisPtrUnsafe();");
+                        writer.WriteLine($"*{retParamName} = ConvertToUnmanaged_{retParamName}(null, {retLocalName}).DetachThisPtrUnsafe();");
                     }
                     else
                     {
                         EmitMarshallerConvertToUnmanagedCallback cvt = EmitMarshallerConvertToUnmanaged(context, rt!, retLocalName);
-                        writer.WriteLine($"    *{retParamName} = {cvt}.DetachThisPtrUnsafe();");
+                        writer.WriteLine($"*{retParamName} = {cvt}.DetachThisPtrUnsafe();");
                     }
                 }
                 else if (returnIsReceiveArrayDoAbi)
                 {
                     // Return-receive-array: emit ConvertToUnmanaged_<retParam> call (declaration
                     // was hoisted to the top of the method body).
-                    writer.WriteLine($"    ConvertToUnmanaged_{retParamName}(null, {retLocalName}, out *{retSizeParamName}, out *{retParamName});");
+                    writer.WriteLine($"ConvertToUnmanaged_{retParamName}(null, {retLocalName}, out *{retSizeParamName}, out *{retParamName});");
                 }
                 else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(rt))
                 {
                     // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
-                    writer.WriteLine($"    *{retParamName} = {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToUnmanaged({retLocalName});");
+                    writer.WriteLine($"*{retParamName} = {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (rt.IsSystemType())
                 {
                     // System.Type return (server-side): convert managed System.Type to ABI Type struct.
-                    writer.WriteLine($"    *{retParamName} = global::ABI.System.TypeMarshaller.ConvertToUnmanaged({retLocalName});");
+                    writer.WriteLine($"*{retParamName} = global::ABI.System.TypeMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (context.AbiTypeShapeResolver.IsComplexStruct(rt))
                 {
                     // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
-                    writer.WriteLine($"    *{retParamName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt)}.ConvertToUnmanaged({retLocalName});");
+                    writer.WriteLine($"*{retParamName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt)}.ConvertToUnmanaged({retLocalName});");
                 }
                 else if (returnIsBlittableStruct)
                 {
-                    writer.WriteLine($"    *{retParamName} = {retLocalName};");
+                    writer.WriteLine($"*{retParamName} = {retLocalName};");
                 }
                 else
                 {
-                    writer.WriteLine($"    *{retParamName} = {retLocalName};");
+                    writer.WriteLine($"*{retParamName} = {retLocalName};");
                 }
             }
 
-            writer.WriteLine(isMultiline: true, """
-                    return 0;
-                }
-                catch (Exception __exception__)
-                {
-                    return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
-                }
-                """);
+            writer.WriteLine("return 0;");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
+            writer.WriteLine("catch (Exception __exception__)");
+            writer.WriteLine("{");
+            writer.IncreaseIndent();
+            writer.WriteLine("return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
 
             // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
             bool hasNonBlittableArrayDoAbi = false;
@@ -640,10 +636,9 @@ internal static partial class AbiMethodBodyFactory
 
             if (hasNonBlittableArrayDoAbi)
             {
-                writer.WriteLine(isMultiline: true, """
-                    finally
-                    {
-                    """);
+                writer.WriteLine("finally");
+                writer.WriteLine("{");
+                writer.IncreaseIndent();
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     ParameterInfo p = sig.Parameters[i];
@@ -667,13 +662,14 @@ internal static partial class AbiMethodBodyFactory
                     string raw = p.GetRawName();
                     WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
-                    writer.WriteLine(isMultiline: true, $$"""
-                        if (__{{raw}}_arrayFromPool is not null)
-                            {
-                                global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Return(__{{raw}}_arrayFromPool);
-                            }
-                    """);
+                    writer.WriteLine($"if (__{raw}_arrayFromPool is not null)");
+                    writer.WriteLine("{");
+                    writer.IncreaseIndent();
+                    writer.WriteLine($"global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Return(__{raw}_arrayFromPool);");
+                    writer.DecreaseIndent();
+                    writer.WriteLine("}");
                 }
+                writer.DecreaseIndent();
                 writer.WriteLine("}");
             }
         }
