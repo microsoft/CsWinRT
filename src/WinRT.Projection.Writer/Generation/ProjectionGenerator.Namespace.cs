@@ -184,7 +184,7 @@ internal sealed partial class ProjectionGenerator
             foreach (TypeDefinition facType in factoryInterfacesAllNs)
             {
                 // Only consider factory interfaces in the same namespace as we're processing.
-                string facNs = facType.Names().Namespace;
+                string facNs = facType.GetRawNamespace();
 
                 if (facNs == ns)
                 {

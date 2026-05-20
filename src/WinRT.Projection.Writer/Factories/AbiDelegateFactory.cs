@@ -312,7 +312,7 @@ internal static class AbiDelegateFactory
     private static void WriteDelegateMarshallerOnly(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        string typeNs = type.Names().Namespace;
+        string typeNs = type.GetRawNamespace();
         string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
@@ -345,7 +345,7 @@ internal static class AbiDelegateFactory
     private static void WriteDelegateComWrappersCallback(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        string typeNs = type.Names().Namespace;
+        string typeNs = type.GetRawNamespace();
         string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
