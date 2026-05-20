@@ -51,7 +51,7 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     /// <summary>
     /// Gets the resolver used to classify type signatures by their ABI marshalling shape.
     /// </summary>
-    public AbiTypeShapeResolver AbiTypeShapeResolver { get; } = new AbiTypeShapeResolver(cache);
+    public AbiTypeKindResolver AbiTypeKindResolver { get; } = new AbiTypeKindResolver(cache);
 
     /// <summary>
     /// Gets a value indicating whether platform-attribute computation should suppress platforms

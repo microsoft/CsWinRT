@@ -45,7 +45,7 @@ internal static class StructEnumMarshallerFactory
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
-        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeShapeResolver.IsBlittableStruct(sig));
+        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
         bool isEnum = cat == TypeCategory.Enum;
 
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
@@ -115,7 +115,7 @@ internal static class StructEnumMarshallerFactory
                 {
                     writer.Write($"HStringMarshaller.ConvertToUnmanaged(value.{fname})");
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
                 {
                     writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(ft)}.ConvertToUnmanaged(value.{fname})");
                 }
@@ -176,7 +176,7 @@ internal static class StructEnumMarshallerFactory
                 {
                     writer.Write($"HStringMarshaller.ConvertToManaged(value.{fname})");
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
                 {
                     writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(ft)}.ConvertToManaged(value.{fname})");
                 }
@@ -229,7 +229,7 @@ internal static class StructEnumMarshallerFactory
                     // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
                     continue;
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
                 {
                     // Mapped value types (DateTime/TimeSpan) have no per-value resources to
                     // release — the ABI representation is just an int64

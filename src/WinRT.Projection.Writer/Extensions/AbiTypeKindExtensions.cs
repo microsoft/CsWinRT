@@ -6,12 +6,12 @@ using WindowsRuntime.ProjectionWriter.Models;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Extension methods for <see cref="AbiTypeShapeKind"/>.
+/// Extension methods for <see cref="AbiTypeKind"/>.
 /// </summary>
-internal static class AbiTypeShapeKindExtensions
+internal static class AbiTypeKindExtensions
 {
     /// <param name="kind">The input ABI type kind.</param>
-    extension(AbiTypeShapeKind kind)
+    extension(AbiTypeKind kind)
     {
         /// <summary>
         /// Returns whether the shape is a reference-type marshalling kind: Windows Runtime classes/interfaces,
@@ -20,11 +20,11 @@ internal static class AbiTypeShapeKindExtensions
         /// </summary>
         public bool IsReferenceType()
         {
-            return kind is AbiTypeShapeKind.RuntimeClassOrInterface
-                or AbiTypeShapeKind.Delegate
-                or AbiTypeShapeKind.Object
-                or AbiTypeShapeKind.GenericInstance
-                or AbiTypeShapeKind.NullableT;
+            return kind is AbiTypeKind.RuntimeClassOrInterface
+                or AbiTypeKind.Delegate
+                or AbiTypeKind.Object
+                or AbiTypeKind.GenericInstance
+                or AbiTypeKind.NullableT;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// Classification of a WinRT ABI type's marshalling shape, used to drive the writer's
 /// decisions about how to emit converters and parameter handling.
 /// </summary>
-internal enum AbiTypeShapeKind
+internal enum AbiTypeKind
 {
     /// <summary>
     /// The shape could not be determined (e.g. unresolved reference).

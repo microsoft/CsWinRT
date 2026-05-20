@@ -194,7 +194,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (!context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject())
+            if (!context.AbiTypeKindResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject())
             {
                 continue;
             }
@@ -219,7 +219,7 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (!context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
+            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(p.Type))
             {
                 continue;
             }
@@ -266,7 +266,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
+            if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 continue;
             }
@@ -382,7 +382,7 @@ internal static partial class ConstructorFactory
                 else if (isArr)
                 {
                     TypeSignature elemT = ((SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittableAbiElement(elemT);
+                    bool isBlittableElem = context.AbiTypeKindResolver.IsBlittableAbiElement(elemT);
                     bool isStringElem = elemT.IsString();
 
                     if (isBlittableElem)
@@ -446,7 +446,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
+            if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 continue;
             }
@@ -521,7 +521,7 @@ internal static partial class ConstructorFactory
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
-            if (context.AbiTypeShapeResolver.IsEnumType(p.Type))
+            if (context.AbiTypeKindResolver.IsEnumType(p.Type))
             {
                 // No cast needed: function pointer signature uses the projected enum type.
                 writer.Write(pname);
@@ -544,11 +544,11 @@ internal static partial class ConstructorFactory
             {
                 writer.Write($"__{raw}.ConvertToUnmanagedUnsafe()");
             }
-            else if (context.AbiTypeShapeResolver.IsReferenceTypeOrGenericInstance(p.Type))
+            else if (context.AbiTypeKindResolver.IsReferenceTypeOrGenericInstance(p.Type))
             {
                 writer.Write($"__{raw}.GetThisPtrUnsafe()");
             }
-            else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
+            else if (context.AbiTypeKindResolver.IsMappedAbiValueType(p.Type))
             {
                 writer.Write($"__{raw}");
             }
@@ -614,7 +614,7 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
-                if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
+                if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
                 {
                     continue;
                 }

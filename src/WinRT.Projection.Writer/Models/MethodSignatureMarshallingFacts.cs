@@ -12,9 +12,9 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// per-parameter-shape probes that drive try/finally emission, so the calling code only
 /// needs to walk the parameter list once instead of re-deriving each flag inline.
 /// </summary>
-/// <param name="ReturnShape">The resolved <see cref="AbiTypeShapeKind"/> of the return type, or <see cref="AbiTypeShapeKind.Unknown"/> when the method returns void.</param>
+/// <param name="ReturnShape">The resolved <see cref="AbiTypeKind"/> of the return type, or <see cref="AbiTypeKind.Unknown"/> when the method returns void.</param>
 /// <param name="ReturnIsString">True when the return type is <see cref="System.String"/>.</param>
-/// <param name="ReturnIsRefType">True when the return type's shape is reference-typed (per <see cref="AbiTypeShapeKindExtensions"/>).</param>
+/// <param name="ReturnIsRefType">True when the return type's shape is reference-typed (per <see cref="AbiTypeKindExtensions"/>).</param>
 /// <param name="ReturnIsBlittableStruct">True when the return type is a blittable struct.</param>
 /// <param name="ReturnIsComplexStruct">True when the return type is a complex struct.</param>
 /// <param name="ReturnIsReceiveArray">True when the return type is an SZ-array whose element is a known ABI element shape (blittable, ref-like, complex struct, HResult-exception, or mapped value type).</param>
@@ -25,7 +25,7 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// <param name="HasNonBlittablePassArray">True when at least one parameter has Pass/Fill-array category and its element type is neither blittable nor mapped value type.</param>
 /// <param name="HasComplexStructInput">True when at least one In/Ref parameter's underlying type is a complex struct (needs marshaller initialisation).</param>
 internal readonly record struct MethodSignatureMarshallingFacts(
-    AbiTypeShapeKind ReturnShape,
+    AbiTypeKind ReturnShape,
     bool ReturnIsString,
     bool ReturnIsRefType,
     bool ReturnIsBlittableStruct,
@@ -51,18 +51,18 @@ internal readonly record struct MethodSignatureMarshallingFacts(
     /// Computes the marshalling facts for <paramref name="sig"/> using <paramref name="resolver"/>
     /// for shape classification.
     /// </summary>
-    public static MethodSignatureMarshallingFacts From(MethodSignatureInfo sig, AbiTypeShapeResolver resolver)
+    public static MethodSignatureMarshallingFacts From(MethodSignatureInfo sig, AbiTypeKindResolver resolver)
     {
         TypeSignature? rt = sig.ReturnType;
-        AbiTypeShapeKind returnShape = rt is null ? AbiTypeShapeKind.Unknown : resolver.Resolve(rt).Kind;
+        AbiTypeKind returnShape = rt is null ? AbiTypeKind.Unknown : resolver.Resolve(rt);
 
-        bool returnIsString = returnShape == AbiTypeShapeKind.String;
+        bool returnIsString = returnShape == AbiTypeKind.String;
         bool returnIsRefType = returnShape.IsReferenceType();
-        bool returnIsBlittableStruct = returnShape == AbiTypeShapeKind.BlittableStruct;
-        bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
+        bool returnIsBlittableStruct = returnShape == AbiTypeKind.BlittableStruct;
+        bool returnIsComplexStruct = returnShape == AbiTypeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSz
             && resolver.IsRecognizedReceiveArrayElement(retSz.BaseType);
-        bool returnIsHResultException = returnShape == AbiTypeShapeKind.HResultException;
+        bool returnIsHResultException = returnShape == AbiTypeKind.HResultException;
         bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
 
         bool hasOutNeedsCleanup = false;

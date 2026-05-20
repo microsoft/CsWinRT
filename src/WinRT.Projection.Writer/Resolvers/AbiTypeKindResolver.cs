@@ -10,7 +10,7 @@ using WindowsRuntime.ProjectionWriter.Models;
 namespace WindowsRuntime.ProjectionWriter.Resolvers;
 
 /// <summary>
-/// Classifies WinRT type signatures by their ABI marshalling shape (see <see cref="AbiTypeShapeKind"/>).
+/// Classifies WinRT type signatures by their ABI marshalling shape (see <see cref="AbiTypeKind"/>).
 /// </summary>
 /// <remarks>
 /// The resolver is constructed with a reference to the <see cref="MetadataCache"/> so it can
@@ -20,7 +20,7 @@ namespace WindowsRuntime.ProjectionWriter.Resolvers;
 /// resolver's classification rather than reaching for the per-shape predicates directly.
 /// </remarks>
 /// <param name="cache">The metadata cache used for cross-module type resolution.</param>
-internal sealed class AbiTypeShapeResolver(MetadataCache cache)
+internal sealed class AbiTypeKindResolver(MetadataCache cache)
 {
     /// <summary>
     /// Gets the metadata cache used for cross-module type resolution.
@@ -28,14 +28,13 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     public MetadataCache Cache { get; } = cache;
 
     /// <summary>
-    /// Classifies <paramref name="signature"/> as an <see cref="AbiTypeShape"/>.
+    /// Classifies <paramref name="signature"/> by its WinRT ABI marshalling shape.
     /// </summary>
     /// <param name="signature">The type signature to classify.</param>
-    /// <returns>The shape classification.</returns>
-    public AbiTypeShape Resolve(TypeSignature signature)
+    /// <returns>The <see cref="AbiTypeKind"/> describing the signature's ABI shape; <see cref="AbiTypeKind.Unknown"/> for signatures that don't match any known WinRT marshalling shape.</returns>
+    public AbiTypeKind Resolve(TypeSignature signature)
     {
-        AbiTypeShapeKind kind = ClassifyShape(signature);
-        return new AbiTypeShape(kind, signature);
+        return ClassifyShape(signature);
     }
 
     /// <summary>
@@ -46,7 +45,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if blittable primitive or enum; otherwise <see langword="false"/>.</returns>
     public bool IsBlittablePrimitive(TypeSignature signature)
-        => Resolve(signature).Kind is AbiTypeShapeKind.BlittablePrimitive or AbiTypeShapeKind.Enum;
+        => Resolve(signature) is AbiTypeKind.BlittablePrimitive or AbiTypeKind.Enum;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT enum (marshalled as its underlying integer).
@@ -54,7 +53,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if an enum; otherwise <see langword="false"/>.</returns>
     public bool IsEnumType(TypeSignature signature)
-        => Resolve(signature).Kind == AbiTypeShapeKind.Enum;
+        => Resolve(signature) == AbiTypeKind.Enum;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT struct that flows across the ABI by value
@@ -64,7 +63,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if a blittable struct; otherwise <see langword="false"/>.</returns>
     public bool IsBlittableStruct(TypeSignature signature)
-        => Resolve(signature).Kind == AbiTypeShapeKind.BlittableStruct;
+        => Resolve(signature) == AbiTypeKind.BlittableStruct;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is any WinRT struct that flows across the ABI by value
@@ -73,7 +72,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if a struct; otherwise <see langword="false"/>.</returns>
     public bool IsAnyStruct(TypeSignature signature)
-        => Resolve(signature).Kind is AbiTypeShapeKind.BlittableStruct or AbiTypeShapeKind.ComplexStruct;
+        => Resolve(signature) is AbiTypeKind.BlittableStruct or AbiTypeKind.ComplexStruct;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT struct that has at least one reference-type
@@ -82,7 +81,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if a complex struct; otherwise <see langword="false"/>.</returns>
     public bool IsComplexStruct(TypeSignature signature)
-        => Resolve(signature).Kind == AbiTypeShapeKind.ComplexStruct;
+        => Resolve(signature) == AbiTypeKind.ComplexStruct;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a WinRT runtime class, interface, or delegate
@@ -91,7 +90,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if a class / interface / delegate; otherwise <see langword="false"/>.</returns>
     public bool IsRuntimeClassOrInterface(TypeSignature signature)
-        => Resolve(signature).Kind is AbiTypeShapeKind.RuntimeClassOrInterface or AbiTypeShapeKind.Delegate;
+        => Resolve(signature) is AbiTypeKind.RuntimeClassOrInterface or AbiTypeKind.Delegate;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a reference type that crosses the ABI as
@@ -110,7 +109,7 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     /// <param name="signature">The type signature to classify.</param>
     /// <returns><see langword="true"/> if mapped; otherwise <see langword="false"/>.</returns>
     public bool IsMappedAbiValueType(TypeSignature signature)
-        => Resolve(signature).Kind == AbiTypeShapeKind.MappedAbiValueType;
+        => Resolve(signature) == AbiTypeKind.MappedAbiValueType;
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a blittable element shape suitable for
@@ -216,49 +215,49 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
     }
 
     /// <summary>
-    /// Inner classification routine. Returns the resolved <see cref="AbiTypeShapeKind"/> for
-    /// <paramref name="signature"/>; returns <see cref="AbiTypeShapeKind.Unknown"/> when the
+    /// Inner classification routine. Returns the resolved <see cref="AbiTypeKind"/> for
+    /// <paramref name="signature"/>; returns <see cref="AbiTypeKind.Unknown"/> when the
     /// signature does not match any known WinRT marshalling shape (typically because of an
     /// unresolved cross-module reference).
     /// </summary>
     /// <param name="signature">The type signature to classify.</param>
     /// <returns>The classification kind.</returns>
-    private AbiTypeShapeKind ClassifyShape(TypeSignature signature)
+    private AbiTypeKind ClassifyShape(TypeSignature signature)
     {
         // Cheap top-level shape checks that don't need the cache.
         if (signature.IsString())
         {
-            return AbiTypeShapeKind.String;
+            return AbiTypeKind.String;
         }
 
         if (signature.IsObject())
         {
-            return AbiTypeShapeKind.Object;
+            return AbiTypeKind.Object;
         }
 
         if (signature.IsHResultException())
         {
-            return AbiTypeShapeKind.HResultException;
+            return AbiTypeKind.HResultException;
         }
 
         if (signature.IsSystemType())
         {
-            return AbiTypeShapeKind.SystemType;
+            return AbiTypeKind.SystemType;
         }
 
         if (signature.IsNullableT())
         {
-            return AbiTypeShapeKind.NullableT;
+            return AbiTypeKind.NullableT;
         }
 
         if (signature is SzArrayTypeSignature)
         {
-            return AbiTypeShapeKind.Array;
+            return AbiTypeKind.Array;
         }
 
         if (signature.IsGenericInstance())
         {
-            return AbiTypeShapeKind.GenericInstance;
+            return AbiTypeKind.GenericInstance;
         }
 
         // Cache-aware classifications. These are evaluated in the same order the writer's
@@ -266,22 +265,22 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         // resolver returns the same shape the legacy code path would have inferred.
         if (AbiTypeHelpers.IsMappedAbiValueType(signature))
         {
-            return AbiTypeShapeKind.MappedAbiValueType;
+            return AbiTypeKind.MappedAbiValueType;
         }
 
         if (AbiTypeHelpers.IsBlittablePrimitive(Cache, signature))
         {
-            return signature is CorLibTypeSignature ? AbiTypeShapeKind.BlittablePrimitive : AbiTypeShapeKind.Enum;
+            return signature is CorLibTypeSignature ? AbiTypeKind.BlittablePrimitive : AbiTypeKind.Enum;
         }
 
         if (AbiTypeHelpers.IsComplexStruct(Cache, signature))
         {
-            return AbiTypeShapeKind.ComplexStruct;
+            return AbiTypeKind.ComplexStruct;
         }
 
         if (AbiTypeHelpers.IsAnyStruct(Cache, signature))
         {
-            return AbiTypeShapeKind.BlittableStruct;
+            return AbiTypeKind.BlittableStruct;
         }
 
         if (AbiTypeHelpers.IsRuntimeClassOrInterface(Cache, signature))
@@ -290,12 +289,12 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
                 td.Type is TypeDefinition def &&
                 TypeCategorization.GetCategory(def) == TypeCategory.Delegate)
             {
-                return AbiTypeShapeKind.Delegate;
+                return AbiTypeKind.Delegate;
             }
 
-            return AbiTypeShapeKind.RuntimeClassOrInterface;
+            return AbiTypeKind.RuntimeClassOrInterface;
         }
 
-        return AbiTypeShapeKind.Unknown;
+        return AbiTypeKind.Unknown;
     }
 }

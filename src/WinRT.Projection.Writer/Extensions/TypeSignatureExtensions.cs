@@ -17,7 +17,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <remarks>
 /// Predicates that need cross-module type resolution (e.g. <c>IsBlittablePrimitive</c>
 /// with cross-module enum lookup, <c>IsAnyStruct</c>, <c>IsComplexStruct</c>) live in
-/// <see cref="Helpers.AbiTypeHelpers"/> and the <see cref="AbiTypeShapeResolver"/>;
+/// <see cref="Helpers.AbiTypeHelpers"/> and the <see cref="AbiTypeKindResolver"/>;
 /// they are intentionally not included here.
 /// </remarks>
 internal static class TypeSignatureExtensions
@@ -117,13 +117,13 @@ internal static class TypeSignatureExtensions
         /// any WinRT runtime class or interface (resolved via <paramref name="resolver"/>),
         /// <see cref="object"/>, and any generic instance (e.g. <c>IList&lt;T&gt;</c>).
         /// </summary>
-        /// <param name="resolver">The active <see cref="AbiTypeShapeResolver"/> (needed for runtime-class/interface resolution).</param>
+        /// <param name="resolver">The active <see cref="AbiTypeKindResolver"/> (needed for runtime-class/interface resolution).</param>
         /// <returns><see langword="true"/> if the signature flows as a <c>void*</c> across the ABI; otherwise <see langword="false"/>.</returns>
         /// <remarks>
         /// Use this variant for parameter/return types. For SZ-array element types (where generic
         /// instances cannot appear as elements), use <see cref="IsAbiArrayElementRefLike"/> instead.
         /// </remarks>
-        public bool IsAbiRefLike(AbiTypeShapeResolver resolver)
+        public bool IsAbiRefLike(AbiTypeKindResolver resolver)
         {
             return
                 sig.IsString() ||
@@ -140,9 +140,9 @@ internal static class TypeSignatureExtensions
         /// without the <c>IsGenericInstance</c> case, because generic instances cannot
         /// appear as array elements in metadata.
         /// </summary>
-        /// <param name="resolver">The active <see cref="AbiTypeShapeResolver"/> (needed for runtime-class/interface resolution).</param>
+        /// <param name="resolver">The active <see cref="AbiTypeKindResolver"/> (needed for runtime-class/interface resolution).</param>
         /// <returns><see langword="true"/> if the signature flows as a <c>void*</c> when used as an SZ-array element; otherwise <see langword="false"/>.</returns>
-        public bool IsAbiArrayElementRefLike(AbiTypeShapeResolver resolver)
+        public bool IsAbiArrayElementRefLike(AbiTypeKindResolver resolver)
         {
             return
                 sig.IsString() ||

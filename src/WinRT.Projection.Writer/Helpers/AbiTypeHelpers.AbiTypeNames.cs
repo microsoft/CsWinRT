@@ -30,7 +30,7 @@ internal static partial class AbiTypeHelpers
     /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
     public static string GetAbiLocalTypeName(ProjectionEmitContext context, TypeSignature sig)
     {
-        if (sig.IsAbiRefLike(context.AbiTypeShapeResolver))
+        if (sig.IsAbiRefLike(context.AbiTypeKindResolver))
         {
             return "void*";
         }
@@ -45,7 +45,7 @@ internal static partial class AbiTypeHelpers
             return WellKnownAbiTypeNames.AbiSystemException;
         }
 
-        if (context.AbiTypeShapeResolver.IsComplexStruct(sig))
+        if (context.AbiTypeKindResolver.IsComplexStruct(sig))
         {
             return GetAbiStructTypeName(context, sig);
         }
@@ -55,7 +55,7 @@ internal static partial class AbiTypeHelpers
             return GetMappedAbiTypeName(sig);
         }
 
-        if (context.AbiTypeShapeResolver.IsBlittableStruct(sig))
+        if (context.AbiTypeKindResolver.IsBlittableStruct(sig))
         {
             return GetBlittableStructAbiType(context, sig);
         }
@@ -66,7 +66,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the ABI C# type name for a single SZ-array element appearing as the <c>data</c>
     /// parameter in array-marshaller <c>UnsafeAccessor</c> signatures (e.g. <c>ConvertToManaged_X</c>,
-    /// <c>Free_X</c>). Dispatched by <see cref="Resolvers.AbiTypeShapeResolver.ClassifyArrayElement"/>:
+    /// <c>Free_X</c>). Dispatched by <see cref="Resolvers.AbiTypeKindResolver.ClassifyArrayElement"/>:
     /// reference-pointer → <c>void*</c>, HResult → <c>global::ABI.System.Exception</c>, mapped value
     /// type → mapped ABI name, complex struct → ABI struct name, blittable struct → blittable ABI
     /// struct, primitive → primitive ABI type.
@@ -76,7 +76,7 @@ internal static partial class AbiTypeHelpers
     /// <returns>The ABI C# type name as a string (no trailing punctuation).</returns>
     public static string GetArrayElementAbiType(ProjectionEmitContext context, TypeSignature elementType)
     {
-        return context.AbiTypeShapeResolver.ClassifyArrayElement(elementType) switch
+        return context.AbiTypeKindResolver.ClassifyArrayElement(elementType) switch
         {
             AbiArrayElementKind.RefLikeVoidStar => "void*",
             AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
@@ -99,7 +99,7 @@ internal static partial class AbiTypeHelpers
     /// <returns>The storage C# type name as a string (no trailing punctuation).</returns>
     public static string GetArrayElementStorageType(ProjectionEmitContext context, TypeSignature elementType)
     {
-        return context.AbiTypeShapeResolver.ClassifyArrayElement(elementType) switch
+        return context.AbiTypeKindResolver.ClassifyArrayElement(elementType) switch
         {
             AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
             AbiArrayElementKind.ComplexStruct => GetAbiStructTypeName(context, elementType),

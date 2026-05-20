@@ -26,14 +26,14 @@ internal static partial class AbiMethodBodyFactory
         TypeSignature? rt = sig.ReturnType;
 
         bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi
-            && (context.AbiTypeShapeResolver.IsBlittableAbiElement(retSzAbi.BaseType)
-                || retSzAbi.BaseType.IsAbiArrayElementRefLike(context.AbiTypeShapeResolver)
-                || context.AbiTypeShapeResolver.IsComplexStruct(retSzAbi.BaseType));
+            && (context.AbiTypeKindResolver.IsBlittableAbiElement(retSzAbi.BaseType)
+                || retSzAbi.BaseType.IsAbiArrayElementRefLike(context.AbiTypeKindResolver)
+                || context.AbiTypeKindResolver.IsComplexStruct(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && rt.IsHResultException();
         bool returnIsString = rt is not null && rt.IsString();
-        bool returnIsRefType = rt is not null && context.AbiTypeShapeResolver.IsReferenceTypeOrGenericInstance(rt);
+        bool returnIsRefType = rt is not null && context.AbiTypeKindResolver.IsReferenceTypeOrGenericInstance(rt);
         bool returnIsGenericInstance = rt is not null && rt.IsGenericInstance();
-        bool returnIsBlittableStruct = rt is not null && context.AbiTypeShapeResolver.IsBlittableStruct(rt);
+        bool returnIsBlittableStruct = rt is not null && context.AbiTypeKindResolver.IsBlittableStruct(rt);
 
         bool isGetter = sig.Method.IsGetter;
         bool isSetter = sig.Method.IsSetter;
@@ -238,7 +238,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
-                bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittableAbiElement(sz.BaseType);
+                bool isBlittableElem = context.AbiTypeKindResolver.IsBlittableAbiElement(sz.BaseType);
 
                 if (isBlittableElem)
                 {
@@ -275,7 +275,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
+                if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
                 {
                     continue;
                 }
@@ -291,7 +291,7 @@ internal static partial class AbiMethodBodyFactory
                 string dataParamType;
                 string dataCastExpr;
 
-                if (context.AbiTypeShapeResolver.IsComplexStruct(szArr.BaseType))
+                if (context.AbiTypeKindResolver.IsComplexStruct(szArr.BaseType))
                 {
                     string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                     dataParamType = abiStructName + "* data";
@@ -410,11 +410,11 @@ internal static partial class AbiMethodBodyFactory
                         {
                             writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToManaged(*{ptr})");
                         }
-                        else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(uRef))
+                        else if (context.AbiTypeKindResolver.IsRuntimeClassOrInterface(uRef))
                         {
                             writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef)}.ConvertToManaged(*{ptr})");
                         }
-                        else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(uRef))
+                        else if (context.AbiTypeKindResolver.IsMappedAbiValueType(uRef))
                         {
                             writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(uRef)}.ConvertToManaged(*{ptr})");
                         }
@@ -422,11 +422,11 @@ internal static partial class AbiMethodBodyFactory
                         {
                             writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged(*{ptr})");
                         }
-                        else if (context.AbiTypeShapeResolver.IsComplexStruct(uRef))
+                        else if (context.AbiTypeKindResolver.IsComplexStruct(uRef))
                         {
                             writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef)}.ConvertToManaged(*{ptr})");
                         }
-                        else if (context.AbiTypeShapeResolver.IsBlittableStruct(uRef) || context.AbiTypeShapeResolver.IsBlittablePrimitive(uRef) || context.AbiTypeShapeResolver.IsEnumType(uRef))
+                        else if (context.AbiTypeKindResolver.IsBlittableStruct(uRef) || context.AbiTypeKindResolver.IsBlittablePrimitive(uRef) || context.AbiTypeKindResolver.IsEnumType(uRef))
                         {
                             // Blittable/almost-blittable: ABI layout matches projected layout.
                             writer.Write($"*{ptr}");
@@ -475,7 +475,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     rhs = $"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()";
                 }
-                else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(underlying))
+                else if (context.AbiTypeKindResolver.IsRuntimeClassOrInterface(underlying))
                 {
                     rhs = $"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()";
                 }
@@ -496,7 +496,7 @@ internal static partial class AbiMethodBodyFactory
                 // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
                 // writing it into the *out ABI struct slot.write_marshal_from_managed
                 //: "Marshaller.ConvertToUnmanaged(local)".
-                else if (context.AbiTypeShapeResolver.IsComplexStruct(underlying))
+                else if (context.AbiTypeKindResolver.IsComplexStruct(underlying))
                 {
                     rhs = $"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw})";
                 }
@@ -532,7 +532,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 // Blittable element types: Span wraps the native buffer; no copy-back needed.
-                if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szFA.BaseType))
+                if (context.AbiTypeKindResolver.IsBlittableAbiElement(szFA.BaseType))
                 {
                     continue;
                 }
@@ -591,7 +591,7 @@ internal static partial class AbiMethodBodyFactory
                     // was hoisted to the top of the method body).
                     writer.WriteLine($"ConvertToUnmanaged_{retParamName}(null, {retLocalName}, out *{retSizeParamName}, out *{retParamName});");
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(rt))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(rt))
                 {
                     // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
                     writer.WriteLine($"*{retParamName} = {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToUnmanaged({retLocalName});");
@@ -601,7 +601,7 @@ internal static partial class AbiMethodBodyFactory
                     // System.Type return (server-side): convert managed System.Type to ABI Type struct.
                     writer.WriteLine($"*{retParamName} = global::ABI.System.TypeMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
-                else if (context.AbiTypeShapeResolver.IsComplexStruct(rt))
+                else if (context.AbiTypeKindResolver.IsComplexStruct(rt))
                 {
                     // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
                     writer.WriteLine($"*{retParamName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt)}.ConvertToUnmanaged({retLocalName});");
@@ -643,7 +643,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
+                if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
                 {
                     continue;
                 }
@@ -674,7 +674,7 @@ internal static partial class AbiMethodBodyFactory
                         continue;
                     }
 
-                    if (context.AbiTypeShapeResolver.IsBlittableAbiElement(szArr.BaseType))
+                    if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
                     {
                         continue;
                     }
@@ -725,11 +725,11 @@ internal static partial class AbiMethodBodyFactory
             // local var __arg_<name> that holds the converted value.
             writer.Write($"__arg_{rawName}");
         }
-        else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject())
+        else if (context.AbiTypeKindResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject())
         {
             EmitMarshallerConvertToManaged(writer, context, p.Type, pname);
         }
-        else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
+        else if (context.AbiTypeKindResolver.IsMappedAbiValueType(p.Type))
         {
             // Mapped value type input (DateTime/TimeSpan): the parameter is the ABI type;
             // convert to the projected managed type via the marshaller.
@@ -740,17 +740,17 @@ internal static partial class AbiMethodBodyFactory
             // System.Type input (server-side): convert ABI Type struct to System.Type.
             writer.Write($"global::ABI.System.TypeMarshaller.ConvertToManaged({pname})");
         }
-        else if (context.AbiTypeShapeResolver.IsComplexStruct(p.Type))
+        else if (context.AbiTypeKindResolver.IsComplexStruct(p.Type))
         {
             // Complex struct input (server-side): convert ABI struct to managed via marshaller.
             writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type)}.ConvertToManaged({pname})");
         }
-        else if (context.AbiTypeShapeResolver.IsBlittableStruct(p.Type))
+        else if (context.AbiTypeKindResolver.IsBlittableStruct(p.Type))
         {
             // Blittable / almost-blittable struct: pass directly (projected type == ABI type).
             writer.Write(pname);
         }
-        else if (context.AbiTypeShapeResolver.IsEnumType(p.Type))
+        else if (context.AbiTypeKindResolver.IsEnumType(p.Type))
         {
             // Enum: param signature is already the projected enum type, no cast needed.
             writer.Write(pname);

@@ -89,7 +89,7 @@ internal static class AbiStructFactory
             return "void*";
         }
 
-        if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+        if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
         {
             return AbiTypeHelpers.GetMappedAbiTypeName(ft);
         }
