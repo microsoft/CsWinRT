@@ -246,8 +246,10 @@ internal static partial class AbiMethodBodyFactory
                     """);
                 }
             }
-            writer.WriteLine("try");
-            writer.WriteLine("{");
+            writer.WriteLine(isMultiline: true, """
+                try
+                {
+                """);
             writer.IncreaseIndent();
 
             // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
@@ -672,11 +674,12 @@ internal static partial class AbiMethodBodyFactory
                     string raw = p.GetRawName();
                     WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
-                    writer.WriteLine($"if (__{raw}_arrayFromPool is not null)");
-                    using (writer.WriteBlock())
-                    {
-                        writer.WriteLine($"global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Return(__{raw}_arrayFromPool);");
-                    }
+                    writer.WriteLine(isMultiline: true, $$"""
+                        if (__{{raw}}_arrayFromPool is not null)
+                        {
+                            global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Return(__{{raw}}_arrayFromPool);
+                        }
+                        """);
                 }
                 writer.DecreaseIndent();
                 writer.WriteLine("}");

@@ -110,6 +110,7 @@ internal static partial class ConstructorFactory
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (context.Settings.ReferenceProjection)
         {
+            writer.DecreaseIndent();
             RefModeStubFactory.EmitRefModeInvokeBody(writer);
             return;
         }
@@ -614,19 +615,19 @@ internal static partial class ConstructorFactory
                 if (szArr.BaseType.IsString())
                 {
                     writer.WriteLine();
-                    writer.WriteLine($"HStringArrayMarshaller.Dispose({names.PinnedHandleSpan});");
-                    writer.WriteLine();
-                    writer.WriteLine($"if ({names.PinnedHandleArrayFromPool} is not null)");
-                    using (writer.WriteBlock())
-                    {
-                        writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.PinnedHandleArrayFromPool});");
-                    }
-                    writer.WriteLine();
-                    writer.WriteLine($"if ({names.HeaderArrayFromPool} is not null)");
-                    using (writer.WriteBlock())
-                    {
-                        writer.WriteLine($"global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({names.HeaderArrayFromPool});");
-                    }
+                    writer.WriteLine(isMultiline: true, $$"""
+                        HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
+
+                        if ({{names.PinnedHandleArrayFromPool}} is not null)
+                        {
+                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
+                        }
+
+                        if ({{names.HeaderArrayFromPool}} is not null)
+                        {
+                            global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
+                        }
+                        """);
                 }
                 else
                 {
@@ -636,27 +637,29 @@ internal static partial class ConstructorFactory
                         static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
 
                         fixed(void* _{{raw}} = {{names.Span}})
+                        {
+                            Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, (void**)_{{raw}});
+                        }
                         """);
-                    using (writer.WriteBlock())
-                    {
-                        writer.WriteLine($"Dispose_{raw}(null, (uint) {names.Span}.Length, (void**)_{raw});");
-                    }
                 }
                 writer.WriteLine();
-                writer.WriteLine($"if ({names.ArrayFromPool} is not null)");
-                using (writer.WriteBlock())
-                {
-                    writer.WriteLine($"global::System.Buffers.ArrayPool<nint>.Shared.Return({names.ArrayFromPool});");
-                }
+                writer.WriteLine(isMultiline: true, $$"""
+                    if ({{names.ArrayFromPool}} is not null)
+                    {
+                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
+                    }
+                    """);
             }
             writer.DecreaseIndent();
             writer.WriteLine("}");
         }
 
         writer.DecreaseIndent();
-        writer.WriteLine("}");
         writer.DecreaseIndent();
-        writer.WriteLine("}");
+        writer.WriteLine(isMultiline: true, """
+                }
+            }
+            """);
     }
 
     /// <summary>
