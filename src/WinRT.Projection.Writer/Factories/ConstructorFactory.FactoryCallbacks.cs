@@ -538,7 +538,7 @@ internal static partial class ConstructorFactory
             {
                 writer.Write($"__{raw}.ConvertToUnmanagedUnsafe()");
             }
-            else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (context.AbiTypeShapeResolver.IsReferenceTypeOrGenericInstance(p.Type))
             {
                 writer.Write($"__{raw}.GetThisPtrUnsafe()");
             }

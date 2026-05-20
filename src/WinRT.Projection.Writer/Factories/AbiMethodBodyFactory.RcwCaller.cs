@@ -829,7 +829,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 writer.Write($"__{p.GetParamLocalName(paramNameOverride)}.HString");
             }
-            else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (context.AbiTypeShapeResolver.IsReferenceTypeOrGenericInstance(p.Type))
             {
                 writer.Write($"__{p.GetParamLocalName(paramNameOverride)}.GetThisPtrUnsafe()");
             }

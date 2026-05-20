@@ -31,7 +31,7 @@ internal static partial class AbiMethodBodyFactory
                 || context.AbiTypeShapeResolver.IsComplexStruct(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && rt.IsHResultException();
         bool returnIsString = rt is not null && rt.IsString();
-        bool returnIsRefType = rt is not null && (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(rt) || rt.IsObject() || rt.IsGenericInstance());
+        bool returnIsRefType = rt is not null && context.AbiTypeShapeResolver.IsReferenceTypeOrGenericInstance(rt);
         bool returnIsGenericInstance = rt is not null && rt.IsGenericInstance();
         bool returnIsBlittableStruct = rt is not null && context.AbiTypeShapeResolver.IsBlittableStruct(rt);
 

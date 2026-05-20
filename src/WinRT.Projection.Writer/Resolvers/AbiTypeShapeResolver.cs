@@ -94,6 +94,16 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         => Resolve(signature).Kind is AbiTypeShapeKind.RuntimeClassOrInterface or AbiTypeShapeKind.Delegate;
 
     /// <summary>
+    /// Returns whether <paramref name="signature"/> is a reference type that crosses the ABI as
+    /// an opaque pointer — either a runtime class / interface / delegate, the base <see cref="object"/>
+    /// type, or any closed generic instance.
+    /// </summary>
+    /// <param name="signature">The type signature to classify.</param>
+    /// <returns><see langword="true"/> if a reference type or generic instance; otherwise <see langword="false"/>.</returns>
+    public bool IsReferenceTypeOrGenericInstance(TypeSignature signature)
+        => IsRuntimeClassOrInterface(signature) || signature.IsObject() || signature.IsGenericInstance();
+
+    /// <summary>
     /// Returns whether <paramref name="signature"/> is a mapped value type that needs ABI-specific
     /// marshalling (<c>Windows.Foundation.DateTime</c>, <c>Windows.Foundation.TimeSpan</c>).
     /// </summary>
