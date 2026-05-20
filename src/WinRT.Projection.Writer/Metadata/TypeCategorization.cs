@@ -95,7 +95,7 @@ internal static class TypeCategorization
     public static bool IsApiContractType(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Struct &&
-               HasAttribute(type, WindowsFoundationMetadata, "ApiContractAttribute");
+               type.HasAttribute(WindowsFoundationMetadata, "ApiContractAttribute");
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ internal static class TypeCategorization
     public static bool IsExclusiveTo(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Interface &&
-               HasAttribute(type, WindowsFoundationMetadata, ExclusiveToAttribute);
+               type.HasAttribute(WindowsFoundationMetadata, ExclusiveToAttribute);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ internal static class TypeCategorization
     public static bool IsFlagsEnum(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Enum &&
-               HasAttribute(type, "System", "FlagsAttribute");
+               type.HasAttribute("System", "FlagsAttribute");
     }
 
     /// <summary>
@@ -137,42 +137,6 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsProjectionInternal(TypeDefinition type)
     {
-        return HasAttribute(type, WindowsRuntimeInternal, "ProjectionInternalAttribute");
-    }
-
-    /// <summary>
-    /// True if this type's CustomAttributes contains the given attribute.
-    /// </summary>
-    public static bool HasAttribute(IHasCustomAttribute member, string ns, string name)
-    {
-        for (int i = 0; i < member.CustomAttributes.Count; i++)
-        {
-            CustomAttribute attr = member.CustomAttributes[i];
-            ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
-
-            if (type is not null && type.Namespace == ns && type.Name == name)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// Gets the matching CustomAttribute or null.
-    /// </summary>
-    public static CustomAttribute? GetAttribute(IHasCustomAttribute member, string ns, string name)
-    {
-        for (int i = 0; i < member.CustomAttributes.Count; i++)
-        {
-            CustomAttribute attr = member.CustomAttributes[i];
-            ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
-
-            if (type is not null && type.Namespace == ns && type.Name == name)
-            {
-                return attr;
-            }
-        }
-        return null;
+        return type.HasAttribute(WindowsRuntimeInternal, "ProjectionInternalAttribute");
     }
 }

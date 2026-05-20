@@ -54,6 +54,28 @@ internal static class IHasCustomAttributeExtensions
         }
 
         /// <summary>
+        /// Returns the number of custom attributes on the member matching the given
+        /// <paramref name="ns"/> and <paramref name="name"/>.
+        /// </summary>
+        /// <param name="ns">The namespace of the attribute type.</param>
+        /// <param name="name">The unqualified type name of the attribute.</param>
+        /// <returns>The number of matching custom attributes.</returns>
+        public int CountAttributes(string ns, string name)
+        {
+            int count = 0;
+
+            foreach (CustomAttribute attribute in member.CustomAttributes)
+            {
+                if (attribute.Type?.IsTypeOf(ns, name) is true)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
         /// Convenience for <c>HasAttribute(ns, name)</c> with the namespace fixed to
         /// <c>Windows.Foundation.Metadata</c>.
         /// </summary>

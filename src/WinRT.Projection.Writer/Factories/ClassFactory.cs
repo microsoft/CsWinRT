@@ -176,8 +176,8 @@ internal static class ClassFactory
         // 4. Type namespace and name (ascending)
         exclusiveIfaces.Sort((a, b) =>
         {
-            int aPrev = -CountAttributes(a, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
-            int bPrev = -CountAttributes(b, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
+            int aPrev = -a.CountAttributes(WindowsFoundationMetadata, "PreviousContractVersionAttribute");
+            int bPrev = -b.CountAttributes(WindowsFoundationMetadata, "PreviousContractVersionAttribute");
 
             if (aPrev != bPrev)
             {
@@ -213,21 +213,6 @@ internal static class ClassFactory
         return (defaultIface, exclusiveIfaces);
     }
 
-    private static int CountAttributes(IHasCustomAttribute member, string ns, string name)
-    {
-        int count = 0;
-        for (int i = 0; i < member.CustomAttributes.Count; i++)
-        {
-            CustomAttribute attr = member.CustomAttributes[i];
-            ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
-
-            if (type is not null && type.Namespace == ns && type.Name == name)
-            {
-                count++;
-            }
-        }
-        return count;
-    }
     /// <summary>
     /// Returns the GC-pressure cost (in bytes) declared by <c>[GCPressureAttribute]</c> on <paramref name="type"/>, or <c>0</c> if not annotated.
     /// </summary>
