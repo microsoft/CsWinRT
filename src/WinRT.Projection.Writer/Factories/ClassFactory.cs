@@ -321,21 +321,27 @@ internal static class ClassFactory
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
-                string accessors = context.Settings.ReferenceProjection
-                    ? """
+
+                if (context.Settings.ReferenceProjection)
+                {
+                    writer.WriteLine(isMultiline: true, $$"""
+                        public static event {{eventType}} {{evtName}}
+                        {
                             add => throw null;
                             remove => throw null;
-                        """
-                    : $$"""
+                        }
+                        """);
+                }
+                else
+                {
+                    writer.WriteLine(isMultiline: true, $$"""
+                        public static event {{eventType}} {{evtName}}
+                        {
                             add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
                             remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
-                        """;
-                writer.WriteLine(isMultiline: true, $$"""
-                    public static event {{eventType}} {{evtName}}
-                    {
-                    {{accessors}}
-                    }
-                    """);
+                        }
+                        """);
+                }
             }
 
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
@@ -454,25 +460,17 @@ internal static class ClassFactory
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
         writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
-            private static WindowsRuntimeObjectReference {{objRefName}}
-            {
-            """);
+
         if (context.Settings.ReferenceProjection)
         {
-            // the static factory objref getter body is just 'throw null;'.
-            writer.WriteLine(isMultiline: true, """
-                    get
-                    {
-                        throw null;
-                    }
-                }
-                """);
-            return;
+            writer.WriteLine($"private static WindowsRuntimeObjectReference {objRefName} => throw null;");
         }
-        WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
-        writer.WriteLine(isMultiline: true, $$"""
-                get
+        else
+        {
+            WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
+
+            writer.WriteLine(isMultiline: true, $$"""
+                private static WindowsRuntimeObjectReference {{objRefName}}
                 {
                     var __{{objRefName}} = field;
                     if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
@@ -481,8 +479,8 @@ internal static class ClassFactory
                     }
                     return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
                 }
-            }
-            """);
+                """);
+        }
     }
 
     /// <summary>
