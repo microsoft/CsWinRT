@@ -290,11 +290,13 @@ internal static partial class AbiMethodBodyFactory
                     dataCastExpr = "(void**)" + ptr;
                 }
 
+                writer.IncreaseIndent();
                 writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
-                            static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
-                            CopyToManaged_{{raw}}(null, __{{raw}}Size, {{dataCastExpr}}, __{{raw}});
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+                        static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
+                        CopyToManaged_{{raw}}(null, __{{raw}}Size, {{dataCastExpr}}, __{{raw}});
                     """);
+                writer.DecreaseIndent();
             }
 
             // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
@@ -317,11 +319,13 @@ internal static partial class AbiMethodBodyFactory
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
                     WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+                    writer.IncreaseIndent();
                     writer.WriteLine(isMultiline: true, $$"""
-                            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                                static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                                var __arg_{{rawName}} = ConvertToManaged_arg_{{rawName}}(null, {{callName}});
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                            static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                            var __arg_{{rawName}} = ConvertToManaged_arg_{{rawName}}(null, {{callName}});
                         """);
+                    writer.DecreaseIndent();
                 }
             }
 
@@ -530,11 +534,13 @@ internal static partial class AbiMethodBodyFactory
                 // complex structs -> "global::ABI.Foo.Bar* data"/"(global::ABI.Foo.Bar*)").
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szFA.BaseType);
 
+                writer.IncreaseIndent();
                 writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                            static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
-                            CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                        static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
+                        CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
                     """);
+                writer.DecreaseIndent();
             }
 
             if (rt is not null)
@@ -600,9 +606,11 @@ internal static partial class AbiMethodBodyFactory
 
             writer.WriteLine("return 0;");
             writer.DecreaseIndent();
-            writer.WriteLine("}");
-            writer.WriteLine("catch (Exception __exception__)");
-            writer.WriteLine("{");
+            writer.WriteLine(isMultiline: true, """
+                }
+                catch (Exception __exception__)
+                {
+                """);
             writer.IncreaseIndent();
             writer.WriteLine("return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
             writer.DecreaseIndent();
@@ -636,8 +644,10 @@ internal static partial class AbiMethodBodyFactory
 
             if (hasNonBlittableArrayDoAbi)
             {
-                writer.WriteLine("finally");
-                writer.WriteLine("{");
+                writer.WriteLine(isMultiline: true, """
+                    finally
+                    {
+                    """);
                 writer.IncreaseIndent();
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
