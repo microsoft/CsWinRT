@@ -37,20 +37,6 @@ internal static class ClassFactory
     }
 
     /// <summary>
-    /// Writes the class modifiers ('static '/'sealed ').
-    /// </summary>
-    public static void WriteClassModifiers(IndentedTextWriter writer, TypeDefinition type)
-    {
-        if (TypeCategorization.IsStatic(type))
-        {
-            writer.Write("static ");
-            return;
-        }
-
-        writer.WriteIf(type.IsSealed, "sealed ");
-    }
-
-    /// <summary>
     /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
     /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>.
     /// </summary>
@@ -117,25 +103,6 @@ internal static class ClassFactory
         }
         return false;
     }
-
-    /// <summary>
-    /// Returns true if <paramref name="iface"/> is the default interface of a fast-abi class.
-    /// </summary>
-    public static bool IsFastAbiDefaultInterface(MetadataCache cache, TypeDefinition iface)
-    {
-        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(cache, iface);
-
-        if (fastAbi is null)
-        {
-            return false;
-        }
-
-        return fastAbi.Value.Default is not null && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, iface);
-    }
-
-    // We don't have direct access to the active Settings from a static helper that only takes
-    // a TypeDefinition. The fast-abi flag is purely determined by the [FastAbiAttribute] (the
-    // netstandard_compat gate is always false in CsWinRT 3.0 -- the flag has been removed).
 
     /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
