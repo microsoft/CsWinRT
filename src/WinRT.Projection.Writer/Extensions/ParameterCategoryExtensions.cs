@@ -23,6 +23,16 @@ internal static class ParameterCategoryExtensions
         }
 
         /// <summary>
+        /// Returns whether the input category is a scalar by-value parameter that the callee
+        /// reads (<see cref="ParameterCategory.In"/> or <see cref="ParameterCategory.Ref"/>) —
+        /// i.e. not an array, not an output parameter, and not a receive-array.
+        /// </summary>
+        public bool IsByValue()
+        {
+            return category is ParameterCategory.In or ParameterCategory.Ref;
+        }
+
+        /// <summary>
         /// Returns whether the input category is any of the array-shaped categories
         /// (<see cref="ParameterCategory.PassArray"/>, <see cref="ParameterCategory.FillArray"/>,
         /// or <see cref="ParameterCategory.ReceiveArray"/>).

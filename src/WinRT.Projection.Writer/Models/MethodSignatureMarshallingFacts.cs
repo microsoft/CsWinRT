@@ -99,7 +99,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
                 hasNonBlittablePassArray = true;
             }
 
-            if (!hasComplexStructInput && (cat is ParameterCategory.In or ParameterCategory.Ref)
+            if (!hasComplexStructInput && cat.IsByValue()
                 && resolver.IsComplexStruct(p.Type.StripByRefAndCustomModifiers()))
             {
                 hasComplexStructInput = true;
