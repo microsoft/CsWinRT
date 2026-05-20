@@ -34,7 +34,80 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     /// <returns>The <see cref="AbiTypeKind"/> describing the signature's ABI shape; <see cref="AbiTypeKind.Unknown"/> for signatures that don't match any known WinRT marshalling shape.</returns>
     public AbiTypeKind Resolve(TypeSignature signature)
     {
-        return ClassifyShape(signature);
+        // Cheap top-level shape checks that don't need the cache
+        if (signature.IsString())
+        {
+            return AbiTypeKind.String;
+        }
+
+        if (signature.IsObject())
+        {
+            return AbiTypeKind.Object;
+        }
+
+        if (signature.IsHResultException())
+        {
+            return AbiTypeKind.HResultException;
+        }
+
+        if (signature.IsSystemType())
+        {
+            return AbiTypeKind.SystemType;
+        }
+
+        if (signature.IsNullableT())
+        {
+            return AbiTypeKind.NullableT;
+        }
+
+        if (signature is SzArrayTypeSignature)
+        {
+            return AbiTypeKind.Array;
+        }
+
+        if (signature.IsGenericInstance())
+        {
+            return AbiTypeKind.GenericInstance;
+        }
+
+        // Cache-aware classifications. These are evaluated in the same order the writer's
+        // emission paths historically queried the inline AbiTypeHelpers predicates so the
+        // resolver returns the same shape the legacy code path would have inferred.
+        if (AbiTypeHelpers.IsMappedAbiValueType(signature))
+        {
+            return AbiTypeKind.MappedAbiValueType;
+        }
+
+        if (AbiTypeHelpers.IsBlittablePrimitive(Cache, signature))
+        {
+            return signature is CorLibTypeSignature
+                ? AbiTypeKind.BlittablePrimitive
+                : AbiTypeKind.Enum;
+        }
+
+        if (AbiTypeHelpers.IsComplexStruct(Cache, signature))
+        {
+            return AbiTypeKind.ComplexStruct;
+        }
+
+        if (AbiTypeHelpers.IsAnyStruct(Cache, signature))
+        {
+            return AbiTypeKind.BlittableStruct;
+        }
+
+        if (AbiTypeHelpers.IsRuntimeClassOrInterface(Cache, signature))
+        {
+            if (signature is TypeDefOrRefSignature td &&
+                td.Type is TypeDefinition def &&
+                TypeCategorization.GetCategory(def) == TypeCategory.Delegate)
+            {
+                return AbiTypeKind.Delegate;
+            }
+
+            return AbiTypeKind.RuntimeClassOrInterface;
+        }
+
+        return AbiTypeKind.Unknown;
     }
 
     /// <summary>
@@ -212,89 +285,5 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         }
 
         return AbiArrayElementKind.BlittablePrimitive;
-    }
-
-    /// <summary>
-    /// Inner classification routine. Returns the resolved <see cref="AbiTypeKind"/> for
-    /// <paramref name="signature"/>; returns <see cref="AbiTypeKind.Unknown"/> when the
-    /// signature does not match any known WinRT marshalling shape (typically because of an
-    /// unresolved cross-module reference).
-    /// </summary>
-    /// <param name="signature">The type signature to classify.</param>
-    /// <returns>The classification kind.</returns>
-    private AbiTypeKind ClassifyShape(TypeSignature signature)
-    {
-        // Cheap top-level shape checks that don't need the cache.
-        if (signature.IsString())
-        {
-            return AbiTypeKind.String;
-        }
-
-        if (signature.IsObject())
-        {
-            return AbiTypeKind.Object;
-        }
-
-        if (signature.IsHResultException())
-        {
-            return AbiTypeKind.HResultException;
-        }
-
-        if (signature.IsSystemType())
-        {
-            return AbiTypeKind.SystemType;
-        }
-
-        if (signature.IsNullableT())
-        {
-            return AbiTypeKind.NullableT;
-        }
-
-        if (signature is SzArrayTypeSignature)
-        {
-            return AbiTypeKind.Array;
-        }
-
-        if (signature.IsGenericInstance())
-        {
-            return AbiTypeKind.GenericInstance;
-        }
-
-        // Cache-aware classifications. These are evaluated in the same order the writer's
-        // emission paths historically queried the inline AbiTypeHelpers predicates so the
-        // resolver returns the same shape the legacy code path would have inferred.
-        if (AbiTypeHelpers.IsMappedAbiValueType(signature))
-        {
-            return AbiTypeKind.MappedAbiValueType;
-        }
-
-        if (AbiTypeHelpers.IsBlittablePrimitive(Cache, signature))
-        {
-            return signature is CorLibTypeSignature ? AbiTypeKind.BlittablePrimitive : AbiTypeKind.Enum;
-        }
-
-        if (AbiTypeHelpers.IsComplexStruct(Cache, signature))
-        {
-            return AbiTypeKind.ComplexStruct;
-        }
-
-        if (AbiTypeHelpers.IsAnyStruct(Cache, signature))
-        {
-            return AbiTypeKind.BlittableStruct;
-        }
-
-        if (AbiTypeHelpers.IsRuntimeClassOrInterface(Cache, signature))
-        {
-            if (signature is TypeDefOrRefSignature td &&
-                td.Type is TypeDefinition def &&
-                TypeCategorization.GetCategory(def) == TypeCategory.Delegate)
-            {
-                return AbiTypeKind.Delegate;
-            }
-
-            return AbiTypeKind.RuntimeClassOrInterface;
-        }
-
-        return AbiTypeKind.Unknown;
     }
 }

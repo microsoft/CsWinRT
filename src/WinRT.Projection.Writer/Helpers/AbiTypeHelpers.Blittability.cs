@@ -181,17 +181,13 @@ internal static partial class AbiTypeHelpers
                 return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
             }
 
-            // Cross-module typeref: try to resolve via the metadata cache to check category.
-            string ns = td.Type?.Namespace?.Value ?? string.Empty;
-            string name = td.Type?.Name?.Value ?? string.Empty;
+            // Cross-module typeref: try to resolve via the metadata cache to check category
+            (string ns, string name) = td.Type.Names();
 
+            // If the type is in 'System', we already know the set of possible types
             if (ns == "System")
             {
-                return name switch
-                {
-                    "Uri" or "Type" or "IDisposable" or "Exception" => true,
-                    _ => false,
-                };
+                return name is "Uri" or "Type" or "IDisposable" or "Exception";
             }
 
             if (cache is not null)
