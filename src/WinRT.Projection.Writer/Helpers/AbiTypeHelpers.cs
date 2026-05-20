@@ -196,6 +196,9 @@ internal static partial class AbiTypeHelpers
 
         (string ns, string nm) = classType.BaseType.Names();
 
+        // 'System.Object' is not in any .winmd, so resolving via the cache fails. But AsmResolver
+        // can still 'TryResolve' it from the corlib runtime context, which would (incorrectly)
+        // make a direct-Object-derivation count as depth 1 instead of 0. Short-circuit here.
         if (ns == "System" && nm == "Object")
         {
             return 0;

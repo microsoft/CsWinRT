@@ -177,16 +177,22 @@ internal static class TypeSemanticsFactory
         {
             (string ns, string name) = reference.Names();
 
+            // 'System.Guid' lives in mscorlib (not in any .winmd), so cache resolution would always
+            // fail. Surface it as a dedicated semantic so the writers emit the BCL short name.
             if (ns == "System" && name == "Guid")
             {
                 return new TypeSemantics.GuidType();
             }
 
+            // Same handling for 'System.Object' as for 'System.Guid' above
             if (ns == "System" && name == "Object")
             {
                 return new TypeSemantics.ObjectType();
             }
 
+            // 'System.Type' appears verbatim in .winmd-s via the ECMA-335 attribute-blob encoding for
+            // 'Type'-valued attribute args ('[Activatable]', '[Composable]', etc.), not as the Windows
+            // Runtime 'TypeName' struct. Surface it as a dedicated semantic.
             if (ns == "System" && name == "Type")
             {
                 return new TypeSemantics.SystemType();

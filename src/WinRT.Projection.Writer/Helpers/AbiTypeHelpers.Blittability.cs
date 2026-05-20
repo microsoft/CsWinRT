@@ -273,11 +273,6 @@ internal static partial class AbiTypeHelpers
         {
             (string ns, string name) = tr.Names();
 
-            if (ns == "System" && name == "Guid")
-            {
-                return false;
-            }
-
             def = cache.Find(ns, name);
         }
 
@@ -346,6 +341,8 @@ internal static partial class AbiTypeHelpers
         {
             (string ns, string name) = trEarly.Names();
 
+            // 'System.Guid' lives in mscorlib (not in any .winmd): the cache never resolves it,
+            // so short-circuit to true here. Windows Runtime's 'Guid' is exactly this BCL struct.
             if (ns == "System" && name == "Guid")
             {
                 return true;
