@@ -271,33 +271,4 @@ internal static partial class AbiTypeHelpers
             && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
     }
 
-    /// <summary>
-    /// Strips trailing <see cref="ByReferenceTypeSignature"/> and <see cref="CustomModifierTypeSignature"/>
-    /// wrappers from the signature, returning the underlying signature (or <see langword="null"/>
-    /// if the input is <see langword="null"/>).
-    /// </summary>
-    /// <returns>The underlying signature with byref + custom-modifier wrappers stripped.</returns>
-    public static TypeSignature StripByRefAndCustomModifiers(TypeSignature sig)
-    {
-        TypeSignature current = sig;
-
-        while (true)
-        {
-            if (current is ByReferenceTypeSignature br)
-            {
-                current = br.BaseType;
-
-                continue;
-            }
-
-            if (current is CustomModifierTypeSignature cm)
-            {
-                current = cm.BaseType;
-
-                continue;
-            }
-
-            return current;
-        }
-    }
 }

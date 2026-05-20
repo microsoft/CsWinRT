@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter.Resolvers;
@@ -31,7 +30,7 @@ internal static class ParameterCategoryResolver
 
         // If byref and underlying is an array, treat as array param (PassArray/ReceiveArray/FillArray)
         // based on in/out flags. WinRT metadata represents 'out byte[]' as 'byte[]&' with [out].
-        bool isByRefArray = isByRef && AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type) is SzArrayTypeSignature;
+        bool isByRefArray = isByRef && p.Type.StripByRefAndCustomModifiers() is SzArrayTypeSignature;
 
         if (isArray || isByRefArray)
         {

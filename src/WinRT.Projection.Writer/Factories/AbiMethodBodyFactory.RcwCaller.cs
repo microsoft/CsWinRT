@@ -63,7 +63,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.Out)
             {
-                TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
                 _ = fp.Append(", ");
 
                 if (uOut.IsAbiRefLike(context.AbiTypeShapeResolver))
@@ -92,7 +92,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.Ref)
             {
-                TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uRef = p.Type.StripByRefAndCustomModifiers();
                 _ = fp.Append(", ");
 
                 if (context.AbiTypeShapeResolver.IsComplexStruct(uRef))
@@ -296,7 +296,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
 
             if (!context.AbiTypeShapeResolver.IsComplexStruct(pType))
             {
@@ -313,7 +313,7 @@ internal static partial class AbiMethodBodyFactory
         {
 
             string localName = p.GetParamLocalName(paramNameOverride);
-            TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
             string abi = AbiTypeHelpers.GetAbiLocalTypeName(context, uOut);
             writer.WriteLine($"{abi} __{localName} = default;");
         }
@@ -462,7 +462,7 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
 
             if (!context.AbiTypeShapeResolver.IsComplexStruct(pType))
             {
@@ -540,7 +540,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.Ref)
             {
-                TypeSignature uRefSkip = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uRefSkip = p.Type.StripByRefAndCustomModifiers();
 
                 if (context.AbiTypeShapeResolver.IsComplexStruct(uRefSkip))
                 {
@@ -797,7 +797,7 @@ internal static partial class AbiMethodBodyFactory
             if (cat == ParameterCategory.Ref)
             {
                 string localName = p.GetParamLocalName(paramNameOverride);
-                TypeSignature uRefArg = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uRefArg = p.Type.StripByRefAndCustomModifiers();
 
                 if (context.AbiTypeShapeResolver.IsComplexStruct(uRefArg))
                 {
@@ -921,7 +921,7 @@ internal static partial class AbiMethodBodyFactory
 
             string callName = p.GetParamName(paramNameOverride);
             string localName = p.GetParamLocalName(paramNameOverride);
-            TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
 
             // For Out generic instance: emit inline UnsafeAccessor to ConvertToManaged_<name>
             // before the writeback. (e.g. Collection1HandlerInvoke
@@ -1130,7 +1130,7 @@ internal static partial class AbiMethodBodyFactory
                     continue;
                 }
 
-                TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
 
                 if (!context.AbiTypeShapeResolver.IsComplexStruct(pType))
                 {
@@ -1278,7 +1278,7 @@ internal static partial class AbiMethodBodyFactory
 
             {
 
-                TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
                 string localName = p.GetParamLocalName(paramNameOverride);
 
                 if (uOut.IsString())

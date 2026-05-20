@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
@@ -79,7 +78,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
         {
             if (!hasOutNeedsCleanup && cat == ParameterCategory.Out)
             {
-                TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
 
                 if (uOut.IsAbiArrayElementRefLike(resolver) || uOut.IsSystemType() || resolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
                 {
@@ -101,7 +100,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
             }
 
             if (!hasComplexStructInput && (cat is ParameterCategory.In or ParameterCategory.Ref)
-                && resolver.IsComplexStruct(AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type)))
+                && resolver.IsComplexStruct(p.Type.StripByRefAndCustomModifiers()))
             {
                 hasComplexStructInput = true;
             }

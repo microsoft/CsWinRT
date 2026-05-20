@@ -84,7 +84,7 @@ internal static partial class AbiMethodBodyFactory
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
             {
 
-                TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
 
                 if (!uOut.IsGenericInstance())
                 {
@@ -182,7 +182,7 @@ internal static partial class AbiMethodBodyFactory
 
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
-                TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature underlying = p.Type.StripByRefAndCustomModifiers();
                 WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, underlying, false);
                 writer.WriteLine($"{projected} __{raw} = default;");
             }
@@ -388,7 +388,7 @@ internal static partial class AbiMethodBodyFactory
                         // marshaller — DO NOT zero or write back.
                         string raw = p.GetRawName();
                         string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                        TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                        TypeSignature uRef = p.Type.StripByRefAndCustomModifiers();
 
                         if (uRef.IsString())
                         {
@@ -449,7 +449,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                TypeSignature underlying = p.Type.StripByRefAndCustomModifiers();
                 string rhs;
 
                 // String: HStringMarshaller.ConvertToUnmanaged

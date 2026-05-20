@@ -151,13 +151,42 @@ internal static class TypeSignatureExtensions
         }
 
         /// <summary>
+        /// Strips trailing <see cref="ByReferenceTypeSignature"/> and <see cref="CustomModifierTypeSignature"/>
+        /// wrappers from the signature, returning the underlying signature.
+        /// </summary>
+        /// <returns>The underlying signature with byref + custom-modifier wrappers stripped.</returns>
+        public TypeSignature StripByRefAndCustomModifiers()
+        {
+            TypeSignature current = sig;
+
+            while (true)
+            {
+                if (current is ByReferenceTypeSignature br)
+                {
+                    current = br.BaseType;
+
+                    continue;
+                }
+
+                if (current is CustomModifierTypeSignature cm)
+                {
+                    current = cm.BaseType;
+
+                    continue;
+                }
+
+                return current;
+            }
+        }
+
+        /// <summary>
         /// Strips byref + custom modifiers from the input signature and returns the result
         /// as an <see cref="SzArrayTypeSignature"/> if the underlying type is one; otherwise
         /// returns <see langword="null"/>.
         /// </summary>
         public SzArrayTypeSignature? AsSzArray()
         {
-            return Helpers.AbiTypeHelpers.StripByRefAndCustomModifiers(sig) as SzArrayTypeSignature;
+            return sig.StripByRefAndCustomModifiers() as SzArrayTypeSignature;
         }
 
         /// <summary>
@@ -167,7 +196,7 @@ internal static class TypeSignatureExtensions
         /// </summary>
         public TypeSignature? SzArrayElement()
         {
-            return (Helpers.AbiTypeHelpers.StripByRefAndCustomModifiers(sig) as SzArrayTypeSignature)?.BaseType;
+            return (sig.StripByRefAndCustomModifiers() as SzArrayTypeSignature)?.BaseType;
         }
     }
 
