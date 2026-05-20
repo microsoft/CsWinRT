@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 
@@ -138,6 +139,7 @@ internal sealed class MetadataCache
         foreach (NamespaceMembers members in _namespaces.Values)
         {
             static int Compare(TypeDefinition a, TypeDefinition b) => StringComparer.Ordinal.Compare(a.GetRawName(), b.GetRawName());
+
             members.Types.Sort(Compare);
             members.Interfaces.Sort(Compare);
             members.Classes.Sort(Compare);
@@ -172,22 +174,17 @@ internal sealed class MetadataCache
             }
 
             // Dedupe by full type name. Multiple input .winmd files can legitimately define types
-            // with the same full name (e.g. WindowsRuntime.Internal types appearing in both
-            // WindowsRuntime.Internal.winmd and cswinrt.winmd, or types showing up in both an SDK
-            // contract winmd and a 3rd-party WinMD that re-exports / forwards them). First-load-wins.
-            string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
-
-            if (!_typesByFullName.TryAdd(fullName, type))
+            // with the same full name (e.g. types showing up in both an SDK contract winmd and a
+            // 3rd-party WinMD that re-exports / forwards them). First-load-wins.
+            if (!_typesByFullName.TryAdd(type.FullName, type))
             {
                 continue;
             }
 
-            if (!_namespaces.TryGetValue(ns, out NamespaceMembers? members))
-            {
-                members = new NamespaceMembers(ns);
-                _namespaces[ns] = members;
-            }
+            // Avoid the double lookup: just add a default entry and initialize it here if needed
+            ref NamespaceMembers? members = ref CollectionsMarshal.GetValueRefOrAddDefault(_namespaces, ns, out _);
 
+            members ??= new NamespaceMembers(ns);
             members.AddType(type);
 
             _typeToModulePath[type] = moduleFilePath;
