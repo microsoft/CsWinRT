@@ -61,11 +61,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
         bool returnIsBlittableStruct = returnShape == AbiTypeShapeKind.BlittableStruct;
         bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSz
-            && (resolver.IsBlittableAbiElement(retSz.BaseType)
-                || retSz.BaseType.IsAbiArrayElementRefLike(resolver)
-                || resolver.IsComplexStruct(retSz.BaseType)
-                || retSz.BaseType.IsHResultException()
-                || resolver.IsMappedAbiValueType(retSz.BaseType));
+            && resolver.IsRecognizedReceiveArrayElement(retSz.BaseType);
         bool returnIsHResultException = returnShape == AbiTypeShapeKind.HResultException;
         bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
 
@@ -76,14 +72,10 @@ internal readonly record struct MethodSignatureMarshallingFacts(
 
         foreach ((_, ParameterInfo p, ParameterCategory cat) in sig.EnumerateWithCategory())
         {
-            if (!hasOutNeedsCleanup && cat == ParameterCategory.Out)
+            if (!hasOutNeedsCleanup && cat == ParameterCategory.Out
+                && resolver.RequiresOutParameterCleanup(p.Type.StripByRefAndCustomModifiers()))
             {
-                TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
-
-                if (uOut.IsAbiArrayElementRefLike(resolver) || uOut.IsSystemType() || resolver.IsComplexStruct(uOut) || uOut.IsGenericInstance())
-                {
-                    hasOutNeedsCleanup = true;
-                }
+                hasOutNeedsCleanup = true;
             }
 
             if (!hasReceiveArray && cat == ParameterCategory.ReceiveArray)
@@ -93,8 +85,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
 
             if (!hasNonBlittablePassArray && cat.IsArrayInput()
                 && p.Type is SzArrayTypeSignature szArr
-                && !resolver.IsBlittableAbiElement(szArr.BaseType)
-                && !resolver.IsMappedAbiValueType(szArr.BaseType))
+                && !resolver.IsDirectPassArrayElement(szArr.BaseType))
             {
                 hasNonBlittablePassArray = true;
             }

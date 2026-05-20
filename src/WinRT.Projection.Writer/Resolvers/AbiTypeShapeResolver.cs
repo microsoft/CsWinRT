@@ -122,6 +122,61 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         => IsBlittablePrimitive(signature) || IsBlittableStruct(signature);
 
     /// <summary>
+    /// Returns whether <paramref name="signature"/> is an SZ-array element shape that flows across the
+    /// ABI without per-element marshalling — either a blittable element (blittable primitive or
+    /// blittable struct, see <see cref="IsBlittableAbiElement"/>) or a mapped value type (e.g.
+    /// WinRT <c>DateTime</c> -&gt; <see cref="System.DateTimeOffset"/>, see <see cref="IsMappedAbiValueType"/>).
+    /// Used to gate "do we need to walk each element on input?" decisions in the array-pass paths.
+    /// </summary>
+    /// <param name="signature">The element type to classify.</param>
+    /// <returns><see langword="true"/> when the element can pass directly; otherwise <see langword="false"/>.</returns>
+    public bool IsDirectPassArrayElement(TypeSignature signature)
+        => IsBlittableAbiElement(signature) || IsMappedAbiValueType(signature);
+
+    /// <summary>
+    /// Returns whether <paramref name="signature"/> is a recognised SZ-array element shape for which
+    /// the projection has an ABI marshalling story. This is the union of all five concrete element
+    /// shapes that the receive-array paths know how to handle:
+    /// <list type="bullet">
+    ///   <item>Blittable element (primitive or blittable struct) — see <see cref="IsBlittableAbiElement"/></item>
+    ///   <item>Ref-like (string / runtime class / interface / object) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
+    ///   <item>Complex struct — see <see cref="IsComplexStruct"/></item>
+    ///   <item><see cref="System.Exception"/> (mapped from WinRT <c>HResult</c>) — see <see cref="TypeSignatureExtensions.IsHResultException"/></item>
+    ///   <item>Mapped value type (e.g. WinRT <c>DateTime</c> / <c>TimeSpan</c>) — see <see cref="IsMappedAbiValueType"/></item>
+    /// </list>
+    /// Element types outside this set (e.g. generic instances, <see cref="System.Type"/>, unresolved
+    /// references) cannot be returned as a receive-array.
+    /// </summary>
+    /// <param name="signature">The element type to classify.</param>
+    /// <returns><see langword="true"/> when the element is one of the recognised receive-array shapes; otherwise <see langword="false"/>.</returns>
+    public bool IsRecognizedReceiveArrayElement(TypeSignature signature)
+        => IsBlittableAbiElement(signature)
+            || signature.IsAbiArrayElementRefLike(this)
+            || IsComplexStruct(signature)
+            || signature.IsHResultException()
+            || IsMappedAbiValueType(signature);
+
+    /// <summary>
+    /// Returns whether <paramref name="signature"/> identifies a parameter type that, when received
+    /// via an <c>Out</c> parameter, holds a resource which the caller must release in a <c>finally</c>
+    /// block. This includes:
+    /// <list type="bullet">
+    ///   <item>SZ-array element ref-like types (HSTRING / IInspectable* slots) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
+    ///   <item><see cref="System.Type"/> (whose ABI form is an HSTRING that must be freed) — see <see cref="TypeSignatureExtensions.IsSystemType"/></item>
+    ///   <item>Complex structs (per-field cleanup via the <c>*Marshaller</c>) — see <see cref="IsComplexStruct"/></item>
+    ///   <item>Generic instances (need <c>WindowsRuntimeObjectReferenceValue</c> dispose) — see <see cref="TypeSignatureExtensions.IsGenericInstance"/></item>
+    /// </list>
+    /// Callers should pass the already-stripped parameter type (via <see cref="TypeSignatureExtensions.StripByRefAndCustomModifiers"/>).
+    /// </summary>
+    /// <param name="signature">The stripped (non-byref) parameter type to classify.</param>
+    /// <returns><see langword="true"/> when the type requires finally-block cleanup on receive; otherwise <see langword="false"/>.</returns>
+    public bool RequiresOutParameterCleanup(TypeSignature signature)
+        => signature.IsAbiArrayElementRefLike(this)
+            || signature.IsSystemType()
+            || IsComplexStruct(signature)
+            || signature.IsGenericInstance();
+
+    /// <summary>
     /// Classifies <paramref name="elementType"/> into one of the six
     /// <see cref="AbiArrayElementKind"/> values used by the per-element pointer-type ladders.
     /// This is the discriminator-only form -- callers translate the kind into the per-site
