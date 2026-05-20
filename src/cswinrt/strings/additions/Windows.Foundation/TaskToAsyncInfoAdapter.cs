@@ -828,8 +828,13 @@ namespace System.Threading.Tasks
             var cts = Interlocked.Exchange(ref _cancelTokenSource, null);
             if (cts != null && _ownsCancelTokenSource)
             {
-                try { cts.Dispose(); }
-                catch (ObjectDisposedException) { }
+                try
+                {
+                    cts.Dispose();
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
 
             _dataContainer = null;
@@ -943,8 +948,13 @@ namespace System.Threading.Tasks
                 var cts = _cancelTokenSource;
                 if (cts != null)
                 {
-                    try { cts.Cancel(); }
-                    catch (ObjectDisposedException) { }
+                    try
+                    {
+                        cts.Cancel();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
                 }
             }
         }
@@ -973,7 +983,7 @@ namespace System.Threading.Tasks
 
             TransitionToClosed();
 
-            // We just performed deterministic cleanup; no need for the finalizer to redo it.
+            // Cleanup already performed deterministically; finalizer can be skipped.
             GC.SuppressFinalize(this);
         }
 
