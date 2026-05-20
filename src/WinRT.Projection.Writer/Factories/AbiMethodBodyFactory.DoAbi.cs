@@ -514,7 +514,6 @@ internal static partial class AbiMethodBodyFactory
             // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
             // Blittable element types don't need this — the Span wraps the native buffer directly.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.FillArray))
-
             {
 
                 if (p.Type is not SzArrayTypeSignature szFA)
