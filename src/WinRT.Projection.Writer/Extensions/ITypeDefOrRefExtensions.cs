@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter;
@@ -15,6 +16,17 @@ internal static class ITypeDefOrRefExtensions
 {
     extension(ITypeDefOrRef type)
     {
+        /// <summary>
+        /// Returns the type's metadata name with any generic-arity backtick suffix stripped
+        /// (e.g. <c>"IList`1"</c> becomes <c>"IList"</c>). When the type has no name, returns
+        /// <see cref="string.Empty"/>.
+        /// </summary>
+        /// <returns>The type's stripped name.</returns>
+        public string GetStrippedName()
+        {
+            return IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
+        }
+
         /// <summary>
         /// Attempts to resolve <paramref name="type"/> against <paramref name="context"/>, returning
         /// <see langword="null"/> when the type cannot be resolved (missing assembly, invalid reference,
