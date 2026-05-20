@@ -198,10 +198,12 @@ internal static partial class AbiMethodBodyFactory
 
         writer.WriteLine();
         writer.IncreaseIndent();
-        writer.WriteLine("{");
+        writer.WriteLine(isMultiline: true, """
+            {
+                using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+                void* ThisPtr = thisValue.GetThisPtrUnsafe();
+            """);
         writer.IncreaseIndent();
-        writer.WriteLine("using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
-        writer.WriteLine("void* ThisPtr = thisValue.GetThisPtrUnsafe();");
 
         // Declare 'using' marshaller values for ref-type parameters (these need disposing).
         for (int i = 0; i < sig.Parameters.Count; i++)
@@ -439,8 +441,10 @@ internal static partial class AbiMethodBodyFactory
 
         if (needsTryFinally)
         {
-            writer.WriteLine("try");
-            writer.WriteLine("{");
+            writer.WriteLine(isMultiline: true, """
+                try
+                {
+                """);
             writer.IncreaseIndent();
         }
 
@@ -1097,8 +1101,10 @@ internal static partial class AbiMethodBodyFactory
         if (needsTryFinally)
         {
             writer.DecreaseIndent();
-            writer.WriteLine("}");
-            writer.WriteLine("finally");
+            writer.WriteLine(isMultiline: true, """
+                }
+                finally
+                """);
             using IndentedTextWriter.Block __finallyBlock = writer.WriteBlock();
 
             // Order matches truth:

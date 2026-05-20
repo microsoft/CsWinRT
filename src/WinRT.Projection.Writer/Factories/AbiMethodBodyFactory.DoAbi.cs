@@ -598,17 +598,15 @@ internal static partial class AbiMethodBodyFactory
                 }
             }
 
-            writer.WriteLine("return 0;");
             writer.DecreaseIndent();
             writer.WriteLine(isMultiline: true, """
+                    return 0;
                 }
                 catch (Exception __exception__)
                 {
+                    return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
+                }
                 """);
-            writer.IncreaseIndent();
-            writer.WriteLine("return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
-            writer.DecreaseIndent();
-            writer.WriteLine("}");
 
             // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
             bool hasNonBlittableArrayDoAbi = false;

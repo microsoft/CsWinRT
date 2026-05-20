@@ -304,8 +304,10 @@ internal static partial class ConstructorFactory
 
         if (hasNonBlittableArray)
         {
-            writer.WriteLine("try");
-            writer.WriteLine("{");
+            writer.WriteLine(isMultiline: true, """
+                try
+                {
+                """);
             writer.IncreaseIndent();
         }
 
@@ -401,8 +403,10 @@ internal static partial class ConstructorFactory
                 }
             }
 
-            writer.WriteLine(")");
-            writer.WriteLine("{");
+            writer.WriteLine(isMultiline: true, """
+                )
+                {
+                """);
             writer.IncreaseIndent();
             fixedNesting = 1;
 
