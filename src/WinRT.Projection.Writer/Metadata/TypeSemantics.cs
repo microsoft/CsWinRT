@@ -117,12 +117,6 @@ internal abstract record TypeSemantics
     public sealed record GenericMethodIndex(int Index) : TypeSemantics;
 
     /// <summary>
-    /// A bound generic parameter token (rare; appears in nested generics).
-    /// </summary>
-    /// <param name="Parameter">The generic parameter.</param>
-    public sealed record BoundGenericParameter(GenericParameter Parameter) : TypeSemantics;
-
-    /// <summary>
     /// A reference to a type defined in another assembly.
     /// </summary>
     /// <param name="Type">The type reference.</param>
@@ -301,27 +295,4 @@ internal static class FundamentalTypes
         _ => "object"
     };
 
-    /// <summary>
-    /// Returns the .NET reflection short name for <paramref name="t"/> (e.g. <c>"Int32"</c>,
-    /// <c>"String"</c>), or <c>"Object"</c> for unrecognized cases.
-    /// </summary>
-    /// <param name="t">The fundamental type to format.</param>
-    /// <returns>The .NET reflection short name.</returns>
-    public static string ToDotNetType(FundamentalType t) => t switch
-    {
-        FundamentalType.Boolean => "Boolean",
-        FundamentalType.Char => "Char",
-        FundamentalType.Int8 => "SByte",
-        FundamentalType.UInt8 => "Byte",
-        FundamentalType.Int16 => "Int16",
-        FundamentalType.UInt16 => "UInt16",
-        FundamentalType.Int32 => "Int32",
-        FundamentalType.UInt32 => "UInt32",
-        FundamentalType.Int64 => "Int64",
-        FundamentalType.UInt64 => "UInt64",
-        FundamentalType.Float => "Single",
-        FundamentalType.Double => "Double",
-        FundamentalType.String => "String",
-        _ => "Object"
-    };
 }

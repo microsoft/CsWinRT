@@ -224,12 +224,4 @@ internal sealed class MetadataCache
         (string ns, string name) = type.Names();
         return Find(ns, name);
     }
-
-    /// <summary>
-    /// Gets a type by full name, throwing if not found.
-    /// </summary>
-    public TypeDefinition FindRequired(string fullName)
-    {
-        return Find(fullName) ?? throw WellKnownProjectionWriterExceptions.CannotResolveType(fullName);
-    }
 }

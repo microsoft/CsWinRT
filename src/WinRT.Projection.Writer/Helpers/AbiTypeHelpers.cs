@@ -76,15 +76,6 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>
-    /// Returns the local-variable name for the return parameter on the server side.
-    /// <c>abi_marshaler::get_marshaler_local()</c> which prefixes <c>__</c> to the param name.
-    /// </summary>
-    public static string GetReturnLocalName(MethodSignatureInfo sig)
-    {
-        return "__" + GetReturnParamName(sig);
-    }
-
-    /// <summary>
     /// Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.
     /// </summary>
     public static string GetReturnSizeParamName(MethodSignatureInfo sig)

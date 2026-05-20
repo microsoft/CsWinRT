@@ -507,14 +507,6 @@ internal sealed partial class IndentedTextWriter
     public char Back() => _buffer.Length == 0 ? '\0' : _buffer[^1];
 
     /// <summary>
-    /// Returns the contents of a substring of the buffer (used for capture-and-restore patterns).
-    /// </summary>
-    /// <param name="startIndex">The starting position.</param>
-    /// <param name="length">The length of the substring to return.</param>
-    /// <returns>The substring of the buffer at the requested position.</returns>
-    public string GetSubstring(int startIndex, int length) => _buffer.ToString(startIndex, length);
-
-    /// <summary>
     /// Removes a range of characters from the buffer.
     /// </summary>
     /// <param name="startIndex">The starting position to remove.</param>
@@ -577,17 +569,6 @@ internal sealed partial class IndentedTextWriter
 
         File.WriteAllText(path, content);
         _ = _buffer.Clear();
-    }
-
-    /// <summary>
-    /// Flushes the current buffer contents to a string (without trimming) and clears the buffer.
-    /// </summary>
-    /// <returns>The full buffer contents, untrimmed.</returns>
-    public string FlushToString()
-    {
-        string text = _buffer.ToString();
-        _ = _buffer.Clear();
-        return text;
     }
 
     /// <summary>

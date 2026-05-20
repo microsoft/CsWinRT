@@ -32,15 +32,5 @@ internal static class ParameterCategoryExtensions
         {
             return category is ParameterCategory.In or ParameterCategory.Ref;
         }
-
-        /// <summary>
-        /// Returns whether the input category is any of the array-shaped categories
-        /// (<see cref="ParameterCategory.PassArray"/>, <see cref="ParameterCategory.FillArray"/>,
-        /// or <see cref="ParameterCategory.ReceiveArray"/>).
-        /// </summary>
-        public bool IsAnyArray()
-        {
-            return category is ParameterCategory.PassArray or ParameterCategory.FillArray or ParameterCategory.ReceiveArray;
-        }
     }
 }

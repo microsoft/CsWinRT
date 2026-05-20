@@ -44,14 +44,4 @@ internal static class ProjectionNames
     /// </summary>
     public const string IID = "IID";
 
-    /// <summary>
-    /// The C# void-pointer keyword form (<c>"void*"</c>).
-    /// </summary>
-    public const string VoidPointer = "void*";
-
-    /// <summary>
-    /// The default placeholder name used for a method's return parameter when the
-    /// metadata does not declare one explicitly (<c>"__return_value__"</c>).
-    /// </summary>
-    public const string DefaultReturnParameterName = "__return_value__";
 }

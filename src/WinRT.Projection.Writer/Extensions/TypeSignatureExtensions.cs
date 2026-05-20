@@ -196,16 +196,6 @@ internal static class TypeSignatureExtensions
         {
             return sig.StripByRefAndCustomModifiers() as SzArrayTypeSignature;
         }
-
-        /// <summary>
-        /// Returns the element type of the underlying SZ-array (after stripping byref +
-        /// custom modifiers), or <see langword="null"/> if the underlying type is not an
-        /// <see cref="SzArrayTypeSignature"/>.
-        /// </summary>
-        public TypeSignature? SzArrayElement()
-        {
-            return (sig.StripByRefAndCustomModifiers() as SzArrayTypeSignature)?.BaseType;
-        }
     }
 
     extension([NotNullWhen(true)] TypeSignature? sig)

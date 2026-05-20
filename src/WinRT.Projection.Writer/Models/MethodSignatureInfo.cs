@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
@@ -92,14 +91,6 @@ internal sealed class MethodSignatureInfo
             }
         }
     }
-
-    /// <summary>
-    /// Returns the name of the return parameter, or <paramref name="defaultName"/> if there is none.
-    /// </summary>
-    /// <param name="defaultName">The default name to use when no return parameter is declared.</param>
-    /// <returns>The return parameter name (or default).</returns>
-    public string ReturnParameterName(string defaultName = ProjectionNames.DefaultReturnParameterName)
-        => ReturnParameter?.Name?.Value ?? defaultName;
 
     /// <summary>
     /// Bundles the three derived return-parameter names commonly needed during marshalling code
