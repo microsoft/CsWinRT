@@ -80,27 +80,30 @@ internal static partial class ConstructorFactory
             
                 [MethodImpl(MethodImplOptions.NoInlining)]
             """);
+
+        writer.IncreaseIndent();
+
         if (isComposable)
         {
             // Composable Invoke signature is multi-line and includes baseInterface (in) +
             // innerInterface (out).
             writer.WriteLine(isMultiline: true, """
-                    public override unsafe void Invoke(
-                      WindowsRuntimeActivationArgsReference additionalParameters,
-                      WindowsRuntimeObject baseInterface,
-                      out void* innerInterface,
-                      out void* retval)
-                    {
+                public override unsafe void Invoke(
+                  WindowsRuntimeActivationArgsReference additionalParameters,
+                  WindowsRuntimeObject baseInterface,
+                  out void* innerInterface,
+                  out void* retval)
+                {
                 """);
         }
         else
         {
             // Sealed Invoke signature is multi-line..
             writer.WriteLine(isMultiline: true, """
-                    public override unsafe void Invoke(
-                      WindowsRuntimeActivationArgsReference additionalParameters,
-                      out void* retval)
-                    {
+                public override unsafe void Invoke(
+                  WindowsRuntimeActivationArgsReference additionalParameters,
+                  out void* retval)
+                {
                 """);
         }
 
@@ -112,11 +115,12 @@ internal static partial class ConstructorFactory
         }
 
         writer.IncreaseIndent();
-        writer.IncreaseIndent();
 
-        writer.WriteLine($"using WindowsRuntimeObjectReferenceValue activationFactoryValue = {factoryObjRefName}.AsValue();");
-        writer.WriteLine("void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();");
-        writer.WriteLine($"ref readonly {argsName} args = ref additionalParameters.GetValueRefUnsafe<{argsName}>();");
+        writer.WriteLine(isMultiline: true, $$"""
+            using WindowsRuntimeObjectReferenceValue activationFactoryValue = {{factoryObjRefName}}.AsValue();
+            void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
+            ref readonly {{argsName}} args = ref additionalParameters.GetValueRefUnsafe<{{argsName}}>();
+            """);
 
         // Bind each arg from the args struct to a local of its ABI-marshalable input type.
         // Bind arg locals.
@@ -168,9 +172,11 @@ internal static partial class ConstructorFactory
 
             string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
             WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
-            writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
-            writer.WriteLine($"static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{raw}([UnsafeAccessorType(\"{interopTypeName}\")] object _, {projectedTypeName} value);");
-            writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = ConvertToUnmanaged_{raw}(null, {pname});");
+            writer.WriteLine(isMultiline: true, $$"""
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
+                using WindowsRuntimeObjectReferenceValue __{{raw}} = ConvertToUnmanaged_{{raw}}(null, {{pname}});
+                """);
         }
 
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
@@ -266,26 +272,30 @@ internal static partial class ConstructorFactory
             string callName = IdentifierEscaping.EscapeIdentifier(raw);
             ArrayTempNames names = new(raw);
             writer.WriteLine();
-            writer.WriteLine($"Unsafe.SkipInit(out InlineArray16<nint> {names.InlineArray});");
-            writer.WriteLine($"nint[] {names.ArrayFromPool} = null;");
-            writer.WriteLine($"Span<nint> {names.Span} = {callName}.Length <= 16");
-            writer.WriteLine($"    ? {names.InlineArray}[..{callName}.Length]");
-            writer.WriteLine($"    : ({names.ArrayFromPool} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({callName}.Length));");
+            writer.WriteLine(isMultiline: true, $$"""
+                Unsafe.SkipInit(out InlineArray16<nint> {{names.InlineArray}});
+                nint[] {{names.ArrayFromPool}} = null;
+                Span<nint> {{names.Span}} = {{callName}}.Length <= 16
+                    ? {{names.InlineArray}}[..{{callName}}.Length]
+                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                """);
 
             if (szArr.BaseType.IsString())
             {
                 writer.WriteLine();
-                writer.WriteLine($"Unsafe.SkipInit(out InlineArray16<HStringHeader> {names.InlineHeaderArray});");
-                writer.WriteLine($"HStringHeader[] {names.HeaderArrayFromPool} = null;");
-                writer.WriteLine($"Span<HStringHeader> {names.HeaderSpan} = {callName}.Length <= 16");
-                writer.WriteLine($"    ? {names.InlineHeaderArray}[..{callName}.Length]");
-                writer.WriteLine($"    : ({names.HeaderArrayFromPool} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({callName}.Length));");
-                writer.WriteLine();
-                writer.WriteLine($"Unsafe.SkipInit(out InlineArray16<nint> {names.InlinePinnedHandleArray});");
-                writer.WriteLine($"nint[] {names.PinnedHandleArrayFromPool} = null;");
-                writer.WriteLine($"Span<nint> {names.PinnedHandleSpan} = {callName}.Length <= 16");
-                writer.WriteLine($"    ? {names.InlinePinnedHandleArray}[..{callName}.Length]");
-                writer.WriteLine($"    : ({names.PinnedHandleArrayFromPool} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({callName}.Length));");
+                writer.WriteLine(isMultiline: true, $$"""
+                    Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
+                    HStringHeader[] {{names.HeaderArrayFromPool}} = null;
+                    Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
+                        ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
+                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+
+                    Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
+                    nint[] {{names.PinnedHandleArrayFromPool}} = null;
+                    Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
+                        ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
+                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                    """);
             }
         }
 
@@ -439,18 +449,22 @@ internal static partial class ConstructorFactory
 
             if (szArr.BaseType.IsString())
             {
-                writer.WriteLine("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(");
-                writer.WriteLine($"    source: {pname},");
-                writer.WriteLine($"    hstringHeaders: (HStringHeader*) _{raw}_inlineHeaderArray,");
-                writer.WriteLine($"    hstrings: {names.Span},");
-                writer.WriteLine($"    pinnedGCHandles: {names.PinnedHandleSpan});");
+                writer.WriteLine(isMultiline: true, $$"""
+                    HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
+                        source: {{pname}},
+                        hstringHeaders: (HStringHeader*) _{{raw}}_inlineHeaderArray,
+                        hstrings: {{names.Span}},
+                        pinnedGCHandles: {{names.PinnedHandleSpan}});
+                    """);
             }
             else
             {
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
-                writer.WriteLine($"static extern void CopyToUnmanaged_{raw}([UnsafeAccessorType(\"{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}\")] object _, ReadOnlySpan<{elementProjected}> span, uint length, void** data);");
-                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, (void**)_{raw});");
+                writer.WriteLine(isMultiline: true, $$"""
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                    static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, void** data);
+                    CopyToUnmanaged_{{raw}}(null, {{pname}}, (uint){{pname}}.Length, (void**)_{{raw}});
+                    """);
             }
         }
 
@@ -568,9 +582,11 @@ internal static partial class ConstructorFactory
         if (hasNonBlittableArray)
         {
             writer.DecreaseIndent();
-            writer.WriteLine("}");
-            writer.WriteLine("finally");
-            writer.WriteLine("{");
+            writer.WriteLine(isMultiline: true, """
+                }
+                finally
+                {
+                """);
             writer.IncreaseIndent();
             for (int i = 0; i < paramCount; i++)
             {
@@ -617,10 +633,12 @@ internal static partial class ConstructorFactory
                 else
                 {
                     writer.WriteLine();
-                    writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]");
-                    writer.WriteLine($"static extern void Dispose_{raw}([UnsafeAccessorType(\"{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}\")] object _, uint length, void** data);");
-                    writer.WriteLine();
-                    writer.WriteLine($"fixed(void* _{raw} = {names.Span})");
+                    writer.WriteLine(isMultiline: true, $$"""
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+                        static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
+
+                        fixed(void* _{{raw}} = {{names.Span}})
+                        """);
                     writer.WriteLine("{");
                     writer.IncreaseIndent();
                     writer.WriteLine($"Dispose_{raw}(null, (uint) {names.Span}.Length, (void**)_{raw});");
@@ -640,11 +658,9 @@ internal static partial class ConstructorFactory
         }
 
         writer.DecreaseIndent();
+        writer.WriteLine("}");
         writer.DecreaseIndent();
-        writer.WriteLine(isMultiline: true, """
-                }
-            }
-            """);
+        writer.WriteLine("}");
     }
 
     /// <summary>
