@@ -48,6 +48,7 @@ internal static class AbiTypeWriter
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
                     (string dNs, string dName) = d.Type.Names();
+
                     // Special case: mapped value types that require ABI marshalling
                     // (DateTime/TimeSpan -> ABI.System.DateTimeOffset/TimeSpan).
                     if (dNs == WindowsFoundation && dName == "DateTime")
@@ -77,6 +78,7 @@ internal static class AbiTypeWriter
                     }
 
                     TypeSignature dts = d.Type.ToTypeSignature();
+
                     // "Almost-blittable" structs (with bool/char fields but no reference-type
                     // fields) can pass through using the projected type since the C# layout
                     // matches the WinRT ABI directly. Truly complex structs (with string/object/
@@ -97,11 +99,13 @@ internal static class AbiTypeWriter
 
                 break;
             case TypeSemantics.Reference r:
+
                 // Cross-module typeref: try resolving the type, applying mapped-type translation
                 // for the field/parameter type after resolution.
                 if (context.Cache is not null)
                 {
                     (string rns, string rname) = r.Type.Names();
+
                     // Special case: mapped value types that require ABI marshalling.
                     if (rns == WindowsFoundation && rname == "DateTime")
                     {
@@ -123,6 +127,7 @@ internal static class AbiTypeWriter
 
                     // Look up the type by its ORIGINAL (unmapped) name in the cache.
                     TypeDefinition? rd = context.Cache.Find(rns, rname);
+
                     // If not found, try the mapped name (for cases where the mapping target is in the cache).
                     if (rd is null)
                     {

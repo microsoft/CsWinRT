@@ -387,6 +387,7 @@ internal static class ObjRefNameGenerator
         {
             // Sealed-class default interface: simple expression-bodied property pointing at NativeObjectReference.
             writer.WriteLine($"private WindowsRuntimeObjectReference {objRefName} => NativeObjectReference;");
+
             // Emit the unsafe accessor AFTER the field so it can be used to pass the IID in the
             // constructor for the default interface.
             if (gi is not null)

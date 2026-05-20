@@ -55,6 +55,7 @@ internal static class EventTableFactory
     internal static void EmitDoAbiAddEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSignatureInfo sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
+
         // Handler is the (last) input parameter of the add method. The emitted parameter name in the
         // signature comes from WriteAbiParameterTypesPointer which uses the metadata name verbatim.
         string handlerRawName = sig.Parameters.Count > 0 ? (sig.Parameters[^1].Parameter.Name ?? "handler") : "handler";

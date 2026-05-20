@@ -20,12 +20,14 @@ internal static partial class ClassMembersFactory
     public static void WriteClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         HashSet<string> writtenMethods = [];
+
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
         // Use insertion-order Dictionary so the per-class property emission order matches the
         // .winmd metadata definition order order).
         Dictionary<string, PropertyAccessorState> propertyState = [];
         HashSet<string> writtenEvents = [];
         HashSet<TypeDefinition> writtenInterfaces = [];
+
         // interface inside WriteInterfaceMembersRecursive (right before that interface's
         // members), instead of one upfront block. This interleaves the GetInterface() impls
         // with their corresponding interface body, matching truth's per-interface layout.
@@ -35,6 +37,7 @@ internal static partial class ClassMembersFactory
         foreach (KeyValuePair<string, PropertyAccessorState> kvp in propertyState)
         {
             PropertyAccessorState s = kvp.Value;
+
             // For generic-interface properties, emit the UnsafeAccessor static externs above the
             // property declaration. Note: getter and setter use the same accessor name (because
             // C# allows method overloading on parameter list for the static externs).
@@ -57,10 +60,12 @@ internal static partial class ClassMembersFactory
             }
 
             writer.WriteLine();
+
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
             string propertyPlat = string.Empty;
+
             // If both accessor platform attributes are equal, collapse them to a single
             // property-level attribute. For getter-only or setter-only properties only one side
             // is set; compare the relevant side.
@@ -77,6 +82,7 @@ internal static partial class ClassMembersFactory
             writer.WriteIf(!string.IsNullOrEmpty(propertyPlat), propertyPlat);
 
             writer.Write($"{s.Access}{s.MethodSpec}{s.PropTypeText} {kvp.Key}");
+
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
             // In ref mode, all property bodies emit '=> throw null;'

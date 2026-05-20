@@ -65,6 +65,7 @@ internal sealed partial class ProjectionGenerator
         IndentedTextWriter guidIndented = guidIndentedOwner.Writer;
         IidExpressionGenerator.WriteInterfaceIidsBegin(guidIndented);
         guidIndented.IncreaseIndent();
+
         // Iterate namespaces in sorted order. Within each namespace, types are already sorted by SortMembersByName.
         // The sorted-by-namespace order produces the parent-before-child grouping in the
         // GeneratedInterfaceIIDs.cs output (e.g. Windows.ApplicationModel.* types before

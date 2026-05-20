@@ -42,6 +42,7 @@ internal static partial class ConstructorFactory
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         defaultIfaceObjRef = defaultIface is not null ? ObjRefNameGenerator.GetObjRefName(context, defaultIface) : string.Empty;
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
+
         // Compute the platform attribute string from the composable factory interface's
         // [ContractVersion] attribute
         string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, composableType);
@@ -61,6 +62,7 @@ internal static partial class ConstructorFactory
             // For the constructor on the projected class, we exclude the trailing two params.
             MethodSignatureInfo sig = new(method);
             int userParamCount = sig.Parameters.Count >= 2 ? sig.Parameters.Count - 2 : sig.Parameters.Count;
+
             // the callback / args type name suffix is the TOTAL ABI param count
             // (size(method.Signature().Parameters())), NOT the user-visible param count. Using the
             // total count guarantees uniqueness against other composable factory overloads that

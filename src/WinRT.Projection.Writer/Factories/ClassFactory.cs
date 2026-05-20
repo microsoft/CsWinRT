@@ -313,6 +313,7 @@ internal static class ClassFactory
 
         // Per-property accessor state (origin tracking for getter/setter)
         Dictionary<string, StaticPropertyAccessorState> properties = [];
+
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
         HashSet<string> emittedObjRefs = [];
 
@@ -331,6 +332,7 @@ internal static class ClassFactory
 
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
+
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
             string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true).Format();
 
@@ -434,6 +436,7 @@ internal static class ClassFactory
         {
             StaticPropertyAccessorState s = kv.Value;
             writer.WriteLine();
+
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -450,6 +453,7 @@ internal static class ClassFactory
             writer.WriteIf(!string.IsNullOrEmpty(propertyPlat), propertyPlat);
 
             writer.Write($"public static {s.PropTypeText} {kv.Key}");
+
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
             // In ref mode, all accessor bodies emit '=> throw null;'
             bool getterOnly = s.HasGetter && !s.HasSetter;
@@ -573,6 +577,7 @@ internal static class ClassFactory
         WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
         WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
         WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+
         // are emitted as plain (non-partial) classes.
         string modifiers = TypeCategorization.IsStatic(type) ? "static " : type.IsSealed ? "sealed " : "";
         WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);

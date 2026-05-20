@@ -56,10 +56,12 @@ internal static partial class AbiMethodBodyFactory
             MethodSignatureInfo.ReturnNameInfo retNames = sig.GetReturnNameInfo();
             string retParamName = retNames.ValuePointer;
             string retSizeParamName = retNames.SizePointer;
+
             // The local name for the unmarshalled return value uses the standard pattern
             // of prefixing '__' to the param name. For the default '__return_value__' param
             // this becomes '____return_value__'.
             string retLocalName = retNames.Local;
+
             // at the TOP of the method body (before local declarations and the try block). The
             // actual call sites later in the body just reference the already-declared accessor.
             // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
@@ -177,6 +179,7 @@ internal static partial class AbiMethodBodyFactory
             {
 
                 string raw = p.GetRawName();
+
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
@@ -268,6 +271,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+
                 // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
                 // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
                 // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
@@ -447,6 +451,7 @@ internal static partial class AbiMethodBodyFactory
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 string rhs;
+
                 // String: HStringMarshaller.ConvertToUnmanaged
                 if (underlying.IsString())
                 {
@@ -523,6 +528,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
+
                 // Determine the ABI element type for the data pointer cast (e.g. "void*" for
                 // ref-like elements -> "void** data"/"(void**)", or "global::ABI.Foo.Bar" for
                 // complex structs -> "global::ABI.Foo.Bar* data"/"(global::ABI.Foo.Bar*)").

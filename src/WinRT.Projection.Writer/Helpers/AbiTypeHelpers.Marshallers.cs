@@ -29,6 +29,7 @@ internal static partial class AbiTypeHelpers
         ITypeDefOrRef gt = gi.GenericType;
         string ns = gt?.Namespace?.Value ?? string.Empty;
         string name = gt?.Name?.Value ?? string.Empty;
+
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
         // It only later gets projected to System.Nullable<T> by the projection layer.
         bool isNullable = (ns == "System" && name == NullableGeneric)
@@ -45,6 +46,7 @@ internal static partial class AbiTypeHelpers
         }
 
         TypeSignature arg = gi.TypeArguments[0];
+
         // Map primitive corlib element type to its ABI marshaller name.
         if (arg is CorLibTypeSignature corlib)
         {
@@ -141,6 +143,7 @@ internal static partial class AbiTypeHelpers
         {
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
+
             // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
             _ = MappedTypes.ApplyMapping(ref ns, ref name);
 

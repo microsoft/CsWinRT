@@ -26,6 +26,7 @@ internal static class ArrayElementEncoder
         // but inside the array brackets the interop generator uses the depth=0 form (assembly + just name).
         // Re-encode the element with the top-level form for accurate matching.
         string topLevelElement = EncodeArrayElementName(elementType);
+
         // Resolve the element's namespace to determine the path prefix.
         string ns = AbiTypeHelpers.GetMappedNamespace(elementType);
 
@@ -82,6 +83,7 @@ internal static class ArrayElementEncoder
     private static void EncodeArrayElementForTypeDef(StringBuilder sb, ITypeDefOrRef type, IList<TypeSignature>? generic_args)
     {
         (string typeNs, string typeName) = type.Names();
+
         // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
 
@@ -98,6 +100,7 @@ internal static class ArrayElementEncoder
         // types resolve to their actual assembly name (e.g. <AuthoringTest>) instead of
         // defaulting to <#Windows>.
         _ = sb.Append(InteropTypeNameWriter.GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+
         // Top-level: just the type name (no namespace).
         _ = sb.Append(typeName);
 

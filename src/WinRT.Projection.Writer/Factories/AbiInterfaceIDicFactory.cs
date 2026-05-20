@@ -91,6 +91,7 @@ internal static class AbiInterfaceIDicFactory
                 // Emit explicit-interface DIM forwarders for the BCL members so the DIC shim
                 // satisfies them when queried via casts like '((IList)(WindowsRuntimeObject)this)'.
                 EmitDicShimMappedBclForwarders(writer, context, rName);
+
                 // IBindableVector's IList forwarders already include the IEnumerable.GetEnumerator
                 // forwarder (since IList : IEnumerable). Pre-add IBindableIterable to the visited
                 // set so we don't emit a second GetEnumerator forwarder for it. We also walk the
@@ -113,6 +114,7 @@ internal static class AbiInterfaceIDicFactory
                     string keyText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true).Format();
                     string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
+
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
                     required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
@@ -315,12 +317,14 @@ internal static class AbiInterfaceIDicFactory
         switch (mappedWinRTInterfaceName)
         {
             case "IClosable":
+
                 // IClosable maps to IDisposable. Forward Dispose() to the
                 // WindowsRuntimeObject base which has the actual implementation.
                 writer.WriteLine();
                 writer.WriteLine("void global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();");
                 break;
             case "IBindableVector":
+
                 // IList covers IList, ICollection, and IEnumerable members.
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, """

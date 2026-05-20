@@ -155,6 +155,7 @@ internal static class InteropTypeNameWriter
 
             _ = sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
             _ = sb.Append(arity.ToString(CultureInfo.InvariantCulture));
+
             // Append the generic args (if any).
             if (generic_args is { Count: > 0 })
             {

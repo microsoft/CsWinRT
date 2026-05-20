@@ -138,6 +138,7 @@ internal static class CustomAttributeFactory
             float f => f.ToString("R", CultureInfo.InvariantCulture) + "f",
             double d => d.ToString("R", CultureInfo.InvariantCulture),
             char c => "'" + c + "'",
+
             // Always prepend 'global::' to typeof() arguments: when the generated file's namespace
             // context happens to contain a 'Windows' sub-namespace (e.g. 'TestComponentCSharp.Windows.*'),
             // an unqualified 'Windows.Foundation.X' would resolve to 'TestComponentCSharp.Windows.Foundation.X'

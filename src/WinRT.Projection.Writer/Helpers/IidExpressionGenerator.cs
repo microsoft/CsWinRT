@@ -69,6 +69,7 @@ internal static partial class IidExpressionGenerator
         ushort data3 = (ushort)(bytes[6] | (bytes[7] << 8));
 
         string fmt = lowerCase ? "x" : "X";
+
         // Format: %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x
         writer.Write($"{data1.ToString(fmt + "8", CultureInfo.InvariantCulture)}-{data2.ToString(fmt + "4", CultureInfo.InvariantCulture)}-{data3.ToString(fmt + "4", CultureInfo.InvariantCulture)}-");
 
@@ -297,6 +298,7 @@ internal static partial class IidExpressionGenerator
             }
 
             (string ns, string nm) = ifaceType.Names();
+
             // Skip mapped types
             if (MappedTypes.Get(ns, nm) is not null)
             {

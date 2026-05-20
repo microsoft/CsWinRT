@@ -97,6 +97,7 @@ internal static class AttributedTypes
         for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
         {
             CustomAttributeArgument arg = attr.Signature.FixedArguments[i];
+
             // For System.Type args in WinMD, the value is typically a TypeSignature
             if (arg.Element is TypeSignature sig)
             {

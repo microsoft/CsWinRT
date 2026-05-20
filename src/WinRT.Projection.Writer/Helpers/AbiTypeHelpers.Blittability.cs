@@ -81,6 +81,7 @@ internal static partial class AbiTypeHelpers
         {
             string fNs = todr.Type?.Namespace?.Value ?? string.Empty;
             string fName = todr.Type?.Name?.Value ?? string.Empty;
+
             // System.Guid is a fundamental blittable type .
             // Same applies to System.IntPtr / UIntPtr (used in some struct layouts).
             if (fNs == "System" && (fName is "Guid" or "IntPtr" || fName == "UIntPtr"))

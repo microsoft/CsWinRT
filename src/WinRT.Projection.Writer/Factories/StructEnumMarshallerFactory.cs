@@ -41,13 +41,16 @@ internal static class StructEnumMarshallerFactory
     {
         string nameStripped = type.GetStrippedName();
         TypeCategory cat = TypeCategorization.GetCategory(type);
+
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
         bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeShapeResolver.IsBlittableStruct(sig));
         bool isEnum = cat == TypeCategory.Enum;
+
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
         bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
+
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
         bool hasReferenceFields = false;
@@ -140,6 +143,7 @@ internal static class StructEnumMarshallerFactory
                     writer.Write($"value.{fname}");
                 }
             }
+
             // - In component mode: emit object initializer with named field assignments
             //   (positional ctor not always available on authored types).
             // - In non-component mode: emit positional constructor (matches the auto-generated
@@ -333,6 +337,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 """);
             writer.WriteLine();
+
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
             if (context.Settings.Component && cat == TypeCategory.Struct)

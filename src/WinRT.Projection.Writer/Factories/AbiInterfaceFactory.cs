@@ -158,6 +158,7 @@ internal static class AbiInterfaceFactory
             writer.Write(", ");
             string retName = AbiTypeHelpers.GetReturnParamName(sig);
             string retSizeName = AbiTypeHelpers.GetReturnSizeParamName(sig);
+
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
             if (sig.ReturnType is SzArrayTypeSignature retSz)
             {
@@ -473,6 +474,7 @@ internal static class AbiInterfaceFactory
     private static void WriteInterfaceMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
+
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
         bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
@@ -535,6 +537,7 @@ internal static class AbiInterfaceFactory
         if (isFastAbiDefault)
         {
             int slot = InspectableMethodCount;
+
             // Default interface: skip its events (they're inlined in the RCW class).
             segments.Add((type, slot, true));
             slot += AbiTypeHelpers.CountMethods(type) + AbiTypeHelpers.GetClassHierarchyIndex(context.Cache, fastAbi!.Value.Class);

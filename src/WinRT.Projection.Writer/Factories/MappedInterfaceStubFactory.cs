@@ -182,11 +182,13 @@ internal static class MappedInterfaceStubFactory
 
         string k = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string v = WriteTypeNameToString(context, args[1], TypedefNameType.Projected, true);
+
         // Truth uses two forms for KeyValuePair:
         // - 'kv' (unqualified) for plain type usages: parameters, field/return types
         // - 'kvNested' (fully qualified) for generic argument usages (inside IEnumerator<>, ICollection<>)
         string kv = $"KeyValuePair<{k}, {v}>";
         string kvNested = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+
         // Long form (always fully qualified) used for objref field-name computation
         // (matches the form WriteClassObjRefDefinitions emits transitively).
         string kvLong = kvNested;
@@ -196,6 +198,7 @@ internal static class MappedInterfaceStubFactory
         string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
+
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
         string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
 
@@ -429,6 +432,7 @@ internal static class MappedInterfaceStubFactory
             public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({{objRefName}}, index);
             public void CopyTo(Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({{objRefName}}, array, index);
             """);
+
         // GetEnumerator is NOT emitted here -- it's handled separately by IBindableIterable's
         // EmitNonGenericEnumerable invocation.
     }

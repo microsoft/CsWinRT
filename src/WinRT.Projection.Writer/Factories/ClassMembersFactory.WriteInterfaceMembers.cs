@@ -170,6 +170,7 @@ internal static partial class ClassMembersFactory
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
+
         // Determine accessibility and method modifier.
         // Overridable interfaces are emitted with 'protected' visibility, plus 'virtual' on
         // non-sealed classes. Sealed classes still get 'protected' (without virtual).
@@ -251,6 +252,7 @@ internal static partial class ClassMembersFactory
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
             string name = method.GetRawName();
+
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
             MethodSignatureInfo sig = new(method, genericContext);
@@ -519,6 +521,7 @@ internal static partial class ClassMembersFactory
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
             writer.WriteLine();
+
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
             writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);

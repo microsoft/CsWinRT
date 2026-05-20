@@ -75,6 +75,7 @@ internal static class ComponentFactory
         foreach (TypeDefinition iface in factoryInterfaces)
         {
             writer.Write(", ");
+
             // CCW + non-forced namespace is the user-facing interface name (e.g. 'IButtonUtilsStatic').
             TypedefNameWriter.WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
             TypedefNameWriter.WriteTypeParams(writer, iface);
@@ -340,6 +341,7 @@ internal static class ComponentFactory
                 switch (activatableClassId)
                 {
                 """);
+
             // Sort by the type's metadata token / row index so cases appear in WinMD declaration order.
             List<TypeDefinition> orderedTypes = [.. kv.Value];
             orderedTypes.Sort((a, b) =>

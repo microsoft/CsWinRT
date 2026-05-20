@@ -63,6 +63,7 @@ internal static class InterfaceFactory
         if (hasNonObjectBase)
         {
             writer.Write(delimiter);
+
             // Same-namespace types stay unqualified (e.g. 'AppointmentActionEntity : ActionEntity'):
             // only emit 'global::' when the base class lives in a different namespace.
             ITypeDefOrRef baseType = type.BaseType!;
@@ -221,6 +222,7 @@ internal static class InterfaceFactory
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
             MethodSignatureInfo sig = new(method);
+
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
@@ -232,6 +234,7 @@ internal static class InterfaceFactory
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
             // Add 'new' when this interface has a setter-only property AND a property of the same
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
@@ -350,6 +353,7 @@ internal static class InterfaceFactory
             }
 
             writer.Write($"[global::Windows.Foundation.Metadata.{baseName}");
+
             // Args: only handle string args (sufficient for [Overload(@"X")]). [DefaultOverload] has none.
             if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
             {

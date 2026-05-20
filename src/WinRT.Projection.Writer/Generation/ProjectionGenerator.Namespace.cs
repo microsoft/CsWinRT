@@ -115,6 +115,7 @@ internal sealed partial class ProjectionGenerator
             }
 
             (string ns2, string nm2) = type.Names();
+
             // Skip generic types and mapped types
             if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
             {

@@ -327,6 +327,7 @@ internal static partial class AbiMethodBodyFactory
             SzArrayTypeSignature sza = p.Type.AsSzArray()!;
             writer.WriteLine($"uint __{localName}_length = default;");
             writer.WriteLine();
+
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
             string elemAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
@@ -622,6 +623,7 @@ internal static partial class AbiMethodBodyFactory
             writer.WriteLine("{");
             fixedNesting++;
             writer.IncreaseIndent();
+
             // Inside the body: emit HStringMarshaller calls for input string params.
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
@@ -707,6 +709,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+
                 // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
                 // element is the ABI struct type; the data pointer parameter type uses that
                 // ABI struct. The fixed() opens with void* (per truth's pattern), so a cast
@@ -898,6 +901,7 @@ internal static partial class AbiMethodBodyFactory
             string localName = p.GetParamLocalName(paramNameOverride);
             ArrayTempNames names = new(localName);
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
+
             // Determine the ABI element type for the data pointer parameter (e.g. "void*" for
             // ref-like elements -> "void** data"/"(void**)", or "global::ABI.Foo.Bar" for complex
             // structs -> "global::ABI.Foo.Bar* data"/"(global::ABI.Foo.Bar*)").
@@ -991,6 +995,7 @@ internal static partial class AbiMethodBodyFactory
             string localName = p.GetParamLocalName(paramNameOverride);
             SzArrayTypeSignature sza = p.Type.AsSzArray()!;
             WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
+
             // Element ABI type for the `data` parameter (void* for ref types, ABI struct for
             // complex structs, blittable struct ABI for blittable structs, primitive ABI otherwise).
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
@@ -1301,6 +1306,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string localName = p.GetParamLocalName(paramNameOverride);
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
+
                 // Element ABI type: same dispatch as the ConvertToManaged_<name> path.
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
@@ -1354,6 +1360,7 @@ internal static partial class AbiMethodBodyFactory
     internal static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p, string? paramNameOverride = null)
     {
         string pname = paramNameOverride ?? p.GetRawName();
+
         // bool: ABI is 'bool' directly; pass as-is.
         if (p.Type is CorLibTypeSignature corlib &&
             corlib.ElementType == ElementType.Boolean)

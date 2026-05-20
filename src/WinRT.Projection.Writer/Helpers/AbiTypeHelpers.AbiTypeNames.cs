@@ -142,6 +142,7 @@ internal static partial class AbiTypeHelpers
         {
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
+
             // If this struct is mapped, use the mapped namespace+name (e.g.
             // 'Windows.UI.Xaml.Interop.TypeName' is mapped to 'System.Type', so the ABI struct
             // is 'global::ABI.System.Type', not 'global::ABI.Windows.UI.Xaml.Interop.TypeName').
@@ -191,6 +192,7 @@ internal static partial class AbiTypeHelpers
     private static string GetProjectedEnumName(TypeDefinition def)
     {
         (string ns, string name) = def.Names();
+
         // Apply mapped-type translation so consumers see the projected (.NET) enum name
         // (e.g. Windows.UI.Xaml.Interop.NotifyCollectionChangedAction →
         // System.Collections.Specialized.NotifyCollectionChangedAction). Same
