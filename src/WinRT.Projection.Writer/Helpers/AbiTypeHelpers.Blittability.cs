@@ -184,12 +184,6 @@ internal static partial class AbiTypeHelpers
             // Cross-module typeref: try to resolve via the metadata cache to check category
             (string ns, string name) = td.Type.Names();
 
-            // If the type is in 'System', we already know the set of possible types
-            if (ns == "System")
-            {
-                return name is "Uri" or "Type" or "IDisposable" or "Exception";
-            }
-
             if (cache is not null)
             {
                 TypeDefinition? resolved = cache.Find(ns, name);
