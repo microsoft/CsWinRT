@@ -83,7 +83,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.IsGeneric(type))
+                if (type.IsGeneric)
                 {
                     continue;
                 }

@@ -293,7 +293,7 @@ internal static class MetadataAttributeFactory
     public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Skip exclusive interfaces and projection-internal interfaces.
-        if (TypeCategorization.GetCategory(type) == TypeKind.Interface &&
+        if (type.IsInterface &&
             (TypeCategorization.IsExclusiveTo(type) || TypeCategorization.IsProjectionInternal(type)))
         {
             return;

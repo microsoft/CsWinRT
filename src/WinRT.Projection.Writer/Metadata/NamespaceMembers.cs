@@ -54,7 +54,7 @@ internal sealed class NamespaceMembers(string name)
                 Interfaces.Add(type);
                 break;
             case TypeKind.Class:
-                if (TypeCategorization.IsAttributeType(type))
+                if (type.IsAttributeType)
                 {
                     Attributes.Add(type);
                 }

@@ -493,7 +493,7 @@ internal static class ClassFactory
             return;
         }
 
-        if (TypeCategorization.IsStatic(type))
+        if (type.IsStatic)
         {
             WriteStaticClass(writer, context, type);
             return;
@@ -518,7 +518,7 @@ internal static class ClassFactory
         WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
 
         // are emitted as plain (non-partial) classes.
-        string modifiers = TypeCategorization.IsStatic(type) ? "static " : type.IsSealed ? "sealed " : "";
+        string modifiers = type.IsStatic ? "static " : type.IsSealed ? "sealed " : "";
         WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
         WriteTypeInheritanceCallback inheritance = InterfaceFactory.WriteTypeInheritance(context, type, false, true);
         writer.WriteLine();

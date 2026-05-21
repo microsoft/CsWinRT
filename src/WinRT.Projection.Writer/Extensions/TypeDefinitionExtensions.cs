@@ -19,6 +19,67 @@ internal static class TypeDefinitionExtensions
     extension(TypeDefinition type)
     {
         /// <summary>
+        /// Returns whether the type is a struct (a value type that isn't an enum).
+        /// </summary>
+        public bool IsStruct => type.IsValueType && !type.IsEnum;
+
+        /// <summary>
+        /// Returns whether the type is a class whose immediate base is <see cref="Attribute"/>.
+        /// </summary>
+        /// <remarks>
+        /// This check only inspects the type's <em>immediate</em> base. Types that inherit
+        /// <see cref="Attribute"/> through an intermediate base class are reported as
+        /// <see langword="false"/>. WinMD attribute types always extend <see cref="Attribute"/>
+        /// directly, so this matches their shape exactly.
+        /// </remarks>
+        public bool IsAttributeType
+        {
+            get
+            {
+                if (type.IsInterface || type.IsValueType || type.IsDelegate)
+                {
+                    return false;
+                }
+
+                if (type.BaseType is not { } baseType)
+                {
+                    return false;
+                }
+
+                (string ns, string name) = baseType.Names();
+
+                return ns == "System" && name == "Attribute";
+            }
+        }
+
+        /// <summary>
+        /// Returns whether the type is a static class (i.e. a class that is both
+        /// <c>abstract</c> and <c>sealed</c>).
+        /// </summary>
+        public bool IsStatic
+        {
+            get
+            {
+                if (type.IsInterface || type.IsValueType || type.IsDelegate)
+                {
+                    return false;
+                }
+
+                return type.IsAbstract && type.IsSealed;
+            }
+        }
+
+        /// <summary>
+        /// Returns whether the type is an enum marked with <c>[System.FlagsAttribute]</c>.
+        /// </summary>
+        public bool IsFlagsEnum => type.IsEnum && type.HasAttribute("System", "FlagsAttribute");
+
+        /// <summary>
+        /// Returns whether the type has any generic type parameters (i.e. is a generic type definition).
+        /// </summary>
+        public bool IsGeneric => type.GenericParameters.Count > 0;
+
+        /// <summary>
         /// Returns the type's methods filtered to exclude special-name methods (property accessors,
         /// event accessors, and runtime-special methods like <c>.ctor</c>).
         /// </summary>

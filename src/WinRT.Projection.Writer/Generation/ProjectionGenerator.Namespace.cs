@@ -47,7 +47,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.IsGeneric(type))
+                if (type.IsGeneric)
                 {
                     continue;
                 }
@@ -64,7 +64,7 @@ internal sealed partial class ProjectionGenerator
                 switch (cat)
                 {
                     case TypeKind.Class:
-                        if (!TypeCategorization.IsStatic(type) && !TypeCategorization.IsAttributeType(type))
+                        if (!type.IsStatic && !type.IsAttributeType)
                         {
                             if (_settings.Component)
                             {
@@ -118,7 +118,7 @@ internal sealed partial class ProjectionGenerator
             (string ns2, string nm2) = type.Names();
 
             // Skip generic types and mapped types
-            if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
+            if (MappedTypes.Get(ns2, nm2) is not null || type.IsGeneric)
             {
                 written = true;
                 continue;
@@ -128,7 +128,7 @@ internal sealed partial class ProjectionGenerator
             TypeKind category = TypeCategorization.GetCategory(type);
             ProjectionFileBuilder.WriteType(writer, context, type, category);
 
-            if (category == TypeKind.Class && !TypeCategorization.IsAttributeType(type))
+            if (category == TypeKind.Class && !type.IsAttributeType)
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
@@ -203,7 +203,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.IsGeneric(type))
+                if (type.IsGeneric)
                 {
                     continue;
                 }
@@ -221,7 +221,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.IsAttributeType(type))
+                if (type.IsAttributeType)
                 {
                     continue;
                 }

@@ -154,14 +154,14 @@ internal static partial class AbiTypeHelpers
 
         if (td.Type is TypeDefinition def)
         {
-            return TypeCategorization.GetCategory(def) == TypeKind.Enum;
+            return def.IsEnum;
         }
 
         if (td.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
             TypeDefinition? resolved = cache.Find(ns, name);
-            return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeKind.Enum;
+            return resolved is not null && resolved.IsEnum;
         }
 
         return false;
@@ -232,7 +232,7 @@ internal static partial class AbiTypeHelpers
         // Enum (TypeDefOrRef-based value type with non-Object base) - same module or cross-module
         if (sig is TypeDefOrRefSignature td)
         {
-            if (td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeKind.Enum)
+            if (td.Type is TypeDefinition def && def.IsEnum)
             {
                 return true;
             }
@@ -243,7 +243,7 @@ internal static partial class AbiTypeHelpers
                 (string ns, string name) = tr.Names();
                 TypeDefinition? resolved = cache.Find(ns, name);
 
-                if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeKind.Enum)
+                if (resolved is not null && resolved.IsEnum)
                 {
                     return true;
                 }
@@ -291,7 +291,7 @@ internal static partial class AbiTypeHelpers
             return false;
         }
 
-        if (TypeCategorization.GetCategory(def) != TypeKind.Struct)
+        if (!def.IsStruct)
         {
             return false;
         }
@@ -383,7 +383,7 @@ internal static partial class AbiTypeHelpers
 
         // Mapped struct types short-circuit based on the mapping's RequiresMarshaling flag
         // (only applies to actual structs, not mapped interfaces like IAsyncAction).
-        if (TypeCategorization.GetCategory(def) == TypeKind.Struct)
+        if (def.IsStruct)
         {
             (string sNs, string sName) = td.Type.Names();
 
@@ -394,7 +394,7 @@ internal static partial class AbiTypeHelpers
         }
 
         // If the type isn't a struct type, then by definition it isn't blittable
-        if (TypeCategorization.GetCategory(def) != TypeKind.Struct)
+        if (!def.IsStruct)
         {
             return false;
         }

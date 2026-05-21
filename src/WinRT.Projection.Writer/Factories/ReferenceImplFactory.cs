@@ -51,10 +51,10 @@ internal static class ReferenceImplFactory
             
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             """);
-        bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeKind.Struct;
-        bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeKind.Struct;
+        bool isBlittableStructType = blittable && type.IsStruct;
+        bool isNonBlittableStructType = !blittable && type.IsStruct;
 
-        if ((blittable && TypeCategorization.GetCategory(type) != TypeKind.Struct)
+        if ((blittable && !type.IsStruct)
             || isBlittableStructType)
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.

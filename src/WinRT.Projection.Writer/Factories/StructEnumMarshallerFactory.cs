@@ -133,7 +133,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
-                         && TypeCategorization.GetCategory(fieldStructTd) == TypeKind.Struct
+                         && fieldStructTd.IsStruct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
@@ -194,7 +194,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd2
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
-                         && TypeCategorization.GetCategory(fieldStructTd2) == TypeKind.Struct
+                         && fieldStructTd2.IsStruct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
@@ -242,7 +242,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd3
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd3) is TypeDefinition fieldStructTd3
-                         && TypeCategorization.GetCategory(fieldStructTd3) == TypeKind.Struct
+                         && fieldStructTd3.IsStruct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd3))
                 {
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.

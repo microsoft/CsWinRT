@@ -23,7 +23,7 @@ internal static class AbiClassFactory
     public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Static classes don't get a *Marshaller (no instances).
-        if (TypeCategorization.IsStatic(type))
+        if (type.IsStatic)
         {
             return;
         }

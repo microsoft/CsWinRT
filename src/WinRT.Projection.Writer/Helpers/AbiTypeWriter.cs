@@ -40,13 +40,13 @@ internal static class AbiTypeWriter
                 writer.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");
                 break;
             case TypeSemantics.Definition d:
-                if (TypeCategorization.GetCategory(d.Type) is TypeKind.Enum)
+                if (d.Type.IsEnum)
                 {
                     // Enums in WinRT ABI use the projected enum type directly (since their C#
                     // layout matches their underlying integer ABI representation 1:1).
                     TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                 }
-                else if (TypeCategorization.GetCategory(d.Type) is TypeKind.Struct)
+                else if (d.Type.IsStruct)
                 {
                     (string dNs, string dName) = d.Type.Names();
 

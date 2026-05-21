@@ -173,7 +173,7 @@ internal static class SignatureGenerator
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
                 TypedefNameWriter.WriteTypeParams(writer, type);
                 writer.Write(";");
-                writer.Write(TypeCategorization.IsFlagsEnum(type) ? "u4" : "i4");
+                writer.Write(type.IsFlagsEnum ? "u4" : "i4");
                 writer.Write(")");
                 break;
             case TypeKind.Struct:

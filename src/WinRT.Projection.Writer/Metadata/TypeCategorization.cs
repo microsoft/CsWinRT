@@ -29,46 +29,11 @@ internal static class TypeCategorization
     }
 
     /// <summary>
-    /// True if this is an Attribute-derived class.
-    /// </summary>
-    public static bool IsAttributeType(TypeDefinition type)
-    {
-        if (GetCategory(type) != TypeKind.Class)
-        {
-            return false;
-        }
-
-        // Check immediate base type for System.Attribute (winmd attribute types extend it directly).
-        ITypeDefOrRef? cur = type.BaseType;
-        while (cur is not null)
-        {
-            if (cur.Namespace == "System" && cur.Name == "Attribute")
-            {
-                return true;
-            }
-
-            // For attributes, the base type chain is short and we typically stop at a TypeRef
-            // pointing to System.Attribute. We don't try to resolve further.
-            return false;
-        }
-        return false;
-    }
-
-    /// <summary>
     /// True if this is an API contract struct type.
     /// </summary>
     public static bool IsApiContractType(TypeDefinition type)
     {
-        return GetCategory(type) == TypeKind.Struct &&
-               type.HasAttribute(WindowsFoundationMetadata, "ApiContractAttribute");
-    }
-
-    /// <summary>
-    /// True if this type is a static class (abstract+sealed).
-    /// </summary>
-    public static bool IsStatic(TypeDefinition type)
-    {
-        return GetCategory(type) == TypeKind.Class && type.IsAbstract && type.IsSealed;
+        return type.IsStruct && type.HasAttribute(WindowsFoundationMetadata, "ApiContractAttribute");
     }
 
     /// <summary>
@@ -76,25 +41,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsExclusiveTo(TypeDefinition type)
     {
-        return GetCategory(type) == TypeKind.Interface &&
-               type.HasAttribute(WindowsFoundationMetadata, ExclusiveToAttribute);
-    }
-
-    /// <summary>
-    /// True if this is a [Flags] enum.
-    /// </summary>
-    public static bool IsFlagsEnum(TypeDefinition type)
-    {
-        return GetCategory(type) == TypeKind.Enum &&
-               type.HasAttribute("System", "FlagsAttribute");
-    }
-
-    /// <summary>
-    /// True if this is a generic type (has type parameters).
-    /// </summary>
-    public static bool IsGeneric(TypeDefinition type)
-    {
-        return type.GenericParameters.Count > 0;
+        return type.IsInterface && type.HasAttribute(WindowsFoundationMetadata, ExclusiveToAttribute);
     }
 
     /// <summary>
@@ -105,3 +52,4 @@ internal static class TypeCategorization
         return type.HasAttribute(WindowsRuntimeInternal, "ProjectionInternalAttribute");
     }
 }
+

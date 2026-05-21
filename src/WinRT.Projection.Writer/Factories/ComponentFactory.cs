@@ -32,7 +32,7 @@ internal static class ComponentFactory
 
         TypeKind cat = TypeCategorization.GetCategory(type);
 
-        if ((cat == TypeKind.Class && TypeCategorization.IsStatic(type)) ||
+        if ((cat == TypeKind.Class && type.IsStatic) ||
             (cat == TypeKind.Interface && TypeCategorization.IsExclusiveTo(type)))
         {
             return;
@@ -53,7 +53,7 @@ internal static class ComponentFactory
         (string typeNs, string typeName) = type.Names();
         string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
         string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
-        bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
+        bool isActivatable = !type.IsStatic && type.HasDefaultConstructor();
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
         MetadataCache cache = context.Cache;

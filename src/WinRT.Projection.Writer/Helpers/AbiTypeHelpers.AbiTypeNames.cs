@@ -179,7 +179,7 @@ internal static partial class AbiTypeHelpers
                 def = cache.Find(ns, name);
             }
 
-            if (def is not null && TypeCategorization.GetCategory(def) == TypeKind.Enum)
+            if (def is not null && def.IsEnum)
             {
                 return cache is null ? "int" : GetProjectedEnumName(def);
             }

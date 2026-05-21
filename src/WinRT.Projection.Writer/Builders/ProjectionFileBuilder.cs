@@ -27,7 +27,7 @@ internal static class ProjectionFileBuilder
     {
         switch (category)
         {
-            case TypeKind.Class when TypeCategorization.IsAttributeType(type):
+            case TypeKind.Class when type.IsAttributeType:
                 WriteAttribute(writer, context, type);
                 break;
             case TypeKind.Class:
@@ -91,7 +91,7 @@ internal static class ProjectionFileBuilder
             return;
         }
 
-        bool isFlags = TypeCategorization.IsFlagsEnum(type);
+        bool isFlags = type.IsFlagsEnum;
         string enumUnderlyingType = isFlags ? "uint" : "int";
         string typeName = type.GetRawName();
 
@@ -162,11 +162,11 @@ internal static class ProjectionFileBuilder
 
             if (semantics is TypeSemantics.Definition d)
             {
-                isInterface = TypeCategorization.GetCategory(d.Type) == TypeKind.Interface;
+                isInterface = d.Type.IsInterface;
             }
             else if (semantics is TypeSemantics.GenericInstance gi)
             {
-                isInterface = TypeCategorization.GetCategory(gi.GenericType) == TypeKind.Interface;
+                isInterface = gi.GenericType.IsInterface;
             }
 
             fields.Add((fieldType, fieldName, paramName, isInterface));
