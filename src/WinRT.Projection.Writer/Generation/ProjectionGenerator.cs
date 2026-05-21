@@ -70,7 +70,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
         ProjectionGeneratorRunState state = new(componentActivatable, componentByModule);
 
-        // Phase 3..6: parallel emission. All file writes happen below; wrap the whole emission
+        // Phase 2: parallel emission. All file writes happen below; wrap the whole emission
         // pipeline in a single try/catch so any unexpected failure surfaces as an
         // UnhandledProjectionWriterException rather than a raw stack trace.
         try
