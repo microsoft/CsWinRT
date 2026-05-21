@@ -98,8 +98,8 @@ internal sealed partial class ProjectionGenerator
                 }
 
                 iidWritten = true;
-                TypeKind cat = TypeKindResolver.Resolve(type);
-                switch (cat)
+                TypeKind kind = TypeKindResolver.Resolve(type);
+                switch (kind)
                 {
                     case TypeKind.Delegate:
                         IidExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);

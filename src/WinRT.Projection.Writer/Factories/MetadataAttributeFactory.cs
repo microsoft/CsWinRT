@@ -340,9 +340,9 @@ internal static class MetadataAttributeFactory
         WriteTypeMapAttribute(writer, "WindowsRuntimeComWrappersTypeMapGroup", $"\"{value}\"", $"typeof({target})", $"typeof({projectionName})");
 
         // For non-interface, non-struct authored types, emit proxy association.
-        TypeKind cat = TypeKindResolver.Resolve(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
-        if (cat is not (TypeKind.Interface or TypeKind.Struct) && context.Settings.Component)
+        if (kind is not (TypeKind.Interface or TypeKind.Struct) && context.Settings.Component)
         {
             WriteTypeMapAssociation(writer, "WindowsRuntimeComWrappersTypeMapGroup", $"typeof({projectionName})", $"typeof({target})");
             writer.WriteLine();

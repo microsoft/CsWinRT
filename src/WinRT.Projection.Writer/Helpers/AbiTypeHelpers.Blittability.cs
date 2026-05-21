@@ -17,14 +17,14 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)
     {
-        TypeKind cat = TypeKindResolver.Resolve(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
-        if (cat == TypeKind.Enum)
+        if (kind == TypeKind.Enum)
         {
             return true;
         }
 
-        if (cat != TypeKind.Struct)
+        if (kind != TypeKind.Struct)
         {
             return false;
         }
@@ -178,8 +178,8 @@ internal static partial class AbiTypeHelpers
             // Same-module: use the resolved category directly.
             if (td.Type is TypeDefinition def)
             {
-                TypeKind cat = TypeKindResolver.Resolve(def);
-                return cat is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
+                TypeKind kind = TypeKindResolver.Resolve(def);
+                return kind is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
             }
 
             // Cross-module typeref: try to resolve via the metadata cache to check category
@@ -191,8 +191,8 @@ internal static partial class AbiTypeHelpers
 
                 if (resolved is not null)
                 {
-                    TypeKind cat = TypeKindResolver.Resolve(resolved);
-                    return cat is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
+                    TypeKind kind = TypeKindResolver.Resolve(resolved);
+                    return kind is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
                 }
             }
 

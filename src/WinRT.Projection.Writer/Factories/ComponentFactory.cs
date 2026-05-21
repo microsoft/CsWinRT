@@ -31,10 +31,10 @@ internal static class ComponentFactory
             return;
         }
 
-        TypeKind cat = TypeKindResolver.Resolve(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
-        if ((cat == TypeKind.Class && type.IsStatic) ||
-            (cat == TypeKind.Interface && type.IsExclusiveTo))
+        if ((kind == TypeKind.Class && type.IsStatic) ||
+            (kind == TypeKind.Interface && type.IsExclusiveTo))
         {
             return;
         }

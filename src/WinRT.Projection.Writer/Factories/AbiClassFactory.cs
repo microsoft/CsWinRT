@@ -120,24 +120,24 @@ internal static class AbiClassFactory
         string typeNs = type.GetRawNamespace();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
-        TypeKind category = TypeKindResolver.Resolve(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
         // [WindowsRuntimeReferenceType(typeof(<projected>?))] for non-delegate, non-class types
         // (i.e. enums, structs, interfaces).
-        if (category is not (TypeKind.Delegate or TypeKind.Class))
+        if (kind is not (TypeKind.Delegate or TypeKind.Class))
         {
             writer.WriteLine($"[WindowsRuntimeReferenceType(typeof({projectedType}?))]");
         }
 
         // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
         // (delegates, enums, interfaces).
-        if (category is not (TypeKind.Struct or TypeKind.Class))
+        if (kind is not (TypeKind.Struct or TypeKind.Class))
         {
             writer.WriteLine($"[ABI.{typeNs}.{nameStripped}ComWrappersMarshaller]");
         }
 
         // [WindowsRuntimeClassName("Windows.Foundation.IReference`1<<ns>.<name>>")] for non-class types.
-        if (category != TypeKind.Class)
+        if (kind != TypeKind.Class)
         {
             writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{fullName}>\")]");
         }

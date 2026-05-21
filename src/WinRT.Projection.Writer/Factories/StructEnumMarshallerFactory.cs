@@ -42,20 +42,20 @@ internal static class StructEnumMarshallerFactory
     internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        TypeKind cat = TypeKindResolver.Resolve(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
         // A struct field is "blittable" when its projected and ABI layouts match (no per-field
         // marshalling). Detect that via AbiTypeKindResolver.IsBlittableStruct: it returns true
         // for self-mapped structs with RequiresMarshaling=false and for user structs whose
         // fields are all blittable.
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
-        bool blittableStruct = cat == TypeKind.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
-        bool isEnum = cat == TypeKind.Enum;
+        bool blittableStruct = kind == TypeKind.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
+        bool isEnum = kind == TypeKind.Enum;
 
         // Complex structs are the remaining (non-blittable, non-mapped) structs that need a
         // per-field marshaller class because at least one field is a reference type, generic
         // instance, or marshalling-mapped value.
-        bool isNonBlittableStruct = cat == TypeKind.Struct && !blittableStruct;
+        bool isNonBlittableStruct = kind == TypeKind.Struct && !blittableStruct;
 
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
@@ -346,7 +346,7 @@ internal static class StructEnumMarshallerFactory
 
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
-            if (context.Settings.Component && cat == TypeKind.Struct)
+            if (context.Settings.Component && kind == TypeKind.Struct)
             {
                 return;
             }

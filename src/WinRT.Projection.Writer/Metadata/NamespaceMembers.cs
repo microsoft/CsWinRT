@@ -48,8 +48,8 @@ internal sealed class NamespaceMembers(string name)
     public void AddType(TypeDefinition type)
     {
         Types.Add(type);
-        TypeKind category = TypeKindResolver.Resolve(type);
-        switch (category)
+        TypeKind kind = TypeKindResolver.Resolve(type);
+        switch (kind)
         {
             case TypeKind.Interface:
                 Interfaces.Add(type);

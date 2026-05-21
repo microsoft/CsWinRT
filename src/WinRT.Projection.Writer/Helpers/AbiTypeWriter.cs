@@ -141,16 +141,16 @@ internal static class AbiTypeWriter
 
                     if (rd is not null)
                     {
-                        TypeKind cat = TypeKindResolver.Resolve(rd);
+                        TypeKind kind = TypeKindResolver.Resolve(rd);
 
-                        if (cat == TypeKind.Enum)
+                        if (kind == TypeKind.Enum)
                         {
                             // Enums use the projected enum type directly (C# layout == ABI layout).
                             TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             break;
                         }
 
-                        if (cat == TypeKind.Struct)
+                        if (kind == TypeKind.Struct)
                         {
                             // Special case: HResult is mapped to System.Exception (a reference type)
                             // but its ABI representation is the global::ABI.System.Exception struct

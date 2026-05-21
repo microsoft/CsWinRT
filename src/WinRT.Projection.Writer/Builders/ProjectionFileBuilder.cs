@@ -23,9 +23,9 @@ internal static class ProjectionFileBuilder
     /// <summary>
     /// Dispatches type emission based on the type category.
     /// </summary>
-    public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeKind category)
+    public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeKind kind)
     {
-        switch (category)
+        switch (kind)
         {
             case TypeKind.Class when type.IsAttributeType:
                 WriteAttribute(writer, context, type);
@@ -49,16 +49,16 @@ internal static class ProjectionFileBuilder
                 WriteStruct(writer, context, type);
                 break;
             default:
-                throw WellKnownProjectionWriterExceptions.UnknownTypeKind(category);
+                throw WellKnownProjectionWriterExceptions.UnknownTypeKind(kind);
         }
     }
 
     /// <summary>
     /// Dispatches ABI emission based on the type category.
     /// </summary>
-    public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeKind category)
+    public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeKind kind)
     {
-        switch (category)
+        switch (kind)
         {
             case TypeKind.Class:
                 AbiClassFactory.WriteAbiClass(writer, context, type);
@@ -77,7 +77,7 @@ internal static class ProjectionFileBuilder
                 AbiStructFactory.WriteAbiStruct(writer, context, type);
                 break;
             default:
-                throw WellKnownProjectionWriterExceptions.UnknownTypeKind(category);
+                throw WellKnownProjectionWriterExceptions.UnknownTypeKind(kind);
         }
     }
 

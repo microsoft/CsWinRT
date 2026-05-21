@@ -61,8 +61,8 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                TypeKind cat = TypeKindResolver.Resolve(type);
-                switch (cat)
+                TypeKind kind = TypeKindResolver.Resolve(type);
+                switch (kind)
                 {
                     case TypeKind.Class:
                         if (!type.IsStatic && !type.IsAttributeType)
@@ -125,11 +125,11 @@ internal sealed partial class ProjectionGenerator
                 continue;
             }
 
-            // Write the projected type per category
-            TypeKind category = TypeKindResolver.Resolve(type);
-            ProjectionFileBuilder.WriteType(writer, context, type, category);
+            // Write the projected type per type kind
+            TypeKind kind = TypeKindResolver.Resolve(type);
+            ProjectionFileBuilder.WriteType(writer, context, type, kind);
 
-            if (category == TypeKind.Class && !type.IsAttributeType)
+            if (kind == TypeKind.Class && !type.IsAttributeType)
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
@@ -140,11 +140,11 @@ internal sealed partial class ProjectionGenerator
                     ComponentFactory.WriteFactoryClass(writer, context, type);
                 }
             }
-            else if (category is TypeKind.Delegate or TypeKind.Enum or TypeKind.Interface)
+            else if (kind is TypeKind.Delegate or TypeKind.Enum or TypeKind.Interface)
             {
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
-            else if (category == TypeKind.Struct && !type.IsApiContractType)
+            else if (kind == TypeKind.Struct && !type.IsApiContractType)
             {
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
@@ -227,8 +227,8 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                TypeKind category = TypeKindResolver.Resolve(type);
-                ProjectionFileBuilder.WriteAbiType(writer, context, type, category);
+                TypeKind kind = TypeKindResolver.Resolve(type);
+                ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
             }
             writer.WriteEndAbiNamespace(context);
         }

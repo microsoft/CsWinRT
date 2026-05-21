@@ -166,8 +166,8 @@ internal static class SignatureGenerator
     /// <param name="type">The type to emit a signature for.</param>
     private static void WriteSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeKind cat = TypeKindResolver.Resolve(type);
-        switch (cat)
+        TypeKind kind = TypeKindResolver.Resolve(type);
+        switch (kind)
         {
             case TypeKind.Enum:
                 writer.Write("enum(");
