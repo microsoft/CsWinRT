@@ -2,22 +2,11 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Models;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
-
-/// <summary>
-/// Categorization of a Windows Runtime type definition.
-/// </summary>
-internal enum TypeCategory
-{
-    Interface,
-    Class,
-    Enum,
-    Struct,
-    Delegate,
-}
 
 /// <summary>
 /// Static type categorization helpers, mirroring <c>winmd::reader::get_category</c> and various
@@ -27,15 +16,15 @@ internal static class TypeCategorization
     /// <summary>
     /// Determines a type's category (class/interface/enum/struct/delegate).
     /// </summary>
-    public static TypeCategory GetCategory(TypeDefinition type)
+    public static TypeKind GetCategory(TypeDefinition type)
     {
         return type switch
         {
-            { IsInterface: true } => TypeCategory.Interface,
-            { IsEnum: true } => TypeCategory.Enum,
-            { IsValueType: true } => TypeCategory.Struct,
-            { IsDelegate: true } => TypeCategory.Delegate,
-            _ => TypeCategory.Class
+            { IsInterface: true } => TypeKind.Interface,
+            { IsEnum: true } => TypeKind.Enum,
+            { IsValueType: true } => TypeKind.Struct,
+            { IsDelegate: true } => TypeKind.Delegate,
+            _ => TypeKind.Class
         };
     }
 
@@ -44,7 +33,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsAttributeType(TypeDefinition type)
     {
-        if (GetCategory(type) != TypeCategory.Class)
+        if (GetCategory(type) != TypeKind.Class)
         {
             return false;
         }
@@ -70,7 +59,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsApiContractType(TypeDefinition type)
     {
-        return GetCategory(type) == TypeCategory.Struct &&
+        return GetCategory(type) == TypeKind.Struct &&
                type.HasAttribute(WindowsFoundationMetadata, "ApiContractAttribute");
     }
 
@@ -79,7 +68,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsStatic(TypeDefinition type)
     {
-        return GetCategory(type) == TypeCategory.Class && type.IsAbstract && type.IsSealed;
+        return GetCategory(type) == TypeKind.Class && type.IsAbstract && type.IsSealed;
     }
 
     /// <summary>
@@ -87,7 +76,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsExclusiveTo(TypeDefinition type)
     {
-        return GetCategory(type) == TypeCategory.Interface &&
+        return GetCategory(type) == TypeKind.Interface &&
                type.HasAttribute(WindowsFoundationMetadata, ExclusiveToAttribute);
     }
 
@@ -96,7 +85,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsFlagsEnum(TypeDefinition type)
     {
-        return GetCategory(type) == TypeCategory.Enum &&
+        return GetCategory(type) == TypeKind.Enum &&
                type.HasAttribute("System", "FlagsAttribute");
     }
 

@@ -12,6 +12,7 @@ using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -292,7 +293,7 @@ internal static class MetadataAttributeFactory
     public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Skip exclusive interfaces and projection-internal interfaces.
-        if (TypeCategorization.GetCategory(type) == TypeCategory.Interface &&
+        if (TypeCategorization.GetCategory(type) == TypeKind.Interface &&
             (TypeCategorization.IsExclusiveTo(type) || TypeCategorization.IsProjectionInternal(type)))
         {
             return;
@@ -338,9 +339,9 @@ internal static class MetadataAttributeFactory
         WriteTypeMapAttribute(writer, "WindowsRuntimeComWrappersTypeMapGroup", $"\"{value}\"", $"typeof({target})", $"typeof({projectionName})");
 
         // For non-interface, non-struct authored types, emit proxy association.
-        TypeCategory cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeCategorization.GetCategory(type);
 
-        if (cat is not (TypeCategory.Interface or TypeCategory.Struct) && context.Settings.Component)
+        if (cat is not (TypeKind.Interface or TypeKind.Struct) && context.Settings.Component)
         {
             WriteTypeMapAssociation(writer, "WindowsRuntimeComWrappersTypeMapGroup", $"typeof({projectionName})", $"typeof({target})");
             writer.WriteLine();

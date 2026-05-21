@@ -18,11 +18,11 @@ internal static class WellKnownProjectionWriterExceptions
     public const string ErrorPrefix = "CSWINRTPROJECTIONGEN";
 
     /// <summary>
-    /// A switch over the well-known <c>TypeCategory</c> enum encountered an unrecognized member.
+    /// A switch over the well-known <c>TypeKind</c> enum encountered an unrecognized member.
     /// </summary>
-    public static WellKnownProjectionWriterException UnknownTypeCategory(object category)
+    public static WellKnownProjectionWriterException UnknownTypeKind(object kind)
     {
-        return Exception(5003, $"Unknown TypeCategory: {category}.");
+        return Exception(5003, $"Unknown TypeKind: {kind}.");
     }
 
     /// <summary>

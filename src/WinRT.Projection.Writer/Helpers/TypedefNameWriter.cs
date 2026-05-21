@@ -7,6 +7,7 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -78,7 +79,7 @@ internal static class TypedefNameWriter
 
         // Authored interfaces that aren't exclusive use the same authored interface.
         if (authoredType && nameToWrite == TypedefNameType.CCW &&
-            TypeCategorization.GetCategory(type) == TypeCategory.Interface &&
+            TypeCategorization.GetCategory(type) == TypeKind.Interface &&
             !TypeCategorization.IsExclusiveTo(type))
         {
             nameToWrite = TypedefNameType.Projected;

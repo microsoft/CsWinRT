@@ -7,6 +7,7 @@ using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -96,7 +97,7 @@ internal static class AbiStructFactory
 
         if (ft is TypeDefOrRefSignature tdr
             && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
-            && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
+            && TypeCategorization.GetCategory(fieldTd) == TypeKind.Struct
             && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))
         {
             return TypedefNameWriter.WriteTypedefName(context, fieldTd, TypedefNameType.ABI, false).Format();

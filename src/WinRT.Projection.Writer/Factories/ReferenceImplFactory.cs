@@ -7,6 +7,7 @@ using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -50,10 +51,10 @@ internal static class ReferenceImplFactory
             
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             """);
-        bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
-        bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
+        bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeKind.Struct;
+        bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeKind.Struct;
 
-        if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
+        if ((blittable && TypeCategorization.GetCategory(type) != TypeKind.Struct)
             || isBlittableStructType)
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
@@ -108,7 +109,7 @@ internal static class ReferenceImplFactory
                     }
                 """);
         }
-        else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
+        else if (TypeCategorization.GetCategory(type) is TypeKind.Class or TypeKind.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
             WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);

@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -15,14 +16,14 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)
     {
-        TypeCategory cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeCategorization.GetCategory(type);
 
-        if (cat == TypeCategory.Enum)
+        if (cat == TypeKind.Enum)
         {
             return true;
         }
 
-        if (cat != TypeCategory.Struct)
+        if (cat != TypeKind.Struct)
         {
             return false;
         }
@@ -153,14 +154,14 @@ internal static partial class AbiTypeHelpers
 
         if (td.Type is TypeDefinition def)
         {
-            return TypeCategorization.GetCategory(def) == TypeCategory.Enum;
+            return TypeCategorization.GetCategory(def) == TypeKind.Enum;
         }
 
         if (td.Type is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
             TypeDefinition? resolved = cache.Find(ns, name);
-            return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum;
+            return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeKind.Enum;
         }
 
         return false;
@@ -176,8 +177,8 @@ internal static partial class AbiTypeHelpers
             // Same-module: use the resolved category directly.
             if (td.Type is TypeDefinition def)
             {
-                TypeCategory cat = TypeCategorization.GetCategory(def);
-                return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
+                TypeKind cat = TypeCategorization.GetCategory(def);
+                return cat is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
             }
 
             // Cross-module typeref: try to resolve via the metadata cache to check category
@@ -189,8 +190,8 @@ internal static partial class AbiTypeHelpers
 
                 if (resolved is not null)
                 {
-                    TypeCategory cat = TypeCategorization.GetCategory(resolved);
-                    return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
+                    TypeKind cat = TypeCategorization.GetCategory(resolved);
+                    return cat is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
                 }
             }
 
@@ -231,7 +232,7 @@ internal static partial class AbiTypeHelpers
         // Enum (TypeDefOrRef-based value type with non-Object base) - same module or cross-module
         if (sig is TypeDefOrRefSignature td)
         {
-            if (td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+            if (td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeKind.Enum)
             {
                 return true;
             }
@@ -242,7 +243,7 @@ internal static partial class AbiTypeHelpers
                 (string ns, string name) = tr.Names();
                 TypeDefinition? resolved = cache.Find(ns, name);
 
-                if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum)
+                if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeKind.Enum)
                 {
                     return true;
                 }
@@ -290,7 +291,7 @@ internal static partial class AbiTypeHelpers
             return false;
         }
 
-        if (TypeCategorization.GetCategory(def) != TypeCategory.Struct)
+        if (TypeCategorization.GetCategory(def) != TypeKind.Struct)
         {
             return false;
         }
@@ -382,7 +383,7 @@ internal static partial class AbiTypeHelpers
 
         // Mapped struct types short-circuit based on the mapping's RequiresMarshaling flag
         // (only applies to actual structs, not mapped interfaces like IAsyncAction).
-        if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
+        if (TypeCategorization.GetCategory(def) == TypeKind.Struct)
         {
             (string sNs, string sName) = td.Type.Names();
 
@@ -393,7 +394,7 @@ internal static partial class AbiTypeHelpers
         }
 
         // If the type isn't a struct type, then by definition it isn't blittable
-        if (TypeCategorization.GetCategory(def) != TypeCategory.Struct)
+        if (TypeCategorization.GetCategory(def) != TypeKind.Struct)
         {
             return false;
         }

@@ -99,7 +99,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         {
             if (signature is TypeDefOrRefSignature td &&
                 td.Type is TypeDefinition def &&
-                TypeCategorization.GetCategory(def) == TypeCategory.Delegate)
+                TypeCategorization.GetCategory(def) == TypeKind.Delegate)
             {
                 return AbiTypeKind.Delegate;
             }

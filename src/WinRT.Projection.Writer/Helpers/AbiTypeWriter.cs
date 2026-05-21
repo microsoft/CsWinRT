@@ -6,6 +6,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.References;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
@@ -39,13 +40,13 @@ internal static class AbiTypeWriter
                 writer.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");
                 break;
             case TypeSemantics.Definition d:
-                if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Enum)
+                if (TypeCategorization.GetCategory(d.Type) is TypeKind.Enum)
                 {
                     // Enums in WinRT ABI use the projected enum type directly (since their C#
                     // layout matches their underlying integer ABI representation 1:1).
                     TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                 }
-                else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
+                else if (TypeCategorization.GetCategory(d.Type) is TypeKind.Struct)
                 {
                     (string dNs, string dName) = d.Type.Names();
 
@@ -139,16 +140,16 @@ internal static class AbiTypeWriter
 
                     if (rd is not null)
                     {
-                        TypeCategory cat = TypeCategorization.GetCategory(rd);
+                        TypeKind cat = TypeCategorization.GetCategory(rd);
 
-                        if (cat == TypeCategory.Enum)
+                        if (cat == TypeKind.Enum)
                         {
                             // Enums use the projected enum type directly (C# layout == ABI layout).
                             TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             break;
                         }
 
-                        if (cat == TypeCategory.Struct)
+                        if (cat == TypeKind.Struct)
                         {
                             // Special case: HResult is mapped to System.Exception (a reference type)
                             // but its ABI representation is the global::ABI.System.Exception struct

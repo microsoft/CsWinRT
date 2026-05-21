@@ -23,61 +23,61 @@ internal static class ProjectionFileBuilder
     /// <summary>
     /// Dispatches type emission based on the type category.
     /// </summary>
-    public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
+    public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeKind category)
     {
         switch (category)
         {
-            case TypeCategory.Class when TypeCategorization.IsAttributeType(type):
+            case TypeKind.Class when TypeCategorization.IsAttributeType(type):
                 WriteAttribute(writer, context, type);
                 break;
-            case TypeCategory.Class:
+            case TypeKind.Class:
                 ClassFactory.WriteClass(writer, context, type);
                 break;
-            case TypeCategory.Delegate:
+            case TypeKind.Delegate:
                 WriteDelegate(writer, context, type);
                 break;
-            case TypeCategory.Enum:
+            case TypeKind.Enum:
                 WriteEnum(writer, context, type);
                 break;
-            case TypeCategory.Interface:
+            case TypeKind.Interface:
                 InterfaceFactory.WriteInterface(writer, context, type);
                 break;
-            case TypeCategory.Struct when TypeCategorization.IsApiContractType(type):
+            case TypeKind.Struct when TypeCategorization.IsApiContractType(type):
                 WriteContract(writer, context, type);
                 break;
-            case TypeCategory.Struct:
+            case TypeKind.Struct:
                 WriteStruct(writer, context, type);
                 break;
             default:
-                throw WellKnownProjectionWriterExceptions.UnknownTypeCategory(category);
+                throw WellKnownProjectionWriterExceptions.UnknownTypeKind(category);
         }
     }
 
     /// <summary>
     /// Dispatches ABI emission based on the type category.
     /// </summary>
-    public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
+    public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeKind category)
     {
         switch (category)
         {
-            case TypeCategory.Class:
+            case TypeKind.Class:
                 AbiClassFactory.WriteAbiClass(writer, context, type);
                 break;
-            case TypeCategory.Delegate:
+            case TypeKind.Delegate:
                 AbiDelegateFactory.WriteAbiDelegate(writer, context, type);
                 AbiDelegateFactory.WriteDelegateEventSourceSubclass(writer, context, type);
                 break;
-            case TypeCategory.Enum:
+            case TypeKind.Enum:
                 AbiEnumFactory.WriteAbiEnum(writer, context, type);
                 break;
-            case TypeCategory.Interface:
+            case TypeKind.Interface:
                 AbiInterfaceFactory.WriteAbiInterface(writer, context, type);
                 break;
-            case TypeCategory.Struct:
+            case TypeKind.Struct:
                 AbiStructFactory.WriteAbiStruct(writer, context, type);
                 break;
             default:
-                throw WellKnownProjectionWriterExceptions.UnknownTypeCategory(category);
+                throw WellKnownProjectionWriterExceptions.UnknownTypeKind(category);
         }
     }
 
@@ -162,11 +162,11 @@ internal static class ProjectionFileBuilder
 
             if (semantics is TypeSemantics.Definition d)
             {
-                isInterface = TypeCategorization.GetCategory(d.Type) == TypeCategory.Interface;
+                isInterface = TypeCategorization.GetCategory(d.Type) == TypeKind.Interface;
             }
             else if (semantics is TypeSemantics.GenericInstance gi)
             {
-                isInterface = TypeCategorization.GetCategory(gi.GenericType) == TypeCategory.Interface;
+                isInterface = TypeCategorization.GetCategory(gi.GenericType) == TypeKind.Interface;
             }
 
             fields.Add((fieldType, fieldName, paramName, isInterface));

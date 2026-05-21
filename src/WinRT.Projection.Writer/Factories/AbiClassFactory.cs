@@ -6,6 +6,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -118,24 +119,24 @@ internal static class AbiClassFactory
         string typeNs = type.GetRawNamespace();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
-        TypeCategory category = TypeCategorization.GetCategory(type);
+        TypeKind category = TypeCategorization.GetCategory(type);
 
         // [WindowsRuntimeReferenceType(typeof(<projected>?))] for non-delegate, non-class types
         // (i.e. enums, structs, interfaces).
-        if (category is not (TypeCategory.Delegate or TypeCategory.Class))
+        if (category is not (TypeKind.Delegate or TypeKind.Class))
         {
             writer.WriteLine($"[WindowsRuntimeReferenceType(typeof({projectedType}?))]");
         }
 
         // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
         // (delegates, enums, interfaces).
-        if (category is not (TypeCategory.Struct or TypeCategory.Class))
+        if (category is not (TypeKind.Struct or TypeKind.Class))
         {
             writer.WriteLine($"[ABI.{typeNs}.{nameStripped}ComWrappersMarshaller]");
         }
 
         // [WindowsRuntimeClassName("Windows.Foundation.IReference`1<<ns>.<name>>")] for non-class types.
-        if (category != TypeCategory.Class)
+        if (category != TypeKind.Class)
         {
             writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{fullName}>\")]");
         }

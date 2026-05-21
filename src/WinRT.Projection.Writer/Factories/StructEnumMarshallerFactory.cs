@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -40,20 +41,20 @@ internal static class StructEnumMarshallerFactory
     internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        TypeCategory cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeCategorization.GetCategory(type);
 
         // A struct field is "blittable" when its projected and ABI layouts match (no per-field
         // marshalling). Detect that via AbiTypeKindResolver.IsBlittableStruct: it returns true
         // for self-mapped structs with RequiresMarshaling=false and for user structs whose
         // fields are all blittable.
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
-        bool blittableStruct = cat == TypeCategory.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
-        bool isEnum = cat == TypeCategory.Enum;
+        bool blittableStruct = cat == TypeKind.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
+        bool isEnum = cat == TypeKind.Enum;
 
         // Complex structs are the remaining (non-blittable, non-mapped) structs that need a
         // per-field marshaller class because at least one field is a reference type, generic
         // instance, or marshalling-mapped value.
-        bool isNonBlittableStruct = cat == TypeCategory.Struct && !blittableStruct;
+        bool isNonBlittableStruct = cat == TypeKind.Struct && !blittableStruct;
 
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
@@ -132,7 +133,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
-                         && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
+                         && TypeCategorization.GetCategory(fieldStructTd) == TypeKind.Struct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
@@ -193,7 +194,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd2
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
-                         && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
+                         && TypeCategorization.GetCategory(fieldStructTd2) == TypeKind.Struct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
@@ -241,7 +242,7 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd3
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd3) is TypeDefinition fieldStructTd3
-                         && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
+                         && TypeCategorization.GetCategory(fieldStructTd3) == TypeKind.Struct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd3))
                 {
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
@@ -344,7 +345,7 @@ internal static class StructEnumMarshallerFactory
 
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
-            if (context.Settings.Component && cat == TypeCategory.Struct)
+            if (context.Settings.Component && cat == TypeKind.Struct)
             {
                 return;
             }

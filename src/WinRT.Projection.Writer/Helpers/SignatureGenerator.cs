@@ -5,6 +5,7 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -164,10 +165,10 @@ internal static class SignatureGenerator
     /// <param name="type">The type to emit a signature for.</param>
     private static void WriteSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeCategory cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeCategorization.GetCategory(type);
         switch (cat)
         {
-            case TypeCategory.Enum:
+            case TypeKind.Enum:
                 writer.Write("enum(");
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
                 TypedefNameWriter.WriteTypeParams(writer, type);
@@ -175,7 +176,7 @@ internal static class SignatureGenerator
                 writer.Write(TypeCategorization.IsFlagsEnum(type) ? "u4" : "i4");
                 writer.Write(")");
                 break;
-            case TypeCategory.Struct:
+            case TypeKind.Struct:
                 writer.Write("struct(");
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
                 TypedefNameWriter.WriteTypeParams(writer, type);
@@ -200,17 +201,17 @@ internal static class SignatureGenerator
                 }
                 writer.Write(")");
                 break;
-            case TypeCategory.Delegate:
+            case TypeKind.Delegate:
                 writer.Write("delegate({");
                 IidExpressionGenerator.WriteGuid(writer, type, true);
                 writer.Write("})");
                 break;
-            case TypeCategory.Interface:
+            case TypeKind.Interface:
                 writer.Write("{");
                 IidExpressionGenerator.WriteGuid(writer, type, true);
                 writer.Write("}");
                 break;
-            case TypeCategory.Class:
+            case TypeKind.Class:
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
                 if (defaultIface is TypeDefinition di)
