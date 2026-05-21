@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver;
 using AsmResolver.DotNet;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -30,37 +29,14 @@ internal static class TypeCategorization
     /// </summary>
     public static TypeCategory GetCategory(TypeDefinition type)
     {
-        if (type.IsInterface)
+        return type switch
         {
-            return TypeCategory.Interface;
-        }
-
-        ITypeDefOrRef? baseType = type.BaseType;
-
-        if (baseType is null)
-        {
-            return TypeCategory.Class;
-        }
-
-        Utf8String? baseNs = baseType.Namespace;
-        Utf8String? baseName = baseType.Name;
-
-        if (baseNs == "System" && baseName == "Enum")
-        {
-            return TypeCategory.Enum;
-        }
-
-        if (baseNs == "System" && baseName == "ValueType")
-        {
-            return TypeCategory.Struct;
-        }
-
-        if (baseNs == "System" && baseName == "MulticastDelegate")
-        {
-            return TypeCategory.Delegate;
-        }
-
-        return TypeCategory.Class;
+            { IsInterface: true } => TypeCategory.Interface,
+            { IsEnum: true } => TypeCategory.Enum,
+            { IsValueType: true } => TypeCategory.Struct,
+            { IsDelegate: true } => TypeCategory.Delegate,
+            _ => TypeCategory.Class
+        };
     }
 
     /// <summary>
