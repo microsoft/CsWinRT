@@ -472,12 +472,15 @@ internal static class ClassFactory
             writer.WriteLine(isMultiline: true, $$"""
                 private static WindowsRuntimeObjectReference {{objRefName}}
                 {
-                    var __{{objRefName}} = field;
-                    if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
+                    get
                     {
-                        return __{{objRefName}};
+                        var __{{objRefName}} = field;
+                        if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
+                        {
+                            return __{{objRefName}};
+                        }
+                        return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
                     }
-                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
                 }
                 """);
         }
