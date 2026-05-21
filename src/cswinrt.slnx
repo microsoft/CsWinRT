@@ -19,7 +19,6 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="TestWinRT/BenchmarkComponent/BenchmarkComponent.vcxproj" Id="78d85f23-7cb1-44a1-9238-6df2c76754e4">
-      <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
       <Platform Solution="*|ARM64" Project="Win32" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
@@ -260,7 +259,6 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/TestComponentCSharp/TestComponentCSharp.vcxproj" Id="7e3a9ab3-8cbb-4b9c-ba76-0fe7108dcaeb">
-      <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
@@ -274,7 +272,6 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="TestWinRT/TestComponent/TestComponent.vcxproj" Id="2954f343-85a7-46f5-a3f3-f106fdd13900">
-      <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
       <Platform Solution="*|ARM64" Project="Win32" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
@@ -418,11 +415,6 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
   <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
-  <Project Path="cswinrt/cswinrt.vcxproj" Id="6acfd2b2-e8aa-4cd4-aad8-213ce8bb2637">
-    <Platform Solution="*|ARM" Project="Win32" />
-    <Platform Solution="*|ARM64" Project="Win32" />
-    <Build Solution="*|ARM" Project="false" />
-  </Project>
   <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
