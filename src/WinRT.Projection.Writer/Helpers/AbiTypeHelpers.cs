@@ -218,5 +218,4 @@ internal static partial class AbiTypeHelpers
     {
         return a == b || a.Names() == b.Names();
     }
-
 }

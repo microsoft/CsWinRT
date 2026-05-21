@@ -30,8 +30,7 @@ internal static class TypeDefinitionExtensions
         /// <remarks>
         /// This check only inspects the type's <em>immediate</em> base. Types that inherit
         /// <see cref="Attribute"/> through an intermediate base class are reported as
-        /// <see langword="false"/>. WinMD attribute types always extend <see cref="Attribute"/>
-        /// directly, so this matches their shape exactly.
+        /// <see langword="false"/>.
         /// </remarks>
         public bool IsAttributeType
         {
@@ -54,21 +53,9 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Returns whether the type is a static class (i.e. a class that is both
-        /// <c>abstract</c> and <c>sealed</c>).
+        /// Returns whether the type is static.
         /// </summary>
-        public bool IsStatic
-        {
-            get
-            {
-                if (type.IsInterface || type.IsValueType || type.IsDelegate)
-                {
-                    return false;
-                }
-
-                return type.IsAbstract && type.IsSealed;
-            }
-        }
+        public bool IsStatic => type.IsAbstract && type.IsSealed;
 
         /// <summary>
         /// Returns whether the type is an enum marked with <c>[System.FlagsAttribute]</c>.

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter.Errors;
 
@@ -20,9 +21,9 @@ internal static class WellKnownProjectionWriterExceptions
     /// <summary>
     /// A switch over the well-known <c>TypeKind</c> enum encountered an unrecognized member.
     /// </summary>
-    public static WellKnownProjectionWriterException UnknownTypeKind(object kind)
+    public static WellKnownProjectionWriterException UnknownTypeKind(TypeKind kind)
     {
-        return Exception(5003, $"Unknown TypeKind: {kind}.");
+        return Exception(5003, $"Unknown type kind: '{kind}'.");
     }
 
     /// <summary>
