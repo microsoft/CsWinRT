@@ -8,7 +8,8 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
-using WindowsRuntime.ProjectionGenerator.Writer;
+using WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
 
 #pragma warning disable IDE0270
 
@@ -47,14 +48,13 @@ internal partial class ProjectionGenerator
         BuildWriterOptions(
             args,
             out string outputFolder,
-            out string rspFile,
             out HashSet<string> projectionReferenceAssemblies,
             out bool hasTypesToProject,
             out ProjectionWriterOptions writerOptions);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
-        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections, writerOptions, hasTypesToProject);
+        return new ProjectionGeneratorProcessingState(outputFolder, referencesWithoutProjections, writerOptions, hasTypesToProject);
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ internal partial class ProjectionGenerator
         // to be replaced/extended without needing to re-publish a separate executable.
         try
         {
-            ProjectionWriter.Run(processingState.WriterOptions);
+            global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -77,20 +77,16 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Builds the <see cref="ProjectionWriterOptions"/> from the supplied arguments and reference assemblies,
-    /// also writing out a debug-only response file with the same options encoded in the historical
-    /// <c>cswinrt.exe</c> CLI format.
+    /// Builds the <see cref="ProjectionWriterOptions"/> from the supplied arguments and reference assemblies.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="outputFolder">The folder where sources will be generated.</param>
-    /// <param name="rspFile">The path to the response file (kept as a debug artifact).</param>
     /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used.</param>
     /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
     /// <param name="writerOptions">The resulting writer options.</param>
     private static void BuildWriterOptions(
         ProjectionGeneratorArgs args,
         out string outputFolder,
-        out string rspFile,
         out HashSet<string> projectionReferenceAssemblies,
         out bool hasTypesToProject,
         out ProjectionWriterOptions writerOptions)
@@ -98,15 +94,12 @@ internal partial class ProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         outputFolder = GetTempFolder();
-        rspFile = Path.Combine(outputFolder, "ProjectionGenerator.rsp");
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
 
         List<string> includes = [];
         List<string> excludes = [];
         List<string> winmdInputs = [];
-
-        using StreamWriter fileStream = new(rspFile);
 
         // Filter out .winmd files from the resolver paths
         string[] resolverPaths = [.. args.ReferenceAssemblyPaths
@@ -161,7 +154,6 @@ internal partial class ProjectionGenerator
                         continue;
                     }
 
-                    fileStream.WriteLine($"-include {type.FullName}");
                     includes.Add(type.FullName);
                     hasTypesToProject = true;
                 }
@@ -209,7 +201,7 @@ internal partial class ProjectionGenerator
                     if (isWindowsSdk)
                     {
                         // Write the filters for the Windows SDK projection mode.
-                        WriteWindowsSdkFilters(fileStream, includes, excludes, args.WindowsUIXamlProjection);
+                        WriteWindowsSdkFilters(includes, excludes, args.WindowsUIXamlProjection);
 
                         hasTypesToProject = true;
 
@@ -219,14 +211,12 @@ internal partial class ProjectionGenerator
                     {
                         // In addition to projecting the individual types, make sure
                         // the additions get included by including the namespace.
-                        fileStream.WriteLine($"-include Microsoft.UI");
                         includes.Add("Microsoft.UI");
                     }
                 }
 
                 foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
                 {
-                    fileStream.WriteLine($"-include {exportedType.FullName}");
                     includes.Add(exportedType.FullName);
                     hasTypesToProject = true;
                 }
@@ -237,7 +227,9 @@ internal partial class ProjectionGenerator
         // (e.g., pipeline builds that pass WinMDs directly), hardcode the includes.
         if (isWindowsSdkMode && projectionReferenceAssemblies.Count == 0)
         {
-            WriteWindowsSdkFilters(fileStream, includes, excludes, args.WindowsUIXamlProjection);
+            WriteWindowsSdkFilters(includes, excludes, args.WindowsUIXamlProjection);
+
+            hasTypesToProject = true;
         }
 
         // If we're not in Windows SDK mode, we exclude the Windows namespace to avoid
@@ -245,30 +237,19 @@ internal partial class ProjectionGenerator
         // and thereby no includes / excludes passed to the writer.
         if (!isWindowsSdkMode)
         {
-            fileStream.WriteLine("-exclude Windows");
             excludes.Add("Windows");
         }
 
-        fileStream.WriteLine($"-target {args.TargetFramework}");
-        fileStream.WriteLine($"-input {args.WindowsMetadata}");
-        fileStream.WriteLine($"-output \"{outputFolder}\"");
-
-        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into actual
-        // .winmd file paths (or directories the writer will recursively scan). The C++ cswinrt.exe
-        // tool did this in cmd_reader.h via reader.files() — see WindowsMetadataExpander.
+        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into
+        // actual .winmd file paths (or directories the writer will recursively scan).
         winmdInputs.AddRange(WindowsMetadataExpander.Expand(args.WindowsMetadata));
 
         // When generating 'WinRT.Component.dll', enable component-specific code generation
         // (activation factories, exclusive-to interfaces, etc.).
         bool componentMode = args.AssemblyName == "WinRT.Component";
-        if (componentMode)
-        {
-            fileStream.WriteLine("-component");
-        }
 
         foreach (string winmdPath in args.WinMDPaths)
         {
-            fileStream.WriteLine($"-input \"{winmdPath}\"");
             winmdInputs.Add(winmdPath);
         }
 
@@ -279,35 +260,25 @@ internal partial class ProjectionGenerator
             Include = includes,
             Exclude = excludes,
             Component = componentMode,
+            MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };
     }
 
     /// <summary>
-    /// Writes the include/exclude filter directives for the Windows SDK projection.
-    /// Emits to both the <c>.rsp</c> file (for debugging) and the in-memory include/exclude lists
-    /// passed to <see cref="ProjectionWriterOptions"/>.
+    /// Adds the include/exclude filter directives for the Windows SDK projection.
     /// </summary>
-    /// <param name="writer">The RSP file writer.</param>
     /// <param name="includes">The list of namespace prefixes to include.</param>
     /// <param name="excludes">The list of namespace prefixes to exclude.</param>
     /// <param name="xamlProjection">
     /// When <c>true</c>, writes the Windows.UI.Xaml filter set.
     /// When <c>false</c>, writes the base Windows SDK filter set.
     /// </param>
-    private static void WriteWindowsSdkFilters(StreamWriter writer, List<string> includes, List<string> excludes, bool xamlProjection)
+    private static void WriteWindowsSdkFilters(List<string> includes, List<string> excludes, bool xamlProjection)
     {
-        void Include(string ns)
-        {
-            writer.WriteLine($"-include {ns}");
-            includes.Add(ns);
-        }
+        void Include(string ns) => includes.Add(ns);
 
-        void Exclude(string ns)
-        {
-            writer.WriteLine($"-exclude {ns}");
-            excludes.Add(ns);
-        }
+        void Exclude(string ns) => excludes.Add(ns);
 
         if (xamlProjection)
         {

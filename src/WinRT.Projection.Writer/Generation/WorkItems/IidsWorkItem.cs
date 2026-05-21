@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using WindowsRuntime.ProjectionWriter.Errors;
+
+namespace WindowsRuntime.ProjectionWriter.Generation.WorkItems;
+
+/// <summary>
+/// Work item that emits the per-projection <c>GeneratedInterfaceIIDs.cs</c> file (the global
+/// IID GUID property table for every projected interface, delegate, enum, struct, and runtime
+/// class). Decoupled from per-namespace work items because it produces a single distinct output
+/// file that does not contend with any other work item.
+/// </summary>
+/// <param name="owner">The owning generator (provides access to settings, cache, and the IID-emission entry point).</param>
+internal sealed class IidsWorkItem(ProjectionGenerator owner) : IProjectionWorkItem
+{
+    /// <inheritdoc/>
+    public void Execute()
+    {
+        try
+        {
+            owner.WriteGeneratedInterfaceIidsFile();
+        }
+        catch (Exception e)
+        {
+            WellKnownProjectionWriterExceptions.GeneratedInterfaceIidsEmissionFailed(e).ThrowOrAttach(e);
+        }
+    }
+}

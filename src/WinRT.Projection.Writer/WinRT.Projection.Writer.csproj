@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
+    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
+      
+    <!-- Set the root namespace to match the other projects -->
+    <RootNamespace>WindowsRuntime.ProjectionWriter</RootNamespace>
+
+    <!--
+      Stamp the assembly with $(VersionString) so the generated 'cswinrt.exe version' banner
+      in projection file headers can read it back via AssemblyInformationalVersionAttribute.
+    -->
+    <InformationalVersion>$(VersionString)</InformationalVersion>
+      
+    <!-- Same settings as 'WinRT.Runtime' -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Features>strict</Features>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+      The writer enables the strictest analysis posture (AnalysisLevel=latest +
+      AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The five entries
+      below are intentional permanent suppressions. They are scoped at the project level
+      because each one fires across many sites where the writer's emission patterns
+      can't reasonably comply with the IDE rule the analyzer surfaces (most recent
+      measurement: 16-60 fires per rule). Where a contributor finds a clean local
+      rewrite, that's preferred over relying on these suppressions, and the suppression
+      should be tightened over time.
+    -->
+    <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
+    <!-- IDE0022: Use expression body for method — writer prefers block bodies for emission helpers, even when short, for visual consistency with surrounding multi-statement methods. -->
+    <!-- IDE0046: 'if' statement can be simplified — early-return guards are more readable than nested ternaries when the branch produces a literal/sentinel and the rest of the method continues. -->
+    <!-- IDE0060: Remove unused parameter — keep for API consistency across factory helpers. -->
+    <NoWarn>$(NoWarn);IDE0010;IDE0022;IDE0046;IDE0060;IDE0072</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+  </ItemGroup>
+
+  <!-- Embed the resource files used for additions and base strings -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\**\*.cs" />
+    <Compile Remove="Resources\**\*.cs" />
+    <None Include="Resources\**\*.cs" />
+  </ItemGroup>
+
+  <!--
+    SR.cs files would be misinterpreted by the SDK's CreateManifestResourceNames task as having
+    Culture="SR" (treating '.SR.' as a locale identifier and embedding them as satellite
+    resources), so we keep them on disk as '_SR.cs' and override the LogicalName to the
+    expected manifest path that Additions.All looks up at runtime.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml._SR.cs"
+                      LogicalName="WindowsRuntime.ProjectionWriter.Resources.Additions.Microsoft.UI.Xaml.Microsoft.UI.Xaml.SR.cs" />
+    <EmbeddedResource Update="Resources\Additions\Windows.UI.Xaml\Windows.UI.Xaml._SR.cs"
+                      LogicalName="WindowsRuntime.ProjectionWriter.Resources.Additions.Windows.UI.Xaml.Windows.UI.Xaml.SR.cs" />
+  </ItemGroup>
+</Project>

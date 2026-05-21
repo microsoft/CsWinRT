@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
-using WindowsRuntime.ProjectionGenerator.Writer;
+using WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
@@ -64,7 +65,7 @@ internal static class ReferenceProjectionGenerator
         {
             ConsoleApp.Log($"Generating reference projection sources -> {options.OutputFolder}");
 
-            ProjectionWriter.Run(options);
+            global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(options);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
