@@ -19,7 +19,7 @@ Read `.github/copilot-instructions.md` in full. Take note of every factual claim
 
 ### Step 2: analyze each project in depth
 
-Launch parallel explore agents for each of the 8 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
+Launch parallel explore agents for each of the 10 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
 
 1. **WinRT.Runtime (`src/WinRT.Runtime2/`)**
    - Directory structure matches what's documented
@@ -30,46 +30,53 @@ Launch parallel explore agents for each of the 8 CsWinRT 3.0 projects listed in 
 
 2. **WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)**
    - Source generators listed still exist and generate what's described
-   - Diagnostic analyzer list is complete and IDs are correct (check `DiagnosticDescriptors.cs`)
+   - Diagnostic analyzer list is complete and IDs are correct (check `DiagnosticDescriptors.cs` and `AnalyzerReleases.Shipped.md`)
    - Diagnostic ID range is accurate
    - Project dependencies are current
 
-3. **cswinrt.exe (`src/cswinrt/`)**
-   - Key files listed still exist
-   - Command-line options are current (check `settings.h`)
-   - Namespace additions in `strings/additions/` are up to date
-   - Generated code patterns are accurately described
+3. **Projection writer (`src/WinRT.Projection.Writer/`)**
+   - Directory structure and namespaces match (`Builders/`, `Errors/`, `Factories/`, `Generation/`, `Helpers/`, `Metadata/`, `Models/`, `References/`, `Resolvers/`, `Resources/`, `Writers/`)
+   - Public API surface (`ProjectionWriter.Run`, `ProjectionWriterOptions` shape) is accurate
+   - Error ID range (5xxx in `Errors/WellKnownProjectionWriterExceptions.cs`) is accurate
+   - Resources structure (`Additions/` per-namespace + `Base/` baseline) matches
 
-4. **Impl generator (`src/WinRT.Impl.Generator/`)**
+4. **Reference projection generator (`src/WinRT.Projection.Ref.Generator/`)**
+   - CLI parameters on `ReferenceProjectionGeneratorArgs` are current
+   - Error ID range (`CSWINRTPROJECTIONREFGENxxxx`) in `Errors/WellKnownReferenceProjectionGeneratorExceptions.cs` is accurate
+   - Project settings (Native AOT, dependencies) are current
+   - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.targets` (CsWinRTGenerateProjection target → `RunCsWinRTProjectionRefGenerator`) is wired
+
+5. **Impl generator (`src/WinRT.Impl.Generator/`)**
    - Type forward routing logic is current
    - Project settings and dependencies are current
    - CLI parameters are current
 
-5. **Projection generator (`src/WinRT.Projection.Generator/`)**
+6. **Projection generator (`src/WinRT.Projection.Generator/`)**
    - Three projection modes are accurately described
    - Namespace filter logic is current
-   - Project settings and dependencies are current
+   - Project settings and dependencies (project reference to `WinRT.Projection.Writer`) are current
+   - The pipeline is documented as in-process (no `cswinrt.exe` subprocess invocation anymore)
 
-6. **Interop generator (`src/WinRT.Interop.Generator/`)**
+7. **Interop generator (`src/WinRT.Interop.Generator/`)**
    - Generated content categories are current
    - Directory structure and key types are accurate
    - Project settings and dependencies are current
 
-7. **WinMD generator (`src/WinRT.WinMD.Generator/`)**
+8. **WinMD generator (`src/WinRT.WinMD.Generator/`)**
    - CLI parameters on `WinMDGeneratorArgs` are current
    - Error ID range (`CSWINRTWINMDGENxxxx`) in `Errors/WellKnownWinMDExceptions.cs` is accurate
    - Project settings and dependencies are current
    - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` is wired (gated on `CsWinRTComponent`)
 
-8. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
-   - MSBuild task classes are accurately listed (including `RunCsWinRTWinMDGenerator`)
+9. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
+   - MSBuild task classes are accurately listed (including `RunCsWinRTProjectionRefGenerator` and `RunCsWinRTWinMDGenerator`)
    - Task-to-tool mappings are current
 
-9. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
-   - Assembly name logic (base vs XAML) is current
-   - Windows SDK package download and WinMD sourcing is accurate
-   - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`) are current
-   - Project settings are current
+10. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
+    - Assembly name logic (base vs XAML) is current
+    - Windows SDK package download and WinMD sourcing is accurate
+    - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`) are current
+    - Project settings are current
 
 ### Step 3: verify the test projects
 

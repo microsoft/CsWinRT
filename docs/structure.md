@@ -13,7 +13,7 @@ Contains files that assist with publishing to Maestro.
 
 ## [`nuget`](../nuget)
 
-Contains source files for producing the C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft. The package contains the **cswinrt.exe** projection compiler, the post-build tools (**cswinrtprojectiongen.exe**, **cswinrtimplgen.exe**, **cswinrtinteropgen.exe**, **cswinrtwinmdgen.exe**), the runtime assembly (`WinRT.Runtime.dll`), precompiled SDK projection assemblies, MSBuild `.props`/`.targets` files, and the Roslyn source generator.
+Contains source files for producing the C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft. The package contains the post-build tools (**cswinrtprojectionrefgen.exe**, **cswinrtprojectiongen.exe**, **cswinrtimplgen.exe**, **cswinrtinteropgen.exe**, **cswinrtwinmdgen.exe**), the runtime assembly (`WinRT.Runtime.dll`), precompiled SDK projection assemblies, MSBuild `.props`/`.targets` files, and the Roslyn source generator.
 
 ## [`src/Authoring`](../src/Authoring)
 
@@ -22,18 +22,6 @@ Contains projects for implementing authoring and hosting support, including the 
 ## [`src/Benchmarks`](../src/Benchmarks)
 
 Contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run `benchmark.cmd`.
-
-## [`src/cswinrt`](../src/cswinrt) 
-
-Contains the sources and `cswinrt.vcxproj` project file for building the C#/WinRT compiler, **cswinrt.exe**.
-
-The compiler uses the [WinMD NuGet package](http://aka.ms/winmd/nuget) for parsing [ECMA-335 metadata](http://www.ecma-international.org/publications/standards/Ecma-335.htm) files.  The WinMD github repo includes a [winmd.natvis](https://github.com/microsoft/winmd/blob/master/vs/winmd.natvis) script for debugging metadata parsing.  A symlink can be used to install the script:
-  > for /f "tokens=2*" %i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Personal ^| findstr Personal') do @for /f "tokens=2" %k in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere" -latest ^| findstr catalog_productLineVersion') do @echo %j\Visual Studio %k\Visualizers| for /f "delims=" %l in ('more') do @md "%l" 2>nul & mklink "%l\winmd.natvis" "c:\git\winmd\vs\winmd.natvis" 
-  
-The C#/WinRT project also contains a cswinrt.natvis script for debugging the C# projection writing, which can also be installed with a symlink:
-> for /f "tokens=2*" %i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Personal ^| findstr Personal') do @for /f "tokens=2" %k in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere" -latest ^| findstr catalog_productLineVersion') do @echo %j\Visual Studio %k\Visualizers| for /f "delims=" %l in ('more') do @md "%l" 2>nul & mklink "%l\cswinrt.natvis" "c:\git\cswinrt\cswinrt\cswinrt.natvis"
-
-See also [Deploying .natvis files](https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2015#BKMK_natvis_location).
 
 ## [`src/Perf`](../src/Perf)
 
@@ -65,7 +53,7 @@ C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/Te
 
 ## [`src/WinRT.Generator.Tasks`](../src/WinRT.Generator.Tasks)
 
-Contains MSBuild task wrappers that invoke the CsWinRT code generators during the build. These tasks orchestrate the post-build tools — the projection generator, the impl/forwarder generator, the interop generator, and the WinMD generator — and are called from the MSBuild targets in the `nuget/` directory.
+Contains MSBuild task wrappers that invoke the CsWinRT code generators during the build. These tasks orchestrate the post-build tools — the reference projection source generator, the projection generator, the impl/forwarder generator, the interop generator, and the WinMD generator — and are called from the MSBuild targets in the `nuget/` directory.
 
 ## [`src/WinRT.Impl.Generator`](../src/WinRT.Impl.Generator)
 
@@ -77,7 +65,15 @@ Contains the **interop assembly generator** (`cswinrtinteropgen.exe`). This tool
 
 ## [`src/WinRT.Projection.Generator`](../src/WinRT.Projection.Generator)
 
-Contains the **projection assembly generator** (`cswinrtprojectiongen.exe`). This tool runs at **app build time** and produces `WinRT.Projection.dll`, which contains the actual projection implementations for all WinRT types used by the application. The forwarder assemblies from component NuGet packages route their types into this assembly. For Windows SDK types, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` binaries, so this tool only needs to generate projections for third-party components.
+Contains the **projection assembly generator** (`cswinrtprojectiongen.exe`). This tool runs at **app build time** and produces `WinRT.Projection.dll`, which contains the actual projection implementations for all WinRT types used by the application. The forwarder assemblies from component NuGet packages route their types into this assembly. For Windows SDK types, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` binaries, so this tool only needs to generate projections for third-party components. The generator drives the [`WinRT.Projection.Writer`](../src/WinRT.Projection.Writer) library in-process to produce its C# sources, then compiles them with Roslyn.
+
+## [`src/WinRT.Projection.Ref.Generator`](../src/WinRT.Projection.Ref.Generator)
+
+Contains the **reference projection source generator** (`cswinrtprojectionrefgen.exe`). This Native AOT CLI tool runs at component-library build time, driving the projection writer in-process to produce the `.cs` files that `csc.exe` then compiles into the user library/component `.dll`. It is the C# replacement for the legacy `cswinrt.exe` invocation in the `CsWinRTGenerateProjection` MSBuild target.
+
+## [`src/WinRT.Projection.Writer`](../src/WinRT.Projection.Writer)
+
+Contains the **projection writer**, a C# library that reads `.winmd` metadata and generates C# projection source code for Windows Runtime types. It is the in-process replacement for the legacy C++ `cswinrt.exe` projection compiler from CsWinRT 2.x (which has been deleted). The writer ships as a library and is consumed by both `cswinrtprojectionrefgen.exe` (component-library build time) and `cswinrtprojectiongen.exe` (app publish time) via a single `ProjectionWriter.Run(ProjectionWriterOptions)` entry point.
 
 ## [`src/WinRT.WinMD.Generator`](../src/WinRT.WinMD.Generator)
 
