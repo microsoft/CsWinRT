@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
 
@@ -47,7 +48,7 @@ internal sealed class NamespaceMembers(string name)
     public void AddType(TypeDefinition type)
     {
         Types.Add(type);
-        TypeKind category = TypeCategorization.GetCategory(type);
+        TypeKind category = TypeKindResolver.Resolve(type);
         switch (category)
         {
             case TypeKind.Interface:
@@ -68,7 +69,7 @@ internal sealed class NamespaceMembers(string name)
                 Enums.Add(type);
                 break;
             case TypeKind.Struct:
-                if (TypeCategorization.IsApiContractType(type))
+                if (type.IsApiContractType)
                 {
                     Contracts.Add(type);
                 }

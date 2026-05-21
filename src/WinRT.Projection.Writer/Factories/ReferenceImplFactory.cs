@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -109,7 +110,7 @@ internal static class ReferenceImplFactory
                     }
                 """);
         }
-        else if (TypeCategorization.GetCategory(type) is TypeKind.Class or TypeKind.Delegate)
+        else if (TypeKindResolver.Resolve(type) is TypeKind.Class or TypeKind.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
             WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
@@ -140,7 +141,7 @@ internal static class ReferenceImplFactory
             // Defensive: should be unreachable. WriteReferenceImpl is only called for enum/struct/delegate
             // types (WriteAbiEnum / WriteAbiStruct / WriteAbiDelegate dispatchers).
             throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
-                $"WriteReferenceImpl: unsupported type category {TypeCategorization.GetCategory(type)} " +
+                $"WriteReferenceImpl: unsupported type category {TypeKindResolver.Resolve(type)} " +
                 $"for type '{type.FullName}'. Expected enum/struct/delegate.");
         }
 

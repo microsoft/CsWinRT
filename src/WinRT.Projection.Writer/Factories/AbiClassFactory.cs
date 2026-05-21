@@ -7,6 +7,7 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -119,7 +120,7 @@ internal static class AbiClassFactory
         string typeNs = type.GetRawNamespace();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
-        TypeKind category = TypeCategorization.GetCategory(type);
+        TypeKind category = TypeKindResolver.Resolve(type);
 
         // [WindowsRuntimeReferenceType(typeof(<projected>?))] for non-delegate, non-class types
         // (i.e. enums, structs, interfaces).
@@ -158,7 +159,7 @@ internal static class AbiClassFactory
             return true;
         }
 
-        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
         {
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
@@ -218,7 +219,7 @@ internal static class AbiClassFactory
         // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
         // exclusive-to.
         TypeDefinition? defaultIfaceTd = defaultIface?.ResolveAsTypeDefinition(context.Cache);
-        bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
+        bool defaultIfaceIsExclusive = defaultIfaceTd is not null && defaultIfaceTd.IsExclusiveTo;
 
         // Public *Marshaller class
         writer.WriteLine(isMultiline: true, $$"""

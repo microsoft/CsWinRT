@@ -99,13 +99,13 @@ internal static class InterfaceFactory
 
             if (impl.Interface is TypeDefinition ifaceTypeDef)
             {
-                isExclusive = TypeCategorization.IsExclusiveTo(ifaceTypeDef);
+                isExclusive = ifaceTypeDef.IsExclusiveTo;
             }
             else
             {
                 if (impl.TryResolveTypeDef(context.Cache, out TypeDefinition? resolved))
                 {
-                    isExclusive = TypeCategorization.IsExclusiveTo(resolved);
+                    isExclusive = resolved.IsExclusiveTo;
                 }
             }
 
@@ -389,14 +389,14 @@ internal static class InterfaceFactory
         // public_exclusiveto is set (or in reference projection or component mode).
         if (!context.Settings.ReferenceProjection &&
             !context.Settings.Component &&
-            TypeCategorization.IsExclusiveTo(type) &&
+            type.IsExclusiveTo &&
             !context.Settings.PublicExclusiveTo &&
             !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))
         {
             return;
         }
 
-        if (context.Settings.Component && !TypeCategorization.IsExclusiveTo(type))
+        if (context.Settings.Component && !type.IsExclusiveTo)
         {
             return;
         }
@@ -410,8 +410,8 @@ internal static class InterfaceFactory
             """);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
-        bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
-                          TypeCategorization.IsProjectionInternal(type);
+        bool isInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo) ||
+                          type.IsProjectionInternal;
         WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, false);
         WriteTypeInheritanceCallback inheritance = WriteTypeInheritance(context, type, false, false);
         writer.WriteLine($"{(isInternal ? "internal" : "public")} interface {name}{inheritance}");
@@ -425,7 +425,7 @@ internal static class InterfaceFactory
     /// [Overridable] interface impl on the class it's exclusive to.</summary>
     private static bool IsDefaultOrOverridableInterfaceTypedef(MetadataCache cache, TypeDefinition iface)
     {
-        if (!TypeCategorization.IsExclusiveTo(iface))
+        if (!iface.IsExclusiveTo)
         {
             return false;
         }

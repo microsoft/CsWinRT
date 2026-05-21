@@ -42,7 +42,7 @@ internal static class ProjectionFileBuilder
             case TypeKind.Interface:
                 InterfaceFactory.WriteInterface(writer, context, type);
                 break;
-            case TypeKind.Struct when TypeCategorization.IsApiContractType(type):
+            case TypeKind.Struct when type.IsApiContractType:
                 WriteContract(writer, context, type);
                 break;
             case TypeKind.Struct:

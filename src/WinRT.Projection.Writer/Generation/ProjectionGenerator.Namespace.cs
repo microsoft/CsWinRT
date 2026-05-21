@@ -10,6 +10,7 @@ using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -60,7 +61,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                TypeKind cat = TypeCategorization.GetCategory(type);
+                TypeKind cat = TypeKindResolver.Resolve(type);
                 switch (cat)
                 {
                     case TypeKind.Class:
@@ -90,7 +91,7 @@ internal sealed partial class ProjectionGenerator
                         MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeKind.Struct:
-                        if (!TypeCategorization.IsApiContractType(type))
+                        if (!type.IsApiContractType)
                         {
                             MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
                             MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
@@ -125,7 +126,7 @@ internal sealed partial class ProjectionGenerator
             }
 
             // Write the projected type per category
-            TypeKind category = TypeCategorization.GetCategory(type);
+            TypeKind category = TypeKindResolver.Resolve(type);
             ProjectionFileBuilder.WriteType(writer, context, type, category);
 
             if (category == TypeKind.Class && !type.IsAttributeType)
@@ -143,7 +144,7 @@ internal sealed partial class ProjectionGenerator
             {
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
-            else if (category == TypeKind.Struct && !TypeCategorization.IsApiContractType(type))
+            else if (category == TypeKind.Struct && !type.IsApiContractType)
             {
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
@@ -175,7 +176,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.GetCategory(type) != TypeKind.Class)
+                if (TypeKindResolver.Resolve(type) != TypeKind.Class)
                 {
                     continue;
                 }
@@ -216,7 +217,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.IsApiContractType(type))
+                if (type.IsApiContractType)
                 {
                     continue;
                 }
@@ -226,7 +227,7 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                TypeKind category = TypeCategorization.GetCategory(type);
+                TypeKind category = TypeKindResolver.Resolve(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, category);
             }
             writer.WriteEndAbiNamespace(context);

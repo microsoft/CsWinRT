@@ -279,7 +279,7 @@ internal static class ObjRefNameGenerator
             {
                 TypeDefinition? implTypeDef = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
-                if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
+                if (implTypeDef is not null && implTypeDef.IsExclusiveTo)
                 {
                     continue;
                 }
@@ -307,7 +307,7 @@ internal static class ObjRefNameGenerator
             {
                 TypeDefinition? implTypeDef = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
-                if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
+                if (implTypeDef is not null && implTypeDef.IsExclusiveTo)
                 {
                     continue;
                 }

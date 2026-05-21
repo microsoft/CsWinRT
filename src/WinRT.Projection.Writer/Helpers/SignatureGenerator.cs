@@ -6,6 +6,7 @@ using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -165,7 +166,7 @@ internal static class SignatureGenerator
     /// <param name="type">The type to emit a signature for.</param>
     private static void WriteSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeKind cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeKindResolver.Resolve(type);
         switch (cat)
         {
             case TypeKind.Enum:

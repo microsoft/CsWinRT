@@ -36,7 +36,7 @@ internal static class AbiInterfaceFactory
         WriteInterfaceMarshallerStub(writer, context, type);
 
         // For internal projections, just the static ABI methods class is enough.
-        if (TypeCategorization.IsProjectionInternal(type))
+        if (type.IsProjectionInternal)
         {
             return;
         }
@@ -431,7 +431,7 @@ internal static class AbiInterfaceFactory
     /// </summary>
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (TypeCategorization.IsExclusiveTo(type))
+        if (type.IsExclusiveTo)
         {
             return;
         }
@@ -477,8 +477,8 @@ internal static class AbiInterfaceFactory
 
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
-        bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
-            || TypeCategorization.IsProjectionInternal(type);
+        bool useInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
+            || type.IsProjectionInternal;
 
         // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
         // class, skip emitting it entirely — its members are merged into the default
@@ -493,7 +493,7 @@ internal static class AbiInterfaceFactory
         // is manually projected in WinRT.Runtime, e.g. IColorHelperStatics for ColorHelper,
         // IColorsStatics for Colors, IFontWeightsStatics for FontWeights). the original code also
         // omits these because their owning class is not projected.
-        if (TypeCategorization.IsExclusiveTo(type))
+        if (type.IsExclusiveTo)
         {
             TypeDefinition? owningClass = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
@@ -506,7 +506,7 @@ internal static class AbiInterfaceFactory
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
 
-        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
         {
             TypeDefinition? classType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 

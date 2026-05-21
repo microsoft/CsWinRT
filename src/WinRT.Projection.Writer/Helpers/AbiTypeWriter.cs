@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.References;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
@@ -140,7 +141,7 @@ internal static class AbiTypeWriter
 
                     if (rd is not null)
                     {
-                        TypeKind cat = TypeCategorization.GetCategory(rd);
+                        TypeKind cat = TypeKindResolver.Resolve(rd);
 
                         if (cat == TypeKind.Enum)
                         {

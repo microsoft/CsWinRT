@@ -6,6 +6,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -16,7 +17,7 @@ internal static partial class AbiTypeHelpers
     /// </summary>
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)
     {
-        TypeKind cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeKindResolver.Resolve(type);
 
         if (cat == TypeKind.Enum)
         {
@@ -177,7 +178,7 @@ internal static partial class AbiTypeHelpers
             // Same-module: use the resolved category directly.
             if (td.Type is TypeDefinition def)
             {
-                TypeKind cat = TypeCategorization.GetCategory(def);
+                TypeKind cat = TypeKindResolver.Resolve(def);
                 return cat is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
             }
 
@@ -190,7 +191,7 @@ internal static partial class AbiTypeHelpers
 
                 if (resolved is not null)
                 {
-                    TypeKind cat = TypeCategorization.GetCategory(resolved);
+                    TypeKind cat = TypeKindResolver.Resolve(resolved);
                     return cat is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
                 }
             }

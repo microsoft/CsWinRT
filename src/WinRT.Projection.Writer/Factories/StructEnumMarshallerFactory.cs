@@ -9,6 +9,7 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -41,7 +42,7 @@ internal static class StructEnumMarshallerFactory
     internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        TypeKind cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeKindResolver.Resolve(type);
 
         // A struct field is "blittable" when its projected and ABI layouts match (no per-field
         // marshalling). Detect that via AbiTypeKindResolver.IsBlittableStruct: it returns true

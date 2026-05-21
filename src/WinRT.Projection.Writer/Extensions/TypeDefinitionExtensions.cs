@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -78,6 +79,26 @@ internal static class TypeDefinitionExtensions
         /// Returns whether the type has any generic type parameters (i.e. is a generic type definition).
         /// </summary>
         public bool IsGeneric => type.GenericParameters.Count > 0;
+
+        /// <summary>
+        /// Returns whether the type is a struct marked with
+        /// <c>[Windows.Foundation.Metadata.ApiContractAttribute]</c> (i.e. a WinRT API contract).
+        /// </summary>
+        public bool IsApiContractType => type.IsStruct && type.HasWindowsFoundationMetadataAttribute("ApiContractAttribute");
+
+        /// <summary>
+        /// Returns whether the type is an interface marked with
+        /// <c>[Windows.Foundation.Metadata.ExclusiveToAttribute]</c> (i.e. an interface
+        /// declared "exclusive to" a single runtime class).
+        /// </summary>
+        public bool IsExclusiveTo => type.IsInterface && type.HasWindowsFoundationMetadataAttribute(ExclusiveToAttribute);
+
+        /// <summary>
+        /// Returns whether the type is marked with
+        /// <c>[WindowsRuntime.Internal.ProjectionInternalAttribute]</c> (i.e. a type that
+        /// should be projected as <c>internal</c> rather than <c>public</c>).
+        /// </summary>
+        public bool IsProjectionInternal => type.HasAttribute(WindowsRuntimeInternal, "ProjectionInternalAttribute");
 
         /// <summary>
         /// Returns the type's methods filtered to exclude special-name methods (property accessors,

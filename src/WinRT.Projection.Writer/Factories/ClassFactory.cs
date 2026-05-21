@@ -130,7 +130,7 @@ internal static class ClassFactory
             {
                 defaultIface = ifaceTd;
             }
-            else if (TypeCategorization.IsExclusiveTo(ifaceTd))
+            else if (ifaceTd.IsExclusiveTo)
             {
                 exclusiveIfaces.Add(ifaceTd);
             }

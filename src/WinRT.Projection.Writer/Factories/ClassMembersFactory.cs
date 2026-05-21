@@ -52,7 +52,7 @@ internal static partial class ClassMembersFactory
             return true;
         }
 
-        return !TypeCategorization.IsExclusiveTo(td);
+        return !td.IsExclusiveTo;
     }
 
     /// <inheritdoc cref="WriteParameterNameWithModifier(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>

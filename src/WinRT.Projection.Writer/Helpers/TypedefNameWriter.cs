@@ -71,7 +71,7 @@ internal static class TypedefNameWriter
 
         TypedefNameType nameToWrite = nameType;
 
-        if (authoredType && TypeCategorization.IsExclusiveTo(type) && nameToWrite == TypedefNameType.Projected)
+        if (authoredType && type.IsExclusiveTo && nameToWrite == TypedefNameType.Projected)
         {
             nameToWrite = TypedefNameType.CCW;
         }
@@ -79,7 +79,7 @@ internal static class TypedefNameWriter
         // Authored interfaces that aren't exclusive use the same authored interface.
         if (authoredType && nameToWrite == TypedefNameType.CCW &&
             type.IsInterface &&
-            !TypeCategorization.IsExclusiveTo(type))
+            !type.IsExclusiveTo)
         {
             nameToWrite = TypedefNameType.Projected;
         }

@@ -13,6 +13,7 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -294,7 +295,7 @@ internal static class MetadataAttributeFactory
     {
         // Skip exclusive interfaces and projection-internal interfaces.
         if (type.IsInterface &&
-            (TypeCategorization.IsExclusiveTo(type) || TypeCategorization.IsProjectionInternal(type)))
+            (type.IsExclusiveTo || type.IsProjectionInternal))
         {
             return;
         }
@@ -339,7 +340,7 @@ internal static class MetadataAttributeFactory
         WriteTypeMapAttribute(writer, "WindowsRuntimeComWrappersTypeMapGroup", $"\"{value}\"", $"typeof({target})", $"typeof({projectionName})");
 
         // For non-interface, non-struct authored types, emit proxy association.
-        TypeKind cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeKindResolver.Resolve(type);
 
         if (cat is not (TypeKind.Interface or TypeKind.Struct) && context.Settings.Component)
         {
@@ -364,8 +365,8 @@ internal static class MetadataAttributeFactory
         }
 
         // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
-        if ((TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo) ||
-            TypeCategorization.IsProjectionInternal(type))
+        if ((type.IsExclusiveTo && !context.Settings.IdicExclusiveTo) ||
+            type.IsProjectionInternal)
         {
             return;
         }
@@ -491,7 +492,7 @@ internal static class MetadataAttributeFactory
                 continue;
             }
 
-            if (TypeCategorization.IsExclusiveTo(ifaceDef))
+            if (ifaceDef.IsExclusiveTo)
             {
                 // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the
                 // Definition branch which knows about authored-type CCW namespacing.

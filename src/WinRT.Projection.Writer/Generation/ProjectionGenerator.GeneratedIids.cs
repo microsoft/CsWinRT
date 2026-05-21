@@ -9,6 +9,7 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -97,7 +98,7 @@ internal sealed partial class ProjectionGenerator
                 }
 
                 iidWritten = true;
-                TypeKind cat = TypeCategorization.GetCategory(type);
+                TypeKind cat = TypeKindResolver.Resolve(type);
                 switch (cat)
                 {
                     case TypeKind.Delegate:

@@ -195,7 +195,7 @@ internal static partial class ClassMembersFactory
         // into the default interface's vtable in a fixed order
         TypeDefinition abiInterface = ifaceType;
         ITypeDefOrRef abiInterfaceRef = originalInterface;
-        bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && TypeCategorization.IsExclusiveTo(ifaceType);
+        bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && ifaceType.IsExclusiveTo;
         bool isDefaultInterface = false;
 
         if (isFastAbiExclusive)

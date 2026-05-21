@@ -11,6 +11,7 @@ using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -30,10 +31,10 @@ internal static class ComponentFactory
             return;
         }
 
-        TypeKind cat = TypeCategorization.GetCategory(type);
+        TypeKind cat = TypeKindResolver.Resolve(type);
 
         if ((cat == TypeKind.Class && type.IsStatic) ||
-            (cat == TypeKind.Interface && TypeCategorization.IsExclusiveTo(type)))
+            (cat == TypeKind.Interface && type.IsExclusiveTo))
         {
             return;
         }
