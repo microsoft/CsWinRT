@@ -34,13 +34,14 @@ CsWinRT/
 │   ├── WinRT.Runtime2/                    # (1) Runtime library (WinRT.Runtime.dll)
 │   ├── Authoring/
 │   │   └── WinRT.SourceGenerator2/        # (2) Roslyn source generator + analyzers
-│   ├── cswinrt/                           # (3) C++ code generator (cswinrt.exe)
-│   ├── WinRT.Impl.Generator/              # (4) Impl/forwarder DLL generator (cswinrtimplgen.exe)
-│   ├── WinRT.Projection.Generator/        # (5) Projection DLL generator (cswinrtprojectiongen.exe)
-│   ├── WinRT.Interop.Generator/           # (6) Interop sidecar generator (cswinrtinteropgen.exe)
-│   ├── WinRT.WinMD.Generator/             # (7) Component .winmd generator (cswinrtwinmdgen.exe)
-│   ├── WinRT.Generator.Tasks/             # (8) MSBuild tasks for the build tools
-│   └── WinRT.Sdk.Projection/              # (9) Precompiled Windows SDK projection builds
+│   ├── WinRT.Projection.Writer/           # (3) Projection writer library (C# code writers)
+│   ├── WinRT.Projection.Ref.Generator/    # (4) Reference projection source generator (cswinrtprojectionrefgen.exe)
+│   ├── WinRT.Impl.Generator/              # (5) Impl/forwarder DLL generator (cswinrtimplgen.exe)
+│   ├── WinRT.Projection.Generator/        # (6) Projection DLL generator (cswinrtprojectiongen.exe)
+│   ├── WinRT.Interop.Generator/           # (7) Interop sidecar generator (cswinrtinteropgen.exe)
+│   ├── WinRT.WinMD.Generator/             # (8) Component .winmd generator (cswinrtwinmdgen.exe)
+│   ├── WinRT.Generator.Tasks/             # (9) MSBuild tasks for the build tools
+│   └── WinRT.Sdk.Projection/              # (10) Precompiled Windows SDK projection builds
 ├── nuget/                                 # MSBuild .props/.targets for NuGet package
 ├── docs/                                  # Specifications and documentation
 └── eng/                                   # Engineering/CI infrastructure
@@ -55,7 +56,7 @@ graph TD
     subgraph NUGET ["WinRT component NuGet package"]
         direction TB
         WINMD[".winmd metadata"]
-        CSWINRT["cswinrt.exe<br/><i>(CsWinRTGenerateProjection target)</i>"]
+        CSWINRT["cswinrtprojectionrefgen.exe<br/><i>(CsWinRTGenerateProjection target)</i>"]
         CS_SOURCES["Generated C# sources"]
         CSC_LIB["csc.exe<br/><i>(compiles projection .csproj)</i>"]
         REF_ASM["Reference assembly<br/><i>(public API surface only)</i>"]
@@ -95,7 +96,9 @@ graph TD
     IMPL_DLL -.->|"referenced by app"| MY_DLL
 ```
 
-> **Precompiled SDK projections:** To speed up builds, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` binaries for all supported Windows SDK versions. When the CsWinRT version matches the target Windows SDK version (which is the normal case, except when using a Windows SDK preview), the projection generator skips regenerating these .dll-s entirely and uses the precompiled ones instead. This avoids the cost of running cswinrt.exe + Roslyn compilation for the entire Windows SDK on every publish.
+> **Shared projection writer:** Both `cswinrtprojectionrefgen.exe` (used at component-library build time) and `cswinrtprojectiongen.exe` (used at app publish time) drive the same internal `WinRT.Projection.Writer` library to translate `.winmd` metadata into C# projection sources. The writer is consumed in-process by both tools, so there is no separate "projection compiler" executable to invoke.
+
+> **Precompiled SDK projections:** To speed up builds, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` binaries for all supported Windows SDK versions. When the CsWinRT version matches the target Windows SDK version (which is the normal case, except when using a Windows SDK preview), the projection generator skips regenerating these .dll-s entirely and uses the precompiled ones instead. This avoids the cost of running the projection writer + Roslyn compilation for the entire Windows SDK on every publish.
 
 ---
 
@@ -145,7 +148,7 @@ By running the interop generator at the very end of the build process (after all
 | Property | Default | Description |
 |----------|---------|-------------|
 | `CsWinRTEnabled` | `true` | Master switch for CsWinRT processing |
-| `CsWinRTGenerateProjection` | `true` | Run cswinrt.exe to generate C# projection code |
+| `CsWinRTGenerateProjection` | `true` | Run `cswinrtprojectionrefgen` to generate C# projection sources for the current project |
 | `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
@@ -180,26 +183,34 @@ WinRT.Runtime2/
 │   ├── Windows.Foundation/          # Foundation types (Point, Rect, Size, etc.)
 │   └── WindowsRuntime.InteropServices/  # Bindable adapters
 ├── Attributes/                      # Public marker attributes (e.g. [WindowsRuntimeClassName])
-├── InteropServices/                 # Core interop infrastructure (~456 files)
+├── InteropServices/                 # Core interop infrastructure
 │   ├── Activation/                  # Object activation factories and helpers
 │   ├── AsyncInfo/                   # Async operation marshalling
+│   ├── Attributes/                  # Internal attributes consumed by the interop stack
+│   ├── Bindables/                   # XAML data-binding bridge types
+│   ├── Buffers/                     # IBuffer / Span<byte> marshalling helpers
 │   ├── Callbacks/                   # ComWrappers callbacks
 │   ├── Collections/                 # Collection adapters (IList↔IVector, IDictionary↔IMap, etc.)
+│   ├── Dispatching/                 # DispatcherQueueSynchronizationContext and dispatcher integration
 │   ├── Events/                      # Event source infrastructure (EventSource<T>, tokens)
 │   ├── Exceptions/                  # Exception ↔ HRESULT marshalling
+│   ├── Extensions/                  # Public extension methods on projected types
 │   ├── InteropDllImports/           # P/Invoke declarations
 │   ├── Marshalers/                  # Type marshallers (string, delegate, value type, etc.)
 │   ├── Marshalling/                 # High-level marshalling APIs (WindowsRuntimeObjectMarshaller, etc.)
 │   ├── ObjectReference/             # Native object lifetime (WindowsRuntimeObjectReference hierarchy)
+│   ├── Placeholders/                # Placeholder types for unresolved generic instantiations
 │   ├── Platform/                    # Platform types (HRESULT, HSTRING, etc.)
+│   ├── ProjectionDllExports/        # Reserved DLL entry points consumed by the generated projection
 │   ├── ProjectionImpls/             # Built-in interface implementations (IStringable, IPropertyValue, etc.)
+│   ├── Streams/                     # IRandomAccessStream / Stream interop
+│   ├── System.Runtime.InteropServices/ # Custom interop attributes added to the BCL surface
 │   ├── TypeMapGroups/               # Type mapping group markers for ComWrappers
 │   ├── TypeMapInfo/                 # Type metadata caching
-│   ├── Vtables/                     # COM vtable struct definitions (37 vtable types)
+│   ├── Vtables/                     # COM vtable struct definitions
 │   └── WeakReferences/              # Weak reference support
 ├── NativeObjects/                   # Managed wrappers for native Windows Runtime objects (collections, async, etc.)
 ├── Windows.Foundation/              # Manually projected foundation types
-├── Windows.Foundation.Collections/  # Collection interfaces (IObservableVector, IObservableMap, etc.)
 ├── Windows.Storage.Streams/         # Manually projected stream types
 ├── Windows.UI.Xaml.Interop/         # Manually projected XAML interop types
 ├── Xaml.Attributes/                 # XAML-related attribute types
@@ -230,7 +241,7 @@ WinRT.Runtime2/
 
 **Types projected in WinRT.Runtime:**
 
-Not all WinRT types are generated automatically by `cswinrt.exe` into SDK projection assemblies. `WinRT.Runtime` contains two categories of types that require special handling:
+Not all WinRT types are generated automatically by the projection writer into SDK projection assemblies. `WinRT.Runtime` contains two categories of types that require special handling:
 
 #### Custom-mapped types
 
@@ -283,7 +294,7 @@ The full mapping table (including identical-name mappings for primitives) is in 
 
 #### Manually-projected types
 
-These are WinRT types that are defined directly in `WinRT.Runtime` rather than being auto-generated by `cswinrt.exe` into SDK projection assemblies. A type is manually projected when it requires customized marshalling support, or when it is referenced by additional infrastructure code that lives in `WinRT.Runtime`. For example:
+These are WinRT types that are defined directly in `WinRT.Runtime` rather than being auto-generated by the projection writer into SDK projection assemblies. A type is manually projected when it requires customized marshalling support, or when it is referenced by additional infrastructure code that lives in `WinRT.Runtime`. For example:
 
 - **Generic collection interfaces** (`IEnumerable<T>`, `IList<T>`, `IDictionary<K,V>`, etc.) are here so that supporting adapter code (e.g. `IListAdapter<T>`, `IEnumerableMethods<T>`) and native object wrappers can live alongside them and be consumed by both projections and the interop generator.
 - **Async interfaces** (`IAsyncOperation<T>`, `IAsyncActionWithProgress<T>`, etc.) and their associated delegates are here to provide the async infrastructure (`AsyncInfo`, `EventSource<T>` specializations) that bridges WinRT async patterns to `Task`.
@@ -311,7 +322,7 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
 | `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
-**Four diagnostic analyzers** producing 9 diagnostics (all errors, IDs `CSWINRT2000`–`CSWINRT2008`):
+**Five diagnostic analyzers** producing 10 diagnostics (IDs `CSWINRT2000`–`CSWINRT2009`; the first nine are errors, the last is a warning):
 
 Validate `[GeneratedCustomPropertyProvider]` usage:
 
@@ -321,38 +332,79 @@ Validate `[GeneratedCustomPropertyProvider]` usage:
 - `CSWINRT2003`: Type already implements `ICustomPropertyProvider` members
 - `CSWINRT2004`–`CSWINRT2008`: Invalid attribute arguments (null names, missing properties/indexers, static indexers)
 
-### 3. cswinrt.exe (`src/cswinrt/`)
+Validate general projection usage:
 
-A **C++ command-line tool** that reads `.winmd` metadata files and generates C# projection source code for Windows Runtime types. It uses the [WinMD NuGet package](http://aka.ms/winmd/nuget) for parsing [ECMA-335 metadata](http://www.ecma-international.org/publications/standards/Ecma-335.htm) files.
+- `CSWINRT2009`: Cast to a `[ComImport]` interface type is not supported under CsWinRT 3.0 (`ComImportInterfaceAnalyzer`)
 
-**Key files:**
+### 3. Projection writer (`src/WinRT.Projection.Writer/`)
 
-| File | Purpose |
-|------|---------|
-| `main.cpp` | Entry point: parses args, loads metadata, orchestrates parallel namespace generation |
-| `settings.h` | Command-line option definitions (`--input`, `--output`, `--include`, `--exclude`, `--reference_projection`, etc.) |
-| `code_writers.h` | Primary code generation logic (~456 KB). Contains `write_class()`, `write_interface()`, `write_struct()`, `write_enum()`, `write_delegate()` and their ABI counterparts |
-| `type_writers.h` | Type name writing utilities, generic argument tracking |
-| `helpers.h` | Type categorization utilities (`is_static()`, `is_type_blittable()`, `get_default_interface()`, etc.) |
-| `strings/` | Embedded C# code injected into output (additions for specific namespaces) |
+The **projection writer** is a C# library that reads `.winmd` metadata and generates C# projection source code for Windows Runtime types. It is the in-process replacement for the legacy C++ `cswinrt.exe` projection compiler from CsWinRT 2.x (which has been deleted). The writer ships as a library so the same code path is reused by both the reference projection generator (component build time) and the merged projection generator (app publish time).
 
-**Input/Output:**
+**Project settings:**
+
+- **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`, `DisableRuntimeMarshalling`, `IsAotCompatible`
+- **Root namespace**: `WindowsRuntime.ProjectionWriter`
+- **Assembly name**: `WinRT.Projection.Writer`
+- **Dependency**: `AsmResolver.DotNet` (for `.winmd` parsing and IL/metadata helpers)
+- **Public surface**: a single static `ProjectionWriter.Run(ProjectionWriterOptions)` entry point. `ProjectionWriterOptions` exposes input metadata paths, output folder, include/exclude filters, component/reference-projection/exclusive-to toggles, a logger callback, a `MaxDegreesOfParallelism` knob, and a `CancellationToken`.
+
+**Public API model:**
+
+The writer is consumed by other generators as a plain library reference — no inter-process invocation, no response file required at this boundary. The two consuming tools (`cswinrtprojectionrefgen` and `cswinrtprojectiongen`) parse their own response files, translate them into `ProjectionWriterOptions`, and call `ProjectionWriter.Run` directly.
+
+**Directory structure:**
 
 ```
-cswinrt.exe --input <.winmd files/dirs> --output <dir> [--include/--exclude prefixes]
-            [--reference_projection] [--component] [--internal] [--embedded]
+WinRT.Projection.Writer/
+├── ProjectionWriter.cs          # Public Run(ProjectionWriterOptions) entry point
+├── ProjectionWriterOptions.cs   # Public options record
+├── Builders/                    # Per-file emission orchestrators
+├── Errors/                      # WellKnownProjectionWriterException + Unhandled* (5xxx error IDs)
+├── Extensions/                  # AsmResolver / type-classifier extensions
+├── Factories/                   # ABI/projection class/interface/struct/enum/delegate factories
+├── Generation/                  # ProjectionGenerator orchestrator (per-namespace work items)
+├── Helpers/                     # Shared emission helpers (type names, IDs, signatures, blittability)
+├── Metadata/                    # MetadataCache, TypeSemantics, NamespaceMembers
+├── Models/                      # TypeKind, AbiTypeKind, MethodSignatureInfo, ParameterCategory, etc.
+├── References/                  # Well-known namespaces / attribute names / type names
+├── Resolvers/                   # TypeKindResolver, AbiTypeKindResolver, ParameterCategoryResolver, ...
+├── Resources/                   # Embedded baseline + per-namespace addition .cs files
+│   ├── Additions/               #   - One folder per WinRT namespace with hand-written add-on members
+│   └── Base/                    #   - Always-emitted baseline: ComInteropExtensions, InspectableVftbl, ReferenceInterfaceEntries
+└── Writers/                     # IndentedTextWriter (with interpolated-string + callback handlers) + supporting types
 ```
 
-**Generates two layers of C# code per Windows Runtime type:**
+**Generated output (per Windows Runtime type):**
 
-1. **Projected types** (public API): the user-facing C# classes, interfaces, structs, enums, and delegates that developers use directly. Runtime classes inherit `WindowsRuntimeObject`.
+1. **Projected types** (public API): user-facing C# classes, interfaces, structs, enums, and delegates. Runtime classes inherit `WindowsRuntimeObject`.
 2. **ABI layer** (`namespace ABI.{Namespace}`): internal marshalling infrastructure — vtable definitions (structs with unmanaged function pointers), interface method implementations, marshaller classes.
 
-**Namespace additions** (`strings/additions/`): extra C# code injected into specific namespaces (e.g. `Color.FromArgb()` for `Windows.UI`, XAML struct helpers for `Thickness`, `CornerRadius`, `GridLength`, etc.).
+**Namespace additions** (`Resources/Additions/`): hand-authored C# snippets injected into specific namespaces (e.g. `Color.FromArgb()` for `Windows.UI`, XAML struct helpers for `Thickness`, `CornerRadius`, `GridLength`, etc.). Both WinUI (`Microsoft.UI.Xaml`) and UWP (`Windows.UI.Xaml`) variants are present.
 
-**Internal interop interfaces** (`WindowsRuntime.Internal.idl`): a manually authored IDL file defining Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard `.winmd` metadata. This IDL is compiled to a `.winmd` that is bundled in the CsWinRT NuGet package and passed as additional input to cswinrt.exe when building Windows SDK projections. The `[ProjectionInternal]` attribute on each interface causes all generated projection code to be `internal`. User-friendly extension methods in `strings/ComInteropExtensions.cs` wrap these internal projections, exposing discoverable APIs on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
+**Baseline emission** (`Resources/Base/`): always-emitted files that are not derived from `.winmd` metadata — `ComInteropExtensions.cs` (user-friendly extension methods wrapping internal interop interfaces), `InspectableVftbl.cs` (cached `IInspectable` vtable shape), `ReferenceInterfaceEntries.cs` (CCW interface entry table for the unknown-object fallback).
 
-### 4. Impl generator (`src/WinRT.Impl.Generator/`)
+**Internal interop interfaces** (`WindowsRuntime.Internal.winmd`): a separately maintained `.winmd` of Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard SDK metadata. It is bundled in the CsWinRT NuGet package (`metadata/WindowsRuntime.Internal.winmd`) and added as additional input to the projection writer when building Windows SDK projections. Interfaces in this metadata carry the `[ProjectionInternal]` attribute, which causes all generated projection code for them to be emitted `internal`. The hand-written extension methods in `Resources/Base/ComInteropExtensions.cs` then surface user-friendly wrappers on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
+
+### 4. Reference projection generator (`src/WinRT.Projection.Ref.Generator/`)
+
+A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT** binary. It is the in-process C# replacement for the legacy `cswinrt.exe` invocation in the `CsWinRTGenerateProjection` MSBuild target. The tool runs at component-library build time and writes `.cs` files into the user's `$(IntermediateOutputPath)`, which `csc.exe` then compiles into the user library/component `.dll`.
+
+**Project settings:**
+
+- **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Root namespace**: `WindowsRuntime.ReferenceProjectionGenerator`
+- **Assembly name**: `cswinrtprojectionrefgen`
+- **Dependencies**: `ConsoleAppFramework` (CLI), and a project reference to `WinRT.Projection.Writer`
+- **Security**: Control Flow Guard enabled, `IlcResilient = false`
+
+**Two-step flow:**
+
+1. **Parse**: read the response file produced by the `CsWinRTGenerateProjection` MSBuild target, validate the target framework is `net10.0+`, and translate the parsed `ReferenceProjectionGeneratorArgs` into a `ProjectionWriterOptions` instance.
+2. **Generate**: invoke `ProjectionWriter.Run(options)` in-process. The writer emits the projection sources into the configured output folder.
+
+The tool is wired through the `RunCsWinRTProjectionRefGenerator` MSBuild task (in `WinRT.Generator.Tasks`).
+
+### 5. Impl generator (`src/WinRT.Impl.Generator/`)
 
 A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary. Generates **forwarder/impl assemblies** that contain only type forwards (no actual code).
 
@@ -380,15 +432,15 @@ A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary.
 4. Emits `[TypeForwarder]` entries for all public top-level types, routing to the appropriate projection assembly
 5. Optionally signs with a strong-name key
 
-### 5. Projection generator (`src/WinRT.Projection.Generator/`)
+### 6. Projection generator (`src/WinRT.Projection.Generator/`)
 
-A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** binary. Takes `.winmd` files as input, invokes `cswinrt.exe` to generate C# sources, then compiles them into a projection `.dll` using the Roslyn APIs.
+A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** binary. Runs at **app build / publish time** to produce a single projection `.dll` for the Windows SDK, the UWP XAML SDK, or all third-party Windows Runtime components referenced by the app. The tool drives the projection writer in-process and then compiles the resulting C# sources with Roslyn.
 
 **Project settings:**
 
 - **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtprojectiongen`
-- **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn)
+- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn), and a project reference to `WinRT.Projection.Writer`
 
 **Three projection modes:**
 
@@ -400,11 +452,11 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 
 **Three-phase pipeline:**
 
-1. **Process References**: load reference assemblies via AsmResolver, generate `.rsp` response file with namespace filters
-2. **Generate Sources**: invoke `cswinrt.exe @response.rsp` to produce C# files
-3. **Emit Assembly**: parse generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info
+1. **Process References**: load reference assemblies via AsmResolver, build a `ProjectionWriterOptions` describing the inputs, output folder, and namespace filters.
+2. **Generate Sources**: invoke `ProjectionWriter.Run(options)` in-process to produce C# files.
+3. **Emit Assembly**: parse the generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info.
 
-### 6. Interop generator (`src/WinRT.Interop.Generator/`)
+### 7. Interop generator (`src/WinRT.Interop.Generator/`)
 
 A **.NET CLI tool** (`cswinrtinteropgen.exe`) published as a **Native AOT** binary. This is the most complex build tool — it analyzes all application assemblies and produces the `WinRT.Interop.dll` sidecar containing all marshalling code.
 
@@ -440,7 +492,7 @@ There's two reasons for this:
 
 **Debug repro support**: can capture all inputs into a `.zip` file for reproducible debugging.
 
-### 7. WinMD generator (`src/WinRT.WinMD.Generator/`)
+### 8. WinMD generator (`src/WinRT.WinMD.Generator/`)
 
 A **.NET CLI tool** (`cswinrtwinmdgen.exe`) published as a **Native AOT** binary. Generates a `.winmd` metadata file from a compiled C# component assembly, allowing developers to author Windows Runtime components in C#. This is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. Moving it to a post-build CLI tool keeps it consistent with the other CsWinRT 3.0 build tools (interop, impl, projection generators) and removes the design-time/IntelliSense overhead of analyzing the entire component at every keystroke. It also addresses a more fundamental issue with the 2.x design: the generator produced a `.winmd` file **on disk**, but doing arbitrary file I/O from a Roslyn source generator is explicitly unsupported (source generators are only allowed to contribute additional source code to the compilation). The 2.x approach was therefore technically not even supported. The 3.0 post-build tool runs as a normal MSBuild step where file I/O is the expected output mechanism.
 
@@ -485,7 +537,7 @@ WinRT.WinMD.Generator/
 - Runs after `CoreCompile` (it needs the compiled .dll), gated on `CsWinRTComponent == true` and `DesignTimeBuild != true`
 - Output is `$(IntermediateOutputPath)$(AssemblyName).winmd`, then copied to `$(TargetDir)` by the authoring targets and packaged into the component's NuGet
 
-### 8. Generator tasks (`src/WinRT.Generator.Tasks/`)
+### 9. Generator tasks (`src/WinRT.Generator.Tasks/`)
 
 MSBuild task wrappers that bridge the MSBuild build system with the CLI tools above.
 
@@ -494,10 +546,11 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 - **Target**: `netstandard2.0` (for MSBuild compatibility)
 - **Dependency**: `Microsoft.Build.Utilities.Core`
 
-**Four tasks:**
+**Five tasks:**
 
 | Task Class | Tool | Purpose |
 |------------|------|---------|
+| `RunCsWinRTProjectionRefGenerator` | `cswinrtprojectionrefgen.exe` | Generate reference projection C# sources (component-library build time) |
 | `RunCsWinRTForwarderImplGenerator` | `cswinrtimplgen.exe` | Generate forwarder/impl assemblies |
 | `RunCsWinRTMergedProjectionGenerator` | `cswinrtprojectiongen.exe` | Generate merged projection assemblies |
 | `RunCsWinRTInteropGenerator` | `cswinrtinteropgen.exe` | Generate interop sidecar assembly |
@@ -505,7 +558,7 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 
 All tasks extend `ToolTask`, generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
 
-### 9. SDK projection builds (`src/WinRT.Sdk.Projection/`)
+### 10. SDK projection builds (`src/WinRT.Sdk.Projection/`)
 
 A build project (not a tool) used during **official CsWinRT builds** to produce precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` for each supported Windows SDK version. These precompiled .dll-s are bundled into the CsWinRT NuGet package so that consumers don't have to regenerate the entire Windows SDK projection on every publish (as described in the architecture overview).
 
@@ -531,13 +584,14 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 
 | File | Role |
 |------|------|
-| `Microsoft.Windows.CsWinRT.props` | Initial setup: sets `CsWinRTPath`, `CsWinRTExe`, `UsingCsWinRT3` flag |
+| `Microsoft.Windows.CsWinRT.props` | Initial setup: sets `CsWinRTPath`, `UsingCsWinRT3` flag, and the `BeforeMicrosoftNETSdkTargets` chain |
 | `Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets` | Pre-SDK configuration: reference projection mode, activation factory merging, stub exe setup |
-| `Microsoft.Windows.CsWinRT.targets` | Main pipeline: projection generation (cswinrt.exe), reference setup, compilation integration |
+| `Microsoft.Windows.CsWinRT.targets` | Main pipeline: invokes `cswinrtprojectionrefgen` for `CsWinRTGenerateProjection`, sets up reference inclusion, integrates with `CoreCompile` |
 | `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
 | `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
 | `Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` | Component `.winmd` generation: invokes `cswinrtwinmdgen.exe` after `CoreCompile` (only when `CsWinRTComponent == true`) |
+| `Microsoft.Windows.CsWinRT.Native.targets` | Imported by native (C++) `.vcxproj` consumers of C# WinRT components: detects component project references and generates `WinRT.Component.dll` + `WinRT.Interop.dll` for JIT hosting (gated on `CsWinRTDisableNativeComponentInterop != 'true'`) |
 
 ---
 
@@ -557,26 +611,20 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
 - **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
-### C++ project (cswinrt)
-
-- Warnings treated as errors (`TreatWarningAsError = true`)
-- Uses precompiled headers (`pch.h`/`pch.cpp`)
-- Character set: Unicode
-- Subsystem: Console
-
 ### Naming conventions
 
 - C# namespaces follow the `WindowsRuntime.*` pattern (root namespace: `WindowsRuntime`)
   - `WindowsRuntime.InteropServices` for interop infrastructure
   - `WindowsRuntime.SourceGenerator` for the source generator
-  - `WindowsRuntime.ImplGenerator`, `WindowsRuntime.ProjectionGenerator`, `WindowsRuntime.InteropGenerator`, `WindowsRuntime.WinMDGenerator` for build tools
+  - `WindowsRuntime.ProjectionWriter` for the projection writer library
+  - `WindowsRuntime.ReferenceProjectionGenerator`, `WindowsRuntime.ProjectionGenerator`, `WindowsRuntime.ImplGenerator`, `WindowsRuntime.InteropGenerator`, `WindowsRuntime.WinMDGenerator` for build tools
 - ABI types live under `ABI.{OriginalNamespace}` (e.g., `ABI.System.Collections.Generic`)
-- CLI tool assembly names are short: `cswinrt`, `cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`, `cswinrtwinmdgen`
+- CLI tool assembly names are short: `cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtwinmdgen`
 - C# keywords in generated identifiers are escaped with `@` prefix
 
 ### Build tool patterns
 
-All four .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`, `cswinrtwinmdgen`) share common patterns:
+All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtwinmdgen`) share common patterns:
 
 - Published as **Native AOT** self-contained binaries for fast startup
 - Use **ConsoleAppFramework** for CLI argument parsing
@@ -592,11 +640,13 @@ All four .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtint
 
 | Project | Error ID Pattern | Range |
 |---------|-----------------|-------|
-| Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2008` |
-| Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0010`, `9999` |
-| Projection Generator | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
-| Interop Generator | `CSWINRTINTEROPGENxxxx` | Various, `9999` |
-| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0007` |
+| Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2009` |
+| Reference Projection Generator | `CSWINRTPROJECTIONREFGENxxxx` | `0001`–`0005`, `9999` |
+| Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
+| Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5021`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
+| Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
+| Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0097`, `9999` |
+| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0007`, `9999` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
 ---

@@ -5,7 +5,7 @@ The [C#/WinRT NuGet package](https://www.nuget.org/packages/Microsoft.Windows.Cs
 - [Generate and distribute a projection](#generate-and-distribute-a-projection)
 - [Author and consume a C#/WinRT component](#author-and-consume-a-cwinrt-component) (coming soon for 3.0)
 
-For more information on using the NuGet package, refer to the [NuGet documentation](../nuget/readme.md). Command line options can be displayed by running `cswinrt -?`.
+For more information on using the NuGet package, refer to the [NuGet documentation](../nuget/readme.md). Command line options can be displayed by running `cswinrtprojectionrefgen -h`.
 
 ## Getting started with CsWinRT 3.0
 
@@ -56,13 +56,13 @@ Here is an example project file for a projection project that generates a refere
 
 By default, the **Windows** and **Microsoft** namespaces are not projected. The `CsWinRTGenerateReferenceProjection` property indicates this library is a projection project and configures it to generate a reference projection. For a full list of C#/WinRT NuGet project properties, refer to the [NuGet documentation](../nuget/readme.md).
 
-In the example diagram below, the projection project invokes **cswinrt.exe** at build time, which processes `.winmd` files in the "Contoso" namespace to generate projection source files and compiles these into a reference projection assembly named `Contoso.projection.dll` under the `ref` subfolder along with a forwarder assembly with the same name. The reference and forwarder assembly is typically distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package.
+In the example diagram below, the projection project invokes **cswinrtprojectionrefgen.exe** at build time, which processes `.winmd` files in the "Contoso" namespace to generate projection source files and compiles these into a reference projection assembly named `Contoso.projection.dll` under the `ref` subfolder along with a forwarder assembly with the same name. The reference and forwarder assembly is typically distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package.
 
 ```mermaid
 flowchart TD
     subgraph build ["Generate reference projection from a component"]
         direction LR
-        WINMD["Contoso.*.winmd"] -->|cswinrt.exe| CS["Contoso.*.cs\n(projection sources)"]
+        WINMD["Contoso.*.winmd"] -->|cswinrtprojectionrefgen.exe| CS["Contoso.*.cs\n(projection sources)"]
         CS -->|csc.exe| REF["ref/Contoso.projection.dll\n(Reference Assembly)"]
         REF -->|cswinrtimplgen.exe| FWD["Contoso.projection.dll\n(Forwarder Assembly)"]
     end
