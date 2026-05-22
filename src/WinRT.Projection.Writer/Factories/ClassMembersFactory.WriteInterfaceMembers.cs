@@ -8,7 +8,6 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -96,7 +95,7 @@ internal static partial class ClassMembersFactory
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
-                WriteInterfaceTypeNameForCcwCallback iface = WriteInterfaceTypeNameForCcw(context, substitutedInterface);
+                IndentedTextWriterCallback iface = WriteInterfaceTypeNameForCcw(context, substitutedInterface);
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
                     WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<{{iface}}>.GetInterface()
@@ -300,9 +299,9 @@ internal static partial class ClassMembersFactory
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
-                WriteProjectionReturnTypeCallback unsafeRet = MethodFactory.WriteProjectionReturnType(context, sig);
-                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                IndentedTextWriterCallback unsafeRet = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
                 string accessorParams = string.Concat(sig.Parameters.Select(p => $", {MethodFactory.WriteProjectionParameter(context, p).Format()}"));
                 string body = context.Settings.ReferenceProjection
                     ? "throw null;"
@@ -328,8 +327,8 @@ internal static partial class ClassMembersFactory
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
                 writer.Write($"{access}{methodSpecForThis}{ret} {name}({parms}");
 
                 if (context.Settings.ReferenceProjection)
@@ -339,7 +338,7 @@ internal static partial class ClassMembersFactory
                 }
                 else
                 {
-                    WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
                     writer.WriteLine($") => {abiClass}.{name}({objRef}{args});");
                 }
             }
@@ -351,10 +350,10 @@ internal static partial class ClassMembersFactory
                 // impl as well (since it shares the same originating interface).
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
-                WriteInterfaceTypeNameForCcwCallback iface = WriteInterfaceTypeNameForCcw(context, originalInterface);
-                WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+                IndentedTextWriterCallback iface = WriteInterfaceTypeNameForCcw(context, originalInterface);
+                IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
                 writer.WriteLine($"{ret} {iface}.{name}({parms}) => {name}({args});");
             }
         }
@@ -533,7 +532,7 @@ internal static partial class ClassMembersFactory
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
             writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt, currentInstance);
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt, currentInstance);
             string accessors;
             if (context.Settings.ReferenceProjection)
             {

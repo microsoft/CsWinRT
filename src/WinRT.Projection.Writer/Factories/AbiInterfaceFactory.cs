@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -57,9 +56,9 @@ internal static class AbiInterfaceFactory
 
     /// <inheritdoc cref="WriteAbiParameterTypesPointer(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, bool)"/>
     /// <returns>A callback emitting the ABI parameter types.</returns>
-    public static WriteAbiParameterTypesPointerCallback WriteAbiParameterTypesPointer(ProjectionEmitContext context, MethodSignatureInfo sig, bool includeParamNames = false)
+    public static IndentedTextWriterCallback WriteAbiParameterTypesPointer(ProjectionEmitContext context, MethodSignatureInfo sig, bool includeParamNames = false)
     {
-        return new(context, sig, includeParamNames);
+        return writer => AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames);
     }
 
     /// <summary>
@@ -79,7 +78,7 @@ internal static class AbiInterfaceFactory
             ParameterInfo p = sig.Parameters[i];
             ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
             string paramName = p.GetRawName();
-            WriteEscapedIdentifierCallback name = IdentifierEscaping.WriteEscapedIdentifier(paramName);
+            IndentedTextWriterCallback name = IdentifierEscaping.WriteEscapedIdentifier(paramName);
 
             if (p.Type is SzArrayTypeSignature)
             {
@@ -99,7 +98,7 @@ internal static class AbiInterfaceFactory
                 if (br.BaseType is SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
                     bool isRefElemBr = brSz.BaseType.IsAbiRefLike(context.AbiTypeKindResolver);
-                    WriteAbiTypeCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(brSz.BaseType));
+                    IndentedTextWriterCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(brSz.BaseType));
 
                     if (includeParamNames)
                     {
@@ -126,7 +125,7 @@ internal static class AbiInterfaceFactory
                 }
                 else
                 {
-                    WriteAbiTypeCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(br.BaseType));
+                    IndentedTextWriterCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(br.BaseType));
                     if (includeParamNames)
                     {
                         writer.Write($"{abi}* {name}");
@@ -139,7 +138,7 @@ internal static class AbiInterfaceFactory
             }
             else
             {
-                WriteAbiTypeCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
+                IndentedTextWriterCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
                 string ptr = cat is ParameterCategory.Out or ParameterCategory.Ref ? "*" : "";
                 if (includeParamNames)
                 {
@@ -162,7 +161,7 @@ internal static class AbiInterfaceFactory
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
             if (sig.ReturnType is SzArrayTypeSignature retSz)
             {
-                WriteAbiTypeCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(retSz.BaseType));
+                IndentedTextWriterCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(retSz.BaseType));
                 if (includeParamNames)
                 {
                     writer.Write($"uint* {retSizeName}, {elemAbi}** {retName}");
@@ -174,7 +173,7 @@ internal static class AbiInterfaceFactory
             }
             else
             {
-                WriteAbiTypeCallback retAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(sig.ReturnType));
+                IndentedTextWriterCallback retAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(sig.ReturnType));
                 if (includeParamNames)
                 {
                     writer.Write($"{retAbi}* {retName}");
@@ -224,7 +223,7 @@ internal static class AbiInterfaceFactory
             {
                 string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
                 MethodSignatureInfo sig = new(method);
-                WriteAbiParameterTypesPointerCallback abiParams = WriteAbiParameterTypesPointer(context, sig);
+                IndentedTextWriterCallback abiParams = WriteAbiParameterTypesPointer(context, sig);
                 writer.WriteLine($"public delegate* unmanaged[MemberFunction]<{abiParams}, int> {vm};");
             }
         }
@@ -357,7 +356,7 @@ internal static class AbiInterfaceFactory
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
-            WriteAbiParameterTypesPointerCallback doAbiParams = WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
+            IndentedTextWriterCallback doAbiParams = WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
             writer.Write(isMultiline: true, $$"""
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
                 private static unsafe int Do_Abi_{{vm}}({{doAbiParams}})
@@ -442,9 +441,9 @@ internal static class AbiInterfaceFactory
 
         string nameStripped = type.GetStrippedName();
 
-        WriteTypedefNameCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
-        WriteTypeParamsCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
-        WriteIidGuidReferenceCallback iid = AbiTypeHelpers.WriteIidGuidReference(context, type);
+        IndentedTextWriterCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
+        IndentedTextWriterCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
+        IndentedTextWriterCallback iid = AbiTypeHelpers.WriteIidGuidReference(context, type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""

@@ -8,7 +8,6 @@ using System.Text;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -287,9 +286,9 @@ internal static class CustomAttributeFactory
 
     /// <inheritdoc cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline). Emits nothing when no <c>[SupportedOSPlatform]</c> applies (or when not in reference-projection mode). The blank-line suppression in the writer collapses any template line that holds only this callback when it expands to empty.</returns>
-    public static WritePlatformAttributeCallback WritePlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
+    public static IndentedTextWriterCallback WritePlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
     {
-        return new(context, member);
+        return writer => CustomAttributeFactory.WritePlatformAttributeBody(writer, context, member);
     }
 
     /// <summary>
@@ -474,9 +473,9 @@ internal static class CustomAttributeFactory
 
     /// <inheritdoc cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>
     /// <returns>A callback emitting each applicable attribute on its own line. The trailing newline of the last attribute is dropped so the callback can be interpolated into a multiline template line without producing a stray blank line.</returns>
-    public static WriteTypeCustomAttributesCallback WriteTypeCustomAttributes(ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
+    public static IndentedTextWriterCallback WriteTypeCustomAttributes(ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
     {
-        return new(context, type, enablePlatformAttrib);
+        return writer => CustomAttributeFactory.WriteTypeCustomAttributesBody(writer, context, type, enablePlatformAttrib);
     }
 
     /// <summary>

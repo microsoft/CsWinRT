@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -164,8 +163,8 @@ internal static class ComponentFactory
         }
 
         string methodName = method.GetRawName();
-        WriteFactoryMethodParametersCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
-        WriteFactoryMethodParametersCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
+        IndentedTextWriterCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
+        IndentedTextWriterCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
         writer.WriteLine();
         writer.WriteLine($"public {projectedTypeName} {methodName}({typedParams}) => new {projectedTypeName}({nameOnlyParams});");
     }
@@ -182,9 +181,9 @@ internal static class ComponentFactory
         }
 
         string methodName = method.GetRawName();
-        WriteFactoryReturnTypeCallback retType = WriteFactoryReturnType(context, method);
-        WriteFactoryMethodParametersCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
-        WriteFactoryMethodParametersCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
+        IndentedTextWriterCallback retType = WriteFactoryReturnType(context, method);
+        IndentedTextWriterCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
+        IndentedTextWriterCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
         writer.WriteLine();
         writer.WriteLine($"public {retType} {methodName}({typedParams}) => {projectedTypeName}.{methodName}({nameOnlyParams});");
     }
@@ -241,9 +240,9 @@ internal static class ComponentFactory
 
     /// <inheritdoc cref="WriteFactoryReturnType(IndentedTextWriter, ProjectionEmitContext, MethodDefinition)"/>
     /// <returns>A callback emitting the projected return type of <paramref name="method"/>.</returns>
-    public static WriteFactoryReturnTypeCallback WriteFactoryReturnType(ProjectionEmitContext context, MethodDefinition method)
+    public static IndentedTextWriterCallback WriteFactoryReturnType(ProjectionEmitContext context, MethodDefinition method)
     {
-        return new(context, method);
+        return writer => ComponentFactory.WriteFactoryReturnType(writer, context, method);
     }
 
     /// <summary>
@@ -278,9 +277,9 @@ internal static class ComponentFactory
 
     /// <inheritdoc cref="WriteFactoryMethodParameters(IndentedTextWriter, ProjectionEmitContext, MethodDefinition, bool)"/>
     /// <returns>A callback emitting the factory-method parameter list.</returns>
-    public static WriteFactoryMethodParametersCallback WriteFactoryMethodParameters(ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
+    public static IndentedTextWriterCallback WriteFactoryMethodParameters(ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
     {
-        return new(context, method, includeTypes);
+        return writer => ComponentFactory.WriteFactoryMethodParameters(writer, context, method, includeTypes);
     }
 
     /// <summary>
@@ -306,7 +305,7 @@ internal static class ComponentFactory
 
             if (includeTypes)
             {
-                WriteTypeNameCallback projectedType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(sig.ParameterTypes[i]), TypedefNameType.Projected, true);
+                IndentedTextWriterCallback projectedType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(sig.ParameterTypes[i]), TypedefNameType.Projected, true);
                 writer.Write($"{projectedType} {paramName}");
             }
             else

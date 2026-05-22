@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -24,9 +23,9 @@ internal static class InterfaceFactory
 {
     /// <inheritdoc cref="WriteGuidAttribute(IndentedTextWriter, TypeDefinition)"/>
     /// <returns>A callback emitting the <c>[Guid("...")]</c> attribute.</returns>
-    public static WriteGuidAttributeCallback WriteGuidAttribute(TypeDefinition type)
+    public static IndentedTextWriterCallback WriteGuidAttribute(TypeDefinition type)
     {
-        return new(type);
+        return writer => InterfaceFactory.WriteGuidAttribute(writer, type);
     }
 
     /// <summary>
@@ -131,9 +130,9 @@ internal static class InterfaceFactory
 
     /// <inheritdoc cref="WriteTypeInheritance(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool, bool)"/>
     /// <returns>A callback that writes the inheritance clause to the writer it's appended to.</returns>
-    public static WriteTypeInheritanceCallback WriteTypeInheritance(ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
+    public static IndentedTextWriterCallback WriteTypeInheritance(ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
     {
-        return new(context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
+        return writer => InterfaceFactory.WriteTypeInheritance(writer, context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
     }
 
     /// <summary>
@@ -224,8 +223,8 @@ internal static class InterfaceFactory
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
-            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
             writer.WriteLine($"{ret} {method.GetRawName()}({parms});");
         }
 
@@ -251,7 +250,7 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine($"event {eventType} {evt.Name?.Value};");
         }
     }
@@ -402,8 +401,8 @@ internal static class InterfaceFactory
         }
 
         writer.WriteLine();
-        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-        WriteGuidAttributeCallback guidAttr = WriteGuidAttribute(type);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback guidAttr = WriteGuidAttribute(type);
         writer.WriteLine(isMultiline: true, $$"""
             {{metadataAttr}}
             {{guidAttr}}
@@ -412,8 +411,8 @@ internal static class InterfaceFactory
 
         bool isInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo) ||
                           type.IsProjectionInternal;
-        WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, false);
-        WriteTypeInheritanceCallback inheritance = WriteTypeInheritance(context, type, false, false);
+        IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, false);
+        IndentedTextWriterCallback inheritance = WriteTypeInheritance(context, type, false, false);
         writer.WriteLine($"{(isInternal ? "internal" : "public")} interface {name}{inheritance}");
         using (writer.WriteBlock())
         {

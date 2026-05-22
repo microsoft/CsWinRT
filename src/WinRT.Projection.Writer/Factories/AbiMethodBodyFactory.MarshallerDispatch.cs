@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -28,9 +27,9 @@ internal static partial class AbiMethodBodyFactory
 
     /// <inheritdoc cref="EmitMarshallerConvertToUnmanaged(IndentedTextWriter, ProjectionEmitContext, TypeSignature, string)"/>
     /// <returns>A callback emitting the marshaller's ConvertToUnmanaged call.</returns>
-    internal static EmitMarshallerConvertToUnmanagedCallback EmitMarshallerConvertToUnmanaged(ProjectionEmitContext context, TypeSignature sig, string argName)
+    internal static IndentedTextWriterCallback EmitMarshallerConvertToUnmanaged(ProjectionEmitContext context, TypeSignature sig, string argName)
     {
-        return new(context, sig, argName);
+        return writer => AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, sig, argName);
     }
 
     /// <summary>
@@ -49,8 +48,8 @@ internal static partial class AbiMethodBodyFactory
 
     /// <inheritdoc cref="EmitMarshallerConvertToManaged(IndentedTextWriter, ProjectionEmitContext, TypeSignature, string)"/>
     /// <returns>A callback emitting the marshaller's ConvertToManaged call.</returns>
-    internal static EmitMarshallerConvertToManagedCallback EmitMarshallerConvertToManaged(ProjectionEmitContext context, TypeSignature sig, string argName)
+    internal static IndentedTextWriterCallback EmitMarshallerConvertToManaged(ProjectionEmitContext context, TypeSignature sig, string argName)
     {
-        return new(context, sig, argName);
+        return writer => AbiMethodBodyFactory.EmitMarshallerConvertToManaged(writer, context, sig, argName);
     }
 }

@@ -129,23 +129,9 @@ internal partial class IndentedTextWriter
 
             int beforeLength = _writer._buffer.Length;
 
-            // Handle custom callbacks first. The value-type fast path lets the JIT specialize
-            // the dispatch when 'T' is the concrete callback struct (e.g. WriteIidGuidReferenceCallback).
-            if (typeof(T).IsValueType && value is IIndentedTextWriterCallback)
+            // Handle callbacks first: invoke the delegate against the writer.
+            if (value is IndentedTextWriterCallback writeCallback)
             {
-                ((IIndentedTextWriterCallback)value).Write(_writer);
-            }
-            else if (value is IIndentedTextWriterCallback callback)
-            {
-                // Polymorphic fallback for callers that declare the local as the interface type
-                // (e.g. to assign one of several concrete callback structs based on a condition).
-                callback.Write(_writer);
-            }
-            else if (value is IndentedTextWriterCallback writeCallback)
-            {
-                // Delegate-based callback (the canonical model going forward): dispatch by invoking
-                // the delegate. Captured lambdas and local functions converted to the delegate type
-                // (and any factory method that returns an 'IndentedTextWriterCallback') flow through here.
                 writeCallback(_writer);
             }
             else if (value is string text)

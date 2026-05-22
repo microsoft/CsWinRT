@@ -8,7 +8,6 @@ using System.Reflection;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Builders;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -93,9 +92,9 @@ internal static class MetadataAttributeFactory
 
     /// <inheritdoc cref="WriteWinRTMetadataAttribute(IndentedTextWriter, TypeDefinition, MetadataCache)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template.</returns>
-    public static WriteWinRTMetadataAttributeCallback WriteWinRTMetadataAttribute(TypeDefinition type, MetadataCache cache)
+    public static IndentedTextWriterCallback WriteWinRTMetadataAttribute(TypeDefinition type, MetadataCache cache)
     {
-        return new(type, cache);
+        return writer => MetadataAttributeFactory.WriteWinRTMetadataAttributeBody(writer, type, cache);
     }
 
     /// <summary>
@@ -123,9 +122,9 @@ internal static class MetadataAttributeFactory
 
     /// <inheritdoc cref="WriteWinRTMetadataTypeNameAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template.</returns>
-    public static WriteWinRTMetadataTypeNameAttributeCallback WriteWinRTMetadataTypeNameAttribute(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteWinRTMetadataTypeNameAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => MetadataAttributeFactory.WriteWinRTMetadataTypeNameAttributeBody(writer, context, type);
     }
 
     /// <summary>
@@ -133,7 +132,7 @@ internal static class MetadataAttributeFactory
     /// </summary>
     internal static void WriteWinRTMetadataTypeNameAttributeBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        WriteTypedefNameWithTypeParamsCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
+        IndentedTextWriterCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.NonProjected, true);
 
         writer.Write($"""[WindowsRuntimeMetadataTypeName("{typeName}")]""");
     }
@@ -152,9 +151,9 @@ internal static class MetadataAttributeFactory
 
     /// <inheritdoc cref="WriteWinRTMappedTypeAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template.</returns>
-    public static WriteWinRTMappedTypeAttributeCallback WriteWinRTMappedTypeAttribute(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteWinRTMappedTypeAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => MetadataAttributeFactory.WriteWinRTMappedTypeAttributeBody(writer, context, type);
     }
 
     /// <summary>
@@ -162,7 +161,7 @@ internal static class MetadataAttributeFactory
     /// </summary>
     internal static void WriteWinRTMappedTypeAttributeBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        WriteTypedefNameWithTypeParamsCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        IndentedTextWriterCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
 
         writer.Write($"[WindowsRuntimeMappedType(typeof({typeName}))]");
     }
@@ -186,9 +185,9 @@ internal static class MetadataAttributeFactory
 
     /// <inheritdoc cref="WriteValueTypeWinRTClassNameAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode (which combined with the writer's blank-line suppression collapses the would-be template line).</returns>
-    public static WriteValueTypeWinRTClassNameAttributeCallback WriteValueTypeWinRTClassNameAttribute(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteValueTypeWinRTClassNameAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttributeBody(writer, context, type);
     }
 
     /// <summary>
@@ -225,9 +224,9 @@ internal static class MetadataAttributeFactory
 
     /// <inheritdoc cref="WriteWinRTReferenceTypeAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode.</returns>
-    public static WriteWinRTReferenceTypeAttributeCallback WriteWinRTReferenceTypeAttribute(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteWinRTReferenceTypeAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => MetadataAttributeFactory.WriteWinRTReferenceTypeAttributeBody(writer, context, type);
     }
 
     /// <summary>
@@ -241,7 +240,7 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        WriteTypedefNameWithTypeParamsCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+        IndentedTextWriterCallback typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
 
         writer.Write($"[WindowsRuntimeReferenceType(typeof({typeName}?))]");
     }
@@ -264,9 +263,9 @@ internal static class MetadataAttributeFactory
 
     /// <inheritdoc cref="WriteComWrapperMarshallerAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode.</returns>
-    public static WriteComWrapperMarshallerAttributeCallback WriteComWrapperMarshallerAttribute(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteComWrapperMarshallerAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => MetadataAttributeFactory.WriteComWrapperMarshallerAttributeBody(writer, context, type);
     }
 
     /// <summary>

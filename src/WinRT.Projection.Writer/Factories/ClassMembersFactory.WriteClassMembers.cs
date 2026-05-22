@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -189,7 +188,7 @@ internal static partial class ClassMembersFactory
             //   T InterfaceName.PropName { set => PropName = value; }
             if (s.IsOverridable && s.OverridableInterface is not null)
             {
-                WriteInterfaceTypeNameForCcwCallback iface = WriteInterfaceTypeNameForCcw(context, s.OverridableInterface);
+                IndentedTextWriterCallback iface = WriteInterfaceTypeNameForCcw(context, s.OverridableInterface);
                 writer.Write($"{s.PropTypeText} {iface}.{kvp.Key} {{");
 
                 if (s.HasGetter)

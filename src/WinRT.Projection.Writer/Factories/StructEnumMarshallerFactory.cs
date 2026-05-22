@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -87,8 +86,8 @@ internal static class StructEnumMarshallerFactory
             isNonBlittableStruct = false;
         }
 
-        WriteTypedefNameCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
-        WriteTypedefNameCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+        IndentedTextWriterCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
+        IndentedTextWriterCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
 
         writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
@@ -267,7 +266,7 @@ internal static class StructEnumMarshallerFactory
         // type still routes through this marshaller (it just lacks per-field
         // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
         string boxFlags = (isEnum || blittableStruct || isNonBlittableStruct) && hasReferenceFields ? "TrackerSupport" : "None";
-        WriteIidReferenceExpressionCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        IndentedTextWriterCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine(isMultiline: true, $$"""
             public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged({{projected}}? value)
@@ -312,7 +311,7 @@ internal static class StructEnumMarshallerFactory
         // unboxing to the ABI struct.
         if (isEnum || blittableStruct || isNonBlittableStruct)
         {
-            WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+            IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
             // InterfaceEntriesImpl
             writer.WriteLine(isMultiline: true, $$"""
@@ -374,7 +373,7 @@ internal static class StructEnumMarshallerFactory
             writer.IncreaseIndent();
             if (isNonBlittableStruct)
             {
-                WriteTypedefNameCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
+                IndentedTextWriterCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
                 writer.WriteLine($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
             }
             else

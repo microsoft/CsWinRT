@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -227,9 +226,9 @@ internal static class ClassFactory
     {
         using (context.EnterPlatformSuppressionScope(string.Empty))
         {
-            WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-            WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
-            WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+            IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+            IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+            IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
             writer.WriteLine(isMultiline: true, $$"""
                 {{metadataAttr}}
                 {{customAttrs}}
@@ -291,8 +290,8 @@ internal static class ClassFactory
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-                WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
                 writer.Write($"public static {ret} {mname}({parms}");
 
                 if (context.Settings.ReferenceProjection)
@@ -302,7 +301,7 @@ internal static class ClassFactory
                 }
                 else
                 {
-                    WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
                     writer.WriteLine($") => {abiClass}.{mname}({objRef}{args});");
                 }
             }
@@ -315,7 +314,7 @@ internal static class ClassFactory
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+                IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
 
                 if (context.Settings.ReferenceProjection)
                 {
@@ -462,7 +461,7 @@ internal static class ClassFactory
         }
         else
         {
-            WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
+            IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
 
             writer.WriteLine(isMultiline: true, $$"""
                 private static WindowsRuntimeObjectReference {{objRefName}}
@@ -511,14 +510,14 @@ internal static class ClassFactory
         int gcPressure = GetGcPressureAmount(type);
 
         // Header attributes + class declaration as a single multiline template.
-        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
-        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
 
         // are emitted as plain (non-partial) classes.
         string modifiers = type.IsStatic ? "static " : type.IsSealed ? "sealed " : "";
-        WriteTypedefNameWithTypeParamsCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
-        WriteTypeInheritanceCallback inheritance = InterfaceFactory.WriteTypeInheritance(context, type, false, true);
+        IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+        IndentedTextWriterCallback inheritance = InterfaceFactory.WriteTypeInheritance(context, type, false, true);
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             {{metadataAttr}}
@@ -644,7 +643,7 @@ internal static class ClassFactory
                     continue;
                 }
 
-                WriteIidExpressionCallback iid = ObjRefNameGenerator.WriteIidExpression(context, implRef);
+                IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, implRef);
                 overridableClauses.Add($"{iid.Format()} == iid");
             }
 

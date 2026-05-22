@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -42,7 +41,7 @@ internal static class AbiStructFactory
             string marshallerOrTypeAttrs = context.Settings.Component
                 ? $"{MetadataAttributeFactory.WriteWinRTMetadataTypeNameAttribute(context, type).Format()}\n{MetadataAttributeFactory.WriteWinRTMappedTypeAttribute(context, type).Format()}"
                 : MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type).Format();
-            WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
+            IndentedTextWriterCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
             writer.WriteLine(isMultiline: true, $$"""
                 {{marshallerOrTypeAttrs}}
                 {{valueTypeAttr}}

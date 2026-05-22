@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
@@ -205,9 +204,9 @@ internal static class AbiTypeWriter
 
     /// <inheritdoc cref="WriteAbiType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
     /// <returns>A callback that writes the ABI type to the writer it's appended to.</returns>
-    public static WriteAbiTypeCallback WriteAbiType(ProjectionEmitContext context, TypeSemantics semantics)
+    public static IndentedTextWriterCallback WriteAbiType(ProjectionEmitContext context, TypeSemantics semantics)
     {
-        return new(context, semantics);
+        return writer => AbiTypeWriter.WriteAbiType(writer, context, semantics);
     }
 
     /// <summary>

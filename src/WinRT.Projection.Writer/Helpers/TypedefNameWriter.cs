@@ -4,7 +4,6 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -143,16 +142,16 @@ internal static class TypedefNameWriter
 
     /// <inheritdoc cref="WriteTypedefNameWithTypeParams(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
     /// <returns>A callback that writes the typedef name + generic-parameter list to the writer it's appended to.</returns>
-    public static WriteTypedefNameWithTypeParamsCallback WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
+    public static IndentedTextWriterCallback WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        return new(context, type, nameType, forceWriteNamespace);
+        return writer => TypedefNameWriter.WriteTypedefNameWithTypeParams(writer, context, type, nameType, forceWriteNamespace);
     }
 
     /// <inheritdoc cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
     /// <returns>A callback that writes the typedef name to the writer it's appended to.</returns>
-    public static WriteTypedefNameCallback WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
+    public static IndentedTextWriterCallback WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        return new(context, type, nameType, forceWriteNamespace);
+        return writer => TypedefNameWriter.WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
     }
 
     /// <summary>
@@ -180,9 +179,9 @@ internal static class TypedefNameWriter
 
     /// <inheritdoc cref="WriteTypeParams(IndentedTextWriter, TypeDefinition)"/>
     /// <returns>A callback that writes the generic-parameter list to the writer it's appended to.</returns>
-    public static WriteTypeParamsCallback WriteTypeParams(TypeDefinition type)
+    public static IndentedTextWriterCallback WriteTypeParams(TypeDefinition type)
     {
-        return new(type);
+        return writer => TypedefNameWriter.WriteTypeParams(writer, type);
     }
 
     /// <summary>
@@ -316,16 +315,16 @@ internal static class TypedefNameWriter
 
     /// <inheritdoc cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>
     /// <returns>A callback that writes the type name to the writer it's appended to.</returns>
-    public static WriteTypeNameCallback WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType, bool forceWriteNamespace)
+    public static IndentedTextWriterCallback WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        return new(context, semantics, nameType, forceWriteNamespace);
+        return writer => TypedefNameWriter.WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
     }
 
     /// <inheritdoc cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
     /// <returns>A callback that writes the projected type name to the writer it's appended to.</returns>
-    public static WriteProjectionTypeCallback WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
+    public static IndentedTextWriterCallback WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
     {
-        return new(context, semantics);
+        return writer => TypedefNameWriter.WriteProjectionType(writer, context, semantics);
     }
 
     /// <summary>
@@ -338,16 +337,16 @@ internal static class TypedefNameWriter
 
     /// <inheritdoc cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition)"/>
     /// <returns>A callback that writes the event handler type to the writer it's appended to.</returns>
-    public static WriteEventTypeCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt)
+    public static IndentedTextWriterCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt)
     {
-        return new(context, evt, null);
+        return writer => TypedefNameWriter.WriteEventType(writer, context, evt);
     }
 
     /// <inheritdoc cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition, GenericInstanceTypeSignature?)"/>
     /// <returns>A callback that writes the event handler type to the writer it's appended to.</returns>
-    public static WriteEventTypeCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt, GenericInstanceTypeSignature? currentInstance)
+    public static IndentedTextWriterCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt, GenericInstanceTypeSignature? currentInstance)
     {
-        return new(context, evt, currentInstance);
+        return writer => TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
     }
 
     /// <summary>

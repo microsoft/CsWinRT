@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -190,9 +189,9 @@ internal static class ObjRefNameGenerator
 
     /// <inheritdoc cref="WriteIidExpression(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
     /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
-    public static WriteIidExpressionCallback WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    public static IndentedTextWriterCallback WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        return new(context, ifaceType);
+        return writer => ObjRefNameGenerator.WriteIidExpression(writer, context, ifaceType);
     }
 
     /// <summary>
@@ -230,9 +229,9 @@ internal static class ObjRefNameGenerator
 
     /// <inheritdoc cref="WriteIidReferenceExpression(IndentedTextWriter, TypeDefinition)"/>
     /// <returns>A callback that writes the IID reference expression to the writer it's appended to.</returns>
-    public static WriteIidReferenceExpressionCallback WriteIidReferenceExpression(TypeDefinition type)
+    public static IndentedTextWriterCallback WriteIidReferenceExpression(TypeDefinition type)
     {
-        return new(type);
+        return writer => ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
     }
 
     /// <summary>

@@ -5,7 +5,6 @@ using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -34,7 +33,7 @@ internal static partial class ConstructorFactory
         writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
-            WriteProjectionParameterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+            IndentedTextWriterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
             writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
         writer.WriteLine(isMultiline: true, """
@@ -45,7 +44,7 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
             string pname = p.GetEscapedName();
-            WriteProjectionParameterTypeCallback paramType = MethodFactory.WriteProjectionParameterType(context, p);
+            IndentedTextWriterCallback paramType = MethodFactory.WriteProjectionParameterType(context, p);
             writer.WriteLine($"    public readonly {paramType} {pname} = {pname};");
         }
         writer.WriteLine("}");
@@ -135,12 +134,12 @@ internal static partial class ConstructorFactory
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
             if (cat == ParameterCategory.PassArray)
             {
-                WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write($"ReadOnlySpan<{elem}>");
             }
             else if (cat == ParameterCategory.FillArray)
             {
-                WriteProjectionTypeCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write($"Span<{elem}>");
             }
             else
@@ -172,7 +171,7 @@ internal static partial class ConstructorFactory
             }
 
             string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
-            WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+            IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
             UnsafeAccessorFactory.EmitStaticMethod(
                 writer,
                 accessName: "ConvertToUnmanaged",
@@ -201,7 +200,7 @@ internal static partial class ConstructorFactory
 
             string raw = p.GetRawName();
             string pname = IdentifierEscaping.EscapeIdentifier(raw);
-            EmitMarshallerConvertToUnmanagedCallback cvt = AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(context, p.Type, pname);
+            IndentedTextWriterCallback cvt = AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(context, p.Type, pname);
             writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = {cvt};");
         }
 
@@ -467,7 +466,7 @@ internal static partial class ConstructorFactory
             }
             else
             {
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "CopyToUnmanaged",
@@ -491,7 +490,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            WriteAbiTypeCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
+            IndentedTextWriterCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
             writer.Write($"{abi}, ");
         }
 
