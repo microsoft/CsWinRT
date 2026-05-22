@@ -3,6 +3,10 @@ parameters:
   displayName: 'Enable debug output'
   type: boolean
   default: false
+- name: 'CreateVPack'
+  displayName: 'Create CsWinRT VPack'
+  type: boolean
+  default: false
 
 variables:
 - template: CsWinRT-Variables.yml@self
@@ -73,12 +77,13 @@ extends:
         jobs:
         - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Stage-OneBranch.yml@self
 
-      # On-demand stage to create and upload VPack. Gated by manual approval on
-      # the 'CsWinRT-VPack' environment (configure approvers in ADO UI).
-      - stage: VPack
-        displayName: Create and Upload VPack
-        dependsOn: Nuget
-        variables:
-          NugetVersion: $[ stageDependencies.Nuget.PublishTo_CsWinRT_InternalFeed.outputs['ParseVersions.NugetVersion'] ]
-        jobs:
-        - template: build/AzurePipelineTemplates/CsWinRT-VPack-Stage-OneBranch.yml@self
+      # On-demand stage to create and upload VPack. Only emitted when the
+      # 'CreateVPack' queue-time parameter is true.
+      - ${{ if eq(parameters.CreateVPack, true) }}:
+        - stage: VPack
+          displayName: Create and Upload VPack
+          dependsOn: Nuget
+          variables:
+            NugetVersion: $[ stageDependencies.Nuget.PublishTo_CsWinRT_InternalFeed.outputs['ParseVersions.NugetVersion'] ]
+          jobs:
+          - template: build/AzurePipelineTemplates/CsWinRT-VPack-Stage-OneBranch.yml@self
