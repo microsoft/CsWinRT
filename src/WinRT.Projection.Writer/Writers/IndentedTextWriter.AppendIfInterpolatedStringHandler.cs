@@ -130,6 +130,16 @@ internal partial class IndentedTextWriter
                 return;
             }
 
+            // Delegate-based callback (the canonical model going forward): dispatch by invoking
+            // the delegate. Captured lambdas and local functions converted to the delegate type
+            // (and any factory method that returns an 'IndentedTextWriterCallback') flow through here.
+            if (value is IndentedTextWriterCallback writeCallback)
+            {
+                writeCallback(_writer);
+
+                return;
+            }
+
             // If the value is a 'string', write it while preserving the multiline semantics.
             // Otherwise, leverage the 'StringBuilder' handler for zero-alloc interpolation.
             if (value is string text)

@@ -4,7 +4,7 @@
 namespace WindowsRuntime.ProjectionWriter.Writers;
 
 /// <summary>
-/// Extension methods for <see cref="IIndentedTextWriterCallback"/> implementations.
+/// Extension methods for indented-writer callback types.
 /// </summary>
 internal static class IIndentedTextWriterCallbackExtensions
 {
@@ -24,6 +24,22 @@ internal static class IIndentedTextWriterCallbackExtensions
         using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
 
         callback.Write(owner.Writer);
+
+        return owner.Writer.ToString();
+    }
+
+    /// <summary>
+    /// Writes the delegate's content into a pooled <see cref="IndentedTextWriter"/> at indent
+    /// level <c>0</c> and returns the resulting string. Same as the struct overload above, but
+    /// for the canonical <see cref="IndentedTextWriterCallback"/> delegate.
+    /// </summary>
+    /// <param name="callback">The callback to invoke.</param>
+    /// <returns>The string produced by the callback.</returns>
+    public static string Format(this IndentedTextWriterCallback callback)
+    {
+        using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
+
+        callback(owner.Writer);
 
         return owner.Writer.ToString();
     }

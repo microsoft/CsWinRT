@@ -141,6 +141,13 @@ internal partial class IndentedTextWriter
                 // (e.g. to assign one of several concrete callback structs based on a condition).
                 callback.Write(_writer);
             }
+            else if (value is IndentedTextWriterCallback writeCallback)
+            {
+                // Delegate-based callback (the canonical model going forward): dispatch by invoking
+                // the delegate. Captured lambdas and local functions converted to the delegate type
+                // (and any factory method that returns an 'IndentedTextWriterCallback') flow through here.
+                writeCallback(_writer);
+            }
             else if (value is string text)
             {
                 // If the value is a 'string', write it while preserving the multiline semantics.
