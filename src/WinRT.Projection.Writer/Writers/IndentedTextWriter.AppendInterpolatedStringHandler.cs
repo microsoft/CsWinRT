@@ -134,6 +134,13 @@ internal partial class IndentedTextWriter
             {
                 writeCallback(_writer);
             }
+            else if (value is Action<IndentedTextWriter> implicitWriteCallback)
+            {
+                // Handle actions too (for method group conversions)
+                implicitWriteCallback(_writer);
+
+                return;
+            }
             else if (value is string text)
             {
                 // If the value is a 'string', write it while preserving the multiline semantics.

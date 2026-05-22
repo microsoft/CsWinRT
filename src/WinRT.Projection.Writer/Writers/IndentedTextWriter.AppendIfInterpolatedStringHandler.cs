@@ -112,10 +112,18 @@ internal partial class IndentedTextWriter
                 return;
             }
 
-            // Handle callbacks first: invoke the delegate against the writer.
+            // Handle callbacks first: invoke the delegate against the writer
             if (value is IndentedTextWriterCallback writeCallback)
             {
                 writeCallback(_writer);
+
+                return;
+            }
+
+            // Handle actions too (for method group conversions)
+            if (value is Action<IndentedTextWriter> implicitWriteCallback)
+            {
+                implicitWriteCallback(_writer);
 
                 return;
             }
