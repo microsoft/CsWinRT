@@ -919,9 +919,9 @@ namespace System.Threading.Tasks
             // Cannot Close from a non-terminal state:
             if (!IsInTerminalState)
             {
-                // If we are STATE_NOT_INITIALIZED, the we probably threw from the ctor.
-                // The finalizer will be called anyway and we need to free this partially constructed object correctly.
-                // So we avoid throwing when we are in STATE_NOT_INITIALIZED.
+                // If we are STATE_NOT_INITIALIZED, we probably threw from the ctor.
+                // We still want a deterministic Close to clean up the partially constructed
+                // object correctly, so we avoid throwing in that case.
                 // In other words throw only if *some* async state is set:
                 if (0 != (_state & STATEMASK_SELECT_ANY_ASYNC_STATE))
                 {
