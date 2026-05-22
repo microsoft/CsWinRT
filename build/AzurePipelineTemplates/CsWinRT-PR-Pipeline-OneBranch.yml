@@ -67,11 +67,11 @@ extends:
         jobs:
         - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Stage-OneBranch.yml@self
 
-      # On-demand stage to create and upload VPack.
+      # On-demand stage to create and upload VPack. Gated by manual approval on
+      # the 'CsWinRT-VPack' environment (configure approvers in ADO UI).
       - stage: VPack
         displayName: Create and Upload VPack
         dependsOn: Nuget
-        trigger: manual
         variables:
           NugetVersion: $[ stageDependencies.Nuget.PublishTo_CsWinRT_InternalFeed.outputs['ParseVersions.NugetVersion'] ]
         jobs:
