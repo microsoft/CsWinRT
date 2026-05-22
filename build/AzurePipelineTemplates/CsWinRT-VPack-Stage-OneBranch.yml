@@ -1,0 +1,83 @@
+jobs:
+  - job: CreateCsWinRTVPack
+    displayName: Create CsWinRT VPack
+    pool:
+      type: windows
+
+    variables:
+      ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+
+      # OneBranch VPack creation (https://aka.ms/wud/template).
+      # The VPack is produced from the contents of $(ob_outputDirectory) after the
+      # steps below extract the just-built Microsoft.Windows.CsWinRT nupkg into it.
+      ob_createvpack_enabled: true
+      ob_createvpack_packagename: 'Microsoft.Windows.CsWinRT'
+      ob_createvpack_description: 'CsWinRT Tool'
+      ob_createvpack_owneralias: 'cswinrtcore'
+      ob_createvpack_versionAs: string
+      ob_createvpack_version: $(CsWinRTVPackVersion)
+      ob_createvpack_provData: true
+      ob_createvpack_verbose: true
+
+      ob_artifactSuffix: vpack
+
+      # No native build happens in this stage - packaging only.
+      ob_sdl_prefast_enabled: false
+      ob_sdl_prefast_runDuring: 'Build'
+      ob_sdl_checkCompliantCompilerWarnings: true
+
+    steps:
+    - task: NuGetAuthenticate@1
+
+    # Download the nupkg published by the Nuget stage. The Nuget stage's job is
+    # 'PublishTo_CsWinRT_InternalFeed' and produces $(ob_outputDirectory)\packages
+    # as a OneBranch drop artifact.
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download CsWinRT nupkg from Nuget stage'
+      inputs:
+        artifactName: drop_Nuget_PublishTo_CsWinRT_InternalFeed
+        itemPattern: '**/Microsoft.Windows.CsWinRT.*.nupkg'
+        targetPath: $(Build.SourcesDirectory)\nupkg
+
+    # Extract the .nupkg into $(ob_outputDirectory). OneBranch's VPack creation
+    # task picks up the contents of $(ob_outputDirectory) as the VPack payload.
+    # We also parse the version out of the nupkg filename and surface it as
+    # CsWinRTVPackVersion so the ob_createvpack_version variable above resolves
+    # correctly when the VPack create task runs.
+    - task: PowerShell@2
+      displayName: 'Extract nupkg into VPack output directory'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $ErrorActionPreference = 'Stop'
+
+          $nupkg = Get-ChildItem -Recurse -Path '$(Build.SourcesDirectory)\nupkg' -Filter 'Microsoft.Windows.CsWinRT.*.nupkg' |
+              Where-Object { $_.Name -notmatch '\.symbols\.nupkg$' } |
+              Select-Object -First 1
+          if (-not $nupkg) {
+              throw 'Microsoft.Windows.CsWinRT nupkg not found in Nuget stage drop.'
+          }
+          Write-Host "Found nupkg: $($nupkg.FullName)"
+
+          # Parse version from filename: Microsoft.Windows.CsWinRT.<version>.nupkg
+          $name = [System.IO.Path]::GetFileNameWithoutExtension($nupkg.Name)
+          $version = $name -replace '^Microsoft\.Windows\.CsWinRT\.', ''
+          Write-Host "Parsed CsWinRT version: $version"
+          Write-Host "##vso[task.setvariable variable=CsWinRTVPackVersion;]$version"
+
+          # Extract the .nupkg (it's a zip) into the output directory used by the
+          # OneBranch VPack create task.
+          New-Item -ItemType Directory -Force -Path '$(ob_outputDirectory)' | Out-Null
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($nupkg.FullName, '$(ob_outputDirectory)')
+
+          # Drop NuGet metadata that should not be in the VPack payload.
+          Get-ChildItem -Path '$(ob_outputDirectory)' -Recurse -Include '*.nupkg','*.nuspec','[Content_Types].xml','.signature.p7s' -Force |
+              Remove-Item -Force -ErrorAction SilentlyContinue
+          $relsDir = Join-Path '$(ob_outputDirectory)' '_rels'
+          if (Test-Path $relsDir) { Remove-Item -Recurse -Force $relsDir }
+          $packageDir = Join-Path '$(ob_outputDirectory)' 'package'
+          if (Test-Path $packageDir) { Remove-Item -Recurse -Force $packageDir }
+
+          Write-Host 'VPack payload contents:'
+          Get-ChildItem -Recurse -Path '$(ob_outputDirectory)'
