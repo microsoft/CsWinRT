@@ -46,7 +46,6 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $nupkg = Get-ChildItem -Recurse -Path '$(Build.SourcesDirectory)\nupkg' -Filter 'Microsoft.Windows.CsWinRT.*.nupkg' |
-              Where-Object { $_.Name -notmatch '\.symbols\.nupkg$' } |
               Select-Object -First 1
           if (-not $nupkg) {
               throw 'Microsoft.Windows.CsWinRT nupkg not found in Nuget stage drop.'
