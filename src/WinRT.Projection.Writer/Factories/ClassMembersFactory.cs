@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -57,9 +56,9 @@ internal static partial class ClassMembersFactory
 
     /// <inheritdoc cref="WriteParameterNameWithModifier(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
     /// <returns>A callback emitting the parameter name with its modifier.</returns>
-    internal static WriteParameterNameWithModifierCallback WriteParameterNameWithModifier(ProjectionEmitContext context, ParameterInfo p)
+    internal static IndentedTextWriterCallback WriteParameterNameWithModifier(ProjectionEmitContext context, ParameterInfo p)
     {
-        return new(context, p);
+        return writer => ClassMembersFactory.WriteParameterNameWithModifier(writer, context, p);
     }
 
     /// <summary>
@@ -132,8 +131,8 @@ internal static partial class ClassMembersFactory
 
     /// <inheritdoc cref="WriteInterfaceTypeNameForCcw(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
     /// <returns>A callback that writes the CCW interface type name to the writer it's appended to.</returns>
-    internal static WriteInterfaceTypeNameForCcwCallback WriteInterfaceTypeNameForCcw(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    internal static IndentedTextWriterCallback WriteInterfaceTypeNameForCcw(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        return new(context, ifaceType);
+        return writer => ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, ifaceType);
     }
 }

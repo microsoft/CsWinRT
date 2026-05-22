@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
@@ -111,9 +110,9 @@ internal static partial class AbiTypeHelpers
 
     /// <inheritdoc cref="WriteIidGuidReference(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
-    public static WriteIidGuidReferenceCallback WriteIidGuidReference(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteIidGuidReference(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
     }
 
     /// <summary>
@@ -124,7 +123,7 @@ internal static partial class AbiTypeHelpers
         if (type.GenericParameters.Count != 0)
         {
             // Generic interface IID - call the unsafe accessor
-            WriteIidGuidPropertyNameCallback iidName = IidExpressionGenerator.WriteIidGuidPropertyName(context, type);
+            IndentedTextWriterCallback iidName = IidExpressionGenerator.WriteIidGuidPropertyName(context, type);
             writer.Write($"{iidName}(null)");
             return;
         }
@@ -137,7 +136,7 @@ internal static partial class AbiTypeHelpers
             return;
         }
 
-        WriteIidGuidPropertyNameCallback name = IidExpressionGenerator.WriteIidGuidPropertyName(context, type);
+        IndentedTextWriterCallback name = IidExpressionGenerator.WriteIidGuidPropertyName(context, type);
         writer.Write($"global::ABI.InterfaceIIDs.{name}");
     }
 

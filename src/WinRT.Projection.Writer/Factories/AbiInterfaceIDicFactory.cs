@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -37,8 +36,8 @@ internal static class AbiInterfaceIDicFactory
         }
 
         string nameStripped = type.GetStrippedName();
-        WriteTypedefNameWithTypeParamsCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
-        WriteGuidAttributeCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
+        IndentedTextWriterCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -251,9 +250,9 @@ internal static class AbiInterfaceIDicFactory
             string mname = method.GetRawName();
 
             writer.WriteLine();
-            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
-            WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
             writer.WriteLine($"{ret} {ccwIfaceName}.{mname}({parms}) => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}({args});");
         }
 
@@ -293,7 +292,7 @@ internal static class AbiInterfaceIDicFactory
         {
             string evtName = evt.GetRawName();
             writer.WriteLine();
-            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine(isMultiline: true, $$"""
                 event {{eventType}} {{ccwIfaceName}}.{{evtName}}
                 {
@@ -373,8 +372,8 @@ internal static class AbiInterfaceIDicFactory
 
             writer.WriteLine();
             writer.Write("unsafe ");
-            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
             writer.Write($"{ret} {ccwIfaceName}.{mname}({parms}");
             writer.WriteLine(isMultiline: true, $$"""
                 )
@@ -384,7 +383,7 @@ internal static class AbiInterfaceIDicFactory
                 """);
             writer.WriteIf(sig.ReturnType is not null, "return ");
 
-            WriteCallArgumentsCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
             writer.Write($"{abiClass}.{mname}(_obj{args}");
             writer.WriteLine(isMultiline: true, """
                 );
@@ -424,7 +423,7 @@ internal static class AbiInterfaceIDicFactory
                 {
                     if (InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
                     {
-                        WriteInterfaceTypeNameForCcwCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
+                        IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
                         writer.WriteLine($"    get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
                     }
                 }
@@ -446,7 +445,7 @@ internal static class AbiInterfaceIDicFactory
         {
             string evtName = evt.GetRawName();
             writer.WriteLine();
-            WriteEventTypeCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine(isMultiline: true, $$"""
                 event {{eventType}} {{ccwIfaceName}}.{{evtName}}
                 {

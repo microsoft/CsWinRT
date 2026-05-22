@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -60,7 +59,7 @@ internal static class ReferenceImplFactory
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
             // Even bool/char fields work because their managed layout matches the WinRT ABI.
-            WriteTypedefNameCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+            IndentedTextWriterCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
             writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {
@@ -86,7 +85,7 @@ internal static class ReferenceImplFactory
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+            IndentedTextWriterCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
             string abiName = AbiTypeHelpers.GetAbiStructTypeName(context, type.ToTypeSignature());
             writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
@@ -113,7 +112,7 @@ internal static class ReferenceImplFactory
         else if (TypeKindResolver.Resolve(type) is TypeKind.Class or TypeKind.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            WriteProjectedSignatureCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+            IndentedTextWriterCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
             writer.WriteLine(isMultiline: true, $$"""
                     public static int get_Value(void* thisPtr, void* result)
                     {
@@ -146,7 +145,7 @@ internal static class ReferenceImplFactory
         }
 
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
-        WriteIidReferenceGuidPropertyNameCallback name = IidExpressionGenerator.WriteIidReferenceGuidPropertyName(context, type);
+        IndentedTextWriterCallback name = IidExpressionGenerator.WriteIidReferenceGuidPropertyName(context, type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -49,9 +48,9 @@ internal static class IdentifierEscaping
 
     /// <inheritdoc cref="WriteEscapedIdentifier(IndentedTextWriter, string)"/>
     /// <returns>A callback that writes the escaped identifier to the writer it's appended to.</returns>
-    public static WriteEscapedIdentifierCallback WriteEscapedIdentifier(string identifier)
+    public static IndentedTextWriterCallback WriteEscapedIdentifier(string identifier)
     {
-        return new(identifier);
+        return writer => IdentifierEscaping.WriteEscapedIdentifier(writer, identifier);
     }
 
     /// <summary>

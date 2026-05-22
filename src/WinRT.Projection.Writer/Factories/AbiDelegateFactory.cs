@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -69,7 +68,7 @@ internal static class AbiDelegateFactory
         string nameStripped = type.GetStrippedName();
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
-        WriteAbiParameterTypesPointerCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
+        IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
             internal static unsafe class {{nameStripped}}Impl
@@ -127,7 +126,7 @@ internal static class AbiDelegateFactory
         MethodSignatureInfo sig = new(invoke);
         string nameStripped = type.GetStrippedName();
 
-        WriteAbiParameterTypesPointerCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig);
+        IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig);
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
@@ -164,8 +163,8 @@ internal static class AbiDelegateFactory
             {
                 public static unsafe 
             """);
-        WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-        WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+        IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+        IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
         string comma = sig.Parameters.Count > 0 ? ", " : "";
         writer.Write($"{ret} {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
@@ -187,7 +186,7 @@ internal static class AbiDelegateFactory
 
         string nameStripped = type.GetStrippedName();
         string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
-        WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -289,13 +288,13 @@ internal static class AbiDelegateFactory
             """);
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
+            IndentedTextWriterCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
             writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
         writer.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            WriteParameterNameWithModifierCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
+            IndentedTextWriterCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
             writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
         writer.WriteLine(isMultiline: true, """
@@ -375,7 +374,7 @@ internal static class AbiDelegateFactory
     private static void WriteDelegateComWrappersMarshallerAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
-        WriteIidReferenceExpressionCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""

@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -135,9 +134,9 @@ internal static partial class IidExpressionGenerator
 
     /// <inheritdoc cref="WriteGuidBytes(IndentedTextWriter, Guid)"/>
     /// <returns>A callback that writes the bytes when invoked.</returns>
-    public static WriteGuidBytesCallback WriteGuidBytes(Guid guid)
+    public static IndentedTextWriterCallback WriteGuidBytes(Guid guid)
     {
-        return new(guid);
+        return writer => IidExpressionGenerator.WriteGuidBytes(writer, guid);
     }
 
     /// <summary>
@@ -167,9 +166,9 @@ internal static partial class IidExpressionGenerator
 
     /// <inheritdoc cref="WriteIidGuidPropertyName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback that writes the property name when invoked.</returns>
-    public static WriteIidGuidPropertyNameCallback WriteIidGuidPropertyName(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteIidGuidPropertyName(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => IidExpressionGenerator.WriteIidGuidPropertyName(writer, context, type);
     }
 
     /// <summary>
@@ -187,9 +186,9 @@ internal static partial class IidExpressionGenerator
 
     /// <inheritdoc cref="WriteIidReferenceGuidPropertyName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
     /// <returns>A callback that writes the property name when invoked.</returns>
-    public static WriteIidReferenceGuidPropertyNameCallback WriteIidReferenceGuidPropertyName(ProjectionEmitContext context, TypeDefinition type)
+    public static IndentedTextWriterCallback WriteIidReferenceGuidPropertyName(ProjectionEmitContext context, TypeDefinition type)
     {
-        return new(context, type);
+        return writer => IidExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
     }
 
     /// <summary>
@@ -209,8 +208,8 @@ internal static partial class IidExpressionGenerator
             throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
         }
 
-        WriteIidGuidPropertyNameCallback name = WriteIidGuidPropertyName(context, type);
-        WriteGuidBytesCallback bytes = WriteGuidBytes(guid);
+        IndentedTextWriterCallback name = WriteIidGuidPropertyName(context, type);
+        IndentedTextWriterCallback bytes = WriteGuidBytes(guid);
 
         writer.WriteLine(isMultiline: true, $$"""
             public static ref readonly Guid {{name}}
@@ -252,8 +251,8 @@ internal static partial class IidExpressionGenerator
             handler.Clear();
         }
 
-        WriteIidReferenceGuidPropertyNameCallback name = WriteIidReferenceGuidPropertyName(context, type);
-        WriteGuidBytesCallback bytes = WriteGuidBytes(guid);
+        IndentedTextWriterCallback name = WriteIidReferenceGuidPropertyName(context, type);
+        IndentedTextWriterCallback bytes = WriteGuidBytes(guid);
 
         writer.WriteLine(isMultiline: true, $$"""
             public static ref readonly Guid {{name}}

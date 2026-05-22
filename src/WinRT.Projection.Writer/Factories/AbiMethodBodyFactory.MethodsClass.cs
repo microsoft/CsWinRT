@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -58,8 +57,8 @@ internal static partial class AbiMethodBodyFactory
                     [MethodImpl(MethodImplOptions.NoInlining)]
                     public static unsafe 
                 """);
-            WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-            WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
             string comma = sig.Parameters.Count > 0 ? ", " : "";
             writer.Write($"{ret} {mname}(WindowsRuntimeObjectReference thisReference{comma}{parms})");
 

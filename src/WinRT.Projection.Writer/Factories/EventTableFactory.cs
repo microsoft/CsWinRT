@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -26,7 +25,7 @@ internal static class EventTableFactory
     internal static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        WriteEventTypeCallback evtType = TypedefNameWriter.WriteEventType(context, evt);
+        IndentedTextWriterCallback evtType = TypedefNameWriter.WriteEventType(context, evt);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -79,7 +78,7 @@ internal static class EventTableFactory
         if (isGeneric)
         {
             string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
-            WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
+            IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
             writer.IncreaseIndent();
             writer.IncreaseIndent();
             UnsafeAccessorFactory.EmitStaticMethod(
@@ -95,7 +94,7 @@ internal static class EventTableFactory
         }
         else
         {
-            WriteTypeNameCallback abiTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+            IndentedTextWriterCallback abiTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
             writer.WriteLine($"        var __handler = {abiTypeName}Marshaller.ConvertToManaged({handlerRef});");
         }
 

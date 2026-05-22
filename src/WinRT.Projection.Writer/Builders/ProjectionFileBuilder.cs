@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -95,11 +94,11 @@ internal static class ProjectionFileBuilder
         string enumUnderlyingType = isFlags ? "uint" : "int";
         string typeName = type.GetRawName();
 
-        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-        WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
-        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
-        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
-        WriteWinRTReferenceTypeAttributeCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
+        IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        IndentedTextWriterCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
 
         writer.WriteLine();
         writer.WriteLineIf(isFlags, "[Flags]");
@@ -175,11 +174,11 @@ internal static class ProjectionFileBuilder
         string projectionName = type.GetRawName();
 
         // Header attributes + struct declaration as a single multiline template.
-        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-        WriteValueTypeWinRTClassNameAttributeCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
-        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
-        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
-        WriteWinRTReferenceTypeAttributeCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
+        IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        IndentedTextWriterCallback refTypeAttr = MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(context, type);
 
         // We are generating all types as 'partial' so that if they have any
         // custom additions, they can be added without issues. This is much
@@ -201,7 +200,7 @@ internal static class ProjectionFileBuilder
             {
                 writer.WriteIf(i > 0, ", ");
 
-                WriteEscapedIdentifierCallback name = IdentifierEscaping.WriteEscapedIdentifier(fields[i].ParamName);
+                IndentedTextWriterCallback name = IdentifierEscaping.WriteEscapedIdentifier(fields[i].ParamName);
                 writer.Write($"{fields[i].TypeStr} {name}");
             }
 
@@ -213,7 +212,7 @@ internal static class ProjectionFileBuilder
                 {
                     // When the param name matches the field name (i.e. 'ToCamelCase' couldn't
                     // change casing), qualify with 'this.' to disambiguate.
-                    WriteEscapedIdentifierCallback paramRef = IdentifierEscaping.WriteEscapedIdentifier(paramName);
+                    IndentedTextWriterCallback paramRef = IdentifierEscaping.WriteEscapedIdentifier(paramName);
                     if (name == paramName)
                     {
                         writer.Write($"this.{name} = {paramRef}; ");
@@ -322,16 +321,16 @@ internal static class ProjectionFileBuilder
 
         MethodSignatureInfo sig = new(invoke);
 
-        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, false);
-        WriteComWrapperMarshallerAttributeCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, false);
+        IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
         string guidAttr = context.Settings.ReferenceProjection
             ? string.Empty
             : $"[Guid(\"{IidExpressionGenerator.FormatGuid(type, lowerCase: false)}\")]";
-        WriteProjectionReturnTypeCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-        WriteTypedefNameCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
-        WriteTypeParamsCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
-        WriteParameterListCallback parms = MethodFactory.WriteParameterList(context, sig);
+        IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+        IndentedTextWriterCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
+        IndentedTextWriterCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
+        IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -350,8 +349,8 @@ internal static class ProjectionFileBuilder
     {
         string typeName = type.GetRawName();
 
-        WriteWinRTMetadataAttributeCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
-        WriteTypeCustomAttributesCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -365,7 +364,7 @@ internal static class ProjectionFileBuilder
             // Constructors
             foreach (MethodDefinition method in type.GetConstructors())
             {
-                WriteParameterListCallback parameterList = MethodFactory.WriteParameterList(context, new MethodSignatureInfo(method));
+                IndentedTextWriterCallback parameterList = MethodFactory.WriteParameterList(context, new MethodSignatureInfo(method));
 
                 writer.Write($$"""public {{typeName}}({{parameterList}}) { }""");
             }
@@ -378,7 +377,7 @@ internal static class ProjectionFileBuilder
                     continue;
                 }
 
-                WriteProjectionTypeCallback fieldType = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(field.Signature.FieldType));
+                IndentedTextWriterCallback fieldType = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(field.Signature.FieldType));
 
                 writer.WriteLine($"public {fieldType} {field.Name?.Value};");
             }

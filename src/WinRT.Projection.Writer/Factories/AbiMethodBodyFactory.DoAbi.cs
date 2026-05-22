@@ -4,7 +4,6 @@
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Errors;
-using WindowsRuntime.ProjectionWriter.Factories.Callbacks;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -70,7 +69,7 @@ internal static partial class AbiMethodBodyFactory
             if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
             {
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt!, TypedefNameType.ABI);
-                WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
+                IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "ConvertToUnmanaged",
@@ -96,7 +95,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
-                WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
+                IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "ConvertToUnmanaged",
@@ -115,7 +114,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
@@ -131,7 +130,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (returnIsReceiveArrayDoAbi && rt is SzArrayTypeSignature retSzHoist)
             {
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSzHoist.BaseType);
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
@@ -155,7 +154,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     // returnIsRefType, returnIsReceiveArrayDoAbi, and the default branch all emit
                     // the same projected type for the default-initialized return local.
-                    WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
+                    IndentedTextWriterCallback projected = MethodFactory.WriteProjectedSignature(context, rt, false);
                     writer.WriteLine($"{projected} {retLocalName} = default;");
                 }
             }
@@ -195,7 +194,7 @@ internal static partial class AbiMethodBodyFactory
                 // Use the projected (non-ABI) type for the local variable.
                 // Strip ByRef and CustomModifier wrappers to get the underlying base type.
                 TypeSignature underlying = p.Type.StripByRefAndCustomModifiers();
-                WriteProjectedSignatureCallback projected = MethodFactory.WriteProjectedSignature(context, underlying, false);
+                IndentedTextWriterCallback projected = MethodFactory.WriteProjectedSignature(context, underlying, false);
                 writer.WriteLine($"{projected} __{raw} = default;");
             }
 
@@ -208,7 +207,7 @@ internal static partial class AbiMethodBodyFactory
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
                 writer.WriteLine(isMultiline: true, $$"""
                 *{{ptr}} = default;
                     *__{{raw}}Size = default;
@@ -237,7 +236,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
                 bool isBlittableElem = context.AbiTypeKindResolver.IsBlittableAbiElement(sz.BaseType);
 
                 if (isBlittableElem)
@@ -282,7 +281,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
                 // For non-blittable structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
                 // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
@@ -331,7 +330,7 @@ internal static partial class AbiMethodBodyFactory
                     string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
                     string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
-                    WriteProjectedSignatureCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+                    IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.IncreaseIndent();
                     writer.WriteLine(isMultiline: true, $$"""
                         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
@@ -539,7 +538,7 @@ internal static partial class AbiMethodBodyFactory
 
                 string raw = p.GetRawName();
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
-                WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szFA.BaseType));
 
                 // Determine the ABI element type for the data pointer cast (e.g. "void*" for
                 // ref-like elements -> "void** data"/"(void**)", or "global::ABI.Foo.Bar" for
@@ -581,7 +580,7 @@ internal static partial class AbiMethodBodyFactory
                     }
                     else
                     {
-                        EmitMarshallerConvertToUnmanagedCallback cvt = EmitMarshallerConvertToUnmanaged(context, rt!, retLocalName);
+                        IndentedTextWriterCallback cvt = EmitMarshallerConvertToUnmanaged(context, rt!, retLocalName);
                         writer.WriteLine($"*{retParamName} = {cvt}.DetachThisPtrUnsafe();");
                     }
                 }
@@ -680,7 +679,7 @@ internal static partial class AbiMethodBodyFactory
                     }
 
                     string raw = p.GetRawName();
-                    WriteProjectionTypeCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                    IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                         if (__{{raw}}_arrayFromPool is not null)
