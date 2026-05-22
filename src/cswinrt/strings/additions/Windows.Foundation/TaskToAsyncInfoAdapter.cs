@@ -124,7 +124,7 @@ namespace System.Threading.Tasks
         #endregion Instance variables
 
 
-        #region Constructors and Destructor
+        #region Constructors
 
         /// <summary>Creates an IAsyncInfo from the specified delegate. The delegate will be called to construct a task that will
         /// represent the future encapsulated by this IAsyncInfo.</summary>
@@ -232,12 +232,7 @@ namespace System.Threading.Tasks
         }
 
 
-        ~TaskToAsyncInfoAdapter()
-        {
-            TransitionToClosed();
-        }
-
-        #endregion Constructors and Destructor
+        #endregion Constructors
 
 
         #region Synchronous completion controls
@@ -800,11 +795,8 @@ namespace System.Threading.Tasks
 
         private void TransitionToClosed()
         {
-            // From the finaliser we always call this Close version since finalisation can happen any time, even when STARTED (e.g. process ends)
-            // and we do not want to throw in those cases.
-
             // Always go to closed, even from STATE_NOT_INITIALIZED.
-            // Any checking whether it is legal to call CLosed inthe current state, should occur in Close().
+            // Any checking whether it is legal to call Close in the current state should occur in Close().
             bool ignore;
             SetAsyncState(STATE_CLOSED, 0, useCondition: false, conditionFailed: out ignore);
 
