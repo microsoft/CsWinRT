@@ -91,7 +91,7 @@ internal static partial class ClassMembersFactory
     {
         // If the reference is to a type in the same module, resolve to TypeDefinition so
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
-        if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && context.Cache is not null)
+        if (ifaceType is not (TypeDefinition or TypeSpecification))
         {
             TypeDefinition? resolved = ifaceType.TryResolve(context.Cache.RuntimeContext);
 

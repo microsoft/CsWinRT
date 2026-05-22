@@ -431,7 +431,7 @@ internal static class MetadataAttributeFactory
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
         ITypeDefOrRef capturedIface = defaultIface;
 
-        if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
+        if (capturedIface is not (TypeDefinition or TypeSpecification))
         {
             TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
 
@@ -471,20 +471,13 @@ internal static class MetadataAttributeFactory
             // Resolve the interface to a TypeDefinition for the [ExclusiveTo] check.
             TypeDefinition? ifaceDef = impl.Interface as TypeDefinition;
 
-            if (ifaceDef is null && context.Cache is not null)
-            {
-                ifaceDef = impl.Interface.TryResolve(context.Cache.RuntimeContext);
-            }
+            ifaceDef ??= impl.Interface.TryResolve(context.Cache.RuntimeContext);
 
             if (ifaceDef is null && impl.Interface is TypeSpecification spec
                 && spec.Signature is GenericInstanceTypeSignature gi)
             {
                 ifaceDef = gi.GenericType as TypeDefinition;
-
-                if (ifaceDef is null && context.Cache is not null)
-                {
-                    ifaceDef = gi.GenericType.TryResolve(context.Cache.RuntimeContext);
-                }
+                ifaceDef ??= gi.GenericType.TryResolve(context.Cache.RuntimeContext);
             }
 
             if (ifaceDef is null)
@@ -498,7 +491,7 @@ internal static class MetadataAttributeFactory
                 // Definition branch which knows about authored-type CCW namespacing.
                 ITypeDefOrRef capturedIface = impl.Interface;
 
-                if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
+                if (capturedIface is not (TypeDefinition or TypeSpecification))
                 {
                     TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
 

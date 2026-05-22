@@ -181,7 +181,7 @@ internal static partial class AbiTypeHelpers
 
             if (def is not null && def.IsEnum)
             {
-                return cache is null ? "int" : GetProjectedEnumName(def);
+                return GetProjectedEnumName(def);
             }
         }
 

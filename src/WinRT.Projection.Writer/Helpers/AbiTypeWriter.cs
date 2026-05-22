@@ -104,76 +104,73 @@ internal static class AbiTypeWriter
 
                 // Cross-module typeref: try resolving the type, applying mapped-type translation
                 // for the field/parameter type after resolution.
-                if (context.Cache is not null)
+                (string rns, string rname) = r.Type.Names();
+
+                // Special case: mapped value types that require ABI marshalling.
+                if (rns == WindowsFoundation && rname == "DateTime")
                 {
-                    (string rns, string rname) = r.Type.Names();
+                    writer.Write(WellKnownAbiTypeNames.AbiSystemDateTimeOffset);
+                    break;
+                }
 
-                    // Special case: mapped value types that require ABI marshalling.
-                    if (rns == WindowsFoundation && rname == "DateTime")
+                if (rns == WindowsFoundation && rname == "TimeSpan")
+                {
+                    writer.Write(WellKnownAbiTypeNames.AbiSystemTimeSpan);
+                    break;
+                }
+
+                if (rns == WindowsFoundation && rname == HResult)
+                {
+                    writer.Write(WellKnownAbiTypeNames.AbiSystemException);
+                    break;
+                }
+
+                // Look up the type by its ORIGINAL (unmapped) name in the cache.
+                TypeDefinition? rd = context.Cache.Find(rns, rname);
+
+                // If not found, try the mapped name (for cases where the mapping target is in the cache).
+                if (rd is null)
+                {
+                    if (MappedTypes.Get(rns, rname) is { } rmapped)
                     {
-                        writer.Write(WellKnownAbiTypeNames.AbiSystemDateTimeOffset);
+                        rd = context.Cache.Find(rmapped.MappedNamespace, rmapped.MappedName);
+                    }
+                }
+
+                if (rd is not null)
+                {
+                    TypeKind kind = TypeKindResolver.Resolve(rd);
+
+                    if (kind == TypeKind.Enum)
+                    {
+                        // Enums use the projected enum type directly (C# layout == ABI layout).
+                        TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                         break;
                     }
 
-                    if (rns == WindowsFoundation && rname == "TimeSpan")
+                    if (kind == TypeKind.Struct)
                     {
-                        writer.Write(WellKnownAbiTypeNames.AbiSystemTimeSpan);
-                        break;
-                    }
+                        // Special case: HResult is mapped to System.Exception (a reference type)
+                        // but its ABI representation is the global::ABI.System.Exception struct
+                        // (which wraps the underlying HRESULT int).
+                        (string rdNs, string rdName) = rd.Names();
 
-                    if (rns == WindowsFoundation && rname == HResult)
-                    {
-                        writer.Write(WellKnownAbiTypeNames.AbiSystemException);
-                        break;
-                    }
-
-                    // Look up the type by its ORIGINAL (unmapped) name in the cache.
-                    TypeDefinition? rd = context.Cache.Find(rns, rname);
-
-                    // If not found, try the mapped name (for cases where the mapping target is in the cache).
-                    if (rd is null)
-                    {
-                        if (MappedTypes.Get(rns, rname) is { } rmapped)
+                        if (rdNs == WindowsFoundation && rdName == HResult)
                         {
-                            rd = context.Cache.Find(rmapped.MappedNamespace, rmapped.MappedName);
+                            writer.Write(WellKnownAbiTypeNames.AbiSystemException);
+                            break;
                         }
-                    }
 
-                    if (rd is not null)
-                    {
-                        TypeKind kind = TypeKindResolver.Resolve(rd);
-
-                        if (kind == TypeKind.Enum)
+                        if (context.AbiTypeKindResolver.IsBlittableStruct(rd.ToTypeSignature()))
                         {
-                            // Enums use the projected enum type directly (C# layout == ABI layout).
                             TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
-                            break;
                         }
-
-                        if (kind == TypeKind.Struct)
+                        else
                         {
-                            // Special case: HResult is mapped to System.Exception (a reference type)
-                            // but its ABI representation is the global::ABI.System.Exception struct
-                            // (which wraps the underlying HRESULT int).
-                            (string rdNs, string rdName) = rd.Names();
-
-                            if (rdNs == WindowsFoundation && rdName == HResult)
-                            {
-                                writer.Write(WellKnownAbiTypeNames.AbiSystemException);
-                                break;
-                            }
-
-                            if (context.AbiTypeKindResolver.IsBlittableStruct(rd.ToTypeSignature()))
-                            {
-                                TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
-                            }
-                            else
-                            {
-                                TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.ABI, true);
-                            }
-
-                            break;
+                            TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.ABI, true);
                         }
+
+                        break;
                     }
                 }
 
@@ -184,7 +181,6 @@ internal static class AbiTypeWriter
                 // void* (it's a runtime class/interface/delegate).
                 if (r.IsValueType)
                 {
-                    (string rns, string rname) = r.Type.Names();
                     writer.Write(GlobalPrefix);
 
                     if (!string.IsNullOrEmpty(rns))

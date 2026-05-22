@@ -184,16 +184,12 @@ internal static partial class AbiTypeHelpers
 
             // Cross-module typeref: try to resolve via the metadata cache to check category
             (string ns, string name) = td.Type.Names();
+            TypeDefinition? resolved = cache.Find(ns, name);
 
-            if (cache is not null)
+            if (resolved is not null)
             {
-                TypeDefinition? resolved = cache.Find(ns, name);
-
-                if (resolved is not null)
-                {
-                    TypeKind kind = TypeKindResolver.Resolve(resolved);
-                    return kind is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
-                }
+                TypeKind kind = TypeKindResolver.Resolve(resolved);
+                return kind is TypeKind.Class or TypeKind.Interface or TypeKind.Delegate;
             }
 
             // Unresolved cross-assembly TypeRef (e.g. a referenced winmd we don't have loaded).

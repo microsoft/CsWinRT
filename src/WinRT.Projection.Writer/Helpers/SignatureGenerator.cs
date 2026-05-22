@@ -98,12 +98,7 @@ internal static class SignatureGenerator
                 {
                     // Resolve the reference to a 'TypeDefinition' (cross-module struct field, etc.).
                     (string ns, string name) = r.Type.Names();
-                    TypeDefinition? resolved = null;
-
-                    if (context.Cache is not null)
-                    {
-                        resolved = r.Type.TryResolve(context.Cache.RuntimeContext) ?? context.Cache.Find(ns, name);
-                    }
+                    TypeDefinition? resolved = r.Type.TryResolve(context.Cache.RuntimeContext) ?? context.Cache.Find(ns, name);
 
                     if (resolved is not null)
                     {
@@ -129,12 +124,7 @@ internal static class SignatureGenerator
                     // appearing as a struct field). Resolve the generic type to a TypeDefinition
                     // so we can extract its [Guid]; recurse on each type argument.
                     (string ns, string name) = gir.GenericType.Names();
-                    TypeDefinition? resolved = null;
-
-                    if (context.Cache is not null)
-                    {
-                        resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext) ?? context.Cache.Find(ns, name);
-                    }
+                    TypeDefinition? resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext) ?? context.Cache.Find(ns, name);
 
                     if (resolved is not null)
                     {

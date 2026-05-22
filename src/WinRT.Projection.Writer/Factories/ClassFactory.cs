@@ -247,11 +247,6 @@ internal static class ClassFactory
     /// </summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Cache is null)
-        {
-            return;
-        }
-
         // Per-property accessor state (origin tracking for getter/setter)
         Dictionary<string, StaticPropertyAccessorState> properties = [];
 
@@ -574,7 +569,7 @@ internal static class ClassFactory
                 }
             }
         }
-        else if (context.Cache is not null)
+        else
         {
             // In ref mode, if WriteAttributedTypes will not emit any public constructors,
             // we need a 'private TypeName() { throw null; }' to suppress the C# compiler's

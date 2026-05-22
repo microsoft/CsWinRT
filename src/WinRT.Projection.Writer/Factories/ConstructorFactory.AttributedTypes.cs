@@ -19,11 +19,6 @@ internal static partial class ConstructorFactory
     /// </summary>
     public static void WriteAttributedTypes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
     {
-        if (context.Cache is null)
-        {
-            return;
-        }
-
         // Track whether we need to emit the static _objRef_<RuntimeClassName> field (used by
         // default constructors). Emit it once per class if any [Activatable] factory exists.
         bool needsClassObjRef = false;

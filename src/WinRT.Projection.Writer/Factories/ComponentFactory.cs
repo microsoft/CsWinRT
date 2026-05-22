@@ -57,9 +57,8 @@ internal static class ComponentFactory
         bool isActivatable = !type.IsStatic && type.HasDefaultConstructor();
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
-        MetadataCache cache = context.Cache;
         List<TypeDefinition> factoryInterfaces = [];
-        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
             AttributedType info = kv.Value;
 
@@ -107,48 +106,45 @@ internal static class ComponentFactory
 
         // Emit factory-class members: forwarding methods/properties/events for static factory
         // interfaces, and constructor wrappers for activatable factory interfaces.
-        if (cache is not null)
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
-            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
+            AttributedType info = kv.Value;
+
+            if (info.Type is null)
             {
-                AttributedType info = kv.Value;
+                continue;
+            }
 
-                if (info.Type is null)
+            if (info.Activatable)
+            {
+                foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    continue;
+                    if (method.IsConstructor)
+                    {
+                        continue;
+                    }
+
+                    WriteFactoryActivatableMethod(writer, context, method, projectedTypeName);
                 }
-
-                if (info.Activatable)
+            }
+            else if (info.Statics)
+            {
+                foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    foreach (MethodDefinition method in info.Type.Methods)
+                    if (method.IsConstructor)
                     {
-                        if (method.IsConstructor)
-                        {
-                            continue;
-                        }
-
-                        WriteFactoryActivatableMethod(writer, context, method, projectedTypeName);
+                        continue;
                     }
+
+                    WriteStaticFactoryMethod(writer, context, method, projectedTypeName);
                 }
-                else if (info.Statics)
+                foreach (PropertyDefinition prop in info.Type.Properties)
                 {
-                    foreach (MethodDefinition method in info.Type.Methods)
-                    {
-                        if (method.IsConstructor)
-                        {
-                            continue;
-                        }
-
-                        WriteStaticFactoryMethod(writer, context, method, projectedTypeName);
-                    }
-                    foreach (PropertyDefinition prop in info.Type.Properties)
-                    {
-                        WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
-                    }
-                    foreach (EventDefinition evt in info.Type.Events)
-                    {
-                        WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
-                    }
+                    WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
+                }
+                foreach (EventDefinition evt in info.Type.Events)
+                {
+                    WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
                 }
             }
         }
