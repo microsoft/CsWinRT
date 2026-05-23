@@ -50,7 +50,7 @@ internal static class IdentifierEscaping
     /// <returns>A callback that writes the escaped identifier to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteEscapedIdentifier(string identifier)
     {
-        return writer => IdentifierEscaping.WriteEscapedIdentifier(writer, identifier);
+        return writer => WriteEscapedIdentifier(writer, identifier);
     }
 
     /// <summary>

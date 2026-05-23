@@ -112,7 +112,7 @@ internal static partial class AbiTypeHelpers
     /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteIidGuidReference(ProjectionEmitContext context, TypeDefinition type)
     {
-        return writer => AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
+        return writer => WriteIidGuidReference(writer, context, type);
     }
 
     /// <summary>

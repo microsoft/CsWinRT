@@ -58,7 +58,7 @@ internal static partial class ClassMembersFactory
     /// <returns>A callback emitting the parameter name with its modifier.</returns>
     internal static IndentedTextWriterCallback WriteParameterNameWithModifier(ProjectionEmitContext context, ParameterInfo p)
     {
-        return writer => ClassMembersFactory.WriteParameterNameWithModifier(writer, context, p);
+        return writer => WriteParameterNameWithModifier(writer, context, p);
     }
 
     /// <summary>
@@ -133,6 +133,6 @@ internal static partial class ClassMembersFactory
     /// <returns>A callback that writes the CCW interface type name to the writer it's appended to.</returns>
     internal static IndentedTextWriterCallback WriteInterfaceTypeNameForCcw(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        return writer => ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, ifaceType);
+        return writer => WriteInterfaceTypeNameForCcw(writer, context, ifaceType);
     }
 }

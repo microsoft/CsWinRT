@@ -29,7 +29,7 @@ internal static partial class AbiMethodBodyFactory
     /// <returns>A callback emitting the marshaller's ConvertToUnmanaged call.</returns>
     internal static IndentedTextWriterCallback EmitMarshallerConvertToUnmanaged(ProjectionEmitContext context, TypeSignature sig, string argName)
     {
-        return writer => AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, sig, argName);
+        return writer => EmitMarshallerConvertToUnmanaged(writer, context, sig, argName);
     }
 
     /// <summary>
@@ -50,6 +50,6 @@ internal static partial class AbiMethodBodyFactory
     /// <returns>A callback emitting the marshaller's ConvertToManaged call.</returns>
     internal static IndentedTextWriterCallback EmitMarshallerConvertToManaged(ProjectionEmitContext context, TypeSignature sig, string argName)
     {
-        return writer => AbiMethodBodyFactory.EmitMarshallerConvertToManaged(writer, context, sig, argName);
+        return writer => EmitMarshallerConvertToManaged(writer, context, sig, argName);
     }
 }

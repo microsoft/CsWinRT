@@ -206,7 +206,7 @@ internal static class AbiTypeWriter
     /// <returns>A callback that writes the ABI type to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteAbiType(ProjectionEmitContext context, TypeSemantics semantics)
     {
-        return writer => AbiTypeWriter.WriteAbiType(writer, context, semantics);
+        return writer => WriteAbiType(writer, context, semantics);
     }
 
     /// <summary>
