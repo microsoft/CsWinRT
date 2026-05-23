@@ -66,9 +66,19 @@ internal static class AbiDelegateFactory
 
         MethodSignatureInfo sig = new(invoke);
         string nameStripped = type.GetStrippedName();
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
-
+        IndentedTextWriterCallback iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
         IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
+
+        void WriteInvokeBody(IndentedTextWriter writer)
+        {
+            // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
+            // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
+            // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
+            string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
+
+            AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
+        }
+
         writer.WriteLine();
         writer.Write(isMultiline: true, $$"""
             internal static unsafe class {{nameStripped}}Impl
@@ -81,6 +91,12 @@ internal static class AbiDelegateFactory
                     *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
                     Vftbl.Invoke = &Invoke;
                 }
+
+                public static ref readonly Guid IID
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => ref {{iidExpr}};
+                }
             
                 public static nint Vtable
                 {
@@ -88,23 +104,9 @@ internal static class AbiDelegateFactory
                     get => (nint)Unsafe.AsPointer(in Vftbl);
                 }
             
-            [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            private static int Invoke({{invokeParams}})
-            """);
-
-        // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
-        // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
-        // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
-        string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
-
-        AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
-        writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
-                public static ref readonly Guid IID
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref {{iidExpr}};
-                }
+                [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+                private static int Invoke({{invokeParams}})
+                {{WriteInvokeBody}}
             }
             """);
     }
@@ -123,10 +125,9 @@ internal static class AbiDelegateFactory
             return;
         }
 
-        MethodSignatureInfo sig = new(invoke);
         string nameStripped = type.GetStrippedName();
+        IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, new MethodSignatureInfo(invoke));
 
-        IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig);
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
