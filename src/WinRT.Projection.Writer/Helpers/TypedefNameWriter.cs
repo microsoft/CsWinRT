@@ -144,14 +144,14 @@ internal static class TypedefNameWriter
     /// <returns>A callback that writes the typedef name + generic-parameter list to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteTypedefNameWithTypeParams(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        return writer => TypedefNameWriter.WriteTypedefNameWithTypeParams(writer, context, type, nameType, forceWriteNamespace);
+        return writer => WriteTypedefNameWithTypeParams(writer, context, type, nameType, forceWriteNamespace);
     }
 
     /// <inheritdoc cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>
     /// <returns>A callback that writes the typedef name to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteTypedefName(ProjectionEmitContext context, TypeDefinition type, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        return writer => TypedefNameWriter.WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
+        return writer => WriteTypedefName(writer, context, type, nameType, forceWriteNamespace);
     }
 
     /// <summary>
@@ -181,7 +181,7 @@ internal static class TypedefNameWriter
     /// <returns>A callback that writes the generic-parameter list to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteTypeParams(TypeDefinition type)
     {
-        return writer => TypedefNameWriter.WriteTypeParams(writer, type);
+        return writer => WriteTypeParams(writer, type);
     }
 
     /// <summary>
@@ -317,14 +317,14 @@ internal static class TypedefNameWriter
     /// <returns>A callback that writes the type name to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType, bool forceWriteNamespace)
     {
-        return writer => TypedefNameWriter.WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
+        return writer => WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
     }
 
     /// <inheritdoc cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
     /// <returns>A callback that writes the projected type name to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteProjectionType(ProjectionEmitContext context, TypeSemantics semantics)
     {
-        return writer => TypedefNameWriter.WriteProjectionType(writer, context, semantics);
+        return writer => WriteProjectionType(writer, context, semantics);
     }
 
     /// <summary>
@@ -339,14 +339,14 @@ internal static class TypedefNameWriter
     /// <returns>A callback that writes the event handler type to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt)
     {
-        return writer => TypedefNameWriter.WriteEventType(writer, context, evt);
+        return writer => WriteEventType(writer, context, evt);
     }
 
     /// <inheritdoc cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition, GenericInstanceTypeSignature?)"/>
     /// <returns>A callback that writes the event handler type to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteEventType(ProjectionEmitContext context, EventDefinition evt, GenericInstanceTypeSignature? currentInstance)
     {
-        return writer => TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
+        return writer => WriteEventType(writer, context, evt, currentInstance);
     }
 
     /// <summary>

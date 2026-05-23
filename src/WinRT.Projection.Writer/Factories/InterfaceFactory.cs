@@ -25,7 +25,7 @@ internal static class InterfaceFactory
     /// <returns>A callback emitting the <c>[Guid("...")]</c> attribute.</returns>
     public static IndentedTextWriterCallback WriteGuidAttribute(TypeDefinition type)
     {
-        return writer => InterfaceFactory.WriteGuidAttribute(writer, type);
+        return writer => WriteGuidAttribute(writer, type);
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ internal static class InterfaceFactory
     /// <returns>A callback that writes the inheritance clause to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteTypeInheritance(ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
     {
-        return writer => InterfaceFactory.WriteTypeInheritance(writer, context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
+        return writer => WriteTypeInheritance(writer, context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
     }
 
     /// <summary>

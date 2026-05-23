@@ -58,7 +58,7 @@ internal static class AbiInterfaceFactory
     /// <returns>A callback emitting the ABI parameter types.</returns>
     public static IndentedTextWriterCallback WriteAbiParameterTypesPointer(ProjectionEmitContext context, MethodSignatureInfo sig, bool includeParamNames = false)
     {
-        return writer => AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames);
+        return writer => WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames);
     }
 
     /// <summary>

@@ -191,7 +191,7 @@ internal static class ObjRefNameGenerator
     /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        return writer => ObjRefNameGenerator.WriteIidExpression(writer, context, ifaceType);
+        return writer => WriteIidExpression(writer, context, ifaceType);
     }
 
     /// <summary>
@@ -231,7 +231,7 @@ internal static class ObjRefNameGenerator
     /// <returns>A callback that writes the IID reference expression to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteIidReferenceExpression(TypeDefinition type)
     {
-        return writer => ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
+        return writer => WriteIidReferenceExpression(writer, type);
     }
 
     /// <summary>

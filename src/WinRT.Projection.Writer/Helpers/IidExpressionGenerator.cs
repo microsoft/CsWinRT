@@ -136,7 +136,7 @@ internal static partial class IidExpressionGenerator
     /// <returns>A callback that writes the bytes when invoked.</returns>
     public static IndentedTextWriterCallback WriteGuidBytes(Guid guid)
     {
-        return writer => IidExpressionGenerator.WriteGuidBytes(writer, guid);
+        return writer => WriteGuidBytes(writer, guid);
     }
 
     /// <summary>
@@ -168,7 +168,7 @@ internal static partial class IidExpressionGenerator
     /// <returns>A callback that writes the property name when invoked.</returns>
     public static IndentedTextWriterCallback WriteIidGuidPropertyName(ProjectionEmitContext context, TypeDefinition type)
     {
-        return writer => IidExpressionGenerator.WriteIidGuidPropertyName(writer, context, type);
+        return writer => WriteIidGuidPropertyName(writer, context, type);
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ internal static partial class IidExpressionGenerator
     /// <returns>A callback that writes the property name when invoked.</returns>
     public static IndentedTextWriterCallback WriteIidReferenceGuidPropertyName(ProjectionEmitContext context, TypeDefinition type)
     {
-        return writer => IidExpressionGenerator.WriteIidReferenceGuidPropertyName(writer, context, type);
+        return writer => WriteIidReferenceGuidPropertyName(writer, context, type);
     }
 
     /// <summary>

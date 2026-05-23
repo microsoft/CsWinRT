@@ -55,7 +55,7 @@ internal static class MethodFactory
     /// <returns>A callback that writes the projected signature to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
     {
-        return writer => MethodFactory.WriteProjectedSignature(writer, context, typeSig, isParameter);
+        return writer => WriteProjectedSignature(writer, context, typeSig, isParameter);
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ internal static class MethodFactory
     /// <returns>A callback that writes the projected parameter type to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteProjectionParameterType(ProjectionEmitContext context, ParameterInfo p)
     {
-        return writer => MethodFactory.WriteProjectionParameterType(writer, context, p);
+        return writer => WriteProjectionParameterType(writer, context, p);
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ internal static class MethodFactory
     /// <returns>A callback that writes the parameter (type + name) to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteProjectionParameter(ProjectionEmitContext context, ParameterInfo p)
     {
-        return writer => MethodFactory.WriteProjectionParameter(writer, context, p);
+        return writer => WriteProjectionParameter(writer, context, p);
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ internal static class MethodFactory
     /// <returns>A callback that writes the projected return type to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteProjectionReturnType(ProjectionEmitContext context, MethodSignatureInfo sig)
     {
-        return writer => MethodFactory.WriteProjectionReturnType(writer, context, sig);
+        return writer => WriteProjectionReturnType(writer, context, sig);
     }
 
     /// <summary>
@@ -197,7 +197,7 @@ internal static class MethodFactory
     /// <returns>A callback that writes the parameter list to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteParameterList(ProjectionEmitContext context, MethodSignatureInfo sig)
     {
-        return writer => MethodFactory.WriteParameterList(writer, context, sig);
+        return writer => WriteParameterList(writer, context, sig);
     }
 
     /// <summary>
@@ -225,6 +225,6 @@ internal static class MethodFactory
     /// <returns>A callback that writes the call-argument list to the writer it's appended to.</returns>
     public static IndentedTextWriterCallback WriteCallArguments(ProjectionEmitContext context, MethodSignatureInfo sig, bool leadingComma)
     {
-        return writer => MethodFactory.WriteCallArguments(writer, context, sig, leadingComma);
+        return writer => WriteCallArguments(writer, context, sig, leadingComma);
     }
 }
