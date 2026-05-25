@@ -258,6 +258,19 @@ namespace WinRT
                 return attribute.CreateInstance;
             }
 
+            // Authored component types won't have the attribute as it is only put on RCW types.
+            // But we will only get here for authored types in certain cases such as with proxies
+            // and for cross ComWrappers uses such as between AOT compilation and JIT scenarios.
+            // For those, we can return it as an IInspectable and if the uses of it are with an
+            // interface type, we would then use IDIC to cast to it. If it is used with as a class type,
+            // we can't actually cast it to the C# class type given this is a WinRT representation
+            // and the caller would get an InvalidCastException later in the code path rather than a
+            // NotSupportedException here that isn't relevant to the scenario.
+            if (implementationType.GetRuntimeClassCCWType() is not null)
+            {
+                return obj => obj;
+            }
+
             if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
                 throw new NotSupportedException(
