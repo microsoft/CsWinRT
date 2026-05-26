@@ -86,6 +86,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// </summary>
     public bool WindowsUIXamlProjection { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether to emit the 'ProjectionTypesInitializer' module initializer
+    /// (Assembly.SetEntryAssembly) into 'WinRT.Component.dll'. Only needed under JIT to
+    /// enable TypeMap discovery; AOT uses a separate exe-project workaround.
+    /// </summary>
+    public bool EmitEntryPointInitializer { get; set; }
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -206,6 +213,11 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (WindowsUIXamlProjection)
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
+        }
+
+        if (EmitEntryPointInitializer)
+        {
+            AppendResponseFileCommand(args, "--emit-entry-point-initializer", "true");
         }
 
         // Add any additional arguments that are not statically known

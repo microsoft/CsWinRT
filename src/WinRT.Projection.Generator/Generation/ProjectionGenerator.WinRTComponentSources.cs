@@ -39,7 +39,11 @@ internal partial class ProjectionGenerator
             return;
         }
 
-        WriteProjectionTypesInitializer(processingState);
+        if (args.EmitEntryPointInitializer)
+        {
+            WriteProjectionTypesInitializer(processingState);
+        }
+
         WriteTypeMapAssemblyTargets(args, processingState);
         WriteMergedManagedExports(processingState);
     }

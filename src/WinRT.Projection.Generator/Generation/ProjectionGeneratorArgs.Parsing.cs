@@ -82,6 +82,7 @@ internal partial class ProjectionGeneratorArgs
             AssemblyName = GetOptionalStringArgument(argsMap, nameof(AssemblyName), "WinRT.Projection"),
             WindowsSdkOnly = GetOptionalBoolArgument(argsMap, nameof(WindowsSdkOnly)),
             WindowsUIXamlProjection = GetOptionalBoolArgument(argsMap, nameof(WindowsUIXamlProjection)),
+            EmitEntryPointInitializer = GetOptionalBoolArgument(argsMap, nameof(EmitEntryPointInitializer)),
             Token = token
         };
     }
