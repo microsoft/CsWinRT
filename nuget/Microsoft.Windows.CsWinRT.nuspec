@@ -27,6 +27,7 @@
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
     <!-- <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="build"/> -->
     <file src="Microsoft.Windows.CsWinRT.CsWinRTGen.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.CsWinRT2Polyfills.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <!-- <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="build"/> -->
     <file src="$interop_winmd$" target="metadata"/>
