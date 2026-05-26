@@ -35,6 +35,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTRcwFactoryFallbackGeneratorForceOptOut Condition="'$(CsWinRTRcwFactoryFallbackGeneratorForceOptOut)' != 'true'">false</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
 
     <!--
+      Default path to the internal interop WinMD shipped with the package. This is referenced
+      by both the CsWinRTGenerateProjection target (which invokes cswinrt.exe to emit C#
+      projection sources) and the CsWinRT 3.0 SDK projection generator (cswinrtprojectiongen.exe,
+      which produces precompiled projection DLLs), so it must be set unconditionally rather
+      than only inside a single target.
+    -->
+    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
+
+    <!--
       These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
       target, because they are also needed in authoring scenarios (which will not run that target).
     -->
@@ -60,6 +69,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
+      
+    <!--
+      PublishAot is needed by AuthoringExportTypesGenerator.ShouldEmitNativeExports for the
+      merged-aggregator scenario (non-component project with CsWinRTMergeReferencedActivationFactories=true).
+      Authoring.targets exposes the same property but only imports when CsWinRTComponent=true.
+    -->
+    <CompilerVisibleProperty Include="PublishAot" />
   </ItemGroup>
   
   <Target Name="CsWinRTMinNet10" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &lt;= 9" BeforeTargets="CsWinRTPrepareProjection">
@@ -128,27 +144,28 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
-  <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
-    <PropertyGroup>
-      <CsWinRTPkg-Net8Dir>$(CsWinRTPath)lib\net10.0</CsWinRTPkg-Net8Dir>
-      <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
-    </PropertyGroup>
-    <ItemGroup>
-     <ReferenceCopyLocalPaths        Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <RuntimeTargetsCopyLocalItems   Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <Reference                      Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
-     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
-    </ItemGroup>
-  </Target>
-
   <!-- Remove Windows.Winmd reference to prevent compile collisions-->
   <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
    <ItemGroup>
      <Reference Remove="Windows"/>
    </ItemGroup>
+  </Target>
+
+  <!--
+    For CsWinRT 3.0 / Windows-targeted TFMs, the .NET SDK's RemoveManagedWinRTComponentWinMDReferences
+    target (in Microsoft.NET.Windows.targets, AfterTargets="ResolveProjectReferences") runs early and
+    scrubs CsWinRT-component winmds out of _ResolvedProjectReferencePaths before our CsWinRTRemoveWinMDReferences
+    target below would have a chance to capture them. Capture them up-front from _ResolvedProjectReferencePaths
+    so they still feed into CsWinRTInputs / _WinMDPathsList for cswinrtprojectiongen and cswinrtinteropgen.
+  -->
+  <Target Name="CsWinRTCaptureProjectReferenceWinMDs"
+          AfterTargets="ResolveProjectReferences"
+          BeforeTargets="RemoveManagedWinRTComponentWinMDReferences;CsWinRTRemoveWinMDReferences">
+    <ItemGroup>
+      <CsWinRTInputs Include="@(_ResolvedProjectReferencePaths)"
+                     Condition="('%(_ResolvedProjectReferencePaths.Extension)' == '.winmd')
+                                And ('%(_ResolvedProjectReferencePaths.Implementation)' == 'WinRT.Host.dll')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences">
@@ -267,7 +284,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
       </CsWinRTFilters>
 
-      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
       <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
 -include WindowsRuntime.Internal

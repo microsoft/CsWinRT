@@ -21,9 +21,13 @@
   </ItemGroup>
     
   <ItemGroup>
+    <!-- This repo builds the SDK projection assemblies from source, so remove
+         any SDK-injected ref packages. -->
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
+    <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.CsWinRT3.Windows" />
+    <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.CsWinRT3.Xaml" />
   </ItemGroup>
 
   <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\nuget\Microsoft.Windows.CsWinRT.targets" />
@@ -103,7 +107,7 @@
 
   <Target Name="CopyEmbeddedSymbols" 
           AfterTargets="Build" 
-          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != '' and '$(ProduceOnlyReferenceAssembly)' != 'true'"
+          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != '' and '$(ProduceOnlyReferenceAssembly)' != 'true' and '$(PkgMicrosoft_DiaSymReader_Pdb2Pdb)' != ''"
           Inputs="$(TargetPath)"
           Outputs="$(OutputPath)$(AssemblyName).pdb">
     <PropertyGroup>

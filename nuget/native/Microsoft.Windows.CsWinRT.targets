@@ -1,0 +1,262 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Targets imported by native (C++) projects consuming CsWinRT component projects via the
+Microsoft.Windows.CsWinRT NuGet (auto-imported as build/native/Microsoft.Windows.CsWinRT.targets).
+
+Walks both sources of CsWinRT component references attached to the consuming vcxproj:
+  - ProjectReferences whose CsWinRTComponent metadata is 'true'.
+  - @(CsWinRTNativeComponent) items contributed by component-package targets files
+    (each item's Identity is the path to a managed component .dll).
+
+Synthesizes a temporary aggregator csproj that references every detected component, builds it
+with CsWinRTBuildForNativeConsumer=true so the cswinrt projection / interop pipeline runs once
+across the union of all referenced components (a single deduplicated WinRT.Interop.dll plus
+WinRT.Component.dll, WinRT.Projection.dll and WinRT.Sdk.Projection.dll), and copies the merged
+hosting bundle to the consumer's output directory.
+
+@(CsWinRTNativeComponent) item metadata:
+  Identity (required)                       Path to the managed component .dll.
+  CsWinRTComponentTargetFramework (required) The TFM the component was compiled for.
+
+Properties consumers may set on the vcxproj:
+  CsWinRTDisableNativeComponentInterop      Set to 'true' to disable aggregator generation.
+  CsWinRTComponentTargetFrameworkOverride   TFM to use for the aggregator csproj. Required when
+                                            referenced components disagree on TFM, or when no
+                                            referenced component supplies a TFM.
+  CsWinRTNativeConsumerWindowsSdkPackageVersion
+                                            WindowsSdkPackageVersion to pass to the aggregator.
+                                            Falls back to a value picked from any component ref
+                                            metadata, then to the SDK default.
+  CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to opt out of the arch-correct
+                                            replacement of WinRT.Host.dll / .mui in the
+                                            consumer's ReferenceCopyLocalPaths.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_CsWinRTNativeConsumerIntermediateDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntDir)', 'cswinrt'))</_CsWinRTNativeConsumerIntermediateDir>
+
+    <!-- Default Message importance for status output, mirroring nuget/Microsoft.Windows.CsWinRT.targets. -->
+    <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
+
+    <!-- Map vcxproj $(Platform) to the equivalent .NET platform name used by the synthesized csproj. -->
+    <_CsWinRTNormalizedPlatform Condition="'$(Platform)' == 'Win32'">x86</_CsWinRTNormalizedPlatform>
+    <_CsWinRTNormalizedPlatform Condition="'$(_CsWinRTNormalizedPlatform)' == ''">$(Platform)</_CsWinRTNormalizedPlatform>
+  </PropertyGroup>
+
+  <!--
+    ============================================================
+                    _DetectCsWinRTNativeComponentReferences
+
+    Collects component references from both ProjectReferences and @(CsWinRTNativeComponent)
+    contributions, resolves the aggregator TFM (with validation), and resolves the aggregator
+    WindowsSdkPackageVersion. Populates @(_CsWinRTAggregatorInputs) for incremental gating.
+    ============================================================
+  -->
+  <Target Name="_DetectCsWinRTNativeComponentReferences"
+          DependsOnTargets="ResolveProjectReferences;ResolveAssemblyReferences">
+
+    <ItemGroup>
+      <!-- Component csprojs from <ProjectReference> with CsWinRTComponent=true metadata. -->
+      <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
+                                     Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
+
+      <!-- Distinct list of TFM values supplied by either ref source. Used for validation below. -->
+      <_CsWinRTComponentTargetFrameworkValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)"
+                                              Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)' != ''" />
+      <_CsWinRTComponentTargetFrameworkValues Include="%(CsWinRTNativeComponent.CsWinRTComponentTargetFramework)"
+                                              Condition="'%(CsWinRTNativeComponent.CsWinRTComponentTargetFramework)' != ''" />
+
+      <!-- Optional WindowsSdkPackageVersion contributed by either ref source. -->
+      <_CsWinRTComponentSdkPackageVersionValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)"
+                                                Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
+      <_CsWinRTComponentSdkPackageVersionValues Include="%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)"
+                                                Condition="'%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <_CsWinRTHasComponentReferences Condition="'@(_CsWinRTComponentProjectPaths)' != '' or '@(CsWinRTNativeComponent)' != ''">true</_CsWinRTHasComponentReferences>
+
+      <!-- Distinct TFM values, semicolon-joined for downstream validation. -->
+      <_CsWinRTDistinctComponentTargetFrameworks>@(_CsWinRTComponentTargetFrameworkValues->Distinct(), ';')</_CsWinRTDistinctComponentTargetFrameworks>
+
+      <!-- Aggregator TFM resolution. Override wins. Otherwise expect exactly one distinct value across all refs. -->
+      <_CsWinRTComponentTargetFramework Condition="'$(CsWinRTComponentTargetFrameworkOverride)' != ''">$(CsWinRTComponentTargetFrameworkOverride)</_CsWinRTComponentTargetFramework>
+      <_CsWinRTComponentTargetFramework Condition="'$(_CsWinRTComponentTargetFramework)' == '' and '$(_CsWinRTDistinctComponentTargetFrameworks)' != '' and !$(_CsWinRTDistinctComponentTargetFrameworks.Contains(';'))">$(_CsWinRTDistinctComponentTargetFrameworks)</_CsWinRTComponentTargetFramework>
+    </PropertyGroup>
+
+    <!-- Disagreement across component refs requires the consumer to pick a TFM via override. -->
+    <Error Condition="'$(_CsWinRTHasComponentReferences)' == 'true' and '$(CsWinRTComponentTargetFrameworkOverride)' == '' and $(_CsWinRTDistinctComponentTargetFrameworks.Contains(';'))"
+           Text="Referenced CsWinRT components disagree on CsWinRTComponentTargetFramework ($(_CsWinRTDistinctComponentTargetFrameworks)). Set CsWinRTComponentTargetFrameworkOverride on the vcxproj to choose the TFM the aggregator should target." />
+
+    <!-- No TFM derivable and no override: the consumer must pick one. -->
+    <Error Condition="'$(_CsWinRTHasComponentReferences)' == 'true' and '$(_CsWinRTComponentTargetFramework)' == ''"
+           Text="No CsWinRTComponentTargetFramework could be inferred from any referenced CsWinRT component. Set CsWinRTComponentTargetFrameworkOverride on the vcxproj to specify the TFM the aggregator should target." />
+
+    <PropertyGroup>
+      <!-- WindowsSdkPackageVersion: consumer override wins, otherwise first non-empty value from refs, otherwise empty. -->
+      <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(CsWinRTNativeConsumerWindowsSdkPackageVersion)' != ''">$(CsWinRTNativeConsumerWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
+      <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">@(_CsWinRTComponentSdkPackageVersionValues->Distinct())</_CsWinRTAggregatorWindowsSdkPackageVersion>
+    </PropertyGroup>
+
+    <!-- Inputs for incremental gating: any change to the targets file or any component artifact re-runs the aggregator. -->
+    <ItemGroup>
+      <_CsWinRTAggregatorInputs Include="@(_ResolvedProjectReferencePaths)"
+                                Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
+      <_CsWinRTAggregatorInputs Include="@(CsWinRTNativeComponent)" />
+      <_CsWinRTAggregatorInputs Include="$(MSBuildThisFileFullPath)" />
+    </ItemGroup>
+
+  </Target>
+
+  <!--
+    ============================================================
+                    CsWinRTGenerateComponentInterop
+
+    Synthesizes a temporary aggregator csproj that references every detected component
+    (via <ProjectReference> for project sources and <Reference HintPath=...> for package
+    sources), builds it with CsWinRTBuildForNativeConsumer=true, and copies the merged
+    hosting bundle to the consumer's output directory.
+    ============================================================
+  -->
+  <Target Name="CsWinRTGenerateComponentInterop"
+          DependsOnTargets="_DetectCsWinRTNativeComponentReferences"
+          BeforeTargets="Link"
+          Inputs="@(_CsWinRTAggregatorInputs)"
+          Outputs="$(OutDir)WinRT.Component.dll"
+          Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
+
+    <!-- _CsWinRTHasComponentReferences is set in _DetectCsWinRTNativeComponentReferences (DependsOnTargets above). -->
+    <Message Condition="'$(_CsWinRTHasComponentReferences)' != 'true'"
+             Importance="Low"
+             Text="No CsWinRT component references found. Skipping aggregator generation." />
+
+    <Message Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Importance="$(CsWinRTMessageImportance)"
+             Text="CsWinRT: aggregating components into $(OutDir)WinRT.Component.dll: @(_CsWinRTComponentProjectPaths);@(CsWinRTNativeComponent)" />
+
+    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTTempProjectDir>$(_CsWinRTNativeConsumerIntermediateDir)</_CsWinRTTempProjectDir>
+      <_CsWinRTTempProjectPath>$(_CsWinRTTempProjectDir)CsWinRT.NativeConsumer.csproj</_CsWinRTTempProjectPath>
+      <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
+
+      <!-- Pin the aggregator's intermediate paths so the post-build copy reads from a known location. -->
+      <_CsWinRTTempProjectBaseIntermediateDir>$(_CsWinRTTempProjectDir)obj\</_CsWinRTTempProjectBaseIntermediateDir>
+      <_CsWinRTTempProjectIntermediateConfigDir>$(_CsWinRTTempProjectBaseIntermediateDir)$(Configuration)\</_CsWinRTTempProjectIntermediateConfigDir>
+      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectIntermediateConfigDir)$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
+
+      <!-- Direct <Import> of cswinrt's props/targets so the synthesized csproj can use CsWinRT properties without a PackageReference. -->
+      <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
+      <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
+    </PropertyGroup>
+
+    <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
+
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTTempProjectLines Include="&lt;Project&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.props&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTPropsForAggregator)&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' != ''"
+                                Include="    &lt;WindowsSdkPackageVersion&gt;$(_CsWinRTAggregatorWindowsSdkPackageVersion)&lt;/WindowsSdkPackageVersion&gt;" />
+      <!-- Project-local IntermediateOutputPath so artifacts land in a path this targets file owns. -->
+      <_CsWinRTTempProjectLines Include="    &lt;BaseIntermediateOutputPath&gt;$(_CsWinRTTempProjectBaseIntermediateDir)&lt;/BaseIntermediateOutputPath&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateConfigDir)&lt;/IntermediateOutputPath&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTBuildForNativeConsumer&gt;true&lt;/CsWinRTBuildForNativeConsumer&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTEmitEntryPointInitializer&gt;true&lt;/CsWinRTEmitEntryPointInitializer&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateInteropAssembly&gt;true&lt;/CsWinRTGenerateInteropAssembly&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateProjection&gt;false&lt;/CsWinRTGenerateProjection&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
+      <!-- Project-supplied components flow as ProjectReferences. -->
+      <_CsWinRTTempProjectLines Condition="'@(_CsWinRTComponentProjectPaths)' != ''"
+                                Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
+      <!-- Package-supplied components flow as <Reference HintPath=...> with CsWinRTComponent=true metadata so they go through the same Authoring pipeline. -->
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="    &lt;Reference Include=&quot;%(CsWinRTNativeComponent.Filename)&quot;&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="      &lt;HintPath&gt;%(CsWinRTNativeComponent.Identity)&lt;/HintPath&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="      &lt;CsWinRTComponent&gt;true&lt;/CsWinRTComponent&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="      &lt;Private&gt;true&lt;/Private&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="    &lt;/Reference&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="&lt;/Project&gt;" />
+    </ItemGroup>
+
+    <WriteLinesToFile Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+                      File="$(_CsWinRTTempProjectPath)"
+                      Lines="@(_CsWinRTTempProjectLines)"
+                      Overwrite="true" />
+
+    <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Projects="$(_CsWinRTTempProjectPath)"
+             Targets="Restore"
+             Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)" />
+
+    <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Projects="$(_CsWinRTTempProjectPath)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)" />
+
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Projection.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll')" />
+    </ItemGroup>
+
+    <Copy Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" SourceFiles="@(_CsWinRTGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+
+  </Target>
+
+  <!--
+    ============================================================
+            _CsWinRTReplaceArchSelectedHostingAssets
+
+    If the standard reference flow brought a WinRT.Host.dll / WinRT.Host.dll.mui into
+    ReferenceCopyLocalPaths (e.g. via a JIT-built component's <None CopyToOutputDirectory>
+    items), replace it with the arch-correct copy from the CsWinRT package's
+    hosting/$(_CsWinRTNormalizedPlatform)/native/ folder. If nothing contributes one
+    (e.g. AOT-published component, or the consumer manages its own host bundle), this
+    target does nothing - we only correct what would already be copied.
+
+    Skipped if the package-layout host dll is not found on disk (in-repo simulation).
+    Skipped if the consumer sets CsWinRTSkipNativeHostingAssetsOverride=true.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTReplaceArchSelectedHostingAssets"
+          AfterTargets="ResolveAssemblyReferences"
+          Condition="'$(CsWinRTSkipNativeHostingAssetsOverride)' != 'true'">
+
+    <PropertyGroup>
+      <_CsWinRTHostDllPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\WinRT.Host.dll</_CsWinRTHostDllPath>
+      <_CsWinRTHostMuiPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\en-US\WinRT.Host.dll.mui</_CsWinRTHostMuiPath>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(_CsWinRTHostDllPath)')">
+      <_CsWinRTHostingItemsToReplace Include="@(ReferenceCopyLocalPaths)"
+                                     Condition="'%(Filename)%(Extension)' == 'WinRT.Host.dll' or '%(Filename)%(Extension)' == 'WinRT.Host.dll.mui'" />
+      <ReferenceCopyLocalPaths Remove="@(_CsWinRTHostingItemsToReplace)" />
+      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostDllPath)"
+                               Condition="'@(_CsWinRTHostingItemsToReplace)' != ''" />
+      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostMuiPath)"
+                               Condition="'@(_CsWinRTHostingItemsToReplace)' != '' and Exists('$(_CsWinRTHostMuiPath)')" />
+    </ItemGroup>
+
+  </Target>
+
+</Project>

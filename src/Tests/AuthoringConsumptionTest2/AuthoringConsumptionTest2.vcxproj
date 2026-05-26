@@ -8,17 +8,9 @@
   <Import Project="..\..\packages\Microsoft.Windows.SDK.BuildTools.MSIX.1.7.20250829.1\build\Microsoft.Windows.SDK.BuildTools.MSIX.props" Condition="Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.MSIX.1.7.20250829.1\build\Microsoft.Windows.SDK.BuildTools.MSIX.props')" />
   <Import Project="..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props" Condition="Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props')" />
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|ARM64">
-      <Configuration>Debug</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|ARM64">
-      <Configuration>Release</Configuration>
-      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -34,9 +26,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0212a7c5-8d3f-443c-9ebc-1f28091fdf88}</ProjectGuid>
+    <ProjectGuid>{8a4b1f2a-9c2e-4d3a-bf68-2a4f5b7c8d9e}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>AuthoringConsumptionTest</RootNamespace>
+    <RootNamespace>AuthoringConsumptionTest2</RootNamespace>
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
@@ -65,17 +57,14 @@
     <None Include="Directory.Build.targets" />
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
-    <!-- Only include the runtimeconfig.json file when not using NativeAOT -->
     <None Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="WinRT.Host.runtimeconfig.json">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
+      <DeploymentContent>true</DeploymentContent>
     </None>
   </ItemGroup>
   <!--
-    Skip referencing projections and other projects if in Release x64.
-    When that is true, we're using NativeAOT, so we're self-contained.
+    Skip referencing JIT-side projections / runtime / host shim / components in Release|x64.
+    That config builds a merged AOT host (AuthoringConsumptionTest2.AOT.csproj) and ships only
+    that single native dll plus the test exe.
   -->
   <ItemGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
@@ -97,48 +86,80 @@
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
-      <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+    <ProjectReference Include="..\AuthoringTest3\AuthoringTest3.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
-  <!--
-    When in Release x64, we want to test NativeAOT publishing. The build.cmd script is
-    already publishing the project, so we just need to copy the .dll to the output.
-  -->
+  <!-- Release|x64 builds the merged AOT host (.AOT.csproj sibling, slnx top-level). Build the
+       component csprojs with RuntimeIdentifier propagated so their .winmd files land at the
+       win-<Platform>\ subfolder the IsWinMDFile HintPath expects. ReferenceOutputAssembly=false
+       drives build ordering only; cppwinrt consumes only the explicit IsWinMDFile References. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
+    <ProjectReference Include="..\AuthoringTest3\AuthoringTest3.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+      <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+      <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
-    <NativeLibraryProjectName>AuthoringTest</NativeLibraryProjectName>
+    <NativeLibraryProjectName>AuthoringConsumptionTest2.AOT</NativeLibraryProjectName>
     <NativeLibraryProjectDirectory>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\$(NativeLibraryProjectName)'))\</NativeLibraryProjectDirectory>
     <NativeLibraryProjectFilePath>$(NativeLibraryProjectDirectory)$(NativeLibraryProjectName).csproj</NativeLibraryProjectFilePath>
-    <NativeLibraryOutputFolder>$(NativeLibraryProjectDirectory)bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\</NativeLibraryOutputFolder>
-    <NativeLibraryDllPath>$(NativeLibraryOutputFolder)$(NativeLibraryProjectName).dll</NativeLibraryDllPath>
     <NativeLibraryPublishFolder>$(NativeLibraryProjectDirectory)bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\publish\</NativeLibraryPublishFolder>
     <NativeLibraryPublishedDllPath>$(NativeLibraryPublishFolder)$(NativeLibraryProjectName).dll</NativeLibraryPublishedDllPath>
   </PropertyGroup>
+  <!-- .AOT.csproj is a slnx top-level project; it's already published. Just pick up the dll. -->
   <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
-		  Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
-		  Inputs="$(NativeLibraryDllPath)"
-		  Outputs="@(ReferenceCopyLocalPaths)">
-    <!-- Publish the managed library with NativeAOT -->
-    <MSBuild Projects="$(NativeLibraryProjectFilePath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1" />
-    <!-- Copy the .dll to our output folder -->
+          Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
+          Inputs="$(NativeLibraryPublishedDllPath)"
+          Outputs="@(ReferenceCopyLocalPaths)">
+    <Error Condition="!Exists('$(NativeLibraryPublishedDllPath)')"
+           Text="Expected published AOT host '$(NativeLibraryPublishedDllPath)' was not produced. Verify slnx built AuthoringConsumptionTest2.AOT.csproj for Release|x64." />
     <ItemGroup>
-      <ReferenceCopyLocalPaths Remove="$(NativeLibraryDllPath)" />
       <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
     </ItemGroup>
   </Target>
-  <ItemGroup>
-    <Reference Include="AuthoringTest">
-      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest.winmd</HintPath>
+  <ItemGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
+    <Reference Include="AuthoringTest3">
+      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest3.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+    </Reference>
+    <Reference Include="AuthoringTest2">
+      <HintPath>..\AuthoringTest2\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest2.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
+  <!-- For Release|x64 the test exe still needs the cppwinrt projection of AuthoringTest3 /
+       AuthoringTest2 winmds at compile time (it consumes the C++ projected types). -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
+    <Reference Include="AuthoringTest3">
+      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest3.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+      <Implementation>AuthoringConsumptionTest2.AOT.dll</Implementation>
+    </Reference>
+    <Reference Include="AuthoringTest2">
+      <HintPath>..\AuthoringTest2\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest2.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+      <Implementation>AuthoringConsumptionTest2.AOT.dll</Implementation>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
-    <!-- Manifest is only needed for JIT hosting (non-NativeAOT). -->
-    <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="AuthoringConsumptionTest.exe.manifest" />
+    <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')"
+              Include="AuthoringConsumptionTest2.exe.manifest" />
+    <Manifest Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
+              Include="AuthoringConsumptionTest2.AOT.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <!-- CsWinRT JIT-host targets. Shipped as build\native\Microsoft.Windows.CsWinRT.targets in the package. -->
   <Import Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')"
           Project="..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -153,6 +174,39 @@
     <Import Project="..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.targets" Condition="Exists('..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>X64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -168,104 +222,26 @@
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>X64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>X64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>X64;NDEBUG;AOT;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-    </Link>
-  </ItemDefinitionGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Web.WebView2.1.0.3179.45\build\native\Microsoft.Web.WebView2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Web.WebView2.1.0.3179.45\build\native\Microsoft.Web.WebView2.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.MSIX.1.7.20250829.1\build\Microsoft.Windows.SDK.BuildTools.MSIX.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.SDK.BuildTools.MSIX.1.7.20250829.1\build\Microsoft.Windows.SDK.BuildTools.MSIX.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.MSIX.1.7.20250829.1\build\Microsoft.Windows.SDK.BuildTools.MSIX.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.SDK.BuildTools.MSIX.1.7.20250829.1\build\Microsoft.Windows.SDK.BuildTools.MSIX.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.Base.1.8.250831001\build\native\Microsoft.WindowsAppSDK.Base.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.Base.1.8.250831001\build\native\Microsoft.WindowsAppSDK.Base.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.Base.1.8.250831001\build\native\Microsoft.WindowsAppSDK.Base.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.Base.1.8.250831001\build\native\Microsoft.WindowsAppSDK.Base.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.InteractiveExperiences.1.8.251104001\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.InteractiveExperiences.1.8.251104001\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.InteractiveExperiences.1.8.251104001\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.InteractiveExperiences.1.8.251104001\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.Foundation.1.8.251104000\build\native\Microsoft.WindowsAppSDK.Foundation.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.Foundation.1.8.251104000\build\native\Microsoft.WindowsAppSDK.Foundation.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.Foundation.1.8.251104000\build\native\Microsoft.WindowsAppSDK.Foundation.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.Foundation.1.8.251104000\build\native\Microsoft.WindowsAppSDK.Foundation.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  <Target Name="EnsurePackageReference" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="Required package Microsoft.Windows.CppWinRT not found. Run NuGet restore." />
+    <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="Required package Microsoft.googletest not found. Run NuGet restore." />
   </Target>
 </Project>

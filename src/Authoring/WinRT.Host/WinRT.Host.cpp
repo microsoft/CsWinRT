@@ -376,16 +376,6 @@ void GetActivationFactory(void* hstr_class_id, void** activation_factory)
 
     init_runtime(host_module.wstring().c_str(), host_config.c_str());
 
-    // If no explicit target assembly mapping found, probe for it by naming convention
-    if (target_path.empty())
-    {
-        target_path = probe_for_target_assembly(host_module, class_id);
-        if (target_path.empty() || !std::filesystem::exists(target_path))
-        {
-            winrt::throw_hresult(HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
-        }
-    }
-
     // Load shim (managed portion of host) and retrieve get_activation_factory pointer
     if (::get_activation_factory == nullptr)
     {
@@ -395,9 +385,55 @@ void GetActivationFactory(void* hstr_class_id, void** activation_factory)
             shim_path.wstring().c_str(),
             L"WinRT.Host.Shim, WinRT.Host.Shim",
             L"GetActivationFactory",
-            L"WinRT.Host.Shim+GetActivationFactoryDelegate, WinRT.Host.Shim",     
+            L"WinRT.Host.Shim+GetActivationFactoryDelegate, WinRT.Host.Shim",
             nullptr,
             (void**)&::get_activation_factory));
+    }
+
+    // If no explicit target assembly mapping was supplied via runtimeconfig, prefer a deployed
+    // 'WinRT.Component.dll'. This is the merged-projection / merged-activation dll produced by
+    // the aggregator's projection generator for native-consumer scenarios with one or more
+    // CsWinRT components. Its merged 'ABI.WinRT.Component.ManagedExports.GetActivationFactory'
+    // dispatches across each input component. A 'CLASS_E_CLASSNOTAVAILABLE' from the shim
+    // means the merged dll didn't aggregate that runtime class, so we fall through to the
+    // existing per-component prefix probe below. Any other failing HRESULT is fatal.
+    if (target_path.empty())
+    {
+        auto winrt_component_path = host_module;
+        winrt_component_path.replace_filename(L"WinRT.Component.dll");
+
+        if (std::filesystem::exists(winrt_component_path))
+        {
+            winrt::hstring hstr_winrt_component_path(winrt_component_path.c_str());
+            *activation_factory = nullptr;
+
+            HRESULT hr = ::get_activation_factory(
+                winrt::get_abi(hstr_winrt_component_path), hstr_class_id, activation_factory);
+
+            if (SUCCEEDED(hr))
+            {
+                return;
+            }
+
+            if (hr != CLASS_E_CLASSNOTAVAILABLE)
+            {
+                check_hostfxr_hresult(hr);
+            }
+
+            // 'WinRT.Component.dll' did not aggregate this runtime class; fall through
+            // to the existing per-component probing logic below.
+            *activation_factory = nullptr;
+        }
+    }
+
+    // If no explicit target assembly mapping found, probe for it by naming convention
+    if (target_path.empty())
+    {
+        target_path = probe_for_target_assembly(host_module, class_id);
+        if (target_path.empty() || !std::filesystem::exists(target_path))
+        {
+            winrt::throw_hresult(HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+        }
     }
 
     // Load target assembly and get managed runtime class activation factory 

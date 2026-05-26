@@ -45,6 +45,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGeneratorStandardErrorImportance Condition="'$(CsWinRTGeneratorStandardErrorImportance)' == ''">High</CsWinRTGeneratorStandardErrorImportance>
     <CsWinRTGeneratorLogStandardErrorAsError Condition="'$(CsWinRTGeneratorLogStandardErrorAsError)' == ''">true</CsWinRTGeneratorLogStandardErrorAsError>
 
+    <!-- Emits a SetEntryAssembly module initializer into WinRT.Component.dll to enable JIT TypeMap discovery.
+         Not needed for AOT (handled via a separate exe-project workaround). Will become unnecessary once
+         the TypeMappingEntryAssembly MSBuild property is available. -->
+    <CsWinRTEmitEntryPointInitializer Condition="'$(CsWinRTEmitEntryPointInitializer)' == ''">false</CsWinRTEmitEntryPointInitializer>
+
     <!-- Derived properties for 'cswinrtinteropgen' tooling -->
     <_CsWinRTGeneratorInteropAssemblyName>WinRT.Interop</_CsWinRTGeneratorInteropAssemblyName>
     <_CsWinRTGeneratorInteropAssemblyFileName>$(_CsWinRTGeneratorInteropAssemblyName).dll</_CsWinRTGeneratorInteropAssemblyFileName>
@@ -350,8 +355,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
-    <!-- Set the metadata for the interop .dll item and add it to the required output groups -->
-    <ItemGroup Condition="'$(_HasMergedProjectionWinMDInputs)' == 'true'">
+    <!-- Only wire up the merged projection DLL if it was actually produced
+         (i.e. the generator found types to project). -->
+    <ItemGroup Condition="Exists('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)')">
       <CsWinRTGeneratorMergedProjectionPath Include="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)">
         <AssemblyName>WinRT.Projection</AssemblyName>
         <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
@@ -408,6 +414,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AssemblyName="WinRT.Component"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      EmitEntryPointInitializer="$(CsWinRTEmitEntryPointInitializer)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />

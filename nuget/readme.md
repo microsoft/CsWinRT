@@ -84,6 +84,62 @@ If a Windows SDK is installed, $(WindowsSDKVersion) is defined when building fro
 
 The C#/WinRT package can be used both to consume WinRT types, and to produce them (via CsWinRTComponent). It is also possible to combine these settings and do both. For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).
 
+## Consuming CsWinRT components from a native (C++) app
+
+When a native (C++) `.vcxproj` references one or more managed CsWinRT components, the CsWinRT package's
+`build/native/Microsoft.Windows.CsWinRT.targets` walks the component references and synthesizes a temporary
+aggregator project. That aggregator runs the cswinrt projection, interop and component pipeline once across
+the union of all referenced components, producing a single deduplicated `WinRT.Interop.dll` plus
+`WinRT.Component.dll`, `WinRT.Projection.dll` and `WinRT.Sdk.Projection.dll`. The merged hosting bundle is
+copied to the consumer's output directory next to `WinRT.Host.dll` / `WinRT.Host.Shim.dll`.
+
+Component references are picked up from two sources, treated as equivalent inputs:
+
+* `<ProjectReference>` items whose `CsWinRTComponent` metadata is `true`. Components built with
+  `CsWinRTComponent=true` automatically expose this metadata.
+* `@(CsWinRTNativeComponent)` items contributed by component-package targets files (see below).
+
+Consumer-side properties:
+
+| Property | Description |
+|-|-|
+| `CsWinRTDisableNativeComponentInterop` | Set to `true` to disable aggregator generation. |
+| `CsWinRTComponentTargetFrameworkOverride` | TFM to use for the aggregator project. Required when referenced components disagree on TFM, or when no referenced component supplies a TFM. |
+| `CsWinRTNativeConsumerWindowsSdkPackageVersion` | `WindowsSdkPackageVersion` to pass to the aggregator. Falls back to a value picked from any component reference, then to the SDK default. |
+| `CsWinRTSkipNativeHostingAssetsOverride` | Set to `true` to opt out of the arch-correct replacement of `WinRT.Host.dll` / `.mui` in the consumer's reference closure. |
+
+### Distributing a CsWinRT component for native consumers
+
+A CsWinRT component is built with `CsWinRTComponent=true` in its `.csproj`. The build produces a managed
+`{AssemblyName}.dll` plus a `.winmd`. Two distribution shapes are supported:
+
+#### Option 1 — Ship the managed component .dll (JIT hosting, supports merged multi-component aggregation)
+
+Native consumers reference the managed component and the consumer's own `WinRT.Host.dll`/`WinRT.Host.Shim.dll`
+load it at runtime. Component packages opt in by shipping a small `build/native/{PackageId}.targets` that
+contributes the component .dll to `@(CsWinRTNativeComponent)` and its `.winmd` to `@(CsWinRTInputs)`:
+
+```xml
+<!-- build/native/Contoso.Foo.targets, packaged inside the NuGet -->
+<Project>
+  <ItemGroup>
+    <CsWinRTNativeComponent Include="$(MSBuildThisFileDirectory)..\..\lib\net10.0-windows10.0.26100.1\Contoso.Foo.dll">
+      <CsWinRTComponentTargetFramework>net10.0-windows10.0.26100.1</CsWinRTComponentTargetFramework>
+    </CsWinRTNativeComponent>
+    <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\..\lib\net10.0-windows10.0.26100.1\Contoso.Foo.winmd" />
+  </ItemGroup>
+</Project>
+```
+
+The `Identity` is the path to the component .dll. `CsWinRTComponentTargetFramework` is required and is used
+by the consumer to derive the aggregator's target framework.
+
+#### Option 2 — AOT-publish the component and ship the resulting native binary
+
+The component author runs `dotnet publish -p:PublishAot=true` on the component themselves and distributes
+the resulting native dll. Native consumers load that binary directly through whatever activation mechanism
+they prefer; they do not go through the aggregator.
+
 ## Troubleshooting
 
 The MSBuild verbosity level maps to MSBuild message importance as follows:

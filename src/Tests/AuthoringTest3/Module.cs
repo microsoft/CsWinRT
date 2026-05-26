@@ -2,7 +2,7 @@ using System.Reflection;
 
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 
-namespace AuthoringTest;
+namespace AuthoringTest3;
 
 internal class Program
 {

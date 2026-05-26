@@ -73,6 +73,7 @@ jobs:
           net10.0/native/cswinrtinteropgen.exe;
           net10.0/native/cswinrtimplgen.exe;
           net10.0/native/cswinrtprojectiongen.exe;
+          net10.0/native/cswinrtwinmdgen.exe;
         search_root: $(StagingFolder)
 
     - task: onebranch.pipeline.signing@1

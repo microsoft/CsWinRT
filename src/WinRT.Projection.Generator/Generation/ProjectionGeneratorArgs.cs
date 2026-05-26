@@ -54,6 +54,16 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
+    /// <summary>
+    /// Gets whether to emit the <c>ProjectionTypesInitializer</c> module initializer
+    /// (calls <c>Assembly.SetEntryAssembly</c>) into <c>WinRT.Component.dll</c>. Only
+    /// needed under JIT to enable <c>[TypeMapAssemblyTarget]</c> discovery at the merged
+    /// component dll; AOT uses a separate exe-project workaround. Will become
+    /// unnecessary once the <c>TypeMappingEntryAssembly</c> MSBuild property is available.
+    /// </summary>
+    [CommandLineArgumentName("--emit-entry-point-initializer")]
+    public bool EmitEntryPointInitializer { get; init; }
+
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
 }
