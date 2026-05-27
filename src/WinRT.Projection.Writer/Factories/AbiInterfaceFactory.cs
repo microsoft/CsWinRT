@@ -447,7 +447,6 @@ internal static class AbiInterfaceFactory
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
-            #nullable enable
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{typedefName}}{{typeParams}} value)
@@ -455,12 +454,11 @@ internal static class AbiInterfaceFactory
                     return WindowsRuntimeInterfaceMarshaller<{{typedefName}}{{typeParams}}>.ConvertToUnmanaged(value, {{iid}});
                 }
 
-                public static {{typedefName}}{{typeParams}}? ConvertToManaged(void* value)
+                public static {{typedefName}}{{typeParams}} ConvertToManaged(void* value)
                 {
-                    return ({{typedefName}}{{typeParams}}?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+                    return ({{typedefName}}{{typeParams}}) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
-            #nullable disable
             """);
     }
 

@@ -29,8 +29,6 @@ internal static class AbiClassFactory
             return;
         }
 
-        writer.WriteLine("#nullable enable");
-
         if (context.Settings.Component)
         {
             WriteComponentClassMarshaller(writer, context, type);
@@ -41,8 +39,6 @@ internal static class AbiClassFactory
             // Emit a ComWrappers marshaller class so the attribute reference resolves
             WriteClassMarshallerStub(writer, context, type);
         }
-
-        writer.WriteLine("#nullable disable");
     }
 
     /// <summary>
@@ -91,20 +87,19 @@ internal static class AbiClassFactory
                 {
             """);
 
-        // Emit the '[UnsafeAccessor]' declaration (uses 'object?' since component-mode
-        // marshallers run inside #nullable enable) if the type is a generic type.
+        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type.
         if (defaultGenericInst is not null)
         {
-            UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst, isInNullableContext: true);
+            UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst);
         }
 
         writer.WriteLine(isMultiline: true, $$"""
                     return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{defaultIfaceIid}});
                 }
             
-                public static {{projectedType}}? ConvertToManaged(void* value)
+                public static {{projectedType}} ConvertToManaged(void* value)
                 {
-                    return ({{projectedType}}?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+                    return ({{projectedType}}) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
             """);
@@ -261,9 +256,9 @@ internal static class AbiClassFactory
                     return default;
                 }
 
-                public static {{fullProjected}}? ConvertToManaged(void* value)
+                public static {{fullProjected}} ConvertToManaged(void* value)
                 {
-                    return ({{fullProjected}}?){{(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}}.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
+                    return ({{fullProjected}}){{(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}}.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
                 }
             }
 
@@ -325,7 +320,7 @@ internal static class AbiClassFactory
                     public static unsafe bool TryCreateObject(
                         void* value,
                         ReadOnlySpan<char> runtimeClassName,
-                        [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,
+                        out object wrapperObject,
                         out CreatedWrapperFlags wrapperFlags)
                     {
                         if (runtimeClassName.SequenceEqual("{{nonProjectedRcn}}".AsSpan()))

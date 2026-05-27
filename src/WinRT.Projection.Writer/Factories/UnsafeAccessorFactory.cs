@@ -73,43 +73,35 @@ internal static class UnsafeAccessorFactory
 
     /// <summary>
     /// Emits the <c>[UnsafeAccessor]</c> extern method declaration that exposes the IID for a
-    /// generic interface instantiation. The declaration is written as a contiguous multi-line
-    /// chunk; on completion the writer's buffer ends with a newline.
+    /// generic interface instantiation.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="isInNullableContext">When <see langword="true"/>, the accessor's parameter type is
-    /// <c>object?</c> (used inside <c>#nullable enable</c> regions); otherwise <c>object</c>.</param>
-    public static void EmitIidAccessor(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
+    public static void EmitIidAccessor(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         string propName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, gi);
         string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
 
-        writer.Write(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
-            static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
+            static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
             """);
-
-        writer.WriteIf(isInNullableContext, "?");
-
-        writer.WriteLine(" _);");
     }
 
     /// <summary>
-    /// Convenience overload of <see cref="EmitIidAccessor(IndentedTextWriter, ProjectionEmitContext, GenericInstanceTypeSignature, bool)"/>
+    /// Convenience overload of <see cref="EmitIidAccessor(IndentedTextWriter, ProjectionEmitContext, GenericInstanceTypeSignature)"/>
     /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
     /// emits the IID accessor declaration into it, and returns the resulting string.
     /// </summary>
     /// <param name="context">The active emit context.</param>
     /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="isInNullableContext">When <see langword="true"/>, the accessor's parameter type is <c>object?</c>; otherwise <c>object</c>.</param>
     /// <returns>The emitted IID accessor declaration.</returns>
-    public static string EmitIidAccessor(ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
+    public static string EmitIidAccessor(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter writer = writerOwner.Writer;
-        EmitIidAccessor(writer, context, gi, isInNullableContext);
+        EmitIidAccessor(writer, context, gi);
         return writer.ToString();
     }
 }

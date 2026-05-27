@@ -325,12 +325,10 @@ internal static class AbiDelegateFactory
                     return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in {{iidExpr}});
                 }
             
-            #nullable enable
-                public static {{fullProjected}}? ConvertToManaged(void* value)
+                public static {{fullProjected}} ConvertToManaged(void* value)
                 {
-                    return ({{fullProjected}}?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
+                    return ({{fullProjected}})WindowsRuntimeDelegateMarshaller.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
                 }
-            #nullable disable
             }
             """);
     }
