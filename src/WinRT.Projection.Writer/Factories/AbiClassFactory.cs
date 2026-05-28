@@ -223,43 +223,47 @@ internal static class AbiClassFactory
         TypeDefinition? defaultIfaceTd = defaultIface?.ResolveAsTypeDefinition(context.Cache);
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && defaultIfaceTd.IsExclusiveTo;
 
-        // Public *Marshaller class
+        // Emit the ConvertToUnmanaged body branch (sealed -> unwrap, unsealed-with-non-exclusive-iface -> IWindowsRuntimeInterface, fallback -> default iface)
+        void WriteConvertToUnmanagedBranch(IndentedTextWriter writer)
+        {
+            if (isSealed)
+            {
+                // For projected sealed runtime classes, the RCW type is always unwrappable.
+                writer.Write(isMultiline: true, """
+                            if (value is not null)
+                            {
+                                return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
+                            }
+                    """);
+            }
+            else if (!defaultIfaceIsExclusive && defaultIface is not null)
+            {
+                string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false).Format();
+                writer.Write(isMultiline: true, $$"""
+                            if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
+                            {
+                                return windowsRuntimeInterface.GetInterface();
+                            }
+                    """);
+            }
+            else
+            {
+                writer.Write(isMultiline: true, """
+                            if (value is not null)
+                            {
+                                return value.GetDefaultInterface();
+                            }
+                    """);
+            }
+        }
+
+        // Public *Marshaller class + file-scoped *ComWrappersMarshallerAttribute declaration
         writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
                 {
-            """);
-        if (isSealed)
-        {
-            // For projected sealed runtime classes, the RCW type is always unwrappable.
-            writer.WriteLine(isMultiline: true, """
-                        if (value is not null)
-                        {
-                            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
-                        }
-                """);
-        }
-        else if (!defaultIfaceIsExclusive && defaultIface is not null)
-        {
-            string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false).Format();
-            writer.WriteLine(isMultiline: true, $$"""
-                        if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
-                        {
-                            return windowsRuntimeInterface.GetInterface();
-                        }
-                """);
-        }
-        else
-        {
-            writer.WriteLine(isMultiline: true, """
-                        if (value is not null)
-                        {
-                            return value.GetDefaultInterface();
-                        }
-                """);
-        }
-        writer.WriteLine(isMultiline: true, $$"""
+            {{WriteConvertToUnmanagedBranch}}
                     return default;
                 }
 
