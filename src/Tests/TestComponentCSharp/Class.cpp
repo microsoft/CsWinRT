@@ -1227,6 +1227,14 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::check_hresult(_asyncResult);
     }
 
+    void Class::SetFailingCompletedHandler(IAsyncAction const& action)
+    {
+        action.Completed([](IAsyncAction const&, AsyncStatus)
+        {
+            throw winrt::hresult_error(E_FAIL, L"Intentional failure in completion handler");
+        });
+    }
+
     IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()
     {
         _asyncResult = E_PENDING;
