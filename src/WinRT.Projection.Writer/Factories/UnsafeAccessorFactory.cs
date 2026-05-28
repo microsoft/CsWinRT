@@ -88,20 +88,4 @@ internal static class UnsafeAccessorFactory
             static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
             """);
     }
-
-    /// <summary>
-    /// Convenience overload of <see cref="EmitIidAccessor(IndentedTextWriter, ProjectionEmitContext, GenericInstanceTypeSignature)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the IID accessor declaration into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <returns>The emitted IID accessor declaration.</returns>
-    public static string EmitIidAccessor(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
-    {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        EmitIidAccessor(writer, context, gi);
-        return writer.ToString();
-    }
 }
