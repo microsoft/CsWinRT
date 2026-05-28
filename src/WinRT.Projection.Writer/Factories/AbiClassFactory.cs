@@ -44,7 +44,7 @@ internal static class AbiClassFactory
     /// <summary>
     /// Emits the simpler component-mode class marshaller.
     /// </summary>
-    internal static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.GetRawNamespace();
@@ -62,21 +62,36 @@ internal static class AbiClassFactory
             defaultGenericInst = null;
         }
 
-        string defaultIfaceIid;
+        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type
+        void WriteIidAccessor(IndentedTextWriter writer)
+        {
+            if (defaultGenericInst is not null)
+            {
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst);
 
-        // If the type is generic, we need to invoke the unsafe accessor (because the IID will be generated
-        // in the 'WinRT.Interop.dll' assembly, whereas if not we can directly use the local IID property.
-        if (defaultGenericInst is not null)
-        {
-            // Call the accessor: '<IID_<EscapedName>>(null)'
-            string accessorName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst);
-            defaultIfaceIid = accessorName + "(null)";
+                writer.WriteLine();
+            }
         }
-        else
+
+        // Emit the actual IID expression to pass during marshalling
+        void WriteIidExpression(IndentedTextWriter writer)
         {
-            defaultIfaceIid = defaultIface is not null
-                ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format()
-                : "default(global::System.Guid)";
+            // If the type is generic, we need to invoke the unsafe accessor (because the IID will be generated
+            // in the 'WinRT.Interop.dll' assembly, whereas if not we can directly use the local IID property.
+            if (defaultGenericInst is not null)
+            {
+                // Call the accessor: '<IID_<EscapedName>>(null)'
+                writer.Write(ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst));
+                writer.Write("(null)");
+            }
+            else if (defaultIface is not null)
+            {
+                writer.Write($"{ObjRefNameGenerator.WriteIidExpression(context, defaultIface)}");
+            }
+            else
+            {
+                writer.Write("default(global::System.Guid)");
+            }
         }
 
         writer.WriteLine();
@@ -85,16 +100,8 @@ internal static class AbiClassFactory
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedType}} value)
                 {
-            """);
-
-        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type.
-        if (defaultGenericInst is not null)
-        {
-            UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst);
-        }
-
-        writer.WriteLine(isMultiline: true, $$"""
-                    return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{defaultIfaceIid}});
+                    {{WriteIidAccessor}}
+                    return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{WriteIidExpression}});
                 }
             
                 public static {{projectedType}} ConvertToManaged(void* value)
@@ -109,7 +116,7 @@ internal static class AbiClassFactory
     /// Emits the metadata wrapper type <c>file static class &lt;Name&gt; {}</c> with the conditional
     /// set of attributes required for the type's category.
     /// </summary>
-    internal static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
         string typeNs = type.GetRawNamespace();

@@ -198,9 +198,10 @@ internal static class ObjRefNameGenerator
     /// Builds the IID property name for a generic interface instantiation.
     /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
     /// </summary>
-    internal static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
+    public static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
+
         return "IID_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(
             TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true).Format(),
             stripGlobal: true, stripGlobalABI: true);
