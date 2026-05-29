@@ -369,24 +369,18 @@ internal static class AbiInterfaceIDicFactory
         {
             MethodSignatureInfo sig = new(method);
             string mname = method.GetRawName();
-
-            writer.WriteLine();
-            writer.Write("unsafe ");
             IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
             IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
-            writer.Write($"{ret} {ccwIfaceName}.{mname}({parms}");
+            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+            string returnKw = sig.ReturnType is not null ? "return " : "";
+
+            writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                )
+                unsafe {{ret}} {{ccwIfaceName}}.{{mname}}({{parms}})
                 {
                     var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                     
-                """);
-            writer.WriteIf(sig.ReturnType is not null, "return ");
-
-            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
-            writer.Write($"{abiClass}.{mname}(_obj{args}");
-            writer.WriteLine(isMultiline: true, """
-                );
+                {{returnKw}}{{abiClass}}.{{mname}}(_obj{{args}});
                 }
                 """);
         }
@@ -397,46 +391,55 @@ internal static class AbiInterfaceIDicFactory
             string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
-            writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
-                {
-                """);
-            if (getter is not null)
+            // Emit the get accessor: a real one if 'getter' is defined on this interface, or a
+            // synthetic delegate to the base interface that owns the actual getter if only the
+            // setter is on this interface (C# requires both accessors on an explicit interface
+            // impl when the interface declaration has 'get; set;').
+            void WriteGetter(IndentedTextWriter writer)
             {
-                writer.WriteLine(isMultiline: true, $$"""
+                if (getter is not null)
+                {
+                    writer.Write(isMultiline: true, $$"""
                         get
                         {
                             var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                             return {{abiClass}}.{{pname}}(_obj);
                         }
-                    """);
+                        """);
+                }
+                else if (setter is not null
+                    && InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
+                {
+                    IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
+                    writer.Write($"get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
+                }
             }
 
-            if (setter is not null)
+            // Emit the set accessor when this interface declares it; otherwise nothing.
+            void WriteSetter(IndentedTextWriter writer)
             {
-                // If the property has only a setter on this interface BUT a base interface declares
-                // the getter (so the C# interface decl emits 'get; set;'), C# requires an explicit
-                // interface impl to provide both accessors. Emit a synthetic getter that delegates
-                // to the base interface where the getter actually lives
-                if (getter is null)
+                if (setter is null)
                 {
-                    if (InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
-                    {
-                        IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
-                        writer.WriteLine($"    get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
-                    }
+                    return;
                 }
 
-                writer.WriteLine(isMultiline: true, $$"""
-                        set
-                        {
-                            var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
-                            {{abiClass}}.{{pname}}(_obj, value);
-                        }
+                writer.Write(isMultiline: true, $$"""
+                    set
+                    {
+                        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
+                        {{abiClass}}.{{pname}}(_obj, value);
+                    }
                     """);
             }
-            writer.WriteLine("}");
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
+                {
+                    {{WriteGetter}}
+                    {{WriteSetter}}
+                }
+                """);
         }
 
         // Events: emit explicit interface event implementations on the IDIC interface that
