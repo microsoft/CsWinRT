@@ -81,32 +81,14 @@ internal static class UnsafeAccessorFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="appendNewline">
-    /// When <see langword="true"/> (the default), the writer's cursor advances to the start of
-    /// the next line after the declaration (suitable for standalone emission followed by another
-    /// <c>WriteLine</c>). When <see langword="false"/>, the cursor is left at the end of the
-    /// closing <c>;</c> with no trailing newline (suitable for emission from inside an
-    /// interpolation-hole callback where the parent literal's own <c>\n</c> supplies the line
-    /// break before the next member).
-    /// </param>
-    public static void EmitIidAccessor(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool appendNewline = true)
+    public static void EmitIidAccessor(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         string propName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, gi);
         string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
 
-        if (appendNewline)
-        {
-            writer.WriteLine(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
-                static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
-                """);
-        }
-        else
-        {
-            writer.Write(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
-                static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
-                """);
-        }
+        writer.WriteLine(isMultiline: true, $$"""
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
+            static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+            """);
     }
 }

@@ -258,15 +258,14 @@ internal static class AbiClassFactory
         }
 
         // Emit the '[UnsafeAccessor]' declaration for the default interface, if it's a generic
-        // instantiation. The 'appendNewline: false' option leaves the cursor mid-line after the
-        // accessor; the cursor-aware indent then aligns the static extern declaration with the
-        // surrounding template and the parent literal's '\n' supplies the line break before the
-        // next member.
+        // instantiation. The writer's blank-line suppression collapses the callback's trailing
+        // '\n' with the parent literal's leading '\n' so the static extern declaration sits
+        // directly above the next member without a stray blank line.
         void WriteUnsafeAccessor(IndentedTextWriter writer)
         {
             if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
             {
-                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi, appendNewline: false);
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
             }
         }
 
