@@ -43,6 +43,17 @@ internal partial class IndentedTextWriter
         /// </summary>
         private bool _anyContentBetweenLiterals;
 
+        /// <summary>
+        /// Tracks whether the previous <c>AppendFormatted</c> call left the buffer ending in <c>'\n'</c>
+        /// (typically because a callback dispatched through <c>WriteLine</c> and the final newline was
+        /// appended). Reset to <see langword="false"/> at every <c>AppendLiteral</c>, set to
+        /// <see langword="true"/> by <c>AppendFormatted</c> calls that grow the buffer when the buffer
+        /// then ends with <c>'\n'</c>. Used by the blank-line suppression rule to collapse a double
+        /// newline at the seam between a callback's trailing newline and the next literal segment's
+        /// leading newline.
+        /// </summary>
+        private bool _lastInterpolationEndedWithNewline;
+
         /// <summary>Creates a handler used to append an interpolated string into a <see cref="IndentedTextWriter"/>.</summary>
         /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
         /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
@@ -56,6 +67,7 @@ internal partial class IndentedTextWriter
             _writer = writer;
             _isMultiline = false;
             _anyContentBetweenLiterals = false;
+            _lastInterpolationEndedWithNewline = false;
         }
 
         /// <summary>Creates a handler used to append an interpolated string into a <see cref="IndentedTextWriter"/>.</summary>
@@ -73,6 +85,7 @@ internal partial class IndentedTextWriter
             _writer = writer;
             _isMultiline = isMultiline;
             _anyContentBetweenLiterals = false;
+            _lastInterpolationEndedWithNewline = false;
         }
 
         /// <summary>Writes the specified string to the handler.</summary>
@@ -81,25 +94,27 @@ internal partial class IndentedTextWriter
         {
             ReadOnlySpan<char> span = value;
 
-            // Blank-line suppression rule: a literal segment that begins with a newline (LF or
-            // CRLF) immediately after one or more empty interpolation holes whose surrounding
-            // literals also ended in '\n' would emit a stray blank line. Strip the leading
-            // newline to collapse the would-be blank line.
+            // Blank-line suppression rules: a literal segment that begins with a newline (LF or
+            // CRLF) immediately after an interpolation hole would emit a stray blank line if either
             //
-            // The rule fires only when:
-            //   1. The previous content in the buffer ended with '\n' (the line is "fresh"), AND
-            //   2. No 'AppendFormatted' call since the previous literal emitted any content, AND
-            //   3. This literal starts with a newline (matched as either '\n' or '\r\n', since
-            //      raw-string literals inherit the source file's line endings, i.e. CRLF on
-            //      Windows, LF on Unix). CR-only line endings are not supported.
+            //   (a) the hole was empty / produced no output AND the buffer already ends with '\n'
+            //       (the cursor is sitting on a fresh line because of the prior literal), OR
+            //   (b) the hole DID produce output and that output ended in '\n' (e.g. a callback
+            //       that delegates to 'WriteLine'); the literal's leading '\n' would now be a
+            //       second consecutive newline.
             //
-            // Literal blank lines (e.g. "...\n\n...") within a single 'AppendLiteral' are always
+            // Strip the leading newline in either case to collapse the would-be blank line.
+            //
+            // Both '\n' and '\r\n' are matched, since raw-string literals inherit the source file's
+            // line endings (CRLF on Windows, LF on Unix). CR-only line endings are not supported.
+            //
+            // Literal blank lines (e.g. '...\n\n...') within a single 'AppendLiteral' are always
             // preserved because they are emitted by the multiline parser in one streaming pass
             // without the rule getting a chance to fire between them.
             if (span.Length > 0 &&
-                !_anyContentBetweenLiterals &&
                 _writer._buffer.Length > 0 &&
-                _writer._buffer[^1] == DefaultNewLine)
+                _writer._buffer[^1] == DefaultNewLine &&
+                (!_anyContentBetweenLiterals || _lastInterpolationEndedWithNewline))
             {
                 if (span[0] == '\n')
                 {
@@ -113,8 +128,9 @@ internal partial class IndentedTextWriter
 
             _writer.Write(_isMultiline, span);
 
-            // We just wrote a literal, so reset the "any content between literals" flag for next time
+            // We just wrote a literal, so reset the per-interpolation tracking flags for next time
             _anyContentBetweenLiterals = false;
+            _lastInterpolationEndedWithNewline = false;
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -138,8 +154,6 @@ internal partial class IndentedTextWriter
             {
                 // Handle actions too (for method group conversions)
                 _writer.InvokeCallbackWithCursorIndent(implicitWriteCallback);
-
-                return;
             }
             else if (value is string text)
             {
@@ -152,10 +166,16 @@ internal partial class IndentedTextWriter
                 _ = _writer._buffer.Append($"{value}");
             }
 
-            // Track whether we actually wrote any content as part of this interpolation hole
-            if (_writer._buffer.Length > beforeLength)
+            // Track whether we actually wrote any content as part of this interpolation hole, and
+            // whether that content left the cursor on a fresh line. The blank-line suppression
+            // rule in 'AppendLiteral' uses both flags to decide whether to drop the next literal
+            // segment's leading newline.
+            int newLength = _writer._buffer.Length;
+
+            if (newLength > beforeLength)
             {
                 _anyContentBetweenLiterals = true;
+                _lastInterpolationEndedWithNewline = _writer._buffer[newLength - 1] == DefaultNewLine;
             }
         }
 
