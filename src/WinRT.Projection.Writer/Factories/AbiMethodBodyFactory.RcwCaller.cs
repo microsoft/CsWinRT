@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
@@ -1254,7 +1253,7 @@ internal static partial class AbiMethodBodyFactory
                     if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
                     {
                         string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
-                        disposeDataParamType = abiStructName + "*";
+                        disposeDataParamType = abiStructName + "* data";
                         fixedPtrType = abiStructName + "*";
                         disposeCastType = string.Empty;
                     }
@@ -1264,14 +1263,15 @@ internal static partial class AbiMethodBodyFactory
                         fixedPtrType = "void*";
                         disposeCastType = "(void**)";
                     }
-                    writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-                        static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
-                        """);
-                    writer.WriteIf(!disposeDataParamType.EndsWith("data", StringComparison.Ordinal), " data");
+                    UnsafeAccessorFactory.EmitStaticMethod(
+                        writer,
+                        accessName: "Dispose",
+                        returnType: "void",
+                        functionName: $"Dispose_{localName}",
+                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                        parameterList: $"uint length, {disposeDataParamType}");
 
                     writer.WriteLine(isMultiline: true, $$"""
-                        );
                         
                         fixed({{fixedPtrType}} _{{localName}} = {{names.Span}})
                         {

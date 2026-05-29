@@ -303,11 +303,14 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 writer.IncreaseIndent();
-                writer.WriteLine(isMultiline: true, $$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
-                        static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
-                        CopyToManaged_{{raw}}(null, __{{raw}}Size, {{dataCastExpr}}, __{{raw}});
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "CopyToManaged",
+                    returnType: "void",
+                    functionName: $"CopyToManaged_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    parameterList: $"uint length, {dataParamType}, Span<{elementProjected.Format()}> span");
+                writer.WriteLine($"CopyToManaged_{raw}(null, __{raw}Size, {dataCastExpr}, __{raw});");
                 writer.DecreaseIndent();
             }
 
@@ -332,11 +335,14 @@ internal static partial class AbiMethodBodyFactory
                     string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
                     IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.IncreaseIndent();
-                    writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                            static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                            var __arg_{{rawName}} = ConvertToManaged_arg_{{rawName}}(null, {{callName}});
-                        """);
+                    UnsafeAccessorFactory.EmitStaticMethod(
+                        writer,
+                        accessName: "ConvertToManaged",
+                        returnType: projectedTypeName.Format(),
+                        functionName: $"ConvertToManaged_arg_{rawName}",
+                        interopType: interopTypeName,
+                        parameterList: "void* value");
+                    writer.WriteLine($"var __arg_{rawName} = ConvertToManaged_arg_{rawName}(null, {callName});");
                     writer.DecreaseIndent();
                 }
             }
@@ -546,11 +552,14 @@ internal static partial class AbiMethodBodyFactory
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szFA.BaseType);
 
                 writer.IncreaseIndent();
-                writer.WriteLine(isMultiline: true, $$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                        static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{elementAbi}}* data);
-                        CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, ({{elementAbi}}*){{ptr}});
-                    """);
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "CopyToUnmanaged",
+                    returnType: "void",
+                    functionName: $"CopyToUnmanaged_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType),
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {elementAbi}* data");
+                writer.WriteLine($"CopyToUnmanaged_{raw}(null, __{raw}, __{raw}Size, ({elementAbi}*){ptr});");
                 writer.DecreaseIndent();
             }
 
