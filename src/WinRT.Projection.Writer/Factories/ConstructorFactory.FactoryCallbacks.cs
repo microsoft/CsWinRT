@@ -178,7 +178,7 @@ internal static partial class ConstructorFactory
                 returnType: "WindowsRuntimeObjectReferenceValue",
                 functionName: $"ConvertToUnmanaged_{raw}",
                 interopType: interopTypeName,
-                parameterList: $", {projectedTypeName.Format()} value");
+                parameterList: $"{projectedTypeName.Format()} value");
             writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = ConvertToUnmanaged_{raw}(null, {pname});");
         }
 
@@ -473,7 +473,7 @@ internal static partial class ConstructorFactory
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{raw}",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
-                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, uint length, void** data");
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, void** data");
                 writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, (void**)_{raw});");
             }
         }
@@ -647,7 +647,7 @@ internal static partial class ConstructorFactory
                         returnType: "void",
                         functionName: $"Dispose_{raw}",
                         interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
-                        parameterList: ", uint length, void** data");
+                        parameterList: "uint length, void** data");
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                         fixed(void* _{{raw}} = {{names.Span}})

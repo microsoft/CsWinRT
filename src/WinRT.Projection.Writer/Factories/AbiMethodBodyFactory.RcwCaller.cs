@@ -237,7 +237,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "WindowsRuntimeObjectReferenceValue",
                     functionName: $"ConvertToUnmanaged_{localName}",
                     interopType: interopTypeName,
-                    parameterList: $", {projectedTypeName.Format()} value");
+                    parameterList: $"{projectedTypeName.Format()} value");
                 writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{localName} = ConvertToUnmanaged_{localName}(null, {callName});");
             }
         }
@@ -747,7 +747,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{localName}",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
-                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
                 writer.WriteLine($"CopyToUnmanaged_{localName}(null, {callName}, (uint){callName}.Length, {dataCastType}_{localName});");
             }
         }
@@ -918,7 +918,7 @@ internal static partial class AbiMethodBodyFactory
                 returnType: "void",
                 functionName: $"CopyToManaged_{localName}",
                 interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType),
-                parameterList: $", uint length, {elementAbi}* data, Span<{elementProjected.Format()}> span");
+                parameterList: $"uint length, {elementAbi}* data, Span<{elementProjected.Format()}> span");
             writer.WriteLine($"CopyToManaged_{localName}(null, (uint){names.Span}.Length, ({elementAbi}*)_{localName}, {callName});");
         }
 
@@ -944,7 +944,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: projectedTypeName.Format(),
                     functionName: $"ConvertToManaged_{localName}",
                     interopType: interopTypeName,
-                    parameterList: ", void* value");
+                    parameterList: "void* value");
                 writer.WriteLine($"{callName} = ConvertToManaged_{localName}(null, __{localName});");
                 continue;
             }
@@ -1017,7 +1017,7 @@ internal static partial class AbiMethodBodyFactory
                 returnType: $"{elementProjected.Format()}[]",
                 functionName: $"ConvertToManaged_{localName}",
                 interopType: marshallerPath,
-                parameterList: $", uint length, {elementAbi}* data");
+                parameterList: $"uint length, {elementAbi}* data");
             writer.WriteLine($"{callName} = ConvertToManaged_{localName}(null, __{localName}_length, __{localName}_data);");
         }
 
@@ -1034,7 +1034,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: $"{elementProjected.Format()}[]",
                     functionName: "ConvertToManaged_retval",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType),
-                    parameterList: $", uint length, {elementAbi}* data");
+                    parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine("return ConvertToManaged_retval(null, __retval_length, __retval_data);");
             }
             else if (returnIsHResultException)
@@ -1064,7 +1064,7 @@ internal static partial class AbiMethodBodyFactory
                         returnType: projectedTypeName.Format(),
                         functionName: "ConvertToManaged_retval",
                         interopType: interopTypeName,
-                        parameterList: ", void* value");
+                        parameterList: "void* value");
                     writer.WriteLine("return ConvertToManaged_retval(null, __retval);");
                 }
                 else
@@ -1336,7 +1336,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "void",
                     functionName: $"Free_{localName}",
                     interopType: marshallerPath,
-                    parameterList: $", uint length, {elementAbi}* data");
+                    parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine();
                 writer.WriteLine($"Free_{localName}(null, __{localName}_length, __{localName}_data);");
             }
@@ -1369,7 +1369,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "void",
                     functionName: "Free_retval",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType),
-                    parameterList: $", uint length, {elementAbi}* data");
+                    parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine("Free_retval(null, __retval_length, __retval_data);");
             }
 

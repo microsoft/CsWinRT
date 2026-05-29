@@ -76,7 +76,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "WindowsRuntimeObjectReferenceValue",
                     functionName: $"ConvertToUnmanaged_{retParamName}",
                     interopType: interopTypeName,
-                    parameterList: $", {projectedTypeName.Format()} value");
+                    parameterList: $"{projectedTypeName.Format()} value");
                 writer.WriteLine();
             }
 
@@ -102,7 +102,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "WindowsRuntimeObjectReferenceValue",
                     functionName: $"ConvertToUnmanaged_{raw}",
                     interopType: interopTypeName,
-                    parameterList: $", {projectedTypeName.Format()} value");
+                    parameterList: $"{projectedTypeName.Format()} value");
                 writer.WriteLine();
             }
 
@@ -124,7 +124,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "void",
                     functionName: $"ConvertToUnmanaged_{raw}",
                     interopType: marshallerPath,
-                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, out uint length, out {elementAbi}* data");
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, out uint length, out {elementAbi}* data");
                 writer.WriteLine();
             }
 
@@ -139,7 +139,7 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "void",
                     functionName: $"ConvertToUnmanaged_{retParamName}",
                     interopType: marshallerPath,
-                    parameterList: $", ReadOnlySpan<{elementProjected.Format()}> span, out uint length, out {elementAbi}* data");
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, out uint length, out {elementAbi}* data");
                 writer.WriteLine();
             }
 

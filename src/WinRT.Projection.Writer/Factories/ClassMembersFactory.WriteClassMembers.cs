@@ -49,7 +49,7 @@ internal static partial class ClassMembersFactory
                     returnType: s.GetterPropTypeText,
                     functionName: s.GetterGenericAccessorName,
                     interopType: s.GetterGenericInteropType,
-                    parameterList: ", WindowsRuntimeObjectReference thisReference");
+                    parameterList: "WindowsRuntimeObjectReference thisReference");
             }
 
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
@@ -61,7 +61,7 @@ internal static partial class ClassMembersFactory
                     returnType: "void",
                     functionName: s.SetterGenericAccessorName,
                     interopType: s.SetterGenericInteropType,
-                    parameterList: $", WindowsRuntimeObjectReference thisReference, {s.SetterPropTypeText} value");
+                    parameterList: $"WindowsRuntimeObjectReference thisReference, {s.SetterPropTypeText} value");
             }
 
             writer.WriteLine();

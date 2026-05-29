@@ -21,7 +21,7 @@ internal static class UnsafeAccessorFactory
     /// targeting a static method on the type identified by <paramref name="interopType"/>:
     /// <code>
     /// [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{accessName}")]
-    /// static extern {returnType} {functionName}([UnsafeAccessorType("{interopType}")] object _{parameterList});
+    /// static extern {returnType} {functionName}([UnsafeAccessorType("{interopType}")] object _, {parameterList});
     /// </code>
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -29,8 +29,9 @@ internal static class UnsafeAccessorFactory
     /// <param name="returnType">The C# return type of the accessor (as a syntax string).</param>
     /// <param name="functionName">The C# name of the accessor (i.e. the local extern method).</param>
     /// <param name="interopType">The assembly-qualified interop type the accessor punches into.</param>
-    /// <param name="parameterList">The trailing parameter list (after the <c>object _</c> parameter),
-    /// including the leading comma when non-empty. Pass <see cref="string.Empty"/> for the parameter-less form.</param>
+    /// <param name="parameterList">The trailing parameter list (after the synthetic <c>object _</c>
+    /// receiver parameter) WITHOUT a leading comma. Pass <see cref="string.Empty"/> for the
+    /// parameter-less form; otherwise the comma separator is inserted automatically.</param>
     public static void EmitStaticMethod(
         IndentedTextWriter writer,
         string accessName,
@@ -39,9 +40,11 @@ internal static class UnsafeAccessorFactory
         string interopType,
         string parameterList)
     {
+        string commaPrefix = parameterList.Length > 0 ? ", " : "";
+
         writer.WriteLine(isMultiline: true, $$"""
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{accessName}}")]
-            static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _{{parameterList}});
+            static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _{{commaPrefix}}{{parameterList}});
             """);
     }
 

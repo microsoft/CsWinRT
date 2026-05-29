@@ -87,7 +87,7 @@ internal static class EventTableFactory
                 returnType: projectedTypeName.Format(),
                 functionName: "ConvertToManaged",
                 interopType: interopTypeName,
-                parameterList: ", void* value");
+                parameterList: "void* value");
             writer.WriteLine($"var __handler = ConvertToManaged(null, {handlerRef});");
             writer.DecreaseIndent();
             writer.DecreaseIndent();

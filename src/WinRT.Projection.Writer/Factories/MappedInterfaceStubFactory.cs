@@ -390,7 +390,7 @@ internal static class MappedInterfaceStubFactory
             returnType: returnType,
             functionName: functionName,
             interopType: interopType,
-            parameterList: $", WindowsRuntimeObjectReference objRef{extraParams}");
+            parameterList: $"WindowsRuntimeObjectReference objRef{extraParams}");
         writer.WriteLine();
     }
 

@@ -315,7 +315,7 @@ internal static partial class ClassMembersFactory
                     returnType: unsafeRet.Format(),
                     functionName: accessorName,
                     interopType: genericInteropType,
-                    parameterList: $", WindowsRuntimeObjectReference thisReference{accessorParams}");
+                    parameterList: $"WindowsRuntimeObjectReference thisReference{accessorParams}");
                 writer.WriteLine(isMultiline: true, $$"""
                     {{platformTrimmed}}
                     {{access}}{{methodSpecForThis}}{{ret}} {{name}}({{parms}}) => {{body}}
