@@ -205,9 +205,9 @@ internal static class AbiClassFactory
         string nameStripped = type.GetStrippedName();
         string typeNs = type.GetRawNamespace();
         string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
-        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
-        // Get the IID expression for the default interface (used by CreateObject)
+        // Get the IID expression for the default interface (used by CreateObject).
+        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
         string defaultIfaceIid = defaultIface is not null
             ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format()
             : "default(global::System.Guid)";
@@ -257,7 +257,28 @@ internal static class AbiClassFactory
             }
         }
 
-        // Public *Marshaller class + file-scoped *ComWrappersMarshallerAttribute declaration
+        // Emit the '[UnsafeAccessor]' declaration for the default interface, if it's a generic
+        // instantiation. The 'Write' (rather than 'WriteLine') call leaves the cursor mid-line
+        // after the accessor; the cursor-aware indent then aligns the static extern declaration
+        // with the surrounding template and the parent literal's '\n' supplies the line break
+        // before the next member.
+        void WriteUnsafeAccessor(IndentedTextWriter writer)
+        {
+            if (defaultIface is null || !defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
+            {
+                return;
+            }
+
+            string propName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, gi);
+            string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
+
+            writer.Write(isMultiline: true, $$"""
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
+                static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+                """);
+        }
+
+        // Public *Marshaller class + file-scoped *ComWrappersMarshallerAttribute
         writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
@@ -275,11 +296,8 @@ internal static class AbiClassFactory
             }
 
             file sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-            """);
-        using (writer.WriteBlock())
-        {
-            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-            writer.WriteLine(isMultiline: true, $$"""
+            {
+                {{WriteUnsafeAccessor}}
                 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                 {
                     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -290,8 +308,8 @@ internal static class AbiClassFactory
 
                     return new {{fullProjected}}(valueReference);
                 }
-                """);
-        }
+            }
+            """);
 
         writer.WriteLine();
 
@@ -301,9 +319,7 @@ internal static class AbiClassFactory
             writer.WriteLine(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
                 {
-                """);
-            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-            writer.WriteLine(isMultiline: true, $$"""
+                    {{WriteUnsafeAccessor}}
                     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                     {
                         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
@@ -321,14 +337,11 @@ internal static class AbiClassFactory
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
             string nonProjectedRcn = $"{typeNs}.{nameStripped}";
+
             writer.WriteLine(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
                 {
-                """);
-            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-
-            // TryCreateObject (non-projected runtime class name match)
-            writer.WriteLine(isMultiline: true, $$"""
+                    {{WriteUnsafeAccessor}}
                     public static unsafe bool TryCreateObject(
                         void* value,
                         ReadOnlySpan<char> runtimeClassName,
