@@ -196,7 +196,7 @@
     <WriteStringsHeader Input="@(StaticStrings)" Header="$(IntDir)strings.h" Namespace="$(RootNamespace)"/>
     <ItemGroup>
       <ClCompile>
-        <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(IntDir)</AdditionalIncludeDirectories>
+        <AdditionalIncludeDirectories>%(ClCompile.AdditionalIncludeDirectories);$(IntDir)</AdditionalIncludeDirectories>
       </ClCompile>
     </ItemGroup>
   </Target>
