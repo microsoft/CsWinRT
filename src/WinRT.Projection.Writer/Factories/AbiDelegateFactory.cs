@@ -252,8 +252,11 @@ internal static class AbiDelegateFactory
         // Compute the projected type name (with global::) used as the generic argument.
         string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
+        // Emit the lambda parameter list / argument list (e.g. "a, b, out c") for the GetEventInvoke body.
+        IndentedTextWriterCallback callArgs = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+
         writer.WriteLine();
-        writer.Write(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public sealed unsafe class {{nameStripped}}EventSource : EventSource<{{projectedName}}>
             {
                 /// <inheritdoc cref="EventSource{T}.EventSource"/>
@@ -285,21 +288,7 @@ internal static class AbiDelegateFactory
                     /// <inheritdoc/>
                     protected override {{projectedName}} GetEventInvoke()
                     {
-                        return (
-            """);
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            IndentedTextWriterCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
-            writer.Write($"{(i > 0 ? ", " : "")}{p}");
-        }
-        writer.Write(") => TargetDelegate.Invoke(");
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            IndentedTextWriterCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
-            writer.Write($"{(i > 0 ? ", " : "")}{p}");
-        }
-        writer.WriteLine(isMultiline: true, """
-            );
+                        return ({{callArgs}}) => TargetDelegate.Invoke({{callArgs}});
                     }
                 }
             }
