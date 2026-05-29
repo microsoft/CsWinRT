@@ -205,9 +205,9 @@ internal static class AbiClassFactory
         string nameStripped = type.GetStrippedName();
         string typeNs = type.GetRawNamespace();
         string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
-
-        // Get the IID expression for the default interface (used by CreateObject).
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
+        // Get the IID expression for the default interface (used by CreateObject)
         string defaultIfaceIid = defaultIface is not null
             ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format()
             : "default(global::System.Guid)";
@@ -218,8 +218,7 @@ internal static class AbiClassFactory
 
         bool isSealed = type.IsSealed;
 
-        // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
-        // exclusive-to.
+        // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is exclusive-to
         TypeDefinition? defaultIfaceTd = defaultIface?.ResolveAsTypeDefinition(context.Cache);
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && defaultIfaceTd.IsExclusiveTo;
 
@@ -230,29 +229,30 @@ internal static class AbiClassFactory
             {
                 // For projected sealed runtime classes, the RCW type is always unwrappable.
                 writer.Write(isMultiline: true, """
-                            if (value is not null)
-                            {
-                                return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
-                            }
+                    if (value is not null)
+                    {
+                        return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
+                    }
                     """);
             }
             else if (!defaultIfaceIsExclusive && defaultIface is not null)
             {
-                string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false).Format();
+                IndentedTextWriterCallback defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
+
                 writer.Write(isMultiline: true, $$"""
-                            if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
-                            {
-                                return windowsRuntimeInterface.GetInterface();
-                            }
+                    if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
+                    {
+                        return windowsRuntimeInterface.GetInterface();
+                    }
                     """);
             }
             else
             {
                 writer.Write(isMultiline: true, """
-                            if (value is not null)
-                            {
-                                return value.GetDefaultInterface();
-                            }
+                    if (value is not null)
+                    {
+                        return value.GetDefaultInterface();
+                    }
                     """);
             }
         }
@@ -263,7 +263,8 @@ internal static class AbiClassFactory
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
                 {
-            {{WriteConvertToUnmanagedBranch}}
+                    {{WriteConvertToUnmanagedBranch}}
+
                     return default;
                 }
 
