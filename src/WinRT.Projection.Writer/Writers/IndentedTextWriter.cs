@@ -177,6 +177,34 @@ internal sealed partial class IndentedTextWriter
             _currentIndentation = savedIndent;
         }
 
+        // If the callback emitted nothing AND the only content between the last '\n' and the
+        // cursor at callback entry was whitespace (i.e. the visual indent the parent literal
+        // wrote in front of an otherwise-line-start placeholder), trim the buffer back to the
+        // last '\n'. This lets the existing blank-line suppression in 'AppendLiteral' fire on
+        // the next literal segment and treat the empty callback as if it weren't there at all.
+        // The whitespace-only check is critical: when a placeholder sits inline after other
+        // content (e.g. '... public delegate {{ret}} {{name}}{{typeParams}}({{parms}});'),
+        // trimming back to the last '\n' would strip the preceding signature, so we leave the
+        // buffer alone in that case.
+        if (_buffer.Length == bufferLength && IsAllWhitespace(_buffer, lastNewline + 1, bufferLength))
+        {
+            _buffer.Length = lastNewline + 1;
+        }
+
+        // Returns whether every char in '_buffer[start..end]' is whitespace.
+        static bool IsAllWhitespace(StringBuilder buffer, int start, int end)
+        {
+            for (int i = start; i < end; i++)
+            {
+                if (!char.IsWhiteSpace(buffer[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         // Dispatches to either delegate shape without allocating a closure wrapping the other.
         static void Invoke(IndentedTextWriter writer, object callback)
         {
