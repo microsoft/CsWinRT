@@ -53,7 +53,9 @@ internal sealed partial class IndentedTextWriter
     private string _currentIndentation;
 
     /// <summary>
-    /// Cached pre-built indentation strings indexed by indentation level.
+    /// Cached pre-built indentation strings indexed by indentation level. Entries are populated
+    /// on demand by <see cref="GetIndentationStringForLevel"/>; the constructor pre-fills the
+    /// first <c>4</c> entries.
     /// </summary>
     private string[] _availableIndentations;
 
@@ -86,13 +88,7 @@ internal sealed partial class IndentedTextWriter
     {
         CurrentIndentLevel++;
 
-        if (CurrentIndentLevel == _availableIndentations.Length)
-        {
-            Array.Resize(ref _availableIndentations, _availableIndentations.Length * 2);
-        }
-
-        _currentIndentation = _availableIndentations[CurrentIndentLevel]
-            ??= _availableIndentations[CurrentIndentLevel - 1] + DefaultIndentation;
+        _currentIndentation = GetIndentationStringForLevel(CurrentIndentLevel);
     }
 
     /// <summary>
@@ -103,6 +99,142 @@ internal sealed partial class IndentedTextWriter
         CurrentIndentLevel--;
 
         _currentIndentation = _availableIndentations[CurrentIndentLevel];
+    }
+
+    /// <summary>
+    /// Invokes the given <paramref name="callback"/> against this writer, with the indentation
+    /// that any newlines emitted by the callback will use temporarily overridden to align with
+    /// the cursor's current column position.
+    /// </summary>
+    /// <param name="callback">
+    /// The callback to invoke. Must be either an <see cref="IndentedTextWriterCallback"/> or an
+    /// <see cref="Action{T}"/> of <see cref="IndentedTextWriter"/>. Typed as <see cref="object"/>
+    /// so a single dispatch path serves both shapes (callers obtained the value via the
+    /// interpolated-string handler's <c>AppendFormatted&lt;T&gt;</c> dispatch and don't need to
+    /// rebox or close over the value through a lambda).
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// This implements an automatic "interpolation-hole indent context": when a callback is
+    /// invoked from an <c>{{...}}</c> interpolation hole in a multiline raw string template,
+    /// any subsequent newlines emitted by the callback indent flush with the column the
+    /// placeholder was at, so the content reads as if it were inlined in the parent template
+    /// at the placeholder's visual position.
+    /// </para>
+    /// <para>
+    /// Implementation: if the cursor is at the start of a new line (the buffer is empty or
+    /// ends with <c>'\n'</c>), the callback is invoked unchanged — <see cref="WriteRawText"/>
+    /// will already use the writer's current indentation for the first line and every
+    /// subsequent newline. Otherwise the cursor is mid-line, so before invoking the callback
+    /// <see cref="_currentIndentation"/> is temporarily replaced with the cached indentation
+    /// string for the level corresponding to the cursor's column (column divided by
+    /// <see cref="DefaultIndentation"/> length, since the writer's own indentation only ever
+    /// advances in multiples of <see cref="DefaultIndentation"/> and well-formatted templates
+    /// align placeholders on the same boundary). The first <c>WriteRawText</c> inside the
+    /// callback appends in-line at the cursor (no indent prefix, because the buffer doesn't
+    /// end with <c>'\n'</c>), and any subsequent <c>WriteRawText</c> uses the cursor-aligned
+    /// indent. The original indentation is restored once the callback returns.
+    /// </para>
+    /// </remarks>
+    internal void InvokeCallbackWithCursorIndent(object callback)
+    {
+        int bufferLength = _buffer.Length;
+
+        // Cursor at start of new line: WriteRawText will use the writer's current indentation
+        // (which is the desired indent here), so no override is needed. Fast-path here avoids
+        // both the back-scan for the last newline and the save/restore of '_currentIndentation'.
+        if (bufferLength == 0 || _buffer[bufferLength - 1] == DefaultNewLine)
+        {
+            Invoke(this, callback);
+            return;
+        }
+
+        // Find the start of the current line: scan back from the end of the buffer to the last
+        // '\n' (or the start of the buffer). The column is the number of chars after that.
+        int lastNewline = bufferLength - 1;
+
+        while (lastNewline >= 0 && _buffer[lastNewline] != DefaultNewLine)
+        {
+            lastNewline--;
+        }
+
+        int column = bufferLength - lastNewline - 1;
+
+        // Indentations are always a multiple of 'DefaultIndentation' (both the writer's own
+        // indent levels and the visual indent of placeholders in well-formatted templates), so
+        // we map the cursor column to a level and reuse the same cache that 'IncreaseIndent'
+        // uses, avoiding a parallel string array.
+        string savedIndent = _currentIndentation;
+
+        _currentIndentation = GetIndentationStringForLevel(column / DefaultIndentation.Length);
+
+        try
+        {
+            Invoke(this, callback);
+        }
+        finally
+        {
+            _currentIndentation = savedIndent;
+        }
+
+        // Dispatches to either delegate shape without allocating a closure wrapping the other.
+        static void Invoke(IndentedTextWriter writer, object callback)
+        {
+            if (callback is IndentedTextWriterCallback typedCallback)
+            {
+                typedCallback(writer);
+            }
+            else
+            {
+                ((Action<IndentedTextWriter>)callback)(writer);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the cached indentation string for the given <paramref name="level"/>, lazily
+    /// expanding <see cref="_availableIndentations"/> and filling intermediate entries as needed.
+    /// </summary>
+    /// <param name="level">The indentation level to retrieve.</param>
+    /// <returns>The cached indentation string of length <c><paramref name="level"/> * <see cref="DefaultIndentation"/>.Length</c>.</returns>
+    /// <remarks>
+    /// <para>
+    /// <see cref="IncreaseIndent"/> always advances one level at a time, so the cache is filled
+    /// densely from the bottom up during normal use. <see cref="InvokeCallbackWithCursorIndent"/>
+    /// may request an arbitrary higher level directly (because the cursor column for a callback
+    /// placeholder can correspond to a deeper level than any open <see cref="Block"/>); this
+    /// method fills any missing intermediate entries on first access.
+    /// </para>
+    /// </remarks>
+    private string GetIndentationStringForLevel(int level)
+    {
+        if (level >= _availableIndentations.Length)
+        {
+            Array.Resize(ref _availableIndentations, Math.Max(_availableIndentations.Length * 2, level + 1));
+        }
+
+        // Fast path: the cached entry is already populated (the constructor pre-fills levels 0..3
+        // and every prior 'IncreaseIndent' / 'GetIndentationStringForLevel' call leaves the cache
+        // dense up to the highest level it touched).
+        if (_availableIndentations[level] is null)
+        {
+            // Walk back to find the highest populated entry below 'level' and build the chain up
+            // from there, so even an initial jump to a deep level only allocates each missing
+            // intermediate string once.
+            int firstNull = level;
+
+            while (firstNull > 0 && _availableIndentations[firstNull - 1] is null)
+            {
+                firstNull--;
+            }
+
+            for (int j = firstNull; j <= level; j++)
+            {
+                _availableIndentations[j] = _availableIndentations[j - 1] + DefaultIndentation;
+            }
+        }
+
+        return _availableIndentations[level];
     }
 
     /// <summary>
