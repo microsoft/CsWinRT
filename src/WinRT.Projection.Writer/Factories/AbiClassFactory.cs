@@ -258,24 +258,16 @@ internal static class AbiClassFactory
         }
 
         // Emit the '[UnsafeAccessor]' declaration for the default interface, if it's a generic
-        // instantiation. The 'Write' (rather than 'WriteLine') call leaves the cursor mid-line
-        // after the accessor; the cursor-aware indent then aligns the static extern declaration
-        // with the surrounding template and the parent literal's '\n' supplies the line break
-        // before the next member.
+        // instantiation. The 'appendNewline: false' option leaves the cursor mid-line after the
+        // accessor; the cursor-aware indent then aligns the static extern declaration with the
+        // surrounding template and the parent literal's '\n' supplies the line break before the
+        // next member.
         void WriteUnsafeAccessor(IndentedTextWriter writer)
         {
-            if (defaultIface is null || !defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
+            if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
             {
-                return;
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi, appendNewline: false);
             }
-
-            string propName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, gi);
-            string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
-
-            writer.Write(isMultiline: true, $$"""
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
-                static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
-                """);
         }
 
         // Public *Marshaller class + file-scoped *ComWrappersMarshallerAttribute
