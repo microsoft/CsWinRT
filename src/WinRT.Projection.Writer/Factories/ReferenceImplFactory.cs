@@ -29,6 +29,105 @@ internal static class ReferenceImplFactory
         string nameStripped = type.GetStrippedName();
         string visibility = context.Settings.Component ? "public" : "file";
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
+        bool isBlittableStructType = blittable && type.IsStruct;
+        bool isNonBlittableStructType = !blittable && type.IsStruct;
+        IndentedTextWriterCallback iidPropName = IidExpressionGenerator.WriteIidReferenceGuidPropertyName(context, type);
+
+        // Emit the 'get_Value' method body. Branches by type category: blittable/blittable-struct
+        // do a direct struct-assignment copy, non-blittable struct routes through the per-type
+        // '*Marshaller.ConvertToUnmanaged', and runtime-class / delegate route through their
+        // marshaller and detach the resulting WindowsRuntimeObjectReferenceValue. The 'else'
+        // fallback is unreachable: only enum/struct/delegate dispatch into this helper from
+        // 'WriteAbiEnum' / 'WriteAbiStruct' / 'WriteAbiDelegate'.
+        void WriteGetValueBody(IndentedTextWriter writer)
+        {
+            if ((blittable && !type.IsStruct) || isBlittableStructType)
+            {
+                IndentedTextWriterCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+
+                writer.Write(isMultiline: true, $$"""
+                    public static int get_Value(void* thisPtr, void* result)
+                    {
+                        if (result is null)
+                        {
+                            return unchecked((int)0x80004003);
+                        }
+                    
+                        try
+                        {
+                            var value = ({{projected}})(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+                            *({{projected}}*)result = value;
+                            return 0;
+                        }
+                        catch (Exception e)
+                        {
+                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+                        }
+                    }
+                    """);
+            }
+            else if (isNonBlittableStructType)
+            {
+                IndentedTextWriterCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+                string abiName = AbiTypeHelpers.GetAbiStructTypeName(context, type.ToTypeSignature());
+
+                writer.Write(isMultiline: true, $$"""
+                    public static int get_Value(void* thisPtr, void* result)
+                    {
+                        if (result is null)
+                        {
+                            return unchecked((int)0x80004003);
+                        }
+
+                        try
+                        {
+                            {{projectedName}} unboxedValue = ({{projectedName}})ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+                            {{abiName}} value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue);
+                            *({{abiName}}*)result = value;
+                            return 0;
+                        }
+                        catch (Exception e)
+                        {
+                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+                        }
+                    }
+                    """);
+            }
+            else if (TypeKindResolver.Resolve(type) is TypeKind.Class or TypeKind.Delegate)
+            {
+                IndentedTextWriterCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
+
+                writer.Write(isMultiline: true, $$"""
+                    public static int get_Value(void* thisPtr, void* result)
+                    {
+                        if (result is null)
+                        {
+                            return unchecked((int)0x80004003);
+                        }
+
+                        try
+                        {
+                            {{projectedName}} unboxedValue = ({{projectedName}})ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+                            void* value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
+                            *(void**)result = value;
+                            return 0;
+                        }
+                        catch (Exception e)
+                        {
+                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+                        }
+                    }
+                    """);
+            }
+            else
+            {
+                // Defensive: should be unreachable. WriteReferenceImpl is only called for enum/struct/delegate
+                // types (WriteAbiEnum / WriteAbiStruct / WriteAbiDelegate dispatchers).
+                throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
+                    $"WriteReferenceImpl: unsupported type category {TypeKindResolver.Resolve(type)} " +
+                    $"for type '{type.FullName}'. Expected enum/struct/delegate.");
+            }
+        }
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -50,112 +149,15 @@ internal static class ReferenceImplFactory
                 }
             
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            """);
-        bool isBlittableStructType = blittable && type.IsStruct;
-        bool isNonBlittableStructType = !blittable && type.IsStruct;
-
-        if ((blittable && !type.IsStruct)
-            || isBlittableStructType)
-        {
-            // For blittable types and blittable structs: direct memcpy via C# struct assignment.
-            // Even bool/char fields work because their managed layout matches the WinRT ABI.
-            IndentedTextWriterCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(isMultiline: true, $$"""
-                    public static int get_Value(void* thisPtr, void* result)
-                    {
-                        if (result is null)
-                        {
-                            return unchecked((int)0x80004003);
-                        }
-                
-                        try
-                        {
-                            var value = ({{projected}})(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
-                            *({{projected}}*)result = value;
-                            return 0;
-                        }
-                        catch (Exception e)
-                        {
-                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-                        }
-                    }
-                """);
-        }
-        else if (isNonBlittableStructType)
-        {
-            // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
-            // (ABI) struct value into the result pointer.
-            IndentedTextWriterCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
-            string abiName = AbiTypeHelpers.GetAbiStructTypeName(context, type.ToTypeSignature());
-            writer.WriteLine(isMultiline: true, $$"""
-                    public static int get_Value(void* thisPtr, void* result)
-                    {
-                        if (result is null)
-                        {
-                            return unchecked((int)0x80004003);
-                        }
-
-                        try
-                        {
-                            {{projectedName}} unboxedValue = ({{projectedName}})ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-                            {{abiName}} value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue);
-                            *({{abiName}}*)result = value;
-                            return 0;
-                        }
-                        catch (Exception e)
-                        {
-                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-                        }
-                    }
-                """);
-        }
-        else if (TypeKindResolver.Resolve(type) is TypeKind.Class or TypeKind.Delegate)
-        {
-            // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            IndentedTextWriterCallback projectedName = MethodFactory.WriteProjectedSignature(context, type.ToTypeSignature(), false);
-            writer.WriteLine(isMultiline: true, $$"""
-                    public static int get_Value(void* thisPtr, void* result)
-                    {
-                        if (result is null)
-                        {
-                            return unchecked((int)0x80004003);
-                        }
-
-                        try
-                        {
-                            {{projectedName}} unboxedValue = ({{projectedName}})ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-                            void* value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
-                            *(void**)result = value;
-                            return 0;
-                        }
-                        catch (Exception e)
-                        {
-                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-                        }
-                    }
-                """);
-        }
-        else
-        {
-            // Defensive: should be unreachable. WriteReferenceImpl is only called for enum/struct/delegate
-            // types (WriteAbiEnum / WriteAbiStruct / WriteAbiDelegate dispatchers).
-            throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
-                $"WriteReferenceImpl: unsupported type category {TypeKindResolver.Resolve(type)} " +
-                $"for type '{type.FullName}'. Expected enum/struct/delegate.");
-        }
-
-        // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
-        IndentedTextWriterCallback name = IidExpressionGenerator.WriteIidReferenceGuidPropertyName(context, type);
-
-        writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
-                    public static ref readonly Guid IID
-                    {
-                        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                        get => ref global::ABI.InterfaceIIDs.{{name}};
-                    }
+                {{WriteGetValueBody}}
+            
+                public static ref readonly Guid IID
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => ref global::ABI.InterfaceIIDs.{{iidPropName}};
                 }
-                """);
+            }
+            """);
         writer.WriteLine();
     }
 }
