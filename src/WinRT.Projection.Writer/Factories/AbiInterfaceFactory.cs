@@ -203,30 +203,43 @@ internal static class AbiInterfaceFactory
 
         string nameStripped = type.GetStrippedName();
 
-        writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
-            [StructLayout(LayoutKind.Sequential)]
-            internal unsafe struct {{nameStripped}}Vftbl
-            """);
-        using (writer.WriteBlock())
+        // Emit per-method virtual entries. Use 'Write' (not 'WriteLine') plus a 'first' flag so
+        // the last entry doesn't end with '\n' — that lets the parent literal's '\n}' continuation
+        // emit the closing brace immediately on the next line without a stray blank line.
+        void WriteMethodFields(IndentedTextWriter writer)
         {
-            writer.WriteLine(isMultiline: true, """
-                public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
-                public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
-                public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-                public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
-                public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
-                public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
-                """);
+            bool first = true;
 
             foreach (MethodDefinition method in type.Methods)
             {
                 string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
                 MethodSignatureInfo sig = new(method);
                 IndentedTextWriterCallback abiParams = WriteAbiParameterTypesPointer(context, sig);
-                writer.WriteLine($"public delegate* unmanaged[MemberFunction]<{abiParams}, int> {vm};");
+
+                if (!first)
+                {
+                    writer.WriteLine();
+                }
+
+                writer.Write($"public delegate* unmanaged[MemberFunction]<{abiParams}, int> {vm};");
+                first = false;
             }
         }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            [StructLayout(LayoutKind.Sequential)]
+            internal unsafe struct {{nameStripped}}Vftbl
+            {
+                public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+                public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+                public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+                public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
+                public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
+                public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
+                {{WriteMethodFields}}
+            }
+            """);
     }
 
     /// <summary>
@@ -246,23 +259,39 @@ internal static class AbiInterfaceFactory
 
         string nameStripped = type.GetStrippedName();
 
+        // Emit per-method Vftbl assignments inside the static constructor body. Same first-flag
+        // pattern as 'WriteInterfaceVftbl': last entry uses 'Write' (no trailing '\n') so the
+        // parent literal's '\n}' continuation places the closing '}' of the static constructor
+        // on the next line without an intervening blank line.
+        void WriteVftblAssignments(IndentedTextWriter writer)
+        {
+            bool first = true;
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
+
+                if (!first)
+                {
+                    writer.WriteLine();
+                }
+
+                writer.Write($"Vftbl.{vm} = &Do_Abi_{vm};");
+                first = false;
+            }
+        }
+
         writer.WriteLine();
         writer.WriteLine($"public static unsafe class {nameStripped}Impl");
         using IndentedTextWriter.Block __implBlock = writer.WriteBlock();
-        writer.WriteLine(isMultiline: true, $$"""
+        writer.Write(isMultiline: true, $$"""
             [FixedAddressValueType]
             private static readonly {{nameStripped}}Vftbl Vftbl;
             
             static {{nameStripped}}Impl()
             {
                 *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
-            """);
-        foreach (MethodDefinition method in type.Methods)
-        {
-            string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
-            writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
-        }
-        writer.Write(isMultiline: true, $$"""
+                {{WriteVftblAssignments}}
             }
             
             public static ref readonly Guid IID
