@@ -71,6 +71,33 @@ internal static partial class ConstructorFactory
         string baseClass = isComposable
             ? "WindowsRuntimeActivationFactoryCallback.DerivedComposed"
             : "WindowsRuntimeActivationFactoryCallback.DerivedSealed";
+
+        // Emit the multi-line Invoke override signature. The composable variant adds two extra
+        // parameters ('baseInterface' input + 'innerInterface' out) that the sealed variant
+        // doesn't have. Both variants leave the cursor mid-line right after the closing ')' so
+        // the parent template's '\n{\n' continuation supplies the opening brace on the next line.
+        void WriteInvokeSignature(IndentedTextWriter writer)
+        {
+            if (isComposable)
+            {
+                writer.Write(isMultiline: true, """
+                    public override unsafe void Invoke(
+                      WindowsRuntimeActivationArgsReference additionalParameters,
+                      WindowsRuntimeObject baseInterface,
+                      out void* innerInterface,
+                      out void* retval)
+                    """);
+            }
+            else
+            {
+                writer.Write(isMultiline: true, """
+                    public override unsafe void Invoke(
+                      WindowsRuntimeActivationArgsReference additionalParameters,
+                      out void* retval)
+                    """);
+            }
+        }
+
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             private sealed class {{callbackName}} : {{baseClass}}
@@ -78,42 +105,18 @@ internal static partial class ConstructorFactory
                 public static readonly {{callbackName}} Instance = new();
             
                 [MethodImpl(MethodImplOptions.NoInlining)]
+                {{WriteInvokeSignature}}
+                {
             """);
-
-        writer.IncreaseIndent();
-
-        if (isComposable)
-        {
-            // Composable Invoke signature is multi-line and includes baseInterface (in) +
-            // innerInterface (out).
-            writer.WriteLine(isMultiline: true, """
-                public override unsafe void Invoke(
-                  WindowsRuntimeActivationArgsReference additionalParameters,
-                  WindowsRuntimeObject baseInterface,
-                  out void* innerInterface,
-                  out void* retval)
-                {
-                """);
-        }
-        else
-        {
-            // Sealed Invoke signature is multi-line
-            writer.WriteLine(isMultiline: true, """
-                public override unsafe void Invoke(
-                  WindowsRuntimeActivationArgsReference additionalParameters,
-                  out void* retval)
-                {
-                """);
-        }
 
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (context.Settings.ReferenceProjection)
         {
-            writer.DecreaseIndent();
             RefModeStubFactory.EmitRefModeInvokeBody(writer);
             return;
         }
 
+        writer.IncreaseIndent();
         writer.IncreaseIndent();
 
         writer.WriteLine(isMultiline: true, $$"""
