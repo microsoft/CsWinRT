@@ -62,14 +62,15 @@ internal static class AbiClassFactory
             defaultGenericInst = null;
         }
 
-        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type
+        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type. The writer's
+        // blank-line suppression collapses the accessor's trailing '\n' with the parent literal's
+        // '\n' between '{{WriteIidAccessor}}' and the next line, so the static extern declaration
+        // sits directly above the body without an extra blank line.
         void WriteIidAccessor(IndentedTextWriter writer)
         {
             if (defaultGenericInst is not null)
             {
                 UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst);
-
-                writer.WriteLine();
             }
         }
 
