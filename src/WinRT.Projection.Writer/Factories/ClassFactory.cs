@@ -536,23 +536,21 @@ internal static class ClassFactory
         if (!context.Settings.ReferenceProjection)
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
-            writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
-                : base(nativeObjectReference)
-                """);
-            using (writer.WriteBlock())
+
+            // For unsealed classes, the default interface objref needs to be initialized only
+            // when GetType() matches the projected class exactly (derived classes have their own
+            // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
+            // 'GC.AddMemoryPressure' is emitted for any class with non-zero [GcPressure].
+            void WriteCtorBody(IndentedTextWriter writer)
             {
                 if (!type.IsSealed)
                 {
-                    // For unsealed classes, the default interface objref needs to be initialized only
-                    // when GetType() matches the projected class exactly (derived classes have their own
-                    // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
                     ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
                     if (defaultIface is not null)
                     {
                         string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
+
                         writer.WriteLine(isMultiline: true, $$"""
                             if (GetType() == typeof({{typeName}}))
                             {
@@ -564,9 +562,18 @@ internal static class ClassFactory
 
                 if (gcPressure > 0)
                 {
-                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
+                    writer.Write($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
             }
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
+                : base(nativeObjectReference)
+                {
+                    {{WriteCtorBody}}
+                }
+                """);
         }
         else
         {
