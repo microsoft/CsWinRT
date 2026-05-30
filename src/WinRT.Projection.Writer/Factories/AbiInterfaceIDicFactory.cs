@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -10,7 +9,6 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -27,7 +25,7 @@ internal static class AbiInterfaceIDicFactory
     /// </summary>
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.IdicExclusiveTo)
         {
             return;
         }
@@ -37,17 +35,16 @@ internal static class AbiInterfaceIDicFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
+        IndentedTextWriterCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
 
         writer.WriteLine();
-        writer.WriteLine("[DynamicInterfaceCastableImplementation]");
-        InterfaceFactory.WriteGuidAttribute(writer, type);
-        writer.WriteLine();
-        writer.Write($"file interface {nameStripped} : ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            [DynamicInterfaceCastableImplementation]
+            {{guidAttr}}
+            file interface {{nameStripped}} : {{parent}}
+            """);
         using (writer.WriteBlock())
         {
             // Emit DIM bodies that dispatch through the static ABI Methods class.
@@ -74,14 +71,7 @@ internal static class AbiInterfaceIDicFactory
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
-            if (impl.Interface is null)
-            {
-                continue;
-            }
-
-            TypeDefinition? required = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
-
-            if (required is null)
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? required))
             {
                 continue;
             }
@@ -100,26 +90,14 @@ internal static class AbiInterfaceIDicFactory
                 // Emit explicit-interface DIM forwarders for the BCL members so the DIC shim
                 // satisfies them when queried via casts like '((IList)(WindowsRuntimeObject)this)'.
                 EmitDicShimMappedBclForwarders(writer, context, rName);
+
                 // IBindableVector's IList forwarders already include the IEnumerable.GetEnumerator
                 // forwarder (since IList : IEnumerable). Pre-add IBindableIterable to the visited
                 // set so we don't emit a second GetEnumerator forwarder for it. We also walk the
                 // required interfaces so any other (deeper) inherited mapped interface is covered.
                 if (rName == "IBindableVector")
                 {
-                    foreach (InterfaceImplementation impl2 in required.Interfaces)
-                    {
-                        if (impl2.Interface is null)
-                        {
-                            continue;
-                        }
-
-                        TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-
-                        if (r2 is not null)
-                        {
-                            _ = visited.Add(r2);
-                        }
-                    }
+                    required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
 
                 continue;
@@ -132,24 +110,12 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
-                    string keyText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
-                    string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
+                    string keyText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true).Format();
+                    string valueText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
+
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
-                    foreach (InterfaceImplementation impl2 in required.Interfaces)
-                    {
-                        if (impl2.Interface is null)
-                        {
-                            continue;
-                        }
-
-                        TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-
-                        if (r2 is not null)
-                        {
-                            _ = visited.Add(r2);
-                        }
-                    }
+                    required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
 
                 continue;
@@ -159,22 +125,9 @@ internal static class AbiInterfaceIDicFactory
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
-                    string elementText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string elementText = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true).Format();
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
-                    foreach (InterfaceImplementation impl2 in required.Interfaces)
-                    {
-                        if (impl2.Interface is null)
-                        {
-                            continue;
-                        }
-
-                        TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-
-                        if (r2 is not null)
-                        {
-                            _ = visited.Add(r2);
-                        }
-                    }
+                    required.MarkRequiredInterfacesVisited(context.Cache, visited);
                 }
 
                 continue;
@@ -203,8 +156,11 @@ internal static class AbiInterfaceIDicFactory
         string target = $"((global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
+        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
+        string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
+
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             ICollection<{{keyText}}> {{self}}Keys => {{target}}.Keys;
             ICollection<{{valueText}}> {{self}}Values => {{target}}.Values;
             int {{icoll}}Count => {{target}}.Count;
@@ -225,18 +181,13 @@ internal static class AbiInterfaceIDicFactory
             bool ICollection<KeyValuePair<{{keyText}}, {{valueText}}>>.Remove(KeyValuePair<{{keyText}}, {{valueText}}> item) => {{target}}.Remove(item);
             IEnumerator<KeyValuePair<{{keyText}}, {{valueText}}>> IEnumerable<KeyValuePair<{{keyText}}, {{valueText}}>>.GetEnumerator() => {{target}}.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            """, isMultiline: true);
-        // IObservableMap.MapChanged event forwarder.
-        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
-        string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
-        writer.WriteLine();
-        writer.WriteLine($$"""
+
             event global::Windows.Foundation.Collections.MapChangedEventHandler<{{keyText}}, {{valueText}}> {{obsSelf}}MapChanged
             {
             add => {{obsTarget}}.MapChanged += value;
             remove => {{obsTarget}}.MapChanged -= value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -250,8 +201,11 @@ internal static class AbiInterfaceIDicFactory
         string target = $"((global::System.Collections.Generic.IList<{elementText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IList<{elementText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
+        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
+        string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
+
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             int {{icoll}}Count => {{target}}.Count;
             bool {{icoll}}IsReadOnly => {{target}}.IsReadOnly;
             {{elementText}} {{self}}this[int index]
@@ -269,18 +223,13 @@ internal static class AbiInterfaceIDicFactory
             bool {{icoll}}Remove({{elementText}} item) => {{target}}.Remove(item);
             IEnumerator<{{elementText}}> IEnumerable<{{elementText}}>.GetEnumerator() => {{target}}.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            """, isMultiline: true);
-        // IObservableVector.VectorChanged event forwarder.
-        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
-        string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
-        writer.WriteLine();
-        writer.WriteLine($$"""
+
             event global::Windows.Foundation.Collections.VectorChangedEventHandler<{{elementText}}> {{obsSelf}}VectorChanged
             {
             add => {{obsTarget}}.VectorChanged += value;
             remove => {{obsTarget}}.VectorChanged -= value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -293,44 +242,24 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
-        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
-        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            ccwIfaceName = GlobalPrefix + ccwIfaceName;
-        }
-
-        foreach (MethodDefinition method in type.Methods)
-        {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             MethodSignatureInfo sig = new(method);
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
 
             writer.WriteLine();
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {ccwIfaceName}.{mname}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write($") => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
-
-                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
-            }
-            writer.WriteLine(");");
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+            writer.WriteLine($"{ret} {ccwIfaceName}.{mname}({parms}) => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}({args});");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-            string pname = prop.Name?.Value ?? string.Empty;
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+            string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.WriteLine();
@@ -361,17 +290,16 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            string evtName = evt.Name?.Value ?? string.Empty;
+            string evtName = evt.GetRawName();
             writer.WriteLine();
-            writer.Write("event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.WriteLine($$"""
-                 {{ccwIfaceName}}.{{evtName}}
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            writer.WriteLine(isMultiline: true, $$"""
+                event {{eventType}} {{ccwIfaceName}}.{{evtName}}
                 {
                     add => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} += value;
                     remove => (({{ccwIfaceName}})(WindowsRuntimeObject)this).{{evtName}} -= value;
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 
@@ -388,15 +316,17 @@ internal static class AbiInterfaceIDicFactory
         switch (mappedWinRTInterfaceName)
         {
             case "IClosable":
+
                 // IClosable maps to IDisposable. Forward Dispose() to the
                 // WindowsRuntimeObject base which has the actual implementation.
                 writer.WriteLine();
                 writer.WriteLine("void global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();");
                 break;
             case "IBindableVector":
+
                 // IList covers IList, ICollection, and IEnumerable members.
                 writer.WriteLine();
-                writer.WriteLine("""
+                writer.WriteLine(isMultiline: true, """
                     int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;
                     bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;
                     object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;
@@ -418,7 +348,7 @@ internal static class AbiInterfaceIDicFactory
                     void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);
                     
                     IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();
-                    """, isMultiline: true);
+                    """);
                 break;
             case "IBindableIterable":
                 writer.WriteLine();
@@ -430,120 +360,97 @@ internal static class AbiInterfaceIDicFactory
     internal static void WriteInterfaceIdicImplMembersForInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
-        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-        if (!ccwIfaceName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            ccwIfaceName = GlobalPrefix + ccwIfaceName;
-        }
+        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
         // The static ABI Methods class name.
-        string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true);
+        string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true).Format();
 
-        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            abiClass = GlobalPrefix + abiClass;
-        }
-
-        foreach (MethodDefinition method in type.Methods)
-        {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             MethodSignatureInfo sig = new(method);
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+            string returnKw = sig.ReturnType is not null ? "return " : "";
 
             writer.WriteLine();
-            writer.Write("unsafe ");
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {ccwIfaceName}.{mname}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.WriteLine($$"""
-                )
+            writer.WriteLine(isMultiline: true, $$"""
+                unsafe {{ret}} {{ccwIfaceName}}.{{mname}}({{parms}})
                 {
                     var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                     
-                """, isMultiline: true);
-            if (sig.ReturnType is not null)
-            {
-                writer.Write("return ");
-            }
-
-            writer.Write($"{abiClass}.{mname}(_obj");
-            for (int i = 0; i < sig.Parameters.Count; i++)
-            {
-                writer.Write(", ");
-                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
-            }
-            writer.WriteLine("""
-                );
+                {{returnKw}}{{abiClass}}.{{mname}}(_obj{{args}});
                 }
-                """, isMultiline: true);
+                """);
         }
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-            string pname = prop.Name?.Value ?? string.Empty;
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+            string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
-            writer.WriteLine();
-            writer.WriteLine($$"""
-                unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
-                {
-                """, isMultiline: true);
-            if (getter is not null)
+            // Emit the get accessor: a real one if 'getter' is defined on this interface, or a
+            // synthetic delegate to the base interface that owns the actual getter if only the
+            // setter is on this interface (C# requires both accessors on an explicit interface
+            // impl when the interface declaration has 'get; set;').
+            void WriteGetter(IndentedTextWriter writer)
             {
-                writer.WriteLine($$"""
+                if (getter is not null)
+                {
+                    writer.Write(isMultiline: true, $$"""
                         get
                         {
                             var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
                             return {{abiClass}}.{{pname}}(_obj);
                         }
-                    """, isMultiline: true);
+                        """);
+                }
+                else if (setter is not null
+                    && InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
+                {
+                    IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
+                    writer.Write($"get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
+                }
             }
 
-            if (setter is not null)
+            // Emit the set accessor when this interface declares it; otherwise nothing.
+            void WriteSetter(IndentedTextWriter writer)
             {
-                // If the property has only a setter on this interface BUT a base interface declares
-                // the getter (so the C# interface decl emits 'get; set;'), C# requires an explicit
-                // interface impl to provide both accessors. Emit a synthetic getter that delegates
-                // to the base interface where the getter actually lives
-                if (getter is null)
+                if (setter is null)
                 {
-                    TypeDefinition? baseIfaceWithGetter = InterfaceFactory.FindPropertyInterfaceInBases(context.Cache, type, pname);
-
-                    if (baseIfaceWithGetter is not null)
-                    {
-                        writer.Write("    get { return ((");
-                        ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
-                        writer.WriteLine($")(WindowsRuntimeObject)this).{pname}; }}");
-                    }
+                    return;
                 }
 
-                writer.WriteLine($$"""
-                        set
-                        {
-                            var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
-                            {{abiClass}}.{{pname}}(_obj, value);
-                        }
-                    """, isMultiline: true);
+                writer.Write(isMultiline: true, $$"""
+                    set
+                    {
+                        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({{ccwIfaceName}}).TypeHandle);
+                        {{abiClass}}.{{pname}}(_obj, value);
+                    }
+                    """);
             }
-            writer.WriteLine("}");
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                unsafe {{propType}} {{ccwIfaceName}}.{{pname}}
+                {
+                    {{WriteGetter}}
+                    {{WriteSetter}}
+                }
+                """);
         }
 
         // Events: emit explicit interface event implementations on the IDIC interface that
         // dispatch through the static ABI Methods class's event accessor (returns an EventSource).
         foreach (EventDefinition evt in type.Events)
         {
-            string evtName = evt.Name?.Value ?? string.Empty;
+            string evtName = evt.GetRawName();
             writer.WriteLine();
-            writer.Write("event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.WriteLine($$"""
-                 {{ccwIfaceName}}.{{evtName}}
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            writer.WriteLine(isMultiline: true, $$"""
+                event {{eventType}} {{ccwIfaceName}}.{{evtName}}
                 {
                     add
                     {
@@ -556,7 +463,7 @@ internal static class AbiInterfaceIDicFactory
                         {{abiClass}}.{{evtName}}((WindowsRuntimeObject)this, _obj).Unsubscribe(value);
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 

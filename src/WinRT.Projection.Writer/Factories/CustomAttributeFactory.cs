@@ -137,6 +137,7 @@ internal static class CustomAttributeFactory
             float f => f.ToString("R", CultureInfo.InvariantCulture) + "f",
             double d => d.ToString("R", CultureInfo.InvariantCulture),
             char c => "'" + c + "'",
+
             // Always prepend 'global::' to typeof() arguments: when the generated file's namespace
             // context happens to contain a 'Windows' sub-namespace (e.g. 'TestComponentCSharp.Windows.*'),
             // an unqualified 'Windows.Foundation.X' would resolve to 'TestComponentCSharp.Windows.Foundation.X'
@@ -246,9 +247,7 @@ internal static class CustomAttributeFactory
         };
         int contractVersion = (int)(versionRaw >> 16);
 
-        string platform = ContractPlatforms.GetPlatform(contractName, contractVersion);
-
-        if (string.IsNullOrEmpty(platform))
+        if (!ContractPlatforms.TryGetPlatform(contractName, contractVersion, out string? platform))
         {
             return string.Empty;
         }
@@ -277,6 +276,28 @@ internal static class CustomAttributeFactory
     /// <param name="member">The member to inspect for <c>[ContractVersion]</c>.</param>
     public static void WritePlatformAttribute(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member)
     {
+        int before = writer.Length;
+        WritePlatformAttributeBody(writer, context, member);
+        if (writer.Length > before)
+        {
+            writer.WriteLine();
+        }
+    }
+
+    /// <inheritdoc cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>
+    /// <returns>A callback emitting the attribute body (no trailing newline). Emits nothing when no <c>[SupportedOSPlatform]</c> applies (or when not in reference-projection mode). The blank-line suppression in the writer collapses any template line that holds only this callback when it expands to empty.</returns>
+    public static IndentedTextWriterCallback WritePlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
+    {
+        return writer => WritePlatformAttributeBody(writer, context, member);
+    }
+
+    /// <summary>
+    /// Writes just the attribute body (no trailing newline) for
+    /// <see cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>.
+    /// In non-reference-projection mode this emits nothing.
+    /// </summary>
+    internal static void WritePlatformAttributeBody(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member)
+    {
         if (!context.Settings.ReferenceProjection)
         {
             return;
@@ -292,7 +313,7 @@ internal static class CustomAttributeFactory
                 continue;
             }
 
-            string name = attrType.Name?.Value ?? string.Empty;
+            string name = attrType.GetRawName();
 
             if (name.EndsWith("Attribute", StringComparison.Ordinal))
             {
@@ -305,7 +326,7 @@ internal static class CustomAttributeFactory
 
                 if (!string.IsNullOrEmpty(platform))
                 {
-                    writer.WriteLine($"[global::System.Runtime.Versioning.SupportedOSPlatform({platform})]");
+                    writer.Write($"[global::System.Runtime.Versioning.SupportedOSPlatform({platform})]");
                     return;
                 }
             }
@@ -316,12 +337,14 @@ internal static class CustomAttributeFactory
     /// Convenience overload of <see cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>
     /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
     /// emits the <c>[SupportedOSPlatform]</c> attribute (if any) into it, and returns the
-    /// resulting string. Returns the empty string when no attribute is emitted.
+    /// resulting string (including the trailing newline). Returns the empty string when no
+    /// attribute is emitted. Used by callers that materialize the result once and use it
+    /// inside multiple <see cref="IndentedTextWriter.WriteIf(bool, string)"/> calls within a loop.
     /// </summary>
     /// <param name="context">The active emit context.</param>
     /// <param name="member">The member to inspect for <c>[ContractVersion]</c>.</param>
     /// <returns>The emitted attribute, or <see cref="string.Empty"/> when none.</returns>
-    public static string WritePlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
+    public static string GetPlatformAttribute(ProjectionEmitContext context, IHasCustomAttribute member)
     {
         using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter writer = writerOwner.Writer;
@@ -424,10 +447,7 @@ internal static class CustomAttributeFactory
                 writer.Write("(");
                 for (int i = 0; i < kv.Value.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     writer.Write(kv.Value[i]);
                 }
@@ -439,7 +459,8 @@ internal static class CustomAttributeFactory
     }
 
     /// <summary>
-    /// Writes the type-level custom attributes for <paramref name="type"/>.
+    /// Writes the projected type-level custom attributes for <paramref name="type"/>. Each emitted
+    /// attribute is on its own line, terminated with a newline. If no attributes apply, emits nothing.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -450,4 +471,31 @@ internal static class CustomAttributeFactory
         WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
     }
 
+    /// <inheritdoc cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>
+    /// <returns>A callback emitting each applicable attribute on its own line. The trailing newline of the last attribute is dropped so the callback can be interpolated into a multiline template line without producing a stray blank line.</returns>
+    public static IndentedTextWriterCallback WriteTypeCustomAttributes(ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
+    {
+        return writer => WriteTypeCustomAttributesBody(writer, context, type, enablePlatformAttrib);
+    }
+
+    /// <summary>
+    /// Writes just the attribute lines (no trailing newline on the last one) for
+    /// <see cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>.
+    /// Used by the callback variant so the callback can be inlined inside a multiline raw-string
+    /// template — the surrounding template line's own newline becomes the trailing newline.
+    /// </summary>
+    internal static void WriteTypeCustomAttributesBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
+    {
+        int before = writer.Length;
+
+        WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
+
+        // If anything was written, the buffer ends with a trailing newline that came from the
+        // last attribute's WriteLine. Trim it so the callback can be inlined into a multiline
+        // template line without producing a stray blank line.
+        if (writer.Length > before && writer.Length > 0 && writer.Back() == '\n')
+        {
+            writer.Remove(writer.Length - 1, 1);
+        }
+    }
 }

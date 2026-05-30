@@ -19,11 +19,6 @@ internal static partial class ConstructorFactory
     /// </summary>
     public static void WriteAttributedTypes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
     {
-        if (context.Cache is null)
-        {
-            return;
-        }
-
         // Track whether we need to emit the static _objRef_<RuntimeClassName> field (used by
         // default constructors). Emit it once per class if any [Activatable] factory exists.
         bool needsClassObjRef = false;
@@ -41,7 +36,7 @@ internal static partial class ConstructorFactory
 
         if (needsClassObjRef)
         {
-            string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + (classType.Name?.Value ?? string.Empty);
+            string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
             writer.WriteLine();
             writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
@@ -54,7 +49,7 @@ internal static partial class ConstructorFactory
             else
             {
                 writer.WriteLine();
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     {
                         get
                         {
@@ -66,7 +61,7 @@ internal static partial class ConstructorFactory
                             return field = WindowsRuntimeObjectReference.GetActivationFactory("{{fullName}}");
                         }
                     }
-                    """, isMultiline: true);
+                    """);
             }
         }
 
@@ -90,27 +85,30 @@ internal static partial class ConstructorFactory
     /// </summary>
     public static void WriteFactoryConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? factoryType, TypeDefinition classType)
     {
-        string typeName = classType.Name?.Value ?? string.Empty;
+        string typeName = classType.GetRawName();
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
 
         if (factoryType is not null)
         {
             // Emit the factory objref property (lazy-initialized).
-            string factoryRuntimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string factoryRuntimeClassFullName = classType.FullName ?? string.Empty;
             string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, factoryType);
             ClassFactory.WriteStaticFactoryObjRef(writer, context, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
 
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
             string marshalingType = GetMarshalingTypeName(classType);
+
             // Compute the platform attribute string from the activation factory interface's
             // [ContractVersion] attribute
-            string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, factoryType);
+            string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, factoryType);
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
-                if (method.IsSpecial())
+                if (method.IsSpecial)
                 {
-                    methodIndex++; continue;
+                    methodIndex++;
+
+                    continue;
                 }
 
                 MethodSignatureInfo sig = new(method);
@@ -120,17 +118,14 @@ internal static partial class ConstructorFactory
                 // Emit the public constructor.
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
                 writer.Write($"public unsafe {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
-                writer.Write("""
+                writer.Write(isMultiline: true, """
                     )
                       :base(
-                    """, isMultiline: true);
+                    """);
                 if (sig.Parameters.Count == 0)
                 {
                     writer.Write("default");
@@ -140,21 +135,18 @@ internal static partial class ConstructorFactory
                     writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
                     for (int i = 0; i < sig.Parameters.Count; i++)
                     {
-                        if (i > 0)
-                        {
-                            writer.Write(", ");
-                        }
+                        writer.WriteIf(i > 0, ", ");
 
-                        string raw = sig.Parameters[i].Parameter.Name ?? "param";
-                        writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
+                        string raw = sig.Parameters[i].GetRawName();
+                        writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
                     }
                     writer.Write("))");
                 }
 
-                writer.WriteLine("""
+                writer.WriteLine(isMultiline: true, """
                     )
                     {
-                    """, isMultiline: true);
+                    """);
                 if (gcPressure > 0)
                 {
                     writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
@@ -176,18 +168,18 @@ internal static partial class ConstructorFactory
             // No factory type means [Activatable(uint version)] - emit a default ctor that calls
             // the WindowsRuntimeObject base constructor with the activation factory objref.
             // The default interface IID is needed too.
-            string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
 
             // Find the default interface IID to use.
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
 
             writer.WriteLine();
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 public {{typeName}}()
                   :base(default(WindowsRuntimeActivationTypes.DerivedSealed), {{objRefName}}, {{defaultIfaceIid}}, {{GetMarshalingTypeName(classType)}})
                 {
-                """, isMultiline: true);
+                """);
             if (gcPressure > 0)
             {
                 writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");

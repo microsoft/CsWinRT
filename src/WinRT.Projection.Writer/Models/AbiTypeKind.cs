@@ -7,7 +7,7 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// Classification of a WinRT ABI type's marshalling shape, used to drive the writer's
 /// decisions about how to emit converters and parameter handling.
 /// </summary>
-internal enum AbiTypeShapeKind
+internal enum AbiTypeKind
 {
     /// <summary>
     /// The shape could not be determined (e.g. unresolved reference).
@@ -32,7 +32,7 @@ internal enum AbiTypeShapeKind
     /// <summary>
     /// A WinRT struct with at least one reference-type field (string, generic instance, runtime class, etc.) that needs per-field marshalling via a generated <c>*Marshaller</c>.
     /// </summary>
-    ComplexStruct,
+    NonBlittableStruct,
 
     /// <summary>
     /// A WinRT struct that is mapped to a BCL value type and requires explicit marshalling (e.g. <c>Windows.Foundation.DateTime</c> -> <see cref="System.DateTimeOffset"/>).
@@ -40,7 +40,7 @@ internal enum AbiTypeShapeKind
     MappedAbiValueType,
 
     /// <summary>
-    /// The corlib <see cref="System.String"/> primitive (marshalled via HSTRING).
+    /// The corlib <see cref="string"/> primitive (marshalled via HSTRING).
     /// </summary>
     String,
 

@@ -23,6 +23,17 @@ internal static class IdentifierEscaping
     }
 
     /// <summary>
+    /// Returns <paramref name="identifier"/> prefixed with <c>@</c> if it is a reserved C# keyword;
+    /// otherwise returns it unchanged.
+    /// </summary>
+    /// <param name="identifier">The identifier to escape.</param>
+    /// <returns>The escaped identifier.</returns>
+    public static string EscapeIdentifier(string identifier)
+    {
+        return CSharpKeywords.IsKeyword(identifier) ? "@" + identifier : identifier;
+    }
+
+    /// <summary>
     /// Writes <paramref name="identifier"/> to <paramref name="writer"/>, prefixed with <c>@</c>
     /// if it is a reserved C# keyword.
     /// </summary>
@@ -30,12 +41,16 @@ internal static class IdentifierEscaping
     /// <param name="identifier">The identifier to write.</param>
     public static void WriteEscapedIdentifier(IndentedTextWriter writer, string identifier)
     {
-        if (CSharpKeywords.IsKeyword(identifier))
-        {
-            writer.Write("@");
-        }
+        writer.WriteIf(CSharpKeywords.IsKeyword(identifier), "@");
 
         writer.Write(identifier);
+    }
+
+    /// <inheritdoc cref="WriteEscapedIdentifier(IndentedTextWriter, string)"/>
+    /// <returns>A callback that writes the escaped identifier to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteEscapedIdentifier(string identifier)
+    {
+        return writer => WriteEscapedIdentifier(writer, identifier);
     }
 
     /// <summary>

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -13,7 +14,6 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -33,9 +33,7 @@ internal static partial class ClassMembersFactory
             }
 
             // Resolve TypeRef to TypeDef using our cache
-            TypeDefinition? ifaceType = ResolveInterface(context.Cache, impl.Interface);
-
-            if (ifaceType is null)
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
             {
                 continue;
             }
@@ -48,7 +46,7 @@ internal static partial class ClassMembersFactory
             _ = writtenInterfaces.Add(ifaceType);
 
             bool isOverridable = impl.IsOverridable();
-            bool isProtected = impl.HasAttribute(WindowsFoundationMetadata, "ProtectedAttribute");
+            bool isProtected = impl.HasWindowsFoundationMetadataAttribute("ProtectedAttribute");
 
             // Substitute generic type arguments using the current generic context BEFORE emitting
             // any references to this interface. This is critical for nested recursion: e.g. when
@@ -58,7 +56,7 @@ internal static partial class ClassMembersFactory
             ITypeDefOrRef substitutedInterface = impl.Interface;
             GenericInstanceTypeSignature? nextInstance = null;
 
-            if (impl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+            if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
             {
                 if (currentInstance is not null)
                 {
@@ -97,15 +95,14 @@ internal static partial class ClassMembersFactory
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
+                IndentedTextWriterCallback iface = WriteInterfaceTypeNameForCcw(context, substitutedInterface);
                 writer.WriteLine();
-                writer.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
-                WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
-                writer.WriteLine($$"""
-                    >.GetInterface()
+                writer.WriteLine(isMultiline: true, $$"""
+                    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<{{iface}}>.GetInterface()
                     {
                         return {{giObjRefName}}.AsValue();
                     }
-                    """, isMultiline: true);
+                    """);
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
@@ -121,25 +118,20 @@ internal static partial class ClassMembersFactory
 
                 if (classType.BaseType is not null)
                 {
-                    string? baseNs = classType.BaseType.Namespace?.Value;
-                    string? baseName = classType.BaseType.Name?.Value;
-                    hasBaseType = !(baseNs == "System" && baseName == "Object");
+                    hasBaseType = classType.HasNonObjectBaseType();
                 }
 
                 writer.WriteLine();
                 writer.Write("internal ");
 
-                if (hasBaseType)
-                {
-                    writer.Write("new ");
-                }
+                writer.WriteIf(hasBaseType, "new ");
 
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     WindowsRuntimeObjectReferenceValue GetDefaultInterface()
                     {
                         return {{giObjRefName}}.AsValue();
                     }
-                    """, isMultiline: true);
+                    """);
             }
 
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
@@ -175,6 +167,7 @@ internal static partial class ClassMembersFactory
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
+
         // Determine accessibility and method modifier.
         // Overridable interfaces are emitted with 'protected' visibility, plus 'virtual' on
         // non-sealed classes. Sealed classes still get 'protected' (without virtual).
@@ -201,7 +194,7 @@ internal static partial class ClassMembersFactory
         // into the default interface's vtable in a fixed order
         TypeDefinition abiInterface = ifaceType;
         ITypeDefOrRef abiInterfaceRef = originalInterface;
-        bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && TypeCategorization.IsExclusiveTo(ifaceType);
+        bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && ifaceType.IsExclusiveTo;
         bool isDefaultInterface = false;
 
         if (isFastAbiExclusive)
@@ -229,12 +222,7 @@ internal static partial class ClassMembersFactory
         // — note this is the ungenerified Methods class for generic interfaces
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
-        string abiClass = TypedefNameWriter.WriteTypedefName(context, abiInterface, TypedefNameType.StaticAbiClass, true);
-
-        if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            abiClass = GlobalPrefix + abiClass;
-        }
+        string abiClass = TypedefNameWriter.WriteTypedefName(context, abiInterface, TypedefNameType.StaticAbiClass, true).Format();
 
         string objRef = ObjRefNameGenerator.GetObjRefName(context, abiInterfaceRef);
 
@@ -245,9 +233,9 @@ internal static partial class ClassMembersFactory
 
         if (isGenericInterface && currentInstance is not null)
         {
-            string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
+            string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true).Format();
             genericParentEncoded = IidExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
-            genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
+            genericInteropType = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(currentInstance, TypedefNameType.StaticAbiClass);
         }
 
         // Compute the platform attribute string from the interface type's [ContractVersion]
@@ -255,21 +243,17 @@ internal static partial class ClassMembersFactory
         // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
         // immediately if not ref)
-        string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, ifaceType);
+        string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, ifaceType);
 
         // Methods
-        foreach (MethodDefinition method in ifaceType.Methods)
+        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
+            string name = method.GetRawName();
 
-            string name = method.Name?.Value ?? string.Empty;
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
             MethodSignatureInfo sig = new(method, genericContext);
-            string key = BuildMethodSignatureKey(name, sig);
+            string key = sig.GetDedupeKey(name);
 
             if (!writtenMethods.Add(key))
             {
@@ -315,60 +299,37 @@ internal static partial class ClassMembersFactory
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
+                IndentedTextWriterCallback unsafeRet = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+                string accessorParams = string.Concat(sig.Parameters.Select(p => $", {MethodFactory.WriteProjectionParameter(context, p).Format()}"));
+                string body = context.Settings.ReferenceProjection
+                    ? "throw null;"
+                    : $"{accessorName}(null, {objRef}{MethodFactory.WriteCallArguments(context, sig, leadingComma: true).Format()});";
+                string platformTrimmed = platformAttribute.TrimEnd('\r', '\n');
+
                 writer.WriteLine();
-                writer.Write($$"""
-                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{name}}")]
-                    static extern 
-                    """, isMultiline: true);
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {accessorName}([UnsafeAccessorType(\"{genericInteropType}\")] object _, WindowsRuntimeObjectReference thisReference");
-                for (int i = 0; i < sig.Parameters.Count; i++)
-                {
-                    writer.Write(", ");
-                    MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
-                }
-                writer.WriteLine(");");
-                // string to each public method emission. In ref mode this produces e.g.
-                // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
-
-                writer.Write($"{access}{methodSpecForThis}");
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {name}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
-
-                if (context.Settings.ReferenceProjection)
-                {
-                    // which emits 'throw null' in reference projection mode.
-                    writer.WriteLine(") => throw null;");
-                }
-                else
-                {
-                    writer.Write($") => {accessorName}(null, {objRef}");
-                    for (int i = 0; i < sig.Parameters.Count; i++)
-                    {
-                        writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
-                    }
-                    writer.WriteLine(");");
-                }
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: name,
+                    returnType: unsafeRet.Format(),
+                    functionName: accessorName,
+                    interopType: genericInteropType,
+                    parameterList: $"WindowsRuntimeObjectReference thisReference{accessorParams}");
+                writer.WriteLine(isMultiline: true, $$"""
+                    {{platformTrimmed}}
+                    {{access}}{{methodSpecForThis}}{{ret}} {{name}}({{parms}}) => {{body}}
+                    """);
             }
             else
             {
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write($"{access}{methodSpecForThis}");
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {name}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+                writer.Write($"{access}{methodSpecForThis}{ret} {name}({parms}");
 
                 if (context.Settings.ReferenceProjection)
                 {
@@ -377,13 +338,8 @@ internal static partial class ClassMembersFactory
                 }
                 else
                 {
-                    writer.Write($") => {abiClass}.{name}({objRef}");
-                    for (int i = 0; i < sig.Parameters.Count; i++)
-                    {
-                        writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
-                    }
-                    writer.WriteLine(");");
+                    IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    writer.WriteLine($") => {abiClass}.{name}({objRef}{args});");
                 }
             }
 
@@ -392,27 +348,13 @@ internal static partial class ClassMembersFactory
             if (isOverridable)
             {
                 // impl as well (since it shares the same originating interface).
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write(" ");
-                WriteInterfaceTypeNameForCcw(writer, context, originalInterface);
-                writer.Write($".{name}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
-                writer.Write($") => {name}(");
-                for (int i = 0; i < sig.Parameters.Count; i++)
-                {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
-
-                    WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
-                }
-                writer.WriteLine(");");
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+                IndentedTextWriterCallback iface = WriteInterfaceTypeNameForCcw(context, originalInterface);
+                IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+                writer.WriteLine($"{ret} {iface}.{name}({parms}) => {name}({args});");
             }
         }
 
@@ -421,8 +363,8 @@ internal static partial class ClassMembersFactory
         // class on the right _objRef_ field.
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
-            string name = prop.Name?.Value ?? string.Empty;
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            string name = prop.GetRawName();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
 
             if (!propertyState.TryGetValue(name, out PropertyAccessorState? state))
             {
@@ -467,7 +409,7 @@ internal static partial class ClassMembersFactory
         // handler type.
         foreach (EventDefinition evt in ifaceType.Events)
         {
-            string name = evt.Name?.Value ?? string.Empty;
+            string name = evt.GetRawName();
 
             if (!writtenEvents.Add(name))
             {
@@ -499,7 +441,7 @@ internal static partial class ClassMembersFactory
             }
             else
             {
-                eventSourceType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
+                eventSourceType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false).Format();
             }
 
             string eventSourceTypeFull = eventSourceType;
@@ -511,7 +453,7 @@ internal static partial class ClassMembersFactory
 
             // The "interop" type name string for the EventSource UnsafeAccessor (only needed for generic events).
             string eventSourceInteropType = isGenericEvent
-                ? InteropTypeNameWriter.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
+                ? InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtSig, TypedefNameType.EventSource)
                 : string.Empty;
 
             // Compute vtable index = method index in the interface vtable + 6 (for IInspectable methods).
@@ -534,29 +476,33 @@ internal static partial class ClassMembersFactory
             if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
                 writer.WriteLine();
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     private {{eventSourceTypeFull}} _eventSource_{{name}}
                     {
                         get
                         {
-                    """, isMultiline: true);
+                    """);
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
-                    writer.WriteLine($$"""
-                                [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-                                [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
-                                static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
-                        """, isMultiline: true);
+                    writer.IncreaseIndent();
+                    writer.IncreaseIndent();
+                    UnsafeAccessorFactory.EmitConstructorReturningObject(
+                        writer,
+                        interopType: eventSourceInteropType,
+                        functionName: "ctor",
+                        parameterList: "WindowsRuntimeObjectReference nativeObjectReference, int index");
+                    writer.DecreaseIndent();
+                    writer.DecreaseIndent();
                     writer.WriteLine();
                 }
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                             [MethodImpl(MethodImplOptions.NoInlining)]
                             {{eventSourceTypeFull}} MakeEventSource()
                             {
                                 _ = global::System.Threading.Interlocked.CompareExchange(
                                     location1: ref field,
                                     value: 
-                    """, isMultiline: true);
+                    """);
                 if (isGenericEvent)
                 {
                     writer.Write($"Unsafe.As<{eventSourceTypeFull}>(ctor({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)}))");
@@ -566,7 +512,7 @@ internal static partial class ClassMembersFactory
                     writer.Write($"new {eventSourceTypeFull}({objRef}, {vtableIndex.ToString(CultureInfo.InvariantCulture)})");
                 }
 
-                writer.WriteLine("""
+                writer.WriteLine(isMultiline: true, """
                     ,
                                     comparand: null);
                     
@@ -576,37 +522,31 @@ internal static partial class ClassMembersFactory
                             return field ?? MakeEventSource();
                         }
                     }
-                    """, isMultiline: true);
+                    """);
             }
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
             writer.WriteLine();
+
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-            if (!string.IsNullOrEmpty(platformAttribute))
-            {
-                writer.Write(platformAttribute);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-            writer.Write($"{access}{methodSpec}event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
-            writer.WriteLine($$"""
-                 {{name}}
-                {
-                """, isMultiline: true);
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt, currentInstance);
+            string accessors;
             if (context.Settings.ReferenceProjection)
             {
-                writer.WriteLine("""
+                accessors = """
                         add => throw null;
                         remove => throw null;
-                    """, isMultiline: true);
+                    """;
             }
             else if (inlineEventSourceField)
             {
-                writer.WriteLine($$"""
+                accessors = $$"""
                         add => _eventSource_{{name}}.Subscribe(value);
                         remove => _eventSource_{{name}}.Unsubscribe(value);
-                    """, isMultiline: true);
+                    """;
             }
             else
             {
@@ -615,12 +555,17 @@ internal static partial class ClassMembersFactory
                 // inline_event_source_field is false (the default helper-based path).
                 // Example: Simple.Event0 (on ISimple5) becomes
                 //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
-                writer.WriteLine($$"""
+                accessors = $$"""
                         add => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Subscribe(value);
                         remove => {{abiClass}}.{{name}}((WindowsRuntimeObject)this, {{objRef}}).Unsubscribe(value);
-                    """, isMultiline: true);
+                    """;
             }
-            writer.WriteLine("}");
+            writer.WriteLine(isMultiline: true, $$"""
+                {{access}}{{methodSpec}}event {{eventType}} {{name}}
+                {
+                {{accessors}}
+                }
+                """);
         }
     }
 }

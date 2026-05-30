@@ -103,21 +103,6 @@ internal sealed class Settings
     public bool Component { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether projected types are emitted as <c>internal</c> rather than <c>public</c>.
-    /// </summary>
-    public bool Internal { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the projection is embedded into a consuming assembly (forces <c>internal</c> visibility).
-    /// </summary>
-    public bool Embedded { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether projected enums are forced to <c>public</c> visibility (overrides <see cref="Internal"/>).
-    /// </summary>
-    public bool PublicEnums { get; init; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

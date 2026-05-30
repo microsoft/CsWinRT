@@ -10,7 +10,6 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
@@ -33,24 +32,7 @@ internal static class ClassFactory
     {
         // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
         // netstandard_compat gate -- it was always false in the C# port.)
-        return type.HasAttribute(WindowsFoundationMetadata, FastAbiAttribute);
-    }
-
-    /// <summary>
-    /// Writes the class modifiers ('static '/'sealed ').
-    /// </summary>
-    public static void WriteClassModifiers(IndentedTextWriter writer, TypeDefinition type)
-    {
-        if (TypeCategorization.IsStatic(type))
-        {
-            writer.Write("static ");
-            return;
-        }
-
-        if (type.IsSealed)
-        {
-            writer.Write("sealed ");
-        }
+        return type.HasWindowsFoundationMetadataAttribute(FastAbiAttribute);
     }
 
     /// <summary>
@@ -106,50 +88,20 @@ internal static class ClassFactory
             return false;
         }
 
-        if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface))
+        if (fastAbi.Value.Default is not null && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, iface))
         {
             return false;
         }
 
         foreach (TypeDefinition other in fastAbi.Value.Others)
         {
-            if (InterfacesEqual(other, iface))
+            if (AbiTypeHelpers.InterfacesEqualByName(other, iface))
             {
                 return true;
             }
         }
         return false;
     }
-
-    /// <summary>
-    /// Returns true if <paramref name="iface"/> is the default interface of a fast-abi class.
-    /// </summary>
-    public static bool IsFastAbiDefaultInterface(MetadataCache cache, TypeDefinition iface)
-    {
-        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(cache, iface);
-
-        if (fastAbi is null)
-        {
-            return false;
-        }
-
-        return fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface);
-    }
-
-    private static bool InterfacesEqual(TypeDefinition a, TypeDefinition b)
-    {
-        if (a == b)
-        {
-            return true;
-        }
-
-        return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
-            && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
-    }
-
-    // We don't have direct access to the active Settings from a static helper that only takes
-    // a TypeDefinition. The fast-abi flag is purely determined by the [FastAbiAttribute] (the
-    // netstandard_compat gate is always false in CsWinRT 3.0 -- the flag has been removed).
 
     /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
@@ -177,7 +129,7 @@ internal static class ClassFactory
             {
                 defaultIface = ifaceTd;
             }
-            else if (TypeCategorization.IsExclusiveTo(ifaceTd))
+            else if (ifaceTd.IsExclusiveTo)
             {
                 exclusiveIfaces.Add(ifaceTd);
             }
@@ -190,8 +142,8 @@ internal static class ClassFactory
         // 4. Type namespace and name (ascending)
         exclusiveIfaces.Sort((a, b) =>
         {
-            int aPrev = -CountAttributes(a, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
-            int bPrev = -CountAttributes(b, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
+            int aPrev = -a.CountAttributes(WindowsFoundationMetadata, "PreviousContractVersionAttribute");
+            int bPrev = -b.CountAttributes(WindowsFoundationMetadata, "PreviousContractVersionAttribute");
 
             if (aPrev != bPrev)
             {
@@ -214,34 +166,19 @@ internal static class ClassFactory
                 return aV.Value.CompareTo(bV.Value);
             }
 
-            string aNs = a.Namespace?.Value ?? string.Empty;
-            string bNs = b.Namespace?.Value ?? string.Empty;
+            (string aNs, string aName) = a.Names();
+            (string bNs, string bName) = b.Names();
 
             if (aNs != bNs)
             {
                 return StringComparer.Ordinal.Compare(aNs, bNs);
             }
 
-            return StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+            return StringComparer.Ordinal.Compare(aName, bName);
         });
         return (defaultIface, exclusiveIfaces);
     }
 
-    private static int CountAttributes(IHasCustomAttribute member, string ns, string name)
-    {
-        int count = 0;
-        for (int i = 0; i < member.CustomAttributes.Count; i++)
-        {
-            CustomAttribute attr = member.CustomAttributes[i];
-            ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
-
-            if (type is not null && type.Namespace == ns && type.Name == name)
-            {
-                count++;
-            }
-        }
-        return count;
-    }
     /// <summary>
     /// Returns the GC-pressure cost (in bytes) declared by <c>[GCPressureAttribute]</c> on <paramref name="type"/>, or <c>0</c> if not annotated.
     /// </summary>
@@ -252,7 +189,7 @@ internal static class ClassFactory
             return 0;
         }
 
-        CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GCPressureAttribute");
+        CustomAttribute? attr = type.GetWindowsFoundationMetadataAttribute("GCPressureAttribute");
 
         if (attr is null || attr.Signature is null)
         {
@@ -289,12 +226,14 @@ internal static class ClassFactory
     {
         using (context.EnterPlatformSuppressionScope(string.Empty))
         {
-            MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-            CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-            writer.Write($"{context.Settings.InternalAccessibility} static class ");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-            TypedefNameWriter.WriteTypeParams(writer, type);
-            writer.WriteLine();
+            IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+            IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+            IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+            writer.WriteLine(isMultiline: true, $$"""
+                {{metadataAttr}}
+                {{customAttrs}}
+                public static class {{name}}
+                """);
             using (writer.WriteBlock())
             {
                 WriteStaticClassMembers(writer, context, type);
@@ -307,17 +246,13 @@ internal static class ClassFactory
     /// </summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (context.Cache is null)
-        {
-            return;
-        }
-
         // Per-property accessor state (origin tracking for getter/setter)
         Dictionary<string, StaticPropertyAccessorState> properties = [];
+
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
         HashSet<string> emittedObjRefs = [];
 
-        string runtimeClassFullName = (type.Namespace?.Value ?? string.Empty) + "." + (type.Name?.Value ?? string.Empty);
+        string runtimeClassFullName = type.FullName ?? string.Empty;
 
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
@@ -332,13 +267,9 @@ internal static class ClassFactory
 
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
-            // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
-            string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true);
 
-            if (!abiClass.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-            {
-                abiClass = GlobalPrefix + abiClass;
-            }
+            // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
+            string abiClass = TypedefNameWriter.WriteTypedefName(context, staticIface, TypedefNameType.StaticAbiClass, true).Format();
 
             // Emit the lazy static objref field (mirrors truth's pattern) once per static iface.
             if (emittedObjRefs.Add(objRef))
@@ -348,29 +279,20 @@ internal static class ClassFactory
 
             // Compute the platform attribute string from the static factory interface's
             // [ContractVersion] attribute
-            string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, staticIface);
+            string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, staticIface);
 
             // Methods
-            foreach (MethodDefinition method in staticIface.Methods)
+            foreach (MethodDefinition method in staticIface.GetNonSpecialMethods())
             {
-                if (method.IsSpecial())
-                {
-                    continue;
-                }
-
                 MethodSignatureInfo sig = new(method);
-                string mname = method.Name?.Value ?? string.Empty;
+                string mname = method.GetRawName();
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write("public static ");
-                MethodFactory.WriteProjectionReturnType(writer, context, sig);
-                writer.Write($" {mname}(");
-                MethodFactory.WriteParameterList(writer, context, sig);
+                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+                writer.Write($"public static {ret} {mname}({parms}");
 
                 if (context.Settings.ReferenceProjection)
                 {
@@ -379,56 +301,48 @@ internal static class ClassFactory
                 }
                 else
                 {
-                    writer.Write($") => {abiClass}.{mname}({objRef}");
-                    for (int i = 0; i < sig.Parameters.Count; i++)
-                    {
-                        writer.Write(", ");
-                        ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Parameters[i]);
-                    }
-                    writer.WriteLine(");");
+                    IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: true);
+                    writer.WriteLine($") => {abiClass}.{mname}({objRef}{args});");
                 }
             }
 
             // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
             {
-                string evtName = evt.Name?.Value ?? string.Empty;
+                string evtName = evt.GetRawName();
                 writer.WriteLine();
 
-                if (!string.IsNullOrEmpty(platformAttribute))
-                {
-                    writer.Write(platformAttribute);
-                }
+                writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
-                writer.Write("public static event ");
-                TypedefNameWriter.WriteEventType(writer, context, evt);
-                writer.WriteLine($$"""
-                     {{evtName}}
-                    {
-                    """, isMultiline: true);
+                IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+
                 if (context.Settings.ReferenceProjection)
                 {
-                    // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.WriteLine("""
+                    writer.WriteLine(isMultiline: true, $$"""
+                        public static event {{eventType}} {{evtName}}
+                        {
                             add => throw null;
                             remove => throw null;
-                        """, isMultiline: true);
+                        }
+                        """);
                 }
                 else
                 {
-                    writer.WriteLine($$"""
+                    writer.WriteLine(isMultiline: true, $$"""
+                        public static event {{eventType}} {{evtName}}
+                        {
                             add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
                             remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
-                        """, isMultiline: true);
+                        }
+                        """);
                 }
-                writer.WriteLine("}");
             }
 
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
             foreach (PropertyDefinition prop in staticIface.Properties)
             {
-                string propName = prop.Name?.Value ?? string.Empty;
-                (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+                string propName = prop.GetRawName();
+                (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
                 string propType = InterfaceFactory.WritePropType(context, prop);
 
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
@@ -463,6 +377,7 @@ internal static class ClassFactory
         {
             StaticPropertyAccessorState s = kv.Value;
             writer.WriteLine();
+
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -476,12 +391,10 @@ internal static class ClassFactory
                 setterPlat = string.Empty;
             }
 
-            if (!string.IsNullOrEmpty(propertyPlat))
-            {
-                writer.Write(propertyPlat);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(propertyPlat), propertyPlat);
 
             writer.Write($"public static {s.PropTypeText} {kv.Key}");
+
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
             // In ref mode, all accessor bodies emit '=> throw null;'
             bool getterOnly = s.HasGetter && !s.HasSetter;
@@ -504,10 +417,7 @@ internal static class ClassFactory
                 {
                     if (s.HasGetter)
                     {
-                        if (!string.IsNullOrEmpty(getterPlat))
-                        {
-                            writer.Write(getterPlat);
-                        }
+                        writer.WriteIf(!string.IsNullOrEmpty(getterPlat), getterPlat);
 
                         if (context.Settings.ReferenceProjection)
                         {
@@ -521,10 +431,7 @@ internal static class ClassFactory
 
                     if (s.HasSetter)
                     {
-                        if (!string.IsNullOrEmpty(setterPlat))
-                        {
-                            writer.Write(setterPlat);
-                        }
+                        writer.WriteIf(!string.IsNullOrEmpty(setterPlat), setterPlat);
 
                         if (context.Settings.ReferenceProjection)
                         {
@@ -547,38 +454,30 @@ internal static class ClassFactory
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
         writer.WriteLine();
-        writer.WriteLine($$"""
-            private static WindowsRuntimeObjectReference {{objRefName}}
-            {
-            """, isMultiline: true);
+
         if (context.Settings.ReferenceProjection)
         {
-            // the static factory objref getter body is just 'throw null;'.
-            writer.WriteLine("""
+            writer.WriteLine($"private static WindowsRuntimeObjectReference {objRefName} => throw null;");
+        }
+        else
+        {
+            IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
+
+            writer.WriteLine(isMultiline: true, $$"""
+                private static WindowsRuntimeObjectReference {{objRefName}}
+                {
                     get
                     {
-                        throw null;
+                        var __{{objRefName}} = field;
+                        if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
+                        {
+                            return __{{objRefName}};
+                        }
+                        return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
                     }
                 }
-                """, isMultiline: true);
-            return;
+                """);
         }
-        writer.Write($$"""
-                get
-                {
-                    var __{{objRefName}} = field;
-                    if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
-                    {
-                        return __{{objRefName}};
-                    }
-                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", 
-            """, isMultiline: true);
-        ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
-        writer.WriteLine("""
-            );
-                }
-            }
-            """, isMultiline: true);
     }
 
     /// <summary>
@@ -591,7 +490,7 @@ internal static class ClassFactory
             return;
         }
 
-        if (TypeCategorization.IsStatic(type))
+        if (type.IsStatic)
         {
             WriteStaticClass(writer, context, type);
             return;
@@ -607,22 +506,25 @@ internal static class ClassFactory
 
     private static void WriteClassCore(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string typeName = type.Name?.Value ?? string.Empty;
+        string typeName = type.GetRawName();
         int gcPressure = GetGcPressureAmount(type);
 
-        // Header attributes
-        writer.WriteLine();
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
-        writer.Write($"{(context.Settings.Internal ? "internal" : "public")} ");
-        WriteClassModifiers(writer, type);
+        // Header attributes + class declaration as a single multiline template.
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
+        IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
+
         // are emitted as plain (non-partial) classes.
-        writer.Write("class ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
+        string modifiers = type.IsStatic ? "static " : type.IsSealed ? "sealed " : "";
+        IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
+        IndentedTextWriterCallback inheritance = InterfaceFactory.WriteTypeInheritance(context, type, false, true);
         writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{customAttrs}}
+            {{comWrappersAttr}}
+            public {{modifiers}}class {{name}}{{inheritance}}
+            """);
         using IndentedTextWriter.Block __classBlock = writer.WriteBlock();
 
         // ObjRef field definitions for each implemented interface.
@@ -634,39 +536,46 @@ internal static class ClassFactory
         if (!context.Settings.ReferenceProjection)
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
-            writer.WriteLine();
-            writer.WriteLine($$"""
-                {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
-                : base(nativeObjectReference)
-                """, isMultiline: true);
-            using (writer.WriteBlock())
+
+            // For unsealed classes, the default interface objref needs to be initialized only
+            // when GetType() matches the projected class exactly (derived classes have their own
+            // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
+            // 'GC.AddMemoryPressure' is emitted for any class with non-zero [GcPressure].
+            void WriteCtorBody(IndentedTextWriter writer)
             {
                 if (!type.IsSealed)
                 {
-                    // For unsealed classes, the default interface objref needs to be initialized only
-                    // when GetType() matches the projected class exactly (derived classes have their own
-                    // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
                     ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
                     if (defaultIface is not null)
                     {
                         string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
-                        writer.WriteLine($$"""
+
+                        writer.WriteLine(isMultiline: true, $$"""
                             if (GetType() == typeof({{typeName}}))
                             {
                                 {{defaultObjRefName}} = NativeObjectReference;
                             }
-                            """, isMultiline: true);
+                            """);
                     }
                 }
 
                 if (gcPressure > 0)
                 {
-                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
+                    writer.Write($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
             }
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
+                : base(nativeObjectReference)
+                {
+                    {{WriteCtorBody}}
+                }
+                """);
         }
-        else if (context.Cache is not null)
+        else
         {
             // In ref mode, if WriteAttributedTypes will not emit any public constructors,
             // we need a 'private TypeName() { throw null; }' to suppress the C# compiler's
@@ -711,12 +620,12 @@ internal static class ClassFactory
         // Conditional finalizer
         if (gcPressure > 0)
         {
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 ~{{typeName}}()
                 {
                 GC.RemoveMemoryPressure({{gcPressure.ToString(CultureInfo.InvariantCulture)}});
                 }
-                """, isMultiline: true);
+                """);
         }
 
         // Class members from interfaces (instance methods, properties, events).
@@ -724,22 +633,9 @@ internal static class ClassFactory
         // be emitted BEFORE the public members.
         if (!context.Settings.ReferenceProjection)
         {
-            writer.WriteLine();
-            writer.Write("protected override bool HasUnwrappableNativeObjectReference => ");
+            string unwrappable = type.IsSealed ? "true" : $"GetType() == typeof({typeName});";
 
-            if (!type.IsSealed)
-            {
-                writer.Write($"GetType() == typeof({typeName});");
-            }
-            else
-            {
-                writer.Write("true;");
-            }
-
-            writer.WriteLine();
-            writer.WriteLine();
-            writer.Write("protected override bool IsOverridableInterface(in Guid iid) => ");
-            bool firstClause = true;
+            List<string> overridableClauses = [];
             foreach (InterfaceImplementation impl in type.Interfaces)
             {
                 if (!impl.IsOverridable())
@@ -754,38 +650,28 @@ internal static class ClassFactory
                     continue;
                 }
 
-                if (!firstClause)
-                {
-                    writer.Write(" || ");
-                }
-
-                firstClause = false;
-                ObjRefNameGenerator.WriteIidExpression(writer, context, implRef);
-                writer.Write(" == iid");
+                IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, implRef);
+                overridableClauses.Add($"{iid.Format()} == iid");
             }
 
             // base call when type has a non-object base class
-            bool hasBaseClass = type.BaseType is not null
-                && !(type.BaseType.Namespace?.Value == "System" && type.BaseType.Name?.Value == "Object")
-                && !(type.BaseType.Namespace?.Value == "WindowsRuntime" && type.BaseType.Name?.Value == "WindowsRuntimeObject");
+            bool hasBaseClass = type.HasNonObjectBaseType();
 
             if (hasBaseClass)
             {
-                if (!firstClause)
-                {
-                    writer.Write(" || ");
-                }
-
-                writer.Write("base.IsOverridableInterface(in iid)");
-                firstClause = false;
+                overridableClauses.Add("base.IsOverridableInterface(in iid)");
             }
 
-            if (firstClause)
-            {
-                writer.Write("false");
-            }
+            string overridableExpr = overridableClauses.Count == 0
+                ? "false"
+                : string.Join(" || ", overridableClauses);
 
-            writer.WriteLine(";");
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                protected override bool HasUnwrappableNativeObjectReference => {{unwrappable}}{{(type.IsSealed ? ";" : "")}}
+
+                protected override bool IsOverridableInterface(in Guid iid) => {{overridableExpr}};
+                """);
         }
 
         ClassMembersFactory.WriteClassMembers(writer, context, type);

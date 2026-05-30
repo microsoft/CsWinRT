@@ -6,6 +6,8 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -22,12 +24,10 @@ internal static class AbiClassFactory
     public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Static classes don't get a *Marshaller (no instances).
-        if (TypeCategorization.IsStatic(type))
+        if (type.IsStatic)
         {
             return;
         }
-
-        writer.WriteLine("#nullable enable");
 
         if (context.Settings.Component)
         {
@@ -39,117 +39,117 @@ internal static class AbiClassFactory
             // Emit a ComWrappers marshaller class so the attribute reference resolves
             WriteClassMarshallerStub(writer, context, type);
         }
-
-        writer.WriteLine("#nullable disable");
     }
 
     /// <summary>
     /// Emits the simpler component-mode class marshaller.
     /// </summary>
-    internal static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedType = $"global::{typeNs}.{nameStripped}";
+        string nameStripped = type.GetStrippedName();
+        string typeNs = type.GetRawNamespace();
+        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
 
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
         // If the default interface is a generic instantiation (e.g. IDictionary<K,V>), emit an
         // UnsafeAccessor extern declaration inside ConvertToUnmanaged that fetches the IID via
         // WinRT.Interop's InterfaceIIDs class (since the IID for a generic instantiation is computed
         // at runtime). The IID expression in the call then becomes '<accessor>(null)' instead of a
         // static InterfaceIIDs reference.
-        GenericInstanceTypeSignature? defaultGenericInst = null;
-
-        if (defaultIface is TypeSpecification spec
-            && spec.Signature is GenericInstanceTypeSignature gi)
+        if (defaultIface?.TryGetGenericInstance(out GenericInstanceTypeSignature? defaultGenericInst) is not true)
         {
-            defaultGenericInst = gi;
+            defaultGenericInst = null;
         }
 
-        string defaultIfaceIid;
-
-        if (defaultGenericInst is not null)
+        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type. The writer's
+        // blank-line suppression collapses the accessor's trailing '\n' with the parent literal's
+        // '\n' between '{{WriteIidAccessor}}' and the next line, so the static extern declaration
+        // sits directly above the body without an extra blank line.
+        void WriteIidAccessor(IndentedTextWriter writer)
         {
-            // Call the accessor: '<IID_<EscapedName>>(null)'.
-            string accessorName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst);
-            defaultIfaceIid = accessorName + "(null)";
+            if (defaultGenericInst is not null)
+            {
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, defaultGenericInst);
+            }
         }
-        else
+
+        // Emit the actual IID expression to pass during marshalling
+        void WriteIidExpression(IndentedTextWriter writer)
         {
-            defaultIfaceIid = defaultIface is not null
-                ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface)
-                : "default(global::System.Guid)";
+            // If the type is generic, we need to invoke the unsafe accessor (because the IID will be generated
+            // in the 'WinRT.Interop.dll' assembly, whereas if not we can directly use the local IID property.
+            if (defaultGenericInst is not null)
+            {
+                // Call the accessor: '<IID_<EscapedName>>(null)'
+                writer.Write(ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst));
+                writer.Write("(null)");
+            }
+            else if (defaultIface is not null)
+            {
+                writer.Write($"{ObjRefNameGenerator.WriteIidExpression(context, defaultIface)}");
+            }
+            else
+            {
+                writer.Write("default(global::System.Guid)");
+            }
         }
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedType}} value)
                 {
-            """, isMultiline: true);
-        if (defaultGenericInst is not null)
-        {
-            // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
-            // marshallers run inside #nullable enable).
-            string accessorBlock = ObjRefNameGenerator.EmitUnsafeAccessorForIid(context, defaultGenericInst, isInNullableContext: true);
-            // Re-emit each line indented by 8 spaces.
-            string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
-            foreach (string accessorLine in accessorLines)
-            {
-                writer.WriteLine($"        {accessorLine}");
-            }
-        }
-
-        writer.WriteLine($$"""
-                    return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{defaultIfaceIid}});
+                    {{WriteIidAccessor}}
+                    return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{WriteIidExpression}});
                 }
             
-                public static {{projectedType}}? ConvertToManaged(void* value)
+                public static {{projectedType}} ConvertToManaged(void* value)
                 {
-                    return ({{projectedType}}?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+                    return ({{projectedType}}) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
     /// Emits the metadata wrapper type <c>file static class &lt;Name&gt; {}</c> with the conditional
     /// set of attributes required for the type's category.
     /// </summary>
-    internal static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedType = string.IsNullOrEmpty(typeNs) ? $"global::{nameStripped}" : $"global::{typeNs}.{nameStripped}";
+        string nameStripped = type.GetStrippedName();
+        string typeNs = type.GetRawNamespace();
+        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
-        TypeCategory category = TypeCategorization.GetCategory(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
         // [WindowsRuntimeReferenceType(typeof(<projected>?))] for non-delegate, non-class types
         // (i.e. enums, structs, interfaces).
-        if (category is not (TypeCategory.Delegate or TypeCategory.Class))
+        if (kind is not (TypeKind.Delegate or TypeKind.Class))
         {
             writer.WriteLine($"[WindowsRuntimeReferenceType(typeof({projectedType}?))]");
         }
 
         // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
         // (delegates, enums, interfaces).
-        if (category is not (TypeCategory.Struct or TypeCategory.Class))
+        if (kind is not (TypeKind.Struct or TypeKind.Class))
         {
             writer.WriteLine($"[ABI.{typeNs}.{nameStripped}ComWrappersMarshaller]");
         }
 
         // [WindowsRuntimeClassName("Windows.Foundation.IReference`1<<ns>.<name>>")] for non-class types.
-        if (category != TypeCategory.Class)
+        if (kind != TypeKind.Class)
         {
             writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{fullName}>\")]");
         }
 
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [WindowsRuntimeMetadataTypeName("{{fullName}}")]
             [WindowsRuntimeMappedType(typeof({{projectedType}}))]
-            file static class {{nameStripped}} {}
-            """, isMultiline: true);
+            file static class {{nameStripped}};
+            """);
     }
 
     /// <summary>
@@ -162,7 +162,7 @@ internal static class AbiClassFactory
             return true;
         }
 
-        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
         {
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
@@ -176,12 +176,10 @@ internal static class AbiClassFactory
             bool hasOverridable = false;
             foreach (InterfaceImplementation impl in exclusiveToType.Interfaces)
             {
-                if (impl.Interface is null)
+                if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceTd))
                 {
                     continue;
                 }
-
-                TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
 
                 if (ifaceTd == type && impl.IsOverridable())
                 {
@@ -205,15 +203,14 @@ internal static class AbiClassFactory
     /// </summary>
     internal static void WriteClassMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string fullProjected = $"global::{typeNs}.{nameStripped}";
+        string nameStripped = type.GetStrippedName();
+        string typeNs = type.GetRawNamespace();
+        string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
 
         // Get the IID expression for the default interface (used by CreateObject).
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
         string defaultIfaceIid = defaultIface is not null
-            ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface)
+            ? ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format()
             : "default(global::System.Guid)";
 
         // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute].
@@ -222,63 +219,77 @@ internal static class AbiClassFactory
 
         bool isSealed = type.IsSealed;
 
-        // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
-        // exclusive-to.
-        TypeDefinition? defaultIfaceTd = defaultIface is null ? null : AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, defaultIface);
-        bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
+        // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is exclusive-to
+        TypeDefinition? defaultIfaceTd = defaultIface?.ResolveAsTypeDefinition(context.Cache);
+        bool defaultIfaceIsExclusive = defaultIfaceTd is not null && defaultIfaceTd.IsExclusiveTo;
 
-        // Public *Marshaller class
-        writer.WriteLine($$"""
+        // Emit the ConvertToUnmanaged body branch (sealed -> unwrap, unsealed-with-non-exclusive-iface -> IWindowsRuntimeInterface, fallback -> default iface)
+        void WriteConvertToUnmanagedBranch(IndentedTextWriter writer)
+        {
+            if (isSealed)
+            {
+                // For projected sealed runtime classes, the RCW type is always unwrappable.
+                writer.Write(isMultiline: true, """
+                    if (value is not null)
+                    {
+                        return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
+                    }
+                    """);
+            }
+            else if (!defaultIfaceIsExclusive && defaultIface is not null)
+            {
+                IndentedTextWriterCallback defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
+
+                writer.Write(isMultiline: true, $$"""
+                    if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
+                    {
+                        return windowsRuntimeInterface.GetInterface();
+                    }
+                    """);
+            }
+            else
+            {
+                writer.Write(isMultiline: true, """
+                    if (value is not null)
+                    {
+                        return value.GetDefaultInterface();
+                    }
+                    """);
+            }
+        }
+
+        // Emit the '[UnsafeAccessor]' declaration for the default interface, if it's a generic
+        // instantiation. The writer's blank-line suppression collapses the callback's trailing
+        // '\n' with the parent literal's leading '\n' so the static extern declaration sits
+        // directly above the next member without a stray blank line.
+        void WriteUnsafeAccessor(IndentedTextWriter writer)
+        {
+            if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
+            {
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
+            }
+        }
+
+        // Public *Marshaller class + file-scoped *ComWrappersMarshallerAttribute
+        writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
                 {
-            """, isMultiline: true);
-        if (isSealed)
-        {
-            // For projected sealed runtime classes, the RCW type is always unwrappable.
-            writer.WriteLine("""
-                        if (value is not null)
-                        {
-                            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
-                        }
-                """, isMultiline: true);
-        }
-        else if (!defaultIfaceIsExclusive && defaultIface is not null)
-        {
-            string defIfaceTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
-            writer.WriteLine($$"""
-                        if (value is IWindowsRuntimeInterface<{{defIfaceTypeName}}> windowsRuntimeInterface)
-                        {
-                            return windowsRuntimeInterface.GetInterface();
-                        }
-                """, isMultiline: true);
-        }
-        else
-        {
-            writer.WriteLine("""
-                        if (value is not null)
-                        {
-                            return value.GetDefaultInterface();
-                        }
-                """, isMultiline: true);
-        }
-        writer.WriteLine($$"""
+                    {{WriteConvertToUnmanagedBranch}}
+
                     return default;
                 }
 
-                public static {{fullProjected}}? ConvertToManaged(void* value)
+                public static {{fullProjected}} ConvertToManaged(void* value)
                 {
-                    return ({{fullProjected}}?){{(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}}.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
+                    return ({{fullProjected}}){{(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}}.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
                 }
             }
 
             file sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-            """, isMultiline: true);
-        using (writer.WriteBlock())
-        {
-            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-            writer.WriteLine($$"""
+            {
+                {{WriteUnsafeAccessor}}
                 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                 {
                     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -289,20 +300,18 @@ internal static class AbiClassFactory
 
                     return new {{fullProjected}}(valueReference);
                 }
-                """, isMultiline: true);
-        }
+            }
+            """);
 
         writer.WriteLine();
 
         if (isSealed)
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
                 {
-                """, isMultiline: true);
-            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-            writer.WriteLine($$"""
+                    {{WriteUnsafeAccessor}}
                     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                     {
                         WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
@@ -314,24 +323,21 @@ internal static class AbiClassFactory
                         return new {{fullProjected}}(valueReference);
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
         else
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
             string nonProjectedRcn = $"{typeNs}.{nameStripped}";
-            writer.WriteLine($$"""
+
+            writer.WriteLine(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
                 {
-                """, isMultiline: true);
-            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
-
-            // TryCreateObject (non-projected runtime class name match)
-            writer.WriteLine($$"""
+                    {{WriteUnsafeAccessor}}
                     public static unsafe bool TryCreateObject(
                         void* value,
                         ReadOnlySpan<char> runtimeClassName,
-                        [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,
+                        out object wrapperObject,
                         out CreatedWrapperFlags wrapperFlags)
                     {
                         if (runtimeClassName.SequenceEqual("{{nonProjectedRcn}}".AsSpan()))
@@ -362,7 +368,7 @@ internal static class AbiClassFactory
                         return new {{fullProjected}}(valueReference);
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 

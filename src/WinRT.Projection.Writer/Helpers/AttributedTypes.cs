@@ -70,7 +70,7 @@ internal static class AttributedTypes
                     continue;
             }
 
-            string key = info.Type?.Name?.Value ?? string.Empty;
+            string key = info.Type?.GetRawName() ?? string.Empty;
             result[key] = info;
         }
 
@@ -89,36 +89,12 @@ internal static class AttributedTypes
     /// </summary>
     private static TypeDefinition? GetSystemType(CustomAttribute attr, MetadataCache cache)
     {
-        if (attr.Signature is null)
+        if (!attr.TryGetFixedArgument(0, out TypeSignature? sig))
         {
             return null;
         }
 
-        for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
-        {
-            CustomAttributeArgument arg = attr.Signature.FixedArguments[i];
-            // For System.Type args in WinMD, the value is typically a TypeSignature
-            if (arg.Element is TypeSignature sig)
-            {
-                string typeName = sig.FullName ?? string.Empty;
-                TypeDefinition? td = cache.Find(typeName);
-
-                if (td is not null)
-                {
-                    return td;
-                }
-            }
-            else if (arg.Element is string s)
-            {
-                TypeDefinition? td = cache.Find(s);
-
-                if (td is not null)
-                {
-                    return td;
-                }
-            }
-        }
-        return null;
+        return cache.Find(sig.FullName ?? string.Empty);
     }
 
     /// <summary>

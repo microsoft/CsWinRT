@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter.Errors;
 
@@ -18,27 +19,11 @@ internal static class WellKnownProjectionWriterExceptions
     public const string ErrorPrefix = "CSWINRTPROJECTIONGEN";
 
     /// <summary>
-    /// An internal invariant about a referenced type failed.
+    /// A switch over the well-known <c>TypeKind</c> enum encountered an unrecognized member.
     /// </summary>
-    public static WellKnownProjectionWriterException InternalInvariantFailed(string message)
+    public static WellKnownProjectionWriterException UnknownTypeKind(TypeKind kind)
     {
-        return Exception(5001, message);
-    }
-
-    /// <summary>
-    /// A metadata type referenced from an emission helper could not be resolved.
-    /// </summary>
-    public static WellKnownProjectionWriterException CannotResolveType(string typeName)
-    {
-        return Exception(5002, $"The type '{typeName}' could not be resolved against the metadata cache.");
-    }
-
-    /// <summary>
-    /// A switch over the well-known <c>TypeCategory</c> enum encountered an unrecognized member.
-    /// </summary>
-    public static WellKnownProjectionWriterException UnknownTypeCategory(object category)
-    {
-        return Exception(5003, $"Unknown TypeCategory: {category}.");
+        return Exception(5003, $"Unknown type kind: '{kind}'.");
     }
 
     /// <summary>

@@ -33,27 +33,19 @@ internal static partial class ConstructorFactory
         writer.Write($"private readonly ref struct {argsName}(");
         for (int i = 0; i < count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
-
-            MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
+            IndentedTextWriterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+            writer.Write($"{(i > 0 ? ", " : "")}{p}");
         }
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             )
             {
-            """, isMultiline: true);
+            """);
         for (int i = 0; i < count; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.Write("    public readonly ");
-            // Use the parameter's projected type (matches the constructor parameter type, including
-            // ReadOnlySpan<T>/Span<T> for array params).
-            MethodFactory.WriteProjectionParameterType(writer, context, p);
-            writer.WriteLine($" {pname} = {pname};");
+            string pname = p.GetEscapedName();
+            IndentedTextWriterCallback paramType = MethodFactory.WriteProjectionParameterType(context, p);
+            writer.WriteLine($"    public readonly {paramType} {pname} = {pname};");
         }
         writer.WriteLine("}");
     }
@@ -79,37 +71,43 @@ internal static partial class ConstructorFactory
         string baseClass = isComposable
             ? "WindowsRuntimeActivationFactoryCallback.DerivedComposed"
             : "WindowsRuntimeActivationFactoryCallback.DerivedSealed";
-        writer.WriteLine();
-        writer.WriteLine($$"""
-            private sealed class {{callbackName}} : {{baseClass}}
-            {
-                public static readonly {{callbackName}} Instance = new();
-            
-                [MethodImpl(MethodImplOptions.NoInlining)]
-            """, isMultiline: true);
-        if (isComposable)
+
+        // Emit the multi-line Invoke override signature. The composable variant adds two extra
+        // parameters ('baseInterface' input + 'innerInterface' out) that the sealed variant
+        // doesn't have. Both variants leave the cursor mid-line right after the closing ')' so
+        // the parent template's '\n{\n' continuation supplies the opening brace on the next line.
+        void WriteInvokeSignature(IndentedTextWriter writer)
         {
-            // Composable Invoke signature is multi-line and includes baseInterface (in) +
-            // innerInterface (out).
-            writer.WriteLine("""
+            if (isComposable)
+            {
+                writer.Write(isMultiline: true, """
                     public override unsafe void Invoke(
                       WindowsRuntimeActivationArgsReference additionalParameters,
                       WindowsRuntimeObject baseInterface,
                       out void* innerInterface,
                       out void* retval)
-                    {
-                """, isMultiline: true);
-        }
-        else
-        {
-            // Sealed Invoke signature is multi-line..
-            writer.WriteLine("""
+                    """);
+            }
+            else
+            {
+                writer.Write(isMultiline: true, """
                     public override unsafe void Invoke(
                       WindowsRuntimeActivationArgsReference additionalParameters,
                       out void* retval)
-                    {
-                """, isMultiline: true);
+                    """);
+            }
         }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            private sealed class {{callbackName}} : {{baseClass}}
+            {
+                public static readonly {{callbackName}} Instance = new();
+            
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                {{WriteInvokeSignature}}
+                {
+            """);
 
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (context.Settings.ReferenceProjection)
@@ -118,33 +116,34 @@ internal static partial class ConstructorFactory
             return;
         }
 
-        writer.WriteLine($$"""
-                    using WindowsRuntimeObjectReferenceValue activationFactoryValue = {{factoryObjRefName}}.AsValue();
-                    void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
-                    ref readonly {{argsName}} args = ref additionalParameters.GetValueRefUnsafe<{{argsName}}>();
-            """, isMultiline: true);
+        writer.IncreaseIndent();
+        writer.IncreaseIndent();
+
+        writer.WriteLine(isMultiline: true, $$"""
+            using WindowsRuntimeObjectReferenceValue activationFactoryValue = {{factoryObjRefName}}.AsValue();
+            void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
+            ref readonly {{argsName}} args = ref additionalParameters.GetValueRefUnsafe<{{argsName}}>();
+            """);
 
         // Bind each arg from the args struct to a local of its ABI-marshalable input type.
         // Bind arg locals.
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            writer.Write("        ");
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
+
             // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
             if (cat == ParameterCategory.PassArray)
             {
-                writer.Write("ReadOnlySpan<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                writer.Write($"ReadOnlySpan<{elem}>");
             }
             else if (cat == ParameterCategory.FillArray)
             {
-                writer.Write("Span<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                writer.Write($"Span<{elem}>");
             }
             else
             {
@@ -164,24 +163,26 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
 
             if (p.Type.IsNullableT())
             {
-                TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
-                writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{raw} = {innerMarshaller}.BoxToUnmanaged({pname});");
+                (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, p.Type);
+                writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = {innerMarshaller}.BoxToUnmanaged({pname});");
                 continue;
             }
 
-            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-            string projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
-            writer.WriteLine($$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
-                        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
-                        using WindowsRuntimeObjectReferenceValue __{{raw}} = ConvertToUnmanaged_{{raw}}(null, {{pname}});
-                """, isMultiline: true);
+            string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
+            IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
+            UnsafeAccessorFactory.EmitStaticMethod(
+                writer,
+                accessName: "ConvertToUnmanaged",
+                returnType: "WindowsRuntimeObjectReferenceValue",
+                functionName: $"ConvertToUnmanaged_{raw}",
+                interopType: interopTypeName,
+                parameterList: $"{projectedTypeName.Format()} value");
+            writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = ConvertToUnmanaged_{raw}(null, {pname});");
         }
 
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
@@ -195,16 +196,15 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (!context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject())
+            if (!context.AbiTypeKindResolver.IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject())
             {
                 continue;
             }
 
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.Write($"        using WindowsRuntimeObjectReferenceValue __{raw} = ");
-            AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
-            writer.WriteLine(";");
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            IndentedTextWriterCallback cvt = AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(context, p.Type, pname);
+            writer.WriteLine($"using WindowsRuntimeObjectReferenceValue __{raw} = {cvt};");
         }
 
         // For composable factories, marshal the additional `baseInterface` (which is a
@@ -212,10 +212,8 @@ internal static partial class ConstructorFactory
         //   using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
         if (isComposable)
         {
-            writer.WriteLine("""
-                        using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
-                        void* __innerInterface = default;
-                """, isMultiline: true);
+            writer.WriteLine("using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);");
+            writer.WriteLine("void* __innerInterface = default;");
         }
 
         // For mapped value-type params (DateTime, TimeSpan), emit ABI local + marshaller conversion.
@@ -223,16 +221,16 @@ internal static partial class ConstructorFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (!context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
+            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(p.Type))
             {
                 continue;
             }
 
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             string abiType = AbiTypeHelpers.GetMappedAbiTypeName(p.Type);
             string marshaller = AbiTypeHelpers.GetMappedMarshallerName(p.Type);
-            writer.WriteLine($"        {abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
+            writer.WriteLine($"{abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
         }
 
         // For HResultException params, emit ABI local + ExceptionMarshaller conversion.
@@ -247,9 +245,9 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.WriteLine($"        global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            writer.WriteLine($"global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
@@ -258,9 +256,9 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+            if (!cat.IsArrayInput())
             {
                 continue;
             }
@@ -270,52 +268,53 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
+            if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 continue;
             }
 
             hasNonBlittableArray = true;
-            string raw = p.Parameter.Name ?? "param";
-            string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string raw = p.GetRawName();
+            string callName = IdentifierEscaping.EscapeIdentifier(raw);
+            ArrayTempNames names = new(raw);
             writer.WriteLine();
-            writer.WriteLine($$"""
-                        Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlineArray);
-                        nint[] __{{raw}}_arrayFromPool = null;
-                        Span<nint> __{{raw}}_span = {{callName}}.Length <= 16
-                            ? __{{raw}}_inlineArray[..{{callName}}.Length]
-                            : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
-                """, isMultiline: true);
+            writer.WriteLine(isMultiline: true, $$"""
+                Unsafe.SkipInit(out InlineArray16<nint> {{names.InlineArray}});
+                nint[] {{names.ArrayFromPool}} = null;
+                Span<nint> {{names.Span}} = {{callName}}.Length <= 16
+                    ? {{names.InlineArray}}[..{{callName}}.Length]
+                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                """);
 
             if (szArr.BaseType.IsString())
             {
                 writer.WriteLine();
-                writer.WriteLine($$"""
-                            Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{raw}}_inlineHeaderArray);
-                            HStringHeader[] __{{raw}}_headerArrayFromPool = null;
-                            Span<HStringHeader> __{{raw}}_headerSpan = {{callName}}.Length <= 16
-                                ? __{{raw}}_inlineHeaderArray[..{{callName}}.Length]
-                                : (__{{raw}}_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
-                    
-                            Unsafe.SkipInit(out InlineArray16<nint> __{{raw}}_inlinePinnedHandleArray);
-                            nint[] __{{raw}}_pinnedHandleArrayFromPool = null;
-                            Span<nint> __{{raw}}_pinnedHandleSpan = {{callName}}.Length <= 16
-                                ? __{{raw}}_inlinePinnedHandleArray[..{{callName}}.Length]
-                                : (__{{raw}}_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
-                    """, isMultiline: true);
+                writer.WriteLine(isMultiline: true, $$"""
+                    Unsafe.SkipInit(out InlineArray16<HStringHeader> {{names.InlineHeaderArray}});
+                    HStringHeader[] {{names.HeaderArrayFromPool}} = null;
+                    Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
+                        ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
+                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+
+                    Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
+                    nint[] {{names.PinnedHandleArrayFromPool}} = null;
+                    Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
+                        ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
+                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                    """);
             }
         }
 
-        writer.WriteLine("        void* __retval = default;");
+        writer.WriteLine("void* __retval = default;");
 
         if (hasNonBlittableArray)
         {
-            writer.WriteLine("""
-                        try
-                        {
-                """, isMultiline: true);
+            writer.WriteLine(isMultiline: true, """
+                try
+                {
+                """);
+            writer.IncreaseIndent();
         }
-        string baseIndent = hasNonBlittableArray ? "            " : "        ";
 
         // For System.Type params, pre-marshal to TypeReference (must be declared OUTSIDE the
         // fixed() block since the fixed block pins the resulting reference).
@@ -328,9 +327,9 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.WriteLine($"{baseIndent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({pname}, out TypeReference __{raw});");
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            writer.WriteLine($"global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({pname}, out TypeReference __{raw});");
         }
 
         // Open ONE combined "fixed(void* _a = ..., _b = ..., ...)" block for ALL pinnable
@@ -341,13 +340,13 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
             if (p.Type.IsString() || p.Type.IsSystemType())
             {
                 pinnableCount++;
             }
-            else if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            else if (cat.IsArrayInput())
             {
                 pinnableCount++;
             }
@@ -355,29 +354,25 @@ internal static partial class ConstructorFactory
 
         if (pinnableCount > 0)
         {
-            string indent = baseIndent;
-            writer.Write($"{indent}fixed(void* ");
+            writer.Write("fixed(void* ");
             bool firstPin = true;
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
                 bool isStr = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
-                bool isArr = cat is ParameterCategory.PassArray or ParameterCategory.FillArray;
+                bool isArr = cat.IsArrayInput();
 
                 if (!isStr && !isType && !isArr)
                 {
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
-                string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                string raw = p.GetRawName();
+                string pname = IdentifierEscaping.EscapeIdentifier(raw);
 
-                if (!firstPin)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(!firstPin, ", ");
 
                 firstPin = false;
                 writer.Write($"_{raw} = ");
@@ -389,14 +384,17 @@ internal static partial class ConstructorFactory
                 else if (isArr)
                 {
                     TypeSignature elemT = ((SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = context.AbiTypeShapeResolver.IsBlittablePrimitive(elemT) || context.AbiTypeShapeResolver.IsBlittableStruct(elemT);
+                    bool isBlittableElem = context.AbiTypeKindResolver.IsBlittableAbiElement(elemT);
                     bool isStringElem = elemT.IsString();
 
                     if (isBlittableElem)
                     {
                         writer.Write(pname);
                     }
-                    else { writer.Write($"__{raw}_span"); }
+                    else
+                    {
+                        writer.Write($"__{raw}_span");
+                    }
 
                     if (isStringElem)
                     {
@@ -409,14 +407,16 @@ internal static partial class ConstructorFactory
                     writer.Write(pname);
                 }
             }
-            writer.WriteLine($$"""
+
+            writer.WriteLine(isMultiline: true, """
                 )
-                {{indent}}{
-                """, isMultiline: true);
+                {
+                """);
+            writer.IncreaseIndent();
             fixedNesting = 1;
+
             // Inside the block: emit HStringMarshaller.ConvertToUnmanagedUnsafe for each
             // string input. The HStringReference local lives stack-only.
-            string innerIndent = baseIndent + new string(' ', fixedNesting * 4);
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -426,21 +426,19 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
-                string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                writer.WriteLine($"{innerIndent}HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{raw}, {pname}?.Length, out HStringReference __{raw});");
+                string raw = p.GetRawName();
+                string pname = IdentifierEscaping.EscapeIdentifier(raw);
+                writer.WriteLine($"HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_{raw}, {pname}?.Length, out HStringReference __{raw});");
             }
         }
-
-        string callIndent = baseIndent + new string(' ', fixedNesting * 4);
 
         // Emit CopyToUnmanaged for non-blittable PassArray params.
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-            if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+            if (!cat.IsArrayInput())
             {
                 continue;
             }
@@ -450,51 +448,53 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
+            if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 continue;
             }
 
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            ArrayTempNames names = new(raw);
 
             if (szArr.BaseType.IsString())
             {
-                writer.WriteLine($$"""
-                    {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
-                    {{callIndent}}    source: {{pname}},
-                    {{callIndent}}    hstringHeaders: (HStringHeader*) _{{raw}}_inlineHeaderArray,
-                    {{callIndent}}    hstrings: __{{raw}}_span,
-                    {{callIndent}}    pinnedGCHandles: __{{raw}}_pinnedHandleSpan);
-                    """, isMultiline: true);
+                writer.WriteLine(isMultiline: true, $$"""
+                    HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
+                        source: {{pname}},
+                        hstringHeaders: (HStringHeader*) _{{raw}}_inlineHeaderArray,
+                        hstrings: {{names.Span}},
+                        pinnedGCHandles: {{names.PinnedHandleSpan}});
+                    """);
             }
             else
             {
-                string elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                _ = elementInteropArg;
-                writer.WriteLine($$"""
-                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
-                    {{callIndent}}static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, void** data);
-                    {{callIndent}}CopyToUnmanaged_{{raw}}(null, {{pname}}, (uint){{pname}}.Length, (void**)_{{raw}});
-                    """, isMultiline: true);
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "CopyToUnmanaged",
+                    returnType: "void",
+                    functionName: $"CopyToUnmanaged_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, void** data");
+                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, (void**)_{raw});");
             }
         }
 
-        writer.Write($"{callIndent}RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
+        writer.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+            if (cat.IsArrayInput())
             {
                 writer.Write("uint, void*, ");
                 continue;
             }
 
-            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
-            writer.Write(", ");
+            IndentedTextWriterCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
+            writer.Write($"{abi}, ");
         }
 
         if (isComposable)
@@ -507,14 +507,14 @@ internal static partial class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-            string raw = p.Parameter.Name ?? "param";
-            string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.Write("""
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            writer.Write(isMultiline: true, """
                 ,
                   
-                """, isMultiline: true);
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
+                """);
+            if (cat.IsArrayInput())
             {
                 writer.Write($"(uint){pname}.Length, _{raw}");
                 continue;
@@ -523,7 +523,7 @@ internal static partial class ConstructorFactory
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
-            if (context.AbiTypeShapeResolver.IsEnumType(p.Type))
+            if (context.AbiTypeKindResolver.IsEnumType(p.Type))
             {
                 // No cast needed: function pointer signature uses the projected enum type.
                 writer.Write(pname);
@@ -546,11 +546,11 @@ internal static partial class ConstructorFactory
             {
                 writer.Write($"__{raw}.ConvertToUnmanagedUnsafe()");
             }
-            else if (context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (context.AbiTypeKindResolver.IsReferenceTypeOrGenericInstance(p.Type))
             {
                 writer.Write($"__{raw}.GetThisPtrUnsafe()");
             }
-            else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(p.Type))
+            else if (context.AbiTypeKindResolver.IsMappedAbiValueType(p.Type))
             {
                 writer.Write($"__{raw}");
             }
@@ -567,44 +567,46 @@ internal static partial class ConstructorFactory
         if (isComposable)
         {
             // Pass __baseInterface.GetThisPtrUnsafe() and &__innerInterface.
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 ,
                   __baseInterface.GetThisPtrUnsafe(),
                   &__innerInterface
-                """, isMultiline: true);
+                """);
         }
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             ,
               &__retval));
-            """, isMultiline: true);
+            """);
         if (isComposable)
         {
-            writer.WriteLine($"{callIndent}innerInterface = __innerInterface;");
+            writer.WriteLine("innerInterface = __innerInterface;");
         }
 
-        writer.WriteLine($"{callIndent}retval = __retval;");
+        writer.WriteLine("retval = __retval;");
 
         // Close fixed blocks (innermost first).
-        for (int i = fixedNesting - 1; i >= 0; i--)
+        for (int i = 0; i < fixedNesting; i++)
         {
-            string indent = baseIndent + new string(' ', i * 4);
-            writer.WriteLine($"{indent}}}");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
         // Close try and emit finally with cleanup for non-blittable PassArray params.
         if (hasNonBlittableArray)
         {
-            writer.WriteLine("""
-                        }
-                        finally
-                        {
-                """, isMultiline: true);
+            writer.DecreaseIndent();
+            writer.WriteLine(isMultiline: true, """
+                }
+                finally
+                {
+                """);
+            writer.IncreaseIndent();
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
-                ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+                ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                if (cat is not (ParameterCategory.PassArray or ParameterCategory.FillArray))
+                if (!cat.IsArrayInput())
                 {
                     continue;
                 }
@@ -614,60 +616,67 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
-                if (context.AbiTypeShapeResolver.IsBlittablePrimitive(szArr.BaseType) || context.AbiTypeShapeResolver.IsBlittableStruct(szArr.BaseType))
+                if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
                 {
                     continue;
                 }
 
-                string raw = p.Parameter.Name ?? "param";
+                string raw = p.GetRawName();
+                ArrayTempNames names = new(raw);
 
                 if (szArr.BaseType.IsString())
                 {
                     writer.WriteLine();
-                    writer.WriteLine($$"""
-                                    HStringArrayMarshaller.Dispose(__{{raw}}_pinnedHandleSpan);
-                        
-                                    if (__{{raw}}_pinnedHandleArrayFromPool is not null)
-                                    {
-                                        global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_pinnedHandleArrayFromPool);
-                                    }
-                        
-                                    if (__{{raw}}_headerArrayFromPool is not null)
-                                    {
-                                        global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{{raw}}_headerArrayFromPool);
-                                    }
-                        """, isMultiline: true);
+                    writer.WriteLine(isMultiline: true, $$"""
+                        HStringArrayMarshaller.Dispose({{names.PinnedHandleSpan}});
+
+                        if ({{names.PinnedHandleArrayFromPool}} is not null)
+                        {
+                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.PinnedHandleArrayFromPool}});
+                        }
+
+                        if ({{names.HeaderArrayFromPool}} is not null)
+                        {
+                            global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return({{names.HeaderArrayFromPool}});
+                        }
+                        """);
                 }
                 else
                 {
-                    string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                    _ = elementInteropArg;
                     writer.WriteLine();
-                    writer.WriteLine($$"""
-                                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
-                                    static extern void Dispose_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, void** data);
-                        
-                                    fixed(void* _{{raw}} = __{{raw}}_span)
-                                    {
-                                        Dispose_{{raw}}(null, (uint) __{{raw}}_span.Length, (void**)_{{raw}});
-                                    }
-                        """, isMultiline: true);
+                    UnsafeAccessorFactory.EmitStaticMethod(
+                        writer,
+                        accessName: "Dispose",
+                        returnType: "void",
+                        functionName: $"Dispose_{raw}",
+                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                        parameterList: "uint length, void** data");
+                    writer.WriteLine();
+                    writer.WriteLine(isMultiline: true, $$"""
+                        fixed(void* _{{raw}} = {{names.Span}})
+                        {
+                            Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, (void**)_{{raw}});
+                        }
+                        """);
                 }
                 writer.WriteLine();
-                writer.WriteLine($$"""
-                                if (__{{raw}}_arrayFromPool is not null)
-                                {
-                                    global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{raw}}_arrayFromPool);
-                                }
-                    """, isMultiline: true);
+                writer.WriteLine(isMultiline: true, $$"""
+                    if ({{names.ArrayFromPool}} is not null)
+                    {
+                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
+                    }
+                    """);
             }
-            writer.WriteLine("        }");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
-        writer.WriteLine("""
+        writer.DecreaseIndent();
+        writer.DecreaseIndent();
+        writer.WriteLine(isMultiline: true, """
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -682,7 +691,7 @@ internal static partial class ConstructorFactory
             return "default(global::System.Guid)";
         }
 
-        string result = ObjRefNameGenerator.WriteIidExpression(context, defaultIface);
+        string result = ObjRefNameGenerator.WriteIidExpression(context, defaultIface).Format();
         return result;
     }
 }

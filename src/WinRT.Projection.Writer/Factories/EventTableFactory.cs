@@ -25,10 +25,10 @@ internal static class EventTableFactory
     internal static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        string evtType = TypedefNameWriter.WriteEventType(context, evt);
+        IndentedTextWriterCallback evtType = TypedefNameWriter.WriteEventType(context, evt);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             private static ConditionalWeakTable<{{ifaceFullName}}, EventRegistrationTokenTable<{{evtType}}>> _{{evName}}
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +45,7 @@ internal static class EventTableFactory
                     return global::System.Threading.Volatile.Read(in field) ?? MakeTable();
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -54,10 +54,11 @@ internal static class EventTableFactory
     internal static void EmitDoAbiAddEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSignatureInfo sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
+
         // Handler is the (last) input parameter of the add method. The emitted parameter name in the
         // signature comes from WriteAbiParameterTypesPointer which uses the metadata name verbatim.
         string handlerRawName = sig.Parameters.Count > 0 ? (sig.Parameters[^1].Parameter.Name ?? "handler") : "handler";
-        string handlerRef = CSharpKeywords.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
+        string handlerRef = IdentifierEscaping.EscapeIdentifier(handlerRawName);
 
         // The cookie/token return parameter takes the metadata return param name (matches truth).
         string cookieName = AbiTypeHelpers.GetReturnParamName(sig);
@@ -66,32 +67,38 @@ internal static class EventTableFactory
         bool isGeneric = evtTypeSig is GenericInstanceTypeSignature;
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             {
                 *{{cookieName}} = default;
                 try
                 {
                     var __this = ComInterfaceDispatch.GetInstance<{{ifaceFullName}}>((ComInterfaceDispatch*)thisPtr);
-            """, isMultiline: true);
+            """);
 
         if (isGeneric)
         {
-            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
-            string projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
-            writer.WriteLine($$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                        static extern {{projectedTypeName}} ConvertToManaged([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                        var __handler = ConvertToManaged(null, {{handlerRef}});
-                """, isMultiline: true);
+            string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
+            IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
+            UnsafeAccessorFactory.EmitStaticMethod(
+                writer,
+                accessName: "ConvertToManaged",
+                returnType: projectedTypeName.Format(),
+                functionName: "ConvertToManaged",
+                interopType: interopTypeName,
+                parameterList: "void* value");
+            writer.WriteLine($"var __handler = ConvertToManaged(null, {handlerRef});");
+            writer.DecreaseIndent();
+            writer.DecreaseIndent();
         }
         else
         {
-            writer.Write("        var __handler = ");
-            TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
-            writer.WriteLine($"Marshaller.ConvertToManaged({handlerRef});");
+            IndentedTextWriterCallback abiTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+            writer.WriteLine($"        var __handler = {abiTypeName}Marshaller.ConvertToManaged({handlerRef});");
         }
 
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
                     *{{cookieName}} = _{{evName}}.GetOrCreateValue(__this).AddEventHandler(__handler);
                     __this.{{evName}} += __handler;
                     return 0;
@@ -101,7 +108,7 @@ internal static class EventTableFactory
                     return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -111,10 +118,10 @@ internal static class EventTableFactory
     {
         string evName = evt.Name?.Value ?? "Event";
         string tokenRawName = sig.Parameters.Count > 0 ? (sig.Parameters[^1].Parameter.Name ?? "token") : "token";
-        string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
+        string tokenRef = IdentifierEscaping.EscapeIdentifier(tokenRawName);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             {
                 try
                 {
@@ -130,6 +137,6 @@ internal static class EventTableFactory
                     return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 }

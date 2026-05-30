@@ -3,6 +3,8 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
 
@@ -46,14 +48,14 @@ internal sealed class NamespaceMembers(string name)
     public void AddType(TypeDefinition type)
     {
         Types.Add(type);
-        TypeCategory category = TypeCategorization.GetCategory(type);
-        switch (category)
+        TypeKind kind = TypeKindResolver.Resolve(type);
+        switch (kind)
         {
-            case TypeCategory.Interface:
+            case TypeKind.Interface:
                 Interfaces.Add(type);
                 break;
-            case TypeCategory.Class:
-                if (TypeCategorization.IsAttributeType(type))
+            case TypeKind.Class:
+                if (type.IsAttributeType)
                 {
                     Attributes.Add(type);
                 }
@@ -63,11 +65,11 @@ internal sealed class NamespaceMembers(string name)
                 }
 
                 break;
-            case TypeCategory.Enum:
+            case TypeKind.Enum:
                 Enums.Add(type);
                 break;
-            case TypeCategory.Struct:
-                if (TypeCategorization.IsApiContractType(type))
+            case TypeKind.Struct:
+                if (type.IsApiContractType)
                 {
                     Contracts.Add(type);
                 }
@@ -77,7 +79,7 @@ internal sealed class NamespaceMembers(string name)
                 }
 
                 break;
-            case TypeCategory.Delegate:
+            case TypeKind.Delegate:
                 Delegates.Add(type);
                 break;
         }

@@ -8,6 +8,8 @@ using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -37,7 +39,7 @@ internal sealed partial class ProjectionGenerator
         {
             foreach (TypeDefinition type in nsMembers.Classes)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }
@@ -65,6 +67,7 @@ internal sealed partial class ProjectionGenerator
         IndentedTextWriter guidIndented = guidIndentedOwner.Writer;
         IidExpressionGenerator.WriteInterfaceIidsBegin(guidIndented);
         guidIndented.IncreaseIndent();
+
         // Iterate namespaces in sorted order. Within each namespace, types are already sorted by SortMembersByName.
         // The sorted-by-namespace order produces the parent-before-child grouping in the
         // GeneratedInterfaceIIDs.cs output (e.g. Windows.ApplicationModel.* types before
@@ -76,12 +79,12 @@ internal sealed partial class ProjectionGenerator
             {
                 bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
 
-                if (!_settings.Filter.Includes(type) && !isFactoryInterface)
+                if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
                 {
                     continue;
                 }
 
-                if (TypeCategorization.IsGeneric(type))
+                if (type.IsGeneric)
                 {
                     continue;
                 }
@@ -95,23 +98,23 @@ internal sealed partial class ProjectionGenerator
                 }
 
                 iidWritten = true;
-                TypeCategory cat = TypeCategorization.GetCategory(type);
-                switch (cat)
+                TypeKind kind = TypeKindResolver.Resolve(type);
+                switch (kind)
                 {
-                    case TypeCategory.Delegate:
+                    case TypeKind.Delegate:
                         IidExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         IidExpressionGenerator.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
                         break;
-                    case TypeCategory.Enum:
+                    case TypeKind.Enum:
                         IidExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         break;
-                    case TypeCategory.Interface:
+                    case TypeKind.Interface:
                         IidExpressionGenerator.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
                         break;
-                    case TypeCategory.Struct:
+                    case TypeKind.Struct:
                         IidExpressionGenerator.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         break;
-                    case TypeCategory.Class:
+                    case TypeKind.Class:
                         IidExpressionGenerator.WriteIidGuidPropertyForClassInterfaces(guidIndented, guidContext, type, interfacesFromClassesEmitted);
                         break;
                 }

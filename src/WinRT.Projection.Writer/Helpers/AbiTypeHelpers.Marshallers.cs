@@ -27,12 +27,11 @@ internal static partial class AbiTypeHelpers
         }
 
         ITypeDefOrRef gt = gi.GenericType;
-        string ns = gt?.Namespace?.Value ?? string.Empty;
-        string name = gt?.Name?.Value ?? string.Empty;
+        (string ns, string name) = gt.Names();
+
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
-        // It only later gets projected to System.Nullable<T> by the projection layer.
-        bool isNullable = (ns == "System" && name == NullableGeneric)
-            || (ns == WindowsFoundation && name == IReferenceGeneric);
+        // (It only later gets projected to System.Nullable<T> by the projection layer.)
+        bool isNullable = ns == WindowsFoundation && name == IReferenceGeneric;
 
         if (!isNullable)
         {
@@ -45,6 +44,7 @@ internal static partial class AbiTypeHelpers
         }
 
         TypeSignature arg = gi.TypeArguments[0];
+
         // Map primitive corlib element type to its ABI marshaller name.
         if (arg is CorLibTypeSignature corlib)
         {
@@ -75,6 +75,24 @@ internal static partial class AbiTypeHelpers
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Bundles the inner type of a <see cref="System.Nullable{T}"/> instantiation together with
+    /// the ABI marshaller name for that inner type. Returned by
+    /// <see cref="GetNullableInnerInfo(IndentedTextWriter, ProjectionEmitContext, TypeSignature)"/>.
+    /// </summary>
+    internal readonly record struct NullableInnerInfo(TypeSignature Inner, string MarshallerName);
+
+    /// <summary>
+    /// Returns the inner type T of <c>Nullable&lt;T&gt;</c> together with its ABI marshaller name.
+    /// Caller must have verified <paramref name="nullableSig"/> is a <c>Nullable&lt;T&gt;</c>
+    /// instantiation (e.g. via <c>IsNullableT</c>).
+    /// </summary>
+    internal static NullableInnerInfo GetNullableInnerInfo(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature nullableSig)
+    {
+        TypeSignature inner = nullableSig.GetNullableInnerType()!;
+        return new NullableInnerInfo(inner, GetNullableInnerMarshallerName(writer, context, inner));
     }
 
     /// <summary>Returns the marshaller name for the inner type T of <c>Nullable&lt;T&gt;</c>.
@@ -121,16 +139,10 @@ internal static partial class AbiTypeHelpers
     {
         if (sig is TypeDefOrRefSignature td)
         {
-            string ns = td.Type?.Namespace?.Value ?? string.Empty;
-            string name = td.Type?.Name?.Value ?? string.Empty;
-            // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
-            MappedType? mapped = MappedTypes.Get(ns, name);
+            (string ns, string name) = td.Type.Names();
 
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             return GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name) + MarshallerSuffix;
         }

@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
-using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -68,12 +65,22 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string nameStripped = type.GetStrippedName();
+        IndentedTextWriterCallback iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
+
+        void WriteInvokeBody(IndentedTextWriter writer)
+        {
+            // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
+            // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
+            // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
+            string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
+
+            AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
+        }
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             internal static unsafe class {{nameStripped}}Impl
             {
                 [FixedAddressValueType]
@@ -84,6 +91,12 @@ internal static class AbiDelegateFactory
                     *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
                     Vftbl.Invoke = &Invoke;
                 }
+
+                public static ref readonly Guid IID
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => ref {{iidExpr}};
+                }
             
                 public static nint Vtable
                 {
@@ -91,32 +104,11 @@ internal static class AbiDelegateFactory
                     get => (nint)Unsafe.AsPointer(in Vftbl);
                 }
             
-            [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-            private static int Invoke(
-            """, isMultiline: true);
-        AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
-        writer.Write(")");
-
-        // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
-        // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
-        // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
-        string projectedDelegateForBody = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-        if (!projectedDelegateForBody.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            projectedDelegateForBody = GlobalPrefix + projectedDelegateForBody;
-        }
-
-        AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
-        writer.WriteLine();
-        writer.WriteLine($$"""
-                public static ref readonly Guid IID
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref {{iidExpr}};
-                }
+                [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+                private static int Invoke({{invokeParams}})
+                {{WriteInvokeBody}}
             }
-            """, isMultiline: true);
+            """);
     }
 
     private static void WriteDelegateVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -133,25 +125,20 @@ internal static class AbiDelegateFactory
             return;
         }
 
-        MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
+        IndentedTextWriterCallback invokeParams = AbiInterfaceFactory.WriteAbiParameterTypesPointer(context, new MethodSignatureInfo(invoke));
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
             {
                 public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
                 public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
                 public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-                public delegate* unmanaged[MemberFunction]<
-            """, isMultiline: true);
-        AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig);
-        writer.WriteLine("""
-            , int> Invoke;
+                public delegate* unmanaged[MemberFunction]<{{invokeParams}}, int> Invoke;
             }
-            """, isMultiline: true);
+            """);
     }
 
     private static void WriteNativeDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -169,31 +156,24 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.Write(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}NativeDelegate
             {
                 public static unsafe 
-            """, isMultiline: true);
-        MethodFactory.WriteProjectionReturnType(writer, context, sig);
-        writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
-
-        if (sig.Parameters.Count > 0)
-        {
-            writer.Write(", ");
-        }
-
-        MethodFactory.WriteParameterList(writer, context, sig);
-        writer.Write(")");
+            """);
+        IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+        IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+        string comma = sig.Parameters.Count > 0 ? ", " : "";
+        writer.Write($"{ret} {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
         // Reuse the interface caller body emitter. Delegate Invoke is at vtable slot 3
         // (after QI/AddRef/Release). Functionally equivalent to the truth's
         // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;' form, just routed
         // through the slot-indexed dispatch shared with interface CCW callers.
-        AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
+        AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept);
 
         writer.WriteLine("}");
     }
@@ -205,13 +185,12 @@ internal static class AbiDelegateFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
-        string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        string nameStripped = type.GetStrippedName();
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
+        IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             file static class {{nameStripped}}InterfaceEntriesImpl
             {
                 [FixedAddressValueType]
@@ -223,16 +202,23 @@ internal static class AbiDelegateFactory
                     Entries.Delegate.Vtable = {{nameStripped}}Impl.Vtable;
                     Entries.DelegateReference.IID = {{iidRefExpr}};
                     Entries.DelegateReference.Vtable = {{nameStripped}}ReferenceImpl.Vtable;
-            """, isMultiline: true);
-        writer.IncreaseIndent();
-        writer.IncreaseIndent();
-        WellKnownInterfaceEntriesEmitter.EmitDelegateReferenceWellKnownEntries(writer);
-        writer.DecreaseIndent();
-        writer.DecreaseIndent();
-        writer.WriteLine("""
+                    Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
+                    Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
+                    Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
+                    Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
+                    Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
+                    Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
+                    Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
+                    Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;
+                    Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
+                    Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
+                    Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
+                    Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
+                    Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
+                    Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -261,19 +247,16 @@ internal static class AbiDelegateFactory
         }
 
         MethodSignatureInfo sig = new(invoke);
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
 
         // Compute the projected type name (with global::) used as the generic argument.
-        string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+        string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
-        if (!projectedName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-        {
-            projectedName = GlobalPrefix + projectedName;
-        }
+        // Emit the lambda parameter list / argument list (e.g. "a, b, out c") for the GetEventInvoke body.
+        IndentedTextWriterCallback callArgs = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
 
         writer.WriteLine();
-        writer.Write($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public sealed unsafe class {{nameStripped}}EventSource : EventSource<{{projectedName}}>
             {
                 /// <inheritdoc cref="EventSource{T}.EventSource"/>
@@ -305,75 +288,25 @@ internal static class AbiDelegateFactory
                     /// <inheritdoc/>
                     protected override {{projectedName}} GetEventInvoke()
                     {
-                        return (
-            """, isMultiline: true);
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
-
-            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
-
-            if (pc == ParameterCategory.Ref)
-            {
-                writer.Write("in ");
-            }
-            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray)
-            {
-                writer.Write("out ");
-            }
-
-            string raw = sig.Parameters[i].Parameter.Name ?? "p";
-            writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
-        }
-        writer.Write(") => TargetDelegate.Invoke(");
-        for (int i = 0; i < sig.Parameters.Count; i++)
-        {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
-
-            ParameterCategory pc = ParameterCategoryResolver.GetParamCategory(sig.Parameters[i]);
-
-            if (pc == ParameterCategory.Ref)
-            {
-                writer.Write("in ");
-            }
-            else if (pc is ParameterCategory.Out or ParameterCategory.ReceiveArray)
-            {
-                writer.Write("out ");
-            }
-
-            string raw = sig.Parameters[i].Parameter.Name ?? "p";
-            writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
-        }
-        writer.WriteLine("""
-            );
+                        return ({{callArgs}}) => TargetDelegate.Invoke({{callArgs}});
                     }
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
-    /// <summary>
-    /// Writes a marshaller stub for a delegate.
-    /// </summary>
     /// <summary>
     /// Emits just the <c>&lt;Name&gt;Marshaller</c> class for a delegate.
     /// </summary>
     private static void WriteDelegateMarshallerOnly(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string fullProjected = $"global::{typeNs}.{nameStripped}";
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string nameStripped = type.GetStrippedName();
+        string typeNs = type.GetRawNamespace();
+        string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{fullProjected}} value)
@@ -381,14 +314,12 @@ internal static class AbiDelegateFactory
                     return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in {{iidExpr}});
                 }
             
-            #nullable enable
-                public static {{fullProjected}}? ConvertToManaged(void* value)
+                public static {{fullProjected}} ConvertToManaged(void* value)
                 {
-                    return ({{fullProjected}}?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
+                    return ({{fullProjected}})WindowsRuntimeDelegateMarshaller.ConvertToManaged<{{nameStripped}}ComWrappersCallback>(value);
                 }
-            #nullable disable
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -400,14 +331,13 @@ internal static class AbiDelegateFactory
     /// </summary>
     private static void WriteDelegateComWrappersCallback(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string fullProjected = $"global::{typeNs}.{nameStripped}";
-        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type);
+        string nameStripped = type.GetStrippedName();
+        string typeNs = type.GetRawNamespace();
+        string fullProjected = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
+        string iidExpr = ObjRefNameGenerator.WriteIidExpression(context, type).Format();
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             file abstract unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback
             {
                 /// <inheritdoc/>
@@ -421,7 +351,7 @@ internal static class AbiDelegateFactory
                     return new {{fullProjected}}(valueReference.{{nameStripped}}Invoke);
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -431,12 +361,11 @@ internal static class AbiDelegateFactory
     /// </summary>
     private static void WriteDelegateComWrappersMarshallerAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+        string nameStripped = type.GetStrippedName();
+        IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
             {
                 /// <inheritdoc/>
@@ -460,7 +389,7 @@ internal static class AbiDelegateFactory
                     return WindowsRuntimeDelegateMarshaller.UnboxToManaged<{{nameStripped}}ComWrappersCallback>(value, in {{iidRefExpr}})!;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
 }

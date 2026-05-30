@@ -9,7 +9,11 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
+
+#pragma warning disable IDE0061
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -28,17 +32,17 @@ internal static class ComponentFactory
             return;
         }
 
-        TypeCategory cat = TypeCategorization.GetCategory(type);
+        TypeKind kind = TypeKindResolver.Resolve(type);
 
-        if ((cat == TypeCategory.Class && TypeCategorization.IsStatic(type)) ||
-            (cat == TypeCategory.Interface && TypeCategorization.IsExclusiveTo(type)))
+        if ((kind == TypeKind.Class && type.IsStatic) ||
+            (kind == TypeKind.Interface && type.IsExclusiveTo))
         {
             return;
         }
 
-        string typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        string typeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true).Format();
 
-        string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true);
+        string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true).Format();
 
         _ = map.TryAdd(typeName, metadataTypeName);
     }
@@ -48,117 +52,130 @@ internal static class ComponentFactory
     /// </summary>
     public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string typeName = type.Name?.Value ?? string.Empty;
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedTypeName = string.IsNullOrEmpty(typeNs)
-            ? $"global::{IdentifierEscaping.StripBackticks(typeName)}"
-            : $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
+        (string typeNs, string typeName) = type.Names();
+        string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
         string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
-        bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
 
-        // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
-        MetadataCache cache = context.Cache;
-        List<TypeDefinition> factoryInterfaces = [];
-        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
+        // Writes the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
+        void WriteBaseInterfaceList(IndentedTextWriter writer)
+        {
+            writer.Write("global::WindowsRuntime.InteropServices.IActivationFactory");
+
+            // Build the inheritance list: factory interfaces ('[Activatable]' or '[Static]') only
+            foreach ((_, AttributedType type) in AttributedTypes.Get(type, context.Cache))
+            {
+                if ((type.Activatable || type.Statics) && type.Type is not null)
+                {
+                    writer.Write(", ");
+
+                    // CCW + non-forced namespace is the user-facing interface name (e.g. 'IButtonUtilsStatic').
+                    TypedefNameWriter.WriteTypedefName(writer, context, type.Type, TypedefNameType.CCW, false);
+                    TypedefNameWriter.WriteTypeParams(writer, type.Type);
+                }
+            }
+        }
+
+        // Writes the body of the 'ActivateInstance' method (it throws for non-activatable types)
+        void WriteActivateInstanceBody(IndentedTextWriter writer)
+        {
+            bool isActivatable = !type.IsStatic && type.HasDefaultConstructor();
+
+            if (isActivatable)
+            {
+                writer.Write($"return new {projectedTypeName}();");
+            }
+            else
+            {
+                writer.Write("throw new NotImplementedException();");
+            }
+        }
+
+        // Helper wrapper to write additional methods
+        void WriteAdditionalActivationFactoryMethods(IndentedTextWriter writer)
+        {
+            ComponentFactory.WriteAdditionalActivationFactoryMethods(writer, context, type, projectedTypeName);
+        }
+
+        writer.WriteLine();
+        writer.Write(isMultiline: true, $$"""
+            internal sealed class {{factoryTypeName}} : {{WriteBaseInterfaceList}}
+            {
+                private static readonly {{factoryTypeName}} _factory = new();
+
+                static {{factoryTypeName}}()
+                {
+                    global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({{projectedTypeName}}).TypeHandle);
+                }
+            
+                public static unsafe void* Make()
+                {
+                    return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>
+                        .ConvertToUnmanaged(_factory, in global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IActivationFactory)
+                        .DetachThisPtrUnsafe();
+                }
+            
+                public object ActivateInstance()
+                {
+                    {{WriteActivateInstanceBody}}
+                }
+                {{WriteAdditionalActivationFactoryMethods}}
+            }
+            """);
+    }
+
+    /// <summary>
+    /// Writes additional methods in an activation factory types (e.g. static methods)
+    /// </summary>
+    private static void WriteAdditionalActivationFactoryMethods(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        TypeDefinition type,
+        string projectedTypeName)
+    {
+        // Emit factory-class members: forwarding methods/properties/events for static factory
+        // interfaces, and constructor wrappers for activatable factory interfaces.
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
             AttributedType info = kv.Value;
 
-            if ((info.Activatable || info.Statics) && info.Type is not null)
+            if (info.Type is null)
             {
-                factoryInterfaces.Add(info.Type);
+                continue;
             }
-        }
 
-        writer.WriteLine();
-        writer.Write($"internal sealed class {factoryTypeName} : global::WindowsRuntime.InteropServices.IActivationFactory");
-        foreach (TypeDefinition iface in factoryInterfaces)
-        {
-            writer.Write(", ");
-            // CCW + non-forced namespace is the user-facing interface name (e.g. 'IButtonUtilsStatic').
-            TypedefNameWriter.WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
-            TypedefNameWriter.WriteTypeParams(writer, iface);
-        }
-        writer.WriteLine();
-        writer.WriteLine($$"""
+            if (info.Activatable)
             {
-            static {{factoryTypeName}}()
-            {
-            global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({{projectedTypeName}}).TypeHandle);
-            }
-            
-            public static unsafe void* Make()
-            {
-            return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>
-                .ConvertToUnmanaged(_factory, in global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IActivationFactory)
-                .DetachThisPtrUnsafe();
-            }
-            
-            private static readonly {{factoryTypeName}} _factory = new();
-            
-            public object ActivateInstance()
-            {
-            """, isMultiline: true);
-        if (isActivatable)
-        {
-            writer.Write($"return new {projectedTypeName}();");
-        }
-        else
-        {
-            writer.Write("throw new NotImplementedException();");
-        }
-
-        writer.WriteLine();
-        writer.WriteLine("}");
-
-        // Emit factory-class members: forwarding methods/properties/events for static factory
-        // interfaces, and constructor wrappers for activatable factory interfaces.
-        if (cache is not null)
-        {
-            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
-            {
-                AttributedType info = kv.Value;
-
-                if (info.Type is null)
+                foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    continue;
+                    if (method.IsConstructor)
+                    {
+                        continue;
+                    }
+
+                    WriteFactoryActivatableMethod(writer, context, method, projectedTypeName);
                 }
-
-                if (info.Activatable)
+            }
+            else if (info.Statics)
+            {
+                foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    foreach (MethodDefinition method in info.Type.Methods)
+                    if (method.IsConstructor)
                     {
-                        if (method.IsConstructor)
-                        {
-                            continue;
-                        }
-
-                        WriteFactoryActivatableMethod(writer, context, method, projectedTypeName);
+                        continue;
                     }
+
+                    WriteStaticFactoryMethod(writer, context, method, projectedTypeName);
                 }
-                else if (info.Statics)
+                foreach (PropertyDefinition prop in info.Type.Properties)
                 {
-                    foreach (MethodDefinition method in info.Type.Methods)
-                    {
-                        if (method.IsConstructor)
-                        {
-                            continue;
-                        }
-
-                        WriteStaticFactoryMethod(writer, context, method, projectedTypeName);
-                    }
-                    foreach (PropertyDefinition prop in info.Type.Properties)
-                    {
-                        WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
-                    }
-                    foreach (EventDefinition evt in info.Type.Events)
-                    {
-                        WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
-                    }
+                    WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
+                }
+                foreach (EventDefinition evt in info.Type.Events)
+                {
+                    WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
                 }
             }
         }
-
-        writer.WriteLine("}");
     }
 
     /// <summary>
@@ -172,13 +189,12 @@ internal static class ComponentFactory
             return;
         }
 
-        string methodName = method.Name?.Value ?? string.Empty;
+        string methodName = method.GetRawName();
+        IndentedTextWriterCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
+        IndentedTextWriterCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
+
         writer.WriteLine();
-        writer.Write($"public {projectedTypeName} {methodName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
-        writer.Write($") => new {projectedTypeName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
-        writer.WriteLine(");");
+        writer.WriteLine($"public {projectedTypeName} {methodName}({typedParams}) => new {projectedTypeName}({nameOnlyParams});");
     }
 
     /// <summary>
@@ -192,15 +208,13 @@ internal static class ComponentFactory
             return;
         }
 
-        string methodName = method.Name?.Value ?? string.Empty;
+        string methodName = method.GetRawName();
+        IndentedTextWriterCallback retType = WriteFactoryReturnType(context, method);
+        IndentedTextWriterCallback typedParams = WriteFactoryMethodParameters(context, method, includeTypes: true);
+        IndentedTextWriterCallback nameOnlyParams = WriteFactoryMethodParameters(context, method, includeTypes: false);
+
         writer.WriteLine();
-        writer.Write("public ");
-        WriteFactoryReturnType(writer, context, method);
-        writer.Write($" {methodName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
-        writer.Write($") => {projectedTypeName}.{methodName}(");
-        WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
-        writer.WriteLine(");");
+        writer.WriteLine($"public {retType} {methodName}({typedParams}) => {projectedTypeName}.{methodName}({nameOnlyParams});");
     }
 
     /// <summary>
@@ -208,34 +222,30 @@ internal static class ComponentFactory
     /// </summary>
     private static void WriteStaticFactoryProperty(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop, string projectedTypeName)
     {
-        string propName = prop.Name?.Value ?? string.Empty;
-        (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-        // Single-line form when no setter is present.
+        string propName = prop.GetRawName();
+        (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+        string propType = GetFactoryPropertyType(context, prop);
+
+        // Single-line form when no setter is present
         if (setter is null)
         {
             writer.WriteLine();
-            writer.Write("public ");
-            WriteFactoryPropertyType(writer, context, prop);
-            writer.WriteLine($" {propName} => {projectedTypeName}.{propName};");
+            writer.WriteLine($"public {propType} {propName} => {projectedTypeName}.{propName};");
+
             return;
         }
 
+        string getterLine = getter is not null
+            ? $"get => {projectedTypeName}.{propName};"
+            : string.Empty;
         writer.WriteLine();
-        writer.Write("public ");
-        WriteFactoryPropertyType(writer, context, prop);
-        writer.WriteLine($$"""
-             {{propName}}
+        writer.WriteLine(isMultiline: true, $$"""
+            public {{propType}} {{propName}}
             {
-            """, isMultiline: true);
-        if (getter is not null)
-        {
-            writer.WriteLine($"get => {projectedTypeName}.{propName};");
-        }
-
-        writer.WriteLine($$"""
+            {{getterLine}}
             set => {{projectedTypeName}}.{{propName}} = value;
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -243,26 +253,32 @@ internal static class ComponentFactory
     /// </summary>
     private static void WriteStaticFactoryEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string projectedTypeName)
     {
-        string evtName = evt.Name?.Value ?? string.Empty;
+        string evtName = evt.GetRawName();
+        string evtType = evt.EventType is null
+            ? string.Empty
+            : TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, false).Format();
+
         writer.WriteLine();
-        writer.Write("public event ");
-
-        if (evt.EventType is not null)
-        {
-            TypeSemantics evtSemantics = TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType);
-            TypedefNameWriter.WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
-        }
-
-        writer.WriteLine($$"""
-             {{evtName}}
+        writer.WriteLine(isMultiline: true, $$"""
+            public event {{evtType}} {{evtName}}
             {
             add => {{projectedTypeName}}.{{evtName}} += value;
             remove => {{projectedTypeName}}.{{evtName}} -= value;
             }
-            """, isMultiline: true);
+            """);
     }
 
-    private static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
+    /// <inheritdoc cref="WriteFactoryReturnType(IndentedTextWriter, ProjectionEmitContext, MethodDefinition)"/>
+    /// <returns>A callback emitting the projected return type of <paramref name="method"/>.</returns>
+    public static IndentedTextWriterCallback WriteFactoryReturnType(ProjectionEmitContext context, MethodDefinition method)
+    {
+        return writer => WriteFactoryReturnType(writer, context, method);
+    }
+
+    /// <summary>
+    /// Writes the projected return type for a static-factory forwarding method.
+    /// </summary>
+    public static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
     {
         TypeSignature? returnType = method.Signature?.ReturnType;
 
@@ -276,20 +292,32 @@ internal static class ComponentFactory
         TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
 
-    private static void WriteFactoryPropertyType(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop)
+    private static string GetFactoryPropertyType(ProjectionEmitContext context, PropertyDefinition prop)
     {
         TypeSignature? sig = prop.Signature?.ReturnType;
 
         if (sig is null)
         {
-            writer.Write("object"); return;
+            return "object";
         }
 
         TypeSemantics semantics = TypeSemanticsFactory.Get(sig);
-        TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
+        return TypedefNameWriter.WriteTypeName(context, semantics, TypedefNameType.Projected, true).Format();
     }
 
-    private static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
+    /// <inheritdoc cref="WriteFactoryMethodParameters(IndentedTextWriter, ProjectionEmitContext, MethodDefinition, bool)"/>
+    /// <returns>A callback emitting the factory-method parameter list.</returns>
+    public static IndentedTextWriterCallback WriteFactoryMethodParameters(ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
+    {
+        return writer => WriteFactoryMethodParameters(writer, context, method, includeTypes);
+    }
+
+    /// <summary>
+    /// Writes the parameter list for a factory wrapper/forwarding method. When
+    /// <paramref name="includeTypes"/> is <see langword="true"/>, emits 'Type name'
+    /// pairs; otherwise emits names only (for forwarding call sites).
+    /// </summary>
+    public static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
     {
         MethodSignature? sig = method.Signature;
 
@@ -300,19 +328,15 @@ internal static class ComponentFactory
 
         for (int i = 0; i < sig.ParameterTypes.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             ParameterDefinition? p = method.Parameters.Count > i ? method.Parameters[i].Definition : null;
             string paramName = p?.Name?.Value ?? $"arg{i}";
 
             if (includeTypes)
             {
-                TypeSemantics semantics = TypeSemanticsFactory.Get(sig.ParameterTypes[i]);
-                TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
-                writer.Write($" {paramName}");
+                IndentedTextWriterCallback projectedType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(sig.ParameterTypes[i]), TypedefNameType.Projected, true);
+                writer.Write($"{projectedType} {paramName}");
             }
             else
             {
@@ -331,7 +355,7 @@ internal static class ComponentFactory
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
             writer.WriteLine();
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 namespace ABI.{{kv.Key}}
                 {
                 public static class ManagedExports
@@ -340,7 +364,8 @@ internal static class ComponentFactory
                 {
                 switch (activatableClassId)
                 {
-                """, isMultiline: true);
+                """);
+
             // Sort by the type's metadata token / row index so cases appear in WinMD declaration order.
             List<TypeDefinition> orderedTypes = [.. kv.Value];
             orderedTypes.Sort((a, b) =>
@@ -352,19 +377,19 @@ internal static class ComponentFactory
             foreach (TypeDefinition type in orderedTypes)
             {
                 (string ns, string name) = type.Names();
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     case "{{ns}}.{{name}}":
                         return global::ABI.Impl.{{ns}}.{{IdentifierEscaping.StripBackticks(name)}}ServerActivationFactory.Make();
-                    """, isMultiline: true);
+                    """);
             }
-            writer.WriteLine("""
+            writer.WriteLine(isMultiline: true, """
                 default:
                     return null;
                 }
                 }
                 }
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 }

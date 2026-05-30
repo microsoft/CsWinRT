@@ -46,43 +46,19 @@ internal static partial class ClassMembersFactory
             return true;
         }
 
-        TypeDefinition? td = ResolveInterface(cache, impl.Interface);
-
-        if (td is null)
+        if (!impl.TryResolveTypeDef(cache, out TypeDefinition? td))
         {
             return true;
         }
 
-        return !TypeCategorization.IsExclusiveTo(td);
+        return !td.IsExclusiveTo;
     }
-    internal static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
+
+    /// <inheritdoc cref="WriteParameterNameWithModifier(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
+    /// <returns>A callback emitting the parameter name with its modifier.</returns>
+    internal static IndentedTextWriterCallback WriteParameterNameWithModifier(ProjectionEmitContext context, ParameterInfo p)
     {
-        if (typeRef is TypeDefinition td)
-        {
-            return td;
-        }
-
-        TypeDefinition? resolved = typeRef.TryResolve(cache.RuntimeContext);
-
-        if (resolved is not null)
-        {
-            return resolved;
-        }
-
-        // Fall back to local lookup by full name
-        if (typeRef is TypeReference tr)
-        {
-            (string ns, string name) = tr.Names();
-            string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
-            return cache.Find(fullName);
-        }
-
-        if (typeRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
-        {
-            return ResolveInterface(cache, gi.GenericType);
-        }
-
-        return null;
+        return writer => WriteParameterNameWithModifier(writer, context, p);
     }
 
     /// <summary>
@@ -90,7 +66,7 @@ internal static partial class ClassMembersFactory
     /// </summary>
     internal static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
         switch (cat)
         {
             case ParameterCategory.Out:
@@ -114,7 +90,7 @@ internal static partial class ClassMembersFactory
     {
         // If the reference is to a type in the same module, resolve to TypeDefinition so
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
-        if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && context.Cache is not null)
+        if (ifaceType is not (TypeDefinition or TypeSpecification))
         {
             TypeDefinition? resolved = ifaceType.TryResolve(context.Cache.RuntimeContext);
 
@@ -132,39 +108,31 @@ internal static partial class ClassMembersFactory
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
-
-            writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}");
+            writer.Write(TypedefNameWriter.BuildGlobalQualifiedName(ns, name));
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
-
-            writer.Write($"global::{ns}.{IdentifierEscaping.StripBackticks(name)}<");
+            writer.Write($"{TypedefNameWriter.BuildGlobalQualifiedName(ns, name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
             writer.Write(">");
         }
+    }
+
+    /// <inheritdoc cref="WriteInterfaceTypeNameForCcw(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// <returns>A callback that writes the CCW interface type name to the writer it's appended to.</returns>
+    internal static IndentedTextWriterCallback WriteInterfaceTypeNameForCcw(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    {
+        return writer => WriteInterfaceTypeNameForCcw(writer, context, ifaceType);
     }
 }

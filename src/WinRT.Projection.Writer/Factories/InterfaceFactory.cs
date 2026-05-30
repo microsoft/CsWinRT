@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -20,6 +21,13 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class InterfaceFactory
 {
+    /// <inheritdoc cref="WriteGuidAttribute(IndentedTextWriter, TypeDefinition)"/>
+    /// <returns>A callback emitting the <c>[Guid("...")]</c> attribute.</returns>
+    public static IndentedTextWriterCallback WriteGuidAttribute(TypeDefinition type)
+    {
+        return writer => WriteGuidAttribute(writer, type);
+    }
+
     /// <summary>
     /// Writes the <c>[Guid("...")]</c> attribute for a type.
     /// </summary>
@@ -54,17 +62,12 @@ internal static class InterfaceFactory
         if (hasNonObjectBase)
         {
             writer.Write(delimiter);
+
             // Same-namespace types stay unqualified (e.g. 'AppointmentActionEntity : ActionEntity'):
             // only emit 'global::' when the base class lives in a different namespace.
             ITypeDefOrRef baseType = type.BaseType!;
             (string ns, string name) = baseType.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
@@ -95,15 +98,13 @@ internal static class InterfaceFactory
 
             if (impl.Interface is TypeDefinition ifaceTypeDef)
             {
-                isExclusive = TypeCategorization.IsExclusiveTo(ifaceTypeDef);
+                isExclusive = ifaceTypeDef.IsExclusiveTo;
             }
             else
             {
-                TypeDefinition? resolved = ClassMembersFactory.ResolveInterface(context.Cache, impl.Interface);
-
-                if (resolved is not null)
+                if (impl.TryResolveTypeDef(context.Cache, out TypeDefinition? resolved))
                 {
-                    isExclusive = TypeCategorization.IsExclusiveTo(resolved);
+                    isExclusive = resolved.IsExclusiveTo;
                 }
             }
 
@@ -127,6 +128,13 @@ internal static class InterfaceFactory
         }
     }
 
+    /// <inheritdoc cref="WriteTypeInheritance(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool, bool)"/>
+    /// <returns>A callback that writes the inheritance clause to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteTypeInheritance(ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
+    {
+        return writer => WriteTypeInheritance(writer, context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
+    }
+
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping (e.g.,
@@ -142,13 +150,7 @@ internal static class InterfaceFactory
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m1)
-            {
-                ns = m1.MappedNamespace;
-                name = m1.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             // Only emit the global:: prefix when the namespace doesn't match the current emit
             // namespace (mirrors WriteTypedefName behavior -- same-namespace stays unqualified).
@@ -159,17 +161,11 @@ internal static class InterfaceFactory
 
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m2)
-            {
-                ns = m2.MappedNamespace;
-                name = m2.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
@@ -179,10 +175,7 @@ internal static class InterfaceFactory
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 // Pass forceWriteNamespace=false so type args also respect the current namespace.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
@@ -214,7 +207,7 @@ internal static class InterfaceFactory
             typeSig = typeSig.InstantiateGenericTypes(genericContext.Value);
         }
 
-        string result = MethodFactory.WriteProjectedSignature(context, typeSig, isSetProperty);
+        string result = MethodFactory.WriteProjectedSignature(context, typeSig, isSetProperty).Format();
         return result;
     }
 
@@ -223,53 +216,42 @@ internal static class InterfaceFactory
     /// </summary>
     public static void WriteInterfaceMemberSignatures(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        foreach (MethodDefinition method in type.Methods)
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
             MethodSignatureInfo sig = new(method);
+
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {method.Name?.Value ?? string.Empty}(");
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.WriteLine(");");
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+            writer.WriteLine($"{ret} {method.GetRawName()}({parms});");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
             // Add 'new' when this interface has a setter-only property AND a property of the same
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
             string newKeyword = (getter is null && setter is not null
-                && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
+                && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.GetRawName(), out _))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.Write($"{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
+            writer.Write($"{newKeyword}{propType} {prop.GetRawName()} {{");
 
-            if (getter is not null || setter is not null)
-            {
-                writer.Write(" get;");
-            }
+            writer.WriteIf(getter is not null || setter is not null, " get;");
 
-            if (setter is not null)
-            {
-                writer.Write(" set;");
-            }
+            writer.WriteIf(setter is not null, " set;");
 
             writer.WriteLine(" }");
         }
 
         foreach (EventDefinition evt in type.Events)
         {
-            writer.Write("event ");
-            TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.WriteLine($" {evt.Name?.Value ?? string.Empty};");
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
+            writer.WriteLine($"event {eventType} {evt.Name?.Value};");
         }
     }
 
@@ -277,20 +259,22 @@ internal static class InterfaceFactory
     /// Recursively walks the base interfaces of <paramref name="type"/> looking for a property
     /// with the given <paramref name="propName"/>. Returns true if any base interface declares
     /// a property with that name (used to decide whether a setter-only property in a derived
-    /// interface needs the <c>new</c> modifier to hide the base getter).
+    /// interface needs the <c>new</c> modifier to hide the base getter). When found, the base
+    /// interface where the property was declared is returned via <paramref name="foundInterface"/>.
     /// </summary>
-    private static bool FindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName)
+    internal static bool TryFindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName, [NotNullWhen(true)] out TypeDefinition? foundInterface)
     {
         if (string.IsNullOrEmpty(propName))
         {
+            foundInterface = null;
             return false;
         }
 
         HashSet<TypeDefinition> visited = [];
-        return FindPropertyInBaseInterfacesRecursive(cache, type, propName, visited);
+        return TryFindPropertyInBaseInterfacesRecursive(cache, type, propName, visited, out foundInterface);
     }
 
-    private static bool FindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited)
+    private static bool TryFindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited, [NotNullWhen(true)] out TypeDefinition? foundInterface)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -299,9 +283,7 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            TypeDefinition? baseIface = ClassMembersFactory.ResolveInterface(cache, impl.Interface);
-
-            if (baseIface is null)
+            if (!impl.TryResolveTypeDef(cache, out TypeDefinition? baseIface))
             {
                 continue;
             }
@@ -319,76 +301,21 @@ internal static class InterfaceFactory
 
             foreach (PropertyDefinition prop in baseIface.Properties)
             {
-                if ((prop.Name?.Value ?? string.Empty) == propName)
+                if (prop.GetRawName() == propName)
                 {
+                    foundInterface = baseIface;
                     return true;
                 }
             }
 
-            if (FindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, visited))
+            if (TryFindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, visited, out foundInterface))
             {
                 return true;
             }
         }
+
+        foundInterface = null;
         return false;
-    }
-
-    /// <summary>
-    /// Like <see cref="FindPropertyInBaseInterfaces"/> but returns the base interface where the
-    /// property was found (or <c>null</c> if not found).
-    /// </summary>
-    internal static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
-    {
-        if (string.IsNullOrEmpty(propName))
-        {
-            return null;
-        }
-
-        HashSet<TypeDefinition> visited = [];
-        return FindPropertyInterfaceInBasesRecursive(cache, type, propName, visited);
-    }
-
-    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited)
-    {
-        foreach (InterfaceImplementation impl in type.Interfaces)
-        {
-            if (impl.Interface is null)
-            {
-                continue;
-            }
-
-            TypeDefinition? baseIface = ClassMembersFactory.ResolveInterface(cache, impl.Interface);
-
-            if (baseIface is null)
-            {
-                continue;
-            }
-
-            if (baseIface == type)
-            {
-                continue;
-            }
-
-            if (!visited.Add(baseIface))
-            {
-                continue;
-            }
-
-            foreach (PropertyDefinition prop in baseIface.Properties)
-            {
-                if ((prop.Name?.Value ?? string.Empty) == propName)
-                {
-                    return baseIface;
-                }
-            }
-            TypeDefinition? deeper = FindPropertyInterfaceInBasesRecursive(cache, baseIface, propName, visited);
-
-            if (deeper is not null)
-            {
-                return deeper;
-            }
-        }
-        return null;
     }
 
     /// <summary>
@@ -421,16 +348,14 @@ internal static class InterfaceFactory
             }
 
             writer.Write($"[global::Windows.Foundation.Metadata.{baseName}");
+
             // Args: only handle string args (sufficient for [Overload(@"X")]). [DefaultOverload] has none.
             if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
             {
                 writer.Write("(");
                 for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
                     object? val = attr.Signature.FixedArguments[i].Element;
 
@@ -463,31 +388,32 @@ internal static class InterfaceFactory
         // public_exclusiveto is set (or in reference projection or component mode).
         if (!context.Settings.ReferenceProjection &&
             !context.Settings.Component &&
-            TypeCategorization.IsExclusiveTo(type) &&
+            type.IsExclusiveTo &&
             !context.Settings.PublicExclusiveTo &&
             !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))
         {
             return;
         }
 
-        if (context.Settings.Component && !TypeCategorization.IsExclusiveTo(type))
+        if (context.Settings.Component && !type.IsExclusiveTo)
         {
             return;
         }
 
         writer.WriteLine();
-        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteGuidAttribute(writer, type);
-        writer.WriteLine();
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback guidAttr = WriteGuidAttribute(type);
+        writer.WriteLine(isMultiline: true, $$"""
+            {{metadataAttr}}
+            {{guidAttr}}
+            """);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
-        bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
-                          TypeCategorization.IsProjectionInternal(type);
-        writer.Write($"{(isInternal ? "internal" : "public")} interface ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        WriteTypeInheritance(writer, context, type, false, false);
-        writer.WriteLine();
+        bool isInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo) ||
+                          type.IsProjectionInternal;
+        IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, false);
+        IndentedTextWriterCallback inheritance = WriteTypeInheritance(context, type, false, false);
+        writer.WriteLine($"{(isInternal ? "internal" : "public")} interface {name}{inheritance}");
         using (writer.WriteBlock())
         {
             WriteInterfaceMemberSignatures(writer, context, type);
@@ -498,7 +424,7 @@ internal static class InterfaceFactory
     /// [Overridable] interface impl on the class it's exclusive to.</summary>
     private static bool IsDefaultOrOverridableInterfaceTypedef(MetadataCache cache, TypeDefinition iface)
     {
-        if (!TypeCategorization.IsExclusiveTo(iface))
+        if (!iface.IsExclusiveTo)
         {
             return false;
         }
@@ -524,7 +450,7 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            TypeDefinition? implDef = ResolveInterfaceTypeDefForExclusiveCheck(cache, implRef);
+            TypeDefinition? implDef = implRef.ResolveAsTypeDefinition(cache);
 
             if (implDef is not null && implDef == iface)
             {
@@ -532,27 +458,5 @@ internal static class InterfaceFactory
             }
         }
         return false;
-    }
-
-    private static TypeDefinition? ResolveInterfaceTypeDefForExclusiveCheck(MetadataCache cache, ITypeDefOrRef ifaceRef)
-    {
-        if (ifaceRef is TypeDefinition td)
-        {
-            return td;
-        }
-
-        if (ifaceRef is TypeReference tr)
-        {
-            (string ns, string nm) = tr.Names();
-            return cache.Find(ns + "." + nm);
-        }
-
-        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
-        {
-            ITypeDefOrRef? gen = gi.GenericType;
-            return gen is null ? null : ResolveInterfaceTypeDefForExclusiveCheck(cache, gen);
-        }
-
-        return null;
     }
 }

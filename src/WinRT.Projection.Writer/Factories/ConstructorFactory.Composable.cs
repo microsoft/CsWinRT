@@ -25,12 +25,12 @@ internal static partial class ConstructorFactory
             return;
         }
 
-        string typeName = classType.Name?.Value ?? string.Empty;
+        string typeName = classType.GetRawName();
 
         // Emit the factory objref + IIDs at the top so the parameterized ctors can reference it.
         if (composableType.Methods.Count > 0)
         {
-            string runtimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string runtimeClassFullName = classType.FullName ?? string.Empty;
             string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, composableType);
             ClassFactory.WriteStaticFactoryObjRef(writer, context, composableType, runtimeClassFullName, factoryObjRefName);
         }
@@ -41,16 +41,19 @@ internal static partial class ConstructorFactory
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         defaultIfaceObjRef = defaultIface is not null ? ObjRefNameGenerator.GetObjRefName(context, defaultIface) : string.Empty;
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
+
         // Compute the platform attribute string from the composable factory interface's
         // [ContractVersion] attribute
-        string platformAttribute = CustomAttributeFactory.WritePlatformAttribute(context, composableType);
+        string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, composableType);
 
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
         {
-            if (method.IsSpecial())
+            if (method.IsSpecial)
             {
-                methodIndex++; continue;
+                methodIndex++;
+
+                continue;
             }
 
             // Composable factory methods have signature like:
@@ -58,6 +61,7 @@ internal static partial class ConstructorFactory
             // For the constructor on the projected class, we exclude the trailing two params.
             MethodSignatureInfo sig = new(method);
             int userParamCount = sig.Parameters.Count >= 2 ? sig.Parameters.Count - 2 : sig.Parameters.Count;
+
             // the callback / args type name suffix is the TOTAL ABI param count
             // (size(method.Signature().Parameters())), NOT the user-visible param count. Using the
             // total count guarantees uniqueness against other composable factory overloads that
@@ -68,10 +72,7 @@ internal static partial class ConstructorFactory
 
             writer.WriteLine();
 
-            if (!string.IsNullOrEmpty(platformAttribute))
-            {
-                writer.Write(platformAttribute);
-            }
+            writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
             writer.Write(visibility);
 
@@ -87,18 +88,14 @@ internal static partial class ConstructorFactory
             writer.Write($"{typeName}(");
             for (int i = 0; i < userParamCount; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
-
-                MethodFactory.WriteProjectionParameter(writer, context, sig.Parameters[i]);
+                IndentedTextWriterCallback p = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+                writer.Write($"{(i > 0 ? ", " : "")}{p}");
             }
 
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                 )
                   :base(
-                """, isMultiline: true);
+                """);
             if (isParameterless)
             {
                 // base(default(WindowsRuntimeActivationTypes.DerivedComposed), <factoryObjRef>, <iid>, <marshalingType>)
@@ -110,34 +107,40 @@ internal static partial class ConstructorFactory
                 writer.Write($"{callbackName}.Instance, {defaultIfaceIid}, {marshalingType}, WindowsRuntimeActivationArgsReference.CreateUnsafe(new {argsName}(");
                 for (int i = 0; i < userParamCount; i++)
                 {
-                    if (i > 0)
-                    {
-                        writer.Write(", ");
-                    }
+                    writer.WriteIf(i > 0, ", ");
 
-                    string raw = sig.Parameters[i].Parameter.Name ?? "param";
-                    writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
+                    string raw = sig.Parameters[i].GetRawName();
+                    writer.Write(IdentifierEscaping.EscapeIdentifier(raw));
                 }
                 writer.Write("))");
             }
 
-            writer.WriteLine("""
-                )
-                """, isMultiline: true);
-            using (writer.WriteBlock())
+            // Emit the ctor body: assign the default interface objref when the runtime type
+            // matches the projected class exactly, and optionally call GC.AddMemoryPressure for
+            // types annotated with [GcPressure]. 'isParameterless' uses 'WriteIfTypeMatches' only;
+            // parameterized variants are followed by the args struct + callback class below.
+            void WriteCtorBody(IndentedTextWriter writer)
             {
-                writer.WriteLine($$"""
+                writer.Write(isMultiline: true, $$"""
                     if (GetType() == typeof({{typeName}}))
                     {
                         {{defaultIfaceObjRef}} = NativeObjectReference;
                     }
-                    """, isMultiline: true);
+                    """);
 
                 if (gcPressure > 0)
                 {
-                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
+                    writer.WriteLine();
+                    writer.Write($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
             }
+
+            writer.WriteLine(isMultiline: true, $$"""
+                )
+                {
+                    {{WriteCtorBody}}
+                }
+                """);
 
             // Emit args struct + callback class for parameterized composable factories.
             // skips both the args struct AND the callback class entirely in ref mode. The
@@ -163,56 +166,29 @@ internal static partial class ConstructorFactory
             ? "GC.AddMemoryPressure(" + gcPressure.ToString(CultureInfo.InvariantCulture) + ");"
             : string.Empty;
 
-        // 1. WindowsRuntimeActivationTypes.DerivedComposed
-        writer.WriteLine();
-        writer.WriteLine($$"""
-            protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
-              :base(_, activationFactoryObjectReference, in iid, marshalingType)
-            """, isMultiline: true);
-        using (writer.WriteBlock())
-        {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
-            }
-        }
+        // Each entry pairs the constructor's parameter list with the matching ':base(...)' arg list.
+        (string Parameters, string BaseArgs)[] ctorSignatures =
+        [
+            ("WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType",
+             "_, activationFactoryObjectReference, in iid, marshalingType"),
+            ("WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType",
+             "_, activationFactoryObjectReference, in iid, marshalingType"),
+            ("WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters",
+             "activationFactoryCallback, in iid, marshalingType, additionalParameters"),
+            ("WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters",
+             "activationFactoryCallback, in iid, marshalingType, additionalParameters"),
+        ];
 
-        writer.WriteLine();
-        writer.WriteLine($$"""
-            protected {{typeName}}(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
-              :base(_, activationFactoryObjectReference, in iid, marshalingType)
-            """, isMultiline: true);
-        using (writer.WriteBlock())
+        foreach ((string parameters, string baseArgs) in ctorSignatures)
         {
-            if (!string.IsNullOrEmpty(gcPressureBody))
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                protected {{typeName}}({{parameters}})
+                  :base({{baseArgs}})
+                """);
+            using (writer.WriteBlock())
             {
-                writer.WriteLine(gcPressureBody);
-            }
-        }
-
-        writer.WriteLine();
-        writer.WriteLine($$"""
-            protected {{typeName}}(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
-              :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
-            """, isMultiline: true);
-        using (writer.WriteBlock())
-        {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
-            }
-        }
-
-        writer.WriteLine();
-        writer.WriteLine($$"""
-            protected {{typeName}}(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
-              :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
-            """, isMultiline: true);
-        using (writer.WriteBlock())
-        {
-            if (!string.IsNullOrEmpty(gcPressureBody))
-            {
-                writer.WriteLine(gcPressureBody);
+                writer.WriteLineIf(!string.IsNullOrEmpty(gcPressureBody), gcPressureBody);
             }
         }
     }

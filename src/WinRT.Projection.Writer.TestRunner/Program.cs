@@ -40,6 +40,10 @@ internal static class Program
         {
             return RunRsp(args[1], refMode);
         }
+        if (args.Length >= 1 && args[0] == "smoke")
+        {
+            return RunSmoke();
+        }
 
         return RunSimple(args);
     }
@@ -57,7 +61,7 @@ internal static class Program
         var include = new System.Collections.Generic.List<string>();
         var exclude = new System.Collections.Generic.List<string>();
         string? outputFolder = null;
-        bool component = false, internalMode = false;
+        bool component = false;
         int maxDegreesOfParallelism = -1;
         var tokens = new System.Collections.Generic.List<string>();
         foreach (string raw in text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
@@ -83,7 +87,6 @@ internal static class Program
                 case "--exclude-namespaces": case "--exclude":
                     if (next is not null) { exclude.AddRange(next.Split(',', StringSplitOptions.RemoveEmptyEntries)); i++; } break;
                 case "--component": component = true; break;
-                case "--internal": internalMode = true; break;
                 case "--reference-projection": refMode = true; break;
                 case "--max-degrees-of-parallelism": case "--mdop":
                     if (next is not null && int.TryParse(next, out int mdop)) { maxDegreesOfParallelism = mdop; i++; } break;
@@ -99,7 +102,7 @@ internal static class Program
             {
                 InputPaths = inputs, OutputFolder = outputFolder,
                 Include = include, Exclude = exclude,
-                Component = component, Internal = internalMode,
+                Component = component,
                 ReferenceProjection = refMode, Verbose = false,
                 MaxDegreesOfParallelism = maxDegreesOfParallelism,
             });
@@ -466,6 +469,206 @@ internal static class Program
 
         Console.WriteLine($"Generated {Directory.GetFiles(output, "*.cs").Length} files in {output}");
         return 0;
+    }
+
+    /// <summary>
+    /// Smoke tests for the <c>suppressEmptyLines</c> overload on
+    /// <see cref="WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter"/>'s interpolated
+    /// string handler. Validates that:
+    /// <list type="bullet">
+    /// <item>When all interpolation holes on a template line expand to empty content, the line's
+    ///       blank residue is suppressed (no stray newline emitted).</item>
+    /// <item>When at least one hole on a line emits content, no suppression occurs.</item>
+    /// <item>Literal blank lines in the template (consecutive newlines not separated by a hole)
+    ///       are always preserved.</item>
+    /// <item>The legacy overload (without <c>suppressEmptyLines</c>) behaves identically to before.</item>
+    /// </list>
+    /// </summary>
+    private static int RunSmoke()
+    {
+        int failures = 0;
+
+        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter Make() =>
+            new WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter();
+
+        // Test cases: each is (description, action_producing_string, expected_string).
+        var tests = new System.Collections.Generic.List<(string desc, Func<string> actual, string expected)>
+        {
+            // Case 1: all 3 attribute holes empty → only header remains.
+            ("S1: all-empty middle holes collapse to nothing",
+                () => {
+                    var w = Make();
+                    string a = string.Empty, b = string.Empty, c = string.Empty;
+                    w.WriteLine(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}
+                        {{b}}
+                        {{c}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "[Header]\npublic class Foo\n"),
+
+            // Case 2: first hole non-empty, others empty → first kept, others collapsed.
+            ("S2: partial-empty holes collapse only the empty ones",
+                () => {
+                    var w = Make();
+                    string a = "[A]", b = string.Empty, c = string.Empty;
+                    w.WriteLine(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}
+                        {{b}}
+                        {{c}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "[Header]\n[A]\npublic class Foo\n"),
+
+            // Case 3: all holes non-empty → every line preserved.
+            ("S3: all-non-empty holes preserved",
+                () => {
+                    var w = Make();
+                    string a = "[A]", b = "[B]", c = "[C]";
+                    w.WriteLine(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}
+                        {{b}}
+                        {{c}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "[Header]\n[A]\n[B]\n[C]\npublic class Foo\n"),
+
+            // Case 4: literal blank line preserved (no hole between newlines).
+            ("S4: literal blank line is preserved (no hole between newlines)",
+                () => {
+                    var w = Make();
+                    string a = "[A]";
+                    w.WriteLine(isMultiline: true, $$"""
+                        Line1
+
+                        {{a}}
+                        Line3
+                        """);
+                    return w.ToString();
+                },
+                "Line1\n\n[A]\nLine3\n"),
+
+            // Case 5: multiple empty holes on a single line → still collapsed.
+            ("S5: multiple empty holes on one line still collapse",
+                () => {
+                    var w = Make();
+                    string a = string.Empty, b = string.Empty;
+                    w.WriteLine(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}{{b}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "[Header]\npublic class Foo\n"),
+
+            // Case 6: hole at start of template, empty - buffer is empty so suppress rule doesn't fire.
+            ("S6: leading empty hole produces a leading blank line (buffer is empty)",
+                () => {
+                    var w = Make();
+                    string a = string.Empty;
+                    w.WriteLine(isMultiline: true, $$"""
+                        {{a}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "\npublic class Foo\n"),
+
+            // Case 7: Write (not WriteLine) - no trailing newline appended by the call.
+            ("S7: Write (no trailing newline) with all-empty interior holes",
+                () => {
+                    var w = Make();
+                    string a = string.Empty, b = string.Empty;
+                    w.Write(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}
+                        {{b}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "[Header]\npublic class Foo"),
+
+            // Case 8: indentation still applied to non-empty lines.
+            ("S8: indented writer with mixed empty/non-empty holes",
+                () => {
+                    var w = Make();
+                    w.IncreaseIndent();
+                    string a = string.Empty, b = "[B]";
+                    w.WriteLine(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}
+                        {{b}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "    [Header]\n    [B]\n    public class Foo\n"),
+
+            // Case 9: literal-only multiline template (no holes) is unaffected.
+            ("S9: literal-only template (no holes) is unaffected",
+                () => {
+                    var w = Make();
+                    w.WriteLine(isMultiline: true, $$"""
+                        Line1
+                        Line2
+
+                        Line4
+                        """);
+                    return w.ToString();
+                },
+                "Line1\nLine2\n\nLine4\n"),
+
+            // Case 10: callback-style interpolation: empty callback hole is collapsed.
+            ("S10: empty string callback collapsed identically to empty string hole",
+                () => {
+                    var w = Make();
+                    string a = "[A]", b = string.Empty;
+                    w.WriteLine(isMultiline: true, $$"""
+                        [Header]
+                        {{a}}
+                        {{b}}
+                        public class Foo
+                        """);
+                    return w.ToString();
+                },
+                "[Header]\n[A]\npublic class Foo\n"),
+        };
+
+        foreach ((string desc, Func<string> actualFn, string expected) in tests)
+        {
+            string actual = actualFn();
+            bool pass = actual == expected;
+            if (!pass)
+            {
+                failures++;
+            }
+
+            Console.WriteLine($"{(pass ? "PASS" : "FAIL")}: {desc}");
+
+            if (!pass)
+            {
+                Console.WriteLine($"  expected: {Escape(expected)}");
+                Console.WriteLine($"  actual:   {Escape(actual)}");
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"=== {tests.Count - failures}/{tests.Count} smoke tests passed ===");
+
+        return failures == 0 ? 0 : 1;
+
+        static string Escape(string s) => s.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
     }
 }
 

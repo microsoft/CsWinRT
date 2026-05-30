@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
@@ -94,10 +93,54 @@ internal sealed class MethodSignatureInfo
     }
 
     /// <summary>
-    /// Returns the name of the return parameter, or <paramref name="defaultName"/> if there is none.
+    /// Bundles the three derived return-parameter names commonly needed during marshalling code
+    /// emission:
+    /// <list type="bullet">
+    ///   <item><see cref="ValuePointer"/>: the (escaped) name of the return-value out-pointer parameter.</item>
+    ///   <item><see cref="SizePointer"/>: the corresponding size out-pointer parameter for receive-array returns.</item>
+    ///   <item><see cref="Local"/>: the conventional <c>__&lt;name&gt;</c> local-variable name for the unmarshalled return value.</item>
+    /// </list>
     /// </summary>
-    /// <param name="defaultName">The default name to use when no return parameter is declared.</param>
-    /// <returns>The return parameter name (or default).</returns>
-    public string ReturnParameterName(string defaultName = ProjectionNames.DefaultReturnParameterName)
-        => ReturnParameter?.Name?.Value ?? defaultName;
+    /// <param name="ValuePointer">The return-value pointer parameter name (e.g. <c>__return_value__</c>).</param>
+    /// <param name="SizePointer">The return-value size pointer parameter name (e.g. <c>____return_value__Size</c>).</param>
+    /// <param name="Local">The local-variable name (e.g. <c>____return_value__</c>).</param>
+    public readonly record struct ReturnNameInfo(string ValuePointer, string SizePointer, string Local);
+
+    /// <summary>
+    /// Returns the trio of derived return-parameter names used by Do_Abi / RcwCaller bodies.
+    /// </summary>
+    public ReturnNameInfo GetReturnNameInfo()
+    {
+        string valuePointer = Helpers.AbiTypeHelpers.GetReturnParamName(this);
+        return new ReturnNameInfo(
+            ValuePointer: valuePointer,
+            SizePointer: "__" + valuePointer + "Size",
+            Local: "__" + valuePointer);
+    }
+
+    /// <summary>
+    /// Returns a deduplication key for a method named <paramref name="name"/> with this signature:
+    /// the method name followed by a comma-separated list of parameter type full names enclosed in
+    /// parentheses. Used to detect duplicate overloads across interface walks.
+    /// </summary>
+    /// <param name="name">The method's local (un-mangled) name.</param>
+    public string GetDedupeKey(string name)
+    {
+        System.Text.StringBuilder sb = new();
+        _ = sb.Append(name);
+        _ = sb.Append('(');
+
+        for (int i = 0; i < Parameters.Count; i++)
+        {
+            if (i > 0)
+            {
+                _ = sb.Append(',');
+            }
+
+            _ = sb.Append(Parameters[i].Type?.FullName ?? "?");
+        }
+
+        _ = sb.Append(')');
+        return sb.ToString();
+    }
 }
