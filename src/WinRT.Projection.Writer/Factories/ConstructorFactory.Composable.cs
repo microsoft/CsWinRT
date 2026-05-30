@@ -115,12 +115,13 @@ internal static partial class ConstructorFactory
                 writer.Write("))");
             }
 
-            writer.WriteLine(isMultiline: true, """
-                )
-                """);
-            using (writer.WriteBlock())
+            // Emit the ctor body: assign the default interface objref when the runtime type
+            // matches the projected class exactly, and optionally call GC.AddMemoryPressure for
+            // types annotated with [GcPressure]. 'isParameterless' uses 'WriteIfTypeMatches' only;
+            // parameterized variants are followed by the args struct + callback class below.
+            void WriteCtorBody(IndentedTextWriter writer)
             {
-                writer.WriteLine(isMultiline: true, $$"""
+                writer.Write(isMultiline: true, $$"""
                     if (GetType() == typeof({{typeName}}))
                     {
                         {{defaultIfaceObjRef}} = NativeObjectReference;
@@ -129,9 +130,17 @@ internal static partial class ConstructorFactory
 
                 if (gcPressure > 0)
                 {
-                    writer.WriteLine($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
+                    writer.WriteLine();
+                    writer.Write($"GC.AddMemoryPressure({gcPressure.ToString(CultureInfo.InvariantCulture)});");
                 }
             }
+
+            writer.WriteLine(isMultiline: true, $$"""
+                )
+                {
+                    {{WriteCtorBody}}
+                }
+                """);
 
             // Emit args struct + callback class for parameterized composable factories.
             // skips both the args struct AND the callback class entirely in ref mode. The
