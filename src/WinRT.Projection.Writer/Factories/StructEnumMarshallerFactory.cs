@@ -350,7 +350,24 @@ internal static class StructEnumMarshallerFactory
                 return;
             }
 
-            // ComWrappersMarshallerAttribute (full body)
+            // ComWrappersMarshallerAttribute (full body). The CreateObject body differs by struct
+            // shape: complex (non-blittable) structs round-trip through the per-field Marshaller's
+            // ConvertToManaged, while enums / blittable structs unbox directly to the projected
+            // value type.
+            void WriteCreateObjectBody(IndentedTextWriter writer)
+            {
+                if (isNonBlittableStruct)
+                {
+                    IndentedTextWriterCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
+
+                    writer.Write($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
+                }
+                else
+                {
+                    writer.Write($"return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{projected}>(value, in {iidRefExpr});");
+                }
+            }
+
             writer.WriteLine(isMultiline: true, $$"""
                 internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
                 {
@@ -368,22 +385,10 @@ internal static class StructEnumMarshallerFactory
                     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                     {
                         wrapperFlags = CreatedWrapperFlags.NonWrapping;
+                        {{WriteCreateObjectBody}}
+                    }
+                }
                 """);
-            writer.IncreaseIndent();
-            writer.IncreaseIndent();
-            if (isNonBlittableStruct)
-            {
-                IndentedTextWriterCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
-                writer.WriteLine($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
-            }
-            else
-            {
-                writer.WriteLine($"return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{projected}>(value, in {iidRefExpr});");
-            }
-            writer.DecreaseIndent();
-            writer.WriteLine("}");
-            writer.DecreaseIndent();
-            writer.WriteLine("}");
         }
         else
         {
