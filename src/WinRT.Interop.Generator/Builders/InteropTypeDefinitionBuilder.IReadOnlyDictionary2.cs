@@ -144,6 +144,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapViewMethodsType">The type returned by <see cref="IMapViewMethods"/>.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -151,6 +152,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Methods(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition mapViewMethodsType,
+            TypeDefinition nativeObjectType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -216,6 +218,57 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Call, interopReferences.IReadOnlyDictionaryMethodsCount },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Keys' method as follows:
+            //
+            // public static IEnumerable<<KEY_TYPE>> Keys(WindowsRuntimeObjectReference thisReference)
+            //
+            // The 'NativeObject' instance derives from 'WindowsRuntimeReadOnlyDictionary<...>' which implements
+            // 'IEnumerable<KeyValuePair<TKey, TValue>>', so it can be passed directly to the collection constructor.
+            MethodDefinition keysMethod = new(
+                name: "Keys"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([keyType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+
+            readOnlyDictionaryMethodsType.Methods.Add(keysMethod);
+
+            // Create a method body for the 'Keys' method
+            keysMethod.CilMethodBody = new CilMethodBody()
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Newobj, interopReferences.ReadOnlyDictionaryKeyCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            // Define the 'Values' method as follows:
+            //
+            // public static IEnumerable<<VALUE_TYPE>> Values(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition valuesMethod = new(
+                name: "Values"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([valueType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+
+            readOnlyDictionaryMethodsType.Methods.Add(valuesMethod);
+
+            // Create a method body for the 'Values' method
+            valuesMethod.CilMethodBody = new CilMethodBody()
+            {
+                Instructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Newobj, interopReferences.ReadOnlyDictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
             };

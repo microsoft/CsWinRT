@@ -1012,14 +1012,6 @@ internal partial class InteropGenerator
                     module: module,
                     mapViewMethodsType: out TypeDefinition mapViewMethodsType);
 
-                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Methods(
-                    readOnlyDictionaryType: typeSignature,
-                    mapViewMethodsType: mapViewMethodsType,
-                    interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module,
-                    readOnlyDictionaryMethodsType: out TypeDefinition readOnlyDictionaryMethodsType);
-
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.NativeObject(
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
@@ -1027,6 +1019,15 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Methods(
+                    readOnlyDictionaryType: typeSignature,
+                    mapViewMethodsType: mapViewMethodsType,
+                    nativeObjectType: nativeObjectType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    readOnlyDictionaryMethodsType: out TypeDefinition readOnlyDictionaryMethodsType);
 
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.ComWrappersCallbackType(
                     readOnlyDictionaryType: typeSignature,
@@ -1149,14 +1150,6 @@ internal partial class InteropGenerator
                     module: module,
                     mapMethodsType: out TypeDefinition mapMethodsType);
 
-                InteropTypeDefinitionBuilder.IDictionary2.Methods(
-                    dictionaryType: typeSignature,
-                    mapMethodsType: mapMethodsType,
-                    interopReferences: interopReferences,
-                    emitState: emitState,
-                    module: module,
-                    dictionaryMethodsType: out TypeDefinition dictionaryMethodsType);
-
                 InteropTypeDefinitionBuilder.IDictionary2.NativeObject(
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
@@ -1164,6 +1157,15 @@ internal partial class InteropGenerator
                     emitState: emitState,
                     module: module,
                     out TypeDefinition nativeObjectType);
+
+                InteropTypeDefinitionBuilder.IDictionary2.Methods(
+                    dictionaryType: typeSignature,
+                    mapMethodsType: mapMethodsType,
+                    nativeObjectType: nativeObjectType,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    dictionaryMethodsType: out TypeDefinition dictionaryMethodsType);
 
                 InteropTypeDefinitionBuilder.IDictionary2.ComWrappersCallbackType(
                     dictionaryType: typeSignature,

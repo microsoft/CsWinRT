@@ -271,6 +271,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapMethodsType">The type returned by <see cref="IMapMethods"/>.</param>
+        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -278,6 +279,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Methods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
+            TypeDefinition nativeObjectType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -413,6 +415,51 @@ internal partial class InteropTypeDefinitionBuilder
             };
 
             dictionaryMethodsType.Methods.Add(countMethod);
+
+            // Define the 'Keys' method as follows:
+            //
+            // public static ICollection<<KEY_TYPE>> Keys(WindowsRuntimeObjectReference thisReference)
+            //
+            // The 'NativeObject' instance derives from 'WindowsRuntimeDictionary<...>' which implements
+            // 'IDictionary<TKey, TValue>', so it can be passed directly to the collection constructor.
+            MethodDefinition keysMethod = new(
+                name: "Keys"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.ICollection1.MakeGenericReferenceType([keyType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            dictionaryMethodsType.Methods.Add(keysMethod);
+
+            // Define the 'Values' method as follows:
+            //
+            // public static ICollection<<VALUE_TYPE>> Values(WindowsRuntimeObjectReference thisReference)
+            MethodDefinition valuesMethod = new(
+                name: "Values"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.ICollection1.MakeGenericReferenceType([valueType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            dictionaryMethodsType.Methods.Add(valuesMethod);
 
             // Define the 'ContainsKey' method as follows:
             //
