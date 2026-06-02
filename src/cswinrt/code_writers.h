@@ -3530,10 +3530,10 @@ visibility, element, self, interop_method_name_prefix, objref_name);
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
-static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
+static extern IEnumerable<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
-static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
+static extern IEnumerable<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
