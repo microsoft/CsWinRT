@@ -1663,6 +1663,316 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestStringMapKeysAndValues()
+        {
+            var stringMap = new Windows.Foundation.Collections.StringMap
+            {
+                ["foo"] = "bar",
+                ["hello"] = "world"
+            };
+
+            ICollection<string> keys = stringMap.Keys;
+            ICollection<string> values = stringMap.Values;
+
+            Assert.IsNotNull(keys);
+            Assert.IsNotNull(values);
+            Assert.AreEqual(2, keys.Count);
+            Assert.AreEqual(2, values.Count);
+
+            CollectionAssert.AreEquivalent(new[] { "foo", "hello" }, keys.ToArray());
+            CollectionAssert.AreEquivalent(new[] { "bar", "world" }, values.ToArray());
+
+            Assert.IsTrue(keys.Contains("foo"));
+            Assert.IsTrue(keys.Contains("hello"));
+            Assert.IsFalse(keys.Contains("missing"));
+
+            Assert.IsTrue(values.Contains("bar"));
+            Assert.IsTrue(values.Contains("world"));
+            Assert.IsFalse(values.Contains("missing"));
+
+            // 'Keys'/'Values' on a key/value collection are read-only views
+            Assert.IsTrue(keys.IsReadOnly);
+            Assert.IsTrue(values.IsReadOnly);
+            Assert.ThrowsExactly<NotSupportedException>(() => keys.Add("nope"));
+            Assert.ThrowsExactly<NotSupportedException>(() => values.Add("nope"));
+            Assert.ThrowsExactly<NotSupportedException>(() => keys.Clear());
+            Assert.ThrowsExactly<NotSupportedException>(() => values.Clear());
+            Assert.ThrowsExactly<NotSupportedException>(() => keys.Remove("foo"));
+            Assert.ThrowsExactly<NotSupportedException>(() => values.Remove("bar"));
+
+            // 'CopyTo' on the key/value collections should produce the same set of items
+            string[] keyBuffer = new string[2];
+            string[] valueBuffer = new string[2];
+            keys.CopyTo(keyBuffer, 0);
+            values.CopyTo(valueBuffer, 0);
+            CollectionAssert.AreEquivalent(new[] { "foo", "hello" }, keyBuffer);
+            CollectionAssert.AreEquivalent(new[] { "bar", "world" }, valueBuffer);
+        }
+
+        [TestMethod]
+        public void TestStringMapKeysAndValuesReflectMutation()
+        {
+            var stringMap = new Windows.Foundation.Collections.StringMap
+            {
+                ["foo"] = "bar"
+            };
+
+            ICollection<string> keys = stringMap.Keys;
+            ICollection<string> values = stringMap.Values;
+
+            Assert.AreEqual(1, keys.Count);
+            Assert.AreEqual(1, values.Count);
+
+            // Add new items
+            stringMap["hello"] = "world";
+
+            // The 'Keys'/'Values' collections are views over the underlying dictionary,
+            // so they should immediately reflect the mutation without needing a new lookup.
+            Assert.AreEqual(2, keys.Count);
+            Assert.AreEqual(2, values.Count);
+            Assert.IsTrue(keys.Contains("hello"));
+            Assert.IsTrue(values.Contains("world"));
+
+            // Remove an existing item
+            Assert.IsTrue(stringMap.Remove("foo"));
+
+            Assert.AreEqual(1, keys.Count);
+            Assert.AreEqual(1, values.Count);
+            Assert.IsFalse(keys.Contains("foo"));
+            Assert.IsFalse(values.Contains("bar"));
+        }
+
+        [TestMethod]
+        public void TestStringMapKeysAndValuesRepeatedAccess()
+        {
+            var stringMap = new Windows.Foundation.Collections.StringMap
+            {
+                ["foo"] = "bar"
+            };
+
+            // Repeated access to 'Keys'/'Values' should always observe the current state and
+            // never throw. This is the basic guarantee callers rely on; whether each access
+            // returns the same wrapper instance or a fresh one is an implementation detail.
+            ICollection<string> keys1 = stringMap.Keys;
+            ICollection<string> keys2 = stringMap.Keys;
+            ICollection<string> values1 = stringMap.Values;
+            ICollection<string> values2 = stringMap.Values;
+
+            Assert.AreEqual(1, keys1.Count);
+            Assert.AreEqual(1, keys2.Count);
+            Assert.AreEqual(1, values1.Count);
+            Assert.AreEqual(1, values2.Count);
+            CollectionAssert.AreEquivalent(keys1.ToArray(), keys2.ToArray());
+            CollectionAssert.AreEquivalent(values1.ToArray(), values2.ToArray());
+        }
+
+        [TestMethod]
+        public void TestPropertySetKeysAndValues()
+        {
+            var propertySet = new Windows.Foundation.Collections.PropertySet
+            {
+                ["foo"] = "bar",
+                ["hello"] = 42
+            };
+
+            ICollection<string> keys = propertySet.Keys;
+            ICollection<object> values = propertySet.Values;
+
+            Assert.IsNotNull(keys);
+            Assert.IsNotNull(values);
+            Assert.AreEqual(2, keys.Count);
+            Assert.AreEqual(2, values.Count);
+
+            CollectionAssert.AreEquivalent(new[] { "foo", "hello" }, keys.ToArray());
+            CollectionAssert.AreEquivalent(new object[] { "bar", 42 }, values.ToArray());
+
+            // Cross-check that 'Keys' values can be used to index back into the dictionary
+            foreach (string key in keys)
+            {
+                Assert.IsTrue(propertySet.ContainsKey(key));
+                Assert.IsTrue(values.Contains(propertySet[key]));
+            }
+        }
+
+        [TestMethod]
+        public void TestPropertySetKeysAndValuesViaIDictionaryInterface()
+        {
+            // Cast to 'IDictionary<string, object>' to force calls through the explicit
+            // interface implementation rather than directly on the projected runtime class.
+            IDictionary<string, object> propertySet = new Windows.Foundation.Collections.PropertySet
+            {
+                ["alpha"] = 1L,
+                ["beta"] = "two",
+                ["gamma"] = true
+            };
+
+            ICollection<string> keys = propertySet.Keys;
+            ICollection<object> values = propertySet.Values;
+
+            Assert.AreEqual(3, keys.Count);
+            Assert.AreEqual(3, values.Count);
+
+            CollectionAssert.AreEquivalent(new[] { "alpha", "beta", "gamma" }, keys.ToArray());
+            CollectionAssert.AreEquivalent(new object[] { 1L, "two", true }, values.ToArray());
+        }
+
+        [TestMethod]
+        public void TestValueSetKeysAndValues()
+        {
+            var valueSet = new Windows.Foundation.Collections.ValueSet
+            {
+                ["foo"] = "bar",
+                ["hello"] = 42
+            };
+
+            ICollection<string> keys = valueSet.Keys;
+            ICollection<object> values = valueSet.Values;
+
+            Assert.IsNotNull(keys);
+            Assert.IsNotNull(values);
+            Assert.AreEqual(2, keys.Count);
+            Assert.AreEqual(2, values.Count);
+
+            CollectionAssert.AreEquivalent(new[] { "foo", "hello" }, keys.ToArray());
+            CollectionAssert.AreEquivalent(new object[] { "bar", 42 }, values.ToArray());
+        }
+
+        [TestMethod]
+        public void TestValueSetKeysAndValuesAfterClear()
+        {
+            var valueSet = new Windows.Foundation.Collections.ValueSet
+            {
+                ["foo"] = "bar",
+                ["hello"] = 42
+            };
+
+            ICollection<string> keys = valueSet.Keys;
+            ICollection<object> values = valueSet.Values;
+
+            Assert.AreEqual(2, keys.Count);
+            Assert.AreEqual(2, values.Count);
+
+            valueSet.Clear();
+
+            Assert.AreEqual(0, valueSet.Count);
+            Assert.AreEqual(0, keys.Count);
+            Assert.AreEqual(0, values.Count);
+
+            using (IEnumerator<string> e = keys.GetEnumerator())
+            {
+                Assert.IsFalse(e.MoveNext());
+            }
+
+            using (IEnumerator<object> e = values.GetEnumerator())
+            {
+                Assert.IsFalse(e.MoveNext());
+            }
+        }
+
+        [TestMethod]
+        public void TestStringMapKeysAndValuesEmpty()
+        {
+            var stringMap = new Windows.Foundation.Collections.StringMap();
+
+            ICollection<string> keys = stringMap.Keys;
+            ICollection<string> values = stringMap.Values;
+
+            Assert.IsNotNull(keys);
+            Assert.IsNotNull(values);
+            Assert.AreEqual(0, keys.Count);
+            Assert.AreEqual(0, values.Count);
+
+            // Enumeration should produce nothing
+            Assert.IsFalse(keys.Any());
+            Assert.IsFalse(values.Any());
+
+            // 'CopyTo' to a zero-length array should be a no-op (not throw)
+            keys.CopyTo([], 0);
+            values.CopyTo([], 0);
+        }
+
+        [TestMethod]
+        public void TestCustomReadOnlyDictionaryKeysAndValues()
+        {
+            // 'CustomReadOnlyDictionaryTest' is a Windows Runtime class projected as
+            // 'IReadOnlyDictionary<string, string>'. This exercises the cswinrt-generated
+            // 'Keys'/'Values' projection that uses the 'UnsafeAccessor' stub to call into
+            // the interop-emitted 'ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<string|string>Methods.Keys'
+            // (and 'Values') static methods. Unlike 'IDictionary', the 'IReadOnlyDictionary'
+            // 'Keys'/'Values' return 'IEnumerable<T>' (not 'ICollection<T>'); this also validates
+            // that the cswinrt-emitted 'UnsafeAccessor' return type matches the interop-emitted method.
+            var dictionary = new TestComponentCSharp.CustomReadOnlyDictionaryTest();
+
+            IEnumerable<string> keys = dictionary.Keys;
+            IEnumerable<string> values = dictionary.Values;
+
+            Assert.IsNotNull(keys);
+            Assert.IsNotNull(values);
+
+            CollectionAssert.AreEquivalent(new[] { "apples", "oranges", "pears" }, keys.ToArray());
+            CollectionAssert.AreEquivalent(new[] { "1", "2", "3" }, values.ToArray());
+
+            // Verify keys can be used to index back into the dictionary
+            foreach (string key in keys)
+            {
+                Assert.IsTrue(dictionary.ContainsKey(key));
+                Assert.IsTrue(values.Contains(dictionary[key]));
+            }
+        }
+
+        [TestMethod]
+        public void TestCustomReadOnlyDictionaryKeysAndValuesViaIReadOnlyDictionaryInterface()
+        {
+            // Cast to 'IReadOnlyDictionary<string, string>' to force calls through the explicit
+            // interface implementation rather than directly on the projected runtime class.
+            IReadOnlyDictionary<string, string> dictionary = new TestComponentCSharp.CustomReadOnlyDictionaryTest();
+
+            IEnumerable<string> keys = dictionary.Keys;
+            IEnumerable<string> values = dictionary.Values;
+
+            Assert.AreEqual(3, keys.Count());
+            Assert.AreEqual(3, values.Count());
+
+            CollectionAssert.AreEquivalent(new[] { "apples", "oranges", "pears" }, keys.ToArray());
+            CollectionAssert.AreEquivalent(new[] { "1", "2", "3" }, values.ToArray());
+        }
+
+        [TestMethod]
+        public void TestCustomReadOnlyDictionaryKeysAndValuesEnumerationOnly()
+        {
+            // 'IReadOnlyDictionary<TKey, TValue>.Keys' and '.Values' are 'IEnumerable<T>' (not
+            // 'ICollection<T>'), so they should not implicitly satisfy 'ICollection<T>' callers.
+            // This pins down that contract — the cswinrt-emitted 'UnsafeAccessor' previously
+            // declared 'ICollection<T>' as the return type by mistake, which would have caused
+            // a signature mismatch with the interop-emitted method and a 'MissingMethodException'.
+            var dictionary = new TestComponentCSharp.CustomReadOnlyDictionaryTest();
+
+            object keys = dictionary.Keys;
+            object values = dictionary.Values;
+
+            Assert.IsNotNull(keys);
+            Assert.IsNotNull(values);
+            Assert.IsInstanceOfType<IEnumerable<string>>(keys);
+            Assert.IsInstanceOfType<IEnumerable<string>>(values);
+            Assert.IsNotInstanceOfType<ICollection<string>>(keys);
+            Assert.IsNotInstanceOfType<ICollection<string>>(values);
+        }
+
+        [TestMethod]
+        public void TestCustomReadOnlyDictionaryKeysAndValuesEmpty()
+        {
+            // Construct with an empty backing map view so the projection is exercised
+            // with a zero-element dictionary.
+            var emptyDictionary = new Dictionary<string, string>();
+            IReadOnlyDictionary<string, string> empty = emptyDictionary;
+            var dictionary = new TestComponentCSharp.CustomReadOnlyDictionaryTest(empty);
+
+            Assert.AreEqual(0, dictionary.Count);
+            Assert.IsFalse(dictionary.Keys.Any());
+            Assert.IsFalse(dictionary.Values.Any());
+        }
+
+        [TestMethod]
         public void TestFactories()
         {
             var cls1 = new Class();
