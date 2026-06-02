@@ -22,15 +22,6 @@ internal static class AbiDelegateFactory
     /// </summary>
     public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        //   write_delegate_marshaller
-        //   write_delegate_vtbl
-        //   write_native_delegate
-        //   write_delegate_comwrappers_callback
-        //   write_delegates_interface_entries_impl
-        //   write_delegate_com_wrappers_marshaller_attribute_impl
-        //   write_delegate_impl
-        //   write_reference_impl
-        //   (component) write_authoring_metadata_type
         WriteDelegateMarshallerOnly(writer, context, type);
         WriteDelegateVftbl(writer, context, type);
         WriteNativeDelegate(writer, context, type);
@@ -157,25 +148,35 @@ internal static class AbiDelegateFactory
 
         MethodSignatureInfo sig = new(invoke);
         string nameStripped = type.GetStrippedName();
-
-        writer.WriteLine();
-        writer.Write(isMultiline: true, $$"""
-            public static unsafe class {{nameStripped}}NativeDelegate
-            {
-                public static unsafe 
-            """);
         IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-        IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
-        string comma = sig.Parameters.Count > 0 ? ", " : "";
-        writer.Write($"{ret} {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
         // Reuse the interface caller body emitter. Delegate Invoke is at vtable slot 3
         // (after QI/AddRef/Release). Functionally equivalent to the truth's
         // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;' form, just routed
         // through the slot-indexed dispatch shared with interface CCW callers.
-        AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept);
+        IndentedTextWriterCallback body = AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(context, sig, slot: 3, isNoExcept: invoke.IsNoExcept);
 
-        writer.WriteLine("}");
+        // Helper to write all invoke parameters
+        void WriteInvokeParameters(IndentedTextWriter writer)
+        {
+            writer.Write("this WindowsRuntimeObjectReference thisReference");
+
+            if (sig.Parameters.Count > 0)
+            {
+                writer.Write(",");
+
+                MethodFactory.WriteParameterList(writer, context, sig);
+            }
+        }
+
+        writer.WriteLine();
+        writer.Write(isMultiline: true, $$"""
+            public static unsafe class {{nameStripped}}NativeDelegate
+            {
+                public static unsafe {{ret}} {{nameStripped}}Invoke({{WriteInvokeParameters}})
+                {{body}}
+            }
+            """);
     }
 
     private static void WriteDelegateInterfaceEntriesImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -391,5 +392,4 @@ internal static class AbiDelegateFactory
             }
             """);
     }
-
 }

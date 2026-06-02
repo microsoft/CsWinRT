@@ -18,6 +18,13 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
 {
+    /// <inheritdoc cref="EmitAbiMethodBodyIfSimple(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, int, string?, bool)"/>
+    /// <returns>A callback emitting the parameter name with its modifier.</returns>
+    public static IndentedTextWriterCallback EmitAbiMethodBodyIfSimple(ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
+    {
+        return writer => EmitAbiMethodBodyIfSimple(writer, context, sig, slot, paramNameOverride, isNoExcept);
+    }
+
     /// <summary>
     /// Emits a real method body for the cases we can fully marshal, otherwise emits
     /// the 'throw null!' stub. Trailing newline is included.
@@ -33,7 +40,7 @@ internal static partial class AbiMethodBodyFactory
     /// contractually return <c>S_OK</c>).</param>
     [SuppressMessage("Style", "IDE0045:Convert to conditional expression",
         Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
-    internal static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
+    public static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         TypeSignature? rt = sig.ReturnType;
 

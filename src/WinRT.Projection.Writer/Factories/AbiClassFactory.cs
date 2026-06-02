@@ -62,10 +62,7 @@ internal static class AbiClassFactory
             defaultGenericInst = null;
         }
 
-        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type. The writer's
-        // blank-line suppression collapses the accessor's trailing '\n' with the parent literal's
-        // '\n' between '{{WriteIidAccessor}}' and the next line, so the static extern declaration
-        // sits directly above the body without an extra blank line.
+        // Emit the '[UnsafeAccessor]' declaration if the type is a generic type
         void WriteIidAccessor(IndentedTextWriter writer)
         {
             if (defaultGenericInst is not null)
@@ -102,12 +99,13 @@ internal static class AbiClassFactory
                 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{projectedType}} value)
                 {
                     {{WriteIidAccessor}}
+
                     return WindowsRuntimeInterfaceMarshaller<{{projectedType}}>.ConvertToUnmanaged(value, {{WriteIidExpression}});
                 }
             
                 public static {{projectedType}} ConvertToManaged(void* value)
                 {
-                    return ({{projectedType}}) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+                    return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
             """);
@@ -258,10 +256,7 @@ internal static class AbiClassFactory
             }
         }
 
-        // Emit the '[UnsafeAccessor]' declaration for the default interface, if it's a generic
-        // instantiation. The writer's blank-line suppression collapses the callback's trailing
-        // '\n' with the parent literal's leading '\n' so the static extern declaration sits
-        // directly above the next member without a stray blank line.
+        // Emit the '[UnsafeAccessor]' declaration for the default interface, if it's a generic instantiation
         void WriteUnsafeAccessor(IndentedTextWriter writer)
         {
             if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
@@ -290,6 +285,7 @@ internal static class AbiClassFactory
             file sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
             {
                 {{WriteUnsafeAccessor}}
+
                 public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                 {
                     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
@@ -327,20 +323,18 @@ internal static class AbiClassFactory
         }
         else
         {
-            // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
-            string nonProjectedRcn = $"{typeNs}.{nameStripped}";
-
             writer.WriteLine(isMultiline: true, $$"""
                 file sealed unsafe class {{nameStripped}}ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
                 {
                     {{WriteUnsafeAccessor}}
+
                     public static unsafe bool TryCreateObject(
                         void* value,
                         ReadOnlySpan<char> runtimeClassName,
                         out object wrapperObject,
                         out CreatedWrapperFlags wrapperFlags)
                     {
-                        if (runtimeClassName.SequenceEqual("{{nonProjectedRcn}}".AsSpan()))
+                        if (runtimeClassName.SequenceEqual("{{typeNs}}.{{nameStripped}}".AsSpan()))
                         {
                             WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
                                 externalComObject: value,
