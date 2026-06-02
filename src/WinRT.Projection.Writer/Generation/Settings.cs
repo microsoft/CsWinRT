@@ -44,14 +44,14 @@ internal sealed class Settings
 
     /// <summary>
     /// Optional callback invoked for each verbose progress message. When <see langword="null"/>,
-    /// verbose messages are forwarded to <see cref="System.Console.Out"/>. Has no effect unless
+    /// verbose messages are forwarded to <see cref="Console.Out"/>. Has no effect unless
     /// <see cref="Verbose"/> is also set.
     /// </summary>
     public Action<string>? Logger { get; init; }
 
     /// <summary>
     /// Maximum number of parallel work items dispatched when generating projections.
-    /// Defaults to <c>-1</c> (let the runtime decide; typically <see cref="System.Environment.ProcessorCount"/>).
+    /// Defaults to <c>-1</c> (let the runtime decide; typically <see cref="Environment.ProcessorCount"/>).
     /// Set to <c>1</c> to force fully sequential execution.
     /// </summary>
     public int MaxDegreesOfParallelism { get; init; } = -1;

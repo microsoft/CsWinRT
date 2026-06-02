@@ -75,7 +75,7 @@ public sealed class ProjectionWriterOptions
 
     /// <summary>
     /// Maximum number of parallel work items to dispatch when generating projections.
-    /// Defaults to <c>-1</c>, which lets the runtime pick (typically <see cref="System.Environment.ProcessorCount"/>).
+    /// Defaults to <c>-1</c>, which lets the runtime pick (typically <see cref="Environment.ProcessorCount"/>).
     /// Set to <c>1</c> to force fully sequential execution (useful for debugging or when a deterministic
     /// thread schedule is required).
     /// </summary>

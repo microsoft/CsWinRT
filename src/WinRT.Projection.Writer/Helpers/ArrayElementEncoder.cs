@@ -45,12 +45,12 @@ internal static class ArrayElementEncoder
     /// </summary>
     private static string EncodeArrayElementName(TypeSignature elementType)
     {
-        System.Text.StringBuilder sb = new();
+        StringBuilder sb = new();
         EncodeArrayElementNameInto(sb, elementType);
         return sb.ToString();
     }
 
-    private static void EncodeArrayElementNameInto(System.Text.StringBuilder sb, TypeSignature sig)
+    private static void EncodeArrayElementNameInto(StringBuilder sb, TypeSignature sig)
     {
         // Special case for System.Guid: the depth=0 (top-level array element) form drops the
         // namespace prefix and uses just the assembly marker + type name, so for Guid this

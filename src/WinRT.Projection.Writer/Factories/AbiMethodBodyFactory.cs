@@ -16,6 +16,4 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 ///   <item><description><c>AbiMethodBodyFactory.MarshallerDispatch.cs</c> - Per-marshaller ConvertToManaged/Unmanaged dispatch helpers.</description></item>
 /// </list>
 /// </remarks>
-internal static partial class AbiMethodBodyFactory
-{
-}
+internal static partial class AbiMethodBodyFactory;

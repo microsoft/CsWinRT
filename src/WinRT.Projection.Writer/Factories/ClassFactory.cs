@@ -61,7 +61,7 @@ internal static class ClassFactory
     /// interfaces) for <paramref name="iface"/>, if the interface is exclusive_to a fast-abi
     /// class; otherwise <c>null</c>.
     /// </summary>
-    public static (TypeDefinition Class, TypeDefinition? Default, System.Collections.Generic.List<TypeDefinition> Others)? GetFastAbiClassForInterface(MetadataCache cache, TypeDefinition iface)
+    public static (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? GetFastAbiClassForInterface(MetadataCache cache, TypeDefinition iface)
     {
         TypeDefinition? cls = FindFastAbiClassType(cache, iface);
 
@@ -70,7 +70,7 @@ internal static class ClassFactory
             return null;
         }
 
-        (TypeDefinition? def, System.Collections.Generic.List<TypeDefinition> others) = GetFastAbiInterfaces(cache, cls);
+        (TypeDefinition? def, List<TypeDefinition> others) = GetFastAbiInterfaces(cache, cls);
         return (cls, def, others);
     }
 
@@ -106,10 +106,10 @@ internal static class ClassFactory
     /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
     /// </summary>
-    public static (TypeDefinition? DefaultInterface, System.Collections.Generic.List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(MetadataCache cache, TypeDefinition classType)
+    public static (TypeDefinition? DefaultInterface, List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(MetadataCache cache, TypeDefinition classType)
     {
         TypeDefinition? defaultIface = null;
-        System.Collections.Generic.List<TypeDefinition> exclusiveIfaces = [];
+        List<TypeDefinition> exclusiveIfaces = [];
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {
             if (impl.Interface is null)

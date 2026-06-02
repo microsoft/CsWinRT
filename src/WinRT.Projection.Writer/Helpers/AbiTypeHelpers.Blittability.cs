@@ -122,7 +122,7 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>
-    /// Resolves a <see cref="AsmResolver.DotNet.Signatures.TypeDefOrRefSignature"/> to its
+    /// Resolves a <see cref="TypeDefOrRefSignature"/> to its
     /// <see cref="TypeDefinition"/>, handling both in-assembly (already a TypeDefinition) and
     /// cross-assembly/TypeRef-row references via the metadata cache. Returns <c>null</c> when
     /// the reference cannot be resolved.
