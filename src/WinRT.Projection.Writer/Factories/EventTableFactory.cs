@@ -66,39 +66,49 @@ internal static class EventTableFactory
         TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
         bool isGeneric = evtTypeSig is GenericInstanceTypeSignature;
 
+        // Emits the unsafe accessor for the 'ConvertToUnmanaged' method for generic types
+        void EmitConvertToUnmanagedAccessor(IndentedTextWriter writer)
+        {
+            if (isGeneric)
+            {
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
+                IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
+
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToManaged",
+                    returnType: projectedTypeName.Format(),
+                    functionName: "ConvertToManaged",
+                    interopType: interopTypeName,
+                    parameterList: "void* value");
+            }
+        }
+
+        // Emits the marshalling call declaring the managed handler
+        void EmitHandlerDeclaration(IndentedTextWriter writer)
+        {
+            if (isGeneric)
+            {
+                writer.WriteLine($"var __handler = ConvertToManaged(null, {handlerRef});");
+            }
+            else
+            {
+                IndentedTextWriterCallback abiTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+
+                writer.WriteLine($"var __handler = {abiTypeName}Marshaller.ConvertToManaged({handlerRef});");
+            }
+        }
+
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             {
                 *{{cookieName}} = default;
                 try
                 {
+                    {{EmitConvertToUnmanagedAccessor}}
+
                     var __this = ComInterfaceDispatch.GetInstance<{{ifaceFullName}}>((ComInterfaceDispatch*)thisPtr);
-            """);
-
-        if (isGeneric)
-        {
-            string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
-            IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
-            writer.IncreaseIndent();
-            writer.IncreaseIndent();
-            UnsafeAccessorFactory.EmitStaticMethod(
-                writer,
-                accessName: "ConvertToManaged",
-                returnType: projectedTypeName.Format(),
-                functionName: "ConvertToManaged",
-                interopType: interopTypeName,
-                parameterList: "void* value");
-            writer.WriteLine($"var __handler = ConvertToManaged(null, {handlerRef});");
-            writer.DecreaseIndent();
-            writer.DecreaseIndent();
-        }
-        else
-        {
-            IndentedTextWriterCallback abiTypeName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
-            writer.WriteLine($"        var __handler = {abiTypeName}Marshaller.ConvertToManaged({handlerRef});");
-        }
-
-        writer.WriteLine(isMultiline: true, $$"""
+                    {{EmitHandlerDeclaration}}
                     *{{cookieName}} = _{{evName}}.GetOrCreateValue(__this).AddEventHandler(__handler);
                     __this.{{evName}} += __handler;
                     return 0;
