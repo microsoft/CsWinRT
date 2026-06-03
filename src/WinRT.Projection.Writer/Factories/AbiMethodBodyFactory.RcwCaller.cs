@@ -865,7 +865,9 @@ internal static partial class AbiMethodBodyFactory
             }
             else
             {
-                EmitParamArgConversion(writer, context, p, paramNameOverride);
+                string parameterName = paramNameOverride ?? p.GetRawName();
+
+                writer.Write(parameterName);
             }
         }
 
@@ -1385,37 +1387,5 @@ internal static partial class AbiMethodBodyFactory
         writer.DecreaseIndent();
         writer.WriteLine("}");
         writer.DecreaseIndent();
-    }
-
-    /// <summary>
-    /// Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.
-    /// </summary>
-    internal static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p, string? paramNameOverride = null)
-    {
-        string pname = paramNameOverride ?? p.GetRawName();
-
-        // bool: ABI is 'bool' directly; pass as-is.
-        if (p.Type is CorLibTypeSignature corlib &&
-            corlib.ElementType == ElementType.Boolean)
-        {
-            writer.Write(pname);
-        }
-
-        // char: ABI is 'char' directly; pass as-is.
-        else if (p.Type is CorLibTypeSignature corlib2 &&
-                 corlib2.ElementType == ElementType.Char)
-        {
-            writer.Write(pname);
-        }
-
-        // Enums: function pointer signature uses the projected enum type, so pass directly.
-        else if (context.AbiTypeKindResolver.IsEnumType(p.Type))
-        {
-            writer.Write(pname);
-        }
-        else
-        {
-            writer.Write(pname);
-        }
     }
 }
