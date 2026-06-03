@@ -416,11 +416,12 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Keys' method as follows:
             //
-            // public static ICollection<<KEY_TYPE>> Keys(WindowsRuntimeObject windowsRuntimeObject)
+            // public static ICollection<<KEY_TYPE>> Keys(WindowsRuntimeObject thisObject)
             //
             // The runtime instance passed in is the projected runtime class itself, which directly implements
-            // 'IDictionary<TKey, TValue>'. The 'castclass' makes the IL verifiable; no extra object allocation
-            // is needed.
+            // 'IDictionary<TKey, TValue>'. This is strictly part of the contract, and we don't need to validate
+            // it at runtime (with a cast), in the same way as we don't do additional 'QueryInterface' calls on
+            // the various object references being passed around as arguments to interop methods.
             MethodDefinition keysMethod = new(
                 name: "Keys"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -431,7 +432,6 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Castclass, dictionaryType.ToTypeDefOrRef() },
                     { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
@@ -441,7 +441,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Values' method as follows:
             //
-            // public static ICollection<<VALUE_TYPE>> Values(WindowsRuntimeObject windowsRuntimeObject)
+            // public static ICollection<<VALUE_TYPE>> Values(WindowsRuntimeObject thisObject)
             MethodDefinition valuesMethod = new(
                 name: "Values"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -452,7 +452,6 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Castclass, dictionaryType.ToTypeDefOrRef() },
                     { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }

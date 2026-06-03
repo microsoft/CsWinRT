@@ -1750,9 +1750,9 @@ namespace UnitTest
                 ["foo"] = "bar"
             };
 
-            // The 'Keys' and 'Values' properties cache the wrapper collection (via the C# 14
-            // 'field ??=' pattern) so repeated access returns the same instance, matching the
-            // caching behavior of the dictionary native object in 'WinRT.Runtime'.
+            // The 'Keys' and 'Values' properties cache the wrapper collection,
+            // so repeated access returns the same instance, matching the caching
+            // behavior of the dictionary native object in 'WinRT.Runtime'.
             ICollection<string> keys1 = stringMap.Keys;
             ICollection<string> keys2 = stringMap.Keys;
             ICollection<string> values1 = stringMap.Values;

@@ -222,14 +222,9 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Keys' method as follows:
             //
-            // public static IEnumerable<<KEY_TYPE>> Keys(WindowsRuntimeObject windowsRuntimeObject)
+            // public static IEnumerable<<KEY_TYPE>> Keys(WindowsRuntimeObject thisObject)
             //
-            // The runtime instance passed in is the projected runtime class itself, which directly implements
-            // 'IEnumerable<KeyValuePair<TKey, TValue>>' (via 'IReadOnlyDictionary<TKey, TValue>'). The 'castclass'
-            // makes the IL verifiable; no extra object allocation is needed.
-            ITypeDefOrRef keyValuePairEnumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([
-                interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType])]).ToTypeDefOrRef();
-
+            // See additional notes in 'InteropTypeDefinitionBuilder.IDictionary2.Methods' (analogous logic).
             MethodDefinition keysMethod = new(
                 name: "Keys"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -245,7 +240,6 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Castclass, keyValuePairEnumerableType },
                     { Newobj, interopReferences.ReadOnlyDictionaryKeyCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
@@ -253,7 +247,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Values' method as follows:
             //
-            // public static IEnumerable<<VALUE_TYPE>> Values(WindowsRuntimeObject windowsRuntimeObject)
+            // public static IEnumerable<<VALUE_TYPE>> Values(WindowsRuntimeObject thisObject)
             MethodDefinition valuesMethod = new(
                 name: "Values"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
@@ -269,7 +263,6 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Castclass, keyValuePairEnumerableType },
                     { Newobj, interopReferences.ReadOnlyDictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
