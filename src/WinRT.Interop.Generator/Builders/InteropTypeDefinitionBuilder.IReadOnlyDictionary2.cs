@@ -230,20 +230,17 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([keyType]),
-                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]));
-
-            readOnlyDictionaryMethodsType.Methods.Add(keysMethod);
-
-            // Create a method body for the 'Keys' method
-            keysMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Newobj, interopReferences.ReadOnlyDictionaryKeyCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
             };
+
+            readOnlyDictionaryMethodsType.Methods.Add(keysMethod);
 
             // Define the 'Values' method as follows:
             //
@@ -253,20 +250,17 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([valueType]),
-                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]));
-
-            readOnlyDictionaryMethodsType.Methods.Add(valuesMethod);
-
-            // Create a method body for the 'Values' method
-            valuesMethod.CilMethodBody = new CilMethodBody()
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
             {
-                Instructions =
+                CilInstructions =
                 {
                     { Ldarg_0 },
                     { Newobj, interopReferences.ReadOnlyDictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
             };
+
+            readOnlyDictionaryMethodsType.Methods.Add(valuesMethod);
 
             // Define the 'ContainsKey' method as follows:
             //
