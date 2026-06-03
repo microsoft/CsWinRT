@@ -3530,10 +3530,10 @@ visibility, element, self, interop_method_name_prefix, objref_name);
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
-static extern IEnumerable<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
+static extern IEnumerable<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObject windowsRuntimeObject);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
-static extern IEnumerable<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
+static extern IEnumerable<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObject windowsRuntimeObject);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
@@ -3556,15 +3556,15 @@ interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key,
 );
 
         w.write(R"(
-%IEnumerable<%> %Keys => %Keys(null, %);
-%IEnumerable<%> %Values => %Values(null, %);
+%IEnumerable<%> %Keys => field ??= %Keys(null, this);
+%IEnumerable<%> %Values => field ??= %Values(null, this);
 %int %Count => %Count(null, %);
 %% %this[% key] => %Item(null, %, key);
 %bool %ContainsKey(% key) => %ContainsKey(null, %, key);
 %bool %TryGetValue(% key, out % value) => %TryGetValue(null, %, key, out value);
 )",
-visibility, key, self, interop_method_name_prefix, objref_name,
-visibility, value, self, interop_method_name_prefix, objref_name,
+visibility, key, self, interop_method_name_prefix,
+visibility, value, self, interop_method_name_prefix,
 visibility, ireadonlycollection, interop_method_name_prefix, objref_name,
 visibility, value, self, key, interop_method_name_prefix, objref_name,
 visibility, self, key, interop_method_name_prefix, objref_name,
@@ -3616,10 +3616,10 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Keys")]
-static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
+static extern ICollection<%> %Keys([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObject windowsRuntimeObject);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Values")]
-static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
+static extern ICollection<%> %Values([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObject windowsRuntimeObject);
 
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Count")]
 static extern int %Count([UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IDictionary'2<%|%>Methods, WinRT.Interop")] object _, WindowsRuntimeObjectReference objRef);
@@ -3674,8 +3674,8 @@ interop_method_name_prefix, key_interop_type_name, value_interop_type_name, key,
 );
 
         w.write(R"(
-%ICollection<%> %Keys => %Keys(null, %);
-%ICollection<%> %Values => %Values(null, %);
+%ICollection<%> %Keys => field ??= %Keys(null, this);
+%ICollection<%> %Values => field ??= %Values(null, this);
 %int %Count => %Count(null, %);
 %bool %IsReadOnly => false;
 %% %this[% key] 
@@ -3693,8 +3693,8 @@ set => %Item(null, %, key, value);
 %void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %CopyTo(null, %, %, array, arrayIndex);
 bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %Remove(null, %, item);
 )",
-visibility, key, self, interop_method_name_prefix, objref_name, //Keys
-visibility, value, self, interop_method_name_prefix, objref_name, // Values
+visibility, key, self, interop_method_name_prefix, //Keys
+visibility, value, self, interop_method_name_prefix, // Values
 visibility, icollection, interop_method_name_prefix, objref_name, // Count
 visibility, icollection, // IsReadOnly
 visibility, value, self, key, interop_method_name_prefix, objref_name, interop_method_name_prefix, objref_name, // Indexer

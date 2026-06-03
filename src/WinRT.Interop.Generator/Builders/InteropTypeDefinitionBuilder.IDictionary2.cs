@@ -271,7 +271,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapMethodsType">The type returned by <see cref="IMapMethods"/>.</param>
-        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -279,7 +278,6 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Methods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
-            TypeDefinition nativeObjectType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -418,21 +416,22 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Keys' method as follows:
             //
-            // public static ICollection<<KEY_TYPE>> Keys(WindowsRuntimeObjectReference thisReference)
+            // public static ICollection<<KEY_TYPE>> Keys(WindowsRuntimeObject windowsRuntimeObject)
             //
-            // The 'NativeObject' instance derives from 'WindowsRuntimeDictionary<...>' which implements
-            // 'IDictionary<TKey, TValue>', so it can be passed directly to the collection constructor.
+            // The runtime instance passed in is the projected runtime class itself, which directly implements
+            // 'IDictionary<TKey, TValue>'. The 'castclass' makes the IL verifiable; no extra object allocation
+            // is needed.
             MethodDefinition keysMethod = new(
                 name: "Keys"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.ICollection1.MakeGenericReferenceType([keyType]),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Castclass, dictionaryType.ToTypeDefOrRef() },
                     { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
@@ -442,18 +441,18 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Values' method as follows:
             //
-            // public static ICollection<<VALUE_TYPE>> Values(WindowsRuntimeObjectReference thisReference)
+            // public static ICollection<<VALUE_TYPE>> Values(WindowsRuntimeObject windowsRuntimeObject)
             MethodDefinition valuesMethod = new(
                 name: "Values"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.ICollection1.MakeGenericReferenceType([valueType]),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Castclass, dictionaryType.ToTypeDefOrRef() },
                     { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }

@@ -144,7 +144,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapViewMethodsType">The type returned by <see cref="IMapViewMethods"/>.</param>
-        /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -152,7 +151,6 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Methods(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition mapViewMethodsType,
-            TypeDefinition nativeObjectType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -224,16 +222,20 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Keys' method as follows:
             //
-            // public static IEnumerable<<KEY_TYPE>> Keys(WindowsRuntimeObjectReference thisReference)
+            // public static IEnumerable<<KEY_TYPE>> Keys(WindowsRuntimeObject windowsRuntimeObject)
             //
-            // The 'NativeObject' instance derives from 'WindowsRuntimeReadOnlyDictionary<...>' which implements
-            // 'IEnumerable<KeyValuePair<TKey, TValue>>', so it can be passed directly to the collection constructor.
+            // The runtime instance passed in is the projected runtime class itself, which directly implements
+            // 'IEnumerable<KeyValuePair<TKey, TValue>>' (via 'IReadOnlyDictionary<TKey, TValue>'). The 'castclass'
+            // makes the IL verifiable; no extra object allocation is needed.
+            ITypeDefOrRef keyValuePairEnumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([
+                interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType])]).ToTypeDefOrRef();
+
             MethodDefinition keysMethod = new(
                 name: "Keys"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([keyType]),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]));
 
             readOnlyDictionaryMethodsType.Methods.Add(keysMethod);
 
@@ -243,7 +245,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Castclass, keyValuePairEnumerableType },
                     { Newobj, interopReferences.ReadOnlyDictionaryKeyCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
@@ -251,13 +253,13 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Define the 'Values' method as follows:
             //
-            // public static IEnumerable<<VALUE_TYPE>> Values(WindowsRuntimeObjectReference thisReference)
+            // public static IEnumerable<<VALUE_TYPE>> Values(WindowsRuntimeObject windowsRuntimeObject)
             MethodDefinition valuesMethod = new(
                 name: "Values"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([valueType]),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]));
 
             readOnlyDictionaryMethodsType.Methods.Add(valuesMethod);
 
@@ -267,7 +269,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Newobj, nativeObjectType.GetMethod(".ctor"u8) },
+                    { Castclass, keyValuePairEnumerableType },
                     { Newobj, interopReferences.ReadOnlyDictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }

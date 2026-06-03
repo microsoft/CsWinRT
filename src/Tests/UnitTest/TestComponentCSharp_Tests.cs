@@ -1750,20 +1750,18 @@ namespace UnitTest
                 ["foo"] = "bar"
             };
 
-            // Repeated access to 'Keys'/'Values' should always observe the current state and
-            // never throw. This is the basic guarantee callers rely on; whether each access
-            // returns the same wrapper instance or a fresh one is an implementation detail.
+            // The 'Keys' and 'Values' properties cache the wrapper collection (via the C# 14
+            // 'field ??=' pattern) so repeated access returns the same instance, matching the
+            // caching behavior of the dictionary native object in 'WinRT.Runtime'.
             ICollection<string> keys1 = stringMap.Keys;
             ICollection<string> keys2 = stringMap.Keys;
             ICollection<string> values1 = stringMap.Values;
             ICollection<string> values2 = stringMap.Values;
 
             Assert.AreEqual(1, keys1.Count);
-            Assert.AreEqual(1, keys2.Count);
             Assert.AreEqual(1, values1.Count);
-            Assert.AreEqual(1, values2.Count);
-            CollectionAssert.AreEquivalent(keys1.ToArray(), keys2.ToArray());
-            CollectionAssert.AreEquivalent(values1.ToArray(), values2.ToArray());
+            Assert.AreSame(keys1, keys2);
+            Assert.AreSame(values1, values2);
         }
 
         [TestMethod]
