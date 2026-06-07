@@ -145,15 +145,16 @@ public static partial class WindowsMetadataExpander
                 return p2;
             }
         }
-
-        // Both views can fail with permission errors on hardened machines, or with I/O errors
-        // when the registry hive is being modified concurrently by an installer. Treat any of
-        // those as "no SDK detected" and let the caller fall back to the path-not-found error.
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
+            // Both views can fail with permission errors on hardened machines, or with I/O errors
+            // when the registry hive is being modified concurrently by an installer. Treat any of
+            // those as "no SDK detected" and let the caller fall back to the path-not-found error.
         }
+
         return string.Empty;
     }
+
     private static string TryGetCurrentSdkVersion()
     {
         string sdkPath = TryGetSdkPath();

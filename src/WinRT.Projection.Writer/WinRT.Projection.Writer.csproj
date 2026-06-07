@@ -49,6 +49,10 @@
     <PackageReference Include="AsmResolver.DotNet" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="WinRT.Projection.Writer.TestRunner" />
+  </ItemGroup>
+
   <!-- Embed the resource files used for additions and base strings -->
   <ItemGroup>
     <EmbeddedResource Include="Resources\**\*.cs" />
@@ -60,7 +64,7 @@
     SR.cs files would be misinterpreted by the SDK's CreateManifestResourceNames task as having
     Culture="SR" (treating '.SR.' as a locale identifier and embedding them as satellite
     resources), so we keep them on disk as '_SR.cs' and override the LogicalName to the
-    expected manifest path that Additions.All looks up at runtime.
+    expected manifest path that Additions looks up at runtime.
   -->
   <ItemGroup>
     <EmbeddedResource Update="Resources\Additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml._SR.cs"

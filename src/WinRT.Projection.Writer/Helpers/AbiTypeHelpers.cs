@@ -8,10 +8,8 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -24,90 +22,16 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the parent class for an interface marked <c>[ExclusiveToAttribute(typeof(T))]</c>.
     /// </summary>
-    internal static TypeDefinition? GetExclusiveToType(MetadataCache cache, TypeDefinition iface)
+    public static TypeDefinition? GetExclusiveToType(MetadataCache cache, TypeDefinition iface)
     {
-        for (int i = 0; i < iface.CustomAttributes.Count; i++)
+        CustomAttribute? attr = iface.GetWindowsFoundationMetadataAttribute(ExclusiveToAttribute);
+
+        if (attr is null || !attr.TryGetFixedArgument(0, out TypeSignature? sig))
         {
-            CustomAttribute attr = iface.CustomAttributes[i];
-            ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
-
-            if (attrType is null)
-            {
-                continue;
-            }
-
-            if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
-                attrType.Name?.Value != ExclusiveToAttribute)
-            {
-                continue;
-            }
-
-            if (attr.Signature is null)
-            {
-                continue;
-            }
-
-            for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
-            {
-                CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
-
-                if (arg.Element is TypeSignature sig)
-                {
-                    string fullName = sig.FullName ?? string.Empty;
-                    TypeDefinition? td = cache.Find(fullName);
-
-                    if (td is not null)
-                    {
-                        return td;
-                    }
-                }
-                else if (arg.Element is string s)
-                {
-                    TypeDefinition? td = cache.Find(s);
-
-                    if (td is not null)
-                    {
-                        return td;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Resolves an InterfaceImpl's interface reference to a TypeDefinition (same module or via metadata cache).
-    /// </summary>
-    internal static TypeDefinition? ResolveInterfaceTypeDef(MetadataCache cache, ITypeDefOrRef ifaceRef)
-    {
-        if (ifaceRef is TypeDefinition td)
-        {
-            return td;
+            return null;
         }
 
-        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
-        {
-            ITypeDefOrRef? gen = gi.GenericType;
-
-            if (gen is TypeDefinition gtd)
-            {
-                return gtd;
-            }
-
-            if (gen is TypeReference gtr)
-            {
-                (string ns, string nm) = gtr.Names();
-                return cache.Find(ns + "." + nm);
-            }
-        }
-
-        if (ifaceRef is TypeReference tr)
-        {
-            (string ns, string nm) = tr.Names();
-            return cache.Find(ns + "." + nm);
-        }
-
-        return null;
+        return cache.Find(sig.FullName ?? string.Empty);
     }
 
     /// <summary>
@@ -131,14 +55,14 @@ internal static partial class AbiTypeHelpers
 
             index++;
         }
-        return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(CultureInfo.InvariantCulture);
+        return method.GetRawName() + "_" + index.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <summary>
     /// Returns the metadata-derived name for the return parameter, or the conventional
     /// <c>__return_value__</c> placeholder when the metadata does not name it.
     /// </summary>
-    internal static string GetReturnParamName(MethodSignatureInfo sig)
+    public static string GetReturnParamName(MethodSignatureInfo sig)
     {
         string? n = sig.ReturnParameter?.Name?.Value;
 
@@ -147,22 +71,13 @@ internal static partial class AbiTypeHelpers
             return "__return_value__";
         }
 
-        return CSharpKeywords.IsKeyword(n) ? "@" + n : n;
-    }
-
-    /// <summary>
-    /// Returns the local-variable name for the return parameter on the server side.
-    /// <c>abi_marshaler::get_marshaler_local()</c> which prefixes <c>__</c> to the param name.
-    /// </summary>
-    internal static string GetReturnLocalName(MethodSignatureInfo sig)
-    {
-        return "__" + GetReturnParamName(sig);
+        return IdentifierEscaping.EscapeIdentifier(n);
     }
 
     /// <summary>
     /// Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.
     /// </summary>
-    internal static string GetReturnSizeParamName(MethodSignatureInfo sig)
+    public static string GetReturnSizeParamName(MethodSignatureInfo sig)
     {
         return "__" + GetReturnParamName(sig) + "Size";
     }
@@ -170,7 +85,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Build a method-to-event map for add/remove accessors of a type.
     /// </summary>
-    internal static Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
+    public static Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
     {
         if (type.Events.Count == 0)
         {
@@ -193,6 +108,13 @@ internal static partial class AbiTypeHelpers
         return map;
     }
 
+    /// <inheritdoc cref="WriteIidGuidReference(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
+    /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteIidGuidReference(ProjectionEmitContext context, TypeDefinition type)
+    {
+        return writer => WriteIidGuidReference(writer, context, type);
+    }
+
     /// <summary>
     /// Writes the IID GUID literal expression for the given runtime type (used by ABI emission paths).
     /// </summary>
@@ -201,8 +123,8 @@ internal static partial class AbiTypeHelpers
         if (type.GenericParameters.Count != 0)
         {
             // Generic interface IID - call the unsafe accessor
-            IidExpressionGenerator.WriteIidGuidPropertyName(writer, context, type);
-            writer.Write("(null)");
+            IndentedTextWriterCallback iidName = IidExpressionGenerator.WriteIidGuidPropertyName(context, type);
+            writer.Write($"{iidName}(null)");
             return;
         }
 
@@ -214,111 +136,18 @@ internal static partial class AbiTypeHelpers
             return;
         }
 
-        writer.Write("global::ABI.InterfaceIIDs.");
-        IidExpressionGenerator.WriteIidGuidPropertyName(writer, context, type);
-    }
-
-    /// <summary>
-    /// True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.
-    /// </summary>
-    internal static bool IsDelegateInvokeNativeSupported(MetadataCache cache, MethodSignatureInfo sig)
-    {
-        TypeSignature? rt = sig.ReturnType;
-
-        if (rt is not null)
-        {
-            if (rt.IsHResultException())
-            {
-                return false;
-            }
-
-            if (!(IsBlittablePrimitive(cache, rt) || IsAnyStruct(cache, rt) || rt.IsString() || IsRuntimeClassOrInterface(cache, rt) || rt.IsObject() || rt.IsGenericInstance() || IsComplexStruct(cache, rt)))
-            {
-                return false;
-            }
-        }
-
-        foreach (ParameterInfo p in sig.Parameters)
-        {
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
-
-            if (cat is ParameterCategory.PassArray or ParameterCategory.FillArray)
-            {
-                if (p.Type is SzArrayTypeSignature szP)
-                {
-                    if (IsBlittablePrimitive(cache, szP.BaseType))
-                    {
-                        continue;
-                    }
-
-                    if (IsAnyStruct(cache, szP.BaseType))
-                    {
-                        continue;
-                    }
-                }
-
-                return false;
-            }
-
-            if (cat != ParameterCategory.In)
-            {
-                return false;
-            }
-
-            if (p.Type.IsHResultException())
-            {
-                return false;
-            }
-
-            if (IsBlittablePrimitive(cache, p.Type))
-            {
-                continue;
-            }
-
-            if (IsAnyStruct(cache, p.Type))
-            {
-                continue;
-            }
-
-            if (p.Type.IsString())
-            {
-                continue;
-            }
-
-            if (IsRuntimeClassOrInterface(cache, p.Type))
-            {
-                continue;
-            }
-
-            if (p.Type.IsObject())
-            {
-                continue;
-            }
-
-            if (p.Type.IsGenericInstance())
-            {
-                continue;
-            }
-
-            if (IsComplexStruct(cache, p.Type))
-            {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
+        IndentedTextWriterCallback name = IidExpressionGenerator.WriteIidGuidPropertyName(context, type);
+        writer.Write($"global::ABI.InterfaceIIDs.{name}");
     }
 
     /// <summary>
     /// True if the interface has at least one non-special method, property, or non-skipped event.
     /// </summary>
-    internal static bool HasEmittableMembers(TypeDefinition iface, bool skipExclusiveEvents)
+    public static bool HasEmittableMembers(TypeDefinition iface, bool skipExclusiveEvents)
     {
         foreach (MethodDefinition m in iface.Methods)
         {
-            if (!m.IsSpecial())
+            if (!m.IsSpecial)
             {
                 return true;
             }
@@ -340,7 +169,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the number of methods (including special accessors) on the interface.
     /// </summary>
-    internal static int CountMethods(TypeDefinition iface)
+    public static int CountMethods(TypeDefinition iface)
     {
         return iface.Methods.Count;
     }
@@ -348,7 +177,7 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns the number of base classes between <paramref name="classType"/> and <see cref="object"/>.
     /// </summary>
-    internal static int GetClassHierarchyIndex(MetadataCache cache, TypeDefinition classType)
+    public static int GetClassHierarchyIndex(MetadataCache cache, TypeDefinition classType)
     {
         if (classType.BaseType is null)
         {
@@ -357,6 +186,9 @@ internal static partial class AbiTypeHelpers
 
         (string ns, string nm) = classType.BaseType.Names();
 
+        // 'System.Object' is not in any .winmd, so resolving via the cache fails. But AsmResolver
+        // can still 'TryResolve' it from the corlib runtime context, which would (incorrectly)
+        // make a direct-Object-derivation count as depth 1 instead of 0. Short-circuit here.
         if (ns == "System" && nm == "Object")
         {
             return 0;
@@ -367,7 +199,7 @@ internal static partial class AbiTypeHelpers
         if (baseDef is null)
         {
             baseDef = classType.BaseType.TryResolve(cache.RuntimeContext);
-            baseDef ??= cache.Find(string.IsNullOrEmpty(ns) ? nm : (ns + "." + nm));
+            baseDef ??= cache.Find(ns, nm);
         }
 
         if (baseDef is null)
@@ -381,64 +213,8 @@ internal static partial class AbiTypeHelpers
     /// <summary>
     /// Returns whether two interface types refer to the same interface by namespace+name (used to compare interfaces across module boundaries).
     /// </summary>
-    internal static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
+    public static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
     {
-        if (a == b)
-        {
-            return true;
-        }
-
-        return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
-            && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
-    }
-
-    /// <summary>Strips <c>ByReferenceTypeSignature</c> and <c>CustomModifierTypeSignature</c> wrappers
-    /// to get the underlying type signature.</summary>
-    internal static TypeSignature StripByRefAndCustomModifiers(TypeSignature sig)
-    {
-        TypeSignature current = sig;
-        while (true)
-        {
-            if (current is ByReferenceTypeSignature br)
-            {
-                current = br.BaseType;
-                continue;
-            }
-
-            if (current is CustomModifierTypeSignature cm)
-            {
-                current = cm.BaseType;
-                continue;
-            }
-
-            return current;
-        }
-    }
-
-    /// <summary>
-    /// Returns the C#-callsite name for <paramref name="p"/> (the metadata name, escaped with
-    /// <c>@</c> when it collides with a C# keyword). When <paramref name="paramNameOverride"/> is
-    /// non-<see langword="null"/>, it replaces the metadata name.
-    /// </summary>
-    /// <param name="p">The parameter to name.</param>
-    /// <param name="paramNameOverride">Optional override (FastAbi-merged Methods classes use this to inject a synthesized name).</param>
-    /// <returns>The escaped parameter name.</returns>
-    internal static string GetParamName(ParameterInfo p, string? paramNameOverride)
-    {
-        string name = paramNameOverride ?? p.Parameter.Name ?? "param";
-        return CSharpKeywords.IsKeyword(name) ? "@" + name : name;
-    }
-
-    /// <summary>
-    /// Returns the local-variable name for <paramref name="p"/> (the metadata name without
-    /// the C#-keyword <c>@</c> escape, since helper local names like <c>__event</c> are valid
-    /// even when the underlying parameter name is a C# keyword).
-    /// </summary>
-    /// <param name="p">The parameter to name.</param>
-    /// <param name="paramNameOverride">Optional override.</param>
-    /// <returns>The unescaped local-variable name.</returns>
-    internal static string GetParamLocalName(ParameterInfo p, string? paramNameOverride)
-    {
-        return paramNameOverride ?? p.Parameter.Name ?? "param";
+        return a == b || a.Names() == b.Names();
     }
 }

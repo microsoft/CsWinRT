@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
@@ -94,18 +95,18 @@ internal static class MappedInterfaceStubFactory
                 break;
             case "IBindableIterator":
                 writer.WriteLine();
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({{objRefName}});
                     public void Reset() => throw new NotSupportedException();
                     public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({{objRefName}});
-                    """, isMultiline: true);
+                    """);
                 break;
             case "IBindableVector":
                 EmitNonGenericList(writer, objRefName);
                 break;
             case "INotifyDataErrorInfo":
                 writer.WriteLine();
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                     public global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({{objRefName}}, propertyName);
                     public bool HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({{objRefName}}); }
                     public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
@@ -113,7 +114,7 @@ internal static class MappedInterfaceStubFactory
                         add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Subscribe(value);
                         remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Unsubscribe(value);
                     }
-                    """, isMultiline: true);
+                    """);
                 break;
         }
     }
@@ -158,17 +159,18 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IEnumeratorMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "Current", t, $"{prefix}Current", interopType, "");
-        EmitUnsafeAccessor(writer, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
+        EmitUnsafeAccessors(writer, interopType, [
+            new("Current",  t,      $"{prefix}Current",  ""),
+            new("MoveNext", "bool", $"{prefix}MoveNext", "")]);
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public bool MoveNext() => {{prefix}}MoveNext(null, {{objRefName}});
             public void Reset() => throw new NotSupportedException();
-            public void Dispose() {}
+            public void Dispose() { }
             public {{t}} Current => {{prefix}}Current(null, {{objRefName}});
             object global::System.Collections.IEnumerator.Current => Current!;
-            """, isMultiline: true);
+            """);
     }
 
     private static void EmitDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -180,11 +182,13 @@ internal static class MappedInterfaceStubFactory
 
         string k = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string v = WriteTypeNameToString(context, args[1], TypedefNameType.Projected, true);
+
         // Truth uses two forms for KeyValuePair:
         // - 'kv' (unqualified) for plain type usages: parameters, field/return types
         // - 'kvNested' (fully qualified) for generic argument usages (inside IEnumerator<>, ICollection<>)
         string kv = $"KeyValuePair<{k}, {v}>";
         string kvNested = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+
         // Long form (always fully qualified) used for objref field-name computation
         // (matches the form WriteClassObjRefDefinitions emits transitively).
         string kvLong = kvNested;
@@ -194,29 +198,31 @@ internal static class MappedInterfaceStubFactory
         string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
+
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
         string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
-        EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "");
-        EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
-        EmitUnsafeAccessor(writer, "Item", v, $"{prefix}Item", interopType, $", {k} key");
-        EmitUnsafeAccessor(writer, "Item", "void", $"{prefix}Item", interopType, $", {k} key, {v} value");
-        EmitUnsafeAccessor(writer, "Add", "void", $"{prefix}Add", interopType, $", {k} key, {v} value");
-        EmitUnsafeAccessor(writer, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
-        EmitUnsafeAccessor(writer, "Remove", "bool", $"{prefix}Remove", interopType, $", {k} key");
-        EmitUnsafeAccessor(writer, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
-        EmitUnsafeAccessor(writer, "Add", "void", $"{prefix}Add", interopType, $", {kv} item");
-        EmitUnsafeAccessor(writer, "Clear", "void", $"{prefix}Clear", interopType, "");
-        EmitUnsafeAccessor(writer, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
-        EmitUnsafeAccessor(writer, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex");
-        EmitUnsafeAccessor(writer, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
+        EmitUnsafeAccessors(writer, interopType, [
+            new("Keys",         $"ICollection<{k}>", $"{prefix}Keys",         ""),
+            new("Values",       $"ICollection<{v}>", $"{prefix}Values",       ""),
+            new("Count",        "int",               $"{prefix}Count",        ""),
+            new("Item",         v,                   $"{prefix}Item",         $", {k} key"),
+            new("Item",         "void",              $"{prefix}Item",         $", {k} key, {v} value"),
+            new("Add",          "void",              $"{prefix}Add",          $", {k} key, {v} value"),
+            new("ContainsKey",  "bool",              $"{prefix}ContainsKey",  $", {k} key"),
+            new("Remove",       "bool",              $"{prefix}Remove",       $", {k} key"),
+            new("TryGetValue",  "bool",              $"{prefix}TryGetValue",  $", {k} key, out {v} value"),
+            new("Add",          "void",              $"{prefix}Add",          $", {kv} item"),
+            new("Clear",        "void",              $"{prefix}Clear",        ""),
+            new("Contains",     "bool",              $"{prefix}Contains",     $", {kv} item"),
+            new("CopyTo",       "void",              $"{prefix}CopyTo",       $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex"),
+            new("Remove",       "bool",              $"{prefix}Remove",       $", {kv} item")]);
 
         // Public member emission order matches the WinRT IMap<K,V> vtable order, NOT alphabetical.
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s own
         // EmitGenericEnumerable invocation.
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public ICollection<{{k}}> Keys => {{prefix}}Keys(null, {{objRefName}});
             public ICollection<{{v}}> Values => {{prefix}}Values(null, {{objRefName}});
             public int Count => {{prefix}}Count(null, {{objRefName}});
@@ -235,7 +241,7 @@ internal static class MappedInterfaceStubFactory
             public bool Contains({{kv}} item) => {{prefix}}Contains(null, {{objRefName}}, item);
             public void CopyTo({{kv}}[] array, int arrayIndex) => {{prefix}}CopyTo(null, {{objRefName}}, {{enumerableObjRefName}}, array, arrayIndex);
             bool ICollection<{{kv}}>.Remove({{kv}} item) => {{prefix}}Remove(null, {{objRefName}}, item);
-            """, isMultiline: true);
+            """);
     }
 
     private static void EmitReadOnlyDictionary(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -255,12 +261,13 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
-        EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "");
-        EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
-        EmitUnsafeAccessor(writer, "Item", v, $"{prefix}Item", interopType, $", {k} key");
-        EmitUnsafeAccessor(writer, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
-        EmitUnsafeAccessor(writer, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
+        EmitUnsafeAccessors(writer, interopType, [
+            new("Keys",        $"ICollection<{k}>", $"{prefix}Keys",        ""),
+            new("Values",      $"ICollection<{v}>", $"{prefix}Values",      ""),
+            new("Count",       "int",               $"{prefix}Count",       ""),
+            new("Item",        v,                   $"{prefix}Item",        $", {k} key"),
+            new("ContainsKey", "bool",              $"{prefix}ContainsKey", $", {k} key"),
+            new("TryGetValue", "bool",              $"{prefix}TryGetValue", $", {k} key, out {v} value")]);
 
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s
         // EmitGenericEnumerable invocation.
@@ -287,17 +294,18 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
-        EmitUnsafeAccessor(writer, "Item", t, $"{prefix}Item", interopType, ", int index");
+        EmitUnsafeAccessors(writer, interopType, [
+            new("Count", "int", $"{prefix}Count", ""),
+            new("Item",  t,     $"{prefix}Item",  ", int index")]);
 
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // EmitGenericEnumerable invocation.
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
             public {{t}} this[int index] => {{prefix}}Item(null, {{objRefName}}, index);
             public int Count => {{prefix}}Count(null, {{objRefName}});
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -305,7 +313,7 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static string WriteTypeNameToString(ProjectionEmitContext context, TypeSemantics arg, TypedefNameType nameType, bool forceQualified)
     {
-        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified);
+        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified).Format();
         return result;
     }
 
@@ -333,22 +341,23 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IListMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
-        EmitUnsafeAccessor(writer, "Item", t, $"{prefix}Item", interopType, ", int index");
-        EmitUnsafeAccessor(writer, "Item", "void", $"{prefix}Item", interopType, $", int index, {t} value");
-        EmitUnsafeAccessor(writer, "IndexOf", "int", $"{prefix}IndexOf", interopType, $", {t} item");
-        EmitUnsafeAccessor(writer, "Insert", "void", $"{prefix}Insert", interopType, $", int index, {t} item");
-        EmitUnsafeAccessor(writer, "RemoveAt", "void", $"{prefix}RemoveAt", interopType, ", int index");
-        EmitUnsafeAccessor(writer, "Add", "void", $"{prefix}Add", interopType, $", {t} item");
-        EmitUnsafeAccessor(writer, "Clear", "void", $"{prefix}Clear", interopType, "");
-        EmitUnsafeAccessor(writer, "Contains", "bool", $"{prefix}Contains", interopType, $", {t} item");
-        EmitUnsafeAccessor(writer, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", {t}[] array, int arrayIndex");
-        EmitUnsafeAccessor(writer, "Remove", "bool", $"{prefix}Remove", interopType, $", {t} item");
+        EmitUnsafeAccessors(writer, interopType, [
+            new("Count",    "int",  $"{prefix}Count",    ""),
+            new("Item",     t,      $"{prefix}Item",     ", int index"),
+            new("Item",     "void", $"{prefix}Item",     $", int index, {t} value"),
+            new("IndexOf",  "int",  $"{prefix}IndexOf",  $", {t} item"),
+            new("Insert",   "void", $"{prefix}Insert",   $", int index, {t} item"),
+            new("RemoveAt", "void", $"{prefix}RemoveAt", ", int index"),
+            new("Add",      "void", $"{prefix}Add",      $", {t} item"),
+            new("Clear",    "void", $"{prefix}Clear",    ""),
+            new("Contains", "bool", $"{prefix}Contains", $", {t} item"),
+            new("CopyTo",   "void", $"{prefix}CopyTo",   $", {t}[] array, int arrayIndex"),
+            new("Remove",   "bool", $"{prefix}Remove",   $", {t} item")]);
 
         // Public member emission order matches the WinRT IVector<T> vtable order mapped to IList<T>,
         // NOT alphabetical. GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // own EmitGenericEnumerable invocation.
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             public int Count => {{prefix}}Count(null, {{objRefName}});
             public bool IsReadOnly => false;
             
@@ -366,7 +375,7 @@ internal static class MappedInterfaceStubFactory
             public bool Contains({{t}} item) => {{prefix}}Contains(null, {{objRefName}}, item);
             public void CopyTo({{t}}[] array, int arrayIndex) => {{prefix}}CopyTo(null, {{objRefName}}, array, arrayIndex);
             public bool Remove({{t}} item) => {{prefix}}Remove(null, {{objRefName}}, item);
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -375,17 +384,37 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams)
     {
-        writer.WriteLine($$"""
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "{{accessName}}")]
-            static extern {{returnType}} {{functionName}}([UnsafeAccessorType("{{interopType}}")] object _, WindowsRuntimeObjectReference objRef{{extraParams}});
-            """, isMultiline: true);
+        UnsafeAccessorFactory.EmitStaticMethod(
+            writer,
+            accessName: accessName,
+            returnType: returnType,
+            functionName: functionName,
+            interopType: interopType,
+            parameterList: $"WindowsRuntimeObjectReference objRef{extraParams}");
         writer.WriteLine();
+    }
+
+    /// <summary>
+    /// Emits a sequence of <c>[UnsafeAccessor]</c> static extern declarations sharing the same
+    /// <paramref name="interopType"/>. Each row of <paramref name="accessors"/> is forwarded to
+    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, string, string, string, string, string)"/>.
+    /// Used by the collection-stub emitters which emit table-shaped sets of accessors.
+    /// </summary>
+    private static void EmitUnsafeAccessors(
+        IndentedTextWriter writer,
+        string interopType,
+        params ReadOnlySpan<(string AccessName, string ReturnType, string FunctionName, string ExtraParams)> accessors)
+    {
+        foreach ((string accessName, string returnType, string functionName, string extraParams) in accessors)
+        {
+            EmitUnsafeAccessor(writer, accessName, returnType, functionName, interopType, extraParams);
+        }
     }
 
     private static void EmitNonGenericList(IndentedTextWriter writer, string objRefName)
     {
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
             public object this[int index]
             {
@@ -405,7 +434,8 @@ internal static class MappedInterfaceStubFactory
             public void Remove(object value) => global::ABI.System.Collections.IListMethods.Remove({{objRefName}}, value);
             public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({{objRefName}}, index);
             public void CopyTo(Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({{objRefName}}, array, index);
-            """, isMultiline: true);
+            """);
+
         // GetEnumerator is NOT emitted here -- it's handled separately by IBindableIterable's
         // EmitNonGenericEnumerable invocation.
     }

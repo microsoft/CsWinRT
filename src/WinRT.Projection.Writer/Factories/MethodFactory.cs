@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -31,16 +29,14 @@ internal static class MethodFactory
         {
             // SZ arrays project as ReadOnlySpan<T> (matches the property setter parameter
             // convention; pass_array semantics).
+            IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
             if (isParameter)
             {
-                writer.Write("ReadOnlySpan<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                writer.Write(">");
+                writer.Write($"ReadOnlySpan<{elem}>");
             }
             else
             {
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                writer.Write("[]");
+                writer.Write($"{elem}[]");
             }
 
             return;
@@ -55,21 +51,11 @@ internal static class MethodFactory
         TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteProjectedSignature(IndentedTextWriter, ProjectionEmitContext, TypeSignature, bool)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the projected signature into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="typeSig">The signature to project.</param>
-    /// <param name="isParameter">When <see langword="true"/>, projects SZ-arrays as <see cref="System.ReadOnlySpan{T}"/> (parameter convention) instead of <c>T[]</c>.</param>
-    /// <returns>The projected signature.</returns>
-    public static string WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
+    /// <inheritdoc cref="WriteProjectedSignature(IndentedTextWriter, ProjectionEmitContext, TypeSignature, bool)"/>
+    /// <returns>A callback that writes the projected signature to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteProjectedSignature(ProjectionEmitContext context, TypeSignature typeSig, bool isParameter)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteProjectedSignature(writer, context, typeSig, isParameter);
-        return writer.ToString();
+        return writer => WriteProjectedSignature(writer, context, typeSig, isParameter);
     }
 
     /// <summary>
@@ -80,7 +66,7 @@ internal static class MethodFactory
     /// <param name="p">The parameter info.</param>
     public static void WriteProjectionParameterType(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
-        ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+        ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
         switch (cat)
         {
             case ParameterCategory.Out:
@@ -92,14 +78,16 @@ internal static class MethodFactory
                 WriteProjectedSignature(writer, context, p.Type, true);
                 break;
             case ParameterCategory.PassArray:
-                writer.Write("ReadOnlySpan<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                {
+                    IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                    writer.Write($"ReadOnlySpan<{elem}>");
+                }
                 break;
             case ParameterCategory.FillArray:
-                writer.Write("Span<");
-                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                writer.Write(">");
+                {
+                    IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                    writer.Write($"Span<{elem}>");
+                }
                 break;
             case ParameterCategory.ReceiveArray:
                 writer.Write("out ");
@@ -108,8 +96,8 @@ internal static class MethodFactory
 
                 if (sz is not null)
                 {
-                    TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
-                    writer.Write("[]");
+                    IndentedTextWriterCallback elem = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sz.BaseType));
+                    writer.Write($"{elem}[]");
                 }
                 else
                 {
@@ -122,6 +110,13 @@ internal static class MethodFactory
         }
     }
 
+    /// <inheritdoc cref="WriteProjectionParameterType(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
+    /// <returns>A callback that writes the projected parameter type to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteProjectionParameterType(ProjectionEmitContext context, ParameterInfo p)
+    {
+        return writer => WriteProjectionParameterType(writer, context, p);
+    }
+
     /// <summary>
     /// Writes the parameter name (escaped if it would clash with a C# keyword).
     /// </summary>
@@ -129,12 +124,9 @@ internal static class MethodFactory
     /// <param name="p">The parameter info.</param>
     public static void WriteParameterName(IndentedTextWriter writer, ParameterInfo p)
     {
-        string name = p.Parameter.Name ?? "param";
+        string name = p.GetRawName();
 
-        if (CSharpKeywords.IsKeyword(name))
-        {
-            writer.Write("@");
-        }
+        writer.WriteIf(CSharpKeywords.IsKeyword(name), "@");
 
         writer.Write(name);
     }
@@ -150,6 +142,13 @@ internal static class MethodFactory
         WriteProjectionParameterType(writer, context, p);
         writer.Write(" ");
         WriteParameterName(writer, p);
+    }
+
+    /// <inheritdoc cref="WriteProjectionParameter(IndentedTextWriter, ProjectionEmitContext, ParameterInfo)"/>
+    /// <returns>A callback that writes the parameter (type + name) to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteProjectionParameter(ProjectionEmitContext context, ParameterInfo p)
+    {
+        return writer => WriteProjectionParameter(writer, context, p);
     }
 
     /// <summary>
@@ -171,6 +170,13 @@ internal static class MethodFactory
         WriteProjectedSignature(writer, context, rt, false);
     }
 
+    /// <inheritdoc cref="WriteProjectionReturnType(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo)"/>
+    /// <returns>A callback that writes the projected return type to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteProjectionReturnType(ProjectionEmitContext context, MethodSignatureInfo sig)
+    {
+        return writer => WriteProjectionReturnType(writer, context, sig);
+    }
+
     /// <summary>
     /// Writes a comma-separated parameter list.
     /// </summary>
@@ -181,27 +187,44 @@ internal static class MethodFactory
     {
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
-            if (i > 0)
-            {
-                writer.Write(", ");
-            }
+            writer.WriteIf(i > 0, ", ");
 
             WriteProjectionParameter(writer, context, sig.Parameters[i]);
         }
     }
 
-    /// <summary>
-    /// Returns the C# literal text for a constant field's value (or empty when no constant).
-    /// </summary>
-    /// <param name="field">The field definition.</param>
-    /// <returns>The formatted constant value, or an empty string.</returns>
-    public static string FormatField(FieldDefinition field)
+    /// <inheritdoc cref="WriteParameterList(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo)"/>
+    /// <returns>A callback that writes the parameter list to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteParameterList(ProjectionEmitContext context, MethodSignatureInfo sig)
     {
-        if (field.Constant is null)
-        {
-            return string.Empty;
-        }
+        return writer => WriteParameterList(writer, context, sig);
+    }
 
-        return ProjectionFileBuilder.FormatConstant(field.Constant);
+    /// <summary>
+    /// Writes a comma-separated argument-forwarding list (parameter names with in/out modifiers).
+    /// When <paramref name="leadingComma"/> is <see langword="true"/>, the list is preceded by
+    /// <c>", "</c> (so it can be appended to a call site that already passed one or more args);
+    /// otherwise, the comma separator appears only between elements.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The method signature whose parameters to forward.</param>
+    /// <param name="leadingComma">When <see langword="true"/>, emits a leading <c>", "</c> before the first element.</param>
+    public static void WriteCallArguments(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, bool leadingComma)
+    {
+        for (int i = 0; i < sig.Parameters.Count; i++)
+        {
+            IndentedTextWriterCallback p = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
+            string sep = (leadingComma || i > 0) ? ", " : "";
+
+            writer.Write($"{sep}{p}");
+        }
+    }
+
+    /// <inheritdoc cref="WriteCallArguments(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, bool)"/>
+    /// <returns>A callback that writes the call-argument list to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteCallArguments(ProjectionEmitContext context, MethodSignatureInfo sig, bool leadingComma)
+    {
+        return writer => WriteCallArguments(writer, context, sig, leadingComma);
     }
 }

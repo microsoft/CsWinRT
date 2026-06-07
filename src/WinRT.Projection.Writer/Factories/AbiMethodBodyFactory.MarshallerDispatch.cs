@@ -25,6 +25,13 @@ internal static partial class AbiMethodBodyFactory
         writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, sig)}.ConvertToUnmanaged({argName})");
     }
 
+    /// <inheritdoc cref="EmitMarshallerConvertToUnmanaged(IndentedTextWriter, ProjectionEmitContext, TypeSignature, string)"/>
+    /// <returns>A callback emitting the marshaller's ConvertToUnmanaged call.</returns>
+    internal static IndentedTextWriterCallback EmitMarshallerConvertToUnmanaged(ProjectionEmitContext context, TypeSignature sig, string argName)
+    {
+        return writer => EmitMarshallerConvertToUnmanaged(writer, context, sig, argName);
+    }
+
     /// <summary>
     /// Emits the call to the appropriate marshaller's ConvertToManaged for a runtime class / object return value.
     /// </summary>
@@ -37,5 +44,12 @@ internal static partial class AbiMethodBodyFactory
         }
 
         writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, sig)}.ConvertToManaged({argName})");
+    }
+
+    /// <inheritdoc cref="EmitMarshallerConvertToManaged(IndentedTextWriter, ProjectionEmitContext, TypeSignature, string)"/>
+    /// <returns>A callback emitting the marshaller's ConvertToManaged call.</returns>
+    internal static IndentedTextWriterCallback EmitMarshallerConvertToManaged(ProjectionEmitContext context, TypeSignature sig, string argName)
+    {
+        return writer => EmitMarshallerConvertToManaged(writer, context, sig, argName);
     }
 }

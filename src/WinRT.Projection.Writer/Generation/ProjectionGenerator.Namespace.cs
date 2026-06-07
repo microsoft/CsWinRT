@@ -9,6 +9,8 @@ using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -38,15 +40,15 @@ internal sealed partial class ProjectionGenerator
         if (!_settings.ReferenceProjection)
         {
             writer.WriteLine();
-            MetadataAttributeFactory.WritePragmaDisableIL2026(writer);
+            writer.WriteLine("#pragma warning disable IL2026");
             foreach (TypeDefinition type in members.Types)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }
 
-                if (TypeCategorization.IsGeneric(type))
+                if (type.IsGeneric)
                 {
                     continue;
                 }
@@ -59,11 +61,11 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                TypeCategory cat = TypeCategorization.GetCategory(type);
-                switch (cat)
+                TypeKind kind = TypeKindResolver.Resolve(type);
+                switch (kind)
                 {
-                    case TypeCategory.Class:
-                        if (!TypeCategorization.IsStatic(type) && !TypeCategorization.IsAttributeType(type))
+                    case TypeKind.Class:
+                        if (!type.IsStatic && !type.IsAttributeType)
                         {
                             if (_settings.Component)
                             {
@@ -76,20 +78,20 @@ internal sealed partial class ProjectionGenerator
                         }
 
                         break;
-                    case TypeCategory.Delegate:
+                    case TypeKind.Delegate:
                         MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
                         MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
-                    case TypeCategory.Enum:
+                    case TypeKind.Enum:
                         MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
                         MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
-                    case TypeCategory.Interface:
+                    case TypeKind.Interface:
                         MetadataAttributeFactory.WriteWinRTIdicTypeMapGroupAssemblyAttribute(writer, context, type);
                         MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
-                    case TypeCategory.Struct:
-                        if (!TypeCategorization.IsApiContractType(type))
+                    case TypeKind.Struct:
+                        if (!type.IsApiContractType)
                         {
                             MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
                             MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
@@ -99,7 +101,8 @@ internal sealed partial class ProjectionGenerator
                 }
             }
 
-            MetadataAttributeFactory.WritePragmaRestoreIL2026(writer);
+            writer.WriteLine();
+            writer.WriteLine("#pragma warning restore IL2026");
         }
 
         // Phase 2: Projected types
@@ -108,24 +111,25 @@ internal sealed partial class ProjectionGenerator
 
         foreach (TypeDefinition type in members.Types)
         {
-            if (!_settings.Filter.Includes(type))
+            if (!_settings.Filter.Includes(type.FullName))
             {
                 continue;
             }
 
             (string ns2, string nm2) = type.Names();
+
             // Skip generic types and mapped types
-            if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
+            if (MappedTypes.Get(ns2, nm2) is not null || type.IsGeneric)
             {
                 written = true;
                 continue;
             }
 
-            // Write the projected type per category
-            TypeCategory category = TypeCategorization.GetCategory(type);
-            ProjectionFileBuilder.WriteType(writer, context, type, category);
+            // Write the projected type per type kind
+            TypeKind kind = TypeKindResolver.Resolve(type);
+            ProjectionFileBuilder.WriteType(writer, context, type, kind);
 
-            if (category == TypeCategory.Class && !TypeCategorization.IsAttributeType(type))
+            if (kind == TypeKind.Class && !type.IsAttributeType)
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
@@ -136,11 +140,11 @@ internal sealed partial class ProjectionGenerator
                     ComponentFactory.WriteFactoryClass(writer, context, type);
                 }
             }
-            else if (category is TypeCategory.Delegate or TypeCategory.Enum or TypeCategory.Interface)
+            else if (kind is TypeKind.Delegate or TypeKind.Enum or TypeKind.Interface)
             {
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
-            else if (category == TypeCategory.Struct && !TypeCategorization.IsApiContractType(type))
+            else if (kind == TypeKind.Struct && !type.IsApiContractType)
             {
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
@@ -167,12 +171,12 @@ internal sealed partial class ProjectionGenerator
             HashSet<TypeDefinition> factoryInterfacesAllNs = [];
             foreach (TypeDefinition type in members.Types)
             {
-                if (!_settings.Filter.Includes(type))
+                if (!_settings.Filter.Includes(type.FullName))
                 {
                     continue;
                 }
 
-                if (TypeCategorization.GetCategory(type) != TypeCategory.Class)
+                if (TypeKindResolver.Resolve(type) != TypeKind.Class)
                 {
                     continue;
                 }
@@ -182,7 +186,7 @@ internal sealed partial class ProjectionGenerator
             foreach (TypeDefinition facType in factoryInterfacesAllNs)
             {
                 // Only consider factory interfaces in the same namespace as we're processing.
-                string facNs = facType.Namespace?.Value ?? string.Empty;
+                string facNs = facType.GetRawNamespace();
 
                 if (facNs == ns)
                 {
@@ -195,12 +199,12 @@ internal sealed partial class ProjectionGenerator
             {
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
 
-                if (!_settings.Filter.Includes(type) && !isFactoryInterface)
+                if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
                 {
                     continue;
                 }
 
-                if (TypeCategorization.IsGeneric(type))
+                if (type.IsGeneric)
                 {
                     continue;
                 }
@@ -213,27 +217,27 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
-                if (TypeCategorization.IsApiContractType(type))
+                if (type.IsApiContractType)
                 {
                     continue;
                 }
 
-                if (TypeCategorization.IsAttributeType(type))
+                if (type.IsAttributeType)
                 {
                     continue;
                 }
 
-                TypeCategory category = TypeCategorization.GetCategory(type);
-                ProjectionFileBuilder.WriteAbiType(writer, context, type, category);
+                TypeKind kind = TypeKindResolver.Resolve(type);
+                ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
             }
             writer.WriteEndAbiNamespace(context);
         }
 
         // Phase 4: Custom additions to namespaces
         _token.ThrowIfCancellationRequested();
-        if (Additions.ByNamespace.TryGetValue(ns, out string[]? resourceNames) && _settings.AdditionFilter.Includes(ns))
+        if (_settings.AdditionFilter.Includes(ns))
         {
-            foreach (string resName in resourceNames)
+            foreach (string resName in Additions.EnumerateByNamespace(ns))
             {
                 using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
 

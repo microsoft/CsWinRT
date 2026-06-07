@@ -20,14 +20,14 @@ internal static class RefModeStubFactory
     public static void EmitRefModeObjRefGetterBody(IndentedTextWriter writer)
     {
         writer.WriteLine();
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
             {
                 get
                 {
                     throw null;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -46,13 +46,15 @@ internal static class RefModeStubFactory
     /// <summary>
     /// Emits the body of a delegate factory <c>Invoke</c> method in reference projection mode.
     /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="writer">The writer to emit to. Must be at the class-scope indent level on
+    /// entry (i.e. the inner method body and the outer class body braces are both closed by
+    /// this method).</param>
     public static void EmitRefModeInvokeBody(IndentedTextWriter writer)
     {
-        writer.WriteLine("""
+        writer.WriteLine(isMultiline: true, """
                     throw null;
                 }
             }
-            """, isMultiline: true);
+            """);
     }
 }

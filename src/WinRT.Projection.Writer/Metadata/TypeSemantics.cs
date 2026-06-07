@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter.Metadata;
 
 /// <summary>
 /// Identifies a fundamental WinRT primitive type (those whose ABI representation matches a C#
-/// primitive type, plus <see cref="System.String"/>).
+/// primitive type, plus <see cref="string"/>).
 /// </summary>
 internal enum FundamentalType
 {
@@ -52,7 +52,7 @@ internal enum FundamentalType
     /// <summary><see cref="double"/>.</summary>
     Double,
 
-    /// <summary><see cref="System.String"/>.</summary>
+    /// <summary><see cref="string"/>.</summary>
     String,
 }
 
@@ -70,7 +70,7 @@ internal abstract record TypeSemantics
     public sealed record Fundamental(FundamentalType Type) : TypeSemantics;
 
     /// <summary>
-    /// The corlib <see cref="System.Object"/> type.
+    /// The corlib <see cref="object"/> type.
     /// </summary>
     public sealed record ObjectType : TypeSemantics;
 
@@ -117,12 +117,6 @@ internal abstract record TypeSemantics
     public sealed record GenericMethodIndex(int Index) : TypeSemantics;
 
     /// <summary>
-    /// A bound generic parameter token (rare; appears in nested generics).
-    /// </summary>
-    /// <param name="Parameter">The generic parameter.</param>
-    public sealed record BoundGenericParameter(GenericParameter Parameter) : TypeSemantics;
-
-    /// <summary>
     /// A reference to a type defined in another assembly.
     /// </summary>
     /// <param name="Type">The type reference.</param>
@@ -159,7 +153,7 @@ internal static class TypeSemanticsFactory
 
     /// <summary>
     /// Resolves an <see cref="ITypeDefOrRef"/> into the corresponding <see cref="TypeSemantics"/>.
-    /// Recognizes the special-cased corlib types (<see cref="System.Object"/>, <see cref="System.Guid"/>,
+    /// Recognizes the special-cased corlib types (<see cref="object"/>, <see cref="System.Guid"/>,
     /// <see cref="System.Type"/>) and falls back to <see cref="TypeSemantics.Definition"/> /
     /// <see cref="TypeSemantics.Reference"/> for everything else.
     /// </summary>
@@ -177,16 +171,22 @@ internal static class TypeSemanticsFactory
         {
             (string ns, string name) = reference.Names();
 
+            // 'System.Guid' lives in mscorlib (not in any .winmd), so cache resolution would always
+            // fail. Surface it as a dedicated semantic so the writers emit the BCL short name.
             if (ns == "System" && name == "Guid")
             {
                 return new TypeSemantics.GuidType();
             }
 
+            // Same handling for 'System.Object' as for 'System.Guid' above
             if (ns == "System" && name == "Object")
             {
                 return new TypeSemantics.ObjectType();
             }
 
+            // 'System.Type' appears verbatim in .winmd-s via the ECMA-335 attribute-blob encoding for
+            // 'Type'-valued attribute args ('[Activatable]', '[Composable]', etc.), not as the Windows
+            // Runtime 'TypeName' struct. Surface it as a dedicated semantic.
             if (ns == "System" && name == "Type")
             {
                 return new TypeSemantics.SystemType();
@@ -230,6 +230,7 @@ internal static class TypeSemanticsFactory
     private static TypeSemantics GetGenericInstance(GenericInstanceTypeSignature gi)
     {
         ITypeDefOrRef genericType = gi.GenericType;
+
         // Always preserve the type arguments.
         List<TypeSemantics> args = new(gi.TypeArguments.Count);
         foreach (TypeSignature arg in gi.TypeArguments)
@@ -294,27 +295,4 @@ internal static class FundamentalTypes
         _ => "object"
     };
 
-    /// <summary>
-    /// Returns the .NET reflection short name for <paramref name="t"/> (e.g. <c>"Int32"</c>,
-    /// <c>"String"</c>), or <c>"Object"</c> for unrecognized cases.
-    /// </summary>
-    /// <param name="t">The fundamental type to format.</param>
-    /// <returns>The .NET reflection short name.</returns>
-    public static string ToDotNetType(FundamentalType t) => t switch
-    {
-        FundamentalType.Boolean => "Boolean",
-        FundamentalType.Char => "Char",
-        FundamentalType.Int8 => "SByte",
-        FundamentalType.UInt8 => "Byte",
-        FundamentalType.Int16 => "Int16",
-        FundamentalType.UInt16 => "UInt16",
-        FundamentalType.Int32 => "Int32",
-        FundamentalType.UInt32 => "UInt32",
-        FundamentalType.Int64 => "Int64",
-        FundamentalType.UInt64 => "UInt64",
-        FundamentalType.Float => "Single",
-        FundamentalType.Double => "Double",
-        FundamentalType.String => "String",
-        _ => "Object"
-    };
 }

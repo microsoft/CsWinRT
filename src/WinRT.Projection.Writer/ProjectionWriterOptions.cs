@@ -47,21 +47,6 @@ public sealed class ProjectionWriterOptions
     public bool Component { get; init; }
 
     /// <summary>
-    /// Generate an internal (non-public) projection.
-    /// </summary>
-    public bool Internal { get; init; }
-
-    /// <summary>
-    /// Generate an embedded projection.
-    /// </summary>
-    public bool Embedded { get; init; }
-
-    /// <summary>
-    /// If <c>true</c> with embedded option, generate enums as public.
-    /// </summary>
-    public bool PublicEnums { get; init; }
-
-    /// <summary>
     /// Make exclusive-to interfaces public in the projection (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; init; }
@@ -90,7 +75,7 @@ public sealed class ProjectionWriterOptions
 
     /// <summary>
     /// Maximum number of parallel work items to dispatch when generating projections.
-    /// Defaults to <c>-1</c>, which lets the runtime pick (typically <see cref="System.Environment.ProcessorCount"/>).
+    /// Defaults to <c>-1</c>, which lets the runtime pick (typically <see cref="Environment.ProcessorCount"/>).
     /// Set to <c>1</c> to force fully sequential execution (useful for debugging or when a deterministic
     /// thread schedule is required).
     /// </summary>

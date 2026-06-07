@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -16,34 +19,52 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static class StructEnumMarshallerFactory
 {
     /// <summary>
+    /// Returns the instance fields of <paramref name="type"/> (skipping static fields and fields
+    /// without a signature). Used by the 4 places in this file that loop over a struct's fields.
+    /// </summary>
+    private static IEnumerable<FieldDefinition> GetInstanceFields(TypeDefinition type)
+    {
+        foreach (FieldDefinition field in type.Fields)
+        {
+            if (field.IsStatic || field.Signature is null)
+            {
+                continue;
+            }
+
+            yield return field;
+        }
+    }
+
+    /// <summary>
     /// Writes a marshaller class for a struct or enum.
     /// </summary>
     internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        TypeCategory cat = TypeCategorization.GetCategory(type);
-        // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
-        // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
+        string nameStripped = type.GetStrippedName();
+        TypeKind kind = TypeKindResolver.Resolve(type);
+
+        // A struct field is "blittable" when its projected and ABI layouts match (no per-field
+        // marshalling). Detect that via AbiTypeKindResolver.IsBlittableStruct: it returns true
+        // for self-mapped structs with RequiresMarshaling=false and for user structs whose
+        // fields are all blittable.
         TypeDefOrRefSignature sig = type.ToTypeSignature(false) is TypeDefOrRefSignature td2 ? td2 : null!;
-        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || context.AbiTypeShapeResolver.IsBlittableStruct(sig));
-        bool isEnum = cat == TypeCategory.Enum;
-        // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
-        bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
+        bool blittableStruct = kind == TypeKind.Struct && (sig is null || context.AbiTypeKindResolver.IsBlittableStruct(sig));
+        bool isEnum = kind == TypeKind.Enum;
+
+        // Complex structs are the remaining (non-blittable, non-mapped) structs that need a
+        // per-field marshaller class because at least one field is a reference type, generic
+        // instance, or marshalling-mapped value.
+        bool isNonBlittableStruct = kind == TypeKind.Struct && !blittableStruct;
+
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
         // call needs CreateComInterfaceFlags.TrackerSupport .
         bool hasReferenceFields = false;
 
-        if (isComplexStruct)
+        if (isNonBlittableStruct)
         {
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
                 if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
@@ -58,54 +79,48 @@ internal static class StructEnumMarshallerFactory
         // public fields don't match the WinMD field layout. The truth marshaller for these
         // contains only BoxToUnmanaged/UnboxToManaged.
         (string typeNs, string typeNm) = type.Names();
-        bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
+        bool isMappedStruct = isNonBlittableStruct && MappedTypes.Get(typeNs, typeNm) is not null;
 
         if (isMappedStruct)
         {
-            isComplexStruct = false;
+            isNonBlittableStruct = false;
         }
 
-        writer.WriteLine($$"""
+        IndentedTextWriterCallback abi = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, false);
+        IndentedTextWriterCallback projected = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
+
+        writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
-            """, isMultiline: true);
+            """);
+        writer.IncreaseIndent();
 
-        if (isComplexStruct)
+        if (isNonBlittableStruct)
         {
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
-            writer.Write("    public static ");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write(" ConvertToUnmanaged(");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine("""
-                 value)
-                    {
-                        return new() {
-                """, isMultiline: true);
+            writer.WriteLine(isMultiline: true, $$"""
+                public static {{abi}} ConvertToUnmanaged({{projected}} value)
+                {
+                    return new() {
+                """);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
             bool first = true;
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
                 string fname = field.Name?.Value ?? "";
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
-                if (!first)
-                {
-                    writer.WriteLine(",");
-                }
+                writer.WriteLineIf(!first, ",");
 
                 first = false;
-                writer.Write($"            {fname} = ");
+                writer.Write($"{fname} = ");
 
                 if (ft.IsString())
                 {
                     writer.Write($"HStringMarshaller.ConvertToUnmanaged(value.{fname})");
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
                 {
                     writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(ft)}.ConvertToUnmanaged(value.{fname})");
                 }
@@ -118,11 +133,11 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
-                         && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
+                         && fieldStructTd.IsStruct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
-                    writer.Write($"{IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty)}Marshaller.ConvertToUnmanaged(value.{fname})");
+                    writer.Write($"{fieldStructTd.GetStrippedName()}Marshaller.ConvertToUnmanaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
@@ -133,56 +148,40 @@ internal static class StructEnumMarshallerFactory
                     writer.Write($"value.{fname}");
                 }
             }
-            writer.WriteLine();
-            writer.Write("""
-                        };
-                    }
-                    public static 
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" ConvertToManaged(");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+
             // - In component mode: emit object initializer with named field assignments
             //   (positional ctor not always available on authored types).
             // - In non-component mode: emit positional constructor (matches the auto-generated
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
-            writer.Write("""
-                 value)
-                    {
-                        return new 
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(useObjectInitializer ? "(){" : "(");
+            writer.WriteLine();
+            writer.DecreaseIndent();
+            writer.WriteLine("};");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
+            writer.WriteLine(isMultiline: true, $$"""
+                public static {{projected}} ConvertToManaged({{abi}} value)
+                {
+                    return new {{projected}}{{(useObjectInitializer ? "(){" : "(")}}
+                """);
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
             first = true;
-            foreach (FieldDefinition field in type.Fields)
+            foreach (FieldDefinition field in GetInstanceFields(type))
             {
-                if (field.IsStatic || field.Signature is null)
-                {
-                    continue;
-                }
-
                 string fname = field.Name?.Value ?? "";
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
-                if (!first)
-                {
-                    writer.WriteLine(",");
-                }
+                writer.WriteLineIf(!first, ",");
 
                 first = false;
-                writer.Write("            ");
-
-                if (useObjectInitializer)
-                {
-                    writer.Write($"{fname} = ");
-                }
+                writer.Write(useObjectInitializer ? $"{fname} = " : "");
 
                 if (ft.IsString())
                 {
                     writer.Write($"HStringMarshaller.ConvertToManaged(value.{fname})");
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
                 {
                     writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(ft)}.ConvertToManaged(value.{fname})");
                 }
@@ -195,11 +194,11 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd2
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
-                         && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
+                         && fieldStructTd2.IsStruct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
-                    writer.Write($"{IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty)}Marshaller.ConvertToManaged(value.{fname})");
+                    writer.Write($"{fieldStructTd2.GetStrippedName()}Marshaller.ConvertToManaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
@@ -211,27 +210,23 @@ internal static class StructEnumMarshallerFactory
                 }
             }
             writer.WriteLine();
-            writer.WriteLine(useObjectInitializer ? "        };" : "        );");
-            writer.WriteLine("    }");
-            writer.Write("    public static void Dispose(");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine("""
-                 value)
-                    {
-                """, isMultiline: true);
-            foreach (FieldDefinition field in type.Fields)
-            {
-                if (field.IsStatic || field.Signature is null)
+            writer.DecreaseIndent();
+            writer.WriteLine(useObjectInitializer ? "};" : ");");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
+            writer.WriteLine(isMultiline: true, $$"""
+                public static void Dispose({{abi}} value)
                 {
-                    continue;
-                }
-
+                """);
+            writer.IncreaseIndent();
+            foreach (FieldDefinition field in GetInstanceFields(type))
+            {
                 string fname = field.Name?.Value ?? "";
-                TypeSignature ft = field.Signature.FieldType;
+                TypeSignature ft = field.Signature!.FieldType;
 
                 if (ft.IsString())
                 {
-                    writer.WriteLine($"        HStringMarshaller.Free(value.{fname});");
+                    writer.WriteLine($"HStringMarshaller.Free(value.{fname});");
                 }
                 else if (ft.IsHResultException())
                 {
@@ -239,7 +234,7 @@ internal static class StructEnumMarshallerFactory
                     // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
                     continue;
                 }
-                else if (context.AbiTypeShapeResolver.IsMappedAbiValueType(ft))
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(ft))
                 {
                     // Mapped value types (DateTime/TimeSpan) have no per-value resources to
                     // release — the ABI representation is just an int64
@@ -247,122 +242,79 @@ internal static class StructEnumMarshallerFactory
                 }
                 else if (ft is TypeDefOrRefSignature ftd3
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd3) is TypeDefinition fieldStructTd3
-                         && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
+                         && fieldStructTd3.IsStruct
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd3))
                 {
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
-                    string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
-                    string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
-                    writer.WriteLine($"        global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
+                    string nestedNs = fieldStructTd3.GetRawNamespace();
+                    string nestedNm = fieldStructTd3.GetStrippedName();
+                    writer.WriteLine($"global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
-                    writer.WriteLine($"        WindowsRuntimeUnknownMarshaller.Free(value.{fname});");
+                    writer.WriteLine($"WindowsRuntimeUnknownMarshaller.Free(value.{fname});");
                 }
             }
-            writer.WriteLine("    }");
+            writer.DecreaseIndent();
+            writer.WriteLine("}");
         }
 
-        // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
+        // BoxToUnmanaged: same pattern for all (enum, blittable struct, complex struct, mapped struct).
         // Truth uses CreateComInterfaceFlags.TrackerSupport when the struct has reference type
         // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
-        writer.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+        // Mapped struct (Duration/KeyTime/etc.) variants always use None — the public projected
+        // type still routes through this marshaller (it just lacks per-field
+        // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
+        string boxFlags = (isEnum || blittableStruct || isNonBlittableStruct) && hasReferenceFields ? "TrackerSupport" : "None";
+        IndentedTextWriterCallback boxIidRef = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
-        if (isEnum || almostBlittable || isComplexStruct)
+        writer.WriteLine(isMultiline: true, $$"""
+            public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged({{projected}}? value)
+            {
+                return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{boxFlags}}, in {{boxIidRef}});
+            }
+            """);
+
+        // UnboxToManaged: simple for blittable and mapped structs; for complex, unbox to
+        // ABI struct then ConvertToManaged. Mapped struct unboxes directly to projected type (no
+        // per-field ConvertToManaged needed because the projected struct's field layout matches
+        // the WinMD struct layout).
+        if (isNonBlittableStruct)
         {
-            writer.Write($$"""
-                ? value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{(hasReferenceFields ? "TrackerSupport" : "None")}}, in 
-                """, isMultiline: true);
-            ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.WriteLine("""
-                );
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(isMultiline: true, $$"""
+                public static {{projected}}? UnboxToManaged(void* value)
+                {
+                    {{abi}}? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{abi}}>(value);
+                    return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
+                }
+                """);
         }
         else
         {
-            // Mapped struct (Duration/KeyTime/etc.): BoxToUnmanaged is still required because the
-            // public projected type still routes through this marshaller (it just lacks per-field
-            // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-            writer.Write("""
-                ? value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in 
-                """, isMultiline: true);
-            ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
-            writer.WriteLine("""
-                );
-                    }
-                """, isMultiline: true);
+            writer.WriteLine(isMultiline: true, $$"""
+                public static {{projected}}? UnboxToManaged(void* value)
+                {
+                    return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{projected}}>(value);
+                }
+                """);
         }
 
-        // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
-        writer.Write("    public static ");
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-
-        if (isEnum || almostBlittable)
-        {
-            writer.Write("""
-                ? UnboxToManaged(void* value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine("""
-                >(value);
-                    }
-                """, isMultiline: true);
-        }
-        else if (isComplexStruct)
-        {
-            writer.WriteLine("""
-                ? UnboxToManaged(void* value)
-                    {
-                        
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine("""
-                >(value);
-                        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
-                    }
-                """, isMultiline: true);
-        }
-        else
-        {
-            // Mapped struct: unbox directly to projected type (no per-field ConvertToManaged needed
-            // because the projected struct's field layout matches the WinMD struct layout).
-            writer.Write("""
-                ? UnboxToManaged(void* value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<
-                """, isMultiline: true);
-            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine("""
-                >(value);
-                    }
-                """, isMultiline: true);
-        }
-
+        writer.DecreaseIndent();
         writer.WriteLine("}");
         writer.WriteLine();
 
         // Emit the InterfaceEntriesImpl static class and the proper ComWrappersMarshallerAttribute
         // class derived from WindowsRuntimeComWrappersMarshallerAttribute (matches truth).
-        // For enums and almost-blittable structs, GetOrCreateComInterfaceForObject uses None.
+        // For enums and blittable structs, GetOrCreateComInterfaceForObject uses None.
         // For complex structs (with reference fields), it uses TrackerSupport.
         // For complex structs, CreateObject converts via the *Marshaller.ConvertToManaged after
         // unboxing to the ABI struct.
-        if (isEnum || almostBlittable || isComplexStruct)
+        if (isEnum || blittableStruct || isNonBlittableStruct)
         {
-            string iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+            IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
 
             // InterfaceEntriesImpl
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 file static class {{nameStripped}}InterfaceEntriesImpl
                 {
                     [FixedAddressValueType]
@@ -388,17 +340,35 @@ internal static class StructEnumMarshallerFactory
                         Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
                     }
                 }
-                """, isMultiline: true);
+                """);
             writer.WriteLine();
+
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
-            if (context.Settings.Component && cat == TypeCategory.Struct)
+            if (context.Settings.Component && kind == TypeKind.Struct)
             {
                 return;
             }
 
-            // ComWrappersMarshallerAttribute (full body)
-            writer.WriteLine($$"""
+            // ComWrappersMarshallerAttribute (full body). The CreateObject body differs by struct
+            // shape: complex (non-blittable) structs round-trip through the per-field Marshaller's
+            // ConvertToManaged, while enums / blittable structs unbox directly to the projected
+            // value type.
+            void WriteCreateObjectBody(IndentedTextWriter writer)
+            {
+                if (isNonBlittableStruct)
+                {
+                    IndentedTextWriterCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
+
+                    writer.Write($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
+                }
+                else
+                {
+                    writer.Write($"return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{projected}>(value, in {iidRefExpr});");
+                }
+            }
+
+            writer.WriteLine(isMultiline: true, $$"""
                 internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
                 {
                     public override void* GetOrCreateComInterfaceForObject(object value)
@@ -415,33 +385,19 @@ internal static class StructEnumMarshallerFactory
                     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
                     {
                         wrapperFlags = CreatedWrapperFlags.NonWrapping;
-                """, isMultiline: true);
-            if (isComplexStruct)
-            {
-                writer.Write($"        return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
-                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-                writer.WriteLine($">(value, in {iidRefExpr}));");
-            }
-            else
-            {
-                writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
-                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-                writer.WriteLine($">(value, in {iidRefExpr});");
-            }
-
-            writer.WriteLine("""
+                        {{WriteCreateObjectBody}}
                     }
                 }
-                """, isMultiline: true);
+                """);
         }
         else
         {
             // Fallback: keep the placeholder class so consumer attribute references resolve.
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                 internal sealed class {{nameStripped}}ComWrappersMarshallerAttribute : global::System.Attribute
                 {
                 }
-                """, isMultiline: true);
+                """);
         }
     }
 }

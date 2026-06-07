@@ -10,7 +10,6 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -31,26 +30,14 @@ internal static class ObjRefNameGenerator
         if (ifaceType is TypeDefinition td)
         {
             (string ns, string name) = td.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
@@ -75,13 +62,7 @@ internal static class ObjRefNameGenerator
         if (ifaceType is TypeDefinition td)
         {
             (string ns, string name) = td.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write(GlobalPrefix);
 
@@ -95,13 +76,7 @@ internal static class ObjRefNameGenerator
         else if (ifaceType is TypeReference tr)
         {
             (string ns, string name) = tr.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write(GlobalPrefix);
 
@@ -112,17 +87,11 @@ internal static class ObjRefNameGenerator
 
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
-        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        else if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ITypeDefOrRef gt = gi.GenericType;
             (string ns, string name) = gt.Names();
-            MappedType? mapped = MappedTypes.Get(ns, name);
-
-            if (mapped is { } m)
-            {
-                ns = m.MappedNamespace;
-                name = m.MappedName;
-            }
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
             writer.Write(GlobalPrefix);
 
@@ -134,10 +103,7 @@ internal static class ObjRefNameGenerator
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
+                writer.WriteIf(i > 0, ", ");
 
                 // forceWriteNamespace=true so generic args also get global:: prefix.
                 TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
@@ -170,7 +136,7 @@ internal static class ObjRefNameGenerator
     public static void WriteIidExpression(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
         // Generic instantiation: use the UnsafeAccessor extern method declared above the field.
-        if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (ifaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             string propName = BuildIidPropertyNameForGenericInterface(context, gi);
             writer.Write($"{propName}(null)");
@@ -183,15 +149,13 @@ internal static class ObjRefNameGenerator
 
         if (ifaceType is TypeDefinition td)
         {
-            ns = td.Namespace?.Value ?? string.Empty;
-            name = td.Name?.Value ?? string.Empty;
-            isMapped = MappedTypes.Get(ns, name) is not null;
+            (ns, name) = td.Names();
+            isMapped = MappedTypes.IsMapped(ns, name);
         }
         else if (ifaceType is TypeReference tr)
         {
-            ns = tr.Namespace?.Value ?? string.Empty;
-            name = tr.Name?.Value ?? string.Empty;
-            isMapped = MappedTypes.Get(ns, name) is not null;
+            (ns, name) = tr.Names();
+            isMapped = MappedTypes.IsMapped(ns, name);
         }
         else
         {
@@ -223,75 +187,26 @@ internal static class ObjRefNameGenerator
         }
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteIidExpression(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the IID expression into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="ifaceType">The interface type whose IID expression is emitted.</param>
-    /// <returns>The emitted IID expression.</returns>
-    public static string WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    /// <inheritdoc cref="WriteIidExpression(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// <returns>A callback that writes the IID expression to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteIidExpression(ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteIidExpression(writer, context, ifaceType);
-        return writer.ToString();
+        return writer => WriteIidExpression(writer, context, ifaceType);
     }
 
     /// <summary>
     /// Builds the IID property name for a generic interface instantiation.
     /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
     /// </summary>
-    internal static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
+    public static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
+
         return "IID_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(
-            TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true),
+            TypedefNameWriter.WriteTypeName(context, sem, TypedefNameType.ABI, forceWriteNamespace: true).Format(),
             stripGlobal: true, stripGlobalABI: true);
     }
 
-    /// <summary>
-    /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
-    /// interface instantiation.
-    /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is
-    /// <c>object?</c> (used inside <c>#nullable enable</c> regions); otherwise <c>object</c>.</param>
-    internal static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
-    {
-        string propName = BuildIidPropertyNameForGenericInterface(context, gi);
-        string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
-        writer.Write($$"""
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
-            static extern ref readonly Guid {{propName}}([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object
-            """, isMultiline: true);
-        if (isInNullableContext)
-        {
-            writer.Write("?");
-        }
-
-        writer.WriteLine(" _);");
-    }
-
-    /// <summary>
-    /// Convenience overload of <see cref="EmitUnsafeAccessorForIid(IndentedTextWriter, ProjectionEmitContext, GenericInstanceTypeSignature, bool)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the [UnsafeAccessor] declaration into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
-    /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is <c>object?</c>; otherwise <c>object</c>.</param>
-    /// <returns>The emitted [UnsafeAccessor] declaration.</returns>
-    internal static string EmitUnsafeAccessorForIid(ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
-    {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        EmitUnsafeAccessorForIid(writer, context, gi, isInNullableContext);
-        return writer.ToString();
-    }
     private static string EscapeIdentifier(string s)
     {
         System.Text.StringBuilder sb = new(s.Length);
@@ -313,19 +228,11 @@ internal static class ObjRefNameGenerator
         writer.Write($"global::ABI.InterfaceIIDs.IID_{id}Reference");
     }
 
-    /// <summary>
-    /// Convenience overload of <see cref="WriteIidReferenceExpression(IndentedTextWriter, TypeDefinition)"/>
-    /// that leases an <see cref="IndentedTextWriter"/> from <see cref="IndentedTextWriterPool"/>,
-    /// emits the IID reference expression into it, and returns the resulting string.
-    /// </summary>
-    /// <param name="type">The value type whose IReference&lt;T&gt; IID expression is emitted.</param>
-    /// <returns>The emitted IID reference expression.</returns>
-    public static string WriteIidReferenceExpression(TypeDefinition type)
+    /// <inheritdoc cref="WriteIidReferenceExpression(IndentedTextWriter, TypeDefinition)"/>
+    /// <returns>A callback that writes the IID reference expression to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteIidReferenceExpression(TypeDefinition type)
     {
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-        WriteIidReferenceExpression(writer, type);
-        return writer.ToString();
+        return writer => WriteIidReferenceExpression(writer, type);
     }
 
     /// <summary>
@@ -366,13 +273,13 @@ internal static class ObjRefNameGenerator
 
             // For FastAbi classes, skip non-default exclusive interfaces -- their methods
             // dispatch through the default interface's vtable so a separate objref is unnecessary.
-            bool isDefault = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
+            bool isDefault = impl.HasWindowsFoundationMetadataAttribute(DefaultAttribute);
 
             if (!isDefault && ClassFactory.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
-                if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
+                if (implTypeDef is not null && implTypeDef.IsExclusiveTo)
                 {
                     continue;
                 }
@@ -394,13 +301,13 @@ internal static class ObjRefNameGenerator
             }
 
             // Same fast-abi guard as the first pass.
-            bool isDefault2 = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
+            bool isDefault2 = impl.HasWindowsFoundationMetadataAttribute(DefaultAttribute);
 
             if (!isDefault2 && ClassFactory.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = impl.Interface.ResolveAsTypeDefinition(context.Cache);
 
-                if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
+                if (implTypeDef is not null && implTypeDef.IsExclusiveTo)
                 {
                     continue;
                 }
@@ -440,11 +347,12 @@ internal static class ObjRefNameGenerator
         {
             // Sealed-class default interface: simple expression-bodied property pointing at NativeObjectReference.
             writer.WriteLine($"private WindowsRuntimeObjectReference {objRefName} => NativeObjectReference;");
+
             // Emit the unsafe accessor AFTER the field so it can be used to pass the IID in the
             // constructor for the default interface.
             if (gi is not null)
             {
-                EmitUnsafeAccessorForIid(writer, context, gi);
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
             }
         }
         else
@@ -452,12 +360,12 @@ internal static class ObjRefNameGenerator
             // Emit the unsafe accessor BEFORE the lazy field so it's referenced inside the As(...) call.
             if (gi is not null)
             {
-                EmitUnsafeAccessorForIid(writer, context, gi);
+                UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
             }
 
             // Lazy CompareExchange pattern. For unsealed-class defaults, also emit 'init;' so the
             // constructor can assign NativeObjectReference for the exact-type case.
-            writer.Write($$"""
+            writer.Write(isMultiline: true, $$"""
                 private WindowsRuntimeObjectReference {{objRefName}}
                 {
                     get
@@ -468,9 +376,9 @@ internal static class ObjRefNameGenerator
                             _ = global::System.Threading.Interlocked.CompareExchange(
                                 location1: ref field,
                                 value: NativeObjectReference.As(
-                """, isMultiline: true);
+                """);
             WriteIidExpression(writer, context, ifaceRef);
-            writer.WriteLine("""
+            writer.WriteLine(isMultiline: true, """
                 ),
                                 comparand: null);
                 
@@ -479,11 +387,8 @@ internal static class ObjRefNameGenerator
                 
                         return field ?? MakeObjectReference();
                     }
-                """, isMultiline: true);
-            if (isDefault)
-            {
-                writer.WriteLine("    init;");
-            }
+                """);
+            writer.WriteLineIf(isDefault, "    init;");
 
             writer.WriteLine("}");
         }
@@ -495,7 +400,7 @@ internal static class ObjRefNameGenerator
     private static void EmitTransitiveInterfaceObjRefs(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted)
     {
         // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
-        TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, ifaceRef);
+        TypeDefinition? ifaceTd = ifaceRef.ResolveAsTypeDefinition(context.Cache);
 
         if (ifaceTd is null)
         {
@@ -505,7 +410,7 @@ internal static class ObjRefNameGenerator
         // Compute a substitution context if the parent is a closed generic instance.
         GenericContext? ctx = null;
 
-        if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (ifaceRef.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
             ctx = new GenericContext(gi, null);
         }

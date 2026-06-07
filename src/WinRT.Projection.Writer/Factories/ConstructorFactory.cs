@@ -27,42 +27,28 @@ internal static partial class ConstructorFactory
     /// </summary>
     internal static string GetMarshalingTypeName(TypeDefinition classType)
     {
-        for (int i = 0; i < classType.CustomAttributes.Count; i++)
+        CustomAttribute? attr = classType.GetAttribute(WindowsFoundationMetadata, "MarshalingBehaviorAttribute");
+
+        if (attr is null || attr.Signature is null)
         {
-            CustomAttribute attr = classType.CustomAttributes[i];
-            ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
+            return "CreateObjectReferenceMarshalingType.Unknown";
+        }
 
-            if (attrType is null)
+        for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
+        {
+            CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
+
+            if (arg.Element is int v)
             {
-                continue;
-            }
-
-            if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
-                attrType.Name?.Value != "MarshalingBehaviorAttribute")
-            {
-                continue;
-            }
-
-            if (attr.Signature is null)
-            {
-                continue;
-            }
-
-            for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
-            {
-                CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
-
-                if (arg.Element is int v)
+                return v switch
                 {
-                    return v switch
-                    {
-                        2 => "CreateObjectReferenceMarshalingType.Agile",
-                        3 => "CreateObjectReferenceMarshalingType.Standard",
-                        _ => "CreateObjectReferenceMarshalingType.Unknown",
-                    };
-                }
+                    2 => "CreateObjectReferenceMarshalingType.Agile",
+                    3 => "CreateObjectReferenceMarshalingType.Standard",
+                    _ => "CreateObjectReferenceMarshalingType.Unknown",
+                };
             }
         }
+
         return "CreateObjectReferenceMarshalingType.Unknown";
     }
 }

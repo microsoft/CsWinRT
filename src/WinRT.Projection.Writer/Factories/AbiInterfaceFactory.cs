@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -36,7 +35,7 @@ internal static class AbiInterfaceFactory
         WriteInterfaceMarshallerStub(writer, context, type);
 
         // For internal projections, just the static ABI methods class is enough.
-        if (TypeCategorization.IsProjectionInternal(type))
+        if (type.IsProjectionInternal)
         {
             return;
         }
@@ -55,6 +54,13 @@ internal static class AbiInterfaceFactory
         WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: false);
     }
 
+    /// <inheritdoc cref="WriteAbiParameterTypesPointer(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, bool)"/>
+    /// <returns>A callback emitting the ABI parameter types.</returns>
+    public static IndentedTextWriterCallback WriteAbiParameterTypesPointer(ProjectionEmitContext context, MethodSignatureInfo sig, bool includeParamNames = false)
+    {
+        return writer => WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames);
+    }
+
     /// <summary>
     /// Writes the ABI parameter types for a vtable function pointer signature, optionally
     /// including parameter names (for method declarations vs. function pointer type lists).
@@ -64,24 +70,22 @@ internal static class AbiInterfaceFactory
         // void* thisPtr, then each param's ABI type, then return type pointer
         writer.Write("void*");
 
-        if (includeParamNames)
-        {
-            writer.Write(" thisPtr");
-        }
+        writer.WriteIf(includeParamNames, " thisPtr");
 
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
             writer.Write(", ");
             ParameterInfo p = sig.Parameters[i];
-            ParameterCategory cat = ParameterCategoryResolver.GetParamCategory(p);
+            ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
+            string paramName = p.GetRawName();
+            IndentedTextWriterCallback name = IdentifierEscaping.WriteEscapedIdentifier(paramName);
 
             if (p.Type is SzArrayTypeSignature)
             {
                 // length pointer + value pointer.
                 if (includeParamNames)
                 {
-                    writer.Write($"uint __{p.Parameter.Name ?? "param"}Size, void* ");
-                    IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
+                    writer.Write($"uint __{paramName}Size, void* {name}");
                 }
                 else
                 {
@@ -93,64 +97,56 @@ internal static class AbiInterfaceFactory
                 // Special case: 'out T[]' is a ReceiveArray ABI signature: (uint* size, T** data).
                 if (br.BaseType is SzArrayTypeSignature brSz && cat == ParameterCategory.ReceiveArray)
                 {
-                    bool isRefElemBr = brSz.BaseType.IsString() || context.AbiTypeShapeResolver.IsRuntimeClassOrInterface(brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
+                    bool isRefElemBr = brSz.BaseType.IsAbiRefLike(context.AbiTypeKindResolver);
+                    IndentedTextWriterCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(brSz.BaseType));
 
                     if (includeParamNames)
                     {
-                        writer.Write($"uint* __{p.Parameter.Name ?? "param"}Size, ");
-
                         if (isRefElemBr)
                         {
-                            writer.Write("void*** ");
+                            writer.Write($"uint* __{paramName}Size, void*** {name}");
                         }
                         else
                         {
-                            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
-                            writer.Write("** ");
+                            writer.Write($"uint* __{paramName}Size, {elemAbi}** {name}");
                         }
-
-                        IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                     }
                     else
                     {
-                        writer.Write("uint*, ");
-
                         if (isRefElemBr)
                         {
-                            writer.Write("void***");
+                            writer.Write("uint*, void***");
                         }
                         else
                         {
-                            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
-                            writer.Write("**");
+                            writer.Write($"uint*, {elemAbi}**");
                         }
                     }
                 }
                 else
                 {
-                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
-                    writer.Write("*");
-
+                    IndentedTextWriterCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(br.BaseType));
                     if (includeParamNames)
                     {
-                        writer.Write(" ");
-                        IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
+                        writer.Write($"{abi}* {name}");
+                    }
+                    else
+                    {
+                        writer.Write($"{abi}*");
                     }
                 }
             }
             else
             {
-                AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
-
-                if (cat is ParameterCategory.Out or ParameterCategory.Ref)
-                {
-                    writer.Write("*");
-                }
-
+                IndentedTextWriterCallback abi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(p.Type));
+                string ptr = cat is ParameterCategory.Out or ParameterCategory.Ref ? "*" : "";
                 if (includeParamNames)
                 {
-                    writer.Write(" ");
-                    IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
+                    writer.Write($"{abi}{ptr} {name}");
+                }
+                else
+                {
+                    writer.Write($"{abi}{ptr}");
                 }
             }
         }
@@ -161,30 +157,30 @@ internal static class AbiInterfaceFactory
             writer.Write(", ");
             string retName = AbiTypeHelpers.GetReturnParamName(sig);
             string retSizeName = AbiTypeHelpers.GetReturnSizeParamName(sig);
+
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
             if (sig.ReturnType is SzArrayTypeSignature retSz)
             {
+                IndentedTextWriterCallback elemAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(retSz.BaseType));
                 if (includeParamNames)
                 {
-                    writer.Write($"uint* {retSizeName}, ");
-                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                    writer.Write($"** {retName}");
+                    writer.Write($"uint* {retSizeName}, {elemAbi}** {retName}");
                 }
                 else
                 {
-                    writer.Write("uint*, ");
-                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                    writer.Write("**");
+                    writer.Write($"uint*, {elemAbi}**");
                 }
             }
             else
             {
-                AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
-                writer.Write("*");
-
+                IndentedTextWriterCallback retAbi = AbiTypeWriter.WriteAbiType(context, TypeSemanticsFactory.Get(sig.ReturnType));
                 if (includeParamNames)
                 {
-                    writer.Write($" {retName}");
+                    writer.Write($"{retAbi}* {retName}");
+                }
+                else
+                {
+                    writer.Write($"{retAbi}*");
                 }
             }
         }
@@ -205,34 +201,45 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
+
+        // Emit per-method virtual entries. Use 'Write' (not 'WriteLine') plus a 'first' flag so
+        // the last entry doesn't end with '\n' — that lets the parent literal's '\n}' continuation
+        // emit the closing brace immediately on the next line without a stray blank line.
+        void WriteMethodFields(IndentedTextWriter writer)
+        {
+            bool first = true;
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
+                MethodSignatureInfo sig = new(method);
+                IndentedTextWriterCallback abiParams = WriteAbiParameterTypesPointer(context, sig);
+
+                if (!first)
+                {
+                    writer.WriteLine();
+                }
+
+                writer.Write($"public delegate* unmanaged[MemberFunction]<{abiParams}, int> {vm};");
+                first = false;
+            }
+        }
 
         writer.WriteLine();
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
-            """, isMultiline: true);
-        using (writer.WriteBlock())
-        {
-            writer.WriteLine("""
+            {
                 public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
                 public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
                 public delegate* unmanaged[MemberFunction]<void*, uint> Release;
                 public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
                 public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
                 public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
-                """, isMultiline: true);
-
-            foreach (MethodDefinition method in type.Methods)
-            {
-                string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
-                MethodSignatureInfo sig = new(method);
-                writer.Write("public delegate* unmanaged[MemberFunction]<");
-                WriteAbiParameterTypesPointer(writer, context, sig);
-                writer.WriteLine($", int> {vm};");
+                {{WriteMethodFields}}
             }
-        }
+            """);
     }
 
     /// <summary>
@@ -250,36 +257,47 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
+
+        // Emit per-method Vftbl assignments inside the static constructor body. Same first-flag
+        // pattern as 'WriteInterfaceVftbl': last entry uses 'Write' (no trailing '\n') so the
+        // parent literal's '\n}' continuation places the closing '}' of the static constructor
+        // on the next line without an intervening blank line.
+        void WriteVftblAssignments(IndentedTextWriter writer)
+        {
+            bool first = true;
+
+            foreach (MethodDefinition method in type.Methods)
+            {
+                string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
+
+                if (!first)
+                {
+                    writer.WriteLine();
+                }
+
+                writer.Write($"Vftbl.{vm} = &Do_Abi_{vm};");
+                first = false;
+            }
+        }
 
         writer.WriteLine();
         writer.WriteLine($"public static unsafe class {nameStripped}Impl");
         using IndentedTextWriter.Block __implBlock = writer.WriteBlock();
-        writer.WriteLine($$"""
+        writer.Write(isMultiline: true, $$"""
             [FixedAddressValueType]
             private static readonly {{nameStripped}}Vftbl Vftbl;
             
             static {{nameStripped}}Impl()
             {
                 *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
-            """, isMultiline: true);
-        foreach (MethodDefinition method in type.Methods)
-        {
-            string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
-            writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
-        }
-        writer.Write("""
+                {{WriteVftblAssignments}}
             }
             
             public static ref readonly Guid IID
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref 
-            """, isMultiline: true);
-        AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.WriteLine("""
-            ;
+                get => ref {{AbiTypeHelpers.WriteIidGuidReference(context, type)}};
             }
             
             public static nint Vtable
@@ -287,7 +305,7 @@ internal static class AbiInterfaceFactory
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => (nint)Unsafe.AsPointer(in Vftbl);
             }
-            """, isMultiline: true);
+            """);
         writer.WriteLine();
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
@@ -304,12 +322,11 @@ internal static class AbiInterfaceFactory
 
         if (context.Settings.Component)
         {
-            MetadataCache cache = context.Cache;
-            exclusiveToOwner = AbiTypeHelpers.GetExclusiveToType(cache, type);
+            exclusiveToOwner = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
             if (exclusiveToOwner is not null)
             {
-                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(exclusiveToOwner, cache))
+                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(exclusiveToOwner, context.Cache))
                 {
                     if (kv.Value.Type == type && (kv.Value.Statics || kv.Value.Activatable))
                     {
@@ -324,8 +341,8 @@ internal static class AbiInterfaceFactory
 
         if (exclusiveToOwner is not null && !exclusiveIsFactoryOrStatic)
         {
-            string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
-            string ownerNm = IdentifierEscaping.StripBackticks(exclusiveToOwner.Name?.Value ?? string.Empty);
+            string ownerNs = exclusiveToOwner.GetRawNamespace();
+            string ownerNm = exclusiveToOwner.GetStrippedName();
             ifaceFullName = string.IsNullOrEmpty(ownerNs)
                 ? GlobalPrefix + ownerNm
                 : GlobalPrefix + ownerNs + "." + ownerNm;
@@ -334,20 +351,15 @@ internal static class AbiInterfaceFactory
         {
             // Factory/static interfaces in authoring mode are implemented by the generated
             // 'global::ABI.Impl.<NS>.<InterfaceName>' type that the activation factory CCW exposes.
-            string ifaceNs = type.Namespace?.Value ?? string.Empty;
-            string ifaceNm = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
+            string ifaceNs = type.GetRawNamespace();
+            string ifaceNm = type.GetStrippedName();
             ifaceFullName = string.IsNullOrEmpty(ifaceNs)
                 ? "global::ABI.Impl." + ifaceNm
                 : "global::ABI.Impl." + ifaceNs + "." + ifaceNm;
         }
         else
         {
-            ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true);
-
-            if (!ifaceFullName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-            {
-                ifaceFullName = GlobalPrefix + ifaceFullName;
-            }
+            ifaceFullName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
         }
 
         // Build a map of event add/remove methods to their event so we can emit the table field
@@ -357,26 +369,14 @@ internal static class AbiInterfaceFactory
         // Build sets of property accessors and event accessors so the first loop below can
         // iterate "regular" methods (non-property, non-event) only. Do_Abi bodies are emitted in
         // this order: methods first, then properties (setter before getter), then events.
-        HashSet<MethodDefinition> propertyAccessors = [];
-        foreach (PropertyDefinition prop in type.Properties)
-        {
-            if (prop.GetMethod is MethodDefinition g)
-            {
-                _ = propertyAccessors.Add(g);
-            }
-
-            if (prop.SetMethod is MethodDefinition s)
-            {
-                _ = propertyAccessors.Add(s);
-            }
-        }
+        HashSet<MethodDefinition> propertyAccessors = [.. type.GetPropertyAccessors()];
 
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
         void EmitOneDoAbi(MethodDefinition method)
         {
             string vm = AbiTypeHelpers.GetVirtualMethodName(type, method);
             MethodSignatureInfo sig = new(method);
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
 
             // If this method is an event add accessor, emit the per-event ConditionalWeakTable
             // before the Do_Abi method.
@@ -385,12 +385,11 @@ internal static class AbiInterfaceFactory
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
-            writer.Write($$"""
+            IndentedTextWriterCallback doAbiParams = WriteAbiParameterTypesPointer(context, sig, includeParamNames: true);
+            writer.Write(isMultiline: true, $$"""
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-                private static unsafe int Do_Abi_{{vm}}(
-                """, isMultiline: true);
-            WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
-            writer.Write(")");
+                private static unsafe int Do_Abi_{{vm}}({{doAbiParams}})
+                """);
 
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt2))
             {
@@ -459,7 +458,7 @@ internal static class AbiInterfaceFactory
     /// </summary>
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (TypeCategorization.IsExclusiveTo(type))
+        if (type.IsExclusiveTo)
         {
             return;
         }
@@ -469,48 +468,27 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
+
+        IndentedTextWriterCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
+        IndentedTextWriterCallback typeParams = TypedefNameWriter.WriteTypeParams(type);
+        IndentedTextWriterCallback iid = AbiTypeHelpers.WriteIidGuidReference(context, type);
 
         writer.WriteLine();
-        writer.Write($$"""
-            #nullable enable
+        writer.WriteLine(isMultiline: true, $$"""
             public static unsafe class {{nameStripped}}Marshaller
             {
-                public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
-            """, isMultiline: true);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("""
-             value)
+                public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({{typedefName}}{{typeParams}} value)
                 {
-                    return WindowsRuntimeInterfaceMarshaller<
-            """, isMultiline: true);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(">.ConvertToUnmanaged(value, ");
-        AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write("""
-            );
+                    return WindowsRuntimeInterfaceMarshaller<{{typedefName}}{{typeParams}}>.ConvertToUnmanaged(value, {{iid}});
                 }
-            
-                public static 
-            """, isMultiline: true);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("""
-            ? ConvertToManaged(void* value)
+
+                public static {{typedefName}}{{typeParams}} ConvertToManaged(void* value)
                 {
-                    return (
-            """, isMultiline: true);
-        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("""
-            ?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+                    return ({{typedefName}}{{typeParams}}) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
                 }
             }
-            #nullable disable
-            """, isMultiline: true);
+            """);
     }
 
     /// <summary>
@@ -520,12 +498,12 @@ internal static class AbiInterfaceFactory
     /// </summary>
     private static void WriteInterfaceMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
+        string nameStripped = type.GetStrippedName();
+
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
-        bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
-            || TypeCategorization.IsProjectionInternal(type);
+        bool useInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
+            || type.IsProjectionInternal;
 
         // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
         // class, skip emitting it entirely — its members are merged into the default
@@ -540,11 +518,11 @@ internal static class AbiInterfaceFactory
         // is manually projected in WinRT.Runtime, e.g. IColorHelperStatics for ColorHelper,
         // IColorsStatics for Colors, IFontWeightsStatics for FontWeights). the original code also
         // omits these because their owning class is not projected.
-        if (TypeCategorization.IsExclusiveTo(type))
+        if (type.IsExclusiveTo)
         {
             TypeDefinition? owningClass = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
-            if (owningClass is not null && !context.Settings.Filter.Includes(owningClass))
+            if (owningClass is not null && !context.Settings.Filter.Includes(owningClass.FullName))
             {
                 return;
             }
@@ -553,7 +531,7 @@ internal static class AbiInterfaceFactory
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
 
-        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
         {
             TypeDefinition? classType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
@@ -561,9 +539,7 @@ internal static class AbiInterfaceFactory
             {
                 foreach (InterfaceImplementation impl in classType.Interfaces)
                 {
-                    TypeDefinition? implDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface!);
-
-                    if (implDef is not null && implDef == type)
+                    if (impl.TryResolveTypeDef(context.Cache, out TypeDefinition? implDef) && implDef == type)
                     {
                         skipExclusiveEvents = true;
                         break;
@@ -586,6 +562,7 @@ internal static class AbiInterfaceFactory
         if (isFastAbiDefault)
         {
             int slot = InspectableMethodCount;
+
             // Default interface: skip its events (they're inlined in the RCW class).
             segments.Add((type, slot, true));
             slot += AbiTypeHelpers.CountMethods(type) + AbiTypeHelpers.GetClassHierarchyIndex(context.Cache, fastAbi!.Value.Class);
@@ -616,10 +593,10 @@ internal static class AbiInterfaceFactory
             return;
         }
 
-        writer.WriteLine($$"""
+        writer.WriteLine(isMultiline: true, $$"""
             {{(useInternal ? "internal static class " : "public static class ")}}{{nameStripped}}Methods
             {
-            """, isMultiline: true);
+            """);
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {

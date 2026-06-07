@@ -24,9 +24,9 @@ internal static partial class AbiMethodBodyFactory
     /// </summary>
     internal static void EmitUnsafeAccessorForDefaultIfaceIfGeneric(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef? defaultIface)
     {
-        if (defaultIface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (defaultIface is not null && defaultIface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
         {
-            ObjRefNameGenerator.EmitUnsafeAccessorForIid(writer, context, gi);
+            UnsafeAccessorFactory.EmitIidAccessor(writer, context, gi);
         }
     }
 
@@ -48,64 +48,48 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // Emit non-special methods first (output order is unchanged from before; only the slot lookup changes).
-        foreach (MethodDefinition method in type.Methods)
+        foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
-            if (method.IsSpecial())
-            {
-                continue;
-            }
-
-            string mname = method.Name?.Value ?? string.Empty;
+            string mname = method.GetRawName();
             MethodSignatureInfo sig = new(method);
 
-            writer.Write("""
+            writer.Write(isMultiline: true, """
                     [MethodImpl(MethodImplOptions.NoInlining)]
                     public static unsafe 
-                """, isMultiline: true);
-            MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write($" {mname}(WindowsRuntimeObjectReference thisReference");
-
-            if (sig.Parameters.Count > 0)
-            {
-                writer.Write(", ");
-            }
-
-            MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write(")");
+                """);
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+            string comma = sig.Parameters.Count > 0 ? ", " : "";
+            writer.Write($"{ret} {mname}(WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
-            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept());
+            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept);
         }
 
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
         foreach (PropertyDefinition prop in type.Properties)
         {
-            string pname = prop.Name?.Value ?? string.Empty;
-            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
+            string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
-            (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
-            // accessors of the property (the attribute is on the property itself, not on the
-            // individual accessors).
-            bool propIsNoExcept = prop.IsNoExcept();
 
-            if (gMethod is not null)
+            if (prop.GetMethod is { } getter)
             {
-                MethodSignatureInfo getSig = new(gMethod);
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
-                    """, isMultiline: true);
-                EmitAbiMethodBodyIfSimple(writer, context, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
+                    """);
+
+                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(getter), methodSlot[getter], isNoExcept: prop.IsNoExcept);
             }
 
-            if (sMethod is not null)
+            if (prop.SetMethod is { } setter)
             {
-                MethodSignatureInfo setSig = new(sMethod);
-                writer.Write($$"""
+                writer.Write(isMultiline: true, $$"""
                         [MethodImpl(MethodImplOptions.NoInlining)]
                         public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
-                    """, isMultiline: true);
-                EmitAbiMethodBodyIfSimple(writer, context, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
+                    """);
+
+                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(setter), methodSlot[setter], paramNameOverride: "value", isNoExcept: prop.IsNoExcept);
             }
         }
 
@@ -119,12 +103,12 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            string evtName = evt.Name?.Value ?? string.Empty;
+            string evtName = evt.GetRawName();
             TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             bool isGenericEvent = evtSig is GenericInstanceTypeSignature;
 
             // Use the add method's WinMD slot (events project as the add_X method's vmethod_index).
-            (MethodDefinition? addMethod, MethodDefinition? _) = evt.GetEventMethods();
+            MethodDefinition? addMethod = evt.AddMethod;
             int eventSlot = addMethod is not null && methodSlot.TryGetValue(addMethod, out int es) ? es : 0;
 
             // Build the projected event source type name. For non-generic delegate handlers, the
@@ -135,7 +119,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (isGenericEvent)
             {
-                eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+                eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true).Format();
 
                 if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
                 {
@@ -150,7 +134,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (evtSig is TypeDefOrRefSignature td)
                 {
-                    delegateName = td.Type?.Name?.Value ?? string.Empty;
+                    delegateName = td.Type.GetRawName();
                     delegateName = IdentifierEscaping.StripBackticks(delegateName);
                 }
 
@@ -158,12 +142,12 @@ internal static partial class AbiMethodBodyFactory
             }
 
             string eventSourceInteropType = isGenericEvent
-                ? InteropTypeNameWriter.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
+                ? InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtSig, TypedefNameType.EventSource)
                 : string.Empty;
 
             // Emit the per-event ConditionalWeakTable static field.
             writer.WriteLine();
-            writer.WriteLine($$"""
+            writer.WriteLine(isMultiline: true, $$"""
                     private static ConditionalWeakTable<object, {{eventSourceProjectedFull}}> _{{evtName}}
                     {
                         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,29 +167,35 @@ internal static partial class AbiMethodBodyFactory
                 
                     public static {{eventSourceProjectedFull}} {{evtName}}(object thisObject, WindowsRuntimeObjectReference thisReference)
                     {
-                """, isMultiline: true);
+                """);
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
-                writer.WriteLine($$"""
-                            [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-                            [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
-                            static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
-                    
-                            return _{{evtName}}.GetOrAdd(
-                                key: thisObject,
-                                valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}})),
-                                factoryArgument: thisReference);
-                    """, isMultiline: true);
+                writer.IncreaseIndent();
+                writer.IncreaseIndent();
+                UnsafeAccessorFactory.EmitConstructorReturningObject(
+                    writer,
+                    interopType: eventSourceInteropType,
+                    functionName: "ctor",
+                    parameterList: "WindowsRuntimeObjectReference nativeObjectReference, int index");
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, $$"""
+                    return _{{evtName}}.GetOrAdd(
+                        key: thisObject,
+                        valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}})),
+                        factoryArgument: thisReference);
+                    """);
+                writer.DecreaseIndent();
+                writer.DecreaseIndent();
             }
             else
             {
                 // Non-generic delegate: directly construct.
-                writer.WriteLine($$"""
+                writer.WriteLine(isMultiline: true, $$"""
                             return _{{evtName}}.GetOrAdd(
                                 key: thisObject,
                                 valueFactory: static (_, thisReference) => new {{eventSourceProjectedFull}}(thisReference, {{eventSlot.ToString(CultureInfo.InvariantCulture)}}),
                                 factoryArgument: thisReference);
-                    """, isMultiline: true);
+                    """);
             }
             writer.WriteLine("    }");
         }

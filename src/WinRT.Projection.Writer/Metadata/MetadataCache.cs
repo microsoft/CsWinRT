@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Errors;
 
@@ -18,7 +19,7 @@ internal sealed class MetadataCache
     /// <summary>Backing field for <see cref="Namespaces"/>.</summary>
     private readonly Dictionary<string, NamespaceMembers> _namespaces = [];
 
-    /// <summary>Backing field for the global type-by-full-name index used by <see cref="Find"/>.</summary>
+    /// <summary>Backing field for the global type-by-full-name index used by <see cref="Find(string)"/>.</summary>
     private readonly Dictionary<string, TypeDefinition> _typesByFullName = [];
 
     /// <summary>Backing field for the type-to-source-module-path index used by <see cref="GetSourcePath"/>.</summary>
@@ -137,7 +138,8 @@ internal sealed class MetadataCache
     {
         foreach (NamespaceMembers members in _namespaces.Values)
         {
-            static int Compare(TypeDefinition a, TypeDefinition b) => StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+            static int Compare(TypeDefinition a, TypeDefinition b) => StringComparer.Ordinal.Compare(a.GetRawName(), b.GetRawName());
+
             members.Types.Sort(Compare);
             members.Interfaces.Sort(Compare);
             members.Classes.Sort(Compare);
@@ -172,22 +174,17 @@ internal sealed class MetadataCache
             }
 
             // Dedupe by full type name. Multiple input .winmd files can legitimately define types
-            // with the same full name (e.g. WindowsRuntime.Internal types appearing in both
-            // WindowsRuntime.Internal.winmd and cswinrt.winmd, or types showing up in both an SDK
-            // contract winmd and a 3rd-party WinMD that re-exports / forwards them). First-load-wins.
-            string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
-
-            if (!_typesByFullName.TryAdd(fullName, type))
+            // with the same full name (e.g. types showing up in both an SDK contract winmd and a
+            // 3rd-party WinMD that re-exports / forwards them). First-load-wins.
+            if (!_typesByFullName.TryAdd(type.FullName, type))
             {
                 continue;
             }
 
-            if (!_namespaces.TryGetValue(ns, out NamespaceMembers? members))
-            {
-                members = new NamespaceMembers(ns);
-                _namespaces[ns] = members;
-            }
+            // Avoid the double lookup: just add a default entry and initialize it here if needed
+            ref NamespaceMembers? members = ref CollectionsMarshal.GetValueRefOrAddDefault(_namespaces, ns, out _);
 
+            members ??= new NamespaceMembers(ns);
             members.AddType(type);
 
             _typeToModulePath[type] = moduleFilePath;
@@ -211,10 +208,20 @@ internal sealed class MetadataCache
     }
 
     /// <summary>
-    /// Gets a type by full name, throwing if not found.
+    /// Looks up a type by its namespace and name; the namespace can be empty for global types.
+    /// Centralises the empty-namespace handling that is otherwise open-coded inconsistently.
     /// </summary>
-    public TypeDefinition FindRequired(string fullName)
+    public TypeDefinition? Find(string typeNamespace, string typeName)
     {
-        return Find(fullName) ?? throw WellKnownProjectionWriterExceptions.CannotResolveType(fullName);
+        return Find(string.IsNullOrEmpty(typeNamespace) ? typeName : typeNamespace + "." + typeName);
+    }
+
+    /// <summary>
+    /// Looks up a type by its namespace and name extracted from <paramref name="type"/>.
+    /// </summary>
+    public TypeDefinition? Find(ITypeDefOrRef type)
+    {
+        (string ns, string name) = type.Names();
+        return Find(ns, name);
     }
 }

@@ -26,7 +26,7 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// Work is split into discrete <see cref="IProjectionWorkItem"/> units (one per namespace, plus
 /// the global <c>GeneratedInterfaceIIDs.cs</c> file and -- in component mode -- the
 /// <c>WinRT_Module.cs</c> activation-factory aggregator). Items are dispatched in parallel via
-/// <see cref="Parallel.ForEach{TSource}(IEnumerable{TSource}, ParallelOptions, System.Action{TSource})"/>
+/// <see cref="Parallel.ForEach{TSource}(IEnumerable{TSource}, ParallelOptions, Action{TSource})"/>
 /// with the configured <see cref="Settings.MaxDegreesOfParallelism"/>; cross-item shared state
 /// lives in <see cref="ProjectionGeneratorRunState"/> and uses <see cref="ConcurrentDictionary{TKey,TValue}"/>
 /// / <see cref="ConcurrentBag{T}"/> / <see cref="Interlocked"/> so the per-item bodies can run
@@ -70,7 +70,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
         ProjectionGeneratorRunState state = new(componentActivatable, componentByModule);
 
-        // Phase 3..6: parallel emission. All file writes happen below; wrap the whole emission
+        // Phase 2: parallel emission. All file writes happen below; wrap the whole emission
         // pipeline in a single try/catch so any unexpected failure surfaces as an
         // UnhandledProjectionWriterException rather than a raw stack trace.
         try

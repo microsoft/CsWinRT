@@ -44,14 +44,14 @@ internal sealed class Settings
 
     /// <summary>
     /// Optional callback invoked for each verbose progress message. When <see langword="null"/>,
-    /// verbose messages are forwarded to <see cref="System.Console.Out"/>. Has no effect unless
+    /// verbose messages are forwarded to <see cref="Console.Out"/>. Has no effect unless
     /// <see cref="Verbose"/> is also set.
     /// </summary>
     public Action<string>? Logger { get; init; }
 
     /// <summary>
     /// Maximum number of parallel work items dispatched when generating projections.
-    /// Defaults to <c>-1</c> (let the runtime decide; typically <see cref="System.Environment.ProcessorCount"/>).
+    /// Defaults to <c>-1</c> (let the runtime decide; typically <see cref="Environment.ProcessorCount"/>).
     /// Set to <c>1</c> to force fully sequential execution.
     /// </summary>
     public int MaxDegreesOfParallelism { get; init; } = -1;
@@ -101,21 +101,6 @@ internal sealed class Settings
     /// Gets or sets a value indicating whether component-authoring mode is enabled.
     /// </summary>
     public bool Component { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether projected types are emitted as <c>internal</c> rather than <c>public</c>.
-    /// </summary>
-    public bool Internal { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the projection is embedded into a consuming assembly (forces <c>internal</c> visibility).
-    /// </summary>
-    public bool Embedded { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether projected enums are forced to <c>public</c> visibility (overrides <see cref="Internal"/>).
-    /// </summary>
-    public bool PublicEnums { get; init; }
 
     /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.

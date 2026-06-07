@@ -13,10 +13,13 @@ internal static class EventDefinitionExtensions
     extension(EventDefinition evt)
     {
         /// <summary>
-        /// Returns the (add, remove) accessor pair of the event.
+        /// Returns the event's raw metadata name, falling back to <see cref="string.Empty"/> when
+        /// the metadata name is <see langword="null"/>. Convenience for the
+        /// <c>evt.Name?.Value ?? string.Empty</c> pattern that appears at many sites.
         /// </summary>
-        /// <returns>A tuple of (Add, Remove) accessor methods, either of which may be <see langword="null"/>.</returns>
-        public (MethodDefinition? Add, MethodDefinition? Remove) GetEventMethods()
-            => (evt.AddMethod, evt.RemoveMethod);
+        public string GetRawName()
+        {
+            return evt.Name?.Value ?? string.Empty;
+        }
     }
 }

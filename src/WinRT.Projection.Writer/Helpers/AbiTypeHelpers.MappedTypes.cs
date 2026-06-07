@@ -68,6 +68,7 @@ internal static partial class AbiTypeHelpers
         }
 
         (string ns, string name) = td.Names();
+
         // The set of mapped types that use the 'value-type marshaller' pattern (DateTime, TimeSpan, HResult).
         // Uri is also a mapped marshalling type but it's a reference type (handled via UriMarshaller separately).
         if (ns == WindowsFoundation)

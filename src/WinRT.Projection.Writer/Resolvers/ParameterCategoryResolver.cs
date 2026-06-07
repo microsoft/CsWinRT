@@ -17,15 +17,17 @@ internal static class ParameterCategoryResolver
     /// </summary>
     /// <param name="p">The parameter to classify.</param>
     /// <returns>The classified parameter category.</returns>
-    public static ParameterCategory GetParamCategory(ParameterInfo p)
+    public static ParameterCategory Resolve(ParameterInfo p)
     {
         bool isArray = p.Type is SzArrayTypeSignature;
         bool isOut = p.Parameter.Definition?.IsOut == true;
         bool isIn = p.Parameter.Definition?.IsIn == true;
+
         // Check both the captured signature type and the parameter's own type (handles cases where
         // the signature is wrapped in a ByReferenceTypeSignature only on one side after substitution).
         // Also peel custom modifiers (e.g. modreq[InAttribute]) which can hide a ByRef beneath.
         bool isByRef = p.Type.IsByRefType() || p.Parameter.ParameterType.IsByRefType();
+
         // If byref and underlying is an array, treat as array param (PassArray/ReceiveArray/FillArray)
         // based on in/out flags. WinRT metadata represents 'out byte[]' as 'byte[]&' with [out].
         bool isByRefArray = isByRef && p.Type.StripByRefAndCustomModifiers() is SzArrayTypeSignature;
