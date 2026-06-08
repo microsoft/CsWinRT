@@ -37,6 +37,11 @@
     <IsBuildTool>true</IsBuildTool>
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
+
+    <!-- Suppress IDE0028 ('Collection initialization can be simplified'), which fires on the
+         'new(StringComparer.Ordinal)' pattern with later analyzer versions. Simplifying to a
+         collection literal would drop the comparer, so the suggestion is not actually correct. -->
+    <NoWarn>$(NoWarn);IDE0028</NoWarn>
   </PropertyGroup>
 
   <!-- NativeAOT and optimization options (same as 'WinRT.Interop.Generator') -->
@@ -49,6 +54,11 @@
     <IlcDehydrate>false</IlcDehydrate>
     <IlcResilient>false</IlcResilient>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\FileExtensions.cs" Link="Extensions\FileExtensions.cs" />
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\PathExtensions.cs" Link="Extensions\PathExtensions.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />

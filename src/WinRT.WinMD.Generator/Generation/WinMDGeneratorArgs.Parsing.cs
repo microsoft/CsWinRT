@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using WindowsRuntime.InteropGenerator;
 using WindowsRuntime.WinMDGenerator.Attributes;
 using WindowsRuntime.WinMDGenerator.Errors;
 
@@ -48,6 +49,19 @@ internal partial class WinMDGeneratorArgs
         }
 
         return ParseFromResponseFile(lines, token);
+    }
+
+    /// <summary>
+    /// Parses a <see cref="WinMDGeneratorArgs"/> instance from a target response file.
+    /// </summary>
+    /// <param name="stream">The stream to the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="WinMDGeneratorArgs"/> instance.</returns>
+    public static WinMDGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
+    {
+        string[] responseArgs = File.ReadAllLines(stream);
+
+        return ParseFromResponseFile(responseArgs, token);
     }
 
     /// <summary>
@@ -104,6 +118,7 @@ internal partial class WinMDGeneratorArgs
             OutputWinmdPath = GetStringArgument(argsMap, nameof(OutputWinmdPath)),
             AssemblyVersion = GetStringArgument(argsMap, nameof(AssemblyVersion)),
             UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(UseWindowsUIXamlProjections)),
+            DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),
             Token = token
         };
     }
@@ -156,6 +171,22 @@ internal partial class WinMDGeneratorArgs
         }
 
         throw WellKnownWinMDExceptions.ResponseFileArgumentParsingError(propertyName);
+    }
+
+    /// <summary>
+    /// Parses a nullable (optional) <see cref="string"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The parsed arguments map.</param>
+    /// <param name="propertyName">The property name to look up.</param>
+    /// <returns>The resulting argument, or <see langword="null"/> if not present.</returns>
+    private static string? GetNullableStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue;
+        }
+
+        return null;
     }
 
     /// <summary>
