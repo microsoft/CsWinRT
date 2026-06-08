@@ -87,6 +87,12 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
     public int MaxDegreesOfParallelism { get; set; } = -1;
 
+    /// <summary>
+    /// Gets or sets the directory where the debug repro will be produced.
+    /// </summary>
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -130,6 +136,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
+
+            return false;
+        }
+
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
 
             return false;
         }
@@ -208,6 +221,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         }
 
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
+        AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
 
         // Add any additional arguments that are not statically known
         foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])
@@ -227,5 +241,20 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     private static void AppendResponseFileCommand(StringBuilder args, string commandName, string commandValue)
     {
         _ = args.Append($"{commandName} ").AppendLine(commandValue);
+    }
+
+    /// <summary>
+    /// Appends an optional command line argument to the response file arguments, with the right format.
+    /// </summary>
+    /// <param name="args">The command line arguments being built.</param>
+    /// <param name="commandName">The command name to append.</param>
+    /// <param name="commandValue">The optional command value to append.</param>
+    /// <remarks>This method will not append the command if <paramref name="commandValue"/> is <see langword="null"/>.</remarks>
+    private static void AppendResponseFileOptionalCommand(StringBuilder args, string commandName, string? commandValue)
+    {
+        if (commandValue is not null)
+        {
+            AppendResponseFileCommand(args, commandName, commandValue);
+        }
     }
 }
