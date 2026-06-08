@@ -37,7 +37,7 @@ internal static partial class ProjectionGenerator
 
         ProjectionGeneratorProcessingState processingState;
 
-        // Process all .winmd references and create the .rsp file for 'cswinrt.exe'
+        // Process all .winmd references
         try
         {
             // Show the appropriate message to inform users of what this generator is doing,

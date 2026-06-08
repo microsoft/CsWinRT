@@ -64,19 +64,6 @@
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
 
     <!--
-      Legacy 'cswinrt' (C++) build-output paths. These are kept defined so existing
-      MSBuild infrastructure (e.g. the '$(CsWinRTExe)' argument still passed to the
-      'RunCsWinRTMergedProjectionGenerator' MSBuild task) continues to resolve to a path
-      string. The .exe file itself is no longer required to exist or to be built. The C#
-      'cswinrtprojectiongen.exe' tool only stores this value as metadata and never
-      reads or executes the file. It will be removed entirely once the legacy 'cswinrt'
-      project is dropped.
-    -->
-    <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
-
-    <!--
       The 'WindowsRuntime.Internal.winmd' metadata used to bind the Windows SDK interop
       interfaces (e.g. 'IPrintManagerInterop', 'IDragDropManagerInterop') is produced by
       the managed 'WinRT.Internal' project, which targets the TFM below.

@@ -46,11 +46,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public string? WindowsMetadata { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the cswinrt.exe tool.
-    /// </summary>
-    public string? CsWinRTExePath { get; set; }
-
-    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtprojectiongen' tool is located.
     /// </summary>
     [Required]
@@ -102,7 +97,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     [MemberNotNullWhen(true, nameof(WinMDPaths))]
     [MemberNotNullWhen(true, nameof(TargetFramework))]
     [MemberNotNullWhen(true, nameof(WindowsMetadata))]
-    [MemberNotNullWhen(true, nameof(CsWinRTExePath))]
     [MemberNotNullWhen(true, nameof(CsWinRTToolsDirectory))]
 #endif
     protected override bool ValidateParameters()
@@ -197,7 +191,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         AppendResponseFileCommand(args, "--winmd-paths", winMDPathsArg);
         AppendResponseFileCommand(args, "--target-framework", TargetFramework!);
         AppendResponseFileCommand(args, "--windows-metadata", WindowsMetadata!);
-        AppendResponseFileCommand(args, "--cswinrt-exe-path", CsWinRTExePath!);
 
         if (!string.IsNullOrEmpty(AssemblyName))
         {

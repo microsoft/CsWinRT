@@ -7,7 +7,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <PropertyGroup>
     <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
-    <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
     <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
@@ -210,11 +209,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <Target Name="CsWinRTCleanGenerateProjectionOutputs">
-    <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt.rsp" />
-    <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt_internal.rsp" />
-  </Target>
-
   <!--
     Register the new C# 'cswinrtprojectionrefgen' MSBuild task. CsWinRTGenTasksAssembly is set in
     the imported CsWinRTGen.targets file (see line 11 of that file); since UsingTask resolves
@@ -224,25 +218,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="CsWinRTGenerateProjection"
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ResolveCsWinRToolsDirectory"
-          Condition="'$(CsWinRTGenerateProjection)' == 'true'"
-          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTGenTasksAssembly)"
-          Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
-
-    <PropertyGroup>
-      <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
-      <!-- %40 is an MSBuild escape code for the @ character; 
-       https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2015/msbuild/msbuild-special-characters?view=vs-2015&redirectedfrom=MSDN 
-  -->
-      <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-      <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
-    </PropertyGroup>
+          Condition="'$(CsWinRTGenerateProjection)' == 'true'">
 
     <ItemGroup>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.winmd'"></CsWinRTDetectWindowsMetadata>
     </ItemGroup>
 
-    <Error Condition="'$(CsWinRTParams)$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
+    <Error Condition="'$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
       Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
 
     <PropertyGroup>
@@ -261,39 +244,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </CsWinRTFilters>
 
       <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
-      <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
--input $(CsWinRTInteropMetadata)
--include WindowsRuntime.Internal
-      </CsWinRTIncludeWinRTInterop>
-
-      <CsWinRTPublicExclusiveTo Condition="'$(CsWinRTPublicExclusiveToInterfaces)' == 'true'">-public_exclusiveto</CsWinRTPublicExclusiveTo>
-      <CsWinRTDynamicallyInterfaceCastableExclusiveTo Condition="'$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)' == 'true'">-idic_exclusiveto</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
-      <CsWinRTReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">-reference_projection</CsWinRTReferenceProjection>
-
-      <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
-$(CsWinRTCommandVerbosity)
--target $(CsWinRTExeTFM)
-$(CsWinRTWindowsMetadataInput)
--input @(CsWinRTInputs->'"%(FullPath)"', ' ')
--output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
-$(CsWinRTFilters)
-$(CsWinRTIncludeWinRTInterop)
-$(CsWinRTPublicExclusiveTo)
-$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)
-$(CsWinRTReferenceProjection)
-      </CsWinRTParams>
     </PropertyGroup>
 
     <!-- 
       During a design-time build, generation of the CsWinRT projection might fail (e.g. input .winmds might
       not exist if a full build hasn't completed yet). To avoid causing a design-time build break, which can 
       put the design-time build results of dependent projects into a bad state, we want the build to continue
-      if cswinrt.exe encounters an error during a design-time build.
+      if the projection generator encounters an error during a design-time build.
     -->
     <PropertyGroup>
       <CsWinRTContinueOnError>false</CsWinRTContinueOnError>
       <CsWinRTContinueOnError Condition="'$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'">true</CsWinRTContinueOnError>
-      <CsWinRTProjectionExitCode>0</CsWinRTProjectionExitCode>
     </PropertyGroup>
 
     <ItemGroup>
@@ -301,13 +262,12 @@ $(CsWinRTReferenceProjection)
     </ItemGroup>
     <Delete Files="@(CsWinRTFilesToDelete)" />
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
 
     <!--
       Reconstruct the include/exclude/input lists for the new C# generator from the historical
       CsWinRTFilters multi-line string. Some projects (e.g. the in-repo
       Windows.csproj/Windows.UI.Xaml.csproj/WinAppSDK.csproj) set CsWinRTFilters directly with raw
-      cswinrt.exe-style '-include X' / '-exclude Y' directives; others rely on the default item-based
+      '-include X' / '-exclude Y' directives; others rely on the default item-based
       computation via CsWinRTIncludeItems/CsWinRTExcludeItems. Parsing the final filter strings back
       into items handles both cases uniformly.
     -->
@@ -322,7 +282,7 @@ $(CsWinRTReferenceProjection)
 
     <!--
       Auto-include WindowsRuntime.Internal (and the matching interop metadata WinMD) when the user
-      requested the Windows namespace, mirroring the OLD CsWinRTIncludeWinRTInterop behavior.
+      requested the Windows namespace.
     -->
     <ItemGroup>
       <_CsWinRTRefHasWindows Include="@(_CsWinRTRefIncludes)" Condition="'%(Identity)' == 'Windows'" />
@@ -356,19 +316,7 @@ $(CsWinRTReferenceProjection)
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
         CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
         CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
-        ContinueOnError="$(CsWinRTContinueOnError)">
-      <Output TaskParameter="ExitCode" PropertyName="CsWinRTProjectionExitCode" />
-    </RunCsWinRTProjectionRefGenerator>
-
-    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTResponseFile)')">
-      <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
-      <UpToDateCheckInput Include="$(CsWinRTGenTasksAssembly)" Set="WinMDs" />
-      <UpToDateCheckBuilt Include="$(CsWinRTResponseFile)" Set="WinMDs" />
-    </ItemGroup>
-
-    <!-- Clean the output file if the target failed to indicate it needs to be rebuild including for design time builds which won't trigger OnError. -->
-    <CallTarget Targets="CsWinRTCleanGenerateProjectionOutputs" Condition="'$(CsWinRTContinueOnError)' == 'true' AND '$(CsWinRTProjectionExitCode)' != '0'" />
-    <OnError ExecuteTargets="CsWinRTCleanGenerateProjectionOutputs" />
+        ContinueOnError="$(CsWinRTContinueOnError)" />
   </Target>
 
   <!-- Note: GenerateTargetFrameworkMonikerAttribute is conditional upon @(Compile) not being empty -->

@@ -338,7 +338,7 @@ Validate general projection usage:
 
 ### 3. Projection writer (`src/WinRT.Projection.Writer/`)
 
-The **projection writer** is a C# library that reads `.winmd` metadata and generates C# projection source code for Windows Runtime types. It is the in-process replacement for the legacy C++ `cswinrt.exe` projection compiler from CsWinRT 2.x (which has been deleted). The writer ships as a library so the same code path is reused by both the reference projection generator (component build time) and the merged projection generator (app publish time).
+The **projection writer** is a C# library that reads `.winmd` metadata and generates C# projection source code for Windows Runtime types. The writer ships as a library so the same code path is reused by both the reference projection generator (component build time) and the merged projection generator (app publish time).
 
 **Project settings:**
 
@@ -387,7 +387,7 @@ WinRT.Projection.Writer/
 
 ### 4. Reference projection generator (`src/WinRT.Projection.Ref.Generator/`)
 
-A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT** binary. It is the in-process C# replacement for the legacy `cswinrt.exe` invocation in the `CsWinRTGenerateProjection` MSBuild target. The tool runs at component-library build time and writes `.cs` files into the user's `$(IntermediateOutputPath)`, which `csc.exe` then compiles into the user library/component `.dll`.
+A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT** binary. It drives the projection writer in-process from the `CsWinRTGenerateProjection` MSBuild target. The tool runs at component-library build time and writes `.cs` files into the user's `$(IntermediateOutputPath)`, which `csc.exe` then compiles into the user library/component `.dll`.
 
 **Project settings:**
 

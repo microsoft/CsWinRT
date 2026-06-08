@@ -69,11 +69,11 @@ Contains the **projection assembly generator** (`cswinrtprojectiongen.exe`). Thi
 
 ## [`src/WinRT.Projection.Ref.Generator`](../src/WinRT.Projection.Ref.Generator)
 
-Contains the **reference projection source generator** (`cswinrtprojectionrefgen.exe`). This Native AOT CLI tool runs at component-library build time, driving the projection writer in-process to produce the `.cs` files that `csc.exe` then compiles into the user library/component `.dll`. It is the C# replacement for the legacy `cswinrt.exe` invocation in the `CsWinRTGenerateProjection` MSBuild target.
+Contains the **reference projection source generator** (`cswinrtprojectionrefgen.exe`). This Native AOT CLI tool runs at component-library build time, driving the projection writer in-process to produce the `.cs` files that `csc.exe` then compiles into the user library/component `.dll`. It is invoked from the `CsWinRTGenerateProjection` MSBuild target.
 
 ## [`src/WinRT.Projection.Writer`](../src/WinRT.Projection.Writer)
 
-Contains the **projection writer**, a C# library that reads `.winmd` metadata and generates C# projection source code for Windows Runtime types. It is the in-process replacement for the legacy C++ `cswinrt.exe` projection compiler from CsWinRT 2.x (which has been deleted). The writer ships as a library and is consumed by both `cswinrtprojectionrefgen.exe` (component-library build time) and `cswinrtprojectiongen.exe` (app publish time) via a single `ProjectionWriter.Run(ProjectionWriterOptions)` entry point.
+Contains the **projection writer**, a C# library that reads `.winmd` metadata and generates C# projection source code for Windows Runtime types. The writer ships as a library and is consumed by both `cswinrtprojectionrefgen.exe` (component-library build time) and `cswinrtprojectiongen.exe` (app publish time) via a single `ProjectionWriter.Run(ProjectionWriterOptions)` entry point.
 
 ## [`src/WinRT.WinMD.Generator`](../src/WinRT.WinMD.Generator)
 

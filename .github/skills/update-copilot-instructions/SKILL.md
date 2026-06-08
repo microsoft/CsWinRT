@@ -55,7 +55,7 @@ Launch parallel explore agents for each of the 10 CsWinRT 3.0 projects listed in
    - Three projection modes are accurately described
    - Namespace filter logic is current
    - Project settings and dependencies (project reference to `WinRT.Projection.Writer`) are current
-   - The pipeline is documented as in-process (no `cswinrt.exe` subprocess invocation anymore)
+   - The pipeline is documented as in-process (the projection writer is invoked as a library)
 
 7. **Interop generator (`src/WinRT.Interop.Generator/`)**
    - Generated content categories are current

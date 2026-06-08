@@ -11,23 +11,20 @@ namespace Microsoft.NET.Build.Tasks;
 
 /// <summary>
 /// The custom MSBuild task that invokes the 'cswinrtprojectionrefgen' tool to generate
-/// reference-projection C# sources. This is the C# replacement for the historical
-/// '&lt;Exec Command="$(CsWinRTCommand)"&gt;' invocation in the 'CsWinRTGenerateProjection'
-/// MSBuild target. The tool produces .cs files that get included in the user's library
-/// or component compilation via the 'CsWinRTIncludeProjection' target.
+/// reference-projection C# sources. The tool produces .cs files that get included in
+/// the user's library or component compilation via the 'CsWinRTIncludeProjection' target.
 /// </summary>
 public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
 {
     /// <summary>
     /// Gets or sets the input WinMD files (or directories that should be recursively scanned)
-    /// providing the Windows Runtime metadata to project. Mirrors the C++ '-input' arg.
+    /// providing the Windows Runtime metadata to project.
     /// </summary>
     [Required]
     public ITaskItem[]? InputWinMDPaths { get; set; }
 
     /// <summary>
     /// Gets or sets the directory where the generated .cs files will be placed.
-    /// Mirrors the C++ '-output' arg.
     /// </summary>
     [Required]
     public string? OutputDirectory { get; set; }
@@ -42,52 +39,48 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     /// <summary>
     /// Gets or sets the optional Windows metadata token (literal path, 'local', 'sdk', 'sdk+',
     /// or a version string like '10.0.26100.0'). The token is expanded in-tool to the actual
-    /// set of .winmd files (mirrors the C++ tool's cmd_reader.h behavior).
+    /// set of .winmd files.
     /// </summary>
     public string? WindowsMetadata { get; set; }
 
     /// <summary>
-    /// Gets or sets the namespace prefixes to include in the projection. Mirrors the C++ '-include' arg.
+    /// Gets or sets the namespace prefixes to include in the projection.
     /// </summary>
     public ITaskItem[]? IncludeNamespaces { get; set; }
 
     /// <summary>
-    /// Gets or sets the namespace prefixes to exclude from the projection. Mirrors the C++ '-exclude' arg.
+    /// Gets or sets the namespace prefixes to exclude from the projection.
     /// </summary>
     public ITaskItem[]? ExcludeNamespaces { get; set; }
 
     /// <summary>
     /// Gets or sets the namespace prefixes to exclude from the projection additions.
-    /// Mirrors the C++ '-addition_exclude' arg.
     /// </summary>
     public ITaskItem[]? AdditionExcludeNamespaces { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to enable verbose progress logging. Mirrors the C++ '-verbose' arg.
+    /// Gets or sets whether to enable verbose progress logging.
     /// </summary>
     public bool Verbose { get; set; }
 
     /// <summary>
     /// Gets or sets whether to generate a Windows Runtime component projection.
-    /// Mirrors the C++ '-component' arg.
     /// </summary>
     public bool Component { get; set; }
 
     /// <summary>
     /// Gets or sets whether to make exclusive-to interfaces public in the projection
-    /// (default is internal). Mirrors the C++ '-public_exclusiveto' arg.
+    /// (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; set; }
 
     /// <summary>
     /// Gets or sets whether exclusive-to interfaces should support IDynamicInterfaceCastable.
-    /// Mirrors the C++ '-idic_exclusiveto' arg.
     /// </summary>
     public bool IdicExclusiveTo { get; set; }
 
     /// <summary>
     /// Gets or sets whether the generated projection should be a reference assembly projection.
-    /// Mirrors the C++ '-reference_projection' arg.
     /// </summary>
     public bool ReferenceProjection { get; set; }
 
