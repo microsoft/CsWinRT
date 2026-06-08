@@ -16,7 +16,11 @@
     <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
     <Nullable>enable</Nullable>
     <RootNamespace>WindowsRuntime.Internal</RootNamespace>
-    <AssemblyName>WinRT.Internal</AssemblyName>
+    <!--
+      The assembly name must match the legacy 'WindowsRuntime.Internal' identity that the rest
+      of the CsWinRT toolchain (and downstream Windows Runtime metadata consumers) references.
+    -->
+    <AssemblyName>WindowsRuntime.Internal</AssemblyName>
     <LangVersion>14.0</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 

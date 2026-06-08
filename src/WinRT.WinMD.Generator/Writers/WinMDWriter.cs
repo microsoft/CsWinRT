@@ -110,8 +110,11 @@ internal sealed partial class WinMDWriter
 
         _assemblyReferenceCache["mscorlib"] = defaultCorLib;
 
-        // Create the output assembly with WindowsRuntime flag (keep reference alive via module)
-        _ = new AssemblyDefinition(assemblyName, new Version(version))
+        // Create the output assembly with WindowsRuntime flag (keep reference alive via module).
+        // Per WinRT convention, the assembly identity always uses version 255.255.255.255 (the
+        // "unbound" version). The 'version' parameter is only used for the type-level
+        // '[Windows.Foundation.Metadata.Version]' attribute applied to each authored type.
+        _ = new AssemblyDefinition(assemblyName, WinMDValues.AssemblyVersion)
         {
             Modules = { _outputModule },
             Attributes = AssemblyAttributes.ContentWindowsRuntime,

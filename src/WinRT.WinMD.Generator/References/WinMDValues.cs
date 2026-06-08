@@ -19,4 +19,10 @@ internal static class WinMDValues
     /// Gets the version of the <c>mscorlib</c> reference for .winmd files.
     /// </summary>
     public static Version MSCorLibVersion { get; } = new(0xFF, 0xFF, 0xFF, 0xFF);
+
+    /// <summary>
+    /// Gets the assembly version stamped onto every authored .winmd, matching the WinRT convention
+    /// of <c>255.255.255.255</c> (the "unbound" version used by all Windows Runtime metadata).
+    /// </summary>
+    public static Version AssemblyVersion { get; } = new(0xFF, 0xFF, 0xFF, 0xFF);
 }
