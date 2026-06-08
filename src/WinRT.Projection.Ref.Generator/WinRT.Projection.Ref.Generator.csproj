@@ -51,6 +51,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\FileExtensions.cs" Link="Extensions\FileExtensions.cs" />
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\PathExtensions.cs" Link="Extensions\PathExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj" />
   </ItemGroup>
 
