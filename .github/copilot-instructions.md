@@ -407,6 +407,8 @@ A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT*
 
 The tool is wired through the `RunCsWinRTProjectionRefGenerator` MSBuild task (in `WinRT.Generator.Tasks`).
 
+**Debug repro support**: when `--debug-repro-directory` is provided, captures the expanded set of input `.winmd` files (resolving any `local` / `sdk` / `sdk+` / version / directory tokens to concrete files) and a faithful `.rsp` into a self-contained `ref-projection-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
+
 ### 5. Impl generator (`src/WinRT.Impl.Generator/`)
 
 A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary. Generates **forwarder/impl assemblies** that contain only type forwards (no actual code).
@@ -435,6 +437,8 @@ A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary.
 4. Emits `[TypeForwarder]` entries for all public top-level types, routing to the appropriate projection assembly
 5. Optionally signs with a strong-name key
 
+**Debug repro support**: when `--debug-repro-directory` is provided, captures the output assembly and all reference assemblies along with a faithful `.rsp` into a self-contained `impl-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
+
 ### 6. Projection generator (`src/WinRT.Projection.Generator/`)
 
 A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** binary. Runs at **app build / publish time** to produce a single projection `.dll` for the Windows SDK, the UWP XAML SDK, or all third-party Windows Runtime components referenced by the app. The tool drives the projection writer in-process and then compiles the resulting C# sources with Roslyn.
@@ -458,6 +462,8 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 1. **Process References**: load reference assemblies via AsmResolver, build a `ProjectionWriterOptions` describing the inputs, output folder, and namespace filters.
 2. **Generate Sources**: invoke `ProjectionWriter.Run(options)` in-process to produce C# files.
 3. **Emit Assembly**: parse the generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info.
+
+**Debug repro support**: when `--debug-repro-directory` is provided, captures all reference `.dll`-s, all input `.winmd` files, and the expanded Windows metadata files (bundled into a separate `windows-metadata/` subfolder) along with a faithful `.rsp` into a self-contained `projection-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
 
 ### 7. Interop generator (`src/WinRT.Interop.Generator/`)
 
@@ -493,7 +499,7 @@ There's two reasons for this:
 1. **Discover phase**: loads all input assemblies in parallel, scans for Windows Runtime types, generic instantiations, user-defined types implementing Windows Runtime interfaces. Uses visitor pattern (`AllGenericTypesVisitor`, `AllSzArrayTypesVisitor`).
 2. **Emit phase**: creates `WinRT.Interop.dll` via AsmResolver. Uses a two-pass IL generation approach (stub creation → rewriting via `InteropMethodRewriter`), then applies IL fixups.
 
-**Debug repro support**: can capture all inputs into a `.zip` file for reproducible debugging.
+**Debug repro support**: when `--debug-repro-directory` is provided, captures all reference and implementation `.dll`-s, the output assembly, and the resolved private implementation assemblies along with a faithful `.rsp` into a self-contained `interop-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
 
 ### 8. WinMD generator (`src/WinRT.WinMD.Generator/`)
 
@@ -532,6 +538,7 @@ WinRT.WinMD.Generator/
 | `--output-winmd-path` | Output `.winmd` file path |
 | `--assembly-version` | Assembly version stamped into the generated WinMD |
 | `--use-windows-ui-xaml-projections` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI |
+| `--debug-repro-directory` | Optional directory to write a self-contained debug repro `.zip` to |
 
 **How it integrates with the build:**
 
@@ -539,6 +546,8 @@ WinRT.WinMD.Generator/
 - Invoked through the `RunCsWinRTWinMDGenerator` MSBuild task (in `WinRT.Generator.Tasks`)
 - Runs after `CoreCompile` (it needs the compiled .dll), gated on `CsWinRTComponent == true` and `DesignTimeBuild != true`
 - Output is `$(IntermediateOutputPath)$(AssemblyName).winmd`, then copied to `$(TargetDir)` by the authoring targets and packaged into the component's NuGet
+
+**Debug repro support**: when `--debug-repro-directory` is provided, captures the input component `.dll` and all reference assemblies along with a faithful `.rsp` into a self-contained `winmd-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
 
 ### 9. Generator tasks (`src/WinRT.Generator.Tasks/`)
 
@@ -662,6 +671,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
   - `WellKnown*Exception` for expected errors (with error IDs like `CSWINRTIMPLGEN0001`)
   - `Unhandled*Exception` for unexpected errors (suggests opening a GitHub issue)
   - `CommandLineArgumentNameAttribute` maps properties to CLI flag names
+- Support a **debug repro** mode: when `--debug-repro-directory` is provided, each tool packages all of its input files (with hashed names to avoid collisions) and a faithful `.rsp` into a self-contained `.zip` (`impl-debug-repro.zip`, `interop-debug-repro.zip`, `projection-debug-repro.zip`, `ref-projection-debug-repro.zip`, `winmd-debug-repro.zip`). Each tool also accepts a `.zip` as input and replays the captured run from a temporary unpack directory, with original file names restored. The MSBuild task wrappers in `WinRT.Generator.Tasks` expose this via a `DebugReproDirectory` parameter, plumbed from the `$(CsWinRTGeneratorDebugReproDirectory)` MSBuild property.
 - Security hardening: Control Flow Guard, `IlcResilient = false` (fail on unresolved assemblies)
 
 ### Error ID ranges
@@ -669,12 +679,12 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Project | Error ID Pattern | Range |
 |---------|-----------------|-------|
 | Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2009` |
-| Reference Projection Generator | `CSWINRTPROJECTIONREFGENxxxx` | `0001`–`0005`, `9999` |
-| Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
+| Reference Projection Generator | `CSWINRTPROJECTIONREFGENxxxx` | `0001`–`0008`, `9999` |
+| Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0011`, `9999` |
 | Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5021`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0097`, `9999` |
-| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0007`, `9999` |
+| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0010`, `9999` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
 ---
