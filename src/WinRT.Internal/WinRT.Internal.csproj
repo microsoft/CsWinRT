@@ -48,11 +48,12 @@
   <!--
     Reference the already-built 'WinRT.Runtime.dll' directly (cswinrt3 SDK projections depend on it)
     so this project can compile without needing the 'Microsoft.Windows.CsWinRT' NuGet package.
+    A 'ProjectReference' is used (rather than '<Reference HintPath="..." />' as in
+    WinRT.Sdk.Projection) so that 'dotnet build' on this project alone implicitly builds
+    WinRT.Runtime2 first. 'Private=false' keeps the .dll out of the bin output / publish set.
   -->
   <ItemGroup>
-    <Reference Include="WinRT.Runtime">
-      <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Runtime2', 'bin', '$(Configuration)', 'net10.0', 'WinRT.Runtime.dll'))</HintPath>
-    </Reference>
+    <ProjectReference Include="..\WinRT.Runtime2\WinRT.Runtime.csproj" Private="false" />
   </ItemGroup>
 
   <!--
