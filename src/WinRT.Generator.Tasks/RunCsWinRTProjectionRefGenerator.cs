@@ -85,6 +85,12 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool ReferenceProjection { get; set; }
 
     /// <summary>
+    /// Gets or sets the directory where the debug repro will be produced.
+    /// </summary>
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
+
+    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtprojectionrefgen' tool is located.
     /// </summary>
     [Required]
@@ -144,6 +150,13 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
+
+            return false;
+        }
+
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
 
             return false;
         }
@@ -247,6 +260,8 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
             AppendResponseFileCommand(args, "--reference-projection", "true");
         }
 
+        AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
+
         // Add any additional arguments that are not statically known
         foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])
         {
@@ -265,5 +280,20 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     private static void AppendResponseFileCommand(StringBuilder args, string commandName, string commandValue)
     {
         _ = args.Append($"{commandName} ").AppendLine(commandValue);
+    }
+
+    /// <summary>
+    /// Appends an optional command line argument to the response file arguments, with the right format.
+    /// </summary>
+    /// <param name="args">The command line arguments being built.</param>
+    /// <param name="commandName">The command name to append.</param>
+    /// <param name="commandValue">The optional command value to append.</param>
+    /// <remarks>This method will not append the command if <paramref name="commandValue"/> is <see langword="null"/>.</remarks>
+    private static void AppendResponseFileOptionalCommand(StringBuilder args, string commandName, string? commandValue)
+    {
+        if (commandValue is not null)
+        {
+            AppendResponseFileCommand(args, commandName, commandValue);
+        }
     }
 }

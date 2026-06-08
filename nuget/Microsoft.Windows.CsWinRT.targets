@@ -314,6 +314,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
+        DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
         CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
         CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
         ContinueOnError="$(CsWinRTContinueOnError)" />

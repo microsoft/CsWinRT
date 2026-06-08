@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using WindowsRuntime.InteropGenerator;
 using WindowsRuntime.ReferenceProjectionGenerator.Attributes;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
@@ -43,10 +44,34 @@ internal partial class ReferenceProjectionGeneratorArgs
             throw WellKnownReferenceProjectionGeneratorExceptions.ResponseFileReadError(e);
         }
 
+        return ParseFromResponseFile(responseArgs, token);
+    }
+
+    /// <summary>
+    /// Parses an <see cref="ReferenceProjectionGeneratorArgs"/> instance from a target response file.
+    /// </summary>
+    /// <param name="stream">The stream to the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="ReferenceProjectionGeneratorArgs"/> instance.</returns>
+    public static ReferenceProjectionGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
+    {
+        string[] responseArgs = File.ReadAllLines(stream);
+
+        return ParseFromResponseFile(responseArgs, token);
+    }
+
+    /// <summary>
+    /// Parses an <see cref="ReferenceProjectionGeneratorArgs"/> instance from the lines of a response file.
+    /// </summary>
+    /// <param name="lines">The lines read from the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="ReferenceProjectionGeneratorArgs"/> instance.</returns>
+    private static ReferenceProjectionGeneratorArgs ParseFromResponseFile(string[] lines, CancellationToken token)
+    {
         Dictionary<string, string> argsMap = [];
 
         // Build a map with all the commands and their values
-        foreach (string line in responseArgs)
+        foreach (string line in lines)
         {
             string trimmedLine = line.Trim();
 
@@ -90,6 +115,7 @@ internal partial class ReferenceProjectionGeneratorArgs
             PublicExclusiveTo = GetOptionalBoolArgument(argsMap, nameof(PublicExclusiveTo)),
             IdicExclusiveTo = GetOptionalBoolArgument(argsMap, nameof(IdicExclusiveTo)),
             ReferenceProjection = GetOptionalBoolArgument(argsMap, nameof(ReferenceProjection)),
+            DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),
             Token = token
         };
     }
@@ -157,6 +183,22 @@ internal partial class ReferenceProjectionGeneratorArgs
         }
 
         throw WellKnownReferenceProjectionGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
+    }
+
+    /// <summary>
+    /// Parses a nullable (optional) <see cref="string"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument.</returns>
+    private static string? GetNullableStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue;
+        }
+
+        return null;
     }
 
     /// <summary>
