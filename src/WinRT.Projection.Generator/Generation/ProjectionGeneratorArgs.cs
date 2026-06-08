@@ -56,4 +56,8 @@ internal sealed partial class ProjectionGeneratorArgs
 
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
+
+    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    [CommandLineArgumentName("--debug-repro-directory")]
+    public string? DebugReproDirectory { get; init; }
 }

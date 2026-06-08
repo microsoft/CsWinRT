@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using WindowsRuntime.InteropGenerator;
 using WindowsRuntime.ProjectionGenerator.Attributes;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
@@ -43,12 +44,42 @@ internal partial class ProjectionGeneratorArgs
             throw WellKnownProjectionGeneratorExceptions.ResponseFileReadError(e);
         }
 
+        return ParseFromResponseFile(responseArgs, token);
+    }
+
+    /// <summary>
+    /// Parses an <see cref="ProjectionGeneratorArgs"/> instance from a target response file.
+    /// </summary>
+    /// <param name="stream">The stream to the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="ProjectionGeneratorArgs"/> instance.</returns>
+    public static ProjectionGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
+    {
+        string[] responseArgs = File.ReadAllLines(stream);
+
+        return ParseFromResponseFile(responseArgs, token);
+    }
+
+    /// <summary>
+    /// Parses an <see cref="ProjectionGeneratorArgs"/> instance from the lines of a response file.
+    /// </summary>
+    /// <param name="lines">The lines read from the response file.</param>
+    /// <param name="token">The token for the operation.</param>
+    /// <returns>The resulting <see cref="ProjectionGeneratorArgs"/> instance.</returns>
+    private static ProjectionGeneratorArgs ParseFromResponseFile(string[] lines, CancellationToken token)
+    {
         Dictionary<string, string> argsMap = [];
 
         // Build a map with all the commands and their values
-        foreach (string line in responseArgs)
+        foreach (string line in lines)
         {
             string trimmedLine = line.Trim();
+
+            // Skip empty lines (the MSBuild ToolTask may emit blank lines).
+            if (trimmedLine.Length == 0)
+            {
+                continue;
+            }
 
             // Each line has the command line argument name followed by a space, and then the
             // argument value. If there are no spaces on any given line, the file is malformed.
@@ -82,6 +113,7 @@ internal partial class ProjectionGeneratorArgs
             WindowsSdkOnly = GetOptionalBoolArgument(argsMap, nameof(WindowsSdkOnly)),
             WindowsUIXamlProjection = GetOptionalBoolArgument(argsMap, nameof(WindowsUIXamlProjection)),
             MaxDegreesOfParallelism = GetInt32Argument(argsMap, nameof(MaxDegreesOfParallelism)),
+            DebugReproDirectory = GetNullableStringArgument(argsMap, nameof(DebugReproDirectory)),
             Token = token
         };
     }
@@ -150,6 +182,22 @@ internal partial class ProjectionGeneratorArgs
         }
 
         return defaultValue;
+    }
+
+    /// <summary>
+    /// Parses a nullable (optional) <see cref="string"/> argument.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument, or <see langword="null"/> if not present.</returns>
+    private static string? GetNullableStringArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue;
+        }
+
+        return null;
     }
 
     /// <summary>
