@@ -63,9 +63,7 @@ internal partial class ProjectionGenerator
     /// <param name="processingState">The state from the processing phase.</param>
     private static void GenerateSources(ProjectionGeneratorProcessingState processingState)
     {
-        // Invoke the projection writer in-process. Previously this spawned cswinrt.exe; now we
-        // call the public C# API directly to avoid the process boundary and to allow the writer
-        // to be replaced/extended without needing to re-publish a separate executable.
+        // Invoke the projection writer in-process via its public C# API.
         try
         {
             global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);

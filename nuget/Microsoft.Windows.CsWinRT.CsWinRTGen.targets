@@ -343,7 +343,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_WinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"      
-      CsWinRTExePath="$(CsWinRTExe)"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
@@ -393,7 +392,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
       <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd'))" />
       <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
-      <!-- Add the current project's .winmd so cswinrt.exe can process it -->
+      <!-- Add the current project's .winmd so the projection generator can process it -->
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
       <_ComponentWinMDPaths Include="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(AssemblyName).winmd'))"
                             Condition="'$(CsWinRTComponent)' == 'true'" />
@@ -406,7 +405,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_ComponentWinMDPaths)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Component"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
@@ -482,7 +480,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_SdkWinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"      
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Sdk.Projection"
       WindowsSdkOnly="true"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
@@ -567,7 +564,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_SdkXamlWinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Sdk.Xaml.Projection"
       WindowsSdkOnly="true"
       WindowsUIXamlProjection="true"

@@ -250,7 +250,6 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 :package
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
-set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set interop_winmd=%this_dir%WinRT.Internal\bin\%cswinrt_configuration%\net10.0-windows10.0.26100.1\WindowsRuntime.Internal.winmd
 set net10_runtime=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
 set net10_runtime_xml=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml
@@ -267,7 +266,7 @@ set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_conf
 
 rem Now call pack
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_xml=%net10_runtime_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;cswinrtprojectionrefgen_x64=%cswinrtprojectionrefgen_x64%;cswinrtprojectionrefgen_arm64=%cswinrtprojectionrefgen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_xml=%net10_runtime_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;cswinrtprojectionrefgen_x64=%cswinrtprojectionrefgen_x64%;cswinrtprojectionrefgen_arm64=%cswinrtprojectionrefgen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
 :exec

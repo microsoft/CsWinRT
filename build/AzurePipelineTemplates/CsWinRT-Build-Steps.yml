@@ -194,17 +194,6 @@ steps:
         sevenZipCompression: 5
         archiveFile: $(StagingFolder)\Windows\sources.zip
 
-    # Stage CsWinRT
-    - task: CopyFiles@2
-      displayName: Stage CsWinRT
-      condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
-      inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
-        Contents: |
-          cswinrt.exe
-          cswinrt.pdb
-        TargetFolder: $(StagingFolder)\native
-
     # Stage WindowsRuntime.Internal.winmd
     - task: CopyFiles@2
       displayName: Stage WindowsRuntime.Internal.winmd

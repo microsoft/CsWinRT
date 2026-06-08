@@ -39,7 +39,6 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTExcludes | "Windows;Microsoft" | Semicolon-separated namespaces to exclude from projection output |
 | CsWinRTFilters | "" | **Specifies the -includes and -excludes to include in projection output |
 | CsWinRTInputs | *@(ReferencePath) | Specifies WinMD files (beyond the Windows SDK) to read metadata from |
-| CsWinRTParams | "" | ***Custom command-line parameters for the projection writer / `cswinrtprojectionrefgen`, replacing default settings below |
 | CsWinRTWindowsMetadata | \<path\> \| "local" \| "sdk" \| *$(WindowsSDKVersion) | Specifies the source for Windows metadata |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
 | CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C#/WinRT build messages (see below) |
@@ -49,13 +48,6 @@ C#/WinRT behavior can be customized with these project properties:
 **If CsWinRTFilters is not defined, the following effective value is used:
 * -exclude $(CsWinRTExcludes)
 * -include $(CsWinRTIncludes)
-
-***If CsWinRTParams is not defined, the following effective value is used:
-* -target $(TargetFramework)
-* -input $(CsWinRTWindowsMetadata)
-* -input @(CsWinRTInputs)
-* -output $(CsWinRTGeneratedFilesDir)
-* $(CsWinRTFilters)
 
 ## Runtime feature switches
 

@@ -13,9 +13,9 @@ using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
 
 /// <summary>
-/// The implementation of the CsWinRT reference projection source generator. This is the C# replacement
-/// for the C++ <c>cswinrt.exe</c> invocation in the <c>CsWinRTGenerateProjection</c> MSBuild target.
-/// It produces <c>.cs</c> files that get compiled into the user's library/component <c>.dll</c>.
+/// The implementation of the CsWinRT reference projection source generator. Invoked by the
+/// <c>CsWinRTGenerateProjection</c> MSBuild target to produce <c>.cs</c> files that get compiled
+/// into the user's library/component <c>.dll</c>.
 /// </summary>
 internal static class ReferenceProjectionGenerator
 {

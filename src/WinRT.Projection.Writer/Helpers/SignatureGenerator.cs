@@ -12,8 +12,7 @@ using WindowsRuntime.ProjectionWriter.Writers;
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
-/// Emits the WinRT parametric type signature string used as the input to the WinRT GUID hash
-/// algorithm. The signature format mirrors the cswinrt.exe C++ implementation:
+/// Emits the WinRT parametric type signature string used as the input to the WinRT GUID hash algorithm.
 /// <list type="bullet">
 ///   <item>Fundamental types map to a single-character code (e.g. <c>i4</c>, <c>u8</c>, <c>string</c>).</item>
 ///   <item>Enums become <c>enum(&lt;name&gt;;&lt;underlying&gt;)</c>.</item>

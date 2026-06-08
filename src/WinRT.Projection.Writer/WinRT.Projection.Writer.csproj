@@ -14,8 +14,8 @@
     <RootNamespace>WindowsRuntime.ProjectionWriter</RootNamespace>
 
     <!--
-      Stamp the assembly with $(VersionString) so the generated 'cswinrt.exe version' banner
-      in projection file headers can read it back via AssemblyInformationalVersionAttribute.
+      Stamp the assembly with $(VersionString) so the generated version banner in projection
+      file headers can read it back via AssemblyInformationalVersionAttribute.
     -->
     <InformationalVersion>$(VersionString)</InformationalVersion>
       

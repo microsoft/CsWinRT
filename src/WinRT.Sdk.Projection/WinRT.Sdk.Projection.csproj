@@ -114,7 +114,6 @@
       WinMDPaths="@(_SdkWinMDPaths)"
       TargetFramework="net10.0"
       WindowsMetadata="$(_WinMDFolder)"
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="$(AssemblyName)"
       WindowsSdkOnly="true"
       WindowsUIXamlProjection="$(WindowsSdkXaml)"
