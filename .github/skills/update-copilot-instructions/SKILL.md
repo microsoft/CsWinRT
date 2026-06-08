@@ -19,7 +19,7 @@ Read `.github/copilot-instructions.md` in full. Take note of every factual claim
 
 ### Step 2: analyze each project in depth
 
-Launch parallel explore agents for each of the 10 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
+Launch parallel explore agents for each of the 11 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
 
 1. **WinRT.Runtime (`src/WinRT.Runtime2/`)**
    - Directory structure matches what's documented
@@ -33,9 +33,10 @@ Launch parallel explore agents for each of the 10 CsWinRT 3.0 projects listed in
    - Diagnostic analyzer list is complete and IDs are correct (check `DiagnosticDescriptors.cs` and `AnalyzerReleases.Shipped.md`)
    - Diagnostic ID range is accurate
    - Project dependencies are current
+   - Assembly name is current (it is `WinRT.SourceGenerator`, **not** `WinRT.SourceGenerator2` — the project folder has `2` for repo history, but the produced .dll does not)
 
 3. **Projection writer (`src/WinRT.Projection.Writer/`)**
-   - Directory structure and namespaces match (`Builders/`, `Errors/`, `Factories/`, `Generation/`, `Helpers/`, `Metadata/`, `Models/`, `References/`, `Resolvers/`, `Resources/`, `Writers/`)
+   - Directory structure and namespaces match (`Attributes/`, `Builders/`, `Errors/`, `Extensions/`, `Factories/`, `Generation/`, `Helpers/`, `Metadata/`, `Models/`, `References/`, `Resolvers/`, `Resources/`, `Writers/`)
    - Public API surface (`ProjectionWriter.Run`, `ProjectionWriterOptions` shape) is accurate
    - Error ID range (5xxx in `Errors/WellKnownProjectionWriterExceptions.cs`) is accurate
    - Resources structure (`Additions/` per-namespace + `Base/` baseline) matches
@@ -56,6 +57,7 @@ Launch parallel explore agents for each of the 10 CsWinRT 3.0 projects listed in
    - Namespace filter logic is current
    - Project settings and dependencies (project reference to `WinRT.Projection.Writer`) are current
    - The pipeline is documented as in-process (the projection writer is invoked as a library)
+   - `ProjectionGeneratorArgs` no longer contains any leftover `CsWinRTExePath` field
 
 7. **Interop generator (`src/WinRT.Interop.Generator/`)**
    - Generated content categories are current
@@ -71,12 +73,20 @@ Launch parallel explore agents for each of the 10 CsWinRT 3.0 projects listed in
 9. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
    - MSBuild task classes are accurately listed (including `RunCsWinRTProjectionRefGenerator` and `RunCsWinRTWinMDGenerator`)
    - Task-to-tool mappings are current
+   - No leftover `CsWinRTExePath` parameter on `RunCsWinRTMergedProjectionGenerator`
 
 10. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
     - Assembly name logic (base vs XAML) is current
     - Windows SDK package download and WinMD sourcing is accurate
-    - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`) are current
+    - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`, `SdkPackageVersion`) are current
     - Project settings are current
+
+11. **WinRT.Internal (`src/WinRT.Internal/`)**
+    - Hand-authored C# source files mirror the historical IDL interop interfaces (HWND struct, `[ProjectionInternal]` attribute, all 14 `I*Interop` interfaces with their original IIDs)
+    - Project TFM uses the CsWinRT 3.0 revision (`net10.0-windows10.0.X.1`) so the `cswinrt3` SDK projection reference assemblies are selected, and `WindowsSdkPackageVersion` is pinned to match
+    - CsWinRT integration is disabled on the project itself (`CsWinRTEnabled`, `CsWinRTGenerateProjection`, `CsWinRTGenerateInteropAssembly[2]` all `false`)
+    - `GenerateWindowsRuntimeInternalWinMD` target invokes `cswinrtwinmdgen.exe` directly via `<Exec>` (not via the `UsingTask` mechanism) to avoid `MSB3027` file-lock contention in Visual Studio
+    - Output `.winmd` lands at `$(TargetDir)$(AssemblyName).winmd` (`WindowsRuntime.Internal.winmd`), and `src/Directory.Build.props` exposes it via `$(CsWinRTInteropMetadata)` for downstream consumers
 
 ### Step 3: verify the test projects
 
