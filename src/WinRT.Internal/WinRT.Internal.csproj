@@ -86,18 +86,23 @@
     'MSB3027 / file is locked' errors on incremental builds in Visual Studio.
     ============================================================
   -->
-  <UsingTask TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))" TaskFactory="TaskHostFactory" />
+  <UsingTask
+    TaskName="RunCsWinRTWinMDGenerator"
+    AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))"
+    TaskFactory="TaskHostFactory" />
   <Target
     Name="GenerateWindowsRuntimeInternalWinMD"
     AfterTargets="CoreCompile"
     Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
     Outputs="$(TargetDir)$(AssemblyName).winmd">
 
+    <!-- Setup the folder for the generator to invoke, and the target output folder for the produced '.winmd' -->
     <PropertyGroup>
       <_CsWinRTWinMDGenToolsDirectory>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0'))</_CsWinRTWinMDGenToolsDirectory>
       <_CsWinRTInternalWinMDOutputPath>$([MSBuild]::NormalizePath('$(TargetDir)', '$(AssemblyName).winmd'))</_CsWinRTInternalWinMDOutputPath>
     </PropertyGroup>
 
+    <!-- Manually invoke the '.winmd' generator task to produce the '.winmd' from this project -->
     <RunCsWinRTWinMDGenerator
       InputAssemblyPath="@(IntermediateAssembly)"
       ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
@@ -107,6 +112,7 @@
       CsWinRTToolsDirectory="$(_CsWinRTWinMDGenToolsDirectory)"
       CsWinRTToolsArchitecture="AnyCPU" />
 
+    <!-- Mark the generated '.winmd' file as a file write (for incremental builds) -->
     <ItemGroup>
       <FileWrites Include="$(_CsWinRTInternalWinMDOutputPath)" />
     </ItemGroup>
