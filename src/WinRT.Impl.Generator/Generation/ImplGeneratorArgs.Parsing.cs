@@ -75,6 +75,12 @@ internal partial class ImplGeneratorArgs
         {
             string trimmedLine = line.Trim();
 
+            // Skip empty lines (the MSBuild ToolTask may emit blank lines)
+            if (trimmedLine.Length == 0)
+            {
+                continue;
+            }
+
             // Each line has the command line argument name followed by a space, and then the
             // argument value. If there are no spaces on any given line, the file is malformed.
             int indexOfSpace = trimmedLine.IndexOf(' ');
