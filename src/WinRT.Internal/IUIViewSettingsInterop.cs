@@ -14,7 +14,7 @@ namespace WindowsRuntime.Internal;
 /// See <see href="https://learn.microsoft.com/windows/win32/api/uiviewsettingsinterop/">UIViewSettingsInterop.idl</see>.
 /// </remarks>
 [ProjectionInternal]
-[Guid("3694dbf9-8f68-44be-8ff5-195c98ede8a6")]
+[Guid("3694DBF9-8F68-44BE-8FF5-195C98EDE8A6")]
 public interface IUIViewSettingsInterop
 {
     /// <summary>

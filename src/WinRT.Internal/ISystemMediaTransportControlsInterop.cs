@@ -14,7 +14,7 @@ namespace WindowsRuntime.Internal;
 /// See <see href="https://learn.microsoft.com/windows/win32/api/systemmediatransportcontrolsinterop/">SystemMediaTransportControlsInterop.idl</see>.
 /// </remarks>
 [ProjectionInternal]
-[Guid("ddb0472d-c911-4a1f-86d9-dc3d71a95f5a")]
+[Guid("DDB0472D-C911-4A1F-86D9-DC3D71A95F5A")]
 public interface ISystemMediaTransportControlsInterop
 {
     /// <summary>

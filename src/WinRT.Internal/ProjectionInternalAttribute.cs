@@ -18,13 +18,13 @@ namespace WindowsRuntime.Internal;
 /// <para>
 /// This attribute is the C# counterpart of the Modern IDL 3.0 declaration:
 /// </para>
-/// <code>
+/// <code language="csharp">
 /// [attributeusage(target_interface)]
 /// [attributename("ProjectionInternal")]
-/// attribute ProjectionInternalAttribute { };
+/// attribute ProjectionInternalAttribute
+/// {
+/// };
 /// </code>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-public sealed class ProjectionInternalAttribute : Attribute
-{
-}
+public sealed class ProjectionInternalAttribute : Attribute;

@@ -11,7 +11,7 @@ namespace WindowsRuntime.Internal;
 /// COM interop interface for retrieving a <see cref="RadialControllerConfiguration"/> bound to a Win32 window.
 /// </summary>
 [ProjectionInternal]
-[Guid("787cdaac-3186-476d-87e4-b9374a7b9970")]
+[Guid("787CDAAC-3186-476D-87E4-B9374A7B9970")]
 public interface IRadialControllerConfigurationInterop
 {
     /// <summary>

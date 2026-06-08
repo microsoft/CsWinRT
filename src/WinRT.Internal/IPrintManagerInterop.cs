@@ -15,7 +15,7 @@ namespace WindowsRuntime.Internal;
 /// See <see href="https://learn.microsoft.com/windows/win32/api/printmanagerinterop/">PrintManagerInterop.idl</see>.
 /// </remarks>
 [ProjectionInternal]
-[Guid("c5435a42-8d43-4e7b-a68a-ef311e392087")]
+[Guid("C5435A42-8D43-4E7B-A68A-EF311E392087")]
 public interface IPrintManagerInterop
 {
     /// <summary>

@@ -1,28 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+
     <!--
-      Target a 'CsWinRT 3.0' Windows TFM (revision .1) so the .NET SDK selects the
-      'cswinrt3' Windows SDK projection reference assemblies (with '[WindowsRuntimeMetadata]'
-      attributes). The C# source files in this project reference Windows Runtime types
-      (e.g. 'Windows.UI.ApplicationSettings.AccountsSettingsPane') through those projections.
+      Target a CsWinRT 3.0 Windows TFM (revision .1) so the .NET SDK selects the
+      correct Windows SDK projection reference assemblies. We need to target a
+      Windows TFM because this is a "normal" authoring project. Additionally,
+      some of the C# source files in this project reference Windows Runtime types
+      (e.g. 'Windows.UI.ApplicationSettings.AccountsSettingsPane') as well.
     -->
     <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+ 
     <!--
       Pin the 'Microsoft.Windows.SDK.NET.Ref' package version so the .NET SDK adds an implicit
-      'FrameworkReference' to it (matching the cswinrt3 projections required by this project).
+      'FrameworkReference' to it (matching the 'cswinrt3' projections required by this project).
     -->
     <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
-    <Nullable>enable</Nullable>
-    <RootNamespace>WindowsRuntime.Internal</RootNamespace>
+
+    <!-- Disable nullability annotations (not supported by the Windows Runtime type system yet) -->
+    <Nullable>disable</Nullable>
+ 
     <!--
       The assembly name must match the legacy 'WindowsRuntime.Internal' identity that the rest
       of the CsWinRT toolchain (and downstream Windows Runtime metadata consumers) references.
     -->
     <AssemblyName>WindowsRuntime.Internal</AssemblyName>
-    <LangVersion>14.0</LangVersion>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!--
       This project contains hand-authored Windows Runtime metadata that is fed back into the
@@ -35,41 +38,35 @@
     <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
     <CsWinRTGenerateInteropAssembly2>false</CsWinRTGenerateInteropAssembly2>
 
-    <!-- The produced .dll is just an intermediate artifact; only the generated .winmd is shipped. -->
+    <!-- The produced '.dll' is just an intermediate artifact, only the generated '.winmd' is shipped -->
     <IsPackable>false</IsPackable>
 
     <!-- Suppress XML doc warnings for parameters/return doc tags we omit on interop methods.
-         NETSDK1229 is also suppressed: this project intentionally targets the CsWinRT 3.0
+         'NETSDK1229' is also suppressed: this project intentionally targets the CsWinRT 3.0
          preview Windows SDK projections to author Windows Runtime metadata, so the preview
          warning is not actionable. -->
-    <NoWarn>$(NoWarn);1591;1701;1702;NETSDK1229</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;1701;CS1702;NETSDK1229</NoWarn>
   </PropertyGroup>
 
   <!--
-    Reference the already-built 'WinRT.Runtime.dll' directly (cswinrt3 SDK projections depend on it)
+    Reference the already-built 'WinRT.Runtime.dll' directly (the SDK projections depend on it)
     so this project can compile without needing the 'Microsoft.Windows.CsWinRT' NuGet package.
     A 'ProjectReference' is used (rather than '<Reference HintPath="..." />' as in
-    WinRT.Sdk.Projection) so that 'dotnet build' on this project alone implicitly builds
-    WinRT.Runtime2 first. 'Private=false' keeps the .dll out of the bin output / publish set.
+    'WinRT.Sdk.Projection') so that 'dotnet build' on this project alone implicitly builds
+    'WinRT.Runtime2' first. 'Private=false' keeps the '.dll' out of the bin output / publish set.
   -->
   <ItemGroup>
     <ProjectReference Include="..\WinRT.Runtime2\WinRT.Runtime.csproj" Private="false" />
   </ItemGroup>
 
   <!--
-    Build-order dependencies: WinRT.WinMD.Generator (cswinrtwinmdgen.exe, the tool we invoke)
-    and WinRT.Generator.Tasks (RunCsWinRTWinMDGenerator MSBuild task). Neither contributes
+    Build-order dependencies: 'WinRT.WinMD.Generator' ('cswinrtwinmdgen.exe', the tool we invoke)
+    and 'WinRT.Generator.Tasks' ('RunCsWinRTWinMDGenerator' MSBuild task). Neither contributes
     a runtime reference to this project's compilation.
   -->
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
-                      ReferenceOutputAssembly="false"
-                      OutputItemType="_CsWinRTToolReference"
-                      Private="false" />
-    <ProjectReference Include="..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"
-                      ReferenceOutputAssembly="false"
-                      OutputItemType="_CsWinRTToolReference"
-                      Private="false" />
+    <ProjectReference Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="_CsWinRTToolReference" Private="false" />
+    <ProjectReference Include="..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj" ReferenceOutputAssembly="false" OutputItemType="_CsWinRTToolReference" Private="false" />
   </ItemGroup>
 
   <!--
@@ -77,17 +74,17 @@
                         GenerateWindowsRuntimeInternalWinMD
 
     Invokes 'cswinrtwinmdgen.exe' (built from this solution) to produce
-    'WindowsRuntime.Internal.winmd' from the compiled WindowsRuntime.Internal.dll.
-    The .winmd is the actual artifact consumed by the CsWinRT toolchain;
-    the .dll itself is just an intermediate build artifact.
+    'WindowsRuntime.Internal.winmd' from the compiled 'WindowsRuntime.Internal.dll'.
+    The '.winmd' is the actual artifact consumed by the CsWinRT toolchain, and
+    the '.dll' itself is just an intermediate build artifact, which is not used.
     ============================================================
   -->
-  <UsingTask TaskName="RunCsWinRTWinMDGenerator"
-             AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))" />
-  <Target Name="GenerateWindowsRuntimeInternalWinMD"
-          AfterTargets="CoreCompile"
-          Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
-          Outputs="$(TargetDir)$(AssemblyName).winmd">
+  <UsingTask TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))" />
+  <Target
+    Name="GenerateWindowsRuntimeInternalWinMD"
+    AfterTargets="CoreCompile"
+    Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
+    Outputs="$(TargetDir)$(AssemblyName).winmd">
 
     <PropertyGroup>
       <_CsWinRTWinMDGenToolsDirectory>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0'))</_CsWinRTWinMDGenToolsDirectory>
