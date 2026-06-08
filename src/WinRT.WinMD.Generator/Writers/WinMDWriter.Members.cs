@@ -135,8 +135,8 @@ internal sealed partial class WinMDWriter
     /// parameter type:
     /// </para>
     /// <list type="bullet">
-    ///   <item><see cref="ReadOnlySpan{T}"/> → <c>[in] T[]</c> (PassArray)</item>
-    ///   <item><see cref="Span{T}"/> → <c>[out] T[]</c> without BYREF (FillArray)</item>
+    ///   <item><see cref="System.ReadOnlySpan{T}"/> → <c>[in] T[]</c> (PassArray)</item>
+    ///   <item><see cref="System.Span{T}"/> → <c>[out] T[]</c> without BYREF (FillArray)</item>
     ///   <item><c>out T[]</c> (byref to <c>SzArray</c>) → <c>[out] T[]</c> with BYREF (ReceiveArray); already captured by the input's <c>Out</c> flag.</item>
     ///   <item>Any other by-reference type (e.g. <c>ref Guid</c> on a COM interop interface) → <c>[in]</c>, matching the MIDL convention for <c>ref const T</c> parameters.</item>
     ///   <item>All other params → <c>[in]</c>.</item>

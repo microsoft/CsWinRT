@@ -1,5 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 
     <!--
@@ -41,10 +40,12 @@
     <!-- The produced '.dll' is just an intermediate artifact, only the generated '.winmd' is shipped -->
     <IsPackable>false</IsPackable>
 
-    <!-- Suppress XML doc warnings for parameters/return doc tags we omit on interop methods.
-         'NETSDK1229' is also suppressed: this project intentionally targets the CsWinRT 3.0
-         preview Windows SDK projections to author Windows Runtime metadata, so the preview
-         warning is not actionable. -->
+    <!--
+      Suppress XML doc warnings for parameters/return doc tags we omit on interop methods.
+      'NETSDK1229' is also suppressed: this project intentionally targets the CsWinRT 3.0
+      preview Windows SDK projections to author Windows Runtime metadata, so the preview
+      warning is not actionable.
+    -->
     <NoWarn>$(NoWarn);CS1591;1701;CS1702;NETSDK1229</NoWarn>
   </PropertyGroup>
 
@@ -68,7 +69,11 @@
     dependency on 'WinRT.Generator.Tasks' is required for this project.
   -->
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="_CsWinRTToolReference" Private="false" />
+    <ProjectReference
+      Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
+      ReferenceOutputAssembly="false"
+      OutputItemType="_CsWinRTToolReference"
+      Private="false" />
   </ItemGroup>
 
   <!--
@@ -82,7 +87,7 @@
 
     The tool is invoked via '<Exec>' (not via the 'RunCsWinRTWinMDGenerator' MSBuild
     task) so that the build doesn't depend on 'WinRT.Generator.Tasks.dll' being loaded
-    by the MSBuild engine — that DLL is the one that's prone to being locked across
+    by the MSBuild engine. That DLL is the one that's prone to being locked across
     incremental builds when the build server (in Visual Studio or 'dotnet build') keeps
     a handle to the custom-task assembly. The tool's argument set is the same: we hand-
     write a '.rsp' response file and pass it via the '@<file>' convention that
@@ -112,6 +117,7 @@
       <_CsWinRTInternalWinMDReferenceAssemblyPaths>@(ReferencePathWithRefAssemblies->'%(FullPath)', ',')</_CsWinRTInternalWinMDReferenceAssemblyPaths>
     </PropertyGroup>
 
+    <!-- Prepare all lines for the '.rsp' file we'll pass to the generator -->
     <ItemGroup>
       <_CsWinRTInternalWinMDResponseLines Include="--input-assembly-path $(_CsWinRTInternalWinMDInputAssemblyPath)" />
       <_CsWinRTInternalWinMDResponseLines Include="--reference-assembly-paths $(_CsWinRTInternalWinMDReferenceAssemblyPaths)" />
@@ -120,6 +126,7 @@
       <_CsWinRTInternalWinMDResponseLines Include="--use-windows-ui-xaml-projections false" />
     </ItemGroup>
 
+    <!-- Write the '.rsp' file to disk for invocation -->
     <WriteLinesToFile
       File="$(_CsWinRTInternalWinMDResponseFile)"
       Lines="@(_CsWinRTInternalWinMDResponseLines)"
@@ -131,10 +138,10 @@
       Command="&quot;$(_CsWinRTWinMDGenExePath)&quot; @&quot;$(_CsWinRTInternalWinMDResponseFile)&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)" />
 
+    <!-- Mark the '.rsp' file and the generated '.winmd' files as file writes (for incremental builds) -->
     <ItemGroup>
       <FileWrites Include="$(_CsWinRTInternalWinMDResponseFile)" />
       <FileWrites Include="$(_CsWinRTInternalWinMDOutputPath)" />
     </ItemGroup>
   </Target>
-
 </Project>
