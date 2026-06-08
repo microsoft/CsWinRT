@@ -251,8 +251,6 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
-rem 'WindowsRuntime.Internal.winmd' is produced by the managed WinRT.Internal project (C#); it
-rem no longer comes from the legacy cswinrt C++ project's output directory.
 set interop_winmd=%this_dir%WinRT.Internal\bin\%cswinrt_configuration%\net10.0-windows10.0.26100.1\WindowsRuntime.Internal.winmd
 set net10_runtime=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
 set net10_runtime_xml=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml

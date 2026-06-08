@@ -174,7 +174,7 @@ internal sealed partial class WinMDWriter
     /// </remarks>
     private static ParameterAttributes GetWinRTParameterAttributes(ParameterDefinition inputParam, TypeSignature inputParamType)
     {
-        // Preserve any In/Out direction flags the input parameter already carries
+        // Preserve any 'In'/'Out' direction flags the input parameter already carries
         ParameterAttributes inputDirectionFlags = inputParam.Attributes & (ParameterAttributes.In | ParameterAttributes.Out);
 
         if (inputDirectionFlags != 0)
@@ -182,7 +182,7 @@ internal sealed partial class WinMDWriter
             return inputDirectionFlags;
         }
 
-        // Span<T> → FillArray pattern: [out] without BYREF
+        // 'Span<T>' → 'FillArray' pattern: '[out]' without 'BYREF'
         if (inputParamType is GenericInstanceTypeSignature genericInstanceSignature &&
             genericInstanceSignature.GenericType.FullName == "System.Span`1")
         {
@@ -190,8 +190,8 @@ internal sealed partial class WinMDWriter
         }
 
         // By-reference parameters with no explicit direction flag (e.g. 'ref Guid riid'
-        // on a COM interop interface) default to [in], matching the MIDL convention for
-        // 'ref const T' parameters. ReadOnlySpan<T> and everything else also default to [in].
+        // on a COM interop interface) default to '[in]', matching the MIDL convention for
+        // 'ref const T' parameters. 'ReadOnlySpan<T>' and everything else also default to '[in]'.
         return ParameterAttributes.In;
     }
 
