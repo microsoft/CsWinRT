@@ -85,7 +85,8 @@ internal partial class WinMDGeneratorArgs
         {
             string trimmedLine = line.Trim();
 
-            if (string.IsNullOrEmpty(trimmedLine))
+            // Skip empty lines (the MSBuild ToolTask may emit blank lines)
+            if (trimmedLine.Length == 0)
             {
                 continue;
             }

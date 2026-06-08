@@ -75,7 +75,7 @@ internal partial class ReferenceProjectionGeneratorArgs
         {
             string trimmedLine = line.Trim();
 
-            // Skip empty lines (the MSBuild ToolTask may emit blank lines).
+            // Skip empty lines (the MSBuild ToolTask may emit blank lines)
             if (trimmedLine.Length == 0)
             {
                 continue;
