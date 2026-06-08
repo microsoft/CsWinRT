@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 
@@ -60,13 +60,15 @@
   </ItemGroup>
 
   <!--
-    Build-order dependencies: 'WinRT.WinMD.Generator' ('cswinrtwinmdgen.exe', the tool we invoke)
-    and 'WinRT.Generator.Tasks' ('RunCsWinRTWinMDGenerator' MSBuild task). Neither contributes
-    a runtime reference to this project's compilation.
+    Build-order dependency: 'WinRT.WinMD.Generator' produces 'cswinrtwinmdgen.exe', which the
+    target below invokes directly via 'Exec' (no custom 'UsingTask'). This avoids the
+    'WinRT.Generator.Tasks.dll' file-lock contention that happens in Visual Studio when
+    the persistent MSBuild build server keeps a custom-task assembly loaded across
+    incremental builds (MSB3027 "The file is locked by MSBuild.exe (...)"). No build-time
+    dependency on 'WinRT.Generator.Tasks' is required for this project.
   -->
   <ItemGroup>
     <ProjectReference Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="_CsWinRTToolReference" Private="false" />
-    <ProjectReference Include="..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj" ReferenceOutputAssembly="false" OutputItemType="_CsWinRTToolReference" Private="false" />
   </ItemGroup>
 
   <!--
@@ -78,45 +80,61 @@
     The '.winmd' is the actual artifact consumed by the CsWinRT toolchain, and
     the '.dll' itself is just an intermediate build artifact, which is not used.
 
-    'TaskFactory="TaskHostFactory"' loads the MSBuild task in a separate
-    'MSBuild.TaskHost' process. Without it, the main MSBuild build server keeps
-    'WinRT.Generator.Tasks.dll' loaded for the lifetime of the build session,
-    which prevents 'WinRT.Generator.Tasks' from being rebuilt on the next build
-    (or by the 'ProjectReference' triggering a fresh compile) and produces
-    'MSB3027 / file is locked' errors on incremental builds in Visual Studio.
+    The tool is invoked via '<Exec>' (not via the 'RunCsWinRTWinMDGenerator' MSBuild
+    task) so that the build doesn't depend on 'WinRT.Generator.Tasks.dll' being loaded
+    by the MSBuild engine — that DLL is the one that's prone to being locked across
+    incremental builds when the build server (in Visual Studio or 'dotnet build') keeps
+    a handle to the custom-task assembly. The tool's argument set is the same: we hand-
+    write a '.rsp' response file and pass it via the '@<file>' convention that
+    'ConsoleAppFramework' (and 'cswinrtwinmdgen.exe' itself) accepts.
     ============================================================
   -->
-  <UsingTask
-    TaskName="RunCsWinRTWinMDGenerator"
-    AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))"
-    TaskFactory="TaskHostFactory" />
   <Target
     Name="GenerateWindowsRuntimeInternalWinMD"
     AfterTargets="CoreCompile"
     Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
     Outputs="$(TargetDir)$(AssemblyName).winmd">
 
-    <!-- Setup the folder for the generator to invoke, and the target output folder for the produced '.winmd' -->
+    <!-- Setup the folder for the generator to invoke, the response file, and the target output folder for the produced '.winmd' -->
     <PropertyGroup>
-      <_CsWinRTWinMDGenToolsDirectory>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0'))</_CsWinRTWinMDGenToolsDirectory>
+      <_CsWinRTWinMDGenExePath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0', 'cswinrtwinmdgen.exe'))</_CsWinRTWinMDGenExePath>
       <_CsWinRTInternalWinMDOutputPath>$([MSBuild]::NormalizePath('$(TargetDir)', '$(AssemblyName).winmd'))</_CsWinRTInternalWinMDOutputPath>
+      <_CsWinRTInternalWinMDResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', 'cswinrtwinmdgen.rsp'))</_CsWinRTInternalWinMDResponseFile>
     </PropertyGroup>
 
-    <!-- Manually invoke the '.winmd' generator task to produce the '.winmd' from this project -->
-    <RunCsWinRTWinMDGenerator
-      InputAssemblyPath="@(IntermediateAssembly)"
-      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
-      OutputWinmdPath="$(_CsWinRTInternalWinMDOutputPath)"
-      AssemblyVersion="$(AssemblyVersion)"
-      UseWindowsUIXamlProjections="false"
-      CsWinRTToolsDirectory="$(_CsWinRTWinMDGenToolsDirectory)"
-      CsWinRTToolsArchitecture="AnyCPU" />
+    <!--
+      Build the response file content (one 'argument value' per line). This matches the
+      format that 'WinMDGeneratorArgs.ParseFromResponseFile' expects. The reference assembly
+      list is comma-separated within a single line (matching 'GetStringArrayArgument').
+    -->
+    <PropertyGroup>
+      <_CsWinRTInternalWinMDInputAssemblyPath>@(IntermediateAssembly->'%(FullPath)')</_CsWinRTInternalWinMDInputAssemblyPath>
+      <_CsWinRTInternalWinMDReferenceAssemblyPaths>@(ReferencePathWithRefAssemblies->'%(FullPath)', ',')</_CsWinRTInternalWinMDReferenceAssemblyPaths>
+    </PropertyGroup>
 
-    <!-- Mark the generated '.winmd' file as a file write (for incremental builds) -->
     <ItemGroup>
+      <_CsWinRTInternalWinMDResponseLines Include="--input-assembly-path $(_CsWinRTInternalWinMDInputAssemblyPath)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--reference-assembly-paths $(_CsWinRTInternalWinMDReferenceAssemblyPaths)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--output-winmd-path $(_CsWinRTInternalWinMDOutputPath)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--assembly-version $(AssemblyVersion)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--use-windows-ui-xaml-projections false" />
+    </ItemGroup>
+
+    <WriteLinesToFile
+      File="$(_CsWinRTInternalWinMDResponseFile)"
+      Lines="@(_CsWinRTInternalWinMDResponseLines)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+
+    <!-- Invoke 'cswinrtwinmdgen.exe' with the response file. -->
+    <Exec
+      Command="&quot;$(_CsWinRTWinMDGenExePath)&quot; @&quot;$(_CsWinRTInternalWinMDResponseFile)&quot;"
+      WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_CsWinRTInternalWinMDResponseFile)" />
       <FileWrites Include="$(_CsWinRTInternalWinMDOutputPath)" />
     </ItemGroup>
   </Target>
 
 </Project>
-
