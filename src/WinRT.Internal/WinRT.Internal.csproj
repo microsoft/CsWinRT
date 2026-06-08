@@ -55,4 +55,57 @@
     </Reference>
   </ItemGroup>
 
+  <!--
+    Build-order dependencies: WinRT.WinMD.Generator (cswinrtwinmdgen.exe, the tool we invoke)
+    and WinRT.Generator.Tasks (RunCsWinRTWinMDGenerator MSBuild task). Neither contributes
+    a runtime reference to this project's compilation.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      Private="false" />
+    <ProjectReference Include="..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      Private="false" />
+  </ItemGroup>
+
+  <!--
+    ============================================================
+                        GenerateWindowsRuntimeInternalWinMD
+
+    Invokes 'cswinrtwinmdgen.exe' (built from this solution) to produce
+    'WindowsRuntime.Internal.winmd' from the compiled WindowsRuntime.Internal.dll.
+    The .winmd is the actual artifact consumed by the CsWinRT toolchain;
+    the .dll itself is just an intermediate build artifact.
+    ============================================================
+  -->
+  <UsingTask TaskName="RunCsWinRTWinMDGenerator"
+             AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))" />
+  <Target Name="GenerateWindowsRuntimeInternalWinMD"
+          AfterTargets="CoreCompile"
+          Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
+          Outputs="$(TargetDir)$(AssemblyName).winmd">
+
+    <PropertyGroup>
+      <_CsWinRTWinMDGenToolsDirectory>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0'))</_CsWinRTWinMDGenToolsDirectory>
+      <_CsWinRTInternalWinMDOutputPath>$([MSBuild]::NormalizePath('$(TargetDir)', '$(AssemblyName).winmd'))</_CsWinRTInternalWinMDOutputPath>
+    </PropertyGroup>
+
+    <RunCsWinRTWinMDGenerator
+      InputAssemblyPath="@(IntermediateAssembly)"
+      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      OutputWinmdPath="$(_CsWinRTInternalWinMDOutputPath)"
+      AssemblyVersion="$(AssemblyVersion)"
+      UseWindowsUIXamlProjections="false"
+      CsWinRTToolsDirectory="$(_CsWinRTWinMDGenToolsDirectory)"
+      CsWinRTToolsArchitecture="AnyCPU" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_CsWinRTInternalWinMDOutputPath)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
+
