@@ -46,6 +46,12 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the directory where the debug repro will be produced.
+    /// </summary>
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
+
+    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtwinmdgen' tool is located.
     /// </summary>
     [Required]
@@ -104,6 +110,12 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
             return false;
         }
 
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
+            return false;
+        }
+
         return true;
     }
 
@@ -145,6 +157,7 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
         AppendResponseFileCommand(args, "--output-winmd-path", OutputWinmdPath!);
         AppendResponseFileCommand(args, "--assembly-version", AssemblyVersion!);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
 
         return args.ToString();
     }
@@ -155,5 +168,17 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
     private static void AppendResponseFileCommand(StringBuilder args, string commandName, string commandValue)
     {
         _ = args.Append($"{commandName} ").AppendLine(commandValue);
+    }
+
+    /// <summary>
+    /// Appends an optional command line argument to the response file arguments, with the right format.
+    /// </summary>
+    /// <remarks>This method will not append the command if <paramref name="commandValue"/> is <see langword="null"/>.</remarks>
+    private static void AppendResponseFileOptionalCommand(StringBuilder args, string commandName, string? commandValue)
+    {
+        if (commandValue is not null)
+        {
+            AppendResponseFileCommand(args, commandName, commandValue);
+        }
     }
 }
