@@ -77,9 +77,16 @@
     'WindowsRuntime.Internal.winmd' from the compiled 'WindowsRuntime.Internal.dll'.
     The '.winmd' is the actual artifact consumed by the CsWinRT toolchain, and
     the '.dll' itself is just an intermediate build artifact, which is not used.
+
+    'TaskFactory="TaskHostFactory"' loads the MSBuild task in a separate
+    'MSBuild.TaskHost' process. Without it, the main MSBuild build server keeps
+    'WinRT.Generator.Tasks.dll' loaded for the lifetime of the build session,
+    which prevents 'WinRT.Generator.Tasks' from being rebuilt on the next build
+    (or by the 'ProjectReference' triggering a fresh compile) and produces
+    'MSB3027 / file is locked' errors on incremental builds in Visual Studio.
     ============================================================
   -->
-  <UsingTask TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))" />
+  <UsingTask TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Generator.Tasks', 'bin', '$(Configuration)', 'netstandard2.0', 'WinRT.Generator.Tasks.dll'))" TaskFactory="TaskHostFactory" />
   <Target
     Name="GenerateWindowsRuntimeInternalWinMD"
     AfterTargets="CoreCompile"
