@@ -1,9 +1,54 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Target a 'CsWinRT 3.0' Windows TFM (revision .1) so the .NET SDK selects the
+      'cswinrt3' Windows SDK projection reference assemblies (with '[WindowsRuntimeMetadata]'
+      attributes). The C# source files in this project reference Windows Runtime types
+      (e.g. 'Windows.UI.ApplicationSettings.AccountsSettingsPane') through those projections.
+    -->
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <!--
+      Pin the 'Microsoft.Windows.SDK.NET.Ref' package version so the .NET SDK adds an implicit
+      'FrameworkReference' to it (matching the cswinrt3 projections required by this project).
+    -->
+    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
     <Nullable>enable</Nullable>
+    <RootNamespace>WindowsRuntime.Internal</RootNamespace>
+    <AssemblyName>WinRT.Internal</AssemblyName>
+    <LangVersion>14.0</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!--
+      This project contains hand-authored Windows Runtime metadata that is fed back into the
+      CsWinRT toolchain. CsWinRT's own per-project projection / interop generation should not
+      run on it (we are building CsWinRT itself), and no NuGet 'CsWinRT' package reference is
+      involved here.
+    -->
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+    <CsWinRTGenerateProjection>false</CsWinRTGenerateProjection>
+    <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
+    <CsWinRTGenerateInteropAssembly2>false</CsWinRTGenerateInteropAssembly2>
+
+    <!-- The produced .dll is just an intermediate artifact; only the generated .winmd is shipped. -->
+    <IsPackable>false</IsPackable>
+
+    <!-- Suppress XML doc warnings for parameters/return doc tags we omit on interop methods.
+         NETSDK1229 is also suppressed: this project intentionally targets the CsWinRT 3.0
+         preview Windows SDK projections to author Windows Runtime metadata, so the preview
+         warning is not actionable. -->
+    <NoWarn>$(NoWarn);1591;1701;1702;NETSDK1229</NoWarn>
   </PropertyGroup>
+
+  <!--
+    Reference the already-built 'WinRT.Runtime.dll' directly (cswinrt3 SDK projections depend on it)
+    so this project can compile without needing the 'Microsoft.Windows.CsWinRT' NuGet package.
+  -->
+  <ItemGroup>
+    <Reference Include="WinRT.Runtime">
+      <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Runtime2', 'bin', '$(Configuration)', 'net10.0', 'WinRT.Runtime.dll'))</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>
