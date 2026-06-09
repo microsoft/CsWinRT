@@ -6,14 +6,12 @@ using System.Threading;
 namespace WindowsRuntime.Generator;
 
 /// <summary>
-/// Common surface implemented by every per-tool args record (e.g. <c>ImplGeneratorArgs</c>,
-/// <c>InteropGeneratorArgs</c>) so the shared <see cref="GeneratorHost"/> entry-point scaffold
-/// can dispatch through a couple of well-known properties.
+/// Common surface implemented by every per-tool arguments record.
 /// </summary>
 internal interface IGeneratorArgs
 {
     /// <summary>
-    /// Gets the token for the operation.
+    /// Gets the cancellation token for the generator invocation.
     /// </summary>
     CancellationToken Token { get; }
 

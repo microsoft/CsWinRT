@@ -4,13 +4,12 @@
 namespace WindowsRuntime.Generator.References;
 
 /// <summary>
-/// Well known public key tokens for the framework and CsWinRT assemblies referenced by the
-/// CsWinRT CLI generators.
+/// Well-known public key tokens for assemblies used by the CsWinRT generators.
 /// </summary>
 internal static class WellKnownPublicKeyTokens
 {
     /// <summary>
-    /// The public key token for <c>mscorlib</c> (<c>b77a5c561934e089</c>).
+    /// The public key token for <c>mscorlib</c>.
     /// </summary>
     public static readonly byte[] MSCorLib = [0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89];
 
