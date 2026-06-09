@@ -24,66 +24,15 @@ internal static partial class InteropGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        string responseFilePath = inputFilePath;
-        bool isUsingDebugRepro = false;
-
-        // Load the debug repro to investigate with, if we have one
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            if (Path.GetExtension(Path.Normalize(inputFilePath)) == ".zip")
-            {
-                ConsoleApp.Log("Unpacking input 'cswinrtinteropgen' debug repro");
-
-                isUsingDebugRepro = true;
-
-                // If we unpacked a debug repro, we'll also replace the input file
-                // path with the extracted response file from the input repro.
-                responseFilePath = UnpackDebugRepro(inputFilePath, token);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("unpack-debug-repro", e);
-        }
-
-        token.ThrowIfCancellationRequested();
-
-        InteropGeneratorArgs args;
-
-        // Parse the actual arguments from the response file
-        try
-        {
-            args = InteropGeneratorArgs.ParseFromResponseFile(responseFilePath, token);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("parsing", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Save a debug repro, if needed
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            // We also skip this if we're currently processing an input debug
-            // repro, as there would be no point in creating a new one from that.
-            if (args.DebugReproDirectory is not null && !isUsingDebugRepro)
-            {
-                ConsoleApp.Log("Saving 'cswinrtinteropgen' debug repro");
-
-                SaveDebugRepro(args);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("save-debug-repro", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+        InteropGeneratorArgs args = GeneratorHost.Prepare<InteropGeneratorArgs>(
+            inputFilePath: inputFilePath,
+            toolName: "cswinrtinteropgen",
+            unpackDebugRepro: UnpackDebugRepro,
+            parseFromResponseFile: InteropGeneratorArgs.ParseFromResponseFile,
+            saveDebugRepro: SaveDebugRepro,
+            wrapUnhandled: static (phase, e) => new UnhandledInteropException(phase, e),
+            log: ConsoleApp.Log,
+            token: token);
 
         InteropGeneratorDiscoveryState discoveryState;
 

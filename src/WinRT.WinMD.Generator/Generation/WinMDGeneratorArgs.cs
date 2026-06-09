@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.GeneratorCli.Attributes;
 using WindowsRuntime.GeneratorCli.Parsing;
 using WindowsRuntime.WinMDGenerator.Errors;
@@ -12,7 +13,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// <summary>
 /// Input parameters for <see cref="WinMDGenerator"/>.
 /// </summary>
-internal sealed class WinMDGeneratorArgs
+internal sealed class WinMDGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the path to the compiled input assembly (.dll) to analyze.</summary>
     [CommandLineArgumentName("--input-assembly-path")]

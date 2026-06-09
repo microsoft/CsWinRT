@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.GeneratorCli.Attributes;
 using WindowsRuntime.GeneratorCli.Parsing;
 using WindowsRuntime.ImplGenerator.Errors;
@@ -12,7 +13,7 @@ namespace WindowsRuntime.ImplGenerator.Generation;
 /// <summary>
 /// Input parameters for <see cref="ImplGenerator"/>.
 /// </summary>
-internal sealed class ImplGeneratorArgs
+internal sealed class ImplGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]

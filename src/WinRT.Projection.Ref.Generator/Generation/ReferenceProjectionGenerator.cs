@@ -28,66 +28,15 @@ internal static partial class ReferenceProjectionGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        string responseFilePath = inputFilePath;
-        bool isUsingDebugRepro = false;
-
-        // Load the debug repro to investigate with, if we have one
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            if (Path.GetExtension(Path.Normalize(inputFilePath)) == ".zip")
-            {
-                ConsoleApp.Log("Unpacking input 'cswinrtprojectionrefgen' debug repro");
-
-                isUsingDebugRepro = true;
-
-                // If we unpacked a debug repro, we'll also replace the input file
-                // path with the extracted response file from the input repro.
-                responseFilePath = UnpackDebugRepro(inputFilePath, token);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledReferenceProjectionGeneratorException("unpack-debug-repro", e);
-        }
-
-        token.ThrowIfCancellationRequested();
-
-        ReferenceProjectionGeneratorArgs args;
-
-        // Parse the actual arguments from the response file
-        try
-        {
-            args = ReferenceProjectionGeneratorArgs.ParseFromResponseFile(responseFilePath, token);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledReferenceProjectionGeneratorException("parsing", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Save a debug repro, if needed
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            // We also skip this if we're currently processing an input debug
-            // repro, as there would be no point in creating a new one from that.
-            if (args.DebugReproDirectory is not null && !isUsingDebugRepro)
-            {
-                ConsoleApp.Log("Saving 'cswinrtprojectionrefgen' debug repro");
-
-                SaveDebugRepro(args);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledReferenceProjectionGeneratorException("save-debug-repro", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+        ReferenceProjectionGeneratorArgs args = GeneratorHost.Prepare<ReferenceProjectionGeneratorArgs>(
+            inputFilePath: inputFilePath,
+            toolName: "cswinrtprojectionrefgen",
+            unpackDebugRepro: UnpackDebugRepro,
+            parseFromResponseFile: ReferenceProjectionGeneratorArgs.ParseFromResponseFile,
+            saveDebugRepro: SaveDebugRepro,
+            wrapUnhandled: static (phase, e) => new UnhandledReferenceProjectionGeneratorException(phase, e),
+            log: ConsoleApp.Log,
+            token: token);
 
         // Validate the target framework. CsWinRT 3.0 requires .NET 10 or later.
         if (!string.IsNullOrEmpty(args.TargetFramework) && !args.TargetFramework.StartsWith("net10.0", StringComparison.Ordinal))

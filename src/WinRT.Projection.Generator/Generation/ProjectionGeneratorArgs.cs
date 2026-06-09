@@ -4,6 +4,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.GeneratorCli.Attributes;
 using WindowsRuntime.GeneratorCli.Parsing;
 using WindowsRuntime.ProjectionGenerator.Errors;
@@ -13,7 +14,7 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <summary>
 /// Input parameters for <see cref="ProjectionGenerator"/>.
 /// </summary>
-internal sealed class ProjectionGeneratorArgs
+internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]

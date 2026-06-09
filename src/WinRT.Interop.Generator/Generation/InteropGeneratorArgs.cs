@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.GeneratorCli.Attributes;
 using WindowsRuntime.GeneratorCli.Parsing;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -12,7 +13,7 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <summary>
 /// Input parameters for <see cref="InteropGenerator"/>.
 /// </summary>
-internal sealed class InteropGeneratorArgs
+internal sealed class InteropGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input reference .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
