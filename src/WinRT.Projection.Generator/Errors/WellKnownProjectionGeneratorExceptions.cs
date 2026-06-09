@@ -5,18 +5,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using WindowsRuntime.GeneratorCli.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Errors;
 
 /// <summary>
 /// Well known exceptions for the projection generator.
 /// </summary>
-internal static class WellKnownProjectionGeneratorExceptions
+internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
     /// </summary>
     public const string ErrorPrefix = "CSWINRTPROJECTIONGEN";
+
+    /// <summary>
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
+    /// </summary>
+    private WellKnownProjectionGeneratorExceptions()
+    {
+    }
 
     /// <summary>
     /// Some exception was thrown when trying to read the response file.

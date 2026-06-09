@@ -2,18 +2,26 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.GeneratorCli.Errors;
 
 namespace WindowsRuntime.ImplGenerator.Errors;
 
 /// <summary>
-/// Well known exceptions for the interop generator.
+/// Well known exceptions for the impl generator.
 /// </summary>
-internal static class WellKnownImplExceptions
+internal sealed class WellKnownImplExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
     /// </summary>
     public const string ErrorPrefix = "CSWINRTIMPLGEN";
+
+    /// <summary>
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
+    /// </summary>
+    private WellKnownImplExceptions()
+    {
+    }
 
     /// <summary>
     /// Some exception was thrown when trying to read the response file.
