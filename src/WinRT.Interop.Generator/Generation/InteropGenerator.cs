@@ -23,7 +23,7 @@ internal static partial class InteropGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        (InteropGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<InteropGeneratorArgs>(
+        GeneratorPhaseRunner<InteropGeneratorArgs> runner = GeneratorHost.CreateRunner<InteropGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtinteropgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -36,18 +36,18 @@ internal static partial class InteropGenerator
         // Discover the types to process
         InteropGeneratorDiscoveryState discoveryState = runner.RunPhase(
             phaseName: "discovery",
-            logMessage: $"Processing {args.ReferenceAssemblyPaths.Length + args.ImplementationAssemblyPaths.Length + 1} module(s)",
-            body: () => Discover(args));
+            logMessage: $"Processing {runner.Args.ReferenceAssemblyPaths.Length + runner.Args.ImplementationAssemblyPaths.Length + 1} module(s)",
+            body: Discover);
 
-        args.Token.ThrowIfCancellationRequested();
+        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Emit the resulting interop assembly
         runner.RunPhase(
             phaseName: "emit",
             logMessage: "Generating interop code",
-            body: () => Emit(args, discoveryState));
+            body: args => Emit(args, discoveryState));
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Interop code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
+        ConsoleApp.Log($"Interop code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
     }
 }

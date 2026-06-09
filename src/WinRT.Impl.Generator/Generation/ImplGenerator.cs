@@ -70,7 +70,7 @@ internal static partial class ImplGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        (ImplGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<ImplGeneratorArgs>(
+        GeneratorPhaseRunner<ImplGeneratorArgs> runner = GeneratorHost.CreateRunner<ImplGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtimplgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -83,38 +83,38 @@ internal static partial class ImplGenerator
         // Initialize the assembly resolver and load the output module
         (RuntimeContext runtimeContext, ModuleDefinition outputModule) = runner.RunPhase(
             phaseName: "loading",
-            body: () => LoadOutputModule(args));
+            body: LoadOutputModule);
 
-        args.Token.ThrowIfCancellationRequested();
+        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Define the impl module to emit
         ModuleDefinition implModule = runner.RunPhase(
             phaseName: "loading",
-            body: () => DefineImplModule(runtimeContext, outputModule));
+            body: _ => DefineImplModule(runtimeContext, outputModule));
 
-        args.Token.ThrowIfCancellationRequested();
+        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Emit all necessary IL code in the impl module
-        runner.RunPhase(phaseName: "generation", body: () =>
+        runner.RunPhase(phaseName: "generation", body: _ =>
         {
             EmitAssemblyAttributes(outputModule, implModule);
             EmitTypeForwards(outputModule, implModule);
         });
 
-        args.Token.ThrowIfCancellationRequested();
+        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Write the module to disk with all the generated contents
         runner.RunPhase(
             phaseName: "emit",
-            body: () => WriteImplModuleToDisk(args, outputModule, implModule));
+            body: args => WriteImplModuleToDisk(args, outputModule, implModule));
 
         // Signs the module on disk, if needed
         runner.RunPhase(
             phaseName: "sign",
-            body: () => SignImplModuleOnDisk(args, outputModule));
+            body: args => SignImplModuleOnDisk(args, outputModule));
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, implModule.Name!)}");
+        ConsoleApp.Log($"Impl code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, implModule.Name!)}");
     }
 
     /// <summary>

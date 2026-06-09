@@ -37,7 +37,7 @@ internal static partial class WinMDGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        (WinMDGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<WinMDGeneratorArgs>(
+        GeneratorPhaseRunner<WinMDGeneratorArgs> runner = GeneratorHost.CreateRunner<WinMDGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtwinmdgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -50,8 +50,8 @@ internal static partial class WinMDGenerator
         // Discover the types to process
         WinMDGeneratorDiscoveryState discoveryState = runner.RunPhase(
             phaseName: "discovery",
-            logMessage: $"Processing assembly: '{System.IO.Path.GetFileName(args.InputAssemblyPath)}'",
-            body: () => Discover(args));
+            logMessage: $"Processing assembly: '{System.IO.Path.GetFileName(runner.Args.InputAssemblyPath)}'",
+            body: Discover);
 
         token.ThrowIfCancellationRequested();
 
@@ -59,8 +59,8 @@ internal static partial class WinMDGenerator
         runner.RunPhase(
             phaseName: "generation",
             logMessage: $"Defining {discoveryState.PublicTypes.Count} authored type(s)",
-            body: () => Generate(args, discoveryState));
+            body: args => Generate(args, discoveryState));
 
-        ConsoleApp.Log($"Windows Runtime assembly (.winmd) generated -> {args.OutputWinmdPath}");
+        ConsoleApp.Log($"Windows Runtime assembly (.winmd) generated -> {runner.Args.OutputWinmdPath}");
     }
 }
