@@ -17,5 +17,5 @@ internal sealed class UnhandledImplException(string phase, Exception exception)
     protected override string ErrorPrefix => WellKnownImplExceptions.ErrorPrefix;
 
     /// <inheritdoc/>
-    protected override string GeneratorDescription => "impl generator";
+    protected override string GeneratorName => "impl";
 }

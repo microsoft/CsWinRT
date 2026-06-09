@@ -70,7 +70,7 @@ internal static partial class ImplGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        GeneratorPhaseRunner<ImplGeneratorArgs> runner = GeneratorHost.CreateRunner<ImplGeneratorArgs>(
+        GeneratorPhaseRunner<ImplGeneratorArgs> runner = GeneratorHost.CreateRunner(
             inputFilePath: inputFilePath,
             toolName: "cswinrtimplgen",
             unpackDebugRepro: UnpackDebugRepro,

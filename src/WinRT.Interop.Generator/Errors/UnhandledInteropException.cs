@@ -17,5 +17,5 @@ internal sealed class UnhandledInteropException(string phase, Exception exceptio
     protected override string ErrorPrefix => WellKnownInteropExceptions.ErrorPrefix;
 
     /// <inheritdoc/>
-    protected override string GeneratorDescription => "interop generator";
+    protected override string GeneratorName => "interop";
 }

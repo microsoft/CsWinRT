@@ -23,7 +23,7 @@ internal static partial class InteropGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        GeneratorPhaseRunner<InteropGeneratorArgs> runner = GeneratorHost.CreateRunner<InteropGeneratorArgs>(
+        GeneratorPhaseRunner<InteropGeneratorArgs> runner = GeneratorHost.CreateRunner(
             inputFilePath: inputFilePath,
             toolName: "cswinrtinteropgen",
             unpackDebugRepro: UnpackDebugRepro,

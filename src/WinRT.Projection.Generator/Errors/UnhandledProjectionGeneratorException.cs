@@ -17,6 +17,6 @@ internal sealed class UnhandledProjectionGeneratorException(string phase, Except
     protected override string ErrorPrefix => WellKnownProjectionGeneratorExceptions.ErrorPrefix;
 
     /// <inheritdoc/>
-    protected override string GeneratorDescription => "projection generator";
+    protected override string GeneratorName => "projection";
 }
 
