@@ -109,8 +109,9 @@
 
     <!--
       Build the response file content (one 'argument value' per line). This matches the
-      format that 'WinMDGeneratorArgs.ParseFromResponseFile' expects. The reference assembly
-      list is comma-separated within a single line (matching 'GetStringArrayArgument').
+      format that the shared 'ResponseFileParser' expects when deserializing into a
+      'WinMDGeneratorArgs' instance. The reference assembly list is comma-separated within
+      a single line (matching how 'string[]' properties are deserialized by the parser).
     -->
     <PropertyGroup>
       <_CsWinRTInternalWinMDInputAssemblyPath>@(IntermediateAssembly->'%(FullPath)')</_CsWinRTInternalWinMDInputAssemblyPath>

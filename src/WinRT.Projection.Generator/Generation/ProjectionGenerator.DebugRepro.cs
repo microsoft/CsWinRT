@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -91,7 +92,7 @@ internal static partial class ProjectionGenerator
         // Parse the debug repro .rsp file
         using (Stream stream = responseFileEntry.Open())
         {
-            args = ProjectionGeneratorArgs.ParseFromResponseFile(stream, token);
+            args = ResponseFileParser.Parse<ProjectionGeneratorArgs, WellKnownProjectionGeneratorExceptions>(stream, token);
         }
 
         token.ThrowIfCancellationRequested();
@@ -172,7 +173,7 @@ internal static partial class ProjectionGenerator
 
         // Prepare the .rsp file with all updated arguments. The 'WindowsMetadata' value points at the
         // bundled folder, which the writer scans recursively to pick up all the .winmd files it contains.
-        string rspText = new ProjectionGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ProjectionGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. referencePaths],
             GeneratedAssemblyDirectory = tempDirectory,
@@ -185,7 +186,7 @@ internal static partial class ProjectionGenerator
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = null,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtprojectiongen.rsp");
@@ -271,7 +272,7 @@ internal static partial class ProjectionGenerator
         // Prepare the .rsp file with all updated arguments. The 'WindowsMetadata' value is just the
         // subfolder name (relative path); the replay run resolves it to an absolute path inside its
         // own temporary unpack directory, since the original 'DebugReproDirectory' may not exist there.
-        string rspText = new ProjectionGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ProjectionGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. updatedReferenceNames],
             GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,
@@ -284,7 +285,7 @@ internal static partial class ProjectionGenerator
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtprojectiongen.rsp");

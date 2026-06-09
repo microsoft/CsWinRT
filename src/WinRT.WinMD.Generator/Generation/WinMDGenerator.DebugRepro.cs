@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 #pragma warning disable IDE0008
@@ -61,7 +62,7 @@ internal static partial class WinMDGenerator
         // Parse the debug repro .rsp file
         using (Stream stream = responseFileEntry.Open())
         {
-            args = WinMDGeneratorArgs.ParseFromResponseFile(stream, token);
+            args = ResponseFileParser.Parse<WinMDGeneratorArgs, WellKnownWinMDExceptions>(stream, token);
         }
 
         token.ThrowIfCancellationRequested();
@@ -126,7 +127,7 @@ internal static partial class WinMDGenerator
         string outputWinmdPath = Path.Combine(tempDirectory, originalOutputName);
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new WinMDGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new WinMDGeneratorArgs
         {
             InputAssemblyPath = inputAssemblyPath!,
             ReferenceAssemblyPaths = [.. referencePaths],
@@ -135,7 +136,7 @@ internal static partial class WinMDGenerator
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             DebugReproDirectory = null,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtwinmdgen.rsp");
@@ -190,7 +191,7 @@ internal static partial class WinMDGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new WinMDGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new WinMDGeneratorArgs
         {
             InputAssemblyPath = inputAssemblyHashedName,
             ReferenceAssemblyPaths = [.. updatedReferenceNames],
@@ -199,7 +200,7 @@ internal static partial class WinMDGenerator
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtwinmdgen.rsp");

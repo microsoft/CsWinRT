@@ -19,6 +19,7 @@ using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
 
@@ -71,7 +72,7 @@ internal static partial class ImplGenerator
             inputFilePath: inputFilePath,
             toolName: "cswinrtimplgen",
             unpackDebugRepro: UnpackDebugRepro,
-            parseFromResponseFile: ImplGeneratorArgs.ParseFromResponseFile,
+            parseFromResponseFile: ResponseFileParser.Parse<ImplGeneratorArgs, WellKnownImplExceptions>,
             saveDebugRepro: SaveDebugRepro,
             wrapUnhandled: static (phase, e) => new UnhandledImplException(phase, e),
             log: ConsoleApp.Log,

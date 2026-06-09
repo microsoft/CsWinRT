@@ -6,6 +6,7 @@ using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
@@ -24,7 +25,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// The generation process runs in three phases:
 /// </para>
 /// <list type="number">
-///   <item><strong>Parse</strong>: Read arguments from the response file via <see cref="WinMDGeneratorArgs.ParseFromResponseFile(string, CancellationToken)"/>.</item>
+///   <item><strong>Parse</strong>: Read arguments from the response file via <see cref="ResponseFileParser.Parse{TArgs, TErr}(string, CancellationToken)"/>.</item>
 ///   <item><strong>Discover</strong>: Load the input assembly and discover public types via <see cref="Discover"/>.</item>
 ///   <item><strong>Generate</strong>: Transform discovered types and write the WinMD file via <see cref="Generate"/>.</item>
 /// </list>
@@ -42,7 +43,7 @@ internal static partial class WinMDGenerator
             inputFilePath: inputFilePath,
             toolName: "cswinrtwinmdgen",
             unpackDebugRepro: UnpackDebugRepro,
-            parseFromResponseFile: WinMDGeneratorArgs.ParseFromResponseFile,
+            parseFromResponseFile: ResponseFileParser.Parse<WinMDGeneratorArgs, WellKnownWinMDExceptions>,
             saveDebugRepro: SaveDebugRepro,
             wrapUnhandled: static (phase, e) => new UnhandledWinMDException(phase, e),
             log: ConsoleApp.Log,

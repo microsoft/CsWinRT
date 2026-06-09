@@ -2,12 +2,9 @@
 // Licensed under the MIT License.
 
 using System.ComponentModel;
-using System.IO;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
-using WindowsRuntime.Generator.Parsing;
-using WindowsRuntime.ProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
@@ -66,35 +63,5 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
-
-    /// <summary>
-    /// Parses a <see cref="ProjectionGeneratorArgs"/> instance from a response file at the given path.
-    /// </summary>
-    /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="ProjectionGeneratorArgs"/> instance.</returns>
-    public static ProjectionGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<ProjectionGeneratorArgs, WellKnownProjectionGeneratorExceptions>(path, token);
-    }
-
-    /// <summary>
-    /// Parses a <see cref="ProjectionGeneratorArgs"/> instance from a response file read from a stream.
-    /// </summary>
-    /// <param name="stream">The stream containing the response file content.</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="ProjectionGeneratorArgs"/> instance.</returns>
-    public static ProjectionGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<ProjectionGeneratorArgs, WellKnownProjectionGeneratorExceptions>(stream, token);
-    }
-
-    /// <summary>
-    /// Formats the current <see cref="ProjectionGeneratorArgs"/> instance into a response file text.
-    /// </summary>
-    /// <returns>The resulting response file text.</returns>
-    public string FormatToResponseFile()
-    {
-        return ResponseFileBuilder.Format(this);
-    }
 }
+
