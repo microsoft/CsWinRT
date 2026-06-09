@@ -14,56 +14,35 @@ namespace WindowsRuntime.Generator.Errors;
 /// </remarks>
 internal static class WellKnownGeneratorMessages
 {
-    /// <summary>
-    /// Builds the message for <see cref="IGeneratorErrorFactory.ResponseFileReadError"/>.
-    /// </summary>
-    /// <param name="toolName">The CLI tool name embedded in the message (e.g. <c>"cswinrtimplgen"</c>).</param>
-    /// <returns>The formatted error message.</returns>
-    public static string ResponseFileReadError(string toolName)
-    {
-        return $"Failed to read the response file to run '{toolName}'.";
-    }
+    /// <see cref="IGeneratorErrorFactory.ResponseFileReadError"/>
+    public const string ResponseFileReadError = "Failed to read the response file (e.g. it may be missing or not accessible).";
 
-    /// <summary>
-    /// Builds the message for <see cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError"/>.
-    /// </summary>
+    /// <see cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError"/>
     /// <param name="argumentName">The name of the response-file argument that failed to parse.</param>
-    /// <returns>The formatted error message.</returns>
     public static string ResponseFileArgumentParsingError(string argumentName)
     {
         return $"Failed to parse argument '{argumentName}' from response file.";
     }
 
-    /// <summary>
-    /// The message for <see cref="IGeneratorErrorFactory.MalformedResponseFile"/>.
-    /// </summary>
+    /// <see cref="IGeneratorErrorFactory.MalformedResponseFile"/>
     public const string MalformedResponseFile = "The response file is malformed and contains invalid content.";
 
-    /// <summary>
-    /// Builds the message for <see cref="IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist"/>.
-    /// </summary>
+    /// <see cref="IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist"/>
     /// <param name="path">The directory path that does not exist.</param>
-    /// <returns>The formatted error message.</returns>
     public static string DebugReproDirectoryDoesNotExist(string path)
     {
         return $"The debug repro directory '{path}' does not exist.";
     }
 
-    /// <summary>
-    /// Builds the message for <see cref="IGeneratorErrorFactory.DebugReproMissingFileEntryMapping"/>.
-    /// </summary>
+    /// <see cref="IGeneratorErrorFactory.DebugReproMissingFileEntryMapping"/>
     /// <param name="path">The debug-repro file entry path that has no mapping.</param>
-    /// <returns>The formatted error message.</returns>
     public static string DebugReproMissingFileEntryMapping(string path)
     {
         return $"The debug repro file entry with path '{path}' is missing its assembly path mapping.";
     }
 
-    /// <summary>
-    /// Builds the message for <see cref="IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry"/>.
-    /// </summary>
+    /// <see cref="IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry"/>
     /// <param name="path">The debug-repro file entry path that was not recognized.</param>
-    /// <returns>The formatted error message.</returns>
     public static string DebugReproUnrecognizedFileEntry(string path)
     {
         return $"The debug repro file entry with path '{path}' was not recognized.";

@@ -26,7 +26,7 @@ internal sealed class WellKnownImplExceptions : IGeneratorErrorFactory
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError("cswinrtimplgen"), exception);
+        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>

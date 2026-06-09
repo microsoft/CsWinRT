@@ -29,7 +29,7 @@ internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFa
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError("cswinrtprojectiongen"), exception);
+        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>

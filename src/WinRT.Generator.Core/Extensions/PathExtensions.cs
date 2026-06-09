@@ -36,21 +36,6 @@ internal static class PathExtensions
             return path?.Replace('\\', '/');
         }
 
-        /// <inheritdoc cref="Normalize(string?)"/>
-        public static ReadOnlySpan<char> Normalize(ReadOnlySpan<char> path)
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                return path;
-            }
-
-            char[] buffer = new char[path.Length];
-
-            path.Replace(buffer, '\\', '/');
-
-            return buffer;
-        }
-
         /// <summary>
         /// Checks whether a given path represents a file or folder contained within a folder with a given name.
         /// </summary>

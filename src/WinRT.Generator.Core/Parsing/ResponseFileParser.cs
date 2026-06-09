@@ -16,52 +16,25 @@ using WindowsRuntime.Generator.Errors;
 namespace WindowsRuntime.Generator.Parsing;
 
 /// <summary>
-/// Parses a response file into a strongly-typed args record by reflecting over its
-/// <c>[<see cref="CommandLineArgumentNameAttribute"/>]</c>-annotated public properties.
+/// Helper to parse response files into argument objects.
 /// </summary>
-/// <remarks>
-/// <para>
-/// The shape of the response file is one <c>name<![CDATA[<space>]]>value</c> per line, with optional
-/// blank lines (the MSBuild <c>ToolTask</c> may emit them). The first token of each non-blank line
-/// is the CLI flag name; everything after the first space (right-trimmed) is the value.
-/// </para>
-/// <para>
-/// Per-property handling:
-/// <list type="bullet">
-///   <item><see cref="CancellationToken"/>-typed properties are set from the parser's <c>token</c>
-///   parameter (they have no <see cref="CommandLineArgumentNameAttribute"/>).</item>
-///   <item>Properties without <see cref="CommandLineArgumentNameAttribute"/> are skipped.</item>
-///   <item>Required properties (those with <see cref="RequiredMemberAttribute"/>) throw
-///   <see cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>
-///   if the value is missing or fails to parse.</item>
-///   <item>Optional properties default to the <see cref="DefaultValueAttribute.Value"/> if
-///   <see cref="DefaultValueAttribute"/> is present, otherwise to <c>default(T)</c> (with
-///   <see cref="string"/><c>[]</c> defaulting to an empty array).</item>
-///   <item>Value coercion is handled by <see cref="Convert.ChangeType(object?, Type, IFormatProvider?)"/>
-///   for primitives, with <see cref="CultureInfo.InvariantCulture"/>; arrays use
-///   <see cref="string.Split(char, StringSplitOptions)"/> with comma separator.</item>
-/// </list>
-/// </para>
-/// </remarks>
 internal static class ResponseFileParser
 {
-    /// <summary>The required dynamic-access annotation for the <c>TArgs</c> type parameter.</summary>
-    private const DynamicallyAccessedMemberTypes ArgsAccessKinds =
-        DynamicallyAccessedMemberTypes.PublicProperties;
-
     /// <summary>
     /// Parses an instance of <typeparamref name="TArgs"/> from a response file at the given path.
     /// </summary>
     /// <remarks>
-    /// The path may be prefixed with <c>@</c> (matching MSBuild's default escaping for <c>ToolTask</c>
-    /// response files), which is stripped before reading the file.
+    /// The path may be prefixed with <c>@</c> (matching MSBuild's default escaping
+    /// for <c>ToolTask</c> response files), which is stripped before reading the file.
     /// </remarks>
     /// <typeparam name="TArgs">The strongly-typed args record. Must have a public parameterless constructor surface (only public properties are inspected via reflection).</typeparam>
     /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    public static TArgs Parse<[DynamicallyAccessedMembers(ArgsAccessKinds)] TArgs, TErr>(string path, CancellationToken token)
+    public static TArgs Parse<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TErr>(
+        string path,
+        CancellationToken token)
         where TArgs : class
         where TErr : IGeneratorErrorFactory
     {
@@ -84,7 +57,9 @@ internal static class ResponseFileParser
             throw TErr.ResponseFileReadError(e);
         }
 
-        return ParseLines<TArgs, TErr>(lines, token);
+        Dictionary<string, string> argsMap = BuildArgsMap<TErr>(lines);
+
+        return Populate<TArgs, TErr>(argsMap, token);
     }
 
     /// <summary>
@@ -95,25 +70,14 @@ internal static class ResponseFileParser
     /// <param name="stream">The stream containing the response file content.</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    public static TArgs Parse<[DynamicallyAccessedMembers(ArgsAccessKinds)] TArgs, TErr>(Stream stream, CancellationToken token)
+    public static TArgs Parse<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TErr>(
+        Stream stream,
+        CancellationToken token)
         where TArgs : class
         where TErr : IGeneratorErrorFactory
     {
-        return ParseLines<TArgs, TErr>(File.ReadAllLines(stream), token);
-    }
+        string[] lines = File.ReadAllLines(stream);
 
-    /// <summary>
-    /// Parses an instance of <typeparamref name="TArgs"/> from the pre-split lines of a response file.
-    /// </summary>
-    /// <typeparam name="TArgs">The strongly-typed args record.</typeparam>
-    /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
-    /// <param name="lines">The lines read from the response file.</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    public static TArgs ParseLines<[DynamicallyAccessedMembers(ArgsAccessKinds)] TArgs, TErr>(string[] lines, CancellationToken token)
-        where TArgs : class
-        where TErr : IGeneratorErrorFactory
-    {
         Dictionary<string, string> argsMap = BuildArgsMap<TErr>(lines);
 
         return Populate<TArgs, TErr>(argsMap, token);
@@ -164,20 +128,16 @@ internal static class ResponseFileParser
     }
 
     /// <summary>
-    /// Constructs <typeparamref name="TArgs"/> via <see cref="RuntimeHelpers.GetUninitializedObject(Type)"/>
-    /// (to bypass <see cref="RequiredMemberAttribute"/> enforcement at construction time) and then
-    /// populates each public property by reflecting on its CLI attribute, nullability, default value, and type.
+    /// Populates an arguments object with the provided parsed values.
     /// </summary>
     /// <typeparam name="TArgs">The strongly-typed args record.</typeparam>
     /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="argsMap">The pre-built name-to-value map.</param>
     /// <param name="token">The cancellation token, assigned to any <see cref="CancellationToken"/>-typed property on <typeparamref name="TArgs"/>.</param>
     /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    [UnconditionalSuppressMessage(
-        "Trimming",
-        "IL2087:'type' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.",
-        Justification = "GetUninitializedObject does not invoke any constructor; it allocates an instance of TArgs without running any user code, so the PublicConstructors/NonPublicConstructors annotation is not required.")]
-    private static TArgs Populate<[DynamicallyAccessedMembers(ArgsAccessKinds)] TArgs, TErr>(Dictionary<string, string> argsMap, CancellationToken token)
+    private static TArgs Populate<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TErr>(
+        Dictionary<string, string> argsMap,
+        CancellationToken token)
         where TArgs : class
         where TErr : IGeneratorErrorFactory
     {
@@ -185,8 +145,6 @@ internal static class ResponseFileParser
         // 'GetUninitializedObject'. All properties are then populated via reflection from the
         // response file values, with explicit defaults applied for non-required properties.
         TArgs instance = (TArgs)RuntimeHelpers.GetUninitializedObject(typeof(TArgs));
-
-        NullabilityInfoContext nullabilityContext = new();
 
         foreach (PropertyInfo property in typeof(TArgs).GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
@@ -214,7 +172,7 @@ internal static class ResponseFileParser
 
             if (!hasValue)
             {
-                ApplyDefault<TErr>(instance, property, propertyType, isRequired, nullabilityContext);
+                ApplyDefault<TErr>(instance, property, propertyType, isRequired);
 
                 continue;
             }
@@ -233,7 +191,7 @@ internal static class ResponseFileParser
             }
             else
             {
-                ApplyDefault<TErr>(instance, property, propertyType, isRequired: false, nullabilityContext);
+                ApplyDefault<TErr>(instance, property, propertyType, isRequired: false);
             }
         }
 
@@ -248,13 +206,11 @@ internal static class ResponseFileParser
     /// <param name="property">The property being set.</param>
     /// <param name="propertyType">The property's type.</param>
     /// <param name="isRequired">Whether the property has <see cref="RequiredMemberAttribute"/>.</param>
-    /// <param name="nullabilityContext">The shared <see cref="NullabilityInfoContext"/> for nullable-reference inspection.</param>
     private static void ApplyDefault<TErr>(
         object instance,
         PropertyInfo property,
         Type propertyType,
-        bool isRequired,
-        NullabilityInfoContext nullabilityContext)
+        bool isRequired)
         where TErr : IGeneratorErrorFactory
     {
         if (isRequired)
@@ -263,7 +219,7 @@ internal static class ResponseFileParser
         }
 
         // '[DefaultValue("…")]' takes precedence: it lets per-tool args express initializer-style
-        // defaults that 'GetUninitializedObject' would otherwise skip.
+        // defaults that 'GetUninitializedObject' would otherwise skip (initializers aren't needed).
         DefaultValueAttribute? defaultValueAttribute = property.GetCustomAttribute<DefaultValueAttribute>();
 
         if (defaultValueAttribute is not null)
@@ -279,18 +235,6 @@ internal static class ResponseFileParser
             property.SetValue(instance, Array.Empty<string>());
 
             return;
-        }
-
-        // Nullable reference types default to null (matching 'GetNullableStringArgument'). For value
-        // types and non-nullable reference types we leave 'default(T)' from 'GetUninitializedObject'.
-        if (!propertyType.IsValueType)
-        {
-            NullabilityInfo nullability = nullabilityContext.Create(property);
-
-            if (nullability.ReadState == NullabilityState.Nullable)
-            {
-                property.SetValue(instance, null);
-            }
         }
     }
 

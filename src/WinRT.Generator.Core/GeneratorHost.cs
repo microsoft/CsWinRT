@@ -11,30 +11,10 @@ namespace WindowsRuntime.Generator;
 /// <summary>
 /// Shared <c>Run</c> entry-point scaffold for the CsWinRT CLI generators.
 /// </summary>
-/// <remarks>
-/// Each generator's <c>Run</c> method historically opened with an identical preamble:
-/// <list type="number">
-///   <item>If the input file path looks like a <c>.zip</c>, unpack a debug repro and re-route to the extracted <c>.rsp</c>.</item>
-///   <item>Parse the response file into a per-tool args record.</item>
-///   <item>If <c>DebugReproDirectory</c> is set and we are not already replaying, save a debug repro of the current invocation.</item>
-/// </list>
-/// <see cref="CreateRunner{TArgs}"/> encapsulates that preamble. Each generator's <c>Run</c> now starts with
-/// a single call to it; the per-tool unpack / save / parse logic is supplied via delegates so behavior stays
-/// identical (same log messages, same exception phases, same per-tool unhandled exception type).
-/// <para>
-/// The same <c>Run</c> methods then proceed through a series of phases (loading, processing, emit, ...),
-/// each wrapped in an identical <c>try</c>/<c>catch</c> that re-throws as the per-tool
-/// <c>Unhandled*Exception</c>. <see cref="CreateRunner{TArgs}"/> returns a
-/// <see cref="GeneratorPhaseRunner{TArgs}"/> bound to the parsed args plus the same per-tool
-/// <c>wrapUnhandled</c> and <c>log</c> delegates, so each phase can be expressed as a single
-/// <see cref="GeneratorPhaseRunner{TArgs}.RunPhase(string, Action{TArgs})"/> call instead of a
-/// hand-written <c>try</c>/<c>catch</c>.
-/// </para>
-/// </remarks>
 internal static class GeneratorHost
 {
     /// <summary>
-    /// Runs the shared unpack → parse → save preamble for a CsWinRT CLI generator and returns a
+    /// Runs the shared unpack, parse, save preamble for a CsWinRT CLI generator and returns a
     /// <see cref="GeneratorPhaseRunner{TArgs}"/> ready to drive the remaining per-tool phases.
     /// </summary>
     /// <typeparam name="TArgs">The per-tool args record (must implement <see cref="IGeneratorArgs"/>).</typeparam>
@@ -122,9 +102,6 @@ internal static class GeneratorHost
 
         args.Token.ThrowIfCancellationRequested();
 
-        return new GeneratorPhaseRunner<TArgs>(args, wrapUnhandled, log);
+        return new(args, wrapUnhandled, log);
     }
 }
-
-
-

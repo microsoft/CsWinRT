@@ -26,7 +26,7 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError("cswinrtwinmdgen"), exception);
+        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
     /// <inheritdoc cref="IGeneratorErrorFactory.MalformedResponseFile"/>

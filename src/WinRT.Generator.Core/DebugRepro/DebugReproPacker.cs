@@ -19,14 +19,8 @@ namespace WindowsRuntime.Generator.DebugRepro;
 /// Leaf helpers shared across the CsWinRT CLI generators for packaging and unpacking debug repros.
 /// </summary>
 /// <remarks>
-/// Each generator's <c>SaveDebugRepro</c>/<c>UnpackDebugRepro</c> still owns the high-level orchestration
-/// (which input categories exist, which subfolders are used, how the response file is re-stitched). This
-/// type only owns the small, identical-across-tools building blocks:
-/// <list type="bullet">
-///   <item>Hashing the original file path into a stable, collision-free file name.</item>
-///   <item>Copying files (or a single file) into a destination directory using the hashed names.</item>
-///   <item>Serializing / deserializing the "hashed name → original path" mapping as JSON inside the repro archive.</item>
-/// </list>
+/// Each generator still owns the high-level orchestration (which input categories exist, which subfolders are
+/// used, how the response file is re-stitched). This type only owns identical helpers that can be reused.
 /// </remarks>
 internal static class DebugReproPacker
 {

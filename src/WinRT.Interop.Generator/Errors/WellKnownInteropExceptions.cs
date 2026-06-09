@@ -287,7 +287,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static WellKnownInteropException ResponseFileReadError(Exception exception)
     {
-        return Exception(28, WellKnownGeneratorMessages.ResponseFileReadError("cswinrtinteropgen"), exception);
+        return Exception(28, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
     /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>
