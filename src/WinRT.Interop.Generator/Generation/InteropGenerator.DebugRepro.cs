@@ -38,11 +38,7 @@ internal partial class InteropGenerator
     /// <returns>The path to the resulting response file to use.</returns>
     private static string UnpackDebugRepro(string path, CancellationToken token)
     {
-        // Create a temporary directory to extract the files from the debug repro
-        string tempFolderName = $"cswinrtinteropgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
-
-        _ = Directory.CreateDirectory(tempDirectory);
+        string tempDirectory = DebugReproPacker.CreateUnpackTempDirectory("cswinrtinteropgen");
 
         token.ThrowIfCancellationRequested();
 
@@ -205,22 +201,14 @@ internal partial class InteropGenerator
             return;
         }
 
-        // The target folder must exist
-        if (!Directory.Exists(args.DebugReproDirectory))
-        {
-            throw WellKnownInteropExceptions.DebugReproDirectoryDoesNotExist(args.DebugReproDirectory);
-        }
+        (string tempDirectory, string zipPath) = DebugReproPacker.BeginSave<WellKnownInteropExceptions>(
+            args.DebugReproDirectory,
+            toolName: "cswinrtinteropgen",
+            archiveFileName: "interop-debug-repro.zip");
 
-        // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "interop-debug-repro.zip");
-
-        // Create a temporary directory to stage files for the ZIP
-        string tempFolderName = $"cswinrtinteropgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
         string referenceDirectory = Path.Combine(tempDirectory, "reference");
         string implementationDirectory = Path.Combine(tempDirectory, "implementation");
 
-        _ = Directory.CreateDirectory(tempDirectory);
         _ = Directory.CreateDirectory(referenceDirectory);
         _ = Directory.CreateDirectory(implementationDirectory);
 
@@ -282,17 +270,7 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Delete the previous file, if it exists
-        if (File.Exists(zipPath))
-        {
-            File.Delete(zipPath);
-        }
-
-        // Create the actual .zip file in the target directory
-        ZipFile.CreateFromDirectory(tempDirectory, zipPath);
-
-        // Clean up the temporary directory
-        Directory.Delete(tempDirectory, recursive: true);
+        DebugReproPacker.FinalizeSave(tempDirectory, zipPath);
     }
 
     /// <summary>

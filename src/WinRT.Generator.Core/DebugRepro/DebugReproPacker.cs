@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
 
 namespace WindowsRuntime.Generator.DebugRepro;
@@ -147,5 +148,77 @@ internal static class DebugReproPacker
 
         // Load the mapping with all the original file paths for the included files
         return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
+    }
+
+    /// <summary>
+    /// Prepares the staging directory and target archive path for a debug repro save operation.
+    /// </summary>
+    /// <typeparam name="TError">The per-tool error factory used to throw if <paramref name="debugReproDirectory"/> does not exist.</typeparam>
+    /// <param name="debugReproDirectory">The user-provided directory where the resulting <c>.zip</c> archive will be written. Must already exist.</param>
+    /// <param name="toolName">The CLI tool name (e.g. <c>"cswinrtimplgen"</c>), used as the prefix of the staging directory.</param>
+    /// <param name="archiveFileName">The file name of the resulting <c>.zip</c> archive (e.g. <c>"impl-debug-repro.zip"</c>).</param>
+    /// <returns>A pair containing the freshly-created staging directory and the absolute path of the target archive.</returns>
+    /// <exception cref="Exception">Thrown via <typeparamref name="TError"/> if <paramref name="debugReproDirectory"/> does not exist.</exception>
+    public static (string TempDirectory, string ZipPath) BeginSave<TError>(
+        string debugReproDirectory,
+        string toolName,
+        string archiveFileName)
+        where TError : IGeneratorErrorFactory
+    {
+        // The target folder must exist
+        if (!Directory.Exists(debugReproDirectory))
+        {
+            throw TError.DebugReproDirectoryDoesNotExist(debugReproDirectory);
+        }
+
+        // Path for the ZIP archive
+        string zipPath = Path.Combine(debugReproDirectory, archiveFileName);
+
+        // Create a temporary directory to stage files for the ZIP
+        string tempFolderName = $"{toolName}-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
+        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
+
+        _ = Directory.CreateDirectory(tempDirectory);
+
+        return (tempDirectory, zipPath);
+    }
+
+    /// <summary>
+    /// Finalizes a debug repro save by zipping the staging directory into the target archive and deleting the staging directory.
+    /// </summary>
+    /// <param name="tempDirectory">The staging directory previously returned by <see cref="BeginSave{TError}(string, string, string)"/>.</param>
+    /// <param name="zipPath">The absolute path of the target <c>.zip</c> archive, previously returned by <see cref="BeginSave{TError}(string, string, string)"/>.</param>
+    /// <remarks>
+    /// If a file already exists at <paramref name="zipPath"/>, it is deleted before the new archive is created.
+    /// </remarks>
+    public static void FinalizeSave(string tempDirectory, string zipPath)
+    {
+        // Delete the previous file, if it exists
+        if (File.Exists(zipPath))
+        {
+            File.Delete(zipPath);
+        }
+
+        // Create the actual .zip file in the target directory
+        ZipFile.CreateFromDirectory(tempDirectory, zipPath);
+
+        // Clean up the temporary directory
+        Directory.Delete(tempDirectory, recursive: true);
+    }
+
+    /// <summary>
+    /// Creates a freshly-named temporary directory for unpacking a debug repro <c>.zip</c> archive.
+    /// </summary>
+    /// <param name="toolName">The CLI tool name (e.g. <c>"cswinrtimplgen"</c>), used as the prefix of the directory.</param>
+    /// <returns>The absolute path of the created directory.</returns>
+    public static string CreateUnpackTempDirectory(string toolName)
+    {
+        // Create a temporary directory to extract the files from the debug repro
+        string tempFolderName = $"{toolName}-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
+        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
+
+        _ = Directory.CreateDirectory(tempDirectory);
+
+        return tempDirectory;
     }
 }
