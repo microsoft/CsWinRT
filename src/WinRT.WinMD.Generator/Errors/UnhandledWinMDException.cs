@@ -17,5 +17,5 @@ internal sealed class UnhandledWinMDException(string phase, Exception exception)
     protected override string ErrorPrefix => WellKnownWinMDExceptions.ErrorPrefix;
 
     /// <inheritdoc/>
-    protected override string GeneratorDescription => "WinMD generator";
+    protected override string GeneratorName => "WinMD";
 }

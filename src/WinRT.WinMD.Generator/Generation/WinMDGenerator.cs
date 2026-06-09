@@ -37,7 +37,7 @@ internal static partial class WinMDGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        GeneratorPhaseRunner<WinMDGeneratorArgs> runner = GeneratorHost.CreateRunner<WinMDGeneratorArgs>(
+        GeneratorPhaseRunner<WinMDGeneratorArgs> runner = GeneratorHost.CreateRunner(
             inputFilePath: inputFilePath,
             toolName: "cswinrtwinmdgen",
             unpackDebugRepro: UnpackDebugRepro,

@@ -17,6 +17,6 @@ internal sealed class UnhandledReferenceProjectionGeneratorException(string phas
     protected override string ErrorPrefix => WellKnownReferenceProjectionGeneratorExceptions.ErrorPrefix;
 
     /// <inheritdoc/>
-    protected override string GeneratorDescription => "reference projection generator";
+    protected override string GeneratorName => "reference projection";
 }
 

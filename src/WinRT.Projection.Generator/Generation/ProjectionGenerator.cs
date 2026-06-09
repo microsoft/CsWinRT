@@ -22,7 +22,7 @@ internal static partial class ProjectionGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        GeneratorPhaseRunner<ProjectionGeneratorArgs> runner = GeneratorHost.CreateRunner<ProjectionGeneratorArgs>(
+        GeneratorPhaseRunner<ProjectionGeneratorArgs> runner = GeneratorHost.CreateRunner(
             inputFilePath: inputFilePath,
             toolName: "cswinrtprojectiongen",
             unpackDebugRepro: UnpackDebugRepro,
