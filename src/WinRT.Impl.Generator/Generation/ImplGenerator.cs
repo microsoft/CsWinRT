@@ -22,8 +22,8 @@ using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.ImplGenerator.Errors;
-using WindowsRuntime.ImplGenerator.References;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 
@@ -245,7 +245,7 @@ internal static partial class ImplGenerator
             // will always have a version number equal or higher than this, so it will load correctly.
             AssemblyReference sdkProjectionAssembly = new("WinRT.Sdk.Projection"u8, new Version(0, 0, 0, 0))
             {
-                PublicKeyOrToken = ImplValues.PublicKeyData,
+                PublicKeyOrToken = WellKnownPublicKeys.WindowsSdkProjection,
                 HasPublicKey = true
             };
 
@@ -253,7 +253,7 @@ internal static partial class ImplGenerator
             // This is only used when the option to use Windows UI Xaml projections is enabled.
             AssemblyReference sdkXamlProjectionAssembly = new("WinRT.Sdk.Xaml.Projection"u8, new Version(0, 0, 0, 0))
             {
-                PublicKeyOrToken = ImplValues.PublicKeyData,
+                PublicKeyOrToken = WellKnownPublicKeys.WindowsSdkProjection,
                 HasPublicKey = true
             };
 
@@ -261,7 +261,7 @@ internal static partial class ImplGenerator
             // Unlike the implementation .dll for the Windows SDK however, this .dll is created on the fly.
             AssemblyReference projectionAssembly = new("WinRT.Projection"u8, new Version(0, 0, 0, 0))
             {
-                PublicKeyOrToken = ImplValues.PublicKeyData,
+                PublicKeyOrToken = WellKnownPublicKeys.WindowsSdkProjection,
                 HasPublicKey = true
             };
 

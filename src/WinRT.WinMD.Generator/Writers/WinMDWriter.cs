@@ -4,11 +4,11 @@
 using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.WinMDGenerator.Errors;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
-using WindowsRuntime.WinMDGenerator.References;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
 #pragma warning disable IDE0046
