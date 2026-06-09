@@ -21,6 +21,14 @@ namespace WindowsRuntime.Generator;
 /// <see cref="Prepare{TArgs}"/> encapsulates that preamble. Each generator's <c>Run</c> now starts with a
 /// single call to it; the per-tool unpack / save / parse logic is supplied via delegates so behavior
 /// stays identical (same log messages, same exception phases, same per-tool unhandled exception type).
+/// <para>
+/// The same <c>Run</c> methods then proceed through a series of phases (loading, processing, emit, ...),
+/// each wrapped in an identical <c>try</c>/<c>catch</c> that re-throws as the per-tool
+/// <c>Unhandled*Exception</c>. <see cref="Prepare{TArgs}"/> additionally returns a
+/// <see cref="GeneratorPhaseRunner"/> bound to the same per-tool <c>wrapUnhandled</c> and <c>log</c>
+/// delegates so each phase can be expressed as a single <see cref="GeneratorPhaseRunner.RunPhase(string, Action)"/>
+/// call instead of a hand-written <c>try</c>/<c>catch</c>.
+/// </para>
 /// </remarks>
 internal static class GeneratorHost
 {
@@ -36,8 +44,11 @@ internal static class GeneratorHost
     /// <param name="wrapUnhandled">Wraps an unexpected exception into the per-tool <c>Unhandled*Exception</c> with the given phase name.</param>
     /// <param name="log">Logs a progress message to the user (typically <c>ConsoleApp.Log</c> from ConsoleAppFramework).</param>
     /// <param name="token">The token for the operation.</param>
-    /// <returns>The parsed <typeparamref name="TArgs"/> instance.</returns>
-    public static TArgs Prepare<TArgs>(
+    /// <returns>
+    /// A pair containing the parsed <typeparamref name="TArgs"/> instance and a <see cref="GeneratorPhaseRunner"/>
+    /// pre-bound to <paramref name="wrapUnhandled"/> and <paramref name="log"/> for use by subsequent phases.
+    /// </returns>
+    public static (TArgs Args, GeneratorPhaseRunner Runner) Prepare<TArgs>(
         string inputFilePath,
         string toolName,
         Func<string, CancellationToken, string> unpackDebugRepro,
@@ -109,7 +120,8 @@ internal static class GeneratorHost
 
         args.Token.ThrowIfCancellationRequested();
 
-        return args;
+        return (args, new GeneratorPhaseRunner(wrapUnhandled, log));
     }
 }
+
 

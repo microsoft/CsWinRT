@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
-using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.WinMDGenerator.Errors;
 
@@ -39,7 +37,7 @@ internal static partial class WinMDGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        WinMDGeneratorArgs args = GeneratorHost.Prepare<WinMDGeneratorArgs>(
+        (WinMDGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<WinMDGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtwinmdgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -50,32 +48,18 @@ internal static partial class WinMDGenerator
             token: token);
 
         // Discover the types to process
-        WinMDGeneratorDiscoveryState discoveryState;
-
-        try
-        {
-            ConsoleApp.Log($"Processing assembly: '{System.IO.Path.GetFileName(args.InputAssemblyPath)}'");
-
-            discoveryState = Discover(args);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledWinMDException("discovery", e);
-        }
+        WinMDGeneratorDiscoveryState discoveryState = runner.RunPhase(
+            phaseName: "discovery",
+            logMessage: $"Processing assembly: '{System.IO.Path.GetFileName(args.InputAssemblyPath)}'",
+            body: () => Discover(args));
 
         token.ThrowIfCancellationRequested();
 
         // Generate and write the .winmd file
-        try
-        {
-            ConsoleApp.Log($"Defining {discoveryState.PublicTypes.Count} authored type(s)");
-
-            Generate(args, discoveryState);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledWinMDException("generation", e);
-        }
+        runner.RunPhase(
+            phaseName: "generation",
+            logMessage: $"Defining {discoveryState.PublicTypes.Count} authored type(s)",
+            body: () => Generate(args, discoveryState));
 
         ConsoleApp.Log($"Windows Runtime assembly (.winmd) generated -> {args.OutputWinmdPath}");
     }

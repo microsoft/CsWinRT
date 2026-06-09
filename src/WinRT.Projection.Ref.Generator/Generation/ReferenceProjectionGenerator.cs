@@ -29,7 +29,7 @@ internal static partial class ReferenceProjectionGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        ReferenceProjectionGeneratorArgs args = GeneratorHost.Prepare<ReferenceProjectionGeneratorArgs>(
+        (ReferenceProjectionGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<ReferenceProjectionGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtprojectionrefgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -46,20 +46,15 @@ internal static partial class ReferenceProjectionGenerator
         }
 
         // Build the writer options from the parsed arguments
-        ProjectionWriterOptions options;
-
-        try
-        {
-            options = BuildWriterOptions(args);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledReferenceProjectionGeneratorException("processing", e);
-        }
+        ProjectionWriterOptions options = runner.RunPhase(
+            phaseName: "processing",
+            body: () => BuildWriterOptions(args));
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Invoke the projection writer (in-process) to generate the projection sources
+        // Invoke the projection writer (in-process) to generate the projection sources. We can't
+        // route this through the shared 'runner.RunPhase' helper because we wrap the exception
+        // into a well-known 'CsWinRTProcessError' rather than the per-tool 'Unhandled' factory.
         try
         {
             ConsoleApp.Log($"Generating reference projection sources -> {options.OutputFolder}");
