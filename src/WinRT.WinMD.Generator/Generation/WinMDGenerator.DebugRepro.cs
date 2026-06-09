@@ -32,11 +32,7 @@ internal static partial class WinMDGenerator
     /// <returns>The path to the resulting response file to use.</returns>
     private static string UnpackDebugRepro(string path, CancellationToken token)
     {
-        // Create a temporary directory to extract the files from the debug repro
-        string tempFolderName = $"cswinrtwinmdgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
-
-        _ = Directory.CreateDirectory(tempDirectory);
+        string tempDirectory = DebugReproPacker.CreateUnpackTempDirectory("cswinrtwinmdgen");
 
         token.ThrowIfCancellationRequested();
 
@@ -159,21 +155,13 @@ internal static partial class WinMDGenerator
             return;
         }
 
-        // The target folder must exist
-        if (!Directory.Exists(args.DebugReproDirectory))
-        {
-            throw WellKnownWinMDExceptions.DebugReproDirectoryDoesNotExist(args.DebugReproDirectory);
-        }
+        (string tempDirectory, string zipPath) = DebugReproPacker.BeginSave<WellKnownWinMDExceptions>(
+            args.DebugReproDirectory,
+            toolName: "cswinrtwinmdgen",
+            archiveFileName: "winmd-debug-repro.zip");
 
-        // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "winmd-debug-repro.zip");
-
-        // Create a temporary directory to stage files for the ZIP
-        string tempFolderName = $"cswinrtwinmdgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
         string referenceDirectory = Path.Combine(tempDirectory, "reference");
 
-        _ = Directory.CreateDirectory(tempDirectory);
         _ = Directory.CreateDirectory(referenceDirectory);
 
         // Map with all the original paths
@@ -214,16 +202,6 @@ internal static partial class WinMDGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Delete the previous file, if it exists
-        if (File.Exists(zipPath))
-        {
-            File.Delete(zipPath);
-        }
-
-        // Create the actual .zip file in the target directory
-        ZipFile.CreateFromDirectory(tempDirectory, zipPath);
-
-        // Clean up the temporary directory
-        Directory.Delete(tempDirectory, recursive: true);
+        DebugReproPacker.FinalizeSave(tempDirectory, zipPath);
     }
 }

@@ -60,11 +60,7 @@ internal static partial class ProjectionGenerator
     /// <returns>The path to the resulting response file to use.</returns>
     private static string UnpackDebugRepro(string path, CancellationToken token)
     {
-        // Create a temporary directory to extract the files from the debug repro
-        string tempFolderName = $"cswinrtprojectiongen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
-
-        _ = Directory.CreateDirectory(tempDirectory);
+        string tempDirectory = DebugReproPacker.CreateUnpackTempDirectory("cswinrtprojectiongen");
 
         token.ThrowIfCancellationRequested();
 
@@ -209,23 +205,15 @@ internal static partial class ProjectionGenerator
             return;
         }
 
-        // The target folder must exist
-        if (!Directory.Exists(args.DebugReproDirectory))
-        {
-            throw WellKnownProjectionGeneratorExceptions.DebugReproDirectoryDoesNotExist(args.DebugReproDirectory);
-        }
+        (string tempDirectory, string zipPath) = DebugReproPacker.BeginSave<WellKnownProjectionGeneratorExceptions>(
+            args.DebugReproDirectory,
+            toolName: "cswinrtprojectiongen",
+            archiveFileName: "projection-debug-repro.zip");
 
-        // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "projection-debug-repro.zip");
-
-        // Create a temporary directory to stage files for the ZIP
-        string tempFolderName = $"cswinrtprojectiongen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
         string referenceDirectory = Path.Combine(tempDirectory, ReferenceSubfolder);
         string winmdDirectory = Path.Combine(tempDirectory, WinMDSubfolder);
         string windowsMetadataDirectory = Path.Combine(tempDirectory, WindowsMetadataSubfolder);
 
-        _ = Directory.CreateDirectory(tempDirectory);
         _ = Directory.CreateDirectory(referenceDirectory);
         _ = Directory.CreateDirectory(winmdDirectory);
         _ = Directory.CreateDirectory(windowsMetadataDirectory);
@@ -301,16 +289,6 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Delete the previous file, if it exists
-        if (File.Exists(zipPath))
-        {
-            File.Delete(zipPath);
-        }
-
-        // Create the actual .zip file in the target directory
-        ZipFile.CreateFromDirectory(tempDirectory, zipPath);
-
-        // Clean up the temporary directory
-        Directory.Delete(tempDirectory, recursive: true);
+        DebugReproPacker.FinalizeSave(tempDirectory, zipPath);
     }
 }

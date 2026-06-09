@@ -33,11 +33,7 @@ internal static partial class ReferenceProjectionGenerator
     /// <returns>The path to the resulting response file to use.</returns>
     private static string UnpackDebugRepro(string path, CancellationToken token)
     {
-        // Create a temporary directory to extract the files from the debug repro
-        string tempFolderName = $"cswinrtprojectionrefgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
-
-        _ = Directory.CreateDirectory(tempDirectory);
+        string tempDirectory = DebugReproPacker.CreateUnpackTempDirectory("cswinrtprojectionrefgen");
 
         token.ThrowIfCancellationRequested();
 
@@ -146,21 +142,13 @@ internal static partial class ReferenceProjectionGenerator
             return;
         }
 
-        // The target folder must exist
-        if (!Directory.Exists(args.DebugReproDirectory))
-        {
-            throw WellKnownReferenceProjectionGeneratorExceptions.DebugReproDirectoryDoesNotExist(args.DebugReproDirectory);
-        }
+        (string tempDirectory, string zipPath) = DebugReproPacker.BeginSave<WellKnownReferenceProjectionGeneratorExceptions>(
+            args.DebugReproDirectory,
+            toolName: "cswinrtprojectionrefgen",
+            archiveFileName: "ref-projection-debug-repro.zip");
 
-        // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "ref-projection-debug-repro.zip");
-
-        // Create a temporary directory to stage files for the ZIP
-        string tempFolderName = $"cswinrtprojectionrefgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
         string inputDirectory = Path.Combine(tempDirectory, "input");
 
-        _ = Directory.CreateDirectory(tempDirectory);
         _ = Directory.CreateDirectory(inputDirectory);
 
         // Expand all input paths (which may be file paths, directories to recursively scan, or
@@ -215,16 +203,6 @@ internal static partial class ReferenceProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Delete the previous file, if it exists
-        if (File.Exists(zipPath))
-        {
-            File.Delete(zipPath);
-        }
-
-        // Create the actual .zip file in the target directory
-        ZipFile.CreateFromDirectory(tempDirectory, zipPath);
-
-        // Clean up the temporary directory
-        Directory.Delete(tempDirectory, recursive: true);
+        DebugReproPacker.FinalizeSave(tempDirectory, zipPath);
     }
 }
