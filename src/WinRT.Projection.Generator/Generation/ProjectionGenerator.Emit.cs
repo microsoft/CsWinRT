@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
+using WindowsRuntime.GeneratorCli.Errors;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
