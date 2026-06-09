@@ -5,7 +5,7 @@ using System.Buffers;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace WindowsRuntime.InteropGenerator;
+namespace WindowsRuntime.Generator.Extensions;
 
 /// <summary>
 /// Extensions for the <see cref="IncrementalHash"/> type.

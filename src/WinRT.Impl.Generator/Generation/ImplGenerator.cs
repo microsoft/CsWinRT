@@ -20,6 +20,7 @@ using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
