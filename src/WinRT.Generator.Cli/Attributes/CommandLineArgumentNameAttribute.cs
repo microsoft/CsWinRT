@@ -1,9 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 
-namespace WindowsRuntime.ProjectionGenerator.Attributes;
+namespace WindowsRuntime.GeneratorCli.Attributes;
 
 /// <summary>
 /// An attribute indicating the name of a given command line argument.

@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace WindowsRuntime.InteropGenerator;
+namespace WindowsRuntime.GeneratorCli;
 
 /// <summary>
 /// Extensions for the <see cref="Path"/> type.
@@ -23,8 +23,9 @@ internal static class PathExtensions
         public static string? Normalize(string? path)
         {
             // If on Windows, no normalization is needed. Paths in debug repros will use this format.
-            // Note: 'cswinrtinteropgen' is only meant to be used on Windows (because CsWinRT itself is
-            // only supported on Windows), but this allows debugging repros on other platforms too.
+            // Note: the CsWinRT generators are only meant to be used on Windows (because CsWinRT
+            // itself is only supported on Windows), but this allows debugging repros on other
+            // platforms too.
             if (OperatingSystem.IsWindows())
             {
                 return path;

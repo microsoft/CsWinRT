@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.ProjectionWriter;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;

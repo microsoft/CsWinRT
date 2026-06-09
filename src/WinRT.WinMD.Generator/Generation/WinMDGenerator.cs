@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;

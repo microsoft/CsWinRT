@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using WindowsRuntime.ImplGenerator.Attributes;
+using WindowsRuntime.GeneratorCli.Attributes;
 using WindowsRuntime.ImplGenerator.Errors;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.GeneratorCli;
 
 #pragma warning disable IDE0046
 

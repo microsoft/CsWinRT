@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!-- Common metadata properties for publishing -->
+    <Description>C#/WinRT Generator CLI shared infrastructure v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Generator CLI shared infrastructure v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
+    <FileVersion>$(VersionNumber)</FileVersion>
+
+    <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
+    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
+
+    <!-- Set the root namespace to match the other generator projects -->
+    <RootNamespace>WindowsRuntime.GeneratorCli</RootNamespace>
+
+    <!-- This is a library shared between the CLI generators (impl, interop, projection, ref-projection, winmd) -->
+    <AssemblyName>WinRT.Generator.Cli</AssemblyName>
+
+    <!-- Same settings as the other CLI generator projects -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Features>strict</Features>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

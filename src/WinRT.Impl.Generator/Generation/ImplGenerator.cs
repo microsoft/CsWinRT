@@ -19,7 +19,7 @@ using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.GeneratorCli;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 

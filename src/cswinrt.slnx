@@ -415,6 +415,7 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
   <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
+  <Project Path="WinRT.Generator.Cli/WinRT.Generator.Cli.csproj" />
   <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Internal/WinRT.Internal.csproj" />

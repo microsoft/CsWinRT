@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Threading;
-using WindowsRuntime.ReferenceProjectionGenerator.Attributes;
+using WindowsRuntime.GeneratorCli.Attributes;
 
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
 
