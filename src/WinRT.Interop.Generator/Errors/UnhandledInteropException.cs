@@ -18,7 +18,4 @@ internal sealed class UnhandledInteropException(string phase, Exception exceptio
 
     /// <inheritdoc/>
     protected override string GeneratorDescription => "interop generator";
-
-    /// <inheritdoc/>
-    protected override bool QuotePhaseInMessage => true;
 }
