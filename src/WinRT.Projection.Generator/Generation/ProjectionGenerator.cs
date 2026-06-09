@@ -45,8 +45,6 @@ internal static partial class ProjectionGenerator
             },
             body: ProcessReferences);
 
-        runner.Args.Token.ThrowIfCancellationRequested();
-
         // If no types were found to project (e.g., component mode with no component references),
         // skip the source generation and emit phases entirely (no .dll will be produced at all).
         if (!processingState.HasTypesToProject)
@@ -59,8 +57,6 @@ internal static partial class ProjectionGenerator
             phaseName: "source-generation",
             logMessage: "Generating projection code",
             body: _ => GenerateSources(processingState));
-
-        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
         runner.RunPhase(

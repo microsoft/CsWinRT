@@ -50,8 +50,6 @@ internal static partial class ReferenceProjectionGenerator
             phaseName: "processing",
             body: BuildWriterOptions);
 
-        runner.Args.Token.ThrowIfCancellationRequested();
-
         // Invoke the projection writer (in-process) to generate the projection sources. We can't
         // route this through the shared 'runner.RunPhase' helper because we wrap the exception
         // into a well-known 'CsWinRTProcessError' rather than the per-tool 'Unhandled' factory.
