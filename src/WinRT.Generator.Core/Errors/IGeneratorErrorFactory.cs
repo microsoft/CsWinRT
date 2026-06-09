@@ -3,7 +3,7 @@
 
 using System;
 
-namespace WindowsRuntime.GeneratorCli.Errors;
+namespace WindowsRuntime.Generator.Errors;
 
 /// <summary>
 /// Routes shared logical errors through the per-tool well-known exception factory.

@@ -4,9 +4,9 @@
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
-using WindowsRuntime.GeneratorCli;
-using WindowsRuntime.GeneratorCli.Attributes;
-using WindowsRuntime.GeneratorCli.Parsing;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;

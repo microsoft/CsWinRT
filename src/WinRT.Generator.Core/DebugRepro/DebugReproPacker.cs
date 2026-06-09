@@ -10,9 +10,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using WindowsRuntime.GeneratorCli.Helpers;
+using WindowsRuntime.Generator.Helpers;
 
-namespace WindowsRuntime.GeneratorCli.DebugRepro;
+namespace WindowsRuntime.Generator.DebugRepro;
 
 /// <summary>
 /// Leaf helpers shared across the CsWinRT CLI generators for packaging and unpacking debug repros.

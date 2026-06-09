@@ -4,8 +4,8 @@
 using System;
 using System.Threading;
 using ConsoleAppFramework;
-using WindowsRuntime.GeneratorCli;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;

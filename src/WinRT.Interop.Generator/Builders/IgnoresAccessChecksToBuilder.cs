@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
-using WindowsRuntime.GeneratorCli;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.References;
 

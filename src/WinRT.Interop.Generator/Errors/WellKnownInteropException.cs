@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 using System.Text;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 

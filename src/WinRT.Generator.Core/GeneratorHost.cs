@@ -4,9 +4,9 @@
 using System;
 using System.IO;
 using System.Threading;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator.Errors;
 
-namespace WindowsRuntime.GeneratorCli;
+namespace WindowsRuntime.Generator;
 
 /// <summary>
 /// Shared <c>Run</c> entry-point scaffold for the CsWinRT CLI generators.

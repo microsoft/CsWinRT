@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Errors;
 
