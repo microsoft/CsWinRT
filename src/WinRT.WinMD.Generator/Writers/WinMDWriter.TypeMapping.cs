@@ -6,9 +6,9 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.WinMDGenerator.Models;
-using WindowsRuntime.WinMDGenerator.References;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
 #pragma warning disable IDE0072
