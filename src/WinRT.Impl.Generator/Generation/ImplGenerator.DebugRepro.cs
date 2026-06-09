@@ -1,19 +1,16 @@
+
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
-using WindowsRuntime.ImplGenerator.Errors;
-using WindowsRuntime.GeneratorCli.Helpers;
 using WindowsRuntime.GeneratorCli;
+using WindowsRuntime.GeneratorCli.DebugRepro;
+using WindowsRuntime.ImplGenerator.Errors;
 
 #pragma warning disable IDE0008
 
@@ -63,7 +60,7 @@ internal static partial class ImplGenerator
         token.ThrowIfCancellationRequested();
 
         // Load the mappings with all the original file paths for reference .dll-s
-        Dictionary<string, string> originalReferenceDllPaths = ExtractPathMap(originalReferenceDllPathsEntry);
+        Dictionary<string, string> originalReferenceDllPaths = DebugReproPacker.ExtractPathMap(originalReferenceDllPathsEntry);
 
         token.ThrowIfCancellationRequested();
 
@@ -172,12 +169,12 @@ internal static partial class ImplGenerator
 
         // Add all reference paths with hashed names to the reference subdirectory under the
         // temporary directory, and store them with the updated names in a list to use to build the .rsp file.
-        List<string> updatedReferenceDllNames = CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referenceDirectory, originalReferenceDllPaths, args.Token);
+        List<string> updatedReferenceDllNames = DebugReproPacker.CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referenceDirectory, originalReferenceDllPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Hash and copy the output assembly
-        string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalReferenceDllPaths, args.Token);
+        string outputAssemblyHashedName = DebugReproPacker.CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalReferenceDllPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -201,7 +198,7 @@ internal static partial class ImplGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Create the .json file with the reference path map
-        CopyPathMapToDirectory(originalReferenceDllPaths, tempDirectory, ReferencePathMapFileName);
+        DebugReproPacker.CopyPathMapToDirectory(originalReferenceDllPaths, tempDirectory, ReferencePathMapFileName);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -216,119 +213,5 @@ internal static partial class ImplGenerator
 
         // Clean up the temporary directory
         Directory.Delete(tempDirectory, recursive: true);
-    }
-
-    /// <summary>
-    /// Generates a hashed filename by appending a hash of the original filename.
-    /// </summary>
-    /// <param name="filePath">The original file path.</param>
-    /// <returns>The hashed filename.</returns>
-    private static string GetHashedFileName(string filePath)
-    {
-        string fileName = Path.GetFileName(Path.Normalize(filePath));
-        byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
-        byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
-        string hash = Convert.ToHexString(hashData);
-
-        return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
-    }
-
-    /// <summary>
-    /// Copies all specified assemblies to a target folder, and returns the list of updated hashed filenames.
-    /// </summary>
-    /// <param name="assemblyPaths">The input assembly paths.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
-    /// <param name="originalPaths">A dictionary to store the original paths of the copied assemblies.</param>
-    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
-    /// <returns>The list of updated hashed filenames.</returns>
-    private static List<string> CopyHashedFilesToDirectory(
-        string[] assemblyPaths,
-        string destinationDirectory,
-        Dictionary<string, string> originalPaths,
-        CancellationToken token)
-    {
-        List<string> updatedDllNames = [];
-
-        foreach (string assemblyPath in assemblyPaths)
-        {
-            token.ThrowIfCancellationRequested();
-
-            string hashedName = GetHashedFileName(assemblyPath);
-            string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-            File.Copy(assemblyPath, destinationPath, overwrite: true);
-
-            updatedDllNames.Add(hashedName);
-            originalPaths.Add(hashedName, assemblyPath);
-        }
-
-        return updatedDllNames;
-    }
-
-    /// <summary>
-    /// Copies a specified assembly to a target folder.
-    /// </summary>
-    /// <param name="assemblyPath">The input assembly paths.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assembly to.</param>
-    /// <param name="originalPaths">A dictionary to store the original paths of the copied assemblies.</param>
-    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
-    /// <returns>The hashed filename.</returns>
-    [return: NotNullIfNotNull(nameof(assemblyPath))]
-    private static string? CopyHashedFileToDirectory(
-        string? assemblyPath,
-        string destinationDirectory,
-        Dictionary<string, string> originalPaths,
-        CancellationToken token)
-    {
-        if (assemblyPath is null)
-        {
-            return null;
-        }
-
-        string hashedName = GetHashedFileName(assemblyPath);
-        string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-        File.Copy(assemblyPath, destinationPath, overwrite: true);
-
-        token.ThrowIfCancellationRequested();
-
-        originalPaths.Add(hashedName, assemblyPath);
-
-        return hashedName;
-    }
-
-    /// <summary>
-    /// Copies an input path map to a target directory, as a serialized JSON file.
-    /// </summary>
-    /// <param name="pathMap">The input path map.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
-    /// <param name="fileName">The name to use for the file with the serialized path map.</param>
-    private static void CopyPathMapToDirectory(
-        Dictionary<string, string> pathMap,
-        string destinationDirectory,
-        string fileName)
-    {
-        // Create the .json file with the input path map
-        string jsonFilePath = Path.Combine(destinationDirectory, fileName);
-
-        using Stream jsonStream = File.Create(jsonFilePath);
-
-        // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, GeneratorJsonSerializerContext.Default.DictionaryStringString);
-    }
-
-    /// <summary>
-    /// Extracts an input path from a .zip archive entry.
-    /// </summary>
-    /// <param name="pathMapEntry">The input path map entry.</param>
-    /// <remarks>
-    /// The <paramref name="pathMapEntry"/> value is expected to have the content produced by calls to <see cref="CopyPathMapToDirectory"/>.
-    /// </remarks>
-    private static Dictionary<string, string> ExtractPathMap(ZipArchiveEntry pathMapEntry)
-    {
-        using Stream stream = pathMapEntry.Open();
-
-        // Load the mapping with all the original file paths for the included .dll-s
-        return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }
