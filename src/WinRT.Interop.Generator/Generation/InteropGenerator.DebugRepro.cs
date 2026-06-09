@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.InteropGenerator.Errors;
 
 #pragma warning disable IDE0008
@@ -60,7 +61,7 @@ internal partial class InteropGenerator
         // Parse the debug repro .rsp file
         using (Stream stream = responseFileEntry.Open())
         {
-            args = InteropGeneratorArgs.ParseFromResponseFile(stream, token);
+            args = ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>(stream, token);
         }
 
         token.ThrowIfCancellationRequested();
@@ -163,7 +164,7 @@ internal partial class InteropGenerator
         token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new InteropGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new InteropGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. referencePaths],
             ImplementationAssemblyPaths = [.. implementationPaths],
@@ -181,7 +182,7 @@ internal partial class InteropGenerator
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = null,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtinteropgen.rsp");
@@ -244,7 +245,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new InteropGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new InteropGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. updatedReferenceDllNames],
             ImplementationAssemblyPaths = [.. updatedImplementationDllNames],
@@ -262,7 +263,7 @@ internal partial class InteropGenerator
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtinteropgen.rsp");

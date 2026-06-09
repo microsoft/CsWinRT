@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ImplGenerator.Errors;
 
 #pragma warning disable IDE0008
@@ -54,7 +55,7 @@ internal static partial class ImplGenerator
         // Parse the debug repro .rsp file
         using (Stream stream = responseFileEntry.Open())
         {
-            args = ImplGeneratorArgs.ParseFromResponseFile(stream, token);
+            args = ResponseFileParser.Parse<ImplGeneratorArgs, WellKnownImplExceptions>(stream, token);
         }
 
         token.ThrowIfCancellationRequested();
@@ -115,7 +116,7 @@ internal static partial class ImplGenerator
         token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new ImplGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ImplGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. referencePaths],
             OutputAssemblyPath = outputAssemblyPath!,
@@ -124,7 +125,7 @@ internal static partial class ImplGenerator
             AssemblyOriginatorKeyFile = args.AssemblyOriginatorKeyFile,
             DebugReproDirectory = null,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtimplgen.rsp");
@@ -179,7 +180,7 @@ internal static partial class ImplGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new ImplGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ImplGeneratorArgs
         {
             ReferenceAssemblyPaths = [.. updatedReferenceDllNames],
             OutputAssemblyPath = outputAssemblyHashedName,
@@ -188,7 +189,7 @@ internal static partial class ImplGenerator
             AssemblyOriginatorKeyFile = args.AssemblyOriginatorKeyFile,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtimplgen.rsp");

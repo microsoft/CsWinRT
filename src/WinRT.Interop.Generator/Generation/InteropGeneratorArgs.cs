@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.IO;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
-using WindowsRuntime.Generator.Parsing;
-using WindowsRuntime.InteropGenerator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -77,35 +74,5 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
-
-    /// <summary>
-    /// Parses an <see cref="InteropGeneratorArgs"/> instance from a response file at the given path.
-    /// </summary>
-    /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="InteropGeneratorArgs"/> instance.</returns>
-    public static InteropGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>(path, token);
-    }
-
-    /// <summary>
-    /// Parses an <see cref="InteropGeneratorArgs"/> instance from a response file read from a stream.
-    /// </summary>
-    /// <param name="stream">The stream containing the response file content.</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="InteropGeneratorArgs"/> instance.</returns>
-    public static InteropGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>(stream, token);
-    }
-
-    /// <summary>
-    /// Formats the current <see cref="InteropGeneratorArgs"/> instance into a response file text.
-    /// </summary>
-    /// <returns>The resulting response file text.</returns>
-    public string FormatToResponseFile()
-    {
-        return ResponseFileBuilder.Format(this);
-    }
 }
+

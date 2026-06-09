@@ -7,6 +7,7 @@ using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -28,7 +29,7 @@ internal static partial class InteropGenerator
             inputFilePath: inputFilePath,
             toolName: "cswinrtinteropgen",
             unpackDebugRepro: UnpackDebugRepro,
-            parseFromResponseFile: InteropGeneratorArgs.ParseFromResponseFile,
+            parseFromResponseFile: ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>,
             saveDebugRepro: SaveDebugRepro,
             wrapUnhandled: static (phase, e) => new UnhandledInteropException(phase, e),
             log: ConsoleApp.Log,

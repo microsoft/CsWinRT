@@ -8,6 +8,7 @@ using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionWriter;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
@@ -32,7 +33,7 @@ internal static partial class ReferenceProjectionGenerator
             inputFilePath: inputFilePath,
             toolName: "cswinrtprojectionrefgen",
             unpackDebugRepro: UnpackDebugRepro,
-            parseFromResponseFile: ReferenceProjectionGeneratorArgs.ParseFromResponseFile,
+            parseFromResponseFile: ResponseFileParser.Parse<ReferenceProjectionGeneratorArgs, WellKnownReferenceProjectionGeneratorExceptions>,
             saveDebugRepro: SaveDebugRepro,
             wrapUnhandled: static (phase, e) => new UnhandledReferenceProjectionGeneratorException(phase, e),
             log: ConsoleApp.Log,

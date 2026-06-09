@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.IO;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
-using WindowsRuntime.Generator.Parsing;
-using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
@@ -41,35 +38,5 @@ internal sealed class WinMDGeneratorArgs : IGeneratorArgs
     /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
-
-    /// <summary>
-    /// Parses a <see cref="WinMDGeneratorArgs"/> instance from a response file at the given path.
-    /// </summary>
-    /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="WinMDGeneratorArgs"/> instance.</returns>
-    public static WinMDGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<WinMDGeneratorArgs, WellKnownWinMDExceptions>(path, token);
-    }
-
-    /// <summary>
-    /// Parses a <see cref="WinMDGeneratorArgs"/> instance from a response file read from a stream.
-    /// </summary>
-    /// <param name="stream">The stream containing the response file content.</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="WinMDGeneratorArgs"/> instance.</returns>
-    public static WinMDGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<WinMDGeneratorArgs, WellKnownWinMDExceptions>(stream, token);
-    }
-
-    /// <summary>
-    /// Formats the current <see cref="WinMDGeneratorArgs"/> instance into a response file text.
-    /// </summary>
-    /// <returns>The resulting response file text.</returns>
-    public string FormatToResponseFile()
-    {
-        return ResponseFileBuilder.Format(this);
-    }
 }
+

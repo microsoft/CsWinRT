@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.IO;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
-using WindowsRuntime.Generator.Parsing;
-using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
 
@@ -66,36 +63,6 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
-
-    /// <summary>
-    /// Parses a <see cref="ReferenceProjectionGeneratorArgs"/> instance from a response file at the given path.
-    /// </summary>
-    /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="ReferenceProjectionGeneratorArgs"/> instance.</returns>
-    public static ReferenceProjectionGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<ReferenceProjectionGeneratorArgs, WellKnownReferenceProjectionGeneratorExceptions>(path, token);
-    }
-
-    /// <summary>
-    /// Parses a <see cref="ReferenceProjectionGeneratorArgs"/> instance from a response file read from a stream.
-    /// </summary>
-    /// <param name="stream">The stream containing the response file content.</param>
-    /// <param name="token">The cancellation token for the operation.</param>
-    /// <returns>The resulting <see cref="ReferenceProjectionGeneratorArgs"/> instance.</returns>
-    public static ReferenceProjectionGeneratorArgs ParseFromResponseFile(Stream stream, CancellationToken token)
-    {
-        return ResponseFileParser.Parse<ReferenceProjectionGeneratorArgs, WellKnownReferenceProjectionGeneratorExceptions>(stream, token);
-    }
-
-    /// <summary>
-    /// Formats the current <see cref="ReferenceProjectionGeneratorArgs"/> instance into a response file text.
-    /// </summary>
-    /// <returns>The resulting response file text.</returns>
-    public string FormatToResponseFile()
-    {
-        return ResponseFileBuilder.Format(this);
-    }
 }
+
 

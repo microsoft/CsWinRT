@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
@@ -54,7 +55,7 @@ internal static partial class ReferenceProjectionGenerator
         // Parse the debug repro .rsp file
         using (Stream stream = responseFileEntry.Open())
         {
-            args = ReferenceProjectionGeneratorArgs.ParseFromResponseFile(stream, token);
+            args = ResponseFileParser.Parse<ReferenceProjectionGeneratorArgs, WellKnownReferenceProjectionGeneratorExceptions>(stream, token);
         }
 
         token.ThrowIfCancellationRequested();
@@ -107,7 +108,7 @@ internal static partial class ReferenceProjectionGenerator
         token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new ReferenceProjectionGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ReferenceProjectionGeneratorArgs
         {
             InputPaths = [.. inputPaths],
             OutputDirectory = tempDirectory,
@@ -122,7 +123,7 @@ internal static partial class ReferenceProjectionGenerator
             ReferenceProjection = args.ReferenceProjection,
             DebugReproDirectory = null,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtprojectionrefgen.rsp");
@@ -185,7 +186,7 @@ internal static partial class ReferenceProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new ReferenceProjectionGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ReferenceProjectionGeneratorArgs
         {
             InputPaths = [.. updatedInputNames],
             OutputDirectory = args.OutputDirectory,
@@ -200,7 +201,7 @@ internal static partial class ReferenceProjectionGenerator
             ReferenceProjection = args.ReferenceProjection,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtprojectionrefgen.rsp");
