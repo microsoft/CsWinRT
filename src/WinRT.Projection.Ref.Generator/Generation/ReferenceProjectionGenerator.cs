@@ -39,7 +39,7 @@ internal static partial class ReferenceProjectionGenerator
             log: ConsoleApp.Log,
             token: token);
 
-        // Validate the target framework. CsWinRT 3.0 requires .NET 10 or later.
+        // Validate the target framework. CsWinRT 3.0 requires .NET 10 or later
         if (!string.IsNullOrEmpty(runner.Args.TargetFramework) && !runner.Args.TargetFramework.StartsWith("net10.0", StringComparison.Ordinal))
         {
             throw WellKnownReferenceProjectionGeneratorExceptions.UnsupportedTargetFramework(runner.Args.TargetFramework);
