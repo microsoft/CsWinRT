@@ -53,8 +53,6 @@ internal static partial class WinMDGenerator
             logMessage: $"Processing assembly: '{System.IO.Path.GetFileName(runner.Args.InputAssemblyPath)}'",
             body: Discover);
 
-        token.ThrowIfCancellationRequested();
-
         // Generate and write the .winmd file
         runner.RunPhase(
             phaseName: "generation",

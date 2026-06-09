@@ -43,6 +43,8 @@ internal readonly struct GeneratorPhaseRunner<TArgs>(
         {
             throw wrapUnhandled(phaseName, e);
         }
+
+        args.Token.ThrowIfCancellationRequested();
     }
 
     /// <inheritdoc cref="RunPhase(string, Action{TArgs})"/>
@@ -59,20 +61,28 @@ internal readonly struct GeneratorPhaseRunner<TArgs>(
         {
             throw wrapUnhandled(phaseName, e);
         }
+
+        args.Token.ThrowIfCancellationRequested();
     }
 
     /// <inheritdoc cref="RunPhase(string, Action{TArgs})"/>
     /// <returns>The value returned by <paramref name="body"/>.</returns>
     public T RunPhase<T>(string phaseName, Func<TArgs, T> body)
     {
+        T result;
+
         try
         {
-            return body(Args);
+            result = body(Args);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw wrapUnhandled(phaseName, e);
         }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        return result;
     }
 
     /// <inheritdoc cref="RunPhase(string, Action{TArgs})"/>
@@ -80,16 +90,22 @@ internal readonly struct GeneratorPhaseRunner<TArgs>(
     /// <returns>The value returned by <paramref name="body"/>.</returns>
     public T RunPhase<T>(string phaseName, string logMessage, Func<TArgs, T> body)
     {
+        T result;
+
         try
         {
             log(logMessage);
 
-            return body(Args);
+            result = body(Args);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
             throw wrapUnhandled(phaseName, e);
         }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        return result;
     }
 }
 

@@ -85,14 +85,10 @@ internal static partial class ImplGenerator
             phaseName: "loading",
             body: LoadOutputModule);
 
-        runner.Args.Token.ThrowIfCancellationRequested();
-
         // Define the impl module to emit
         ModuleDefinition implModule = runner.RunPhase(
             phaseName: "loading",
             body: _ => DefineImplModule(runtimeContext, outputModule));
-
-        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Emit all necessary IL code in the impl module
         runner.RunPhase(phaseName: "generation", body: _ =>
@@ -100,8 +96,6 @@ internal static partial class ImplGenerator
             EmitAssemblyAttributes(outputModule, implModule);
             EmitTypeForwards(outputModule, implModule);
         });
-
-        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Write the module to disk with all the generated contents
         runner.RunPhase(

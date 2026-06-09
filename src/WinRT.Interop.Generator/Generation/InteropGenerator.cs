@@ -39,8 +39,6 @@ internal static partial class InteropGenerator
             logMessage: $"Processing {runner.Args.ReferenceAssemblyPaths.Length + runner.Args.ImplementationAssemblyPaths.Length + 1} module(s)",
             body: Discover);
 
-        runner.Args.Token.ThrowIfCancellationRequested();
-
         // Emit the resulting interop assembly
         runner.RunPhase(
             phaseName: "emit",
