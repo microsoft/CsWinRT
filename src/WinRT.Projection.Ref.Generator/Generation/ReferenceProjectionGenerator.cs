@@ -29,7 +29,7 @@ internal static partial class ReferenceProjectionGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        (ReferenceProjectionGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<ReferenceProjectionGeneratorArgs>(
+        GeneratorPhaseRunner<ReferenceProjectionGeneratorArgs> runner = GeneratorHost.CreateRunner<ReferenceProjectionGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtprojectionrefgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -40,17 +40,17 @@ internal static partial class ReferenceProjectionGenerator
             token: token);
 
         // Validate the target framework. CsWinRT 3.0 requires .NET 10 or later.
-        if (!string.IsNullOrEmpty(args.TargetFramework) && !args.TargetFramework.StartsWith("net10.0", StringComparison.Ordinal))
+        if (!string.IsNullOrEmpty(runner.Args.TargetFramework) && !runner.Args.TargetFramework.StartsWith("net10.0", StringComparison.Ordinal))
         {
-            throw WellKnownReferenceProjectionGeneratorExceptions.UnsupportedTargetFramework(args.TargetFramework);
+            throw WellKnownReferenceProjectionGeneratorExceptions.UnsupportedTargetFramework(runner.Args.TargetFramework);
         }
 
         // Build the writer options from the parsed arguments
         ProjectionWriterOptions options = runner.RunPhase(
             phaseName: "processing",
-            body: () => BuildWriterOptions(args));
+            body: BuildWriterOptions);
 
-        args.Token.ThrowIfCancellationRequested();
+        runner.Args.Token.ThrowIfCancellationRequested();
 
         // Invoke the projection writer (in-process) to generate the projection sources. We can't
         // route this through the shared 'runner.RunPhase' helper because we wrap the exception
