@@ -56,7 +56,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.Generator.Cli\WinRT.Generator.Cli.csproj" />
+    <ProjectReference Include="..\WinRT.Generator.Core\WinRT.Generator.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
