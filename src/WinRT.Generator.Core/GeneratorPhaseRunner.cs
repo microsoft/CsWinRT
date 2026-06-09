@@ -13,37 +13,19 @@ namespace WindowsRuntime.Generator;
 /// <c>Unhandled*Exception</c> and optionally logging a progress message before the body runs.
 /// </summary>
 /// <typeparam name="TArgs">The per-tool args record (must implement <see cref="IGeneratorArgs"/>).</typeparam>
-internal readonly struct GeneratorPhaseRunner<TArgs>
+/// <param name="args">The parsed per-tool args, forwarded to every <see cref="RunPhase(string, Action{TArgs})"/> body.</param>
+/// <param name="wrapUnhandled">Wraps an unexpected exception into the per-tool <c>Unhandled*Exception</c> with the given phase name.</param>
+/// <param name="log">Logs a progress message to the user (typically <c>ConsoleApp.Log</c> from ConsoleAppFramework).</param>
+internal readonly struct GeneratorPhaseRunner<TArgs>(
+    TArgs args,
+    Func<string, Exception, Exception> wrapUnhandled,
+    Action<string> log)
     where TArgs : IGeneratorArgs
 {
     /// <summary>
-    /// The per-tool <c>wrapUnhandled</c> delegate.
-    /// </summary>
-    private readonly Func<string, Exception, Exception> _wrapUnhandled;
-
-    /// <summary>
-    /// The per-tool progress logger.
-    /// </summary>
-    private readonly Action<string> _log;
-
-    /// <summary>
-    /// Creates a new <see cref="GeneratorPhaseRunner{TArgs}"/> bound to the given args and per-tool delegates.
-    /// </summary>
-    /// <param name="args">The parsed per-tool args, forwarded to every <see cref="RunPhase(string, Action{TArgs})"/> body.</param>
-    /// <param name="wrapUnhandled">Wraps an unexpected exception into the per-tool <c>Unhandled*Exception</c> with the given phase name.</param>
-    /// <param name="log">Logs a progress message to the user (typically <c>ConsoleApp.Log</c> from ConsoleAppFramework).</param>
-    internal GeneratorPhaseRunner(TArgs args, Func<string, Exception, Exception> wrapUnhandled, Action<string> log)
-    {
-        _wrapUnhandled = wrapUnhandled;
-        _log = log;
-
-        Args = args;
-    }
-
-    /// <summary>
     /// Gets the parsed per-tool args, forwarded to every <see cref="RunPhase(string, Action{TArgs})"/> body.
     /// </summary>
-    public TArgs Args { get; }
+    public TArgs Args => args;
 
     /// <summary>
     /// Runs <paramref name="body"/>, wrapping any unexpected exception in the per-tool
@@ -59,7 +41,7 @@ internal readonly struct GeneratorPhaseRunner<TArgs>
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw _wrapUnhandled(phaseName, e);
+            throw wrapUnhandled(phaseName, e);
         }
     }
 
@@ -69,13 +51,13 @@ internal readonly struct GeneratorPhaseRunner<TArgs>
     {
         try
         {
-            _log(logMessage);
+            log(logMessage);
 
             body(Args);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw _wrapUnhandled(phaseName, e);
+            throw wrapUnhandled(phaseName, e);
         }
     }
 
@@ -89,7 +71,7 @@ internal readonly struct GeneratorPhaseRunner<TArgs>
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw _wrapUnhandled(phaseName, e);
+            throw wrapUnhandled(phaseName, e);
         }
     }
 
@@ -100,13 +82,13 @@ internal readonly struct GeneratorPhaseRunner<TArgs>
     {
         try
         {
-            _log(logMessage);
+            log(logMessage);
 
             return body(Args);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw _wrapUnhandled(phaseName, e);
+            throw wrapUnhandled(phaseName, e);
         }
     }
 }
