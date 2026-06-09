@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Threading;
-using WindowsRuntime.InteropGenerator.Attributes;
+using WindowsRuntime.GeneratorCli.Attributes;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 

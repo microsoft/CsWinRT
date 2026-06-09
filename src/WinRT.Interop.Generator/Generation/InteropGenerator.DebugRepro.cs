@@ -11,8 +11,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using WindowsRuntime.GeneratorCli;
+using WindowsRuntime.GeneratorCli.Helpers;
 using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Helpers;
 
 #pragma warning disable IDE0008
 
@@ -413,7 +414,7 @@ internal partial class InteropGenerator
         using Stream jsonStream = File.Create(jsonFilePath);
 
         // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString);
+        JsonSerializer.Serialize(jsonStream, pathMap, GeneratorJsonSerializerContext.Default.DictionaryStringString);
     }
 
     /// <summary>
@@ -428,6 +429,6 @@ internal partial class InteropGenerator
         using Stream stream = pathMapEntry.Open();
 
         // Load the mapping with all the original file paths for the included .dll-s
-        return JsonSerializer.Deserialize(stream, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
+        return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }

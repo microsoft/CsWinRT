@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using WindowsRuntime.InteropGenerator;
-using WindowsRuntime.ReferenceProjectionGenerator.Attributes;
+using WindowsRuntime.GeneratorCli;
+using WindowsRuntime.GeneratorCli.Attributes;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
 #pragma warning disable IDE0046

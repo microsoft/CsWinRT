@@ -10,9 +10,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.ProjectionGenerator.Errors;
-using WindowsRuntime.ProjectionGenerator.Helpers;
+using WindowsRuntime.GeneratorCli.Helpers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 
 #pragma warning disable IDE0008
@@ -380,7 +380,7 @@ internal static partial class ProjectionGenerator
         using Stream jsonStream = File.Create(jsonFilePath);
 
         // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, ProjectionGeneratorJsonSerializerContext.Default.DictionaryStringString);
+        JsonSerializer.Serialize(jsonStream, pathMap, GeneratorJsonSerializerContext.Default.DictionaryStringString);
     }
 
     /// <summary>
@@ -395,6 +395,6 @@ internal static partial class ProjectionGenerator
         using Stream stream = pathMapEntry.Open();
 
         // Load the mapping with all the original file paths for the included assemblies
-        return JsonSerializer.Deserialize(stream, ProjectionGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
+        return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }

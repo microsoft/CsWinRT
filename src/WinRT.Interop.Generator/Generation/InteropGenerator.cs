@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
+using WindowsRuntime.GeneratorCli;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
 

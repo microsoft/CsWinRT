@@ -12,8 +12,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using WindowsRuntime.ImplGenerator.Errors;
-using WindowsRuntime.ImplGenerator.Helpers;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.GeneratorCli.Helpers;
+using WindowsRuntime.GeneratorCli;
 
 #pragma warning disable IDE0008
 
@@ -314,7 +314,7 @@ internal static partial class ImplGenerator
         using Stream jsonStream = File.Create(jsonFilePath);
 
         // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, ImplGeneratorJsonSerializerContext.Default.DictionaryStringString);
+        JsonSerializer.Serialize(jsonStream, pathMap, GeneratorJsonSerializerContext.Default.DictionaryStringString);
     }
 
     /// <summary>
@@ -329,6 +329,6 @@ internal static partial class ImplGenerator
         using Stream stream = pathMapEntry.Open();
 
         // Load the mapping with all the original file paths for the included .dll-s
-        return JsonSerializer.Deserialize(stream, ImplGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
+        return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }

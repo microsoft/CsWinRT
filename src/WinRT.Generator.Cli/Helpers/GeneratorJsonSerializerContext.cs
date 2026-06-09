@@ -4,11 +4,11 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace WindowsRuntime.InteropGenerator.Helpers;
+namespace WindowsRuntime.GeneratorCli.Helpers;
 
 /// <summary>
-/// A <see cref="JsonSerializerContext"/> for types used in the interop generator.
+/// A <see cref="JsonSerializerContext"/> for types used across the CsWinRT CLI generators.
 /// </summary>
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSourceGenerationOptions(WriteIndented = true)]
-internal sealed partial class InteropGeneratorJsonSerializerContext : JsonSerializerContext;
+internal sealed partial class GeneratorJsonSerializerContext : JsonSerializerContext;
