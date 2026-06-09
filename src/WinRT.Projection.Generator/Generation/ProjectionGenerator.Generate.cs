@@ -67,7 +67,7 @@ internal partial class ProjectionGenerator
         // Invoke the projection writer in-process via its public C# API.
         try
         {
-            global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);
+            ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

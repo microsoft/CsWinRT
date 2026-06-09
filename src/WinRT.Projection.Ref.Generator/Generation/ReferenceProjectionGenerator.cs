@@ -59,7 +59,7 @@ internal static partial class ReferenceProjectionGenerator
         {
             ConsoleApp.Log($"Generating reference projection sources -> {options.OutputFolder}");
 
-            global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(options);
+            ProjectionWriter.ProjectionWriter.Run(options);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
