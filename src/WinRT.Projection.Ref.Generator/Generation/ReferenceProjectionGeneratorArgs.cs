@@ -60,10 +60,10 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--reference-projection")]
     public bool ReferenceProjection { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
 
-    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 
