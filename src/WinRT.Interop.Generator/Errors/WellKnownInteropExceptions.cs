@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
+using WindowsRuntime.GeneratorCli.Errors;
 using WindowsRuntime.InteropGenerator.Fixups;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
@@ -15,12 +16,53 @@ namespace WindowsRuntime.InteropGenerator.Errors;
 /// <summary>
 /// Well known exceptions for the interop generator.
 /// </summary>
-internal static class WellKnownInteropExceptions
+internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
     /// </summary>
     public const string ErrorPrefix = "CSWINRTINTEROPGEN";
+
+    /// <summary>
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
+    /// </summary>
+    private WellKnownInteropExceptions()
+    {
+    }
+
+    // Explicit IGeneratorErrorFactory implementations: the public static methods for these six
+    // shared logical errors return 'WellKnownInteropException' (so callers can chain '.ThrowOrAttach(...)'),
+    // but the interface contract returns 'Exception'. C# 'static abstract' interface methods don't
+    // support return-type covariance, so we forward through these tiny explicit shims.
+    static Exception IGeneratorErrorFactory.ResponseFileReadError(Exception exception)
+    {
+        return ResponseFileReadError(exception);
+    }
+
+    static Exception IGeneratorErrorFactory.ResponseFileArgumentParsingError(string argumentName, Exception? exception)
+    {
+        return ResponseFileArgumentParsingError(argumentName, exception);
+    }
+
+    static Exception IGeneratorErrorFactory.MalformedResponseFile()
+    {
+        return MalformedResponseFile();
+    }
+
+    static Exception IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist(string path)
+    {
+        return DebugReproDirectoryDoesNotExist(path);
+    }
+
+    static Exception IGeneratorErrorFactory.DebugReproMissingFileEntryMapping(string path)
+    {
+        return DebugReproMissingFileEntryMapping(path);
+    }
+
+    static Exception IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry(string path)
+    {
+        return DebugReproUnrecognizedFileEntry(path);
+    }
 
     /// <summary>
     /// A runtime class name is too long.

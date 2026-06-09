@@ -2,18 +2,26 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.GeneratorCli.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Errors;
 
 /// <summary>
 /// Well-known exceptions for the WinMD generator.
 /// </summary>
-internal static class WellKnownWinMDExceptions
+internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
     /// </summary>
     public const string ErrorPrefix = "CSWINRTWINMDGEN";
+
+    /// <summary>
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
+    /// </summary>
+    private WellKnownWinMDExceptions()
+    {
+    }
 
     /// <summary>
     /// Some exception was thrown when trying to read the response file.
