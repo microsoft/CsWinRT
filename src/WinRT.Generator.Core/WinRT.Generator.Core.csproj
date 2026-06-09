@@ -29,4 +29,8 @@
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+  </ItemGroup>
 </Project>
