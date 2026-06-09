@@ -9,9 +9,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using WindowsRuntime.GeneratorCli.Attributes;
+using WindowsRuntime.Generator.Attributes;
 
-namespace WindowsRuntime.GeneratorCli.Parsing;
+namespace WindowsRuntime.Generator.Parsing;
 
 /// <summary>
 /// Formats an args record into a response file by reflecting over its

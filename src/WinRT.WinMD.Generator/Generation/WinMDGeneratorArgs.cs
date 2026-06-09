@@ -3,9 +3,9 @@
 
 using System.IO;
 using System.Threading;
-using WindowsRuntime.GeneratorCli;
-using WindowsRuntime.GeneratorCli.Attributes;
-using WindowsRuntime.GeneratorCli.Parsing;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;

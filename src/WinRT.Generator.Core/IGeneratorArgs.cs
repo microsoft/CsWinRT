@@ -3,7 +3,7 @@
 
 using System.Threading;
 
-namespace WindowsRuntime.GeneratorCli;
+namespace WindowsRuntime.Generator;
 
 /// <summary>
 /// Common surface implemented by every per-tool args record (e.g. <c>ImplGeneratorArgs</c>,

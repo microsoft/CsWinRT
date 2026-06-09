@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace WindowsRuntime.GeneratorCli.Helpers;
+namespace WindowsRuntime.Generator.Helpers;
 
 /// <summary>
 /// A <see cref="JsonSerializerContext"/> for types used across the CsWinRT CLI generators.

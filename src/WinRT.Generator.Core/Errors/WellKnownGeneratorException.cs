@@ -3,7 +3,7 @@
 
 using System;
 
-namespace WindowsRuntime.GeneratorCli.Errors;
+namespace WindowsRuntime.Generator.Errors;
 
 /// <summary>
 /// A well-known exception for a CsWinRT CLI generator.

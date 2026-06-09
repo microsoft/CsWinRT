@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace WindowsRuntime.GeneratorCli;
+namespace WindowsRuntime.Generator;
 
 /// <summary>
 /// Extensions for the <see cref="Path"/> type.

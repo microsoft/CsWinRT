@@ -10,10 +10,10 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using WindowsRuntime.GeneratorCli.Attributes;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator.Attributes;
+using WindowsRuntime.Generator.Errors;
 
-namespace WindowsRuntime.GeneratorCli.Parsing;
+namespace WindowsRuntime.Generator.Parsing;
 
 /// <summary>
 /// Parses a response file into a strongly-typed args record by reflecting over its

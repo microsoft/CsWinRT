@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace WindowsRuntime.GeneratorCli;
+namespace WindowsRuntime.Generator;
 
 /// <summary>
 /// Extensions for <see cref="File"/>.

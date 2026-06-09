@@ -8,8 +8,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
-using WindowsRuntime.GeneratorCli;
-using WindowsRuntime.GeneratorCli.DebugRepro;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.DebugRepro;
 using WindowsRuntime.InteropGenerator.Errors;
 
 #pragma warning disable IDE0008

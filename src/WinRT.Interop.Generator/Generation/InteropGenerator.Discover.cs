@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
-using WindowsRuntime.GeneratorCli.Errors;
+using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
