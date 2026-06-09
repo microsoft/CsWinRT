@@ -33,4 +33,12 @@
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="cswinrtimplgen" />
+    <InternalsVisibleTo Include="cswinrtinteropgen" />
+    <InternalsVisibleTo Include="cswinrtprojectiongen" />
+    <InternalsVisibleTo Include="cswinrtprojectionrefgen" />
+    <InternalsVisibleTo Include="cswinrtwinmdgen" />
+  </ItemGroup>
 </Project>
