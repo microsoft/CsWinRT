@@ -69,7 +69,7 @@ internal static partial class ImplGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        ImplGeneratorArgs args = GeneratorHost.Prepare<ImplGeneratorArgs>(
+        (ImplGeneratorArgs args, GeneratorPhaseRunner runner) = GeneratorHost.Prepare<ImplGeneratorArgs>(
             inputFilePath: inputFilePath,
             toolName: "cswinrtimplgen",
             unpackDebugRepro: UnpackDebugRepro,
@@ -79,67 +79,38 @@ internal static partial class ImplGenerator
             log: ConsoleApp.Log,
             token: token);
 
-        RuntimeContext runtimeContext;
-        ModuleDefinition outputModule;
-
         // Initialize the assembly resolver and load the output module
-        try
-        {
-            LoadOutputModule(args, out runtimeContext, out outputModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("loading", e);
-        }
+        (RuntimeContext runtimeContext, ModuleDefinition outputModule) = runner.RunPhase(
+            phaseName: "loading",
+            body: () => LoadOutputModule(args));
 
         args.Token.ThrowIfCancellationRequested();
 
-        ModuleDefinition implModule;
-
         // Define the impl module to emit
-        try
-        {
-            implModule = DefineImplModule(runtimeContext, outputModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("loading", e);
-        }
+        ModuleDefinition implModule = runner.RunPhase(
+            phaseName: "loading",
+            body: () => DefineImplModule(runtimeContext, outputModule));
 
         args.Token.ThrowIfCancellationRequested();
 
         // Emit all necessary IL code in the impl module
-        try
+        runner.RunPhase(phaseName: "generation", body: () =>
         {
             EmitAssemblyAttributes(outputModule, implModule);
             EmitTypeForwards(outputModule, implModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("generation", e);
-        }
+        });
 
         args.Token.ThrowIfCancellationRequested();
 
         // Write the module to disk with all the generated contents
-        try
-        {
-            WriteImplModuleToDisk(args, outputModule, implModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("emit", e);
-        }
+        runner.RunPhase(
+            phaseName: "emit",
+            body: () => WriteImplModuleToDisk(args, outputModule, implModule));
 
         // Signs the module on disk, if needed
-        try
-        {
-            SignImplModuleOnDisk(args, outputModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("sign", e);
-        }
+        runner.RunPhase(
+            phaseName: "sign",
+            body: () => SignImplModuleOnDisk(args, outputModule));
 
         // Notify the user that generation was successful
         ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, implModule.Name!)}");
@@ -149,12 +120,8 @@ internal static partial class ImplGenerator
     /// Loads the output assembly being produced.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="runtimeContext">The <see cref="RuntimeContext"/> instance in use.</param>
-    /// <param name="outputModule">The loaded <see cref="ModuleDefinition"/> for the output assembly.</param>
-    private static void LoadOutputModule(
-        ImplGeneratorArgs args,
-        out RuntimeContext runtimeContext,
-        out ModuleDefinition outputModule)
+    /// <returns>The <see cref="RuntimeContext"/> instance in use and the loaded <see cref="ModuleDefinition"/> for the output assembly.</returns>
+    private static (RuntimeContext RuntimeContext, ModuleDefinition OutputModule) LoadOutputModule(ImplGeneratorArgs args)
     {
         PEImage outputAssemblyImage;
 
@@ -179,12 +146,12 @@ internal static partial class ImplGenerator
         PathAssemblyResolver assemblyResolver = new(args.ReferenceAssemblyPaths);
 
         // Initialize the runtime context (this will be reused to allow caching)
-        runtimeContext = new RuntimeContext(targetRuntime, assemblyResolver);
+        RuntimeContext runtimeContext = new(targetRuntime, assemblyResolver);
 
         // Try to load the .dll at the current path
         try
         {
-            outputModule = runtimeContext.LoadModule(outputAssemblyImage);
+            return (runtimeContext, runtimeContext.LoadModule(outputAssemblyImage));
         }
         catch (Exception e)
         {
