@@ -6,14 +6,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 using WindowsRuntime.GeneratorCli;
+using WindowsRuntime.GeneratorCli.DebugRepro;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
-using WindowsRuntime.GeneratorCli.Helpers;
 
 #pragma warning disable IDE0008
 
@@ -63,7 +60,7 @@ internal static partial class ReferenceProjectionGenerator
         token.ThrowIfCancellationRequested();
 
         // Load the mappings with all the original file paths for the input .winmd files
-        Dictionary<string, string> originalInputPaths = ExtractPathMap(originalInputPathsEntry);
+        Dictionary<string, string> originalInputPaths = DebugReproPacker.ExtractPathMap(originalInputPathsEntry);
 
         token.ThrowIfCancellationRequested();
 
@@ -183,7 +180,7 @@ internal static partial class ReferenceProjectionGenerator
 
         // Add all input paths with hashed names to the input subdirectory under the temporary
         // directory, and store them with the updated names in a list to use to build the .rsp file.
-        List<string> updatedInputNames = CopyHashedFilesToDirectory([.. expandedInputPaths], inputDirectory, originalInputPaths, args.Token);
+        List<string> updatedInputNames = DebugReproPacker.CopyHashedFilesToDirectory([.. expandedInputPaths], inputDirectory, originalInputPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -213,7 +210,7 @@ internal static partial class ReferenceProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Create the .json file with the input path map
-        CopyPathMapToDirectory(originalInputPaths, tempDirectory, InputPathMapFileName);
+        DebugReproPacker.CopyPathMapToDirectory(originalInputPaths, tempDirectory, InputPathMapFileName);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -228,87 +225,5 @@ internal static partial class ReferenceProjectionGenerator
 
         // Clean up the temporary directory
         Directory.Delete(tempDirectory, recursive: true);
-    }
-
-    /// <summary>
-    /// Generates a hashed filename by appending a hash of the original filename.
-    /// </summary>
-    /// <param name="filePath">The original file path.</param>
-    /// <returns>The hashed filename.</returns>
-    private static string GetHashedFileName(string filePath)
-    {
-        string fileName = Path.GetFileName(Path.Normalize(filePath));
-        byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
-        byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
-        string hash = Convert.ToHexString(hashData);
-
-        return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
-    }
-
-    /// <summary>
-    /// Copies all specified files to a target folder, and returns the list of updated hashed filenames.
-    /// </summary>
-    /// <param name="filePaths">The input file paths.</param>
-    /// <param name="destinationDirectory">The target directory to copy the files to.</param>
-    /// <param name="originalPaths">A dictionary to store the original paths of the copied files.</param>
-    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
-    /// <returns>The list of updated hashed filenames.</returns>
-    private static List<string> CopyHashedFilesToDirectory(
-        string[] filePaths,
-        string destinationDirectory,
-        Dictionary<string, string> originalPaths,
-        CancellationToken token)
-    {
-        List<string> updatedFileNames = [];
-
-        foreach (string filePath in filePaths)
-        {
-            token.ThrowIfCancellationRequested();
-
-            string hashedName = GetHashedFileName(filePath);
-            string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-            File.Copy(filePath, destinationPath, overwrite: true);
-
-            updatedFileNames.Add(hashedName);
-            originalPaths.Add(hashedName, filePath);
-        }
-
-        return updatedFileNames;
-    }
-
-    /// <summary>
-    /// Copies an input path map to a target directory, as a serialized JSON file.
-    /// </summary>
-    /// <param name="pathMap">The input path map.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
-    /// <param name="fileName">The name to use for the file with the serialized path map.</param>
-    private static void CopyPathMapToDirectory(
-        Dictionary<string, string> pathMap,
-        string destinationDirectory,
-        string fileName)
-    {
-        // Create the .json file with the input path map
-        string jsonFilePath = Path.Combine(destinationDirectory, fileName);
-
-        using Stream jsonStream = File.Create(jsonFilePath);
-
-        // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, GeneratorJsonSerializerContext.Default.DictionaryStringString);
-    }
-
-    /// <summary>
-    /// Extracts an input path from a .zip archive entry.
-    /// </summary>
-    /// <param name="pathMapEntry">The input path map entry.</param>
-    /// <remarks>
-    /// The <paramref name="pathMapEntry"/> value is expected to have the content produced by calls to <see cref="CopyPathMapToDirectory"/>.
-    /// </remarks>
-    private static Dictionary<string, string> ExtractPathMap(ZipArchiveEntry pathMapEntry)
-    {
-        using Stream stream = pathMapEntry.Open();
-
-        // Load the mapping with all the original file paths for the included files
-        return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }

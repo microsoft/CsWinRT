@@ -7,12 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 using WindowsRuntime.GeneratorCli;
-using WindowsRuntime.GeneratorCli.Helpers;
+using WindowsRuntime.GeneratorCli.DebugRepro;
 using WindowsRuntime.InteropGenerator.Errors;
 
 #pragma warning disable IDE0008
@@ -69,8 +66,8 @@ internal partial class InteropGenerator
         token.ThrowIfCancellationRequested();
 
         // Load the mappings with all the original file paths for both reference and implementation .dll-s
-        Dictionary<string, string> originalReferenceDllPaths = ExtractPathMap(originalReferenceDllPathsEntry);
-        Dictionary<string, string> originalImplementationDllPaths = ExtractPathMap(originalImplementationDllPathsEntry);
+        Dictionary<string, string> originalReferenceDllPaths = DebugReproPacker.ExtractPathMap(originalReferenceDllPathsEntry);
+        Dictionary<string, string> originalImplementationDllPaths = DebugReproPacker.ExtractPathMap(originalImplementationDllPathsEntry);
 
         token.ThrowIfCancellationRequested();
 
@@ -232,8 +229,8 @@ internal partial class InteropGenerator
 
         // Add all reference and implementation paths with hashed names to the respective subdirectories under the
         // temporary directory, and store them with the updated names in a list to use to build the .rsp file.
-        List<string> updatedReferenceDllNames = CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referenceDirectory, originalReferenceDllPaths, args.Token);
-        List<string> updatedImplementationDllNames = CopyHashedFilesToDirectory(args.ImplementationAssemblyPaths, implementationDirectory, originalImplementationDllPaths, args.Token);
+        List<string> updatedReferenceDllNames = DebugReproPacker.CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referenceDirectory, originalReferenceDllPaths, args.Token);
+        List<string> updatedImplementationDllNames = DebugReproPacker.CopyHashedFilesToDirectory(args.ImplementationAssemblyPaths, implementationDirectory, originalImplementationDllPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -275,12 +272,12 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Create the .json file with the reference path map
-        CopyPathMapToDirectory(originalReferenceDllPaths, tempDirectory, ReferencePathMapFileName);
+        DebugReproPacker.CopyPathMapToDirectory(originalReferenceDllPaths, tempDirectory, ReferencePathMapFileName);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Do the same for the implementation path map
-        CopyPathMapToDirectory(originalImplementationDllPaths, tempDirectory, ImplementationPathMapFileName);
+        DebugReproPacker.CopyPathMapToDirectory(originalImplementationDllPaths, tempDirectory, ImplementationPathMapFileName);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -298,79 +295,41 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Generates a hashed filename by appending a hash of the original filename.
+    /// Copies a single specified file to a target folder, with reserved-DLL dedupe.
     /// </summary>
-    /// <param name="filePath">The original file path.</param>
-    /// <returns>The hashed filename.</returns>
-    private static string GetHashedFileName(string filePath)
-    {
-        string fileName = Path.GetFileName(Path.Normalize(filePath));
-        byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
-        byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
-        string hash = Convert.ToHexString(hashData);
-
-        return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
-    }
-
-    /// <summary>
-    /// Copies all specified assemblies to a target folder, and returns the list of updated hashed filenames.
-    /// </summary>
-    /// <param name="assemblyPaths">The input assembly paths.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
-    /// <param name="originalPaths">A dictionary to store the original paths of the copied assemblies.</param>
+    /// <remarks>
+    /// The interop generator keeps a local variant (instead of using the shared
+    /// <see cref="DebugReproPacker.CopyHashedFileToDirectory(string?, string, Dictionary{string, string}, CancellationToken)"/>)
+    /// to handle the private implementation-detail assemblies (<c>WinRT.Sdk.Projection.dll</c>, <c>WinRT.Sdk.Xaml.Projection.dll</c>,
+    /// <c>WinRT.Projection.dll</c>, <c>WinRT.Component.dll</c>) that are passed both via the reference set and
+    /// explicitly via dedicated properties. When the same path is already in the map (under the same hashed name),
+    /// the copy is skipped; if the hashed name collides but the original paths differ, that's a real bug and we
+    /// throw <see cref="WellKnownInteropExceptions.ReservedDllOriginalPathMismatchFromDebugRepro(string)"/>.
+    /// </remarks>
+    /// <param name="filePath">The input file path, or <see langword="null"/> to skip.</param>
+    /// <param name="destinationDirectory">The target directory to copy the file to.</param>
+    /// <param name="originalPaths">A dictionary to store the original path of the copied file (keyed by hashed file name).</param>
     /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
-    /// <returns>The list of updated hashed filenames.</returns>
-    private static List<string> CopyHashedFilesToDirectory(
-        string[] assemblyPaths,
-        string destinationDirectory,
-        Dictionary<string, string> originalPaths,
-        CancellationToken token)
-    {
-        List<string> updatedDllNames = [];
-
-        foreach (string assemblyPath in assemblyPaths)
-        {
-            token.ThrowIfCancellationRequested();
-
-            string hashedName = GetHashedFileName(assemblyPath);
-            string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-            File.Copy(assemblyPath, destinationPath, overwrite: true);
-
-            updatedDllNames.Add(hashedName);
-            originalPaths.Add(hashedName, assemblyPath);
-        }
-
-        return updatedDllNames;
-    }
-
-    /// <summary>
-    /// Copies a specified assembly to a target folder.
-    /// </summary>
-    /// <param name="assemblyPath">The input assembly paths.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assembly to.</param>
-    /// <param name="originalPaths">A dictionary to store the original paths of the copied assemblies.</param>
-    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
-    /// <returns>The hashed filename.</returns>
-    [return: NotNullIfNotNull(nameof(assemblyPath))]
+    /// <returns>The hashed filename, or <see langword="null"/> if <paramref name="filePath"/> was <see langword="null"/>.</returns>
+    [return: NotNullIfNotNull(nameof(filePath))]
     private static string? CopyHashedFileToDirectory(
-        string? assemblyPath,
+        string? filePath,
         string destinationDirectory,
         Dictionary<string, string> originalPaths,
         CancellationToken token)
     {
-        if (assemblyPath is null)
+        if (filePath is null)
         {
             return null;
         }
 
-        string hashedName = GetHashedFileName(assemblyPath);
+        string hashedName = DebugReproPacker.GetHashedFileName(filePath);
 
         // Special case for private implementation detail assemblies (e.g. 'WinRT.Projection.dll') that are
         // both passed via the reference set, but also explicitly as separate properties. In that case, we
         // expect that those should already be in the original paths at this point. So we validate that
         // the path actually matches, and simply do nothing if that's the case, as this is intended.
-        if (originalPaths.TryGetValue(hashedName, out string? originalPath) && originalPath == assemblyPath)
+        if (originalPaths.TryGetValue(hashedName, out string? originalPath) && originalPath == filePath)
         {
             return hashedName;
         }
@@ -379,7 +338,7 @@ internal partial class InteropGenerator
         // different path than the one provided to the reference set, which should never happen (it's invalid).
         if (originalPaths.ContainsKey(hashedName))
         {
-            string fileName = Path.GetFileName(Path.Normalize(assemblyPath));
+            string fileName = Path.GetFileName(Path.Normalize(filePath));
 
             throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatchFromDebugRepro(fileName);
         }
@@ -388,47 +347,12 @@ internal partial class InteropGenerator
 
         // After validating that the file is unique and should be copied, we can safely do that. We move
         // this operation to ensure we don't accidentally end up with duplicated .dll-s in the debug repro.
-        File.Copy(assemblyPath, destinationPath, overwrite: true);
+        File.Copy(filePath, destinationPath, overwrite: true);
 
         token.ThrowIfCancellationRequested();
 
-        originalPaths.Add(hashedName, assemblyPath);
+        originalPaths.Add(hashedName, filePath);
 
         return hashedName;
-    }
-
-    /// <summary>
-    /// Copies an input path map to a target directory, as a serialized JSON file.
-    /// </summary>
-    /// <param name="pathMap">The input path map.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
-    /// <param name="fileName">The name to use for the file with the serialized path map.</param>
-    private static void CopyPathMapToDirectory(
-        Dictionary<string, string> pathMap,
-        string destinationDirectory,
-        string fileName)
-    {
-        // Create the .json file with the input path map
-        string jsonFilePath = Path.Combine(destinationDirectory, fileName);
-
-        using Stream jsonStream = File.Create(jsonFilePath);
-
-        // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, GeneratorJsonSerializerContext.Default.DictionaryStringString);
-    }
-
-    /// <summary>
-    /// Extracts an input path from a .zip archive entry.
-    /// </summary>
-    /// <param name="pathMapEntry">The input path map entry.</param>
-    /// <remarks>
-    /// The <paramref name="pathMapEntry"/> value is expected to have the content produced by calls to <see cref="CopyPathMapToDirectory"/>.
-    /// </remarks>
-    private static Dictionary<string, string> ExtractPathMap(ZipArchiveEntry pathMapEntry)
-    {
-        using Stream stream = pathMapEntry.Open();
-
-        // Load the mapping with all the original file paths for the included .dll-s
-        return JsonSerializer.Deserialize(stream, GeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }
