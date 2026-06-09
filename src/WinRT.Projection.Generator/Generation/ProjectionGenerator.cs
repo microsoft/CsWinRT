@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.GeneratorCli;
+using WindowsRuntime.GeneratorCli.Errors;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;

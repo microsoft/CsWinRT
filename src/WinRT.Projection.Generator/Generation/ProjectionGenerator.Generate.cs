@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
+using WindowsRuntime.GeneratorCli.Errors;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionWriter;
 using WindowsRuntime.ProjectionWriter.Helpers;
