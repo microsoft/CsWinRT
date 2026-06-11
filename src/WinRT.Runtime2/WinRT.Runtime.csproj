@@ -79,28 +79,33 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <!--
-    Disable the default 'ProduceReferenceAssembly' behavior. WinRT.Runtime provides its own custom
-    reference assembly (built with 'CsWinRTBuildReferenceAssembly=true') that strips private implementation
-    detail types via '#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY'. The SDK-generated ref assembly would
-    include those types (since 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY' is not defined in normal builds), which
-    would leak abstract members to downstream ProjectReference consumers and break reference projections.
-  -->
+  <!-- Settings for the implementation assembly -->
   <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' != 'true'">
+
+    <!--
+      Disable the default 'ProduceReferenceAssembly' behavior. WinRT.Runtime provides its own custom
+      reference assembly (built with 'CsWinRTBuildReferenceAssembly=true') that strips private implementation
+      detail types via '#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY'. The SDK-generated ref assembly would
+      include those types (since 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY' is not defined in normal builds), which
+      would leak abstract members to downstream ProjectReference consumers and break reference projections.
+    -->
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
 
     <!-- Build constant to simplify '#ifdef'-s, so they don't need negation expressions -->
     <DefineConstants>$(DefineConstants);WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY</DefineConstants>
+      <WarningsAsErrors>$(WarningsAsErrors);RS0030</WarningsAsErrors>
   </PropertyGroup>
 
-  <!--
-    When producing a reference assembly for packaging, define 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY'. This is used
-    to completely strip out the private implementation detail types from the reference assembly, so they're
-    further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
-    because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
-    stripping should only happen during the explicit reference assembly build step for NuGet packaging.
-  -->
+  <!-- Settings for the reference assembly -->
   <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+
+    <!--
+      When producing a reference assembly for packaging, define 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY'. This is used
+      to completely strip out the private implementation detail types from the reference assembly, so they're
+      further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
+      because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
+      stripping should only happen during the explicit reference assembly build step for NuGet packaging.
+    -->
     <DefineConstants>$(DefineConstants);WINDOWS_RUNTIME_REFERENCE_ASSEMBLY</DefineConstants>
 
     <!--
@@ -111,7 +116,19 @@
         - IDE0380: 'unsafe' modifier is unnecessary (some types have 'unsafe' for excluded members).
     -->
     <NoWarn>$(NoWarn);CS8597;IDE0005;IDE0380</NoWarn>
+
+    <!-- Always make the banned API analyzer warnings errors, since these should always be blocking -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0030</WarningsAsErrors>
   </PropertyGroup>
+  <ItemGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+
+    <!-- Include the banned API list, for the implementation-only marker attribute -->
+    <None Remove="BannedSymbols.txt" />
+    <AdditionalFiles Include="BannedSymbols.txt" />
+
+    <!-- Include the banned API analyzer, which we use to block implementation-only types in the reference assembly -->
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+  </ItemGroup>
 
   <!--
     Strip all files whose top-level type is annotated with '[WindowsRuntimeImplementationOnlyMember]'
