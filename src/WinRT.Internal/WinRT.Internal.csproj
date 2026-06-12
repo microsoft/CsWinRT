@@ -67,12 +67,24 @@
     the persistent MSBuild build server keeps a custom-task assembly loaded across
     incremental builds (MSB3027 "The file is locked by MSBuild.exe (...)"). No build-time
     dependency on 'WinRT.Generator.Tasks' is required for this project.
+
+    'UndefineProperties' drops the build-tool publishing properties ('BuildToolArch' and
+    'PublishBuildTool', plus 'RuntimeIdentifier' / 'SelfContained') from this reference so the
+    generator is always built *framework-dependent for the build host* (output under 'net10.0\',
+    with no 'win-<arch>' RID subfolder). In official builds, CI sets 'BuildToolArch' to the target
+    platform (e.g. 'arm64') and the arm64 leg is cross-compiled on an x64 host; without this, the
+    generator would be produced as an arm64 Native AOT binary that cannot execute on the x64 host
+    (failing with exit code 216, ERROR_EXE_MACHINE_TYPE_MISMATCH). The generated '.winmd' is
+    architecture-neutral, so a host-built generator produces identical metadata. The separate,
+    solution-level build of 'WinRT.WinMD.Generator' (which produces the arch-specific binary that
+    ships in the NuGet package) is unaffected by this reference.
   -->
   <ItemGroup>
     <ProjectReference
       Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
       ReferenceOutputAssembly="false"
       OutputItemType="_CsWinRTToolReference"
+      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained"
       Private="false" />
   </ItemGroup>
 
@@ -104,14 +116,14 @@
     <PropertyGroup>
 
       <!--
-        Resolve 'cswinrtwinmdgen.exe' via the shared 'CsWinRTWinMDGenEffectiveToolsDirectory' property (from
-        'Directory.Build.props'), rather than hard-coding the 'net10.0' output folder. When the build tools are
-        published for a specific architecture (CI sets 'PublishBuildTool=true' and 'BuildToolArch=<arch>'), the
-        generator is emitted under a 'win-<arch>' RID subfolder (e.g. 'net10.0\win-arm64\'), which this property
-        accounts for via '_CsWinRTToolsArchFolder'. Hard-coding 'net10.0\cswinrtwinmdgen.exe' would miss that
-        subfolder and fail with MSB3073 (exit code 9009, "file not found") on architectures such as arm64.
+        Resolve the host-built, framework-dependent 'cswinrtwinmdgen.exe' under 'net10.0\' (no
+        'win-<arch>' RID subfolder). The 'ProjectReference' above undefines 'BuildToolArch' and
+        'PublishBuildTool' so the generator is built for the build host and lands here, which is
+        why this path is intentionally architecture-agnostic (unlike 'CsWinRTWinMDGenEffectiveToolsDirectory',
+        which points at the arch-specific 'win-<arch>\' output used for the shipping NuGet binary).
+        This is what lets the cross-compiled arm64 leg (built on an x64 host) still run the tool.
       -->
-      <_CsWinRTWinMDGenExePath>$([MSBuild]::NormalizePath('$(CsWinRTWinMDGenEffectiveToolsDirectory)', 'cswinrtwinmdgen.exe'))</_CsWinRTWinMDGenExePath>
+      <_CsWinRTWinMDGenExePath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0', 'cswinrtwinmdgen.exe'))</_CsWinRTWinMDGenExePath>
       <_CsWinRTInternalWinMDOutputPath>$([MSBuild]::NormalizePath('$(TargetDir)', '$(AssemblyName).winmd'))</_CsWinRTInternalWinMDOutputPath>
       <_CsWinRTInternalWinMDResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', 'cswinrtwinmdgen.rsp'))</_CsWinRTInternalWinMDResponseFile>
     </PropertyGroup>
