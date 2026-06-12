@@ -10,21 +10,9 @@ namespace WindowsRuntime.Internal;
 /// </summary>
 /// <remarks>
 /// <para>
-/// CsWinRT generates an <see langword="internal"/> projection for any interface marked with this
-/// attribute (rather than the default <see langword="public"/> projection). User-friendly wrappers
-/// over the internal projection are exposed via hand-authored extension methods (see e.g.
-/// <c>ComInteropExtensions</c>).
-/// </para>
-/// <para>
-/// This attribute is the C# counterpart of the Modern IDL 3.0 declaration:
-/// </para>
-/// <code language="csharp">
-/// [attributeusage(target_interface)]
-/// [attributename("ProjectionInternal")]
-/// attribute ProjectionInternalAttribute
-/// {
-/// };
-/// </code>
+/// CsWinRT generates an <see langword="internal"/> projection for any interface marked with this attribute
+/// (rather than the default <see langword="public"/> projection). User-friendly wrappers over the internal
+/// projection are exposed via hand-authored extension methods (see e.g. <c>ComInteropExtensions</c>).
 /// </remarks>
 [AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 public sealed class ProjectionInternalAttribute : Attribute;
