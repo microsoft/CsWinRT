@@ -19,7 +19,7 @@ extends:
   parameters:
     pool:
       name: Azure-Pipelines-1ESPT-ExDShared
-      image: windows-2025
+      image: windows-2025-vs2026
       os: windows
     customBuildTags:
     - ES365AIMigrationTooling
