@@ -125,12 +125,23 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Adds parameter definitions to an output method with correct Windows Runtime attributes.
-    /// Handles Span/ReadOnlySpan → array parameter attribute mapping:
-    /// - ReadOnlySpan&lt;T&gt; → [in] T[] (PassArray)
-    /// - Span&lt;T&gt; → [out] T[] without BYREF (FillArray)
-    /// - out T[] → [out] T[] with BYREF (ReceiveArray)
-    /// - All other params → [in]
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The In/Out flags on the input parameters are honored as-is when present. This allows
+    /// authors to opt-in or opt-out of the WinRT defaults explicitly (e.g. <c>[In] ref T</c>
+    /// preserves the <c>In</c> flag, <c>[Out] ref T</c> preserves the <c>Out</c> flag). When
+    /// no In/Out flag is set on the input parameter, the WinRT default is inferred from the
+    /// parameter type:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><see cref="System.ReadOnlySpan{T}"/> → <c>[in] T[]</c> (PassArray)</item>
+    ///   <item><see cref="System.Span{T}"/> → <c>[out] T[]</c> without BYREF (FillArray)</item>
+    ///   <item><c>out T[]</c> (byref to <c>SzArray</c>) → <c>[out] T[]</c> with BYREF (ReceiveArray); already captured by the input's <c>Out</c> flag.</item>
+    ///   <item>Any other by-reference type (e.g. <c>ref Guid</c> on a COM interop interface) → <c>[in]</c>, matching the MIDL convention for <c>ref const T</c> parameters.</item>
+    ///   <item>All other params → <c>[in]</c>.</item>
+    /// </list>
+    /// </remarks>
     private static void AddParameterDefinitions(MethodDefinition outputMethod, MethodDefinition inputMethod)
     {
         int paramIndex = 1;
@@ -143,7 +154,7 @@ internal sealed partial class WinMDWriter
 
             if (sigIndex < inputParamTypes.Count)
             {
-                paramattributes = GetWinRTParameterAttributes(inputParamTypes[sigIndex]);
+                paramattributes = GetWinRTParameterAttributes(inputParam, inputParamTypes[sigIndex]);
             }
 
             outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
@@ -154,28 +165,33 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Determines the Windows Runtime parameter attributes based on the input parameter type.
+    /// Determines the Windows Runtime parameter attributes based on the input parameter and its type.
     /// </summary>
-    private static ParameterAttributes GetWinRTParameterAttributes(TypeSignature inputParamType)
+    /// <remarks>
+    /// If the input parameter already has <see cref="ParameterAttributes.In"/> or
+    /// <see cref="ParameterAttributes.Out"/> set, those flags are preserved unchanged. Otherwise,
+    /// the type drives the default per the rules documented on <see cref="AddParameterDefinitions"/>.
+    /// </remarks>
+    private static ParameterAttributes GetWinRTParameterAttributes(ParameterDefinition inputParam, TypeSignature inputParamType)
     {
-        // out parameters (ByRef) stay as Out
-        if (inputParamType is ByReferenceTypeSignature)
+        // Preserve any 'In'/'Out' direction flags the input parameter already carries
+        ParameterAttributes inputDirectionFlags = inputParam.Attributes & (ParameterAttributes.In | ParameterAttributes.Out);
+
+        if (inputDirectionFlags != 0)
+        {
+            return inputDirectionFlags;
+        }
+
+        // 'Span<T>' → 'FillArray' pattern: '[out]' without 'BYREF'
+        if (inputParamType is GenericInstanceTypeSignature genericInstanceSignature &&
+            genericInstanceSignature.GenericType.FullName == "System.Span`1")
         {
             return ParameterAttributes.Out;
         }
 
-        // Span<T> → FillArray pattern: [out] without BYREF
-        if (inputParamType is GenericInstanceTypeSignature genericInstanceSignature)
-        {
-            string typeName = genericInstanceSignature.GenericType.FullName;
-
-            if (typeName == "System.Span`1")
-            {
-                return ParameterAttributes.Out;
-            }
-        }
-
-        // ReadOnlySpan<T> and everything else → [in]
+        // By-reference parameters with no explicit direction flag (e.g. 'ref Guid riid'
+        // on a COM interop interface) default to '[in]', matching the MIDL convention for
+        // 'ref const T' parameters. 'ReadOnlySpan<T>' and everything else also default to '[in]'.
         return ParameterAttributes.In;
     }
 

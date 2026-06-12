@@ -1,0 +1,162 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+
+    <!--
+      Target a CsWinRT 3.0 Windows TFM (revision .1) so the .NET SDK selects the
+      correct Windows SDK projection reference assemblies. We need to target a
+      Windows TFM because this is a "normal" authoring project. Additionally,
+      some of the C# source files in this project reference Windows Runtime types
+      (e.g. 'Windows.UI.ApplicationSettings.AccountsSettingsPane') as well.
+    -->
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+ 
+    <!--
+      Pin the 'Microsoft.Windows.SDK.NET.Ref' package version so the .NET SDK adds an implicit
+      'FrameworkReference' to it (matching the 'cswinrt3' projections required by this project).
+    -->
+    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
+
+    <!-- Disable nullability annotations (not supported by the Windows Runtime type system yet) -->
+    <Nullable>disable</Nullable>
+
+    <!--
+      This project contains hand-authored Windows Runtime metadata that is fed back into the
+      CsWinRT toolchain. CsWinRT's own per-project projection / interop generation should not
+      run on it (we are building CsWinRT itself), and no NuGet 'CsWinRT' package reference is
+      involved here.
+    -->
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+    <CsWinRTGenerateProjection>false</CsWinRTGenerateProjection>
+    <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
+    <CsWinRTGenerateInteropAssembly2>false</CsWinRTGenerateInteropAssembly2>
+
+    <!-- The produced '.dll' is just an intermediate artifact, only the generated '.winmd' is shipped -->
+    <IsPackable>false</IsPackable>
+
+    <!--
+      Suppress XML doc warnings for parameters/return doc tags we omit on interop methods.
+      'NETSDK1229' is also suppressed: this project intentionally targets the CsWinRT 3.0
+      preview Windows SDK projections to author Windows Runtime metadata, so the preview
+      warning is not actionable.
+    -->
+    <NoWarn>$(NoWarn);CS1591;1701;CS1702;NETSDK1229</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Reference the already-built 'WinRT.Runtime.dll' directly (the SDK projections depend on it)
+    so this project can compile without needing the 'Microsoft.Windows.CsWinRT' NuGet package.
+    A 'ProjectReference' is used (rather than '<Reference HintPath="..." />' as in
+    'WinRT.Sdk.Projection') so that 'dotnet build' on this project alone implicitly builds
+    'WinRT.Runtime2' first. 'Private=false' keeps the '.dll' out of the bin output / publish set.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\WinRT.Runtime2\WinRT.Runtime.csproj" Private="false" />
+  </ItemGroup>
+
+  <!--
+    Build-order dependency: 'WinRT.WinMD.Generator' produces 'cswinrtwinmdgen.exe', which the
+    target below invokes directly via 'Exec' (no custom 'UsingTask'). This avoids the
+    'WinRT.Generator.Tasks.dll' file-lock contention that happens in Visual Studio when
+    the persistent MSBuild build server keeps a custom-task assembly loaded across
+    incremental builds (MSB3027 "The file is locked by MSBuild.exe (...)"). No build-time
+    dependency on 'WinRT.Generator.Tasks' is required for this project.
+
+    'UndefineProperties' drops the build-tool publishing properties ('BuildToolArch' and
+    'PublishBuildTool', plus 'RuntimeIdentifier' / 'SelfContained') from this reference so the
+    generator is always built *framework-dependent for the build host* (output under 'net10.0\',
+    with no 'win-<arch>' RID subfolder). In official builds, CI sets 'BuildToolArch' to the target
+    platform (e.g. 'arm64') and the arm64 leg is cross-compiled on an x64 host; without this, the
+    generator would be produced as an arm64 Native AOT binary that cannot execute on the x64 host
+    (failing with exit code 216, ERROR_EXE_MACHINE_TYPE_MISMATCH). The generated '.winmd' is
+    architecture-neutral, so a host-built generator produces identical metadata. The separate,
+    solution-level build of 'WinRT.WinMD.Generator' (which produces the arch-specific binary that
+    ships in the NuGet package) is unaffected by this reference.
+  -->
+  <ItemGroup>
+    <ProjectReference
+      Include="..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
+      ReferenceOutputAssembly="false"
+      OutputItemType="_CsWinRTToolReference"
+      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained"
+      Private="false" />
+  </ItemGroup>
+
+  <!--
+    ============================================================
+                        GenerateWindowsRuntimeInternalWinMD
+
+    Invokes 'cswinrtwinmdgen.exe' (built from this solution) to produce
+    'WindowsRuntime.Internal.winmd' from the compiled 'WindowsRuntime.Internal.dll'.
+    The '.winmd' is the actual artifact consumed by the CsWinRT toolchain, and
+    the '.dll' itself is just an intermediate build artifact, which is not used.
+
+    The tool is invoked via '<Exec>' (not via the 'RunCsWinRTWinMDGenerator' MSBuild
+    task) so that the build doesn't depend on 'WinRT.Generator.Tasks.dll' being loaded
+    by the MSBuild engine. That DLL is the one that's prone to being locked across
+    incremental builds when the build server (in Visual Studio or 'dotnet build') keeps
+    a handle to the custom-task assembly. The tool's argument set is the same: we hand-
+    write a '.rsp' response file and pass it via the '@<file>' convention that
+    'ConsoleAppFramework' (and 'cswinrtwinmdgen.exe' itself) accepts.
+    ============================================================
+  -->
+  <Target
+    Name="GenerateWindowsRuntimeInternalWinMD"
+    AfterTargets="CoreCompile"
+    Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
+    Outputs="$(TargetDir)$(AssemblyName).winmd">
+
+    <!-- Setup the folder for the generator to invoke, the response file, and the target output folder for the produced '.winmd' -->
+    <PropertyGroup>
+
+      <!--
+        Resolve the host-built, framework-dependent 'cswinrtwinmdgen.exe' under 'net10.0\' (no
+        'win-<arch>' RID subfolder). The 'ProjectReference' above undefines 'BuildToolArch' and
+        'PublishBuildTool' so the generator is built for the build host and lands here, which is
+        why this path is intentionally architecture-agnostic (unlike 'CsWinRTWinMDGenEffectiveToolsDirectory',
+        which points at the arch-specific 'win-<arch>\' output used for the shipping NuGet binary).
+        This is what lets the cross-compiled arm64 leg (built on an x64 host) still run the tool.
+      -->
+      <_CsWinRTWinMDGenExePath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.WinMD.Generator', 'bin', '$(Configuration)', 'net10.0', 'cswinrtwinmdgen.exe'))</_CsWinRTWinMDGenExePath>
+      <_CsWinRTInternalWinMDOutputPath>$([MSBuild]::NormalizePath('$(TargetDir)', '$(AssemblyName).winmd'))</_CsWinRTInternalWinMDOutputPath>
+      <_CsWinRTInternalWinMDResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', 'cswinrtwinmdgen.rsp'))</_CsWinRTInternalWinMDResponseFile>
+    </PropertyGroup>
+
+    <!--
+      Build the response file content (one 'argument value' per line). This matches the
+      format that 'WinMDGeneratorArgs.ParseFromResponseFile' expects. The reference assembly
+      list is comma-separated within a single line (matching 'GetStringArrayArgument').
+    -->
+    <PropertyGroup>
+      <_CsWinRTInternalWinMDInputAssemblyPath>@(IntermediateAssembly->'%(FullPath)')</_CsWinRTInternalWinMDInputAssemblyPath>
+      <_CsWinRTInternalWinMDReferenceAssemblyPaths>@(ReferencePathWithRefAssemblies->'%(FullPath)', ',')</_CsWinRTInternalWinMDReferenceAssemblyPaths>
+    </PropertyGroup>
+
+    <!-- Prepare all lines for the '.rsp' file we'll pass to the generator -->
+    <ItemGroup>
+      <_CsWinRTInternalWinMDResponseLines Include="--input-assembly-path $(_CsWinRTInternalWinMDInputAssemblyPath)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--reference-assembly-paths $(_CsWinRTInternalWinMDReferenceAssemblyPaths)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--output-winmd-path $(_CsWinRTInternalWinMDOutputPath)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--assembly-version $(AssemblyVersion)" />
+      <_CsWinRTInternalWinMDResponseLines Include="--use-windows-ui-xaml-projections false" />
+    </ItemGroup>
+
+    <!-- Write the '.rsp' file to disk for invocation -->
+    <WriteLinesToFile
+      File="$(_CsWinRTInternalWinMDResponseFile)"
+      Lines="@(_CsWinRTInternalWinMDResponseLines)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+
+    <!-- Invoke 'cswinrtwinmdgen.exe' with the response file. -->
+    <Exec
+      Command="&quot;$(_CsWinRTWinMDGenExePath)&quot; @&quot;$(_CsWinRTInternalWinMDResponseFile)&quot;"
+      WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <!-- Mark the '.rsp' file and the generated '.winmd' files as file writes (for incremental builds) -->
+    <ItemGroup>
+      <FileWrites Include="$(_CsWinRTInternalWinMDResponseFile)" />
+      <FileWrites Include="$(_CsWinRTInternalWinMDOutputPath)" />
+    </ItemGroup>
+  </Target>
+</Project>

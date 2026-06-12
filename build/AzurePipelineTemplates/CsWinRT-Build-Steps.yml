@@ -211,7 +211,7 @@ steps:
       condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
       continueOnError: True
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Internal\bin\$(BuildConfiguration)\net10.0-windows10.0.26100.1
         Contents: WindowsRuntime.Internal.winmd
         TargetFolder: $(StagingFolder)\native
 
