@@ -261,9 +261,13 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
 
         writer.WriteLine();
+
+        // 'Keys'/'Values' take the projected runtime class directly (passed as 'this'), rather than the
+        // interface object reference like the other accessors. This lets the returned collection be cached
+        // in the public property's backing 'field' so it preserves reference identity across accesses.
+        EmitUnsafeAccessor(writer, "Keys", $"IEnumerable<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessor(writer, "Values", $"IEnumerable<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
         EmitUnsafeAccessors(writer, interopType, [
-            new("Keys",        $"ICollection<{k}>", $"{prefix}Keys",        ""),
-            new("Values",      $"ICollection<{v}>", $"{prefix}Values",      ""),
             new("Count",       "int",               $"{prefix}Count",       ""),
             new("Item",        v,                   $"{prefix}Item",        $", {k} key"),
             new("ContainsKey", "bool",              $"{prefix}ContainsKey", $", {k} key"),
@@ -273,8 +277,8 @@ internal static class MappedInterfaceStubFactory
         // EmitGenericEnumerable invocation.
         writer.WriteLine();
         writer.WriteLine($"public {v} this[{k} key] => {prefix}Item(null, {objRefName}, key);");
-        writer.WriteLine($"public IEnumerable<{k}> Keys => {prefix}Keys(null, {objRefName});");
-        writer.WriteLine($"public IEnumerable<{v}> Values => {prefix}Values(null, {objRefName});");
+        writer.WriteLine($"public IEnumerable<{k}> Keys => field ??= {prefix}Keys(null, this);");
+        writer.WriteLine($"public IEnumerable<{v}> Values => field ??= {prefix}Values(null, this);");
         writer.WriteLine($"public int Count => {prefix}Count(null, {objRefName});");
         writer.WriteLine($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);");
         writer.WriteLine($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);");
@@ -380,9 +384,12 @@ internal static class MappedInterfaceStubFactory
 
     /// <summary>
     /// Emits a single <c>[UnsafeAccessor]</c> static extern declaration that targets a method on a
-    /// WinRT.Interop helper type. The function signature is built from the supplied parts.
+    /// WinRT.Interop helper type. The function signature is built from the supplied parts. The
+    /// <paramref name="receiver"/> defaults to the interface object reference
+    /// (<c>WindowsRuntimeObjectReference objRef</c>); a few accessors (e.g. dictionary
+    /// <c>Keys</c>/<c>Values</c>) instead take the projected runtime class (<c>WindowsRuntimeObject</c>).
     /// </summary>
-    private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams)
+    private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams, string receiver = "WindowsRuntimeObjectReference objRef")
     {
         UnsafeAccessorFactory.EmitStaticMethod(
             writer,
@@ -390,14 +397,14 @@ internal static class MappedInterfaceStubFactory
             returnType: returnType,
             functionName: functionName,
             interopType: interopType,
-            parameterList: $"WindowsRuntimeObjectReference objRef{extraParams}");
+            parameterList: $"{receiver}{extraParams}");
         writer.WriteLine();
     }
 
     /// <summary>
     /// Emits a sequence of <c>[UnsafeAccessor]</c> static extern declarations sharing the same
     /// <paramref name="interopType"/>. Each row of <paramref name="accessors"/> is forwarded to
-    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, string, string, string, string, string)"/>.
+    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, string, string, string, string, string, string)"/>.
     /// Used by the collection-stub emitters which emit table-shaped sets of accessors.
     /// </summary>
     private static void EmitUnsafeAccessors(
