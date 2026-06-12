@@ -80,6 +80,7 @@
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.CsWinRT2Polyfills.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.nuspec" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.props" />

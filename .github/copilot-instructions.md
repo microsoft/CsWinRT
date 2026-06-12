@@ -535,6 +535,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 | `Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets` | Pre-SDK configuration: reference projection mode, activation factory merging, stub exe setup |
 | `Microsoft.Windows.CsWinRT.targets` | Main pipeline: projection generation (cswinrt.exe), reference setup, compilation integration |
 | `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
+| `Microsoft.Windows.CsWinRT.CsWinRT2Polyfills.targets` | Generates C# polyfill attributes for CsWinRT 2.x interop (e.g. `DynamicWindowsRuntimeCastAttribute`) when `CsWinRTGenerateVersion2PolyfillAttributes` is `true`, to aid multi-targeting |
 | `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
 | `Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` | Component `.winmd` generation: invokes `cswinrtwinmdgen.exe` after `CoreCompile` (only when `CsWinRTComponent == true`) |

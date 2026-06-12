@@ -601,6 +601,13 @@ namespace TestComponentCSharp
         static CustomIterableTest CreateWithCustomIterator();
     }
 
+    [default_interface]
+    runtimeclass CustomReadOnlyDictionaryTest : Windows.Foundation.Collections.IMapView<String, String>
+    {
+        CustomReadOnlyDictionaryTest();
+        CustomReadOnlyDictionaryTest(Windows.Foundation.Collections.IMapView<String, String> mapView);
+    }
+
     // SupportedOSPlatform warning tests
     [contract(Windows.Foundation.UniversalApiContract, 10)]
     [attributeusage(target_all)]

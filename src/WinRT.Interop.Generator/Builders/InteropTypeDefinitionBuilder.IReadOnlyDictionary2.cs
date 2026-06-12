@@ -220,6 +220,48 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
+            // Define the 'Keys' method as follows:
+            //
+            // public static IEnumerable<<KEY_TYPE>> Keys(WindowsRuntimeObject thisObject)
+            //
+            // See additional notes in 'InteropTypeDefinitionBuilder.IDictionary2.Methods' (analogous logic).
+            MethodDefinition keysMethod = new(
+                name: "Keys"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([keyType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, interopReferences.ReadOnlyDictionaryKeyCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            readOnlyDictionaryMethodsType.Methods.Add(keysMethod);
+
+            // Define the 'Values' method as follows:
+            //
+            // public static IEnumerable<<VALUE_TYPE>> Values(WindowsRuntimeObject thisObject)
+            MethodDefinition valuesMethod = new(
+                name: "Values"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.IEnumerable1.MakeGenericReferenceType([valueType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, interopReferences.ReadOnlyDictionaryValueCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            readOnlyDictionaryMethodsType.Methods.Add(valuesMethod);
+
             // Define the 'ContainsKey' method as follows:
             //
             // public static bool ContainsKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
