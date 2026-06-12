@@ -157,6 +157,14 @@
       <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
       <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
       <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
+      <!--
+        This project includes the 'Windows' namespace ('-include Windows'), so its projection
+        generation consumes 'WindowsRuntime.Internal.winmd' (via '$(CsWinRTInteropMetadata)').
+        That metadata is produced by the 'WinRT.Internal' project, so it must build first.
+        Previously this ordering was provided implicitly by the (now removed) ProjectReference
+        to the C++ 'cswinrt.vcxproj'; this makes the dependency explicit.
+      -->
+      <BuildDependency Project="WinRT.Internal/WinRT.Internal.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
