@@ -203,9 +203,13 @@ internal static class MappedInterfaceStubFactory
         string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
 
         writer.WriteLine();
+
+        // 'Keys'/'Values' take the projected runtime class directly (passed as 'this'), rather than the
+        // interface object reference like the other accessors. This lets the returned collection be cached
+        // in the public property's backing 'field' so it preserves reference identity across accesses.
+        EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
         EmitUnsafeAccessors(writer, interopType, [
-            new("Keys",         $"ICollection<{k}>", $"{prefix}Keys",         ""),
-            new("Values",       $"ICollection<{v}>", $"{prefix}Values",       ""),
             new("Count",        "int",               $"{prefix}Count",        ""),
             new("Item",         v,                   $"{prefix}Item",         $", {k} key"),
             new("Item",         "void",              $"{prefix}Item",         $", {k} key, {v} value"),
@@ -223,8 +227,8 @@ internal static class MappedInterfaceStubFactory
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s own
         // EmitGenericEnumerable invocation.
         writer.WriteLine(isMultiline: true, $$"""
-            public ICollection<{{k}}> Keys => {{prefix}}Keys(null, {{objRefName}});
-            public ICollection<{{v}}> Values => {{prefix}}Values(null, {{objRefName}});
+            public ICollection<{{k}}> Keys => field ??= {{prefix}}Keys(null, this);
+            public ICollection<{{v}}> Values => field ??= {{prefix}}Values(null, this);
             public int Count => {{prefix}}Count(null, {{objRefName}});
             public bool IsReadOnly => false;
             public {{v}} this[{{k}} key]
