@@ -34,3 +34,4 @@ CSWINRT2024 | WindowsRuntime.SourceGenerator | Error | Mismatched '[WindowsRunti
 CSWINRT2025 | WindowsRuntime.SourceGenerator | Error | Duplicate activation factory for a Windows Runtime class
 CSWINRT2026 | WindowsRuntime.SourceGenerator | Warning | Implemented Windows Runtime class is not activatable
 CSWINRT2027 | WindowsRuntime.SourceGenerator | Error | Invalid '[GeneratedWindowsRuntimeActivationFactory]' target type
+CSWINRT2028 | WindowsRuntime.SourceGenerator | Warning | Reading from a write-only 'Span<T>' parameter

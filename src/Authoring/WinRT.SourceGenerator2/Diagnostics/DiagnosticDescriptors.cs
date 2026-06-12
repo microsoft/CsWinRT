@@ -379,4 +379,17 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Types annotated with '[GeneratedWindowsRuntimeActivationFactory]' must be non-abstract, non-generic classes implementing a Windows Runtime class defined in existing metadata (i.e. deriving from a generated implementable base class), with a parameterless constructor accessible within their assembly. The implemented class must only be activated through its parameterless constructor: a class with constructors with parameters or statics needs an activation factory declared with '[WindowsRuntimeActivationFactory]'.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for reading from a write-only <see cref="System.Span{T}"/> parameter on a Windows Runtime method.
+    /// </summary>
+    public static readonly DiagnosticDescriptor WriteOnlySpanParameterRead = new(
+        id: "CSWINRT2028",
+        title: "Reading from a write-only 'Span<T>' parameter",
+        messageFormat: """The 'Span<T>' parameter '{0}' is projected as a fill array in the Windows Runtime ABI, which is write-only, so the method implementation should only write to it and not read from it""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A 'Span<T>' parameter on a Windows Runtime method is projected as a fill array in the ABI, meaning the implementation is only allowed to write to it, not read from it. Reading from such a parameter (e.g. by indexing it for a value or a readonly reference, converting it to 'ReadOnlySpan<T>', or iterating over it) is not supported. Use 'ReadOnlySpan<T>' for a parameter that should be read from instead.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
