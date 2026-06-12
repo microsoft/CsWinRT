@@ -19,12 +19,6 @@
 
     <!-- Disable nullability annotations (not supported by the Windows Runtime type system yet) -->
     <Nullable>disable</Nullable>
- 
-    <!--
-      The assembly name must match the legacy 'WindowsRuntime.Internal' identity that the rest
-      of the CsWinRT toolchain (and downstream Windows Runtime metadata consumers) references.
-    -->
-    <AssemblyName>WindowsRuntime.Internal</AssemblyName>
 
     <!--
       This project contains hand-authored Windows Runtime metadata that is fed back into the
