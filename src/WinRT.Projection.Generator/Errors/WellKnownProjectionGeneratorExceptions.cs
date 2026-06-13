@@ -93,6 +93,30 @@ internal static class WellKnownProjectionGeneratorExceptions
     }
 
     /// <summary>
+    /// The debug repro directory does not exist.
+    /// </summary>
+    public static Exception DebugReproDirectoryDoesNotExist(string path)
+    {
+        return Exception(9, $"The debug repro directory '{path}' does not exist.");
+    }
+
+    /// <summary>
+    /// The debug repro contains a file entry that has no mapping.
+    /// </summary>
+    public static Exception DebugReproMissingFileEntryMapping(string path)
+    {
+        return Exception(10, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+    }
+
+    /// <summary>
+    /// The debug repro contains a file entry that was not recognized.
+    /// </summary>
+    public static Exception DebugReproUnrecognizedFileEntry(string path)
+    {
+        return Exception(11, $"The debug repro file entry with path '{path}' was not recognized.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

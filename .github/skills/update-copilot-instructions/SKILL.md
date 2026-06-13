@@ -46,11 +46,13 @@ Launch parallel explore agents for each of the 11 CsWinRT 3.0 projects listed in
    - Error ID range (`CSWINRTPROJECTIONREFGENxxxx`) in `Errors/WellKnownReferenceProjectionGeneratorExceptions.cs` is accurate
    - Project settings (Native AOT, dependencies) are current
    - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.targets` (CsWinRTGenerateProjection target → `RunCsWinRTProjectionRefGenerator`) is wired
+   - Debug repro support is documented (mentions `--debug-repro-directory`, `ref-projection-debug-repro.zip`, expansion of input tokens to concrete `.winmd` files)
 
 5. **Impl generator (`src/WinRT.Impl.Generator/`)**
    - Type forward routing logic is current
    - Project settings and dependencies are current
    - CLI parameters are current
+   - Debug repro support is documented (mentions `--debug-repro-directory`, `impl-debug-repro.zip`, output assembly + reference assemblies bundled)
 
 6. **Projection generator (`src/WinRT.Projection.Generator/`)**
    - Three projection modes are accurately described
@@ -58,22 +60,26 @@ Launch parallel explore agents for each of the 11 CsWinRT 3.0 projects listed in
    - Project settings and dependencies (project reference to `WinRT.Projection.Writer`) are current
    - The pipeline is documented as in-process (the projection writer is invoked as a library)
    - `ProjectionGeneratorArgs` no longer contains any leftover `CsWinRTExePath` field
+   - Debug repro support is documented (mentions `--debug-repro-directory`, `projection-debug-repro.zip`, expanded Windows metadata bundled into a `windows-metadata/` subfolder)
 
 7. **Interop generator (`src/WinRT.Interop.Generator/`)**
    - Generated content categories are current
    - Directory structure and key types are accurate
    - Project settings and dependencies are current
+   - Debug repro support is documented (mentions `--debug-repro-directory`, `interop-debug-repro.zip`, reference + implementation `.dll`-s bundled into separate subfolders)
 
 8. **WinMD generator (`src/WinRT.WinMD.Generator/`)**
    - CLI parameters on `WinMDGeneratorArgs` are current
    - Error ID range (`CSWINRTWINMDGENxxxx`) in `Errors/WellKnownWinMDExceptions.cs` is accurate
    - Project settings and dependencies are current
    - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` is wired (gated on `CsWinRTComponent`)
+   - Debug repro support is documented (mentions `--debug-repro-directory`, `winmd-debug-repro.zip`, input component `.dll` + reference assemblies bundled)
 
 9. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
    - MSBuild task classes are accurately listed (including `RunCsWinRTProjectionRefGenerator` and `RunCsWinRTWinMDGenerator`)
    - Task-to-tool mappings are current
    - No leftover `CsWinRTExePath` parameter on `RunCsWinRTMergedProjectionGenerator`
+   - All five tasks expose a `DebugReproDirectory` parameter plumbed from `$(CsWinRTGeneratorDebugReproDirectory)`
 
 10. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
     - Assembly name logic (base vs XAML) is current

@@ -39,7 +39,7 @@
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
 
     <!-- Temporarily suppress warnings for 'Microsoft.CodeAnalysis.CSharp' -->    
-    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026;</NoWarn>
+    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026;IDE0028</NoWarn>
   </PropertyGroup>
 
   <!-- NativeAOT and optimization options (same as 'WinRT.Interop.Generator') -->
@@ -52,6 +52,11 @@
     <IlcDehydrate>false</IlcDehydrate>
     <IlcResilient>false</IlcResilient>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\FileExtensions.cs" Link="Extensions\FileExtensions.cs" />
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\PathExtensions.cs" Link="Extensions\PathExtensions.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj" />
