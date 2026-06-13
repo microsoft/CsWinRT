@@ -416,7 +416,8 @@ internal static class CustomAttributeFactory
                     allowMultiple = true;
                 }
 
-                if (strippedName == "ContractVersion")
+                // ContractVersion and ApiContract are only emitted for reference assemblies
+                if (strippedName is "ContractVersion" or "ApiContract")
                 {
                     if (!context.Settings.ReferenceProjection)
                     {
