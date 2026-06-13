@@ -4,7 +4,7 @@
 
 CsWinRT 3.0 provides a complete COM interop layer for Windows Runtime types on .NET 10+. All interop types are in the `WindowsRuntime.InteropServices` namespace (assembly: `WinRT.Runtime.dll`). Most marshalling is handled automatically by the generated projection and interop assemblies, but advanced scenarios may require direct use of the APIs below.
 
-> **Note:** CsWinRT exposes many types and methods marked `[Obsolete]` with diagnostic `CSWINRT3001`. These are **private implementation details** consumed only by generated code (`cswinrt.exe` and `cswinrtinteropgen.exe`). They are not part of the versioned API surface, may change without notice, and should not be used in application code. This guide covers only the supported public APIs.
+> **Note:** CsWinRT exposes many types and methods marked `[Obsolete]` with diagnostic `CSWINRT3001`. These are **private implementation details** consumed only by generated code (produced by the projection writer and `cswinrtinteropgen.exe`). They are not part of the versioned API surface, may change without notice, and should not be used in application code. This guide covers only the supported public APIs.
 
 ## Summary
 

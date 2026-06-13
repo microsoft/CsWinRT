@@ -78,7 +78,6 @@ internal partial class ProjectionGeneratorArgs
             WinMDPaths = GetStringArrayArgument(argsMap, nameof(WinMDPaths)),
             TargetFramework = GetStringArgument(argsMap, nameof(TargetFramework)),
             WindowsMetadata = GetStringArgument(argsMap, nameof(WindowsMetadata)),
-            CsWinRTExePath = GetStringArgument(argsMap, nameof(CsWinRTExePath)),
             AssemblyName = GetOptionalStringArgument(argsMap, nameof(AssemblyName), "WinRT.Projection"),
             WindowsSdkOnly = GetOptionalBoolArgument(argsMap, nameof(WindowsSdkOnly)),
             WindowsUIXamlProjection = GetOptionalBoolArgument(argsMap, nameof(WindowsUIXamlProjection)),

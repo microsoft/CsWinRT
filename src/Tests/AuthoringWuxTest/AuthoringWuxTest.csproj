@@ -23,7 +23,6 @@
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
     <ProjectReference Include="..\..\Projections\Windows.UI.Xaml\Windows.UI.Xaml.csproj" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
   </ItemGroup>
 
 </Project>

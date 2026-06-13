@@ -10,7 +10,18 @@
     -->
     <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
- 
+
+    <!--
+      The produced '.dll' and '.winmd' must carry the 'WindowsRuntime.Internal' assembly identity
+      (the name that all the rest of the CsWinRT toolchain expects, e.g. the projection writer
+      resolves the '-include WindowsRuntime.Internal' namespace against it). Without this, the
+      assembly name defaults to the project name ('WinRT.Internal'), so the build would emit
+      'WinRT.Internal.winmd' and consumers looking for '$(CsWinRTInteropMetadata)' (which points
+      at '...\WindowsRuntime.Internal.winmd') would fail to find it.
+    -->
+    <AssemblyName>WindowsRuntime.Internal</AssemblyName>
+    <RootNamespace>WindowsRuntime.Internal</RootNamespace>
+
     <!--
       Pin the 'Microsoft.Windows.SDK.NET.Ref' package version so the .NET SDK adds an implicit
       'FrameworkReference' to it (matching the 'cswinrt3' projections required by this project).

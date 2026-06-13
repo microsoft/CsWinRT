@@ -31,10 +31,6 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-metadata")]
     public required string WindowsMetadata { get; init; }
 
-    /// <summary>Gets the path to CsWinRT.exe.</summary>
-    [CommandLineArgumentName("--cswinrt-exe-path")]
-    public required string CsWinRTExePath { get; init; }
-
     /// <summary>Gets the output assembly name. Defaults to 'WinRT.Projection'.</summary>
     [CommandLineArgumentName("--assembly-name")]
     public string AssemblyName { get; init; } = "WinRT.Projection";

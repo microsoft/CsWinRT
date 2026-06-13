@@ -7,9 +7,7 @@ using WindowsRuntime.ReferenceProjectionGenerator.Attributes;
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
 
 /// <summary>
-/// Input parameters for <see cref="ReferenceProjectionGenerator"/>. Mirrors the C++ <c>cswinrt.exe</c> CLI
-/// arguments that the <c>CsWinRTGenerateProjection</c> MSBuild target sends today (every flag the OLD
-/// target plumbs is supported here, including ones that are dead in CsWinRT 3.0 but kept for parity).
+/// Input parameters for <see cref="ReferenceProjectionGenerator"/>.
 /// </summary>
 internal sealed partial class ReferenceProjectionGeneratorArgs
 {
