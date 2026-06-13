@@ -414,6 +414,51 @@ internal partial class InteropTypeDefinitionBuilder
 
             dictionaryMethodsType.Methods.Add(countMethod);
 
+            // Define the 'Keys' method as follows:
+            //
+            // public static ICollection<<KEY_TYPE>> Keys(WindowsRuntimeObject thisObject)
+            //
+            // The runtime instance passed in is the projected runtime class itself, which directly implements
+            // 'IDictionary<TKey, TValue>'. This is strictly part of the contract, and we don't need to validate
+            // it at runtime (with a cast), in the same way as we don't do additional 'QueryInterface' calls on
+            // the various object references being passed around as arguments to interop methods.
+            MethodDefinition keysMethod = new(
+                name: "Keys"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.ICollection1.MakeGenericReferenceType([keyType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            dictionaryMethodsType.Methods.Add(keysMethod);
+
+            // Define the 'Values' method as follows:
+            //
+            // public static ICollection<<VALUE_TYPE>> Values(WindowsRuntimeObject thisObject)
+            MethodDefinition valuesMethod = new(
+                name: "Values"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.ICollection1.MakeGenericReferenceType([valueType]),
+                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType) },
+                    { Ret }
+                }
+            };
+
+            dictionaryMethodsType.Methods.Add(valuesMethod);
+
             // Define the 'ContainsKey' method as follows:
             //
             // public static bool ContainsKey(WindowsRuntimeObjectReference thisReference, <KEY_TYPE> key)
