@@ -1106,7 +1106,7 @@ internal static class WindowsRuntimeExceptionExtensions
     extension(UnauthorizedAccessException)
     {
         /// <summary>
-        /// Throws an <see cref="UnauthorizedAccessException"/> indicating that the internal buffer of a <see cref="System.IO.MemoryStream"/> cannot be accessed.
+        /// Throws an <see cref="UnauthorizedAccessException"/> indicating that the internal buffer of a <see cref="MemoryStream"/> cannot be accessed.
         /// </summary>
         /// <exception cref="UnauthorizedAccessException">Always thrown.</exception>
         [DoesNotReturn]

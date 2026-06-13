@@ -6,35 +6,26 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
 
 /// <summary>
 /// A well-known exception for the interop generator.
 /// </summary>
-internal sealed class WellKnownInteropException : Exception
+/// <remarks>
+/// The interop generator extends the shared <see cref="WellKnownGeneratorException"/> base with an
+/// optional outer exception that can be attached via <see cref="ThrowOrAttach"/> when re-throwing,
+/// plus a richer <see cref="ToString"/> that surfaces both the inner and outer context when present.
+/// </remarks>
+/// <inheritdoc cref="WellKnownGeneratorException(string, string, Exception?)"/>
+internal sealed class WellKnownInteropException(string id, string message, Exception? innerException)
+    : WellKnownGeneratorException(id, message, innerException)
 {
     /// <summary>
     /// The outer exception to include in the output, if available.
     /// </summary>
     private WellKnownInteropException? _outerException;
-
-    /// <summary>
-    /// Creates a new <see cref="WellKnownInteropException"/> instance with the specified parameters.
-    /// </summary>
-    /// <param name="id">The id of the exception.</param>
-    /// <param name="message">The exception message.</param>
-    /// <param name="innerException">The inner exception.</param>
-    public WellKnownInteropException(string id, string message, Exception? innerException)
-        : base(message, innerException)
-    {
-        Id = id;
-    }
-
-    /// <summary>
-    /// Gets the id of the exception.
-    /// </summary>
-    public string Id { get; }
 
     /// <inheritdoc/>
     public override string ToString()

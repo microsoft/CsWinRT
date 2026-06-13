@@ -65,7 +65,7 @@ internal static class WellKnownInterfaceIIDs
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The <see cref="MemberReference"/> for the <c>get_IID_...</c> method for <paramref name="interfaceType"/>.</returns>
-    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="NullReferenceException"></exception>
     /// <remarks>
     /// The types handled by this method should be kept in sync with
     /// <see cref="WindowsRuntimeExtensions.IsCustomMappedWindowsRuntimeNonGenericInterfaceType"/> and

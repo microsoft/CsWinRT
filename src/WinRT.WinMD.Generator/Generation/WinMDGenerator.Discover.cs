@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.PE;
+using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Errors;
 

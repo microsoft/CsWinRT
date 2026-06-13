@@ -10,7 +10,7 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// </summary>
 /// <param name="sourcesFolder">The path to the folder where sources will be generated.</param>
 /// <param name="referencesWithoutProjections">The reference assembly paths excluding projection assemblies.</param>
-/// <param name="writerOptions">The options to pass to <see cref="global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run"/>.</param>
+/// <param name="writerOptions">The options to pass to <see cref="ProjectionWriter.ProjectionWriter.Run"/>.</param>
 /// <param name="hasTypesToProject">Whether any types were found to project.</param>
 internal sealed class ProjectionGeneratorProcessingState(
     string sourcesFolder,
@@ -29,7 +29,7 @@ internal sealed class ProjectionGeneratorProcessingState(
     public string[] ReferencesWithoutProjections { get; } = referencesWithoutProjections;
 
     /// <summary>
-    /// Gets the options used to invoke <see cref="global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run"/>.
+    /// Gets the options used to invoke <see cref="ProjectionWriter.ProjectionWriter.Run"/>.
     /// </summary>
     public ProjectionWriterOptions WriterOptions { get; } = writerOptions;
 

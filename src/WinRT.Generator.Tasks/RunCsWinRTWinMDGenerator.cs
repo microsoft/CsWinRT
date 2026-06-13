@@ -126,7 +126,7 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
         string? effectiveArchitecture = CsWinRTToolsArchitecture;
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
-        if (effectiveArchitecture?.Equals("AnyCPU", System.StringComparison.OrdinalIgnoreCase) is true)
+        if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
             return Path.Combine(CsWinRTToolsDirectory!, ToolName);
         }

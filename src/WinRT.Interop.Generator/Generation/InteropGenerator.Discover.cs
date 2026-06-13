@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
+using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Extensions;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
@@ -555,7 +558,7 @@ internal partial class InteropGenerator
         AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime"u8, windowsRuntimeVersion)
         {
             // Set the public keys, as it's needed to ensure references compare as equals as expected
-            PublicKeyOrToken = InteropValues.CsWinRTPublicKeyData,
+            PublicKeyOrToken = WellKnownPublicKeys.CsWinRT,
             HasPublicKey = true
         };
 

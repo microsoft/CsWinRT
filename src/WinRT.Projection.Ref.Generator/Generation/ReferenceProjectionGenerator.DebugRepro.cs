@@ -6,14 +6,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
-using WindowsRuntime.InteropGenerator;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
-using WindowsRuntime.ReferenceProjectionGenerator.Helpers;
 
 #pragma warning disable IDE0008
 
@@ -35,11 +33,7 @@ internal static partial class ReferenceProjectionGenerator
     /// <returns>The path to the resulting response file to use.</returns>
     private static string UnpackDebugRepro(string path, CancellationToken token)
     {
-        // Create a temporary directory to extract the files from the debug repro
-        string tempFolderName = $"cswinrtprojectionrefgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
-
-        _ = Directory.CreateDirectory(tempDirectory);
+        string tempDirectory = DebugReproPacker.CreateUnpackTempDirectory("cswinrtprojectionrefgen");
 
         token.ThrowIfCancellationRequested();
 
@@ -57,13 +51,13 @@ internal static partial class ReferenceProjectionGenerator
         // Parse the debug repro .rsp file
         using (Stream stream = responseFileEntry.Open())
         {
-            args = ReferenceProjectionGeneratorArgs.ParseFromResponseFile(stream, token);
+            args = ResponseFileParser.Parse<ReferenceProjectionGeneratorArgs, WellKnownReferenceProjectionGeneratorExceptions>(stream, token);
         }
 
         token.ThrowIfCancellationRequested();
 
         // Load the mappings with all the original file paths for the input .winmd files
-        Dictionary<string, string> originalInputPaths = ExtractPathMap(originalInputPathsEntry);
+        Dictionary<string, string> originalInputPaths = DebugReproPacker.ExtractPathMap(originalInputPathsEntry);
 
         token.ThrowIfCancellationRequested();
 
@@ -110,7 +104,7 @@ internal static partial class ReferenceProjectionGenerator
         token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new ReferenceProjectionGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ReferenceProjectionGeneratorArgs
         {
             InputPaths = [.. inputPaths],
             OutputDirectory = tempDirectory,
@@ -125,7 +119,7 @@ internal static partial class ReferenceProjectionGenerator
             ReferenceProjection = args.ReferenceProjection,
             DebugReproDirectory = null,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtprojectionrefgen.rsp");
@@ -148,21 +142,13 @@ internal static partial class ReferenceProjectionGenerator
             return;
         }
 
-        // The target folder must exist
-        if (!Directory.Exists(args.DebugReproDirectory))
-        {
-            throw WellKnownReferenceProjectionGeneratorExceptions.DebugReproDirectoryDoesNotExist(args.DebugReproDirectory);
-        }
+        (string tempDirectory, string zipPath) = DebugReproPacker.BeginSave<WellKnownReferenceProjectionGeneratorExceptions>(
+            args.DebugReproDirectory,
+            toolName: "cswinrtprojectionrefgen",
+            archiveFileName: "ref-projection-debug-repro.zip");
 
-        // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "ref-projection-debug-repro.zip");
-
-        // Create a temporary directory to stage files for the ZIP
-        string tempFolderName = $"cswinrtprojectionrefgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
-        string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
         string inputDirectory = Path.Combine(tempDirectory, "input");
 
-        _ = Directory.CreateDirectory(tempDirectory);
         _ = Directory.CreateDirectory(inputDirectory);
 
         // Expand all input paths (which may be file paths, directories to recursively scan, or
@@ -183,12 +169,12 @@ internal static partial class ReferenceProjectionGenerator
 
         // Add all input paths with hashed names to the input subdirectory under the temporary
         // directory, and store them with the updated names in a list to use to build the .rsp file.
-        List<string> updatedInputNames = CopyHashedFilesToDirectory([.. expandedInputPaths], inputDirectory, originalInputPaths, args.Token);
+        List<string> updatedInputNames = DebugReproPacker.CopyHashedFilesToDirectory([.. expandedInputPaths], inputDirectory, originalInputPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Prepare the .rsp file with all updated arguments
-        string rspText = new ReferenceProjectionGeneratorArgs
+        string rspText = ResponseFileBuilder.Format(new ReferenceProjectionGeneratorArgs
         {
             InputPaths = [.. updatedInputNames],
             OutputDirectory = args.OutputDirectory,
@@ -203,7 +189,7 @@ internal static partial class ReferenceProjectionGenerator
             ReferenceProjection = args.ReferenceProjection,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None
-        }.FormatToResponseFile();
+        });
 
         // Create the actual .rsp file
         string rspFilePath = Path.Combine(tempDirectory, "cswinrtprojectionrefgen.rsp");
@@ -213,102 +199,10 @@ internal static partial class ReferenceProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Create the .json file with the input path map
-        CopyPathMapToDirectory(originalInputPaths, tempDirectory, InputPathMapFileName);
+        DebugReproPacker.CopyPathMapToDirectory(originalInputPaths, tempDirectory, InputPathMapFileName);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Delete the previous file, if it exists
-        if (File.Exists(zipPath))
-        {
-            File.Delete(zipPath);
-        }
-
-        // Create the actual .zip file in the target directory
-        ZipFile.CreateFromDirectory(tempDirectory, zipPath);
-
-        // Clean up the temporary directory
-        Directory.Delete(tempDirectory, recursive: true);
-    }
-
-    /// <summary>
-    /// Generates a hashed filename by appending a hash of the original filename.
-    /// </summary>
-    /// <param name="filePath">The original file path.</param>
-    /// <returns>The hashed filename.</returns>
-    private static string GetHashedFileName(string filePath)
-    {
-        string fileName = Path.GetFileName(Path.Normalize(filePath));
-        byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
-        byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
-        string hash = Convert.ToHexString(hashData);
-
-        return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
-    }
-
-    /// <summary>
-    /// Copies all specified files to a target folder, and returns the list of updated hashed filenames.
-    /// </summary>
-    /// <param name="filePaths">The input file paths.</param>
-    /// <param name="destinationDirectory">The target directory to copy the files to.</param>
-    /// <param name="originalPaths">A dictionary to store the original paths of the copied files.</param>
-    /// <param name="token">A cancellation token to monitor for cancellation requests.</param>
-    /// <returns>The list of updated hashed filenames.</returns>
-    private static List<string> CopyHashedFilesToDirectory(
-        string[] filePaths,
-        string destinationDirectory,
-        Dictionary<string, string> originalPaths,
-        CancellationToken token)
-    {
-        List<string> updatedFileNames = [];
-
-        foreach (string filePath in filePaths)
-        {
-            token.ThrowIfCancellationRequested();
-
-            string hashedName = GetHashedFileName(filePath);
-            string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-            File.Copy(filePath, destinationPath, overwrite: true);
-
-            updatedFileNames.Add(hashedName);
-            originalPaths.Add(hashedName, filePath);
-        }
-
-        return updatedFileNames;
-    }
-
-    /// <summary>
-    /// Copies an input path map to a target directory, as a serialized JSON file.
-    /// </summary>
-    /// <param name="pathMap">The input path map.</param>
-    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
-    /// <param name="fileName">The name to use for the file with the serialized path map.</param>
-    private static void CopyPathMapToDirectory(
-        Dictionary<string, string> pathMap,
-        string destinationDirectory,
-        string fileName)
-    {
-        // Create the .json file with the input path map
-        string jsonFilePath = Path.Combine(destinationDirectory, fileName);
-
-        using Stream jsonStream = File.Create(jsonFilePath);
-
-        // Serialize the path map to the target file
-        JsonSerializer.Serialize(jsonStream, pathMap, ReferenceProjectionGeneratorJsonSerializerContext.Default.DictionaryStringString);
-    }
-
-    /// <summary>
-    /// Extracts an input path from a .zip archive entry.
-    /// </summary>
-    /// <param name="pathMapEntry">The input path map entry.</param>
-    /// <remarks>
-    /// The <paramref name="pathMapEntry"/> value is expected to have the content produced by calls to <see cref="CopyPathMapToDirectory"/>.
-    /// </remarks>
-    private static Dictionary<string, string> ExtractPathMap(ZipArchiveEntry pathMapEntry)
-    {
-        using Stream stream = pathMapEntry.Open();
-
-        // Load the mapping with all the original file paths for the included files
-        return JsonSerializer.Deserialize(stream, ReferenceProjectionGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
+        DebugReproPacker.FinalizeSave(tempDirectory, zipPath);
     }
 }

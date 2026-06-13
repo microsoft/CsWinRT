@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionWriter;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -66,7 +67,7 @@ internal partial class ProjectionGenerator
         // Invoke the projection writer in-process via its public C# API.
         try
         {
-            global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);
+            ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

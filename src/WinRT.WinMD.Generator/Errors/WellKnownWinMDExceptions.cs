@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Errors;
 
 /// <summary>
 /// Well-known exceptions for the WinMD generator.
 /// </summary>
-internal static class WellKnownWinMDExceptions
+internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
@@ -16,27 +17,28 @@ internal static class WellKnownWinMDExceptions
     public const string ErrorPrefix = "CSWINRTWINMDGEN";
 
     /// <summary>
-    /// Some exception was thrown when trying to read the response file.
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
     /// </summary>
+    private WellKnownWinMDExceptions()
+    {
+    }
+
+    /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, "Failed to read the response file to run 'cswinrtwinmdgen'.", exception);
+        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
-    /// <summary>
-    /// The input response file is malformed.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.MalformedResponseFile"/>
     public static Exception MalformedResponseFile()
     {
-        return Exception(2, "The response file is malformed and contains invalid content.");
+        return Exception(2, WellKnownGeneratorMessages.MalformedResponseFile);
     }
 
-    /// <summary>
-    /// Failed to parse an argument from the response file.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>
     public static Exception ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
     {
-        return Exception(3, $"Failed to parse argument '{argumentName}' from response file.", exception);
+        return Exception(3, WellKnownGeneratorMessages.ResponseFileArgumentParsingError(argumentName), exception);
     }
 
     /// <summary>
@@ -71,28 +73,22 @@ internal static class WellKnownWinMDExceptions
         return Exception(7, $"Failed to probe the .NET runtime version from the input assembly '{path}'.");
     }
 
-    /// <summary>
-    /// The debug repro directory does not exist.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist(string)"/>
     public static Exception DebugReproDirectoryDoesNotExist(string path)
     {
-        return Exception(8, $"The debug repro directory '{path}' does not exist.");
+        return Exception(8, WellKnownGeneratorMessages.DebugReproDirectoryDoesNotExist(path));
     }
 
-    /// <summary>
-    /// The debug repro contains a file entry that has no mapping.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproMissingFileEntryMapping(string)"/>
     public static Exception DebugReproMissingFileEntryMapping(string path)
     {
-        return Exception(9, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+        return Exception(9, WellKnownGeneratorMessages.DebugReproMissingFileEntryMapping(path));
     }
 
-    /// <summary>
-    /// The debug repro contains a file entry that was not recognized.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry(string)"/>
     public static Exception DebugReproUnrecognizedFileEntry(string path)
     {
-        return Exception(10, $"The debug repro file entry with path '{path}' was not recognized.");
+        return Exception(10, WellKnownGeneratorMessages.DebugReproUnrecognizedFileEntry(path));
     }
 
     /// <summary>

@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Errors;
 
 /// <summary>
 /// Well known exceptions for the projection generator.
 /// </summary>
-internal static class WellKnownProjectionGeneratorExceptions
+internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
@@ -19,27 +20,28 @@ internal static class WellKnownProjectionGeneratorExceptions
     public const string ErrorPrefix = "CSWINRTPROJECTIONGEN";
 
     /// <summary>
-    /// Some exception was thrown when trying to read the response file.
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
     /// </summary>
+    private WellKnownProjectionGeneratorExceptions()
+    {
+    }
+
+    /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, "Failed to read the response file to run 'cswinrtprojectiongen'.", exception);
+        return Exception(1, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
-    /// <summary>
-    /// Failed to parse an argument from the response file.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>
     public static Exception ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
     {
-        return Exception(2, $"Failed to parse argument '{argumentName}' from response file.", exception);
+        return Exception(2, WellKnownGeneratorMessages.ResponseFileArgumentParsingError(argumentName), exception);
     }
 
-    /// <summary>
-    /// The input response file is malformed.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.MalformedResponseFile"/>
     public static Exception MalformedResponseFile()
     {
-        return Exception(3, "The response file is malformed and contains invalid content.");
+        return Exception(3, WellKnownGeneratorMessages.MalformedResponseFile);
     }
 
     /// <summary>
@@ -92,28 +94,22 @@ internal static class WellKnownProjectionGeneratorExceptions
         return Exception(8, $"The projection writer failed during source generation (exit code {exitCode}).", exception);
     }
 
-    /// <summary>
-    /// The debug repro directory does not exist.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist(string)"/>
     public static Exception DebugReproDirectoryDoesNotExist(string path)
     {
-        return Exception(9, $"The debug repro directory '{path}' does not exist.");
+        return Exception(9, WellKnownGeneratorMessages.DebugReproDirectoryDoesNotExist(path));
     }
 
-    /// <summary>
-    /// The debug repro contains a file entry that has no mapping.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproMissingFileEntryMapping(string)"/>
     public static Exception DebugReproMissingFileEntryMapping(string path)
     {
-        return Exception(10, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+        return Exception(10, WellKnownGeneratorMessages.DebugReproMissingFileEntryMapping(path));
     }
 
-    /// <summary>
-    /// The debug repro contains a file entry that was not recognized.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry(string)"/>
     public static Exception DebugReproUnrecognizedFileEntry(string path)
     {
-        return Exception(11, $"The debug repro file entry with path '{path}' was not recognized.");
+        return Exception(11, WellKnownGeneratorMessages.DebugReproUnrecognizedFileEntry(path));
     }
 
     /// <summary>

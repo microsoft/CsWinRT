@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Threading;
-using WindowsRuntime.ReferenceProjectionGenerator.Attributes;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
 
 /// <summary>
 /// Input parameters for <see cref="ReferenceProjectionGenerator"/>.
 /// </summary>
-internal sealed partial class ReferenceProjectionGeneratorArgs
+internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input <c>.winmd</c> paths (files, directories to recursively scan, or special
     /// tokens like <c>"local"</c>, <c>"sdk"</c>, <c>"sdk+"</c>, or a version like <c>"10.0.26100.0"</c>).</summary>
@@ -56,10 +57,12 @@ internal sealed partial class ReferenceProjectionGeneratorArgs
     [CommandLineArgumentName("--reference-projection")]
     public bool ReferenceProjection { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
 
-    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
+
+

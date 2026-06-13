@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Threading;
-using WindowsRuntime.ProjectionGenerator.Attributes;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
 /// <summary>
 /// Input parameters for <see cref="ProjectionGenerator"/>.
 /// </summary>
-internal sealed partial class ProjectionGeneratorArgs
+internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
@@ -33,6 +35,7 @@ internal sealed partial class ProjectionGeneratorArgs
 
     /// <summary>Gets the output assembly name. Defaults to 'WinRT.Projection'.</summary>
     [CommandLineArgumentName("--assembly-name")]
+    [DefaultValue("WinRT.Projection")]
     public string AssemblyName { get; init; } = "WinRT.Projection";
 
     /// <summary>
@@ -54,10 +57,11 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
     public required int MaxDegreesOfParallelism { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
 
-    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
+
