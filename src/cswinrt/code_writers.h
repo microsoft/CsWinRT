@@ -5212,8 +5212,6 @@ R"(
         w.write(R"(using System;
 using WindowsRuntime;
 
-#pragma warning disable CSWINRT3001
-
 namespace ABI
 {
 %internal static class WindowsRuntimeDefaultInterfaces;
@@ -5268,8 +5266,6 @@ namespace ABI
         write_file_header(w);
         w.write(R"(using System;
 using WindowsRuntime;
-
-#pragma warning disable CSWINRT3001
 
 namespace ABI
 {

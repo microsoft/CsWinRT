@@ -11,8 +11,6 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
-
 namespace WinRT.Host;
 
 public static class Shim
