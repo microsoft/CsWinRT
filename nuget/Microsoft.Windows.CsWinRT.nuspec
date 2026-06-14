@@ -21,7 +21,6 @@
   <files>
     <file src="LICENSE"/>
     <file src="NOTICE.txt"/>
-    <file src="$cswinrt_exe$" target="tools\win-x86"/>
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
@@ -59,6 +58,8 @@
     <file src="$cswinrtimplgen_arm64$" target ="tools\win-arm64"/>
     <file src="$cswinrtprojectiongen_x64$" target ="tools\win-x64"/>
     <file src="$cswinrtprojectiongen_arm64$" target ="tools\win-arm64"/>
+    <file src="$cswinrtprojectionrefgen_x64$" target ="tools\win-x64"/>
+    <file src="$cswinrtprojectionrefgen_arm64$" target ="tools\win-arm64"/>
     <file src="$cswinrtwinmdgen_x64$" target ="tools\win-x64"/>
     <file src="$cswinrtwinmdgen_arm64$" target ="tools\win-arm64"/>
     <file src="$run_cswinrt_generator_task$" target ="tools\"/>

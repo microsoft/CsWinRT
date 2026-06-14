@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
@@ -39,7 +39,7 @@
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
 
     <!-- Temporarily suppress warnings for 'Microsoft.CodeAnalysis.CSharp' -->    
-    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026;</NoWarn>
+    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026;IDE0028</NoWarn>
   </PropertyGroup>
 
   <!-- NativeAOT and optimization options (same as 'WinRT.Interop.Generator') -->
@@ -54,7 +54,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsmResolver.DotNet" />
+    <ProjectReference Include="..\WinRT.Generator.Core\WinRT.Generator.Core.csproj" />
+    <ProjectReference Include="..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>

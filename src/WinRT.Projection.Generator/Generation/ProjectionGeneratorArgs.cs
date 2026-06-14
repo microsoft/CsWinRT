@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Threading;
-using WindowsRuntime.ProjectionGenerator.Attributes;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
 /// <summary>
 /// Input parameters for <see cref="ProjectionGenerator"/>.
 /// </summary>
-internal sealed partial class ProjectionGeneratorArgs
+internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
@@ -31,12 +33,9 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-metadata")]
     public required string WindowsMetadata { get; init; }
 
-    /// <summary>Gets the path to CsWinRT.exe.</summary>
-    [CommandLineArgumentName("--cswinrt-exe-path")]
-    public required string CsWinRTExePath { get; init; }
-
     /// <summary>Gets the output assembly name. Defaults to 'WinRT.Projection'.</summary>
     [CommandLineArgumentName("--assembly-name")]
+    [DefaultValue("WinRT.Projection")]
     public string AssemblyName { get; init; } = "WinRT.Projection";
 
     /// <summary>
@@ -54,6 +53,10 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
+    /// <summary>Gets the maximum number of parallel tasks to use for execution.</summary>
+    [CommandLineArgumentName("--max-degrees-of-parallelism")]
+    public required int MaxDegreesOfParallelism { get; init; }
+
     /// <summary>
     /// Gets whether to emit the <c>ProjectionTypesInitializer</c> module initializer
     /// (calls <c>Assembly.SetEntryAssembly</c>) into <c>WinRT.Component.dll</c>. Only
@@ -64,6 +67,11 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--emit-entry-point-initializer")]
     public bool EmitEntryPointInitializer { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
+
+    /// <inheritdoc/>
+    [CommandLineArgumentName("--debug-repro-directory")]
+    public string? DebugReproDirectory { get; init; }
 }
+

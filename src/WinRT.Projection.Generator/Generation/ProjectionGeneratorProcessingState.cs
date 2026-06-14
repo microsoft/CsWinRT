@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
+using WindowsRuntime.ProjectionWriter;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
@@ -9,14 +10,14 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// State produced by the processing phase of <see cref="ProjectionGenerator"/>.
 /// </summary>
 /// <param name="sourcesFolder">The path to the folder where sources will be generated.</param>
-/// <param name="rspFilePath">The path to the generated response file for CsWinRT.</param>
 /// <param name="referencesWithoutProjections">The reference assembly paths excluding projection assemblies.</param>
+/// <param name="writerOptions">The options to pass to <see cref="ProjectionWriter.ProjectionWriter.Run"/>.</param>
 /// <param name="hasTypesToProject">Whether any types were found to project.</param>
 /// <param name="componentAssemblyNames">Sorted simple names of all input <c>[WindowsRuntimeComponentAssembly]</c> references (component-mode only).</param>
 internal sealed class ProjectionGeneratorProcessingState(
     string sourcesFolder,
-    string rspFilePath,
     string[] referencesWithoutProjections,
+    ProjectionWriterOptions writerOptions,
     bool hasTypesToProject = true,
     IReadOnlyList<string>? componentAssemblyNames = null)
 {
@@ -26,14 +27,14 @@ internal sealed class ProjectionGeneratorProcessingState(
     public string SourcesFolder { get; } = sourcesFolder;
 
     /// <summary>
-    /// Gets the path to the generated response file for CsWinRT.
-    /// </summary>
-    public string RspFilePath { get; } = rspFilePath;
-
-    /// <summary>
     /// Gets the reference assembly paths excluding projection assemblies.
     /// </summary>
     public string[] ReferencesWithoutProjections { get; } = referencesWithoutProjections;
+
+    /// <summary>
+    /// Gets the options used to invoke <see cref="ProjectionWriter.ProjectionWriter.Run"/>.
+    /// </summary>
+    public ProjectionWriterOptions WriterOptions { get; } = writerOptions;
 
     /// <summary>
     /// Gets whether any types were found to project. When <c>false</c>, the source generation
@@ -48,3 +49,4 @@ internal sealed class ProjectionGeneratorProcessingState(
     /// </summary>
     public IReadOnlyList<string> ComponentAssemblyNames { get; } = componentAssemblyNames ?? [];
 }
+

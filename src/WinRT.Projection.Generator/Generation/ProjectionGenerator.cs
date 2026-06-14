@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
@@ -17,47 +18,32 @@ internal static partial class ProjectionGenerator
     /// <summary>
     /// Runs the projection generator to produce the resulting <c>WinRT.Projection.dll</c> assembly.
     /// </summary>
-    /// <param name="responseFilePath">The path to the response file to use.</param>
+    /// <param name="inputFilePath">The path to the response file or debug repro to use.</param>
     /// <param name="token">The token for the operation.</param>
-    public static void Run([Argument] string responseFilePath, CancellationToken token)
+    public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        ProjectionGeneratorArgs args;
+        GeneratorPhaseRunner<ProjectionGeneratorArgs> runner = GeneratorHost.CreateRunner(
+            inputFilePath: inputFilePath,
+            toolName: "cswinrtprojectiongen",
+            unpackDebugRepro: UnpackDebugRepro,
+            parseFromResponseFile: ResponseFileParser.Parse<ProjectionGeneratorArgs, WellKnownProjectionGeneratorExceptions>,
+            saveDebugRepro: SaveDebugRepro,
+            wrapUnhandled: static (phase, e) => new UnhandledProjectionGeneratorException(phase, e),
+            log: ConsoleApp.Log,
+            token: token);
 
-        // Parse the actual arguments from the response file
-        try
-        {
-            args = ProjectionGeneratorArgs.ParseFromResponseFile(responseFilePath, token);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledProjectionGeneratorException("parsing", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        ProjectionGeneratorProcessingState processingState;
-
-        // Process all .winmd references and create the .rsp file for 'cswinrt.exe'
-        try
-        {
-            // Show the appropriate message to inform users of what this generator is doing,
-            // based on the input arguments. If we don't have precompiled projections, this
-            // tool might run up to 3 times during builds, so this helps make things clearer.
-            ConsoleApp.Log(args switch
+        // Process all .winmd references. Show the appropriate message to inform users of what this
+        // generator is doing, based on the input arguments. If we don't have precompiled projections,
+        // this tool might run up to 3 times during builds, so this helps make things clearer.
+        ProjectionGeneratorProcessingState processingState = runner.RunPhase(
+            phaseName: "processing",
+            logMessage: runner.Args switch
             {
                 { WindowsSdkOnly: true, WindowsUIXamlProjection: false } => "Processing Windows SDK .winmd references",
                 { WindowsSdkOnly: true, WindowsUIXamlProjection: true } => "Processing 'Windows.UI.Xaml' .winmd references",
-                _ => $"Processing {args.WinMDPaths.Length} .winmd reference(s)"
-            });
-
-            processingState = ProcessReferences(args);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledProjectionGeneratorException("processing", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+                _ => $"Processing {runner.Args.WinMDPaths.Length} .winmd reference(s)"
+            },
+            body: ProcessReferences);
 
         // If no types were found to project (e.g., component mode with no component references),
         // skip the source generation and emit phases entirely (no .dll will be produced at all).
@@ -66,48 +52,28 @@ internal static partial class ProjectionGenerator
             return;
         }
 
-        // Invoke 'cswinrt.exe' to generate the projection sources
-        try
-        {
-            ConsoleApp.Log("Generating projection code");
-
-            GenerateSources(args, processingState);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledProjectionGeneratorException("source-generation", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+        // Invoke the projection writer (in-process) to generate the projection sources
+        runner.RunPhase(
+            phaseName: "source-generation",
+            logMessage: "Generating projection code",
+            body: _ => GenerateSources(processingState));
 
         // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting
-        // source files alongside cswinrt.exe's output so the merged dll plays the entry-assembly
-        // and merged-activation roles (TypeMap union, SetEntryAssembly module init, merged
-        // 'ABI.WinRT.Component.ManagedExports.GetActivationFactory', and AOT native export).
-        try
-        {
-            EmitWinRTComponentSources(args, processingState);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledProjectionGeneratorException("winrt-component-sources", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+        // source files alongside the projection writer's output so the merged dll plays
+        // the entry-assembly and merged-activation roles (TypeMap union, SetEntryAssembly
+        // module init, merged 'ABI.WinRT.Component.ManagedExports.GetActivationFactory',
+        // and AOT native export).
+        runner.RunPhase(
+            phaseName: "winrt-component-sources",
+            body: args => EmitWinRTComponentSources(args, processingState));
 
         // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
-        try
-        {
-            ConsoleApp.Log("Compiling projection code");
-
-            Emit(args, processingState);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledProjectionGeneratorException("emit", e);
-        }
+        runner.RunPhase(
+            phaseName: "emit",
+            logMessage: "Compiling projection code",
+            body: args => Emit(args, processingState));
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, args.AssemblyName)}.dll");
+        ConsoleApp.Log($"Projection code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, runner.Args.AssemblyName)}.dll");
     }
 }

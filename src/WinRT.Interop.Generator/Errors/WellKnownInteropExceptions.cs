@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
+using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.InteropGenerator.Fixups;
 
 namespace WindowsRuntime.InteropGenerator.Errors;
@@ -15,12 +16,53 @@ namespace WindowsRuntime.InteropGenerator.Errors;
 /// <summary>
 /// Well known exceptions for the interop generator.
 /// </summary>
-internal static class WellKnownInteropExceptions
+internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
     /// </summary>
     public const string ErrorPrefix = "CSWINRTINTEROPGEN";
+
+    /// <summary>
+    /// Prevents external instantiation; this type is only used to dispatch through <see cref="IGeneratorErrorFactory"/>.
+    /// </summary>
+    private WellKnownInteropExceptions()
+    {
+    }
+
+    // Explicit IGeneratorErrorFactory implementations: the public static methods for these six
+    // shared logical errors return 'WellKnownInteropException' (so callers can chain '.ThrowOrAttach(...)'),
+    // but the interface contract returns 'Exception'. C# 'static abstract' interface methods don't
+    // support return-type covariance, so we forward through these tiny explicit shims.
+    static Exception IGeneratorErrorFactory.ResponseFileReadError(Exception exception)
+    {
+        return ResponseFileReadError(exception);
+    }
+
+    static Exception IGeneratorErrorFactory.ResponseFileArgumentParsingError(string argumentName, Exception? exception)
+    {
+        return ResponseFileArgumentParsingError(argumentName, exception);
+    }
+
+    static Exception IGeneratorErrorFactory.MalformedResponseFile()
+    {
+        return MalformedResponseFile();
+    }
+
+    static Exception IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist(string path)
+    {
+        return DebugReproDirectoryDoesNotExist(path);
+    }
+
+    static Exception IGeneratorErrorFactory.DebugReproMissingFileEntryMapping(string path)
+    {
+        return DebugReproMissingFileEntryMapping(path);
+    }
+
+    static Exception IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry(string path)
+    {
+        return DebugReproUnrecognizedFileEntry(path);
+    }
 
     /// <summary>
     /// A runtime class name is too long.
@@ -242,36 +284,28 @@ internal static class WellKnownInteropExceptions
         return Exception(27, $"Failed to generate marshalling code for 'IDictionary<TKey, TValue>' type '{dictionaryType}'.", exception);
     }
 
-    /// <summary>
-    /// Some exception was thrown when trying to read the response file.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileReadError(Exception)"/>
     public static WellKnownInteropException ResponseFileReadError(Exception exception)
     {
-        return Exception(28, "Failed to read the response file to run 'cswinrtinteropgen'.", exception);
+        return Exception(28, WellKnownGeneratorMessages.ResponseFileReadError, exception);
     }
 
-    /// <summary>
-    /// Failed to parse an argument from the response file.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.ResponseFileArgumentParsingError(string, Exception?)"/>
     public static WellKnownInteropException ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
     {
-        return Exception(29, $"Failed to parse argument '{argumentName}' from response file.", exception);
+        return Exception(29, WellKnownGeneratorMessages.ResponseFileArgumentParsingError(argumentName), exception);
     }
 
-    /// <summary>
-    /// The input response file is malformed.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.MalformedResponseFile"/>
     public static WellKnownInteropException MalformedResponseFile()
     {
-        return Exception(30, "The response file is malformed and contains invalid content.");
+        return Exception(30, WellKnownGeneratorMessages.MalformedResponseFile);
     }
 
-    /// <summary>
-    /// The debug repro directory does not exist.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproDirectoryDoesNotExist(string)"/>
     public static WellKnownInteropException DebugReproDirectoryDoesNotExist(string path)
     {
-        return Exception(31, $"The debug repro directory '{path}' does not exist.");
+        return Exception(31, WellKnownGeneratorMessages.DebugReproDirectoryDoesNotExist(path));
     }
 
     /// <summary>
@@ -746,20 +780,16 @@ internal static class WellKnownInteropExceptions
         return Exception(88, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro cannot be generated.");
     }
 
-    /// <summary>
-    /// The debug repro contains a file entry that has no mapping.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproMissingFileEntryMapping(string)"/>
     public static WellKnownInteropException DebugReproMissingFileEntryMapping(string path)
     {
-        return Exception(89, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+        return Exception(89, WellKnownGeneratorMessages.DebugReproMissingFileEntryMapping(path));
     }
 
-    /// <summary>
-    /// The debug repro contains a file entry that was not recognized.
-    /// </summary>
+    /// <inheritdoc cref="IGeneratorErrorFactory.DebugReproUnrecognizedFileEntry(string)"/>
     public static WellKnownInteropException DebugReproUnrecognizedFileEntry(string path)
     {
-        return Exception(90, $"The debug repro file entry with path '{path}' was not recognized.");
+        return Exception(90, WellKnownGeneratorMessages.DebugReproUnrecognizedFileEntry(path));
     }
 
     /// <summary>

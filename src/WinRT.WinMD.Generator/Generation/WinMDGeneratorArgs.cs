@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Threading;
-using WindowsRuntime.WinMDGenerator.Attributes;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
 /// <summary>
 /// Input parameters for <see cref="WinMDGenerator"/>.
 /// </summary>
-internal sealed partial class WinMDGeneratorArgs
+internal sealed class WinMDGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the path to the compiled input assembly (.dll) to analyze.</summary>
     [CommandLineArgumentName("--input-assembly-path")]
@@ -31,6 +32,11 @@ internal sealed partial class WinMDGeneratorArgs
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
+
+    /// <inheritdoc/>
+    [CommandLineArgumentName("--debug-repro-directory")]
+    public string? DebugReproDirectory { get; init; }
 }
+

@@ -11,7 +11,6 @@
     <ProjectReference Include="..\..\TestWinRT\test_component_base\test_component_base.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
     <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
-    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\Test\Test.csproj" />

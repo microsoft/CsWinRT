@@ -46,11 +46,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public string? WindowsMetadata { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the cswinrt.exe tool.
-    /// </summary>
-    public string? CsWinRTExePath { get; set; }
-
-    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtprojectiongen' tool is located.
     /// </summary>
     [Required]
@@ -87,6 +82,18 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public bool WindowsUIXamlProjection { get; set; }
 
     /// <summary>
+    /// Gets or sets the maximum number of parallel tasks the projection writer is allowed to dispatch.
+    /// </summary>
+    /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
+    public int MaxDegreesOfParallelism { get; set; } = -1;
+
+    /// <summary>
+    /// Gets or sets the directory where the debug repro will be produced.
+    /// </summary>
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
+
+    /// <summary>
     /// Gets or sets whether to emit the 'ProjectionTypesInitializer' module initializer
     /// (Assembly.SetEntryAssembly) into 'WinRT.Component.dll'. Only needed under JIT to
     /// enable TypeMap discovery; AOT uses a separate exe-project workaround.
@@ -103,7 +110,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     [MemberNotNullWhen(true, nameof(WinMDPaths))]
     [MemberNotNullWhen(true, nameof(TargetFramework))]
     [MemberNotNullWhen(true, nameof(WindowsMetadata))]
-    [MemberNotNullWhen(true, nameof(CsWinRTExePath))]
     [MemberNotNullWhen(true, nameof(CsWinRTToolsDirectory))]
 #endif
     protected override bool ValidateParameters()
@@ -137,6 +143,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
+
+            return false;
+        }
+
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
 
             return false;
         }
@@ -198,7 +211,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         AppendResponseFileCommand(args, "--winmd-paths", winMDPathsArg);
         AppendResponseFileCommand(args, "--target-framework", TargetFramework!);
         AppendResponseFileCommand(args, "--windows-metadata", WindowsMetadata!);
-        AppendResponseFileCommand(args, "--cswinrt-exe-path", CsWinRTExePath!);
 
         if (!string.IsNullOrEmpty(AssemblyName))
         {
@@ -214,6 +226,9 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
         }
+
+        AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
+        AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
 
         if (EmitEntryPointInitializer)
         {
@@ -238,5 +253,20 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     private static void AppendResponseFileCommand(StringBuilder args, string commandName, string commandValue)
     {
         _ = args.Append($"{commandName} ").AppendLine(commandValue);
+    }
+
+    /// <summary>
+    /// Appends an optional command line argument to the response file arguments, with the right format.
+    /// </summary>
+    /// <param name="args">The command line arguments being built.</param>
+    /// <param name="commandName">The command name to append.</param>
+    /// <param name="commandValue">The optional command value to append.</param>
+    /// <remarks>This method will not append the command if <paramref name="commandValue"/> is <see langword="null"/>.</remarks>
+    private static void AppendResponseFileOptionalCommand(StringBuilder args, string commandName, string? commandValue)
+    {
+        if (commandValue is not null)
+        {
+            AppendResponseFileCommand(args, commandName, commandValue);
+        }
     }
 }
