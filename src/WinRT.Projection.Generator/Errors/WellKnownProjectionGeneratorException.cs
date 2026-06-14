@@ -2,36 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using WindowsRuntime.Generator.Errors;
 
 namespace WindowsRuntime.ProjectionGenerator.Errors;
 
 /// <summary>
-/// A well known exceptions for the projection generator.
+/// A well known exception for the projection generator.
 /// </summary>
-internal sealed class WellKnownProjectionGeneratorException : Exception
-{
-    /// <summary>
-    /// Creates a new <see cref="WellKnownProjectionGeneratorException"/> instance with the specified parameters.
-    /// </summary>
-    /// <param name="id">The id of the exception.</param>
-    /// <param name="message">The exception message.</param>
-    /// <param name="innerException">The inner exception.</param>
-    public WellKnownProjectionGeneratorException(string id, string message, Exception? innerException)
-        : base(message, innerException)
-    {
-        Id = id;
-    }
-
-    /// <summary>
-    /// Gets the id of the exception.
-    /// </summary>
-    public string Id { get; }
-
-    /// <inheritdoc/>
-    public override string ToString()
-    {
-        return InnerException is not null
-            ? $"""error {Id}: {Message} Inner exception: '{InnerException.GetType().Name}': '{InnerException.Message}'."""
-            : $"""error {Id}: {Message}""";
-    }
-}
+/// <inheritdoc cref="WellKnownGeneratorException(string, string, Exception?)"/>
+internal sealed class WellKnownProjectionGeneratorException(string id, string message, Exception? innerException)
+    : WellKnownGeneratorException(id, message, innerException);

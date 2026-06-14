@@ -95,6 +95,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTInteropGenEffectiveToolsDirectory Condition="'$(CsWinRTInteropGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTInteropGenEffectiveToolsDirectory>
       <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
       <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+      <CsWinRTRefGenEffectiveToolsDirectory Condition="'$(CsWinRTRefGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTRefGenEffectiveToolsDirectory>
 
       <!-- Temporarily setting this due to .NET SDK targets check it. -->
       <CsWinRTToolsDirectory>$(CsWinRTInteropGenEffectiveToolsDirectory)</CsWinRTToolsDirectory>
@@ -342,12 +343,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_WinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"      
-      CsWinRTExePath="$(CsWinRTExe)"
+      DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the interop .dll item and add it to the required output groups -->
@@ -391,7 +393,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
       <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd'))" />
       <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
-      <!-- Add the current project's .winmd so cswinrt.exe can process it -->
+      <!-- Add the current project's .winmd so the projection generator can process it -->
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
       <_ComponentWinMDPaths Include="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(AssemblyName).winmd'))"
                             Condition="'$(CsWinRTComponent)' == 'true'" />
@@ -404,12 +406,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_ComponentWinMDPaths)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Component"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Only wire up the component DLL if it was actually produced (i.e. component types were found) -->
@@ -479,7 +481,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_SdkWinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"      
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Sdk.Projection"
       WindowsSdkOnly="true"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
@@ -487,6 +488,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the SDK projection .dll item -->
@@ -563,7 +565,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinMDPaths="@(_SdkXamlWinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
-      CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Sdk.Xaml.Projection"
       WindowsSdkOnly="true"
       WindowsUIXamlProjection="true"
@@ -572,6 +573,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Set the metadata for the SDK XAML .dll item -->

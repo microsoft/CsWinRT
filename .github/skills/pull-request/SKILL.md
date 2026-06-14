@@ -42,10 +42,7 @@ Brief summary of what this PR does (1-3 sentences).
 
 ## Motivation
 
-Explain *why* these changes are being made. What problem do they solve?
-What improvement do they bring? If the user provided motivation when
-asking for the PR, use that. Otherwise, infer from the diff, commit
-messages, and code comments.
+Explain *why* these changes are being made. What problem do they solve? What improvement do they bring? If the user provided motivation when asking for the PR, use that. Otherwise, infer from the diff, commit messages, and code comments.
 
 ## Changes
 
@@ -57,6 +54,7 @@ List the key changes in the PR:
 ```
 
 **Formatting rules:**
+- **Do not hard-wrap text like a commit message.** A PR description is not a commit message: never break paragraphs or bullet points at a fixed column width (e.g. 72 characters). Write each paragraph and each bullet point as a single continuous line and let it soft-wrap. GitHub-Flavored Markdown renders a single newline inside a paragraph as a hard `<br>` line break, so commit-style wrapping makes the description render with line breaks mid-sentence. Only use blank lines to separate paragraphs, list items, and sections.
 - Use clean, standard markdown (no HTML entities, no non-printable characters)
 - Use backticks for file paths, type names, and code references
 - Keep bullet points concise
@@ -128,15 +126,11 @@ Remove-Item $bodyFile
 ```markdown
 ## Summary
 
-Add comprehensive Copilot instructions documenting the CsWinRT 3.0
-architecture, build pipeline, and coding conventions.
+Add comprehensive Copilot instructions documenting the CsWinRT 3.0 architecture, build pipeline, and coding conventions.
 
 ## Motivation
 
-The CsWinRT 3.0 codebase is complex, with multiple interrelated build
-tools and a multi-phase build pipeline. Having detailed Copilot
-instructions helps contributors and AI assistants understand the
-architecture and make correct changes without extensive ramp-up time.
+The CsWinRT 3.0 codebase is complex, with multiple interrelated build tools and a multi-phase build pipeline. Having detailed Copilot instructions helps contributors and AI assistants understand the architecture and make correct changes without extensive ramp-up time.
 
 ## Changes
 

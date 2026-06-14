@@ -148,6 +148,84 @@ foreach (var hierarchyDAsHierarchyC in hierarchyDAsHierarchyCList)
     }
 }
 
+// Test 'Keys'/'Values' on a directly constructed runtime class that's projected via
+// cswinrt's static_abi_methods path (uses the interop generator's '{Map}Methods.Keys/Values'
+// statically resolved via 'UnsafeAccessor'). 'Windows.Foundation.Collections.StringMap' is a
+// runtime class projected as 'IDictionary<string, string>'; this exercises the trim/AOT path
+// for both the cswinrt-generated 'Keys'/'Values' property and the interop-emitted static method.
+var stringMapForKeysValues = new Windows.Foundation.Collections.StringMap
+{
+    ["one"] = "1",
+    ["two"] = "2",
+    ["three"] = "3"
+};
+
+System.Collections.Generic.ICollection<string> stringMapKeys = stringMapForKeysValues.Keys;
+System.Collections.Generic.ICollection<string> stringMapValues = stringMapForKeysValues.Values;
+if (stringMapKeys.Count != 3 || stringMapValues.Count != 3)
+{
+    return 101;
+}
+if (!stringMapKeys.Contains("one") || !stringMapKeys.Contains("two") || !stringMapKeys.Contains("three"))
+{
+    return 101;
+}
+if (!stringMapValues.Contains("1") || !stringMapValues.Contains("2") || !stringMapValues.Contains("3"))
+{
+    return 101;
+}
+
+// Same scenario for 'PropertySet'/'ValueSet': different generic instantiation
+// ('IDictionary<string, object>') and so a different generated 'Methods' type.
+var newPropertySet = new Windows.Foundation.Collections.PropertySet
+{
+    ["alpha"] = 1,
+    ["beta"] = "two"
+};
+
+System.Collections.Generic.ICollection<string> newPropertySetKeys = newPropertySet.Keys;
+System.Collections.Generic.ICollection<object> newPropertySetValues = newPropertySet.Values;
+if (newPropertySetKeys.Count != 2 || newPropertySetValues.Count != 2)
+{
+    return 101;
+}
+if (!newPropertySetKeys.Contains("alpha") || !newPropertySetKeys.Contains("beta"))
+{
+    return 101;
+}
+
+var newValueSet = new Windows.Foundation.Collections.ValueSet
+{
+    ["x"] = 1.0,
+    ["y"] = 2.0
+};
+
+if (newValueSet.Keys.Count != 2 || newValueSet.Values.Count != 2)
+{
+    return 101;
+}
+
+// Test the parallel 'IReadOnlyDictionary' path through a runtime class that's projected
+// as 'IReadOnlyDictionary<string, string>'. This exercises the cswinrt-emitted projection
+// (with the corrected 'IEnumerable<T>' UnsafeAccessor return type) bound to the interop-
+// emitted 'IReadOnlyDictionary'2<string|string>Methods.Keys'/'Values' static methods,
+// under trimming/AOT.
+var customReadOnlyDictionary = new TestComponentCSharp.CustomReadOnlyDictionaryTest();
+System.Collections.Generic.IEnumerable<string> customDictionaryKeys = customReadOnlyDictionary.Keys;
+System.Collections.Generic.IEnumerable<string> customDictionaryValues = customReadOnlyDictionary.Values;
+if (customDictionaryKeys.Count() != 3 || customDictionaryValues.Count() != 3)
+{
+    return 101;
+}
+if (!customDictionaryKeys.Contains("apples") || !customDictionaryKeys.Contains("oranges") || !customDictionaryKeys.Contains("pears"))
+{
+    return 101;
+}
+if (!customDictionaryValues.Contains("1") || !customDictionaryValues.Contains("2") || !customDictionaryValues.Contains("3"))
+{
+    return 101;
+}
+
 var propertySet = Class.PropertySet;
 if (propertySet["beta"] is not string str || str != "second")
 {

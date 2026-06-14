@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Threading;
-using WindowsRuntime.ImplGenerator.Attributes;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 
 /// <summary>
 /// Input parameters for <see cref="ImplGenerator"/>.
 /// </summary>
-internal sealed partial class ImplGeneratorArgs
+internal sealed class ImplGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
@@ -31,10 +32,11 @@ internal sealed partial class ImplGeneratorArgs
     [CommandLineArgumentName("--assembly-originator-key-file")]
     public string? AssemblyOriginatorKeyFile { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
 
-    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
+

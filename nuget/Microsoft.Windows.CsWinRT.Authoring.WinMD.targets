@@ -86,6 +86,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       OutputWinmdPath="$(_CsWinRTWinMDOutputPath)"
       AssemblyVersion="$(AssemblyVersion)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTWinMDGenEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"

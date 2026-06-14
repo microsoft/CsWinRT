@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Threading;
-using WindowsRuntime.InteropGenerator.Attributes;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Attributes;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <summary>
 /// Input parameters for <see cref="InteropGenerator"/>.
 /// </summary>
-internal sealed partial class InteropGeneratorArgs
+internal sealed class InteropGeneratorArgs : IGeneratorArgs
 {
     /// <summary>Gets the input reference .dll paths.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
@@ -67,10 +68,11 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
     public required int MaxDegreesOfParallelism { get; init; }
 
-    /// <summary>Gets the token for the operation.</summary>
+    /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
 
-    /// <summary>Gets the directory to use to place the debug repro, if requested.</summary>
+    /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
+

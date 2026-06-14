@@ -44,6 +44,7 @@
     <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
     <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>
     <CsWinRTMergedProjectionEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+    <CsWinRTRefGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTRefGenEffectiveToolsDirectory>
     <CsWinRTWinMDGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTWinMDGenEffectiveToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
   </PropertyGroup>
@@ -51,13 +52,24 @@
   <PropertyGroup>
     <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
     <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
+
+    <!--
+      Default 'AssemblyVersionNumber' to '3.0.0.0' (the 'WinRT.Runtime' CsWinRT 3.0 baseline) so
+      that 'dotnet build' from the repo root works without explicit '/p:AssemblyVersionNumber=...'.
+      Official builds set this explicitly via the 'CsWinRT-Variables' pipeline.
+    -->
+    <AssemblyVersionNumber Condition="'$(AssemblyVersionNumber)' == ''">3.0.0.0</AssemblyVersionNumber>
     <BuildPlatform>$(Platform)</BuildPlatform>
     <BuildPlatform Condition="'$(Platform)'=='Win32'">x86</BuildPlatform>
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
-    <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
-    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)WindowsRuntime.Internal.winmd</CsWinRTInteropMetadata>
+
+    <!--
+      The 'WindowsRuntime.Internal.winmd' metadata used to bind the Windows SDK interop
+      interfaces (e.g. 'IPrintManagerInterop', 'IDragDropManagerInterop') is produced by
+      the managed 'WinRT.Internal' project, which targets the TFM below.
+    -->
+    <CsWinRTInternalTargetFramework Condition="'$(CsWinRTInternalTargetFramework)' == ''">net10.0-windows10.0.26100.1</CsWinRTInternalTargetFramework>
+    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'WinRT.Internal', 'bin', '$(Configuration)', '$(CsWinRTInternalTargetFramework)', 'WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj'">

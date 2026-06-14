@@ -17,9 +17,13 @@ using AsmResolver.DotNet;
 using AsmResolver.PE;
 using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Extensions;
+using WindowsRuntime.Generator.Helpers;
+using WindowsRuntime.Generator.Parsing;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.ImplGenerator.Errors;
-using WindowsRuntime.ImplGenerator.References;
-using WindowsRuntime.InteropGenerator;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 
@@ -66,143 +70,53 @@ internal static partial class ImplGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        string responseFilePath = inputFilePath;
-        bool isUsingDebugRepro = false;
-
-        // Load the debug repro to investigate with, if we have one
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            if (Path.GetExtension(Path.Normalize(inputFilePath)) == ".zip")
-            {
-                ConsoleApp.Log("Unpacking input 'cswinrtimplgen' debug repro");
-
-                isUsingDebugRepro = true;
-
-                // If we unpacked a debug repro, we'll also replace the input file
-                // path with the extracted response file from the input repro.
-                responseFilePath = UnpackDebugRepro(inputFilePath, token);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("unpack-debug-repro", e);
-        }
-
-        token.ThrowIfCancellationRequested();
-
-        ImplGeneratorArgs args;
-
-        // Parse the actual arguments from the response file
-        try
-        {
-            args = ImplGeneratorArgs.ParseFromResponseFile(responseFilePath, token);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("parsing", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Save a debug repro, if needed
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            // We also skip this if we're currently processing an input debug
-            // repro, as there would be no point in creating a new one from that.
-            if (args.DebugReproDirectory is not null && !isUsingDebugRepro)
-            {
-                ConsoleApp.Log("Saving 'cswinrtimplgen' debug repro");
-
-                SaveDebugRepro(args);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("save-debug-repro", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        RuntimeContext runtimeContext;
-        ModuleDefinition outputModule;
+        GeneratorPhaseRunner<ImplGeneratorArgs> runner = GeneratorHost.CreateRunner(
+            inputFilePath: inputFilePath,
+            toolName: "cswinrtimplgen",
+            unpackDebugRepro: UnpackDebugRepro,
+            parseFromResponseFile: ResponseFileParser.Parse<ImplGeneratorArgs, WellKnownImplExceptions>,
+            saveDebugRepro: SaveDebugRepro,
+            wrapUnhandled: static (phase, e) => new UnhandledImplException(phase, e),
+            log: ConsoleApp.Log,
+            token: token);
 
         // Initialize the assembly resolver and load the output module
-        try
-        {
-            LoadOutputModule(args, out runtimeContext, out outputModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("loading", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        ModuleDefinition implModule;
+        (RuntimeContext runtimeContext, ModuleDefinition outputModule) = runner.RunPhase(
+            phaseName: "loading",
+            body: LoadOutputModule);
 
         // Define the impl module to emit
-        try
-        {
-            implModule = DefineImplModule(runtimeContext, outputModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("loading", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+        ModuleDefinition implModule = runner.RunPhase(
+            phaseName: "loading",
+            body: _ => DefineImplModule(runtimeContext, outputModule));
 
         // Emit all necessary IL code in the impl module
-        try
+        runner.RunPhase(phaseName: "generation", body: _ =>
         {
             EmitAssemblyAttributes(outputModule, implModule);
             EmitTypeForwards(outputModule, implModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("generation", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
+        });
 
         // Write the module to disk with all the generated contents
-        try
-        {
-            WriteImplModuleToDisk(args, outputModule, implModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("emit", e);
-        }
+        runner.RunPhase(
+            phaseName: "emit",
+            body: args => WriteImplModuleToDisk(args, outputModule, implModule));
 
         // Signs the module on disk, if needed
-        try
-        {
-            SignImplModuleOnDisk(args, outputModule);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledImplException("sign", e);
-        }
+        runner.RunPhase(
+            phaseName: "sign",
+            body: args => SignImplModuleOnDisk(args, outputModule));
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Impl code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, implModule.Name!)}");
+        ConsoleApp.Log($"Impl code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, implModule.Name!)}");
     }
 
     /// <summary>
     /// Loads the output assembly being produced.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="runtimeContext">The <see cref="RuntimeContext"/> instance in use.</param>
-    /// <param name="outputModule">The loaded <see cref="ModuleDefinition"/> for the output assembly.</param>
-    private static void LoadOutputModule(
-        ImplGeneratorArgs args,
-        out RuntimeContext runtimeContext,
-        out ModuleDefinition outputModule)
+    /// <returns>The <see cref="RuntimeContext"/> instance in use and the loaded <see cref="ModuleDefinition"/> for the output assembly.</returns>
+    private static (RuntimeContext RuntimeContext, ModuleDefinition OutputModule) LoadOutputModule(ImplGeneratorArgs args)
     {
         PEImage outputAssemblyImage;
 
@@ -227,12 +141,12 @@ internal static partial class ImplGenerator
         PathAssemblyResolver assemblyResolver = new(args.ReferenceAssemblyPaths);
 
         // Initialize the runtime context (this will be reused to allow caching)
-        runtimeContext = new RuntimeContext(targetRuntime, assemblyResolver);
+        RuntimeContext runtimeContext = new(targetRuntime, assemblyResolver);
 
         // Try to load the .dll at the current path
         try
         {
-            outputModule = runtimeContext.LoadModule(outputAssemblyImage);
+            return (runtimeContext, runtimeContext.LoadModule(outputAssemblyImage));
         }
         catch (Exception e)
         {
@@ -325,7 +239,7 @@ internal static partial class ImplGenerator
             // will always have a version number equal or higher than this, so it will load correctly.
             AssemblyReference sdkProjectionAssembly = new("WinRT.Sdk.Projection"u8, new Version(0, 0, 0, 0))
             {
-                PublicKeyOrToken = ImplValues.PublicKeyData,
+                PublicKeyOrToken = WellKnownPublicKeys.WindowsSdkProjection,
                 HasPublicKey = true
             };
 
@@ -333,7 +247,7 @@ internal static partial class ImplGenerator
             // This is only used when the option to use Windows UI Xaml projections is enabled.
             AssemblyReference sdkXamlProjectionAssembly = new("WinRT.Sdk.Xaml.Projection"u8, new Version(0, 0, 0, 0))
             {
-                PublicKeyOrToken = ImplValues.PublicKeyData,
+                PublicKeyOrToken = WellKnownPublicKeys.WindowsSdkProjection,
                 HasPublicKey = true
             };
 
@@ -341,7 +255,7 @@ internal static partial class ImplGenerator
             // Unlike the implementation .dll for the Windows SDK however, this .dll is created on the fly.
             AssemblyReference projectionAssembly = new("WinRT.Projection"u8, new Version(0, 0, 0, 0))
             {
-                PublicKeyOrToken = ImplValues.PublicKeyData,
+                PublicKeyOrToken = WellKnownPublicKeys.WindowsSdkProjection,
                 HasPublicKey = true
             };
 

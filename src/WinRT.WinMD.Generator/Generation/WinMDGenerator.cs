@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Threading;
 using ConsoleAppFramework;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
@@ -22,7 +23,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// The generation process runs in three phases:
 /// </para>
 /// <list type="number">
-///   <item><strong>Parse</strong>: Read arguments from the response file via <see cref="WinMDGeneratorArgs.ParseFromResponseFile(string, CancellationToken)"/>.</item>
+///   <item><strong>Parse</strong>: Read arguments from the response file via <see cref="ResponseFileParser.Parse{TArgs, TErr}(string, CancellationToken)"/>.</item>
 ///   <item><strong>Discover</strong>: Load the input assembly and discover public types via <see cref="Discover"/>.</item>
 ///   <item><strong>Generate</strong>: Transform discovered types and write the WinMD file via <see cref="Generate"/>.</item>
 /// </list>
@@ -32,52 +33,32 @@ internal static partial class WinMDGenerator
     /// <summary>
     /// Runs the WinMD generator to produce a <c>.winmd</c> file from a compiled assembly.
     /// </summary>
-    /// <param name="inputFilePath">The path to the response file to use.</param>
+    /// <param name="inputFilePath">The path to the response file or debug repro to use.</param>
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        WinMDGeneratorArgs args;
-
-        // Parse the arguments from the response file
-        try
-        {
-            args = WinMDGeneratorArgs.ParseFromResponseFile(inputFilePath, token);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledWinMDException("parsing", e);
-        }
-
-        token.ThrowIfCancellationRequested();
+        GeneratorPhaseRunner<WinMDGeneratorArgs> runner = GeneratorHost.CreateRunner(
+            inputFilePath: inputFilePath,
+            toolName: "cswinrtwinmdgen",
+            unpackDebugRepro: UnpackDebugRepro,
+            parseFromResponseFile: ResponseFileParser.Parse<WinMDGeneratorArgs, WellKnownWinMDExceptions>,
+            saveDebugRepro: SaveDebugRepro,
+            wrapUnhandled: static (phase, e) => new UnhandledWinMDException(phase, e),
+            log: ConsoleApp.Log,
+            token: token);
 
         // Discover the types to process
-        WinMDGeneratorDiscoveryState discoveryState;
-
-        try
-        {
-            ConsoleApp.Log($"Processing assembly: '{System.IO.Path.GetFileName(args.InputAssemblyPath)}'");
-
-            discoveryState = Discover(args);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledWinMDException("discovery", e);
-        }
-
-        token.ThrowIfCancellationRequested();
+        WinMDGeneratorDiscoveryState discoveryState = runner.RunPhase(
+            phaseName: "discovery",
+            logMessage: $"Processing assembly: '{System.IO.Path.GetFileName(runner.Args.InputAssemblyPath)}'",
+            body: Discover);
 
         // Generate and write the .winmd file
-        try
-        {
-            ConsoleApp.Log($"Defining {discoveryState.PublicTypes.Count} authored type(s)");
+        runner.RunPhase(
+            phaseName: "generation",
+            logMessage: $"Defining {discoveryState.PublicTypes.Count} authored type(s)",
+            body: args => Generate(args, discoveryState));
 
-            Generate(args, discoveryState);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledWinMDException("generation", e);
-        }
-
-        ConsoleApp.Log($"Windows Runtime assembly (.winmd) generated -> {args.OutputWinmdPath}");
+        ConsoleApp.Log($"Windows Runtime assembly (.winmd) generated -> {runner.Args.OutputWinmdPath}");
     }
 }

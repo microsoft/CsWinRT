@@ -40,16 +40,14 @@ This version matching is critical because `cswinrtinteropgen` relies on "impleme
 - **Root namespace**: `WindowsRuntime.InteropGenerator`
 - **Assembly name**: `WinRT.Interop.Generator`
 - **Output type**: Exe (console application)
-- **Key dependency**: `AsmResolver.DotNet` (assembly reading/writing), `ConsoleAppFramework` (CLI)
+- **Key dependencies**: `AsmResolver.DotNet` (assembly reading/writing), `ConsoleAppFramework` (CLI), `CommunityToolkit.HighPerformance`, `System.Numerics.Tensors`, and a project reference to the shared `WinRT.Generator.Core` library
 - **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 
 ## Project structure
 
 ```
 WinRT.Interop.Generator/
-├── Program.cs                              # Entry point (delegates to InteropGenerator.Run)
-├── Attributes/                             # CLI argument attribute
-│   └── CommandLineArgumentNameAttribute.cs # Maps properties to CLI arg names
+├── Program.cs                              # Entry point (ConsoleApp.Run → InteropGenerator.Run)
 ├── Builders/                               # IL type/method definition builders
 │   ├── InteropTypeDefinitionBuilder.cs     # Core builder (IID, NativeObject, ComWrappersCallback)
 │   ├── InteropTypeDefinitionBuilder.*.cs   # Per-interface builders (20+ partials)
@@ -65,12 +63,12 @@ WinRT.Interop.Generator/
 │   ├── WellKnownInteropException.cs        # Structured errors with CSWINRTINTEROPGEN### codes
 │   ├── WellKnownInteropExceptions.cs       # Factory for all error/warning codes (80+ codes)
 │   └── WellKnownInteropWarning.cs          # Non-fatal warnings (can be promoted to errors)
-├── Extensions/                             # Extension methods (26 files)
+├── Extensions/                             # Extension methods (23 files)
 │   ├── WindowsRuntimeExtensions.cs         # Core: IsProjectedWindowsRuntimeType, IsBlittable, etc.
 │   ├── TypeSignatureExtensions.cs          # GetAbiType, EnumerateAllInterfaces, etc.
 │   ├── ModuleDefinitionExtensions.cs       # GetType, TryGetType, ReferencesAssembly
 │   ├── CilInstructionCollectionExtensions.cs # IL instruction manipulation
-│   └── ... (22 more)                       # Various AsmResolver type extensions
+│   └── ... (19 more)                       # Various AsmResolver type extensions
 ├── Factories/                              # Type/member/attribute creation factories
 │   ├── InteropCustomAttributeFactory.cs    # [Guid], [UnmanagedCallersOnly], [TypeMap], etc.
 │   ├── InteropMemberDefinitionFactory.cs   # Properties, methods, lazy-init patterns
@@ -88,13 +86,11 @@ WinRT.Interop.Generator/
 │   ├── InteropMethodFixup.RemoveLeftoverNopAfterLeave.cs  # ECMA-335 compliance
 │   └── InteropMethodFixup.RemoveUnnecessaryTryStartNop.cs # IL size optimization
 ├── Generation/                             # Core pipeline orchestration
-│   ├── InteropGenerator.cs                 # Main entry: Run() → Discover() → Emit()
-│   ├── InteropGenerator.DebugRepro.cs      # Debug repro pack/unpack
+│   ├── InteropGenerator.cs                 # Main entry: GeneratorHost.CreateRunner → Discover() → Emit()
+│   ├── InteropGenerator.DebugRepro.cs      # Debug repro pack/unpack (delegates to shared DebugReproPacker)
 │   ├── InteropGenerator.Discover.cs        # Discovery phase orchestration
 │   ├── InteropGenerator.Emit.cs            # Emit phase orchestration (~131 KB, largest file)
-│   ├── InteropGeneratorArgs.cs             # CLI argument definitions
-│   ├── InteropGeneratorArgs.Parsing.cs     # .rsp file parsing
-│   ├── InteropGeneratorArgs.Formatting.cs  # .rsp file serialization (for debug repros)
+│   ├── InteropGeneratorArgs.cs             # CLI argument definitions (implements IGeneratorArgs)
 │   ├── InteropGeneratorDiscoveryState.cs   # Thread-safe discovery phase state
 │   └── InteropGeneratorEmitState.cs        # Thread-safe emit phase state
 ├── Helpers/                                # Utility classes
@@ -102,13 +98,11 @@ WinRT.Interop.Generator/
 │   ├── SignatureGenerator.cs               # Windows Runtime type signature strings
 │   ├── SignatureGenerator.Primitives.cs    # Primitive type signatures (i4, u4, f8, etc.)
 │   ├── SignatureGenerator.Projections.cs   # Projected type signatures (pinterface, struct, etc.)
-│   ├── TypeMapping.cs                      # Managed ↔ Windows Runtime type mapping registry (~70 types)
+│   ├── TypeMapping.cs                      # Managed ↔ Windows Runtime type mapping registry (~50 types)
 │   ├── TypeExclusions.cs                   # Types excluded from processing
-│   ├── MvidGenerator.cs                    # Deterministic MVID from input assemblies
 │   ├── RuntimeClassNameGenerator.cs        # Windows Runtime class name generation
 │   ├── MetadataTypeNameGenerator.cs        # Metadata type name formatting
 │   ├── WindowsRuntimeTypeAnalyzer.cs       # Type hierarchy and covariance analysis
-│   ├── InteropGeneratorJsonSerializerContext.cs # JSON serializer for debug repros
 │   └── Comparers/                          # IComparer implementations for sorting
 ├── Models/                                 # Data models
 │   ├── TypeSignatureEquatableSet.cs        # Immutable, equatable set of type signatures
@@ -126,16 +120,14 @@ WinRT.Interop.Generator/
 │   ├── InteropReferences.cs                # 100+ cached type/method references from core libs
 │   ├── InteropDefinitions.cs               # Generated type definitions in output assembly
 │   ├── InteropNames.cs                     # Well-known assembly/DLL name constants
-│   ├── InteropValues.cs                    # CsWinRT strong-name public key
-│   ├── WellKnownInterfaceIIDs.cs           # Pre-computed IIDs for well-known interfaces
-│   └── WellKnownPublicKeyTokens.cs         # System assembly public key tokens
+│   └── WellKnownInterfaceIIDs.cs           # Pre-computed IIDs for well-known interfaces
 ├── Resolvers/                              # Type/method resolution
+│   ├── InterfaceIIDResolver.cs             # Resolves IIDs from generated 'ABI.InterfaceIIDs' types
 │   ├── InteropImplTypeResolver.cs          # Locates Impl types (IID + Vtable) across assemblies
 │   ├── InteropInterfaceEntriesResolver.cs  # Builds interface entry lists for CCW
 │   ├── InteropInterfaceEntryInfo.cs        # Abstract base for IID/Vtable loading
 │   ├── InteropMarshallerType.cs            # Accessor for marshaller methods (ref struct)
-│   ├── InteropMarshallerTypeResolver.cs    # Locates marshaller type for a type signature
-│   └── PathAssemblyResolver.cs             # Custom assembly resolver from file paths
+│   └── InteropMarshallerTypeResolver.cs    # Locates marshaller type for a type signature
 ├── Rewriters/                              # Two-pass IL rewriting
 │   ├── InteropMethodRewriter.ReturnValue.cs   # ABI → managed return value marshalling
 │   ├── InteropMethodRewriter.RetVal.cs        # Indirect return value (out param) marshalling
@@ -150,18 +142,38 @@ WinRT.Interop.Generator/
     └── IsConstructedGenericTypeVisitor.cs   # Validates no open generic parameters remain
 ```
 
+### Shared infrastructure (`WinRT.Generator.Core`)
+
+The interop generator is one of five CsWinRT CLI build tools, and it shares common scaffolding with the others through the `WinRT.Generator.Core` library (namespace `WindowsRuntime.Generator`, see project 9 in `.github/copilot-instructions.md`). It consumes the following pieces from that library:
+
+| Shared type (in `WinRT.Generator.Core`) | What it provides |
+|------------------------------------------|------------------|
+| `GeneratorHost.CreateRunner` + `GeneratorPhaseRunner<TArgs>` | the entry-point preamble and phase sequencing driven by `InteropGenerator.Run` |
+| `Parsing.ResponseFileParser` / `Parsing.ResponseFileBuilder` | reflection-based parsing and serialization of the `.rsp` file |
+| `Attributes.CommandLineArgumentNameAttribute` | maps `InteropGeneratorArgs` properties to CLI flag names |
+| `IGeneratorArgs` | implemented by `InteropGeneratorArgs` (contributes `Token` and `DebugReproDirectory`) |
+| `Errors.IGeneratorErrorFactory`, `Errors.WellKnownGeneratorException`, `Errors.UnhandledGeneratorException`, `Errors.GeneratorExceptionExtensions` | base types for `WellKnownInteropException(s)`/`UnhandledInteropException`, and the `IsWellKnown` exception extension |
+| `DebugRepro.DebugReproPacker` | the shared debug-repro pack/unpack helpers |
+| `Helpers.MvidGenerator` | deterministic MVID computation from input assemblies |
+| `Helpers.GeneratorJsonSerializerContext` | AOT-safe JSON serialization for the debug-repro path maps |
+| `References.WellKnownPublicKeys` / `References.WellKnownPublicKeyTokens` | the CsWinRT strong-name public key and system-assembly public key tokens |
+| `Extensions.{File,Path,RuntimeContext,IncrementalHash}Extensions` | shared file, path, runtime-context, and incremental-hash helpers |
+
+Tool-specific logic (the entire discovery and emit pipeline, all builders/factories/resolvers/rewriters/fixups, the interop-specific error messages, and the reserved-DLL handling in the debug repro) lives in this project.
+
 ## Pipeline architecture
 
-The generator runs in three sequential phases:
+The generator runs in three sequential phases, with the shared `GeneratorHost.CreateRunner` handling the common preamble (debug repro unpack/save and response-file parsing) and a `GeneratorPhaseRunner<InteropGeneratorArgs>` driving each phase (each `RunPhase` call automatically checks the cancellation token):
 
 ```
 Program.cs → ConsoleApp.Run(args, InteropGenerator.Run)
                 │
-                ├── 1. Debug repro handling (optional)
-                │   ├── UnpackDebugRepro() — if input is .zip
+                ├── GeneratorHost.CreateRunner (shared preamble)
+                │   ├── UnpackDebugRepro() — if input is a .zip
+                │   ├── ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>()
                 │   └── SaveDebugRepro() — if --debug-repro-directory is set
                 │
-                ├── 2. Discovery phase (InteropGenerator.Discover)
+                ├── runner.RunPhase("discovery", Discover)
                 │   ├── Load all reference + implementation assemblies (parallel)
                 │   ├── Load special WinRT modules (Sdk.Projection, Projection, Component)
                 │   ├── For each module (parallel):
@@ -172,14 +184,15 @@ Program.cs → ConsoleApp.Run(args, InteropGenerator.Run)
                 │   ├── ValidateWinRTRuntimeDllVersion2References()
                 │   └── Return frozen InteropGeneratorDiscoveryState
                 │
-                └── 3. Emit phase (InteropGenerator.Emit)
+                └── runner.RunPhase("emit", Emit)
                     ├── DefineInteropModule() — create output assembly
                     ├── Type hierarchy emission
-                    ├── Generic type definition (26 Define*() methods)
+                    ├── Generic type definition (16 Define*Types() methods)
                     ├── SZ array type definition
                     ├── RewriteMethodDefinitions() — two-pass IL
                     ├── FixupMethodDefinitions() — IL cleanup
                     ├── DefineUserDefinedTypes() — CCW code
+                    ├── DefineDynamicImplementationDetailTypes()
                     ├── Dynamic custom-mapped type map entries
                     ├── Assembly attributes
                     └── WriteInteropModuleToDisk()
@@ -191,15 +204,18 @@ The generator is invoked via a response file: `cswinrtinteropgen.exe @path/to/re
 
 **Format:** Plain text, one argument per line: `--argument-name value`
 
-**Parsing** (`InteropGeneratorArgs.Parsing.cs`):
+**Parsing** (shared `ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>` from `WinRT.Generator.Core`):
 - Each property in `InteropGeneratorArgs` is decorated with `[CommandLineArgumentName("--name")]`
 - String arrays use comma-separated values
 - Validates no duplicate arguments
 - Maps property names to CLI argument names via reflection over the attribute
+- Parsing/format errors are reported through the tool's own `WellKnownInteropExceptions` factory (passed as the `TError` type argument), so they keep `CSWINRTINTEROPGEN###` error IDs
 
-**Serialization** (`InteropGeneratorArgs.Formatting.cs`):
+**Serialization** (shared `ResponseFileBuilder.Format` from `WinRT.Generator.Core`):
 - Reverses the parsing process for debug repro generation
 - Maintains exact format for reproducibility
+
+`InteropGeneratorArgs` implements `IGeneratorArgs`, which adds two members beyond the CLI flags below: a required `Token` (`CancellationToken`, not serialized) and `DebugReproDirectory` (mapped to `--debug-repro-directory`).
 
 **Parameters:**
 
@@ -234,16 +250,18 @@ reference/                         — All reference .dll-s (renamed to avoid co
 implementation/                    — All implementation .dll-s (renamed to avoid conflicts)
 ```
 
-**DLL naming:** To avoid filename conflicts, DLLs are renamed using a SHAKE128 hash of their full original path: `<originalName>_<SHAKE128(filePath)>.dll` (16 bytes of hash).
+**DLL naming:** To avoid filename conflicts, DLLs are renamed using a SHAKE128 hash of their full original path: `<originalName>_<SHAKE128(filePath)>.dll` (16 bytes of hash). This is done by the shared `DebugReproPacker.GetHashedFileName` in `WinRT.Generator.Core`.
 
-**Generation** (`SaveDebugRepro` in `InteropGenerator.DebugRepro.cs`):
+**Generation** (`SaveDebugRepro` in `InteropGenerator.DebugRepro.cs`): the bulk of the work is delegated to the shared `DebugReproPacker` (`BeginSave<WellKnownInteropExceptions>` → `CopyHashedFilesToDirectory` → `CopyPathMapToDirectory` → `FinalizeSave`), which writes the `interop-debug-repro.zip` archive:
 1. Creates temporary directory structure
 2. Copies all input DLLs with hash-based names
 3. Records original paths in JSON maps
-4. Serializes args to response file with updated paths
+4. Serializes args to response file with updated paths (via `ResponseFileBuilder.Format`)
 5. Zips everything to `--debug-repro-directory`
 
-**Consumption** (`UnpackDebugRepro`):
+The interop generator uses a small local `CopyHashedFileToDirectory` variant (rather than the shared `DebugReproPacker.CopyHashedFileToDirectory`) to dedupe the private implementation-detail assemblies (`WinRT.Sdk.Projection.dll`, `WinRT.Sdk.Xaml.Projection.dll`, `WinRT.Projection.dll`, `WinRT.Component.dll`) that are passed both via the reference set and via their own dedicated properties.
+
+**Consumption** (`UnpackDebugRepro`): uses `DebugReproPacker.CreateUnpackTempDirectory` and `DebugReproPacker.ExtractPathMap`:
 1. If the input path ends with `.zip`, extracts to a temp directory
 2. Loads JSON maps to restore original→normalized path mappings
 3. Returns path to extracted response file
@@ -365,19 +383,21 @@ The emit phase (`InteropGenerator.Emit.cs`, ~131 KB) is the largest file in the 
 
 The emit method runs these steps sequentially:
 
-1. **Module setup** — `DefineInteropModule()` creates the output module with a deterministic MVID (computed from input assembly content via `MvidGenerator`)
+1. **Module setup** — `DefineInteropModule()` creates the output module with a deterministic MVID (computed from input assembly content via the shared `MvidGenerator.CreateMvid`)
 2. **Type hierarchy** — `WindowsRuntimeTypeHierarchyBuilder.Lookup()` emits a frozen hash table mapping runtime class names to types
 3. **Default implementation details** — Built-in base types (vtable structures, etc.)
-4. **Generic type processing** — 26 separate `Define*Types()` methods, one per interface family:
+4. **Generic type processing** — 16 separate `Define*Types()` methods, one per interface family, from `DefineGenericDelegateTypes()` through `DefineICollectionKeyValuePair2Types()`:
    - `DefineGenericDelegateTypes()` — `EventHandler<T>`, `TypedEventHandler<TSender, TArgs>`
    - `DefineIEnumeratorTypes()` through `DefineIAsyncOperationWithProgressTypes()` — all collection/async interfaces
-   - `DefineSzArrayTypes()` — `T[]` array marshallers
-5. **IL rewriting** — `RewriteMethodDefinitions()` (two-pass, see below)
-6. **IL fixups** — `FixupMethodDefinitions()` (cleanup, see below)
-7. **User-defined types** — `DefineUserDefinedTypes()` emits CCW code
-8. **Dynamic custom-mapped types** — `DefineDynamicCustomMappedTypeMapEntries()` for `ICommand`, `INotifyPropertyChanged`, `INotifyCollectionChanged`
-9. **Assembly attributes** — `[IgnoresAccessChecksTo]`, metadata attributes
-10. **Write to disk** — `WriteInteropModuleToDisk()`
+   - `DefineIReadOnlyCollectionKeyValuePair2Types()` / `DefineICollectionKeyValuePair2Types()` — KVP collection interfaces
+5. **SZ array types** — `DefineSzArrayTypes()` — `T[]` array marshallers
+6. **IL rewriting** — `RewriteMethodDefinitions()` (two-pass, see below)
+7. **IL fixups** — `FixupMethodDefinitions()` (cleanup, see below)
+8. **User-defined types** — `DefineUserDefinedTypes()` emits CCW code
+9. **Dynamic implementation details** — `DefineDynamicImplementationDetailTypes()` for types that depend on the discovered set
+10. **Dynamic custom-mapped types** — `DefineDynamicCustomMappedTypeMapEntries()` for `ICommand`, `INotifyPropertyChanged`, `INotifyCollectionChanged`
+11. **Assembly attributes** — `DefineIgnoresAccessChecksToAttributes()` (`[IgnoresAccessChecksTo]`) + `EmitMetadataAssemblyAttributes()`
+12. **Write to disk** — `WriteInteropModuleToDisk()`
 
 ### What gets generated
 
@@ -562,13 +582,17 @@ IIDs for generic instantiations are computed as RFC 4122 v5 (SHA1-based) GUIDs:
 
 This produces a deterministic GUID that is identical across all implementations that follow the same algorithm (the Windows Runtime standard).
 
-### MVID generation (`Helpers/MvidGenerator.cs`)
+### MVID generation (shared `MvidGenerator` from `WinRT.Generator.Core`)
 
-The generated assembly's Module Version ID (MVID) is deterministic: it's computed by streaming all input assembly files (sorted alphabetically by path) through an incremental SHA1 hasher, then taking the first 16 bytes as a GUID. Same inputs = same MVID = reproducible builds.
+The generated assembly's Module Version ID (MVID) is deterministic: it's computed by streaming all input assembly files (sorted alphabetically by path) through an incremental SHA1 hasher, then taking the first 16 bytes as a GUID. Same inputs = same MVID = reproducible builds. The interop generator calls the shared `MvidGenerator.CreateMvid(discoveryState.Modules.Keys)` from `WinRT.Generator.Core`.
 
 ## Resolvers (`Resolvers/`)
 
 Resolvers locate types and methods across assemblies:
+
+### `InterfaceIIDResolver`
+
+Resolves the IID of an interface type from the generated `ABI.InterfaceIIDs` type in a given module (`TryGetIID(module, typeFullName, out iid)`). This is used to look up IIDs for `[GeneratedComInterface]` and other user-defined interface types that have their IIDs emitted into the implementation assemblies by naming convention.
 
 ### `InteropImplTypeResolver`
 
@@ -616,7 +640,7 @@ The returned `InteropMarshallerType` (a `readonly ref struct`) provides access t
 
 Central registry of managed ↔ Windows Runtime type mappings. Contains three `FrozenDictionary` instances:
 
-- **`ProjectionTypeMapping`** (~70+ entries) — Maps managed type full names to `(Windows Runtime namespace, Windows Runtime name, optional signature)`. Includes all custom-mapped types from `.github/copilot-instructions.md` plus identical-name mappings for primitives.
+- **`ProjectionTypeMapping`** (~50 entries) — Maps managed type full names to `(Windows Runtime namespace, Windows Runtime name, optional signature)`. Includes all custom-mapped types from `.github/copilot-instructions.md` plus identical-name mappings for primitives.
 - **`FundamentalTypeMapping`** — Maps primitive type names (Boolean→Boolean, Byte→UInt8, Int32→Int32, etc.)
 - **`WindowsUIXamlTypeMapping`** — Alternative mappings when `CsWinRTUseWindowsUIXamlProjections = true` (e.g., `ICommand` → `Windows.UI.Xaml.Input.ICommand` instead of `Microsoft.UI.Xaml.Input.ICommand`)
 
@@ -629,9 +653,9 @@ Key methods:
 - **`InteropReferences`** — Central registry of 100+ cached type/method references from core libraries (`System.Runtime`, `System.Memory`, etc.) and the `WinRT.Runtime` assembly. Properties are lazy-initialized (`??=` pattern).
 - **`InteropDefinitions`** — Tracks generated type definitions in the output assembly. Includes `RvaFields` (for IID data), `InterfaceIIDs` (holder type for IID properties), and per-interface generated types.
 - **`InteropNames`** — String constants for well-known assembly names (`WinRT.Runtime.dll`, `WinRT.Interop.dll`, etc.), including UTF-8 versions for zero-copy comparison.
-- **`InteropValues`** — CsWinRT strong-name public key data.
-- **`WellKnownInterfaceIIDs`** — Pre-computed GUIDs for ~60+ well-known interfaces plus a `ReservedIIDsMap` for the 6 fixed native interface entries.
-- **`WellKnownPublicKeyTokens`** — Public key tokens for system assemblies.
+- **`WellKnownInterfaceIIDs`** — Pre-computed GUIDs for ~60+ well-known interfaces plus a `ReservedIIDsMap` of the 5 reserved interface IIDs that cannot be manually implemented (`IStringable`, `IWeakReferenceSource`, `IAgileObject`, `IInspectable`, `IUnknown`). `IMarshal` is defined here too but is intentionally **not** in the map, since user types can override it via `[GeneratedComInterface]`.
+
+The CsWinRT strong-name public key and the system-assembly public key tokens come from `WellKnownPublicKeys` / `WellKnownPublicKeyTokens` (namespace `WindowsRuntime.Generator.References`) in the shared `WinRT.Generator.Core` library.
 
 ## Diagnostics and error handling
 
@@ -639,33 +663,39 @@ Key methods:
 
 | Type | Purpose |
 |------|---------|
-| `WellKnownInteropException` | Structured errors with `CSWINRTINTEROPGEN###` codes (1–81+) |
+| `WellKnownInteropException` | Structured errors with `CSWINRTINTEROPGEN####` codes (1–97); extends the shared `WellKnownGeneratorException` and adds an optional outer-exception chain via `ThrowOrAttach` (used when re-throwing to add outer context while preserving the original failure) |
 | `WellKnownInteropWarning` | Non-fatal warnings; `LogOrThrow(treatWarningsAsErrors)` |
-| `UnhandledInteropException` | Wraps unexpected errors with phase context; formats as `CSWINRTINTEROPGEN9999` |
+| `UnhandledInteropException` | Wraps unexpected errors with phase context; extends the shared `UnhandledGeneratorException`, formatting as `CSWINRTINTEROPGEN9999` |
+
+The factory class `WellKnownInteropExceptions` implements the shared `IGeneratorErrorFactory` (a `static abstract` interface from `WinRT.Generator.Core`). This lets the shared `ResponseFileParser`/`DebugReproPacker` raise the six common logical errors (response-file read/parse/malformed and debug-repro directory/mapping/entry errors) through the interop generator's own factory, so they keep `CSWINRTINTEROPGEN###` IDs.
 
 ### Error code categories
 
-All factory methods are in `WellKnownInteropExceptions.cs` (38+ KB):
+All factory methods are in `WellKnownInteropExceptions.cs` (~42 KB). Codes are assigned sequentially as diagnostics are added, so they are **not** contiguous by theme; the table below groups them by theme with representative code numbers:
 
-| Range | Category | Examples |
-|-------|----------|---------|
-| 001–002 | Runtime class names | Name too long, lookup size limit exceeded |
-| 003–005 | Module loading | Assembly not found, WinRT runtime not found |
-| 006–010 | Type hierarchy | RVA errors, implementation errors |
-| 011–040 | Code generation | Per-interface-type errors (delegate, KVP, IEnumerator, IList, etc.) |
-| 041–050 | Response file | Read error, argument parsing, malformed format |
-| 051–055 | Debug repros | Directory not found |
-| 056–060 | Version validation | Assembly version mismatch |
-| 061–075 | Method rewriting | Missing body, marker not found, type mismatch, parameter index invalid |
-| 076–081 | Tracked definitions | Duplicate type/method, lookup errors |
-| 9999 | Unhandled | Unexpected errors (with GitHub issue link) |
+| Theme | Example codes | Examples |
+|-------|---------------|---------|
+| Runtime class names | 1–2 | name too long, lookup size limit exceeded |
+| Module loading & type discovery | 3–4, 14–17, 33, 37, 40, 91, 97 | assembly / WinRT runtime / Windows SDK module not found, discovery loop errors |
+| Type hierarchy lookup (RVA) | 5–8, 36 | Keys/Values/Buckets RVA errors, no discovered key-value pairs |
+| Per-type code generation | 9, 11–13, 18, 20–22, 25–27, 34, 38–48, 53–54, 61 | delegate, KVP, collection, async, array, user-defined type generation errors |
+| Tracked definitions & state | 10, 23–24, 56, 73–74 | duplicate type/method, lookup errors, state changed after `MakeReadOnly` |
+| Response files | 28–30 | read error, argument parsing, malformed format |
+| Debug repros | 31, 86–90 | directory not found, reserved-DLL conflicts, bad/unmapped zip entry |
+| Version validation | 32, 35, 93–96 | runtime version mismatch, v2 references, output assembly version not found/supported |
+| Marshaller & IID resolution | 49, 52, 64, 72, 81–82 | marshaller-attribute / methods resolve, reserved GUID, primary interface not found |
+| Method rewriting | 57–60, 68–71 | missing body, marker not found, source local / parameter type mismatch |
+| Method fixups | 76–79 | ECMA-335 cleanup failures (labels, branches) |
+| Metadata attributes | 19, 75 | `[IgnoresAccessChecksTo]`, assembly metadata attributes |
+| Warnings (non-fatal) | 50–51, 62–63, 65–67, 83–85, 92 | unresolved types, duplicate/reserved IIDs, exceeded interface-count limit |
+| Unhandled | 9999 | unexpected errors (with GitHub issue link) |
 
 ### Error flow
 
-1. Each phase wraps operations in try/catch
+1. The shared `GeneratorPhaseRunner.RunPhase` wraps each phase body (discovery, emit) in try/catch
 2. Known errors throw `WellKnownInteropException` with a descriptive message
-3. Unknown errors are caught and wrapped in `UnhandledInteropException` with phase context
-4. The main `Run()` method catches everything and formats the error for MSBuild consumption
+3. Unknown errors are caught and wrapped in `UnhandledInteropException` via the `wrapUnhandled` callback passed to `GeneratorHost.CreateRunner`, preserving phase context
+4. The error is formatted (via `ToString()`) for MSBuild consumption
 5. Warnings use `LogOrThrow()` which either logs via `ConsoleApp.Log()` or throws based on `--treat-warnings-as-errors`
 
 ## Control flow between generated code and WinRT.Runtime
