@@ -30,7 +30,7 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// indentation, so raw multi-line literals with blank lines do not gain trailing whitespace.
 /// </para>
 /// </remarks>
-internal sealed partial class IndentedTextWriter
+public sealed partial class IndentedTextWriter
 {
     /// <summary>
     /// The default indentation (4 spaces).

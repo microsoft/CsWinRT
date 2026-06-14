@@ -6,7 +6,7 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// <summary>
 /// Extension methods for <see cref="IndentedTextWriterCallback"/>.
 /// </summary>
-internal static class IndentedTextWriterCallbackExtensions
+public static class IndentedTextWriterCallbackExtensions
 {
     /// <summary>
     /// Writes the delegate's content into a pooled <see cref="IndentedTextWriter"/> at indent
