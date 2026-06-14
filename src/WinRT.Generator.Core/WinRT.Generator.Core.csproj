@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!-- Common metadata properties for publishing -->
+    <Description>C#/WinRT Generator core shared infrastructure v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Generator core shared infrastructure v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
+    <FileVersion>$(VersionNumber)</FileVersion>
+
+    <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
+    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
+
+    <!-- Set the root namespace (we ignore the '.Core' suffix) -->
+    <RootNamespace>WindowsRuntime.Generator</RootNamespace>
+
+    <!-- Same settings as the other generator projects -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Features>strict</Features>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="cswinrtimplgen" />
+    <InternalsVisibleTo Include="cswinrtinteropgen" />
+    <InternalsVisibleTo Include="cswinrtprojectiongen" />
+    <InternalsVisibleTo Include="cswinrtprojectionrefgen" />
+    <InternalsVisibleTo Include="cswinrtwinmdgen" />
+  </ItemGroup>
+</Project>

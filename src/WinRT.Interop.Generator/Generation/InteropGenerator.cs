@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
+using WindowsRuntime.Generator;
+using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -22,99 +23,29 @@ internal static partial class InteropGenerator
     /// <param name="token">The token for the operation.</param>
     public static void Run([Argument] string inputFilePath, CancellationToken token)
     {
-        string responseFilePath = inputFilePath;
-        bool isUsingDebugRepro = false;
+        GeneratorPhaseRunner<InteropGeneratorArgs> runner = GeneratorHost.CreateRunner(
+            inputFilePath: inputFilePath,
+            toolName: "cswinrtinteropgen",
+            unpackDebugRepro: UnpackDebugRepro,
+            parseFromResponseFile: ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>,
+            saveDebugRepro: SaveDebugRepro,
+            wrapUnhandled: static (phase, e) => new UnhandledInteropException(phase, e),
+            log: ConsoleApp.Log,
+            token: token);
 
-        // Load the debug repro to investigate with, if we have one
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            if (Path.GetExtension(Path.Normalize(inputFilePath)) == ".zip")
-            {
-                ConsoleApp.Log("Unpacking input 'cswinrtinteropgen' debug repro");
+        // Discover the types to process
+        InteropGeneratorDiscoveryState discoveryState = runner.RunPhase(
+            phaseName: "discovery",
+            logMessage: $"Processing {runner.Args.ReferenceAssemblyPaths.Length + runner.Args.ImplementationAssemblyPaths.Length + 1} module(s)",
+            body: Discover);
 
-                isUsingDebugRepro = true;
-
-                // If we unpacked a debug repro, we'll also replace the input file
-                // path with the extracted response file from the input repro.
-                responseFilePath = UnpackDebugRepro(inputFilePath, token);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("unpack-debug-repro", e);
-        }
-
-        token.ThrowIfCancellationRequested();
-
-        InteropGeneratorArgs args;
-
-        // Parse the actual arguments from the response file
-        try
-        {
-            args = InteropGeneratorArgs.ParseFromResponseFile(responseFilePath, token);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("parsing", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Save a debug repro, if needed
-        try
-        {
-            // If no debug repro directory was provided, we have nothing to do.
-            // This is fully expected, it just means no debug repro is needed.
-            // We also skip this if we're currently processing an input debug
-            // repro, as there would be no point in creating a new one from that.
-            if (args.DebugReproDirectory is not null && !isUsingDebugRepro)
-            {
-                ConsoleApp.Log("Saving 'cswinrtinteropgen' debug repro");
-
-                SaveDebugRepro(args);
-            }
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("save-debug-repro", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        InteropGeneratorDiscoveryState discoveryState;
-
-        // Wrap the actual logic, to ensure that we're only ever throwing an exception that will result
-        // in either graceful cancellation, or a well formatted error message. The 'ConsoleApp' code is
-        // taking care of passing the exception 'ToString()' result to the output buffer, so we want all
-        // exceptions that can reach that path to have our custom formatting implementation there.
-        try
-        {
-            ConsoleApp.Log($"Processing {args.ReferenceAssemblyPaths.Length + args.ImplementationAssemblyPaths.Length + 1} module(s)");
-
-            discoveryState = Discover(args);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("discovery", e);
-        }
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Same thing for the emit phase
-        try
-        {
-            ConsoleApp.Log("Generating interop code");
-
-            Emit(args, discoveryState);
-        }
-        catch (Exception e) when (!e.IsWellKnown)
-        {
-            throw new UnhandledInteropException("emit", e);
-        }
+        // Emit the resulting interop assembly
+        runner.RunPhase(
+            phaseName: "emit",
+            logMessage: "Generating interop code",
+            body: args => Emit(args, discoveryState));
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Interop code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
+        ConsoleApp.Log($"Interop code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
     }
 }

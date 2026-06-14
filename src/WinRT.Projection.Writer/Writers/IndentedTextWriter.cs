@@ -1,0 +1,786 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// Adapted from src/Authoring/WinRT.SourceGenerator2/Helpers/IndentedTextWriter.cs (which itself
+// was ported from ComputeSharp); reshaped here as a class backed by StringBuilder so it can be
+// passed around freely and live as long as needed in this long-running tool.
+
+using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text;
+
+namespace WindowsRuntime.ProjectionWriter.Writers;
+
+/// <summary>
+/// A general-purpose helper for building C# source text with consistent indentation.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This type only knows about writing indented text. WinRT-specific concerns (file headers,
+/// projection namespace blocks, mode flags, metadata cache) live elsewhere -- typically as
+/// extension methods. See <c>WinRT.Interop.Generator</c>'s separation of concerns for the
+/// equivalent design.
+/// </para>
+/// <para>
+/// Indentation is applied per line: the first <see cref="Write(bool, string)"/> after a
+/// newline (or at buffer start) prepends the current indentation string; mid-line writes do not.
+/// Multiline content (passed with <c>isMultiline: true</c>) normalizes <c>CRLF</c> -> <c>LF</c>
+/// and indents each line via the current indentation level. Empty lines never receive
+/// indentation, so raw multi-line literals with blank lines do not gain trailing whitespace.
+/// </para>
+/// </remarks>
+internal sealed partial class IndentedTextWriter
+{
+    /// <summary>
+    /// The default indentation (4 spaces).
+    /// </summary>
+    private const string DefaultIndentation = "    ";
+
+    /// <summary>
+    /// The default new line character (<c>'\n'</c>).
+    /// </summary>
+    private const char DefaultNewLine = '\n';
+
+    /// <summary>
+    /// The underlying buffer that text is written to.
+    /// </summary>
+    private readonly StringBuilder _buffer;
+
+    /// <summary>
+    /// The current indentation string (cached for fast reuse).
+    /// </summary>
+    private string _currentIndentation;
+
+    /// <summary>
+    /// Cached pre-built indentation strings indexed by indentation level. Entries are populated
+    /// on demand by <see cref="GetIndentationStringForLevel"/>; the constructor pre-fills the
+    /// first <c>4</c> entries.
+    /// </summary>
+    private string[] _availableIndentations;
+
+    /// <summary>
+    /// Gets the current indent level (number of <see cref="Block"/>-equivalent units of indentation).
+    /// </summary>
+    public int CurrentIndentLevel { get; private set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IndentedTextWriter"/> class with an empty buffer.
+    /// </summary>
+    public IndentedTextWriter()
+    {
+        _buffer = new StringBuilder();
+        CurrentIndentLevel = 0;
+        _currentIndentation = string.Empty;
+        _availableIndentations = new string[4];
+        _availableIndentations[0] = string.Empty;
+
+        for (int i = 1; i < _availableIndentations.Length; i++)
+        {
+            _availableIndentations[i] = _availableIndentations[i - 1] + DefaultIndentation;
+        }
+    }
+
+    /// <summary>
+    /// Increases the current indentation level by one.
+    /// </summary>
+    public void IncreaseIndent()
+    {
+        CurrentIndentLevel++;
+
+        _currentIndentation = GetIndentationStringForLevel(CurrentIndentLevel);
+    }
+
+    /// <summary>
+    /// Decreases the current indentation level by one.
+    /// </summary>
+    public void DecreaseIndent()
+    {
+        CurrentIndentLevel--;
+
+        _currentIndentation = _availableIndentations[CurrentIndentLevel];
+    }
+
+    /// <summary>
+    /// Invokes the given <paramref name="callback"/> against this writer, with the indentation
+    /// that any newlines emitted by the callback will use temporarily overridden to align with
+    /// the cursor's current column position.
+    /// </summary>
+    /// <param name="callback">
+    /// The callback to invoke. Must be either an <see cref="IndentedTextWriterCallback"/> or an
+    /// <see cref="Action{T}"/> of <see cref="IndentedTextWriter"/>. Typed as <see cref="object"/>
+    /// so a single dispatch path serves both shapes (callers obtained the value via the
+    /// interpolated-string handler's <c>AppendFormatted&lt;T&gt;</c> dispatch and don't need to
+    /// rebox or close over the value through a lambda).
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// This implements an automatic "interpolation-hole indent context": when a callback is
+    /// invoked from an <c>{{...}}</c> interpolation hole in a multiline raw string template,
+    /// any subsequent newlines emitted by the callback indent flush with the column the
+    /// placeholder was at, so the content reads as if it were inlined in the parent template
+    /// at the placeholder's visual position.
+    /// </para>
+    /// <para>
+    /// Implementation: if the cursor is at the start of a new line (the buffer is empty or
+    /// ends with <c>'\n'</c>), the callback is invoked unchanged — <see cref="WriteRawText"/>
+    /// will already use the writer's current indentation for the first line and every
+    /// subsequent newline. Otherwise the cursor is mid-line, so before invoking the callback
+    /// <see cref="_currentIndentation"/> is temporarily replaced with the cached indentation
+    /// string for the level corresponding to the cursor's column (column divided by
+    /// <see cref="DefaultIndentation"/> length, since the writer's own indentation only ever
+    /// advances in multiples of <see cref="DefaultIndentation"/> and well-formatted templates
+    /// align placeholders on the same boundary). The first <c>WriteRawText</c> inside the
+    /// callback appends in-line at the cursor (no indent prefix, because the buffer doesn't
+    /// end with <c>'\n'</c>), and any subsequent <c>WriteRawText</c> uses the cursor-aligned
+    /// indent. The original indentation is restored once the callback returns.
+    /// </para>
+    /// </remarks>
+    internal void InvokeCallbackWithCursorIndent(object callback)
+    {
+        int bufferLength = _buffer.Length;
+
+        // Cursor at start of new line: WriteRawText will use the writer's current indentation
+        // (which is the desired indent here), so no override is needed. Fast-path here avoids
+        // both the back-scan for the last newline and the save/restore of '_currentIndentation'.
+        if (bufferLength == 0 || _buffer[bufferLength - 1] == DefaultNewLine)
+        {
+            Invoke(this, callback);
+            return;
+        }
+
+        // Find the start of the current line: scan back from the end of the buffer to the last
+        // '\n' (or the start of the buffer). The column is the number of chars after that.
+        int lastNewline = bufferLength - 1;
+
+        while (lastNewline >= 0 && _buffer[lastNewline] != DefaultNewLine)
+        {
+            lastNewline--;
+        }
+
+        int column = bufferLength - lastNewline - 1;
+
+        // Indentations are always a multiple of 'DefaultIndentation' (both the writer's own
+        // indent levels and the visual indent of placeholders in well-formatted templates), so
+        // we map the cursor column to a level and reuse the same cache that 'IncreaseIndent'
+        // uses, avoiding a parallel string array.
+        string savedIndent = _currentIndentation;
+
+        _currentIndentation = GetIndentationStringForLevel(column / DefaultIndentation.Length);
+
+        try
+        {
+            Invoke(this, callback);
+        }
+        finally
+        {
+            _currentIndentation = savedIndent;
+        }
+
+        // If the callback emitted nothing AND the only content between the last '\n' and the
+        // cursor at callback entry was whitespace (i.e. the visual indent the parent literal
+        // wrote in front of an otherwise-line-start placeholder), trim the buffer back to the
+        // last '\n'. This lets the existing blank-line suppression in 'AppendLiteral' fire on
+        // the next literal segment and treat the empty callback as if it weren't there at all.
+        // The whitespace-only check is critical: when a placeholder sits inline after other
+        // content (e.g. '... public delegate {{ret}} {{name}}{{typeParams}}({{parms}});'),
+        // trimming back to the last '\n' would strip the preceding signature, so we leave the
+        // buffer alone in that case.
+        if (_buffer.Length == bufferLength && IsAllWhitespace(_buffer, lastNewline + 1, bufferLength))
+        {
+            _buffer.Length = lastNewline + 1;
+        }
+
+        // Returns whether every char in '_buffer[start..end]' is whitespace.
+        static bool IsAllWhitespace(StringBuilder buffer, int start, int end)
+        {
+            for (int i = start; i < end; i++)
+            {
+                if (!char.IsWhiteSpace(buffer[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Dispatches to either delegate shape without allocating a closure wrapping the other.
+        static void Invoke(IndentedTextWriter writer, object callback)
+        {
+            if (callback is IndentedTextWriterCallback typedCallback)
+            {
+                typedCallback(writer);
+            }
+            else
+            {
+                ((Action<IndentedTextWriter>)callback)(writer);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the cached indentation string for the given <paramref name="level"/>, lazily
+    /// expanding <see cref="_availableIndentations"/> and filling intermediate entries as needed.
+    /// </summary>
+    /// <param name="level">The indentation level to retrieve.</param>
+    /// <returns>The cached indentation string of length <c><paramref name="level"/> * <see cref="DefaultIndentation"/>.Length</c>.</returns>
+    /// <remarks>
+    /// <para>
+    /// <see cref="IncreaseIndent"/> always advances one level at a time, so the cache is filled
+    /// densely from the bottom up during normal use. <see cref="InvokeCallbackWithCursorIndent"/>
+    /// may request an arbitrary higher level directly (because the cursor column for a callback
+    /// placeholder can correspond to a deeper level than any open <see cref="Block"/>); this
+    /// method fills any missing intermediate entries on first access.
+    /// </para>
+    /// </remarks>
+    private string GetIndentationStringForLevel(int level)
+    {
+        if (level >= _availableIndentations.Length)
+        {
+            Array.Resize(ref _availableIndentations, Math.Max(_availableIndentations.Length * 2, level + 1));
+        }
+
+        // Fast path: the cached entry is already populated (the constructor pre-fills levels 0..3
+        // and every prior 'IncreaseIndent' / 'GetIndentationStringForLevel' call leaves the cache
+        // dense up to the highest level it touched).
+        if (_availableIndentations[level] is null)
+        {
+            // Walk back to find the highest populated entry below 'level' and build the chain up
+            // from there, so even an initial jump to a deep level only allocates each missing
+            // intermediate string once.
+            int firstNull = level;
+
+            while (firstNull > 0 && _availableIndentations[firstNull - 1] is null)
+            {
+                firstNull--;
+            }
+
+            for (int j = firstNull; j <= level; j++)
+            {
+                _availableIndentations[j] = _availableIndentations[j - 1] + DefaultIndentation;
+            }
+        }
+
+        return _availableIndentations[level];
+    }
+
+    /// <summary>
+    /// Writes an opening brace on the current line, increases the indentation level, and returns
+    /// a <see cref="Block"/> token whose <see cref="Block.Dispose"/> method closes the block by
+    /// decreasing the indentation level and writing the matching closing brace on its own line.
+    /// </summary>
+    /// <returns>A <see cref="Block"/> value that, when disposed, closes the open block.</returns>
+    public Block WriteBlock()
+    {
+        WriteLine("{");
+        IncreaseIndent();
+
+        return new(this);
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer, applying current indentation
+    /// at the start of each new line.
+    /// </summary>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void Write([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer, applying current indentation at the start of each new line.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void Write(bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation at the start of each new line.
+    /// </summary>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void Write(string content)
+    {
+        Write(isMultiline: false, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation at the start of each new line.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void Write(bool isMultiline, string content)
+    {
+        Write(isMultiline, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation at the start of each new line.
+    /// </summary>
+    /// <param name="content">The content to write.</param>
+    public void Write(ReadOnlySpan<char> content)
+    {
+        Write(isMultiline: false, content);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer, applying current indentation
+    /// at the start of each new line.
+    /// </summary>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline (normalizes <c>CRLF</c> -> <c>LF</c> and indents every line).</param>
+    /// <param name="content">The content to write.</param>
+    public void Write(bool isMultiline, ReadOnlySpan<char> content)
+    {
+        if (isMultiline)
+        {
+            while (content.Length > 0)
+            {
+                int newLineIndex = content.IndexOf(DefaultNewLine);
+
+                if (newLineIndex < 0)
+                {
+                    // No newline left -- write the rest as a single line. The caller is
+                    // responsible for emitting any trailing newline they need.
+                    WriteRawText(content);
+
+                    break;
+                }
+
+                ReadOnlySpan<char> line = content[..newLineIndex];
+
+                // Strip trailing CR so output is normalized to LF regardless of source line endings.
+                if (line is [.. var trim, '\r'])
+                {
+                    line = trim;
+                }
+
+                // Skip writing empty lines (avoids trailing whitespace from leading indentation
+                // on what would otherwise be a blank line in the multi-line literal).
+                if (!line.IsEmpty)
+                {
+                    WriteRawText(line);
+                }
+
+                WriteLine();
+
+                content = content[(newLineIndex + 1)..];
+            }
+        }
+        else
+        {
+            WriteRawText(content);
+        }
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>; otherwise this call is a no-op.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref AppendIfInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref AppendIfInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, string content)
+    {
+        if (condition)
+        {
+            Write(isMultiline: false, content.AsSpan());
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, bool isMultiline, string content)
+    {
+        if (condition)
+        {
+            Write(isMultiline, content.AsSpan());
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, ReadOnlySpan<char> content)
+    {
+        if (condition)
+        {
+            Write(isMultiline: false, content);
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteIf(bool condition, bool isMultiline, ReadOnlySpan<char> content)
+    {
+        if (condition)
+        {
+            Write(isMultiline, content);
+        }
+    }
+
+    /// <summary>
+    /// Writes a newline to the underlying buffer.
+    /// </summary>
+    /// <param name="skipIfPresent">When <see langword="true"/>, the newline is suppressed if the
+    /// buffer already ends with a blank line (<c>\n\n</c>) or with <c>{\n</c>. Used by callers
+    /// that want explicit blank-line collapse on a per-call basis. Defaults to <see langword="false"/>.</param>
+    public void WriteLine(bool skipIfPresent = false)
+    {
+        if (skipIfPresent && _buffer.Length > 0)
+        {
+            int j = _buffer.Length - 1;
+
+            // Skip trailing spaces on the last line so the check ignores indentation
+            // that may have been emitted speculatively for an empty line.
+            while (j >= 0 && _buffer[j] == ' ')
+            {
+                j--;
+            }
+
+            if (j >= 1 && _buffer[j] == '\n' && (_buffer[j - 1] == '\n' || _buffer[j - 1] == '{'))
+            {
+                return;
+            }
+        }
+
+        _ = _buffer.Append(DefaultNewLine);
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler)
+    {
+        WriteLine();
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(isMultiline))] ref AppendInterpolatedStringHandler handler)
+    {
+        WriteLine();
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(string content)
+    {
+        WriteLine(isMultiline: false, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(bool isMultiline, string content)
+    {
+        WriteLine(isMultiline, content.AsSpan());
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(ReadOnlySpan<char> content)
+    {
+        WriteLine(isMultiline: false, content);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
+    /// </summary>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLine(bool isMultiline, ReadOnlySpan<char> content)
+    {
+        Write(isMultiline, content);
+        WriteLine();
+    }
+
+    /// <summary>
+    /// Writes a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes a newline; otherwise this call is a no-op.</param>
+    /// <param name="skipIfPresent">Forwarded to <see cref="WriteLine(bool)"/>.</param>
+    public void WriteLineIf(bool condition, bool skipIfPresent = false)
+    {
+        if (condition)
+        {
+            WriteLine(skipIfPresent);
+        }
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer followed by a newline if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, [InterpolatedStringHandlerArgument("", nameof(condition))] ref AppendIfInterpolatedStringHandler handler)
+    {
+        _ = this;
+    }
+
+    /// <summary>
+    /// Writes an interpolated expression to the underlying buffer followed by a newline if <paramref name="condition"/> is <see langword="true"/>; otherwise does nothing.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="handler"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="handler"/> as multiline.</param>
+    /// <param name="handler">The interpolated content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, bool isMultiline, [InterpolatedStringHandlerArgument("", nameof(condition), nameof(isMultiline))] ref AppendIfInterpolatedStringHandler handler)
+    {
+        if (condition)
+        {
+            WriteLine();
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, string content)
+    {
+        if (condition)
+        {
+            WriteLine(isMultiline: false, content.AsSpan());
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, bool isMultiline, string content)
+    {
+        if (condition)
+        {
+            WriteLine(isMultiline, content.AsSpan());
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, ReadOnlySpan<char> content)
+    {
+        if (condition)
+        {
+            WriteLine(isMultiline: false, content);
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
+    /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
+    /// <param name="content">The content to write.</param>
+    /// <remarks><inheritdoc cref="Write(ReadOnlySpan{char})" path="/remarks/node()"/></remarks>
+    public void WriteLineIf(bool condition, bool isMultiline, ReadOnlySpan<char> content)
+    {
+        if (condition)
+        {
+            WriteLine(isMultiline, content);
+        }
+    }
+
+    /// <summary>
+    /// Returns the current buffer contents without modifying the buffer.
+    /// </summary>
+    public override string ToString() => _buffer.ToString();
+
+    /// <summary>
+    /// Gets the current length (in chars) of the underlying buffer.
+    /// </summary>
+    public int Length => _buffer.Length;
+
+    /// <summary>
+    /// Returns the last character written to the buffer, or <c>'\0'</c> if the buffer is empty.
+    /// </summary>
+    public char Back() => _buffer.Length == 0 ? '\0' : _buffer[^1];
+
+    /// <summary>
+    /// Removes a range of characters from the buffer.
+    /// </summary>
+    /// <param name="startIndex">The starting position to remove.</param>
+    /// <param name="length">The number of characters to remove.</param>
+    public void Remove(int startIndex, int length) => _buffer.Remove(startIndex, length);
+
+    /// <summary>
+    /// Sets the indent level back to zero (for emergency reset; rarely needed).
+    /// </summary>
+    public void ResetIndent()
+    {
+        CurrentIndentLevel = 0;
+        _currentIndentation = _availableIndentations[0];
+    }
+
+    /// <summary>
+    /// Clears the underlying buffer and resets the current indentation level back to zero.
+    /// Used by <see cref="IndentedTextWriterPool.GetOrCreate"/> to recycle a returned writer
+    /// before handing it back out, so callers always observe a fully reset writer regardless
+    /// of how the previous lease left it.
+    /// </summary>
+    public void Clear()
+    {
+        _ = _buffer.Clear();
+
+        ResetIndent();
+    }
+
+    /// <summary>
+    /// Flushes the current buffer to <paramref name="path"/> (skipping the write if the file
+    /// already exists with identical content), then clears the buffer.
+    /// </summary>
+    /// <remarks>
+    /// If the destination file exists but cannot be read (e.g. due to a transient I/O failure or
+    /// access denial), the catch block silently falls through to a fresh write. This is the
+    /// intended behavior for a build tool: the worst case is an extra write of identical content
+    /// that the OS will then re-permit; the alternative (failing the build) would create
+    /// brittleness around incidental file-system noise.
+    /// </remarks>
+    /// <param name="path">The destination file path.</param>
+    public void FlushToFile(string path)
+    {
+        string content = _buffer.ToString();
+
+        if (File.Exists(path))
+        {
+            try
+            {
+                if (File.ReadAllText(path) == content)
+                {
+                    _ = _buffer.Clear();
+                    return;
+                }
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // Intentional: see <remarks/> -- a failed read falls through to a fresh write.
+            }
+        }
+
+        File.WriteAllText(path, content);
+        _ = _buffer.Clear();
+    }
+
+    /// <summary>
+    /// Writes raw text to the underlying buffer, prepending current indentation if positioned
+    /// at the start of a new line.
+    /// </summary>
+    /// <param name="content">The raw text to write.</param>
+    private void WriteRawText(ReadOnlySpan<char> content)
+    {
+        // Skip writing indent for empty content so that empty lines never
+        // receive trailing whitespace from the indentation prefix.
+        if (content.IsEmpty)
+        {
+            return;
+        }
+
+        // Add the indentation if this is the very start of a new line
+        if (_buffer.Length == 0 || _buffer[^1] == DefaultNewLine)
+        {
+            _ = _buffer.Append(_currentIndentation);
+        }
+
+        // Append the content after the correct indentation
+        _ = _buffer.Append(content);
+    }
+
+    /// <summary>
+    /// Represents an open <c>{ ... }</c> block that needs to be closed (via
+    /// <see cref="Dispose"/>). Returned from <see cref="WriteBlock"/>.
+    /// </summary>
+    public struct Block : IDisposable
+    {
+        private IndentedTextWriter? _writer;
+
+        internal Block(IndentedTextWriter writer)
+        {
+            _writer = writer;
+        }
+
+        /// <summary>
+        /// Closes the open block by decreasing the indentation level and writing a matching
+        /// closing brace on its own line.
+        /// </summary>
+        public void Dispose()
+        {
+            IndentedTextWriter? writer = _writer;
+            _writer = null;
+            if (writer is not null)
+            {
+                writer.DecreaseIndent();
+                writer.WriteLine("}");
+            }
+        }
+    }
+}

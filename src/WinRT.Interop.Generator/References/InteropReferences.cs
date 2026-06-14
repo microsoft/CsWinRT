@@ -4,6 +4,7 @@
 using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Factories;
 
 #pragma warning disable IDE0032

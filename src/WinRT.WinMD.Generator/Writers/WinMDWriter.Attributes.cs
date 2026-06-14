@@ -66,7 +66,7 @@ internal sealed partial class WinMDWriter
         Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];
 
         // Hash the data (we know we'll always fully fill the buffer).
-        // CodeQL [SM02196] Windows Runtime uses UUID v5 SHA1 to generate Guids for parameterized types.
+        // CodeQL [SM02196] Windows Runtime uses UUID v5 SHA1 to generate IIDs for parameterized types.
         _ = SHA1.HashData(span[..writtenNumberOfBytes], hash);
 
         // Return the rented array to the pool, if we have one

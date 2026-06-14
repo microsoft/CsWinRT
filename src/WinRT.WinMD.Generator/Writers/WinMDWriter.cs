@@ -4,11 +4,11 @@
 using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.WinMDGenerator.Errors;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
-using WindowsRuntime.WinMDGenerator.References;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
 #pragma warning disable IDE0046
@@ -110,8 +110,11 @@ internal sealed partial class WinMDWriter
 
         _assemblyReferenceCache["mscorlib"] = defaultCorLib;
 
-        // Create the output assembly with WindowsRuntime flag (keep reference alive via module)
-        _ = new AssemblyDefinition(assemblyName, new Version(version))
+        // Create the output assembly with 'WindowsRuntime' flag (keep reference alive via module).
+        // Per Windows Runtime convention, the assembly identity always uses version '255.255.255.255'
+        // (the "unbound" version). The 'version' parameter is only used for the type-level
+        // '[Windows.Foundation.Metadata.Version]' attribute applied to each authored type.
+        _ = new AssemblyDefinition(assemblyName, WinMDValues.AssemblyVersion)
         {
             Modules = { _outputModule },
             Attributes = AssemblyAttributes.ContentWindowsRuntime,
