@@ -599,10 +599,8 @@ namespace UnitTest
 
         class TestIDICInspectable : WindowsRuntimeObject
         {
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
             public unsafe TestIDICInspectable(void* ptr)
                 : base(WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ptr, WellKnownInterfaceIIDs.IID_IInspectable, out _))
-#pragma warning restore CSWINRT3001 // Type or member is obsolete
             {
             }
 

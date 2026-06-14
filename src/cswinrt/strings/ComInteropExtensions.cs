@@ -25,8 +25,6 @@
 // minimum Windows SDK that is currently supported. See this mapping
 // in the Windows SDK projection project. The two should be kept in sync.
 
-#pragma warning disable CSWINRT3001
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

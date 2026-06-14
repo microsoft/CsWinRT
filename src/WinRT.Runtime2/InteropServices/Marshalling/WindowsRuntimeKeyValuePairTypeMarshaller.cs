@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -10,10 +9,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// A marshaller for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class WindowsRuntimeKeyValuePairTypeMarshaller
 {
     /// <summary>

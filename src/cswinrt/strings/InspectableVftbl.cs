@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
-
 #if CSWINRT_REFERENCE_PROJECTION
 [assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
 #else

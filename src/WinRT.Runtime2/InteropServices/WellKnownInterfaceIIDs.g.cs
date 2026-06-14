@@ -10,10 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// IIDs for well known projected WinRT interfaces.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static class WellKnownInterfaceIIDs
 {
     /// <summary>The IID for <c>IUnknown</c>.</summary>

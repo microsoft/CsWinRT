@@ -10,8 +10,6 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
-
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
 

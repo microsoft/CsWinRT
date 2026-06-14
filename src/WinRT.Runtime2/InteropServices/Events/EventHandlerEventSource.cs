@@ -2,17 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="EventHandler"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public sealed unsafe class EventHandlerEventSource : EventSource<EventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

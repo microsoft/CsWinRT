@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -42,10 +41,7 @@ file static class IStringable;
 /// <summary>
 /// Marshaller for <see cref="global::Windows.Foundation.IStringable"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class IStringableMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
@@ -129,10 +125,7 @@ file sealed class WindowsRuntimeStringable : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -148,10 +141,7 @@ file sealed class WindowsRuntimeStringable : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
@@ -161,10 +151,7 @@ file sealed class WindowsRuntimeStringable : WindowsRuntimeObject,
 /// <summary>
 /// Interop methods for <see cref="global::Windows.Foundation.IStringable"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class IStringableMethods
 {
     /// <see cref="global::Windows.Foundation.IStringable.ToString"/>
@@ -208,10 +195,7 @@ internal unsafe struct IStringableVftbl
 /// <summary>
 /// The <see cref="global::Windows.Foundation.IStringable"/> implementation.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class IStringableImpl
 {
     /// <summary>

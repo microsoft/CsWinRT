@@ -555,7 +555,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **Compiler strict mode**: `<Features>strict</Features>` in all projects
 - **XML documentation**: generated for all projects
 - **`SkipLocalsInit`**: enabled in runtime and build tools for performance
-- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
+- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes)
 - **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
 ### C++ project (cswinrt)
@@ -598,7 +598,6 @@ All four .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtint
 | Projection Generator | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | Various, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0007` |
-| Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
 ---
 
