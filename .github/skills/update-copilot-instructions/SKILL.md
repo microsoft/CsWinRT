@@ -19,7 +19,7 @@ Read `.github/copilot-instructions.md` in full. Take note of every factual claim
 
 ### Step 2: analyze each project in depth
 
-Launch parallel explore agents for each of the 11 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
+Launch parallel explore agents for each of the 12 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
 
 1. **WinRT.Runtime (`src/WinRT.Runtime2/`)**
    - Directory structure matches what's documented
@@ -75,19 +75,25 @@ Launch parallel explore agents for each of the 11 CsWinRT 3.0 projects listed in
    - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` is wired (gated on `CsWinRTComponent`)
    - Debug repro support is documented (mentions `--debug-repro-directory`, `winmd-debug-repro.zip`, input component `.dll` + reference assemblies bundled)
 
-9. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
+9. **Generator core (`src/WinRT.Generator.Core/`)**
+   - Project settings are current (`net10.0`, C# 14, `IsAotCompatible`, `DisableRuntimeMarshalling`, root namespace `WindowsRuntime.Generator`, assembly name `WinRT.Generator.Core`, `AsmResolver.DotNet` dependency)
+   - `[InternalsVisibleTo]` is declared for all five CLI tool assemblies (`cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtprojectiongen`, `cswinrtprojectionrefgen`, `cswinrtwinmdgen`)
+   - Shared infrastructure types are present and accurately described: `GeneratorHost.CreateRunner` + `GeneratorPhaseRunner<TArgs>` + `IGeneratorArgs` (entry-point scaffold), `ResponseFileParser`/`ResponseFileBuilder` + `CommandLineArgumentNameAttribute` (reflection-based `.rsp` handling), `IGeneratorErrorFactory` + `WellKnownGeneratorException`/`UnhandledGeneratorException`/`WellKnownGeneratorMessages`/`GeneratorExceptionExtensions` (shared error contract), `DebugReproPacker` (debug repro), and misc helpers (`MvidGenerator`, `GeneratorJsonSerializerContext`, `{File,Path,RuntimeContext,IncrementalHash}Extensions`, `WellKnownPublicKeys`/`WellKnownPublicKeyTokens`)
+   - The library has no error IDs of its own — per-tool `WellKnown*Exceptions` factories own them and are dispatched through `IGeneratorErrorFactory` (the shared unhandled-exception format is `{ErrorPrefix}9999`)
+
+10. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
    - MSBuild task classes are accurately listed (including `RunCsWinRTProjectionRefGenerator` and `RunCsWinRTWinMDGenerator`)
    - Task-to-tool mappings are current
    - No leftover `CsWinRTExePath` parameter on `RunCsWinRTMergedProjectionGenerator`
    - All five tasks expose a `DebugReproDirectory` parameter plumbed from `$(CsWinRTGeneratorDebugReproDirectory)`
 
-10. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
+11. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
     - Assembly name logic (base vs XAML) is current
     - Windows SDK package download and WinMD sourcing is accurate
     - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`, `SdkPackageVersion`) are current
     - Project settings are current
 
-11. **WinRT.Internal (`src/WinRT.Internal/`)**
+12. **WinRT.Internal (`src/WinRT.Internal/`)**
     - Hand-authored C# source files mirror the historical IDL interop interfaces (HWND struct, `[ProjectionInternal]` attribute, all 14 `I*Interop` interfaces with their original IIDs)
     - Project TFM uses the CsWinRT 3.0 revision (`net10.0-windows10.0.X.1`) so the `cswinrt3` SDK projection reference assemblies are selected, and `WindowsSdkPackageVersion` is pinned to match
     - CsWinRT integration is disabled on the project itself (`CsWinRTEnabled`, `CsWinRTGenerateProjection`, `CsWinRTGenerateInteropAssembly[2]` all `false`)

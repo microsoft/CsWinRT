@@ -40,9 +40,10 @@ CsWinRT/
 │   ├── WinRT.Projection.Generator/        # (6) Projection DLL generator (cswinrtprojectiongen.exe)
 │   ├── WinRT.Interop.Generator/           # (7) Interop sidecar generator (cswinrtinteropgen.exe)
 │   ├── WinRT.WinMD.Generator/             # (8) Component .winmd generator (cswinrtwinmdgen.exe)
-│   ├── WinRT.Generator.Tasks/             # (9) MSBuild tasks for the build tools
-│   ├── WinRT.Sdk.Projection/              # (10) Precompiled Windows SDK projection builds
-│   └── WinRT.Internal/                    # (11) WindowsRuntime.Internal.winmd authoring project
+│   ├── WinRT.Generator.Core/              # (9) Shared infrastructure library for the CLI build tools
+│   ├── WinRT.Generator.Tasks/             # (10) MSBuild tasks for the build tools
+│   ├── WinRT.Sdk.Projection/              # (11) Precompiled Windows SDK projection builds
+│   └── WinRT.Internal/                    # (12) WindowsRuntime.Internal.winmd authoring project
 ├── nuget/                                 # MSBuild .props/.targets for NuGet package
 ├── docs/                                  # Specifications and documentation
 └── eng/                                   # Engineering/CI infrastructure
@@ -348,7 +349,7 @@ The **projection writer** is a C# library that reads `.winmd` metadata and gener
 - **Root namespace**: `WindowsRuntime.ProjectionWriter`
 - **Assembly name**: `WinRT.Projection.Writer`
 - **Dependency**: `AsmResolver.DotNet` (for `.winmd` parsing and IL/metadata helpers)
-- **Public surface**: a single static `ProjectionWriter.Run(ProjectionWriterOptions)` entry point. `ProjectionWriterOptions` exposes input metadata paths, output folder, include/exclude filters, component/reference-projection/exclusive-to toggles, a logger callback, a `MaxDegreesOfParallelism` knob, and a `CancellationToken`.
+- **Public surface**: a single static `ProjectionWriter.Run(ProjectionWriterOptions)` entry point. `ProjectionWriterOptions` exposes input metadata paths, output folder, include/exclude/additions-exclude filters, component/reference-projection/exclusive-to toggles, a verbose flag, a logger callback, a `MaxDegreesOfParallelism` knob, and a `CancellationToken`.
 
 **Public API model:**
 
@@ -360,7 +361,6 @@ The writer is consumed by other generators as a plain library reference — no i
 WinRT.Projection.Writer/
 ├── ProjectionWriter.cs          # Public Run(ProjectionWriterOptions) entry point
 ├── ProjectionWriterOptions.cs   # Public options record
-├── Attributes/                  # Internal attributes consumed by the writer
 ├── Builders/                    # Per-file emission orchestrators
 ├── Errors/                      # WellKnownProjectionWriterException + Unhandled* (5xxx error IDs)
 ├── Extensions/                  # AsmResolver / type-classifier extensions
@@ -386,7 +386,7 @@ WinRT.Projection.Writer/
 
 **Baseline emission** (`Resources/Base/`): always-emitted files that are not derived from `.winmd` metadata — `ComInteropExtensions.cs` (user-friendly extension methods wrapping internal interop interfaces), `InspectableVftbl.cs` (cached `IInspectable` vtable shape), `ReferenceInterfaceEntries.cs` (CCW interface entry table for the unknown-object fallback).
 
-**Internal interop interfaces** (`WindowsRuntime.Internal.winmd`): a small set of Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard SDK metadata. The .winmd is produced from the C# `WinRT.Internal` project (see project 11 below); it is bundled in the CsWinRT NuGet package (`metadata/WindowsRuntime.Internal.winmd`) and added as additional input to the projection writer when building Windows SDK projections. Interfaces in this metadata carry the `[ProjectionInternal]` attribute, which causes all generated projection code for them to be emitted `internal`. The hand-written extension methods in `Resources/Base/ComInteropExtensions.cs` then surface user-friendly wrappers on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
+**Internal interop interfaces** (`WindowsRuntime.Internal.winmd`): a small set of Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard SDK metadata. The .winmd is produced from the C# `WinRT.Internal` project (see project 12 below); it is bundled in the CsWinRT NuGet package (`metadata/WindowsRuntime.Internal.winmd`) and added as additional input to the projection writer when building Windows SDK projections. Interfaces in this metadata carry the `[ProjectionInternal]` attribute, which causes all generated projection code for them to be emitted `internal`. The hand-written extension methods in `Resources/Base/ComInteropExtensions.cs` then surface user-friendly wrappers on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
 
 ### 4. Reference projection generator (`src/WinRT.Projection.Ref.Generator/`)
 
@@ -397,7 +397,7 @@ A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT*
 - **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Root namespace**: `WindowsRuntime.ReferenceProjectionGenerator`
 - **Assembly name**: `cswinrtprojectionrefgen`
-- **Dependencies**: `ConsoleAppFramework` (CLI), and a project reference to `WinRT.Projection.Writer`
+- **Dependencies**: `ConsoleAppFramework` (CLI), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
 - **Security**: Control Flow Guard enabled, `IlcResilient = false`
 
 **Two-step flow:**
@@ -417,7 +417,7 @@ A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary.
 
 - **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtimplgen`
-- **Dependencies**: `AsmResolver.DotNet` (IL manipulation), `ConsoleAppFramework` (CLI)
+- **Dependencies**: `AsmResolver.DotNet` (IL manipulation), `ConsoleAppFramework` (CLI), and a project reference to the shared `WinRT.Generator.Core`
 
 **Purpose:** Projection `.dll` files in NuGet packages don't need to be updated for new CsWinRT versions. They contain no actual code — just type forwards to the merged projection `.dll` that is generated at app publish time.
 
@@ -447,7 +447,7 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 
 - **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtprojectiongen`
-- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn), and a project reference to `WinRT.Projection.Writer`
+- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
 
 **Three projection modes:**
 
@@ -473,7 +473,7 @@ A **.NET CLI tool** (`cswinrtinteropgen.exe`) published as a **Native AOT** bina
 
 - **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtinteropgen`
-- **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`, `CommunityToolkit.HighPerformance`, `System.Numerics.Tensors`
+- **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`, `CommunityToolkit.HighPerformance`, `System.Numerics.Tensors`, and a project reference to the shared `WinRT.Generator.Core`
 - **Security**: Control Flow Guard enabled, `IlcDehydrate = false` for lower memory usage
 
 **Why IL emission (not C# source generation)?**
@@ -510,7 +510,7 @@ A **.NET CLI tool** (`cswinrtwinmdgen.exe`) published as a **Native AOT** binary
 - **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Root namespace**: `WindowsRuntime.WinMDGenerator`
 - **Assembly name**: `cswinrtwinmdgen`
-- **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`
+- **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`, and a project reference to the shared `WinRT.Generator.Core`
 - **Security**: Control Flow Guard enabled, `IlcResilient = false`
 
 **Directory structure:**
@@ -549,7 +549,31 @@ WinRT.WinMD.Generator/
 
 **Debug repro support**: when `--debug-repro-directory` is provided, captures the input component `.dll` and all reference assemblies along with a faithful `.rsp` into a self-contained `winmd-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
 
-### 9. Generator tasks (`src/WinRT.Generator.Tasks/`)
+### 9. Generator core (`src/WinRT.Generator.Core/`)
+
+A shared infrastructure library (`WinRT.Generator.Core.dll`) referenced by all five .NET CLI build tools (the reference projection, impl, projection, interop, and WinMD generators). It centralizes the common scaffolding that every tool needs, so each generator only has to implement its tool-specific logic.
+
+**Project settings:**
+
+- **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`, `DisableRuntimeMarshalling`, `IsAotCompatible`
+- **Root namespace**: `WindowsRuntime.Generator` (the `.Core` suffix is dropped)
+- **Assembly name**: `WinRT.Generator.Core`
+- **Dependency**: `AsmResolver.DotNet`
+- **`[InternalsVisibleTo]`**: exposes its internals to the five CLI tool assemblies (`cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtprojectiongen`, `cswinrtprojectionrefgen`, `cswinrtwinmdgen`)
+
+**What it provides:**
+
+| Area | Types | Purpose |
+|------|-------|---------|
+| Entry-point scaffold | `GeneratorHost`, `GeneratorPhaseRunner<TArgs>`, `IGeneratorArgs` | `GeneratorHost.CreateRunner` runs the shared unpack → parse → save preamble and returns a `GeneratorPhaseRunner<TArgs>` that wraps each subsequent phase in the per-tool `Unhandled*Exception` (and auto-checks the cancellation token between phases) |
+| Response files | `Parsing/ResponseFileParser`, `Parsing/ResponseFileBuilder`, `Attributes/CommandLineArgumentNameAttribute` | Reflection-based parsing/formatting of the `.rsp` files: properties are mapped to `--flag` names via `[CommandLineArgumentName]`, so each tool's `*Args` type is a plain record with no hand-written parse/format code |
+| Error contract | `Errors/IGeneratorErrorFactory`, `Errors/WellKnownGeneratorException`, `Errors/UnhandledGeneratorException`, `Errors/WellKnownGeneratorMessages`, `Errors/GeneratorExceptionExtensions` | The shared infrastructure is generic over an `IGeneratorErrorFactory` (a `static abstract` interface) so it can route the common logical errors (response-file parsing, debug-repro packing, etc.) through each tool's own `WellKnown*Exceptions` factory — preserving per-tool error IDs and the shared `{ErrorPrefix}9999` unhandled-exception format |
+| Debug repro | `DebugRepro/DebugReproPacker` | Shared helpers to package input files (with hashed names) into a self-contained `.zip` and to unpack/replay one (each tool still owns its per-category subfolder layout) |
+| Misc helpers | `Helpers/MvidGenerator`, `Helpers/GeneratorJsonSerializerContext`, `Extensions/{File,Path,RuntimeContext,IncrementalHash}Extensions`, `References/{WellKnownPublicKeys,WellKnownPublicKeyTokens}` | Deterministic MVID hashing, AOT-safe JSON, path/file/`RuntimeContext` extensions, and the strong-name public keys/tokens used when emitting or referencing assemblies |
+
+The library has no error IDs of its own — the per-tool `WellKnown*Exceptions` factories (each with its own `CSWINRT*GEN` prefix) own them and are dispatched through `IGeneratorErrorFactory`.
+
+### 10. Generator tasks (`src/WinRT.Generator.Tasks/`)
 
 MSBuild task wrappers that bridge the MSBuild build system with the CLI tools above.
 
@@ -570,7 +594,7 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 
 All tasks extend `ToolTask`, generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
 
-### 10. SDK projection builds (`src/WinRT.Sdk.Projection/`)
+### 11. SDK projection builds (`src/WinRT.Sdk.Projection/`)
 
 A build project (not a tool) used during **official CsWinRT builds** to produce precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` for each supported Windows SDK version. These precompiled .dll-s are bundled into the CsWinRT NuGet package so that consumers don't have to regenerate the entire Windows SDK projection on every publish (as described in the architecture overview).
 
@@ -588,7 +612,7 @@ A build project (not a tool) used during **official CsWinRT builds** to produce 
 - Output goes to a per-SDK-version subdirectory (`bin/{Configuration}/{WindowsSdkBuild}/`)
 - Built twice per SDK version: once for the base projection (`WinRT.Sdk.Projection.dll`) and once with `WindowsSdkXaml=true` for the XAML projection (`WinRT.Sdk.Xaml.Projection.dll`)
 
-### 11. WinRT.Internal (`src/WinRT.Internal/`)
+### 12. WinRT.Internal (`src/WinRT.Internal/`)
 
 A small build project that produces **`WindowsRuntime.Internal.winmd`** — the Windows SDK COM interop interface metadata bundled with the CsWinRT NuGet package and consumed by the projection writer when building Windows SDK projections (see "Internal interop interfaces" under the Projection writer section above).
 
@@ -654,6 +678,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
   - `WindowsRuntime.InteropServices` for interop infrastructure
   - `WindowsRuntime.SourceGenerator` for the source generator
   - `WindowsRuntime.ProjectionWriter` for the projection writer library
+  - `WindowsRuntime.Generator` for the shared CLI build-tool infrastructure library (`WinRT.Generator.Core`)
   - `WindowsRuntime.ReferenceProjectionGenerator`, `WindowsRuntime.ProjectionGenerator`, `WindowsRuntime.ImplGenerator`, `WindowsRuntime.InteropGenerator`, `WindowsRuntime.WinMDGenerator` for build tools
   - `WindowsRuntime.Internal` for the interop metadata authoring project (produces `WindowsRuntime.Internal.winmd`)
 - ABI types live under `ABI.{OriginalNamespace}` (e.g., `ABI.System.Collections.Generic`)
@@ -662,15 +687,17 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 
 ### Build tool patterns
 
-All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtwinmdgen`) share common patterns:
+All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtwinmdgen`) share common patterns, most of which are factored into the shared `WinRT.Generator.Core` library (see project 9):
 
 - Published as **Native AOT** self-contained binaries for fast startup
 - Use **ConsoleAppFramework** for CLI argument parsing
-- Accept a **response file** (`.rsp`) as their primary input
+- Accept a **response file** (`.rsp`) as their primary input, parsed/formatted by the shared reflection-based `ResponseFileParser`/`ResponseFileBuilder` (each tool's `*Args` is a plain record with `[CommandLineArgumentName]`-annotated properties)
 - Use **AsmResolver.DotNet** for IL reading/writing
+- Start from the shared `GeneratorHost.CreateRunner` preamble and drive their phases through a `GeneratorPhaseRunner<TArgs>`
 - Follow the same error handling pattern:
   - `WellKnown*Exception` for expected errors (with error IDs like `CSWINRTIMPLGEN0001`)
-  - `Unhandled*Exception` for unexpected errors (suggests opening a GitHub issue)
+  - `Unhandled*Exception` for unexpected errors (suggests opening a GitHub issue; uses the shared `{ErrorPrefix}9999` format)
+  - The common logical errors are routed through each tool's `WellKnown*Exceptions` factory via the shared `IGeneratorErrorFactory` contract, so per-tool error IDs are preserved
   - `CommandLineArgumentNameAttribute` maps properties to CLI flag names
 - Support a **debug repro** mode: when `--debug-repro-directory` is provided, each tool packages all of its input files (with hashed names to avoid collisions) and a faithful `.rsp` into a self-contained `.zip` (`impl-debug-repro.zip`, `interop-debug-repro.zip`, `projection-debug-repro.zip`, `ref-projection-debug-repro.zip`, `winmd-debug-repro.zip`). Each tool also accepts a `.zip` as input and replays the captured run from a temporary unpack directory, with original file names restored. The MSBuild task wrappers in `WinRT.Generator.Tasks` expose this via a `DebugReproDirectory` parameter, plumbed from the `$(CsWinRTGeneratorDebugReproDirectory)` MSBuild property.
 - Security hardening: Control Flow Guard, `IlcResilient = false` (fail on unresolved assemblies)
@@ -727,7 +754,7 @@ Assembly-level `[TypeMapAssemblyTarget]` attributes (generated by the source gen
 | `src/Benchmarks/` | BenchmarkDotNet project for tracking performance of projection scenarios (e.g. async, events, QueryInterface, GUIDs). |
 | `src/Projections/` | Projects that generate and build projections from the Windows SDK, WinUI, and test metadata. **For local development and testing only** — these are not shipped in the NuGet package. |
 | `src/Samples/` | End-to-end sample projects: component authoring (`NetProjectionSample`, `AuthoringDemo`), WinUI desktop app (`WinUIDesktopSample`), background task component (`BgTaskComponent`). |
-| `src/Tests/` | Test projects: unit tests (`UnitTest/`), functional/AOT tests (`FunctionalTests/`), source generator and analyzer tests (`SourceGenerator2Test/`), object lifetime tests (`ObjectLifetimeTests.Lifted/`), authoring tests (`AuthoringTest/`, `AuthoringWuxTest/`, `AuthoringConsumptionTest/`, `AuthoringWuxConsumptionTest/`, `AuthoringWinUITest/`), build determinism (`BuildDeterminismTest/`), diagnostics (`DiagnosticTests/`), runtime framework version probing (`RuntimeFrameworkVersion/`), out-of-process EXE harness (`OOPExe/`), host (`HostTest/`), and the C++ test component (`TestComponentCSharp/`). |
+| `src/Tests/` | Test projects: unit tests (`UnitTest/`), functional/AOT tests (`FunctionalTests/`), source generator and analyzer tests (`SourceGenerator2Test/`), object lifetime tests (`ObjectLifetimeTests/`), authoring tests (`AuthoringTest/`, `AuthoringWuxTest/`, `AuthoringConsumptionTest/`, `AuthoringWuxConsumptionTest/`, `AuthoringWinUITest/`), build determinism (`BuildDeterminismTest/`), diagnostics (`DiagnosticTests/`), out-of-process EXE harness (`OOPExe/`), host (`HostTest/`), and the C++ test component (`TestComponentCSharp/`). |
 | `src/TestWinRT/` | Git submodule of [microsoft/TestWinRT](https://github.com/microsoft/TestWinRT/), providing general language projection test coverage. Produces `TestComponent` and `BenchmarkComponent` consumed by the unit test and benchmark projects. |
 | `build/` | Azure DevOps pipeline definitions for official builds and testing. Uses Maestro (from the [Arcade Build System](https://github.com/dotnet/arcade)) to publish builds for dependent projects. |
 | `eng/` | Engineering infrastructure: Maestro publishing helpers and shared build scripts. |
