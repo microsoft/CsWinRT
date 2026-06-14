@@ -25,7 +25,7 @@ Launch an explore agent to verify the directory tree listed in the skill matches
 - No new files or subdirectories have been added that are not documented
 - No files have been renamed or removed
 - File descriptions still match their actual purpose
-- The "Shared infrastructure (`WinRT.Generator.Core`)" section is accurate: verify which pieces are consumed from the shared library (CLI parsing via `ResponseFileParser`/`ResponseFileBuilder`, the `GeneratorHost.CreateRunner`/`GeneratorPhaseRunner` entry-point scaffold, `DebugReproPacker`, the `IGeneratorErrorFactory`/`WellKnownGeneratorException`/`UnhandledGeneratorException` error contract, `MvidGenerator`, `WellKnownPublicKeys`/`WellKnownPublicKeyTokens`, and the moved `Extensions/*`) rather than defined locally
+- The "Shared infrastructure (`WinRT.Generator.Core`)" section is accurate: verify which pieces are consumed from the shared library (CLI parsing via `ResponseFileParser`/`ResponseFileBuilder`, the `GeneratorHost.CreateRunner`/`GeneratorPhaseRunner` entry-point scaffold, `DebugReproPacker`, the `IGeneratorErrorFactory`/`WellKnownGeneratorException`/`UnhandledGeneratorException` error contract, `MvidGenerator`, `WellKnownPublicKeys`/`WellKnownPublicKeyTokens`, and the shared `Extensions/*` helpers) rather than being defined locally
 
 ### Step 3: verify the pipeline architecture
 
@@ -41,7 +41,7 @@ Launch an explore agent to verify the pipeline flow described in the skill. Chec
 Launch an explore agent to verify:
 
 - **Parameter list** is complete — check `InteropGeneratorArgs.cs` for all properties with `[CommandLineArgumentName]` (note it implements the shared `IGeneratorArgs`, which adds `Token` and `DebugReproDirectory`)
-- **Parsing/serialization** is accurately described as delegating to the shared `ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>` / `ResponseFileBuilder.Format` from `WinRT.Generator.Core` (the local `.Parsing.cs`/`.Formatting.cs` files no longer exist)
+- **Parsing/serialization** is accurately described as delegating to the shared `ResponseFileParser.Parse<InteropGeneratorArgs, WellKnownInteropExceptions>` / `ResponseFileBuilder.Format` from `WinRT.Generator.Core`
 - No parameters have been added, removed, or renamed
 
 ### Step 5: verify debug repro handling
@@ -95,7 +95,7 @@ Launch an explore agent to verify:
 Launch an explore agent to verify:
 
 - **Resolver classes** in `Resolvers/` are complete and accurately described (including `InterfaceIIDResolver`, which resolves IIDs from generated `ABI.InterfaceIIDs` types)
-- **Reference classes** in `References/` are complete (note the CsWinRT public key and system public key tokens now come from `WellKnownPublicKeys`/`WellKnownPublicKeyTokens` in `WinRT.Generator.Core`, not local `InteropValues.cs`/`WellKnownPublicKeyTokens.cs`)
+- **Reference classes** in `References/` are complete (note the CsWinRT public key and system public key tokens come from `WellKnownPublicKeys`/`WellKnownPublicKeyTokens` in `WinRT.Generator.Core`)
 - **Well-known interface IIDs** are current (native interface entry order, and the `ReservedIIDsMap` set — verify whether `IMarshal` is included; it is currently excluded because it can be user-overridden)
 - **Marshaller type resolution** logic is current
 
@@ -107,7 +107,7 @@ Launch an explore agent to verify:
 - **GuidGenerator** algorithm is accurately described
 - **TypeMapping** entries are current (check for added/removed mappings, and that the entry count in the doc matches the actual `ProjectionTypeMapping` table)
 - **TypeExclusions** are current
-- **MvidGenerator** algorithm is current (note it is now the shared `MvidGenerator` from `WinRT.Generator.Core`, not a local `Helpers/MvidGenerator.cs`)
+- **MvidGenerator** algorithm is current (it is the shared `MvidGenerator` from `WinRT.Generator.Core`)
 
 ### Step 11: verify diagnostics
 
@@ -115,7 +115,7 @@ Launch an explore agent to verify:
 
 - **Error code categories** table is complete — check `WellKnownInteropExceptions.cs` for all factory methods (codes are assigned sequentially and are not contiguous by theme, so verify the highest numeric code and the themed groupings rather than fixed ranges)
 - **Error code range** is accurate (currently 1–97 plus 9999)
-- **Error types** (`WellKnownInteropException`, `WellKnownInteropWarning`, `UnhandledInteropException`) are current, including that the first and third now extend the shared `WellKnownGeneratorException`/`UnhandledGeneratorException`, and that `WellKnownInteropExceptions` implements the shared `IGeneratorErrorFactory`
+- **Error types** (`WellKnownInteropException`, `WellKnownInteropWarning`, `UnhandledInteropException`) are current, including that the first and third extend the shared `WellKnownGeneratorException`/`UnhandledGeneratorException`, and that `WellKnownInteropExceptions` implements the shared `IGeneratorErrorFactory`
 
 ### Step 12: update the skill
 

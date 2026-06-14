@@ -144,22 +144,22 @@ WinRT.Interop.Generator/
 
 ### Shared infrastructure (`WinRT.Generator.Core`)
 
-The interop generator is one of five CsWinRT CLI build tools, and it shares common scaffolding with the others through the `WinRT.Generator.Core` library (namespace `WindowsRuntime.Generator`, see project 9 in `.github/copilot-instructions.md`). Several pieces that used to live in this project were moved there and are now consumed as a library:
+The interop generator is one of five CsWinRT CLI build tools, and it shares common scaffolding with the others through the `WinRT.Generator.Core` library (namespace `WindowsRuntime.Generator`, see project 9 in `.github/copilot-instructions.md`). It consumes the following pieces from that library:
 
-| Shared type (in `WinRT.Generator.Core`) | Replaces (formerly local) |
-|------------------------------------------|----------------------------|
-| `GeneratorHost.CreateRunner` + `GeneratorPhaseRunner<TArgs>` | the hand-written preamble and phase sequencing in `InteropGenerator.Run` |
-| `Parsing.ResponseFileParser` / `Parsing.ResponseFileBuilder` | `InteropGeneratorArgs.Parsing.cs` / `InteropGeneratorArgs.Formatting.cs` |
-| `Attributes.CommandLineArgumentNameAttribute` | the local `Attributes/CommandLineArgumentNameAttribute.cs` |
-| `IGeneratorArgs` | implemented by `InteropGeneratorArgs` (adds `Token` and `DebugReproDirectory`) |
-| `Errors.IGeneratorErrorFactory`, `Errors.WellKnownGeneratorException`, `Errors.UnhandledGeneratorException`, `Errors.GeneratorExceptionExtensions` | base types for `WellKnownInteropException(s)`/`UnhandledInteropException`, plus the local `Extensions/InteropExceptionExtensions.cs` (the `IsWellKnown` extension) |
-| `DebugRepro.DebugReproPacker` | the bulk of `InteropGenerator.DebugRepro.cs` |
-| `Helpers.MvidGenerator` | the local `Helpers/MvidGenerator.cs` |
-| `Helpers.GeneratorJsonSerializerContext` | the local `Helpers/InteropGeneratorJsonSerializerContext.cs` |
-| `References.WellKnownPublicKeys` / `References.WellKnownPublicKeyTokens` | the local `References/InteropValues.cs` / `References/WellKnownPublicKeyTokens.cs` |
-| `Extensions.{File,Path,RuntimeContext,IncrementalHash}Extensions` | the local `Extensions/*.cs` of the same names |
+| Shared type (in `WinRT.Generator.Core`) | What it provides |
+|------------------------------------------|------------------|
+| `GeneratorHost.CreateRunner` + `GeneratorPhaseRunner<TArgs>` | the entry-point preamble and phase sequencing driven by `InteropGenerator.Run` |
+| `Parsing.ResponseFileParser` / `Parsing.ResponseFileBuilder` | reflection-based parsing and serialization of the `.rsp` file |
+| `Attributes.CommandLineArgumentNameAttribute` | maps `InteropGeneratorArgs` properties to CLI flag names |
+| `IGeneratorArgs` | implemented by `InteropGeneratorArgs` (contributes `Token` and `DebugReproDirectory`) |
+| `Errors.IGeneratorErrorFactory`, `Errors.WellKnownGeneratorException`, `Errors.UnhandledGeneratorException`, `Errors.GeneratorExceptionExtensions` | base types for `WellKnownInteropException(s)`/`UnhandledInteropException`, and the `IsWellKnown` exception extension |
+| `DebugRepro.DebugReproPacker` | the shared debug-repro pack/unpack helpers |
+| `Helpers.MvidGenerator` | deterministic MVID computation from input assemblies |
+| `Helpers.GeneratorJsonSerializerContext` | AOT-safe JSON serialization for the debug-repro path maps |
+| `References.WellKnownPublicKeys` / `References.WellKnownPublicKeyTokens` | the CsWinRT strong-name public key and system-assembly public key tokens |
+| `Extensions.{File,Path,RuntimeContext,IncrementalHash}Extensions` | shared file, path, runtime-context, and incremental-hash helpers |
 
-Tool-specific logic (the entire discovery and emit pipeline, all builders/factories/resolvers/rewriters/fixups, the interop-specific error messages, and the reserved-DLL handling in the debug repro) stays in this project.
+Tool-specific logic (the entire discovery and emit pipeline, all builders/factories/resolvers/rewriters/fixups, the interop-specific error messages, and the reserved-DLL handling in the debug repro) lives in this project.
 
 ## Pipeline architecture
 
@@ -259,7 +259,7 @@ implementation/                    — All implementation .dll-s (renamed to avo
 4. Serializes args to response file with updated paths (via `ResponseFileBuilder.Format`)
 5. Zips everything to `--debug-repro-directory`
 
-The interop generator keeps a small local `CopyHashedFileToDirectory` variant (instead of the shared `DebugReproPacker.CopyHashedFileToDirectory`) to dedupe the private implementation-detail assemblies (`WinRT.Sdk.Projection.dll`, `WinRT.Sdk.Xaml.Projection.dll`, `WinRT.Projection.dll`, `WinRT.Component.dll`) that are passed both via the reference set and via their own dedicated properties.
+The interop generator uses a small local `CopyHashedFileToDirectory` variant (rather than the shared `DebugReproPacker.CopyHashedFileToDirectory`) to dedupe the private implementation-detail assemblies (`WinRT.Sdk.Projection.dll`, `WinRT.Sdk.Xaml.Projection.dll`, `WinRT.Projection.dll`, `WinRT.Component.dll`) that are passed both via the reference set and via their own dedicated properties.
 
 **Consumption** (`UnpackDebugRepro`): uses `DebugReproPacker.CreateUnpackTempDirectory` and `DebugReproPacker.ExtractPathMap`:
 1. If the input path ends with `.zip`, extracts to a temp directory
@@ -584,7 +584,7 @@ This produces a deterministic GUID that is identical across all implementations 
 
 ### MVID generation (shared `MvidGenerator` from `WinRT.Generator.Core`)
 
-The generated assembly's Module Version ID (MVID) is deterministic: it's computed by streaming all input assembly files (sorted alphabetically by path) through an incremental SHA1 hasher, then taking the first 16 bytes as a GUID. Same inputs = same MVID = reproducible builds. The interop generator calls `MvidGenerator.CreateMvid(discoveryState.Modules.Keys)`; the implementation now lives in the shared `WinRT.Generator.Core` library rather than locally.
+The generated assembly's Module Version ID (MVID) is deterministic: it's computed by streaming all input assembly files (sorted alphabetically by path) through an incremental SHA1 hasher, then taking the first 16 bytes as a GUID. Same inputs = same MVID = reproducible builds. The interop generator calls the shared `MvidGenerator.CreateMvid(discoveryState.Modules.Keys)` from `WinRT.Generator.Core`.
 
 ## Resolvers (`Resolvers/`)
 
@@ -655,7 +655,7 @@ Key methods:
 - **`InteropNames`** — String constants for well-known assembly names (`WinRT.Runtime.dll`, `WinRT.Interop.dll`, etc.), including UTF-8 versions for zero-copy comparison.
 - **`WellKnownInterfaceIIDs`** — Pre-computed GUIDs for ~60+ well-known interfaces plus a `ReservedIIDsMap` of the 5 reserved interface IIDs that cannot be manually implemented (`IStringable`, `IWeakReferenceSource`, `IAgileObject`, `IInspectable`, `IUnknown`). `IMarshal` is defined here too but is intentionally **not** in the map, since user types can override it via `[GeneratedComInterface]`.
 
-The CsWinRT strong-name public key (formerly `InteropValues`) and the system-assembly public key tokens (formerly `WellKnownPublicKeyTokens`) now come from `WindowsRuntime.Generator.References.WellKnownPublicKeys` / `WellKnownPublicKeyTokens` in the shared `WinRT.Generator.Core` library.
+The CsWinRT strong-name public key and the system-assembly public key tokens come from `WellKnownPublicKeys` / `WellKnownPublicKeyTokens` (namespace `WindowsRuntime.Generator.References`) in the shared `WinRT.Generator.Core` library.
 
 ## Diagnostics and error handling
 
