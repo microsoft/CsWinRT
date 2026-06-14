@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+
+    <!-- This project unit-tests the WinMD generator's managed logic directly; no CsWinRT processing needed -->
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x86'">
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Used to compile the C# inputs that drive the generator end-to-end -->
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+
+    <!-- Core MSTest attributes/assertions -->
+    <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="MSTest.Analyzers" />
+
+    <!-- MTP build integration + optional reporting -->
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+
+    <!-- MSTest runner and generators -->
+    <PackageReference Include="MSTest.Engine" />
+    <PackageReference Include="MSTest.SourceGeneration" />
+  </ItemGroup>
+
+  <!--
+    Build the WinMD generator tool, but do not reference its assembly: the tests invoke it as a
+    separate process (end-to-end), so the generator exposes no internals to this project. The
+    'RuntimeIdentifier' is removed so the tool always builds to 'bin/$(Configuration)/net10.0'.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      GlobalPropertiesToRemove="RuntimeIdentifier" />
+  </ItemGroup>
+
+  <!-- Pass the built tool's path to the tests via assembly metadata -->
+  <ItemGroup>
+    <AssemblyMetadata Include="WinMDGeneratorAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\cswinrtwinmdgen.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+</Project>
