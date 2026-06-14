@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using AsmResolver.DotNet;
 
@@ -13,27 +15,34 @@ internal partial class ProjectionGenerator
 {
     /// <summary>
     /// Component-mode only. Emits the supporting source files that make <c>WinRT.Component.dll</c>
-    /// the merged aggregator dll: (a) a module initializer that designates this assembly as the
-    /// entry assembly for .NET TypeMap discovery, (b) a <c>[TypeMapAssemblyTarget]</c> union
-    /// covering each component plus shared infrastructure assemblies, and (c) a merged
-    /// <c>ABI.WinRT.Component.ManagedExports.GetActivationFactory</c> that the
-    /// <c>WinRT.Host.Shim</c> reflects on.
+    /// the merged aggregator dll:
+    /// <list type="bullet">
+    ///   <item>A module initializer that designates this assembly as the entry assembly for .NET interop type map discovery.</item>
+    ///   <item>
+    ///     A <see cref="System.Runtime.InteropServices.TypeMapAssemblyTargetAttribute{TTypeMapGroup}"/>
+    ///     union covering each component plus shared infrastructure assemblies.
+    ///   </item>
+    ///   <item>
+    ///     A merged <c>ABI.WinRT.Component.ManagedExports.GetActivationFactory</c> that <c>WinRT.Host.Shim</c> reflects on.
+    ///   </item>
+    /// </list>
     /// </summary>
     /// <remarks>
     /// These emissions write directly into <see cref="ProjectionGeneratorProcessingState.SourcesFolder"/>
-    /// (the same folder cswinrt.exe targets), so they are picked up automatically by the
-    /// Roslyn compile step in <see cref="Emit"/>.
+    /// (the same folder cswinrt.exe targets), so they are picked up automatically by the Roslyn compile
+    /// step in <see cref="Emit"/>.
     /// </remarks>
     private static void EmitWinRTComponentSources(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
     {
-        // Only emit these files when producing 'WinRT.Component.dll'.
+        // Only emit these files when producing 'WinRT.Component.dll'
         if (args.AssemblyName != "WinRT.Component")
         {
             return;
         }
 
-        // Nothing to merge if there are no input components. cswinrt.exe -component would
-        // not have produced any 'ABI.{ComponentName}.ManagedExports' types either.
+        // Nothing to merge if there are no input components. In this case, the
+        // projection generator invocation in component mode would not have produced
+        // any 'ABI.{ComponentName}.ManagedExports' types either.
         if (processingState.ComponentAssemblyNames.Count == 0)
         {
             return;
@@ -49,12 +58,14 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Emits a <c>[ModuleInitializer]</c>-driven <c>SetEntryAssembly</c> in <c>WinRT.Component.dll</c>.
+    /// Emits a <see cref="System.Runtime.CompilerServices.ModuleInitializerAttribute"/>-driven call
+    /// to <see cref="System.Reflection.Assembly.SetEntryAssembly"/> in <c>WinRT.Component.dll</c>.
     /// This designates <c>WinRT.Component.dll</c> as the entry assembly the .NET runtime uses
-    /// to root <c>[TypeMapAssemblyTarget]</c> discovery. Idempotent: skipped if the host has
-    /// already set an entry assembly. Per-component dlls intentionally do not emit a similar
-    /// initializer; consumers using a single component dll directly must call
-    /// <c>Assembly.SetEntryAssembly</c> themselves if they need TypeMap discovery rooted there.
+    /// to root <see cref="System.Runtime.InteropServices.TypeMapAssemblyTargetAttribute{TTypeMapGroup}"/>
+    /// discovery. This method is idempotent: skipped if the host has already set an entry assembly.
+    /// Per-component '.dll'-s intentionally do not emit a similar initializer. Consumers using a single
+    /// component '.dll' directly must call <see cref="System.Reflection.Assembly.SetEntryAssembly"/>
+    /// themselves if they need interop type map discovery rooted there.
     /// </summary>
     private static void WriteProjectionTypesInitializer(ProjectionGeneratorProcessingState processingState)
     {
@@ -85,7 +96,9 @@ internal partial class ProjectionGenerator
             }
             """;
 
-        File.WriteAllText(Path.Combine(processingState.SourcesFolder, "ProjectionTypesInitializer.g.cs"), source);
+        string destinationPath = Path.Combine(processingState.SourcesFolder, "ProjectionTypesInitializer.g.cs");
+
+        File.WriteAllText(destinationPath, source);
     }
 
     /// <summary>
@@ -105,7 +118,7 @@ internal partial class ProjectionGenerator
     {
         // Build the list of target assembly simple names. Order is deterministic for stable
         // codegen output. The runtime treats the order as irrelevant for discovery.
-        System.Collections.Generic.List<string> targetAssemblyNames =
+        List<string> targetAssemblyNames =
         [
             "WinRT.Interop",
             "WinRT.Runtime",
@@ -119,8 +132,8 @@ internal partial class ProjectionGenerator
 
         // 'WinRT.Projection.dll' is generated only when there are non-Windows-SDK, non-component
         // Windows Runtime reference assemblies in scope (i.e. third-party projection references).
-        // Only include it in the union when that condition holds; otherwise the runtime would
-        // fail with FileNotFoundException trying to enumerate a non-existent assembly.
+        // Only include it in the union when that condition holds, otherwise the runtime would
+        // fail with 'FileNotFoundException' trying to enumerate a non-existent assembly.
         if (HasMergedProjectionReferences(args))
         {
             targetAssemblyNames.Add("WinRT.Projection");
@@ -129,27 +142,27 @@ internal partial class ProjectionGenerator
         // Per-component targets
         targetAssemblyNames.AddRange(processingState.ComponentAssemblyNames);
 
-        StringBuilder sb = new();
-        _ = sb.AppendLine("// <auto-generated/>");
-        _ = sb.AppendLine("#pragma warning disable");
-        _ = sb.AppendLine();
+        StringBuilder builder = new();
 
-        foreach (string targetTypeMapGroup in (string[])
-        [
+        _ = builder.AppendLine("// <auto-generated/>");
+        _ = builder.AppendLine("#pragma warning disable");
+        _ = builder.AppendLine();
+
+        // Append all interop type map entries for each target assembly we discovered
+        foreach (string targetTypeMapGroup in (ReadOnlySpan<string>)[
             "global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup",
             "global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup",
-            "global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup",
-        ])
+            "global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup"])
         {
             foreach (string targetAssembly in targetAssemblyNames)
             {
-                _ = sb.AppendLine($"[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<{targetTypeMapGroup}>(\"{targetAssembly}\")]");
+                _ = builder.AppendLine($"[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<{targetTypeMapGroup}>(\"{targetAssembly}\")]");
             }
-
-            _ = sb.AppendLine();
         }
 
-        File.WriteAllText(Path.Combine(processingState.SourcesFolder, "TypeMapAssemblyTargets.g.cs"), sb.ToString());
+        string destinationPath = Path.Combine(processingState.SourcesFolder, "TypeMapAssemblyTargets.g.cs");
+
+        File.WriteAllText(destinationPath, builder.ToString());
     }
 
     /// <summary>
@@ -159,8 +172,7 @@ internal partial class ProjectionGenerator
     /// </summary>
     private static bool HasMergedProjectionReferences(ProjectionGeneratorArgs args)
     {
-        string[] resolverPaths = [.. System.Linq.Enumerable.Where(args.ReferenceAssemblyPaths,
-            p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
+        string[] resolverPaths = [.. args.ReferenceAssemblyPaths.Where(p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
 
         PathAssemblyResolver resolver = new(resolverPaths);
 
@@ -188,22 +200,22 @@ internal partial class ProjectionGenerator
                 continue;
             }
 
-            // Windows SDK projections (Microsoft.Windows.SDK.NET / Microsoft.Windows.UI.Xaml)
-            // go into 'WinRT.Sdk.Projection.dll' / 'WinRT.Sdk.Xaml.Projection.dll', not 'WinRT.Projection.dll'.
+            // Windows SDK projections ('Microsoft.Windows.SDK.NET' and 'Microsoft.Windows.UI.Xaml') go into
+            // 'WinRT.Sdk.Projection.dll' and 'WinRT.Sdk.Xaml.Projection.dll', not 'WinRT.Projection.dll'.
             if (IsWindowsSdkAssembly(refModule))
             {
                 continue;
             }
 
-            // Component reference projections also don't go into 'WinRT.Projection.dll' (they
-            // are listed separately in the per-component target group above).
+            // Component reference projections also don't go into 'WinRT.Projection.dll'
+            // (they are listed separately in the per-component target group above).
             if (IsComponentAssembly(refModule))
             {
                 continue;
             }
 
-            // A third-party Windows Runtime reference projection - 'WinRT.Projection.dll' will
-            // be generated by '_RunCsWinRTMergedProjectionGenerator' for these.
+            // A third-party Windows Runtime reference projection, 'WinRT.Projection.dll'
+            // will be generated by '_RunCsWinRTMergedProjectionGenerator' for these.
             return true;
         }
 
@@ -211,15 +223,15 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Emits <c>ABI.WinRT.Component.ManagedExports.GetActivationFactory</c>, a merged
-    /// dispatcher that walks each per-component <c>ABI.{ComponentName}.ManagedExports.GetActivationFactory</c>
-    /// (already emitted by cswinrt.exe in <c>-component</c> mode) and returns the first
-    /// non-<c>null</c> factory.
+    /// Emits <c>ABI.WinRT.Component.ManagedExports.GetActivationFactory</c>, a merged dispatcher
+    /// that walks each per-component <c>ABI.{ComponentName}.ManagedExports.GetActivationFactory</c>
+    /// (already emitted by the projection generator invocation in component mode) and returns the
+    /// first non-<see langword="null"/> factory.
     /// </summary>
     /// <remarks>
     /// This type is what <c>WinRT.Host.Shim.GetActivationFactory</c> reflects on when the
     /// loaded target assembly is <c>WinRT.Component.dll</c> (the moduleName the shim
-    /// computes from the dll filename is <c>"WinRT.Component"</c>, so it looks up
+    /// computes from the '.dll' filename is <c>"WinRT.Component"</c>, so it looks up
     /// <c>ABI.WinRT.Component.ManagedExports</c>).
     /// </remarks>
     private static void WriteMergedManagedExports(ProjectionGeneratorProcessingState processingState)
@@ -277,6 +289,8 @@ internal partial class ProjectionGenerator
             }
             """;
 
-        File.WriteAllText(Path.Combine(processingState.SourcesFolder, "MergedManagedExports.g.cs"), source);
+        string destinationPath = Path.Combine(processingState.SourcesFolder, "MergedManagedExports.g.cs");
+
+        File.WriteAllText(destinationPath, source);
     }
 }

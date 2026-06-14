@@ -723,11 +723,12 @@ internal sealed partial class IndentedTextWriter
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                // Intentional: see <remarks/> -- a failed read falls through to a fresh write.
+                // Intentional, see the remarksL a failed read falls through to a fresh write
             }
         }
 
         File.WriteAllText(path, content);
+
         _ = _buffer.Clear();
     }
 

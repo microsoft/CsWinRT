@@ -96,7 +96,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// <summary>
     /// Gets or sets whether to emit the 'ProjectionTypesInitializer' module initializer
     /// (Assembly.SetEntryAssembly) into 'WinRT.Component.dll'. Only needed under JIT to
-    /// enable TypeMap discovery; AOT uses a separate exe-project workaround.
+    /// enable TypeMap discovery, AOT uses a separate exe-project workaround.
     /// </summary>
     public bool EmitEntryPointInitializer { get; set; }
 
