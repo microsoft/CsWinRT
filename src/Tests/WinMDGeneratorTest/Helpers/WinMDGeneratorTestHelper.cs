@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -21,55 +22,80 @@ internal static class WinMDGeneratorTestHelper
 {
     /// <summary>
     /// Compiles the given C# <paramref name="source"/> into an assembly and runs the WinMD generator
-    /// against it, returning the process exit code and combined output.
+    /// against it with a standard response file, returning the process exit code and combined output.
     /// </summary>
     /// <param name="source">The C# source defining the authored component types.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use the UWP (<c>Windows.UI.Xaml</c>) projections.</param>
     /// <returns>The generator process exit code and its combined standard output and error.</returns>
     public static (int ExitCode, string Output) RunGenerator(string source, bool useWindowsUIXamlProjections = false)
     {
+        return RunGenerator(temporaryDirectory =>
+        {
+            string inputAssemblyPath = CompileComponent(source, temporaryDirectory);
+
+            return
+            [
+                $"--input-assembly-path {inputAssemblyPath}",
+                $"--reference-assembly-paths {inputAssemblyPath}",
+                $"--output-winmd-path {Path.Combine(temporaryDirectory, "TestInput.winmd")}",
+                "--assembly-version 1.0.0.0",
+                $"--use-windows-ui-xaml-projections {useWindowsUIXamlProjections}",
+            ];
+        });
+    }
+
+    /// <summary>
+    /// Runs the WinMD generator against a caller-provided response file, returning the process exit
+    /// code and combined output.
+    /// </summary>
+    /// <remarks>
+    /// The <paramref name="responseFileFactory"/> receives a fresh temporary working directory and
+    /// returns the response file lines to run with. It can use <see cref="CompileComponent"/> to produce
+    /// an input assembly, or reference any other path under the directory (e.g. to test invalid inputs).
+    /// </remarks>
+    /// <param name="responseFileFactory">Builds the response file lines for a given temporary directory.</param>
+    /// <returns>The generator process exit code and its combined standard output and error.</returns>
+    public static (int ExitCode, string Output) RunGenerator(Func<string, IReadOnlyList<string>> responseFileFactory)
+    {
         string toolPath = GetGeneratorPath();
         string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
 
         try
         {
-            string inputAssemblyPath = Path.Combine(temporaryDirectory, "TestInput.dll");
-            string outputWinmdPath = Path.Combine(temporaryDirectory, "TestInput.winmd");
+            IReadOnlyList<string> responseFileLines = responseFileFactory(temporaryDirectory);
             string responseFilePath = Path.Combine(temporaryDirectory, "args.rsp");
 
-            CompileInputAssembly(source, inputAssemblyPath);
-
-            // Each line of the response file is a single '<argument-name> <value>' pair. The input
-            // assembly is also passed as its own reference path (its directory seeds the resolver).
-            File.WriteAllLines(responseFilePath,
-            [
-                $"--input-assembly-path {inputAssemblyPath}",
-                $"--reference-assembly-paths {inputAssemblyPath}",
-                $"--output-winmd-path {outputWinmdPath}",
-                "--assembly-version 1.0.0.0",
-                $"--use-windows-ui-xaml-projections {useWindowsUIXamlProjections}",
-            ]);
+            File.WriteAllLines(responseFilePath, responseFileLines);
 
             return RunTool(toolPath, responseFilePath);
         }
         finally
         {
-            try
-            {
-                Directory.Delete(temporaryDirectory, recursive: true);
-            }
-            catch (IOException)
-            {
-                // Best effort cleanup; a leftover temp directory must not fail the test
-            }
+            TryDeleteDirectory(temporaryDirectory);
         }
     }
 
     /// <summary>
-    /// Compiles the given C# <paramref name="source"/> into an assembly on disk.
+    /// Runs the WinMD generator pointed at a response file path that does not exist.
     /// </summary>
-    private static void CompileInputAssembly(string source, string outputPath)
+    /// <returns>The generator process exit code and its combined standard output and error.</returns>
+    public static (int ExitCode, string Output) RunGeneratorWithMissingResponseFile()
     {
+        string missingResponseFilePath = Path.Combine(Path.GetTempPath(), $"WinMDGeneratorTest_{Guid.NewGuid():N}.rsp");
+
+        return RunTool(GetGeneratorPath(), missingResponseFilePath);
+    }
+
+    /// <summary>
+    /// Compiles the given C# <paramref name="source"/> into <c>TestInput.dll</c> in <paramref name="directory"/>.
+    /// </summary>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <param name="directory">The directory to emit the assembly into.</param>
+    /// <returns>The full path to the compiled assembly.</returns>
+    public static string CompileComponent(string source, string directory)
+    {
+        string outputPath = Path.Combine(directory, "TestInput.dll");
+
         CSharpParseOptions parseOptions = new(LanguageVersion.Preview);
 
         // The target framework attribute lets the generator probe the .NET runtime version. It is added
@@ -89,12 +115,14 @@ internal static class WinMDGeneratorTestHelper
         EmitResult result = compilation.Emit(outputPath);
 
         Assert.IsTrue(result.Success, $"Input compilation failed:\n{string.Join("\n", result.Diagnostics)}");
+
+        return outputPath;
     }
 
     /// <summary>
-    /// Runs <c>dotnet exec &lt;tool&gt; &lt;responseFile&gt;</c> and captures the exit code and output.
+    /// Runs <c>dotnet exec &lt;tool&gt; &lt;argument&gt;</c> and captures the exit code and output.
     /// </summary>
-    private static (int ExitCode, string Output) RunTool(string toolPath, string responseFilePath)
+    private static (int ExitCode, string Output) RunTool(string toolPath, string argument)
     {
         ProcessStartInfo startInfo = new("dotnet")
         {
@@ -106,7 +134,7 @@ internal static class WinMDGeneratorTestHelper
 
         startInfo.ArgumentList.Add("exec");
         startInfo.ArgumentList.Add(toolPath);
-        startInfo.ArgumentList.Add(responseFilePath);
+        startInfo.ArgumentList.Add(argument);
 
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the WinMD generator process.");
 
@@ -134,5 +162,20 @@ internal static class WinMDGeneratorTestHelper
         Assert.IsTrue(File.Exists(fullPath), $"The WinMD generator was not found at '{fullPath}'.");
 
         return fullPath;
+    }
+
+    /// <summary>
+    /// Deletes a directory recursively, ignoring failures (best effort cleanup).
+    /// </summary>
+    private static void TryDeleteDirectory(string directory)
+    {
+        try
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+        catch (IOException)
+        {
+            // Best effort cleanup; a leftover temp directory must not fail the test
+        }
     }
 }
