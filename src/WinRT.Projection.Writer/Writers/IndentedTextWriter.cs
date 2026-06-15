@@ -30,7 +30,7 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// indentation, so raw multi-line literals with blank lines do not gain trailing whitespace.
 /// </para>
 /// </remarks>
-internal sealed partial class IndentedTextWriter
+public sealed partial class IndentedTextWriter
 {
     /// <summary>
     /// The default indentation (4 spaces).
@@ -696,38 +696,15 @@ internal sealed partial class IndentedTextWriter
     }
 
     /// <summary>
-    /// Flushes the current buffer to <paramref name="path"/> (skipping the write if the file
-    /// already exists with identical content), then clears the buffer.
+    /// Flushes the current buffer to <paramref name="path"/>, then clears the buffer.
     /// </summary>
-    /// <remarks>
-    /// If the destination file exists but cannot be read (e.g. due to a transient I/O failure or
-    /// access denial), the catch block silently falls through to a fresh write. This is the
-    /// intended behavior for a build tool: the worst case is an extra write of identical content
-    /// that the OS will then re-permit; the alternative (failing the build) would create
-    /// brittleness around incidental file-system noise.
-    /// </remarks>
     /// <param name="path">The destination file path.</param>
     public void FlushToFile(string path)
     {
         string content = _buffer.ToString();
 
-        if (File.Exists(path))
-        {
-            try
-            {
-                if (File.ReadAllText(path) == content)
-                {
-                    _ = _buffer.Clear();
-                    return;
-                }
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-            {
-                // Intentional: see <remarks/> -- a failed read falls through to a fresh write.
-            }
-        }
-
         File.WriteAllText(path, content);
+
         _ = _buffer.Clear();
     }
 

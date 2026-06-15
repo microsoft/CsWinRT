@@ -11,7 +11,7 @@ using System.Text;
 namespace WindowsRuntime.ProjectionWriter.Writers;
 
 /// <inheritdoc cref="IndentedTextWriter"/>
-internal partial class IndentedTextWriter
+public partial class IndentedTextWriter
 {
     /// <summary>
     /// Provides a handler used by the language compiler to conditionally append interpolated strings into <see cref="IndentedTextWriter"/> instances.

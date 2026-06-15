@@ -29,7 +29,7 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// parallel load the pool naturally caps at the worker-thread high-water mark.
 /// </para>
 /// </remarks>
-internal static class IndentedTextWriterPool
+public static class IndentedTextWriterPool
 {
     /// <summary>
     /// The backing pool. <see cref="ConcurrentBag{T}"/> is the right primitive for thread-local
@@ -54,7 +54,8 @@ internal static class IndentedTextWriterPool
             writer.Clear();
             return new IndentedTextWriterOwner(writer);
         }
-        return new IndentedTextWriterOwner(new IndentedTextWriter());
+
+        return new(new IndentedTextWriter());
     }
 
     /// <summary>
@@ -82,7 +83,7 @@ internal static class IndentedTextWriterPool
 /// <see cref="Writer"/> property throws <see cref="ObjectDisposedException"/>.
 /// </para>
 /// </remarks>
-internal ref struct IndentedTextWriterOwner : IDisposable
+public ref struct IndentedTextWriterOwner : IDisposable
 {
     private IndentedTextWriter? _writer;
 

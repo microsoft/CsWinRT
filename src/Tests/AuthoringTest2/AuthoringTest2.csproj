@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <CsWinRTComponent>true</CsWinRTComponent>
+    <IsTrimmable>true</IsTrimmable>
+    <TargetPlatformResourceVersion>10.0.18362.0</TargetPlatformResourceVersion>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+  </ItemGroup>
+
+</Project>

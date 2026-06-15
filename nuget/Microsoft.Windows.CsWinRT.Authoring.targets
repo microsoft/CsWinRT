@@ -67,7 +67,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   --> 
   <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'"> 
 
-    <None Condition="Exists('$(CsWinRTPath)lib\net10.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net10.0\WinRT.Host.Shim.dll">
+    <None Condition="Exists('$(CsWinRTPath)hosting\net10.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)hosting\net10.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -171,6 +171,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <CsWinRTComponent>true</CsWinRTComponent>
         <!-- Expose TFM so native consumers can generate a compatible temp project -->
         <CsWinRTComponentTargetFramework>$(TargetFramework)</CsWinRTComponentTargetFramework>
+        <!-- Expose WindowsSdkPackageVersion so native consumers' synthesized aggregator
+             csproj resolves the same Microsoft.Windows.SDK.NET.Ref pack version. -->
+        <CsWinRTComponentWindowsSdkPackageVersion>$(WindowsSdkPackageVersion)</CsWinRTComponentWindowsSdkPackageVersion>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
     
@@ -293,7 +296,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
 
-      <Content  Include="$(CsWinRTPath)lib\net10.0\WinRT.Host.Shim.dll">
+      <Content  Include="$(CsWinRTPath)hosting\net10.0\WinRT.Host.Shim.dll">
         <Pack>true</Pack>
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>

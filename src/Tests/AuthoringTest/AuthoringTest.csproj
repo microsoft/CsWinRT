@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <IsTrimmable>true</IsTrimmable>
@@ -41,7 +41,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI">
+      <!-- Keep build assets imported. -->
+      <ExcludeAssets>compile;runtime</ExcludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>

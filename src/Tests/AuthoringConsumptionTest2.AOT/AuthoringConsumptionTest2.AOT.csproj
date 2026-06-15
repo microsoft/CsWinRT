@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+
+    <CsWinRTMergeReferencedActivationFactories>true</CsWinRTMergeReferencedActivationFactories>
+
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <SelfContained>true</SelfContained>
+    <OutputType>Exe</OutputType>
+    <CustomNativeMain>true</CustomNativeMain>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuthoringTest3\AuthoringTest3.csproj" />
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Solution-level Build invokes Build (not Publish); hook Publish onto Build to drive ILC. -->
+  <Target Name="_RunPublishAfterBuild" AfterTargets="Build" DependsOnTargets="Publish" />
+
+</Project>

@@ -19,4 +19,4 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// </para>
 /// </remarks>
 /// <param name="writer">The writer to emit content to at its current position and indentation level.</param>
-internal delegate void IndentedTextWriterCallback(IndentedTextWriter writer);
+public delegate void IndentedTextWriterCallback(IndentedTextWriter writer);
