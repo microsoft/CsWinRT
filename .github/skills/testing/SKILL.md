@@ -13,7 +13,7 @@ Before adding tests, always check whether tests for the same functionality alrea
 
 ## Test project overview
 
-CsWinRT 3.0 has 6 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
+CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
 
 ### 1. Unit tests (`src/Tests/UnitTest/`)
 
@@ -244,6 +244,45 @@ public async Task InvalidType_Warns()
 
 **How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly (shared verification). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the three reference-projection tests are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
 
+### 7. WinMD generator tests (`src/Tests/WinMDGeneratorTest/`)
+
+**What it tests:** End-to-end behavior of the `cswinrtwinmdgen` build tool (the WinMD generator). It focuses on **failure cases** — unsupported authored component shapes and invalid tool invocations — that can be asserted without breaking a real build.
+
+**When to add tests here:** For testing a WinMD generator failure mode — a new `CSWINRTWINMDGEN` validation error, an unsupported authoring pattern, or a malformed/invalid invocation. Authored shapes that produce a valid `.winmd` are covered by the authoring tests (`AuthoringTest/`) instead.
+
+**Project settings:**
+- **Test framework:** MSTest (`[TestClass]`, `[TestMethod]`, `Assert.*`)
+- **TFM:** `net10.0`, multi-platform (x64/x86)
+- **Output type:** Exe, `CsWinRTEnabled=false`
+- **Key dependencies:** MSTest packages, `Basic.Reference.Assemblies.Net100` and `Microsoft.CodeAnalysis.CSharp` (used to compile the C# inputs)
+- **References:** `WinRT.WinMD.Generator` via `ProjectReference` with `ReferenceOutputAssembly="false"` and `GlobalPropertiesToRemove="RuntimeIdentifier"` — the tool is **built but not referenced**, and tests invoke it as a separate process. Its path is passed to the tests via an `AssemblyMetadata` item (`WinMDGeneratorAssemblyPath`).
+
+**Test classes:**
+| Test class | What it tests |
+|------------|---------------|
+| `Test_ParameterConventions` | Unsupported array/span parameter shapes (`ref`/`in` arrays, `out` spans) → `CSWINRTWINMDGEN0011`/`0012`, plus a valid smoke test |
+| `Test_InvalidInputs` | Invalid invocations: malformed/missing response files, bad arguments, missing/corrupt input assemblies, an unwritable output path, a missing debug-repro directory |
+
+**Test helper (in `Helpers/`):**
+- `WinMDGeneratorRunner` — compiles a C# input, runs the actual tool as a subprocess, and asserts the outcome. Public entry points: `AssertSuccess`, `AssertFailure` (from component source or full response-file content), `AssertFailureForMissingResponseFile`, and `CompileComponent`.
+
+**Pattern:**
+```csharp
+[TestMethod]
+public void RefArrayParameter_IsRejected()
+{
+    WinMDGeneratorRunner.AssertFailure("""
+        public interface IComponent
+        {
+            void Method(ref int[] values);
+        }
+        """, error: "CSWINRTWINMDGEN0011");
+}
+```
+
+- Each test is a single `AssertSuccess`/`AssertFailure` call; the runner makes the exit-code and error-output assertions
+- Failure cases assert the tool exits non-zero and its output contains the expected `CSWINRTWINMDGEN` error id
+
 ## Deciding where to add tests
 
 | You want to test... | Add test to... |
@@ -258,6 +297,7 @@ public async Task InvalidType_Warns()
 | GC/reference tracking behavior | `ObjectLifetimeTests/` |
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
 | WinRT component authoring patterns | `AuthoringTest/` |
+| A WinMD generator failure mode (a `CSWINRTWINMDGEN` error) | `WinMDGeneratorTest/` (add to `Test_ParameterConventions` or `Test_InvalidInputs`) |
 | The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/`, `Authoring/`, or a reference-projection project) |
 | Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
 

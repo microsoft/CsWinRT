@@ -86,7 +86,19 @@ Launch an explore agent to verify:
 - **"Referenced from" list** is current
 - **"When to update" guidance** is still correct
 
-### Step 9: verify the "deciding where to add tests" table
+### Step 9: verify WinMD generator tests (`src/Tests/WinMDGeneratorTest/`)
+
+Launch an explore agent to analyze the WinMD generator test project. Verify:
+
+- **Project settings** are current: test framework, TFM, platforms, output type, `CsWinRTEnabled` setting
+- **Tool wiring** is accurate: the `WinRT.WinMD.Generator` `ProjectReference` is built but not referenced (`ReferenceOutputAssembly="false"` + `GlobalPropertiesToRemove="RuntimeIdentifier"`), and the `AssemblyMetadata` item (`WinMDGeneratorAssemblyPath`) passes the built tool's path to the tests
+- **Key dependencies** are current (MSTest packages, `Basic.Reference.Assemblies.Net100`, `Microsoft.CodeAnalysis.CSharp`)
+- **Test class table** is complete and accurate — check all `Test_*.cs` files, verify no classes have been added, removed, or renamed, and verify each class's description matches its actual content
+- **Test helper** (`WinMDGeneratorRunner` in `Helpers/`) is accurately described, including its public entry points (`AssertSuccess`, `AssertFailure`, `AssertFailureForMissingResponseFile`, `CompileComponent`)
+- **Pattern example** matches the actual single-call `AssertSuccess`/`AssertFailure` style
+- **Error ids** referenced (`CSWINRTWINMDGEN*`) are still produced by the generator
+
+### Step 10: verify the "deciding where to add tests" table
 
 Check every row in the routing table against the actual test projects. Verify:
 
@@ -95,7 +107,7 @@ Check every row in the routing table against the actual test projects. Verify:
 - No new test project categories exist that should be added as rows
 - The `TestComponentCSharp` guidance is still accurate
 
-### Step 10: verify code examples
+### Step 11: verify code examples
 
 For each code example in the testing skill, verify it matches the conventions actually used in the test files:
 
@@ -103,8 +115,9 @@ For each code example in the testing skill, verify it matches the conventions ac
 - **Functional test pattern**: verify the example uses the correct exit codes and top-level statement style
 - **Generator test pattern**: verify the `VerifySources` call matches the actual method signature and style. Check an actual test method in `Test_CustomPropertyProviderGenerator` to confirm
 - **Analyzer test pattern**: verify the `VerifyAnalyzerAsync` call matches the actual method signature and style. Check an actual test method in the analyzer test files to confirm
+- **WinMD generator test pattern**: verify the single-call `AssertSuccess`/`AssertFailure` example matches the actual style. Check an actual test method in `Test_ParameterConventions` or `Test_InvalidInputs` to confirm
 
-### Step 11: update the testing instructions
+### Step 12: update the testing instructions
 
 Apply surgical edits to `.github/skills/testing/SKILL.md` to fix any discrepancies found. Typical updates include:
 
@@ -125,17 +138,17 @@ Apply surgical edits to `.github/skills/testing/SKILL.md` to fix any discrepanci
 - Do not add unnecessary commentary or explanation beyond what's needed for test placement guidance
 </style_rules>
 
-### Step 12: update this skill if needed
+### Step 13: update this skill if needed
 
 If significant changes to the test suite were discovered (e.g. test projects added or removed, new categories of tests, changed validation criteria), also update this skill file (`.github/skills/update-testing-instructions/SKILL.md`) to reflect those changes. In particular:
 
-- The **per-project verification steps** (steps 2–8) must stay in sync with the actual test projects. If a test project is added or removed, add or remove its verification step accordingly.
+- The **per-project verification steps** (steps 2–9) must stay in sync with the actual test projects. If a test project is added or removed, add or remove its verification step accordingly.
 - The **verification criteria** for each step should reflect what is actually worth checking. If a project gains new aspects worth validating (e.g. new test helper classes, new build settings), add those to the checklist.
-- The **code example verification step** (step 10) should list all code examples present in the testing skill.
+- The **code example verification step** (step 11) should list all code examples present in the testing skill.
 
 This ensures the skill remains useful and accurate for future runs.
 
-### Step 13: summarize changes
+### Step 14: summarize changes
 
 After editing, provide a clear summary of what was updated and why, so the user can review the changes before committing.
 
