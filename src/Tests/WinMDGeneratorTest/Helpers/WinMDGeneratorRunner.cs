@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -52,12 +51,13 @@ internal static class WinMDGeneratorRunner
     /// </summary>
     /// <remarks>
     /// The <paramref name="responseFileFactory"/> receives a fresh temporary working directory and
-    /// returns the response file lines to run with. It can use <see cref="CompileComponent"/> to produce
-    /// an input assembly, or reference any other path under the directory (e.g. to test invalid inputs).
+    /// returns the full response file content to run with (one <c>--argument value</c> pair per line). It
+    /// can use <see cref="CompileComponent"/> to produce an input assembly, or reference any other path
+    /// under the directory (e.g. to test invalid inputs).
     /// </remarks>
-    /// <param name="responseFileFactory">Builds the response file lines for a given temporary directory.</param>
+    /// <param name="responseFileFactory">Builds the full response file content for a given temporary directory.</param>
     /// <param name="error">The expected error id (e.g. <c>"CSWINRTWINMDGEN0002"</c>) the output must contain.</param>
-    public static void AssertFailure(Func<string, IReadOnlyList<string>> responseFileFactory, string error)
+    public static void AssertFailure(Func<string, string> responseFileFactory, string error)
     {
         AssertFailureResult(Run(responseFileFactory), error);
     }
@@ -78,7 +78,7 @@ internal static class WinMDGeneratorRunner
     /// Compiles the given C# <paramref name="source"/> into <c>TestInput.dll</c> in <paramref name="directory"/>.
     /// </summary>
     /// <remarks>
-    /// This is exposed for the <see cref="AssertFailure(Func{string, IReadOnlyList{string}}, string)"/>
+    /// This is exposed for the <see cref="AssertFailure(Func{string, string}, string)"/>
     /// scenarios that need a valid input assembly before triggering a later-stage failure (e.g. an
     /// unwritable output path).
     /// </remarks>
@@ -122,31 +122,30 @@ internal static class WinMDGeneratorRunner
         {
             string inputAssemblyPath = CompileComponent(source, temporaryDirectory);
 
-            return
-            [
-                $"--input-assembly-path {inputAssemblyPath}",
-                $"--reference-assembly-paths {inputAssemblyPath}",
-                $"--output-winmd-path {Path.Combine(temporaryDirectory, "TestInput.winmd")}",
-                "--assembly-version 1.0.0.0",
-                $"--use-windows-ui-xaml-projections {useWindowsUIXamlProjections}",
-            ];
+            return $"""
+                --input-assembly-path {inputAssemblyPath}
+                --reference-assembly-paths {inputAssemblyPath}
+                --output-winmd-path {Path.Combine(temporaryDirectory, "TestInput.winmd")}
+                --assembly-version 1.0.0.0
+                --use-windows-ui-xaml-projections {useWindowsUIXamlProjections}
+                """;
         });
     }
 
     /// <summary>
     /// Runs the WinMD generator against a caller-provided response file.
     /// </summary>
-    private static (int ExitCode, string Output) Run(Func<string, IReadOnlyList<string>> responseFileFactory)
+    private static (int ExitCode, string Output) Run(Func<string, string> responseFileFactory)
     {
         string toolPath = GetGeneratorPath();
         string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
 
         try
         {
-            IReadOnlyList<string> responseFileLines = responseFileFactory(temporaryDirectory);
+            string responseFileContent = responseFileFactory(temporaryDirectory);
             string responseFilePath = Path.Combine(temporaryDirectory, "args.rsp");
 
-            File.WriteAllLines(responseFilePath, responseFileLines);
+            File.WriteAllText(responseFilePath, responseFileContent);
 
             return RunTool(toolPath, responseFilePath);
         }
