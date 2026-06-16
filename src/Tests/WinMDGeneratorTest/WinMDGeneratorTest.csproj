@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
 
-    <!-- This project unit-tests the WinMD generator's managed logic directly; no CsWinRT processing needed -->
+    <!-- This project runs the WinMD generator tool end-to-end; it needs no CsWinRT processing itself -->
     <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
 
