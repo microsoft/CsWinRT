@@ -59,8 +59,8 @@ internal static partial class ProjectionGenerator
             body: _ => GenerateSources(processingState));
 
         // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting source files
-        // alongside the projection writer's output so the merged '.dll' plays the entry-assembly and
-        // merged-activation roles (interop type map union, 'SetEntryAssembly' module init, merged
+        // alongside the projection writer's output so the merged '.dll' plays the
+        // merged-activation roles (interop type map union, merged
         // 'ABI.WinRT.Component.ManagedExports.GetActivationFactory', and AOT native export).
         runner.RunPhase(
             phaseName: "winrt-component-sources",
