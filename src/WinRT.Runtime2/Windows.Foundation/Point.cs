@@ -6,8 +6,10 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
@@ -17,12 +19,15 @@ namespace Windows.Foundation;
 /// Represents X and Y coordinate values that define a point in a two-dimensional plane.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[SupportedOSPlatform("Windows10.0.10240.0")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Point>")]
 [WindowsRuntimeReferenceType(typeof(Point?))]
-[SupportedOSPlatform("Windows10.0.10240.0")]
-[ContractVersion(typeof(FoundationContract), 65536u)]
 [ABI.Windows.Foundation.PointComWrappersMarshaller]
+#endif
 public struct Point : IEquatable<Point>, IFormattable
 {
     /// <summary>

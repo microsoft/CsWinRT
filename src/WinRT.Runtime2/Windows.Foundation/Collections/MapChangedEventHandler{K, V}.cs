@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;
@@ -13,6 +15,9 @@ namespace Windows.Foundation.Collections;
 /// <typeparam name="V">The type of values in the observable map.</typeparam>
 /// <param name="sender">The observable map that changed.</param>
 /// <param name="event">The description of the change that occurred in the map.</param>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 public delegate void MapChangedEventHandler<K, V>(IObservableMap<K, V> sender, IMapChangedEventArgs<K> @event);

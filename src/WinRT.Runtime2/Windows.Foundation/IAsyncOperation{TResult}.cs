@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation;
@@ -18,9 +20,12 @@ namespace Windows.Foundation;
 /// progress and have a result use another interface, <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [Guid("9FC2B0BB-E446-44E2-AA61-9CAB8F636AF2")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 public interface IAsyncOperation<TResult> : IAsyncInfo
 {
     /// <summary>

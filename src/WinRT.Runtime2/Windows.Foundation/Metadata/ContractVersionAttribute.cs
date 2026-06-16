@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
+#endif
 using WindowsRuntime;
 
 #pragma warning disable IDE0060
@@ -12,7 +14,12 @@ namespace Windows.Foundation.Metadata;
 /// <summary>
 /// Indicates the version of the API contract.
 /// </summary>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[SupportedOSPlatform("Windows10.0.10240.0")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 [AttributeUsage(
     AttributeTargets.Delegate |
     AttributeTargets.Enum |
@@ -23,8 +30,6 @@ namespace Windows.Foundation.Metadata;
     AttributeTargets.Property |
     AttributeTargets.Class |
     AttributeTargets.Struct, AllowMultiple = true)]
-[SupportedOSPlatform("Windows10.0.10240.0")]
-[ContractVersion(typeof(FoundationContract), 65536u)]
 public sealed class ContractVersionAttribute : Attribute
 {
     /// <summary>

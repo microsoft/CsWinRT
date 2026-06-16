@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -13,7 +12,6 @@ namespace WindowsRuntime.InteropServices;
 /// Implements the Windows Runtime <see cref="IAsyncActionWithProgress{TProgress}"/> interface by wrapping a <see cref="Task"/> instance.
 /// </summary>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
-[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class TaskWithProgressAdapter<TProgress> : UniversalTaskAdapter<
     ValueTypePlaceholder,
     TProgress,

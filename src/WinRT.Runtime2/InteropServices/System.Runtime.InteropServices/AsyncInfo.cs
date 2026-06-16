@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -20,7 +22,9 @@ namespace WindowsRuntime.InteropServices;
 /// that will be wrapped by the returned Windows Runtime adapter.
 /// </remarks>
 /// <seealso cref="IAsyncInfo"/>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("windows10.0.10240.0")]
+#endif
 public static class AsyncInfo
 {
     /// <summary>

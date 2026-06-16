@@ -2,14 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Numerics;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
+#endif
 
 namespace Windows.Foundation;
 
 /// <summary>
 /// Provides extension methods for converting between <see cref="Vector2"/> and Windows Foundation types.
 /// </summary>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
+#endif
 public static class VectorExtensions
 {
     /// <summary>

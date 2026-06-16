@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -13,7 +12,6 @@ namespace WindowsRuntime.InteropServices;
 /// Implements the Windows Runtime <see cref="IAsyncOperation{TResult}"/> interface by wrapping a <see cref="Task{TResult}"/> instance.
 /// </summary>
 /// <typeparam name="TResult">The result type.</typeparam>
-[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class TaskAdapter<TResult> : UniversalTaskAdapter<
     TResult,
     ValueTypePlaceholder,
