@@ -44,7 +44,7 @@ internal sealed partial class WinMDWriter
         // modifiers have no Windows Runtime representation, and without stripping them a modifier-wrapped
         // type would fall through to the 'System.Object' fallback at the end of this method, silently
         // erasing the real signature.
-        inputSignature = StripCustomModifiers(inputSignature);
+        inputSignature = inputSignature.StripCustomModifiers();
 
         // Handle 'CorLib' types
         if (inputSignature is CorLibTypeSignature corLib)
@@ -145,26 +145,6 @@ internal sealed partial class WinMDWriter
 
         // Fallback: import the type
         return _outputModule.CorLibTypeFactory.Object;
-    }
-
-    /// <summary>
-    /// Strips any leading custom modifiers (<c>modreq</c>/<c>modopt</c>) from a type signature.
-    /// </summary>
-    /// <remarks>
-    /// Custom modifiers carry no Windows Runtime meaning. They are emitted by the C# compiler in a few
-    /// cases, most notably the <c>modreq(System.Runtime.InteropServices.InAttribute)</c> applied to the
-    /// by-reference type of an <c>in</c> parameter on abstract, virtual, interface, or delegate members.
-    /// </remarks>
-    /// <param name="signature">The type signature to unwrap.</param>
-    /// <returns>The underlying <see cref="TypeSignature"/> with all leading custom modifiers removed.</returns>
-    private static TypeSignature StripCustomModifiers(TypeSignature signature)
-    {
-        while (signature is CustomModifierTypeSignature customModifier)
-        {
-            signature = customModifier.BaseType;
-        }
-
-        return signature;
     }
 
     /// <summary>

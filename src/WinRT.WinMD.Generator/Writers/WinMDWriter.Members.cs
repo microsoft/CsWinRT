@@ -196,7 +196,7 @@ internal sealed partial class WinMDWriter
     {
         // Look through any custom modifiers (e.g. the 'modreq(InAttribute)' emitted for 'in' parameters
         // on abstract, virtual, interface, or delegate members) to inspect the real underlying signature
-        TypeSignature parameterType = StripCustomModifiers(inputParamType);
+        TypeSignature parameterType = inputParamType.StripCustomModifiers();
 
         // Validate by-reference parameters that wrap a span or array. Windows Runtime spans are always
         // passed by value, and Windows Runtime arrays use one of three conventions: 'ReadOnlySpan<T>'
@@ -204,9 +204,9 @@ internal sealed partial class WinMDWriter
         // 'ref'/'in' array, has no Windows Runtime representation and is rejected here.
         if (parameterType is ByReferenceTypeSignature byReference)
         {
-            TypeSignature elementType = StripCustomModifiers(byReference.BaseType);
+            TypeSignature elementType = byReference.BaseType.StripCustomModifiers();
 
-            if (IsSpan(elementType) || IsReadOnlySpan(elementType))
+            if (elementType.IsTypeOfSpan() || elementType.IsTypeOfReadOnlySpan())
             {
                 throw WellKnownWinMDExceptions.ByReferenceSpanParameterNotSupported(
                     inputMethod.DeclaringType!.FullName,
@@ -234,7 +234,7 @@ internal sealed partial class WinMDWriter
         }
 
         // 'Span<T>' → 'FillArray' pattern: '[out]' without 'BYREF'
-        if (IsSpan(parameterType))
+        if (parameterType.IsTypeOfSpan())
         {
             return ParameterAttributes.Out;
         }
@@ -243,26 +243,6 @@ internal sealed partial class WinMDWriter
         // on a COM interop interface) default to '[in]', matching the MIDL convention for
         // 'ref const T' parameters. 'ReadOnlySpan<T>' and everything else also default to '[in]'.
         return ParameterAttributes.In;
-    }
-
-    /// <summary>
-    /// Determines whether a type signature is <see cref="System.Span{T}"/>.
-    /// </summary>
-    /// <param name="signature">The type signature to test.</param>
-    /// <returns><see langword="true"/> if <paramref name="signature"/> is <see cref="System.Span{T}"/>; otherwise, <see langword="false"/>.</returns>
-    private static bool IsSpan(TypeSignature signature)
-    {
-        return signature is GenericInstanceTypeSignature { GenericType.FullName: "System.Span`1" };
-    }
-
-    /// <summary>
-    /// Determines whether a type signature is <see cref="System.ReadOnlySpan{T}"/>.
-    /// </summary>
-    /// <param name="signature">The type signature to test.</param>
-    /// <returns><see langword="true"/> if <paramref name="signature"/> is <see cref="System.ReadOnlySpan{T}"/>; otherwise, <see langword="false"/>.</returns>
-    private static bool IsReadOnlySpan(TypeSignature signature)
-    {
-        return signature is GenericInstanceTypeSignature { GenericType.FullName: "System.ReadOnlySpan`1" };
     }
 
     /// <summary>
