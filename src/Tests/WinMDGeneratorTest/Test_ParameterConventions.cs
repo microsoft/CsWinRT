@@ -20,30 +20,24 @@ public class Test_ParameterConventions
     [TestMethod]
     public void ValidComponent_GeneratesSuccessfully()
     {
-        // Smoke test: a valid component generates a '.winmd' (exit code 0). This validates the
-        // end-to-end harness so the failure assertions below are meaningful.
-        (int exitCode, string output) = WinMDGeneratorTestHelper.RunGenerator("""
+        // Smoke test: a valid component generates a '.winmd', validating the end-to-end harness
+        WinMDGeneratorRunner.AssertSuccess("""
             public interface IComponent
             {
                 int Method(int value);
             }
             """);
-
-        Assert.AreEqual(0, exitCode, output);
     }
 
     [TestMethod]
     public void RefArrayParameter_IsRejected()
     {
-        (int exitCode, string output) = WinMDGeneratorTestHelper.RunGenerator("""
+        WinMDGeneratorRunner.AssertFailure("""
             public interface IComponent
             {
                 void Method(ref int[] values);
             }
-            """);
-
-        Assert.AreNotEqual(0, exitCode, output);
-        StringAssert.Contains(output, "CSWINRTWINMDGEN0011");
+            """, error: "CSWINRTWINMDGEN0011");
     }
 
     [TestMethod]
@@ -51,44 +45,35 @@ public class Test_ParameterConventions
     {
         // 'in int[]' carries a 'modreq(InAttribute)' on interface members; the generator must still
         // see through it to detect the by-reference array.
-        (int exitCode, string output) = WinMDGeneratorTestHelper.RunGenerator("""
+        WinMDGeneratorRunner.AssertFailure("""
             public interface IComponent
             {
                 void Method(in int[] values);
             }
-            """);
-
-        Assert.AreNotEqual(0, exitCode, output);
-        StringAssert.Contains(output, "CSWINRTWINMDGEN0011");
+            """, error: "CSWINRTWINMDGEN0011");
     }
 
     [TestMethod]
     public void OutSpanParameter_IsRejected()
     {
-        (int exitCode, string output) = WinMDGeneratorTestHelper.RunGenerator("""
+        WinMDGeneratorRunner.AssertFailure("""
             using System;
             public interface IComponent
             {
                 void Method(out Span<int> values);
             }
-            """);
-
-        Assert.AreNotEqual(0, exitCode, output);
-        StringAssert.Contains(output, "CSWINRTWINMDGEN0012");
+            """, error: "CSWINRTWINMDGEN0012");
     }
 
     [TestMethod]
     public void OutReadOnlySpanParameter_IsRejected()
     {
-        (int exitCode, string output) = WinMDGeneratorTestHelper.RunGenerator("""
+        WinMDGeneratorRunner.AssertFailure("""
             using System;
             public interface IComponent
             {
                 void Method(out ReadOnlySpan<int> values);
             }
-            """);
-
-        Assert.AreNotEqual(0, exitCode, output);
-        StringAssert.Contains(output, "CSWINRTWINMDGEN0012");
+            """, error: "CSWINRTWINMDGEN0012");
     }
 }
