@@ -177,7 +177,11 @@ Managed code:   myObject.SomeEvent += myHandler;
 
 This compiles down to a call through the projected interface implementation, which calls into the ABI methods layer and ultimately into `EventSource<T>.Subscribe(handler)`. Here's what happens step by step:
 
-1. **Get or create the `EventSource<T>`** — The projected runtime class holds one `EventSource<T>` per event, created lazily on first use and stored in a per-instance field (`_eventSource_<EventName>`). This guarantees at most one `EventSource<T>` per event per object, with a lifetime bounded by the runtime class instance. (For a small subset of interfaces, the event source is instead cached in a `ConditionalWeakTable` keyed on the runtime class instance, in the generated ABI methods class — but the lifetime semantics are the same.)
+1. **Get or create the `EventSource<T>`** — There is at most one `EventSource<T>` per event per managed object, and its lifetime is bounded by that object (a `WindowsRuntimeObject`). It is stored in one of two ways, depending on how the object implements the interface:
+   - **Concrete projected runtime class** (the event is declared on the class): in a per-instance field (`_eventSource_<EventName>`) on the class, created lazily.
+   - **Dynamic interface cast** (the interface is provided by a `[DynamicInterfaceCastableImplementation]` proxy — the case for the mapped interfaces such as `INotifyPropertyChanged`, and for any object that reaches the interface via a cast rather than a declared field, e.g. the `WindowsRuntimeInspectable` fallback): in a `ConditionalWeakTable<WindowsRuntimeObject, EventSource<T>>` keyed on the object instance, held by the generated ABI `*Methods` class. The proxy interface can't carry per-instance fields, so the table is what ties the event source to the object's lifetime.
+
+   Either way the `EventSource<T>` shares the lifetime of the `WindowsRuntimeObject`.
 
 2. **Check for existing state** — Inside `Subscribe`, under a lock, the method checks if there's already a live `EventSourceState<T>` (via the weak reference) that still has COM references.
 
@@ -241,12 +245,14 @@ graph TD
     WR2 -.->|"targets"| ESS
 ```
 
+> This diagram shows a **concrete projected runtime class**, where the `EventSource<T>` lives in a per-instance field. When the event is reached through a **dynamic interface cast** instead, that field is replaced by a `ConditionalWeakTable<WindowsRuntimeObject, EventSource<T>>` entry keyed on the object (held by the ABI `*Methods` class) — the storage differs, but the lifetime (bounded by the `WindowsRuntimeObject`) is the same.
+
 **Who keeps what alive:**
 
 | Object | Kept alive by |
 |--------|--------------|
 | `WindowsRuntimeObject` (RCW) | Application code holding a reference to the projected object |
-| `EventSource<T>` | The runtime class instance's per-instance field (or a `ConditionalWeakTable` entry keyed weakly on it); alive while the RCW is alive |
+| `EventSource<T>` | The `WindowsRuntimeObject` that exposes the event — via a per-instance field (projected runtime class) or a `ConditionalWeakTable` entry keyed weakly on the object (dynamic interface cast); alive while the RCW is alive |
 | `EventSourceState<T>` | The `EventInvoke` delegate captures it; the CCW of that delegate is held by the native event source |
 | `EventInvoke` delegate (CCW) | The native Windows Runtime object holds a COM reference to it |
 | `WindowsRuntimeObjectReference` | `EventSource<T>._nativeObjectReference` holds a strong reference |
@@ -398,7 +404,7 @@ All of the shared infrastructure is safe to use concurrently:
 
 ### How Static Events Differ from Instance Events
 
-For instance events, the `EventSource<T>` is bound to the lifetime of the **runtime class instance**. The projected class stores it in a per-instance field, created lazily on first use:
+For instance events, the `EventSource<T>` is bound to the lifetime of the **managed object** that exposes the event. A concrete projected runtime class stores it in a per-instance field, created lazily on first use:
 
 ```csharp
 // Instance events: the event source lives in a per-instance field on the
@@ -413,7 +419,7 @@ public event EventHandler SomeEvent
 }
 ```
 
-(The real generated getter initializes the field atomically with `Interlocked.CompareExchange`. A subset of interfaces — fast-ABI exclusive, non-default — instead route through a `ConditionalWeakTable<object, EventHandlerEventSource>` keyed on the runtime class instance, in the generated ABI methods class. Either way the event source's lifetime is bounded by the runtime class instance — the `WindowsRuntimeObject` itself — a stable identity that lives exactly as long as the object.)
+(The real generated getter initializes the field atomically with `Interlocked.CompareExchange`. This per-instance field is used when the event is declared on a concrete projected runtime class. When the interface is instead reached through a **dynamic interface cast** — a `[DynamicInterfaceCastableImplementation]` proxy, as used for the mapped interfaces (`INotifyPropertyChanged`, `INotifyDataErrorInfo`, …) and for any non-projected object such as the `WindowsRuntimeInspectable` fallback — the proxy has no instance fields, so the event source is cached in a `ConditionalWeakTable<WindowsRuntimeObject, EventSource<T>>` keyed on the object instance, in the ABI `*Methods` class. Either way the event source's lifetime is bounded by the `WindowsRuntimeObject` itself — a stable identity that lives exactly as long as the object.)
 
 For **static events**, there's no object instance. Instead, the generated code uses a **globally cached activation factory object reference** as the key:
 
@@ -601,7 +607,7 @@ The fundamental issue is that the activation factory object reference is an **un
 
 One might consider using a **stable, context-independent key** (e.g., a singleton per type or a type handle) instead of the activation factory object reference. This *does* fix the unsubscribe-after-context-switch problem: the same `EventSource<T>` is found on every access, so it always reaches the original `EventSourceState<T>` (and its token). Importantly, it stays correct across contexts — the `EventSource<T>` wraps a context-aware `WindowsRuntimeObjectReference` (the only case in which this problem can arise at all), and its native `add`/`remove` calls are marshalled to the right context: `GetThisPtrUnsafe()` routes through `GetThisPtrWithContextUnsafe()`, which resolves the pointer for the *current* context via an agile reference (falling back to the original pointer only on a best-effort basis if that agile/context resolution fails — for example, if the original apartment has already been torn down). The cached object reference originating from the "original" context is therefore **not**, in itself, a correctness problem.
 
-The real cost is **lifetime**. A stable key — or a `static` codegen-level event source field, analogous to how `WindowsRuntimeObservableVector<T>` stores its event source in a *per-instance* field — never dies, so the `EventSource<T>` it holds (and the first-context `WindowsRuntimeObjectReference` that event source wraps) would stay alive for the lifetime of the process, even after every handler has been unsubscribed. For an *instance* event this is a non-issue: the per-instance field is collected together with the runtime class instance, so it is naturally bounded. A *static* event has no such bound, so a naive static field or stable key turns a transient subscription into a permanent leak.
+The real cost is **lifetime**. A stable key — or a `static` codegen-level event source field, analogous to how `WindowsRuntimeObservableVector<T>` stores its event source in a *per-instance* field — never dies, so the `EventSource<T>` it holds (and the first-context `WindowsRuntimeObjectReference` that event source wraps) would stay alive for the lifetime of the process, even after every handler has been unsubscribed. For an *instance* event this is a non-issue: whatever holds the event source (a per-instance field, or a `ConditionalWeakTable` entry keyed on the object) is collected together with the runtime class instance, so it is naturally bounded. A *static* event has no such bound, so a naive static field or stable key turns a transient subscription into a permanent leak.
 
 In short, changing the key alone is not the whole answer: it must be paired with lifetime management that keeps the event source reachable **only while subscriptions are active** and releases it once the last handler is removed — which is exactly what the fix below does.
 
