@@ -99,7 +99,8 @@ steps:
         cswinrt_nuget_version=$(NugetVersion);\
         interop_winmd=$(Build.SourcesDirectory)\\release_x86\\native\\WindowsRuntime.Internal.winmd;\
         net10_runtime=$(Build.SourcesDirectory)\\release_x86\\net10.0\\WinRT.Runtime.dll;\
-        net10_runtime_xml=$(Build.SourcesDirectory)\\release_x86\\net10.0\\WinRT.Runtime.xml;\
+        net10_runtime_ref=$(Build.SourcesDirectory)\\release_x86\\net10.0\\ref\\WinRT.Runtime.dll;\
+        net10_runtime_ref_xml=$(Build.SourcesDirectory)\\release_x86\\net10.0\\ref\\WinRT.Runtime.xml;\
         source_generator=$(Build.SourcesDirectory)\\release_x86\\net10.0\\WinRT.SourceGenerator.dll;\
         winrt_shim=$(Build.SourcesDirectory)\\release_x86\\net10.0\\WinRT.Host.Shim.dll;\
         winrt_host_x86=$(Build.SourcesDirectory)\\release_x86\\native\\WinRT.Host.dll;\

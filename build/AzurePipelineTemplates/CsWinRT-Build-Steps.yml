@@ -237,8 +237,37 @@ steps:
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
-          WinRT.Runtime.xml
         TargetFolder: $(StagingFolder)\net10.0
+
+    # Build the WinRT.Runtime reference assembly, with implementation-only types stripped out. Like the
+    # implementation assembly, it is built as AnyCPU (no platform), so its outputs land in the platform-less
+    # 'bin\<config>\net10.0' and 'obj\<config>\net10.0\ref' folders. It is staged after the implementation
+    # assembly (above), since the reference build overwrites the 'bin' outputs.
+    - task: VSBuild@1
+      displayName: Build WinRT.Runtime reference assembly
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\WinRT.Runtime2\WinRT.Runtime.csproj
+        msbuildArgs: /restore /p:VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),CsWinRTBuildReferenceAssembly=true,ContinuousIntegrationBuild=true
+        configuration: $(BuildConfiguration)
+
+    # Stage WinRT.Runtime reference assembly (metadata-only assembly produced under 'obj\...\ref')
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Runtime reference assembly
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime2\obj\$(BuildConfiguration)\net10.0\ref
+        Contents: WinRT.Runtime.dll
+        TargetFolder: $(StagingFolder)\net10.0\ref
+
+    # Stage WinRT.Runtime reference assembly XML documentation (stripped to the reference surface)
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Runtime reference assembly XML
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime2\bin\$(BuildConfiguration)\net10.0
+        Contents: WinRT.Runtime.xml
+        TargetFolder: $(StagingFolder)\net10.0\ref
 
     # Stage WinRT.Host.Shim
     - task: CopyFiles@2 

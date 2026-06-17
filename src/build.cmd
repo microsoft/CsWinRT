@@ -118,6 +118,32 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+rem Build the WinRT.Runtime reference assembly. This recompiles WinRT.Runtime with all implementation-only
+rem types stripped out (via 'CsWinRTBuildReferenceAssembly=true'), producing a lightweight reference assembly
+rem (and its matching, stripped XML documentation) for packaging under 'ref\net10.0'. Like the implementation
+rem assembly, it is built as AnyCPU (no platform), so its outputs land in the platform-less 'bin\<config>\net10.0'
+rem and 'obj\<config>\net10.0\ref' folders. The reference build overwrites the implementation assembly in 'bin',
+rem so the implementation outputs are staged out first, and both are then packaged from the staging folder.
+set winrt_runtime_bin=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\
+set winrt_runtime_staging=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\
+
+echo Staging WinRT.Runtime implementation assembly for %cswinrt_platform% %cswinrt_configuration%
+if not exist "%winrt_runtime_staging%lib\" mkdir "%winrt_runtime_staging%lib\"
+copy /y "%winrt_runtime_bin%WinRT.Runtime.dll" "%winrt_runtime_staging%lib\WinRT.Runtime.dll"
+
+echo Building WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /restore /p:configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;CsWinRTBuildReferenceAssembly=true %this_dir%WinRT.Runtime2\WinRT.Runtime.csproj
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Reference assembly build failed
+  exit /b !ErrorLevel!
+)
+
+echo Staging WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
+if not exist "%winrt_runtime_staging%ref\" mkdir "%winrt_runtime_staging%ref\"
+copy /y "%this_dir%WinRT.Runtime2\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref\WinRT.Runtime.dll"
+copy /y "%winrt_runtime_bin%WinRT.Runtime.xml" "%winrt_runtime_staging%ref\WinRT.Runtime.xml"
+
 rem skip tests for now
 goto :package
 
@@ -270,8 +296,9 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set interop_winmd=%this_dir%WinRT.Internal\bin\%cswinrt_configuration%\net10.0-windows10.0.26100.1\WindowsRuntime.Internal.winmd
-set net10_runtime=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
-set net10_runtime_xml=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml
+set net10_runtime=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\lib\WinRT.Runtime.dll
+set net10_runtime_ref=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.dll
+set net10_runtime_ref_xml=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
@@ -286,7 +313,7 @@ set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_conf
 
 rem Now call pack
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_xml=%net10_runtime_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;cswinrtprojectionrefgen_x64=%cswinrtprojectionrefgen_x64%;cswinrtprojectionrefgen_arm64=%cswinrtprojectionrefgen_arm64%;cswinrtwinmdgen_x64=%cswinrtwinmdgen_x64%;cswinrtwinmdgen_arm64=%cswinrtwinmdgen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_ref=%net10_runtime_ref%;net10_runtime_ref_xml=%net10_runtime_ref_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;cswinrtprojectionrefgen_x64=%cswinrtprojectionrefgen_x64%;cswinrtprojectionrefgen_arm64=%cswinrtprojectionrefgen_arm64%;cswinrtwinmdgen_x64=%cswinrtwinmdgen_x64%;cswinrtwinmdgen_arm64=%cswinrtwinmdgen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
 :exec
