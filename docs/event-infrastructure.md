@@ -378,8 +378,8 @@ In XAML scenarios, the native framework uses `IReferenceTracker` / `IReferenceTr
 When an `EventSourceState<T>` is finalized (because the native object released its CCW reference and nothing else references the state):
 
 1. The finalizer calls `OnDispose()`.
-2. `OnDispose()` calls `EventSourceCache.Remove(...)` to clean up the cache entry.
-3. If this was the last state in the cache for that native object, the `EventSourceCache` entry itself is removed from the global dictionary.
+2. `OnDispose()` reads the saved native pointer (the cache key) into a local, clears the `_thisPtr` field, and — only if that pointer was non-`null` — calls `EventSourceCache.Remove(savedPointer, _index, _weakReferenceToSelf)`. Capturing the pointer *before* clearing the field is what makes the removal correct (the cache lookup uses the real key, not `null`) and idempotent (the work happens the first time `OnDispose()` runs and becomes a no-op on any later call).
+3. `EventSourceCache.Remove(...)` removes the matching weak reference from the per-object cache. If this was the last state in the cache for that native object, the `EventSourceCache` entry itself is removed from the global dictionary.
 
 Explicit disposal (via `Unsubscribe`) follows the same path but also calls `GC.SuppressFinalize` to avoid double cleanup.
 
@@ -587,8 +587,6 @@ Note that in practice, this scenario is relatively rare: it requires a static ev
 #### Why the Root Cause Matters
 
 The fundamental issue is that the activation factory object reference is an **unstable key**: it can be replaced whenever a context switch occurs. Any caching strategy that is layered on top of this unstable identity — whether it's a `ConditionalWeakTable`, a static field, or anything else — will lose track of the old `EventSourceState<T>` (and its token) when the key changes.
-
-For example, one might consider using a **static (codegen-level) event source field** (similar to how `WindowsRuntimeObservableVector<T>` stores its event source in a per-instance field). But this has the same problem: the static field would be populated on first access with an `EventSource<T>` wrapping the activation factory from that context. After a context switch, that event source would wrap a stale object reference for a different context, making native vtable calls through it invalid. Adding the same `IsInCurrentContext` invalidation pattern to the field would bring us right back to the original problem — replacing the event source loses the state.
 
 #### Why Alternative Cache Key Strategies Don't Help
 
