@@ -3,7 +3,9 @@
 
 using System;
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation;
@@ -16,9 +18,12 @@ namespace Windows.Foundation;
 /// <see cref="object.ToString"/> method. When exposed to native code, they will implicitly get an implementation
 /// of <see cref="IStringable"/> that will call the managed <see cref="object.ToString"/> override.
 /// </remarks>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 public interface IStringable
 {
     /// <summary>

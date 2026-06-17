@@ -11,8 +11,10 @@ namespace WindowsRuntime.InteropServices;
 /// Enables a class to be activated by the Windows Runtime.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/activation/nn-activation-iactivationfactory"/>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [Guid("00000035-0000-0000-C000-000000000046")]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IActivationFactory
 {

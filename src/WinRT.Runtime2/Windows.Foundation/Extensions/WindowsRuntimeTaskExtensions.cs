@@ -3,7 +3,9 @@
 
 using System;
 using System.Runtime.CompilerServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using WindowsRuntime.InteropServices;
@@ -15,7 +17,9 @@ namespace Windows.Foundation;
 /// <summary>
 /// Provides extensions for <see cref="IAsyncInfo"/> types to interoperate with <see cref="Task"/> types.
 /// </summary>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("windows10.0.10240.0")]
+#endif
 public static class WindowsRuntimeTaskExtensions
 {
     /// <summary>
@@ -38,6 +42,9 @@ public static class WindowsRuntimeTaskExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         // If the source is already an adapter over a 'Task', return the underlying 'Task' directly
@@ -67,6 +74,7 @@ public static class WindowsRuntimeTaskExtensions
         source.Completed = bridge.Complete;
 
         return bridge.Task;
+#endif
     }
 
     /// <summary>Gets an awaiter used to await this <see cref="IAsyncAction"/>.</summary>
@@ -100,6 +108,9 @@ public static class WindowsRuntimeTaskExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task<TResult> AsTask<TResult>(this IAsyncOperation<TResult> source, CancellationToken cancellationToken)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         if (source is UniversalTaskAdapter { Task: Task<TResult> task })
@@ -124,6 +135,7 @@ public static class WindowsRuntimeTaskExtensions
         source.Completed = bridge.Complete;
 
         return bridge.Task;
+#endif
     }
 
     /// <summary>Gets an awaiter used to await this <see cref="IAsyncOperation{TResult}"/>.</summary>
@@ -158,6 +170,9 @@ public static class WindowsRuntimeTaskExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source, CancellationToken cancellationToken)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         if (source is UniversalTaskAdapter { Task: Task task })
@@ -182,6 +197,7 @@ public static class WindowsRuntimeTaskExtensions
         source.Completed = bridge.Complete;
 
         return bridge.Task;
+#endif
     }
 
     /// <summary>
@@ -211,6 +227,9 @@ public static class WindowsRuntimeTaskExtensions
         IProgress<TProgress> progress,
         CancellationToken cancellationToken)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(progress);
 
@@ -230,6 +249,7 @@ public static class WindowsRuntimeTaskExtensions
         source.Completed = bridge.Complete;
 
         return bridge.Task;
+#endif
     }
 
     /// <summary>Gets an awaiter used to await this <see cref="IAsyncActionWithProgress{TProgress}"/>.</summary>
@@ -266,6 +286,9 @@ public static class WindowsRuntimeTaskExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         if (source is UniversalTaskAdapter { Task: Task<TResult> task })
@@ -290,6 +313,7 @@ public static class WindowsRuntimeTaskExtensions
         source.Completed = bridge.Complete;
 
         return bridge.Task;
+#endif
     }
 
     /// <summary>
@@ -321,6 +345,9 @@ public static class WindowsRuntimeTaskExtensions
         IProgress<TProgress> progress,
         CancellationToken cancellationToken)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(progress);
 
@@ -340,6 +367,7 @@ public static class WindowsRuntimeTaskExtensions
         source.Completed = bridge.Complete;
 
         return bridge.Task;
+#endif
     }
 
     /// <summary>Gets an awaiter used to await this <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.</summary>
@@ -361,9 +389,13 @@ public static class WindowsRuntimeTaskExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static IAsyncAction AsAsyncAction(this Task source)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         return new TaskAdapter(source, cancellationTokenSource: null);
+#endif
     }
 
     /// <summary>
@@ -375,8 +407,12 @@ public static class WindowsRuntimeTaskExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     public static IAsyncOperation<TResult> AsAsyncOperation<TResult>(this Task<TResult> source)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         return new TaskAdapter<TResult>(source, cancellationTokenSource: null);
+#endif
     }
 }
