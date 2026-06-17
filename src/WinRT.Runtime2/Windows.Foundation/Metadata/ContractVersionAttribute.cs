@@ -19,6 +19,7 @@ namespace Windows.Foundation.Metadata;
     AttributeTargets.Event |
     AttributeTargets.Field |
     AttributeTargets.Interface |
+    AttributeTargets.Constructor |
     AttributeTargets.Method |
     AttributeTargets.Property |
     AttributeTargets.Class |
