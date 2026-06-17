@@ -148,6 +148,7 @@
       <Compile Remove="InteropServices\Exceptions\**\*.cs"/>
       <Compile Remove="InteropServices\InteropDllImports\**\*.cs"/>
       <Compile Remove="InteropServices\Marshalers\**\*.cs"/>
+      <Compile Remove="InteropServices\Marshalling\**\*.cs"/>
       <Compile Remove="InteropServices\ObjectReference\**\*.cs"/>
       <Compile Remove="InteropServices\Placeholders\**\*.cs"/>
       <Compile Remove="InteropServices\ProjectionDllExports\**\*.cs"/>

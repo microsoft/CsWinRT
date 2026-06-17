@@ -5,7 +5,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 using WindowsRuntime.InteropServices.Marshalling;
+#endif
 
 namespace WindowsRuntime.InteropServices;
 
@@ -22,6 +24,9 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>Whether <paramref name="left"/> and <paramref name="right"/> are the same object or wrap the same underlying native object.</returns>
     public static bool NativeReferenceEquals(object? left, object? right)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         if (ReferenceEquals(left, right))
         {
             return true;
@@ -44,6 +49,7 @@ public static unsafe class WindowsRuntimeMarshal
         }
 
         return false;
+#endif
     }
 
     /// <summary>
@@ -55,9 +61,13 @@ public static unsafe class WindowsRuntimeMarshal
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsReferenceToManagedObject(void* externalComObject)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(externalComObject);
 
         return WindowsRuntimeComWrappersMarshal.IsReferenceToManagedObjectUnsafe(externalComObject);
+#endif
     }
 
     /// <summary>
@@ -68,6 +78,9 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>Whether <paramref name="externalComObject"/> was a reference to a managed object, and <paramref name="result"/> could be retrieved.</returns>
     public static bool TryGetManagedObject(void* externalComObject, [NotNullWhen(true)] out object? result)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // If the input pointer is a reference to a managed object, we can resolve the original managed object
         if (externalComObject is not null && WindowsRuntimeComWrappersMarshal.IsReferenceToManagedObjectUnsafe(externalComObject))
         {
@@ -79,6 +92,7 @@ public static unsafe class WindowsRuntimeMarshal
         result = null;
 
         return false;
+#endif
     }
 
     /// <summary>
@@ -89,6 +103,9 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>Whether <paramref name="managedObject"/> was a reference to a native object, and <paramref name="result"/> could be retrieved.</returns>
     public static bool TryGetNativeObject([NotNullWhen(true)] object? managedObject, out void* result)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // If the input object is wrapping a native object, we can unwrap it and return it after incrementing its reference count
         if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(managedObject, out WindowsRuntimeObjectReference? objectReference))
         {
@@ -100,6 +117,7 @@ public static unsafe class WindowsRuntimeMarshal
         result = null;
 
         return false;
+#endif
     }
 
     /// <summary>
@@ -120,7 +138,11 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToUnmanaged"/>
     public static void* ConvertToUnmanaged(object? managedObject)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(managedObject).DetachThisPtrUnsafe();
+#endif
     }
 
     /// <summary>
@@ -132,7 +154,11 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
     public static object? ConvertToManaged(void* value)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+#endif
     }
 
     /// <summary>
@@ -146,6 +172,10 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.Free"/>
     public static void Free(void* value)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         WindowsRuntimeUnknownMarshaller.Free(value);
+#endif
     }
 }
