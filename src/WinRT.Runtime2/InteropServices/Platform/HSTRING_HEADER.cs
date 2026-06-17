@@ -6,12 +6,15 @@
 
 #pragma warning disable IDE1006
 
+using System.Runtime.InteropServices;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Represents a header for an <c>HSTRING</c>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/hstring/ns-hstring-hstring_header"/>
+[StructLayout(LayoutKind.Sequential)]
 internal struct HSTRING_HEADER
 {
     /// <summary>
@@ -24,6 +27,7 @@ internal struct HSTRING_HEADER
     // To avoid producing multiple builds of the managed bindings, we use a 16 byte buffer and a native int instead, preserving the same layout.
     // Using this strategy, trying to match the native definition of this union would be too contrived.
     // Since the contents of this structure are undefined, it is not important to provide the same definitions.
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe partial struct _Reserved_e__Union
     {
         internal fixed byte Reserved1_0[16];
