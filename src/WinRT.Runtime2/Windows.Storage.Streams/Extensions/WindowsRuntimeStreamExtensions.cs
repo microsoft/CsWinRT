@@ -23,7 +23,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForRead), forceBufferSize: false);
 #endif
     }
@@ -40,7 +40,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStreamForRead), forceBufferSize: true);
 #endif
     }
@@ -55,7 +55,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForWrite), forceBufferSize: false);
 #endif
     }
@@ -72,7 +72,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStreamForWrite), forceBufferSize: true);
 #endif
     }
@@ -87,7 +87,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStream), forceBufferSize: false);
 #endif
     }
@@ -104,7 +104,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStream), forceBufferSize: true);
 #endif
     }
@@ -120,7 +120,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToInputStream(stream.CanRead);
 
@@ -139,7 +139,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToOutputStream(stream.CanWrite);
 
@@ -158,7 +158,7 @@ public static class WindowsRuntimeStreamExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToRandomAccessStream(stream.CanSeek);
 

@@ -39,7 +39,7 @@ public static class RestrictedErrorInfoExceptionMarshaller
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         RestrictedErrorInfo.SetErrorInfo(value);
 
         return RestrictedErrorInfo.GetHRForException(value);
@@ -55,7 +55,7 @@ public static class RestrictedErrorInfoExceptionMarshaller
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return RestrictedErrorInfo.GetExceptionForHR(value);
 #endif
     }

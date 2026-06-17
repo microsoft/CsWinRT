@@ -61,7 +61,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
@@ -113,7 +113,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentException.ThrowIfBufferIndexExceedsCapacity(destinationIndex, destination.Capacity);
         ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(destination.Capacity, destinationIndex, (uint)source.Length);
@@ -224,7 +224,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
@@ -320,7 +320,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
@@ -428,7 +428,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(buffer);
 
         if (otherBuffer is null)
@@ -491,7 +491,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // Note: the naming inconsistency with 'byte[].AsBuffer' is intentional. This extension method will appear on
         // 'MemoryStream', so consistency with method names on 'MemoryStream' is more important. There we already have
         // an API called 'GetBuffer,' which returns the underlying array.
@@ -549,7 +549,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentOutOfRangeException.ThrowIfNegative(position);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
@@ -581,7 +581,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         // If the buffer is backed by a managed array, create a stream around it
@@ -614,7 +614,7 @@ public static class WindowsRuntimeBufferExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentException.ThrowIfBufferOffsetOutOfRange(byteOffset, source.Length);
 

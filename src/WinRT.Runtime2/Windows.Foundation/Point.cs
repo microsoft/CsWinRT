@@ -89,7 +89,7 @@ public struct Point : IEquatable<Point>, IFormattable
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}";
@@ -101,7 +101,7 @@ public struct Point : IEquatable<Point>, IFormattable
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {

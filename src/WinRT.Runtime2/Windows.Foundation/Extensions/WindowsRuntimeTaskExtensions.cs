@@ -44,7 +44,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         // If the source is already an adapter over a 'Task', return the underlying 'Task' directly
@@ -110,7 +110,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         if (source is UniversalTaskAdapter { Task: Task<TResult> task })
@@ -172,7 +172,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         if (source is UniversalTaskAdapter { Task: Task task })
@@ -229,7 +229,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(progress);
 
@@ -288,7 +288,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         if (source is UniversalTaskAdapter { Task: Task<TResult> task })
@@ -347,7 +347,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(progress);
 
@@ -391,7 +391,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         return new TaskAdapter(source, cancellationTokenSource: null);
@@ -409,7 +409,7 @@ public static class WindowsRuntimeTaskExtensions
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         return new TaskAdapter<TResult>(source, cancellationTokenSource: null);

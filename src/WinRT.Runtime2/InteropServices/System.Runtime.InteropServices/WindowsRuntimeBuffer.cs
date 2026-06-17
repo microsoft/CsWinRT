@@ -21,7 +21,7 @@ public static class WindowsRuntimeBuffer
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
 
         return new WindowsRuntimePinnedArrayBuffer(capacity);
@@ -37,7 +37,7 @@ public static class WindowsRuntimeBuffer
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         byte[] pinnedData = GC.AllocateArray<byte>(data.Length, pinned: true);
 
         data.CopyTo(pinnedData);
@@ -59,7 +59,7 @@ public static class WindowsRuntimeBuffer
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         //if (capacity < length) throw new ArgumentException(global::Windows.Foundation.SR.Argument_InsufficientBufferCapacity);
 
@@ -87,7 +87,7 @@ public static class WindowsRuntimeBuffer
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(data);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(length);

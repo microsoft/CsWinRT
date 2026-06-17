@@ -297,7 +297,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         if (IsEmpty)
         {
             return "Empty";
@@ -314,7 +314,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {

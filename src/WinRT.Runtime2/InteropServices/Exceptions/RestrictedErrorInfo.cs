@@ -40,7 +40,7 @@ public static unsafe class RestrictedErrorInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // If the 'HRESULT' indicates success, there is no exception to return
         if (errorCode.Succeeded)
         {
@@ -232,7 +232,7 @@ public static unsafe class RestrictedErrorInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // If the input exception is 'null', we always just map to 'S_OK'
         if (exception is null)
         {
@@ -269,7 +269,7 @@ public static unsafe class RestrictedErrorInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(exception);
 
         try
@@ -357,7 +357,7 @@ public static unsafe class RestrictedErrorInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(exception);
 
         void* restrictedErrorInfoPtr = null;
@@ -447,7 +447,7 @@ public static unsafe class RestrictedErrorInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         SetErrorInfo(exception);
 
         using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo();

@@ -47,7 +47,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskAdapter(factory);
@@ -85,7 +85,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskWithProgressAdapter<TProgress>(factory);
@@ -113,7 +113,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskAdapter<TResult>(factory);
@@ -157,7 +157,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskWithProgressAdapter<TResult, TProgress>(factory);
@@ -172,7 +172,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskAdapter(default(CompletedTaskPlaceholder));
 #endif
     }
@@ -186,7 +186,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskWithProgressAdapter<TProgress>(default(CompletedTaskPlaceholder));
 #endif
     }
@@ -201,7 +201,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskAdapter<TResult>(result);
 #endif
     }
@@ -217,7 +217,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskWithProgressAdapter<TResult, TProgress>(result);
 #endif
     }
@@ -231,7 +231,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskAdapter(exception);
@@ -248,7 +248,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskWithProgressAdapter<TProgress>(exception);
@@ -265,7 +265,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskAdapter<TResult>(exception);
@@ -283,7 +283,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskWithProgressAdapter<TResult, TProgress>(exception);
@@ -298,7 +298,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskAdapter(default(CanceledTaskPlaceholder));
 #endif
     }
@@ -312,7 +312,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskWithProgressAdapter<TProgress>(default(CanceledTaskPlaceholder));
 #endif
     }
@@ -326,7 +326,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskAdapter<TResult>(default(CanceledTaskPlaceholder));
 #endif
     }
@@ -341,7 +341,7 @@ public static class AsyncInfo
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         return new TaskWithProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
 #endif
     }

@@ -116,7 +116,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         // If we have no input IID, it means that callers just expect whatever the default interface pointer
         // returned by each attempted API is. For the activation handler and 'RoGetActivationFactory', we
         // still need to pass an IID in all cases. Unless specified, this should be 'IID_IActivationFactory'.
@@ -181,7 +181,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         activationFactory = null;
 
         ReadOnlySpan<char> moduleName = runtimeClassName;
@@ -245,7 +245,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         activationFactory = null;
 
         // First, try to get the activation factory with the same logic for when we don't have an IID

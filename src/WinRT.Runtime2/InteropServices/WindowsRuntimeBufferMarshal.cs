@@ -29,7 +29,7 @@ public static partial class WindowsRuntimeBufferMarshal
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -72,7 +72,7 @@ public static partial class WindowsRuntimeBufferMarshal
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -112,7 +112,7 @@ public static partial class WindowsRuntimeBufferMarshal
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
-#else
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
