@@ -38,7 +38,7 @@
     <File Path="../docs/versioning.md" />
   </Folder>
   <Folder Name="/Docs/diagnostics/">
-    <File Path="../docs/diagnostics/cswinrt30001.md" />
+    <File Path="../docs/diagnostics/cswinrt3001.md" />
   </Folder>
   <Folder Name="/Docs/images/">
     <File Path="../docs/images/AuthorPackage_VS.png" />
