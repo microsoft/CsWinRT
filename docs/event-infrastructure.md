@@ -21,6 +21,7 @@ This document provides a deep dive into how CsWinRT's event infrastructure works
   - [EventInvoke Delegate and the CCW](#eventinvoke-delegate-and-the-ccw)
   - [Reference Tracking Integration](#reference-tracking-integration)
   - [Cleanup on GC](#cleanup-on-gc)
+  - [Thread Safety](#thread-safety)
 - [Static Events](#static-events)
   - [How Static Events Differ from Instance Events](#how-static-events-differ-from-instance-events)
   - [The Activation Factory Cache](#the-activation-factory-cache)
@@ -88,6 +89,8 @@ Concrete derived types exist for each delegate shape:
 Each derived type implements two abstract methods:
 - `ConvertToUnmanaged(T handler)` — marshals the delegate to a native CCW.
 - `CreateEventSourceState()` — creates the concrete `EventSourceState<T>` subclass.
+
+The collection-change event sources (`VectorChangedEventHandlerEventSource<T>`, `MapChangedEventHandlerEventSource<K, V>`) back the `VectorChanged` / `MapChanged` events on the projected observable collection types (e.g. `WindowsRuntimeObservableVector<T>`), which route through the same `Subscribe` / `Unsubscribe` path as any other instance event.
 
 ### EventSourceState\<T\>
 
@@ -380,6 +383,14 @@ When an `EventSourceState<T>` is finalized (because the native object released i
 3. `EventSourceCache.Remove(...)` removes the matching weak reference from the per-object cache. If this was the last state in the cache for that native object, the `EventSourceCache` entry itself is removed from the global dictionary.
 
 Explicit disposal (via `Unsubscribe`) follows the same path but also calls `GC.SuppressFinalize` to avoid double cleanup.
+
+### Thread Safety
+
+All of the shared infrastructure is safe to use concurrently:
+
+- **`EventSource<T>`** serializes `Subscribe` / `Unsubscribe` for a given event with a `lock` on the event source instance, so concurrent `+=` / `-=` on the same event never race on the shared `EventSourceState<T>`.
+- **`EventSourceCache`** coordinates its global map with a `ReaderWriterLockSlim` (held as a read lock while adding or updating entries, and as a write lock only when removing the last entry for a native object) layered on top of `ConcurrentDictionary`, and takes a per-cache lock when resolving its `IWeakReference` target.
+- **`EventRegistrationTokenTable<T>`** (the CCW path) serializes token allocation and removal with a `lock` on its backing dictionary, so native callers adding and removing handlers concurrently always receive distinct tokens.
 
 ---
 
