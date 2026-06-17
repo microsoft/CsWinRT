@@ -1,0 +1,7 @@
+# We use the '[WindowsRuntimeImplementationOnlyMember]' attribute to mark
+# all implementation-only types in 'WinRT.Runtime.dll'. These types are
+# only included when building the implementation assembly, while entirely
+# skipped when producing the reference assembly. This list of banned
+# symbols is only included when building the reference assembly, which
+# ensures that we never accidentally leak any of them in the public API.
+T:WindowsRuntime.WindowsRuntimeImplementationOnlyMemberAttribute
