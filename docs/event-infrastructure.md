@@ -174,7 +174,7 @@ Managed code:   myObject.SomeEvent += myHandler;
 
 This compiles down to a call through the projected interface implementation, which calls into the ABI methods layer and ultimately into `EventSource<T>.Subscribe(handler)`. Here's what happens step by step:
 
-1. **Get or create the `EventSource<T>`** — A `ConditionalWeakTable<WindowsRuntimeObject, EventSourceT>` keyed on the managed wrapper object is used to ensure there's at most one `EventSource<T>` per event per object.
+1. **Get or create the `EventSource<T>`** — The projected runtime class holds one `EventSource<T>` per event, created lazily on first use and stored in a per-instance field (`_eventSource_<EventName>`). This guarantees at most one `EventSource<T>` per event per object, with a lifetime bounded by the runtime class instance. (For a small subset of interfaces, the event source is instead cached in a `ConditionalWeakTable` keyed on the runtime class instance, in the generated ABI methods class — but the lifetime semantics are the same.)
 
 2. **Check for existing state** — Inside `Subscribe`, under a lock, the method checks if there's already a live `EventSourceState<T>` (via the weak reference) that still has COM references.
 
@@ -205,8 +205,7 @@ Managed code:   myObject.SomeEvent -= myHandler;
 ```mermaid
 graph TD
     subgraph "Managed (GC Heap)"
-        MO["WindowsRuntimeObject<br/>(managed wrapper / RCW)"]
-        CWT["ConditionalWeakTable&lt;WRO, EventSource&gt;"]
+        MO["WindowsRuntimeObject<br/>(managed wrapper / RCW)<br/>• _eventSource_&lt;Name&gt; field"]
         ES["EventSource&lt;T&gt;<br/>• _nativeObjectReference<br/>• _weakReferenceToEventSourceState"]
         ESS["EventSourceState&lt;T&gt;<br/>• TargetDelegate<br/>• EventInvoke (delegate)<br/>• Token<br/>• _thisPtr (cache key)"]
         TD["TargetDelegate<br/>(combined handlers)"]
@@ -225,8 +224,7 @@ graph TD
         ObjRef["WindowsRuntimeObjectReference"]
     end
 
-    CWT -->|"weak key"| MO
-    CWT -->|"strong value"| ES
+    MO -->|"per-instance field (strong)"| ES
     ES -->|"strong ref"| ObjRef
     ObjRef -->|"prevents release of"| NO
     ES -->|"weak ref"| WR
@@ -245,7 +243,7 @@ graph TD
 | Object | Kept alive by |
 |--------|--------------|
 | `WindowsRuntimeObject` (RCW) | Application code holding a reference to the projected object |
-| `EventSource<T>` | `ConditionalWeakTable` entry (alive while the RCW is alive) |
+| `EventSource<T>` | The runtime class instance's per-instance field (or a `ConditionalWeakTable` entry keyed weakly on it); alive while the RCW is alive |
 | `EventSourceState<T>` | The `EventInvoke` delegate captures it; the CCW of that delegate is held by the native event source |
 | `EventInvoke` delegate (CCW) | The native Windows Runtime object holds a COM reference to it |
 | `WindowsRuntimeObjectReference` | `EventSource<T>._nativeObjectReference` holds a strong reference |
@@ -342,7 +340,7 @@ graph LR
 The event infrastructure uses a carefully designed chain of strong and weak references to ensure:
 
 1. **Active subscriptions are not prematurely collected**, even if the managed `EventSource<T>` wrapper is GC'd.
-2. **No preventing GC of the managed RCW** — the `ConditionalWeakTable` uses the RCW as a weak key, so the event source doesn't keep the RCW alive.
+2. **No preventing GC of the managed RCW** — the event source lives in a field on the runtime class instance (or a `ConditionalWeakTable` keyed weakly on it), so it shares the RCW's lifetime and never keeps the RCW alive on its own.
 3. **No preventing GC of native objects** — once all managed handlers are removed, the CCW reference is released and the native object can be destroyed.
 
 ### EventInvoke Delegate and the CCW
@@ -389,22 +387,22 @@ Explicit disposal (via `Unsubscribe`) follows the same path but also calls `GC.S
 
 ### How Static Events Differ from Instance Events
 
-For instance events, the `ConditionalWeakTable` is keyed on the managed wrapper object (`WindowsRuntimeObject`):
+For instance events, the `EventSource<T>` is bound to the lifetime of the **runtime class instance**. The projected class stores it in a per-instance field, created lazily on first use:
 
 ```csharp
-// Instance events (in the generated ABI methods class)
-ConditionalWeakTable<WindowsRuntimeObject, EventHandlerEventSource> table;
+// Instance events: the event source lives in a per-instance field on the
+// projected runtime class, created lazily on first access.
+private EventHandlerEventSource _eventSource_SomeEvent =>
+    field ??= new EventHandlerEventSource(NativeObjectReference, vtableIndex);
 
-public static EventHandlerEventSource SomeEvent(
-    WindowsRuntimeObject thisObject,             // <-- the managed RCW
-    WindowsRuntimeObjectReference thisReference)
+public event EventHandler SomeEvent
 {
-    return table.GetOrAdd(
-        key: thisObject,
-        valueFactory: (_, ref) => new EventHandlerEventSource(ref, vtableIndex),
-        factoryArgument: thisReference);
+    add => _eventSource_SomeEvent.Subscribe(value);
+    remove => _eventSource_SomeEvent.Unsubscribe(value);
 }
 ```
+
+(The real generated getter initializes the field atomically with `Interlocked.CompareExchange`. A subset of interfaces — fast-ABI exclusive, non-default — instead route through a `ConditionalWeakTable<object, EventHandlerEventSource>` keyed on the runtime class instance, in the generated ABI methods class. Either way the key is a stable identity — the `WindowsRuntimeObject` itself — that lives exactly as long as the object.)
 
 For **static events**, there's no object instance. Instead, the generated code uses a **globally cached activation factory object reference** as the key:
 
