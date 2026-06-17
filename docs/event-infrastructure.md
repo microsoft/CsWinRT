@@ -417,7 +417,7 @@ private static WindowsRuntimeObjectReference __IStaticsType
         {
             return ___IStaticsType;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory("TypeName", iid);
+        return field = WindowsRuntimeObjectReference.GetActivationFactory("TypeName", iid);
     }
 }
 ```
@@ -456,7 +456,7 @@ public static EventHandlerEventSource SomeStaticEvent(
 
 The static property `__IStaticsType` uses a **semi-cached** pattern:
 
-1. On first access: calls `WindowsRuntimeActivationFactory.GetActivationFactory(...)` and stores the result.
+1. On first access: calls `WindowsRuntimeObjectReference.GetActivationFactory(...)` and stores the result.
 2. On subsequent accesses: checks `IsInCurrentContext`. If the current COM context matches the one where the factory was created, returns the cached value.
 3. If the context has changed (e.g., thread apartment transition): **re-fetches** the activation factory and **overwrites** the cached field.
 
