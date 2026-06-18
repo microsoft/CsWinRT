@@ -51,7 +51,7 @@ cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
 
 # Only for files under the Controls folder
 [Controls/**.cs]
-cswinrt_aot_warning_suppressed_interfaces = System.IDisposable;System.IFormattable
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable;System.ComponentModel.INotifyPropertyChanged
 ```
 
 Note that suppressing the warning for an interface does not stop a vtable from being generated for it. If a class is marked `partial`, the source generator still generates the vtable including those interfaces so it remains AOT compatible when passed across the WinRT ABI.
