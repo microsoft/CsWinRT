@@ -1,12 +1,38 @@
 <Project>
 
   <!--
-    Intentionally blank.
+    The smoke tests consume the real 'Microsoft.Windows.CsWinRT' NuGet package exactly as an
+    external customer would. This file (together with the sibling '.targets' and
+    'Directory.Packages.props') shadows the repository's own build infrastructure, so the smoke
+    tests inherit nothing from 'src/Directory.Build.*'.
 
-    The smoke tests consume the real 'Microsoft.Windows.CsWinRT' NuGet package exactly as
-    an external customer would. This file exists only to stop MSBuild from walking up into
-    the repository's own build infrastructure ('src/Directory.Build.props'), keeping the
-    smoke tests fully isolated from how CsWinRT itself is built. All project configuration
-    lives in the individual '.csproj' files.
+    All configuration shared by the consumption and authoring smoke tests lives here, so each
+    '.csproj' only carries what makes it different.
   -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
+  </PropertyGroup>
+
+  <!--
+    The CsWinRT package version, and the folder it was built into, are supplied by the build
+    that produced the package ('build.cmd' locally, or the CI pack step). They default to the
+    local 'build.cmd x64 Release' output so the smoke tests can also be built by hand after a
+    local package build.
+  -->
+  <PropertyGroup>
+    <CsWinRTPackageVersion Condition="'$(CsWinRTPackageVersion)' == ''">0.0.0-private.0</CsWinRTPackageVersion>
+    <CsWinRTPackageSource Condition="'$(CsWinRTPackageSource)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '_build', 'x64', 'Release', 'cswinrt', 'bin'))</CsWinRTPackageSource>
+
+    <!-- Public NuGet feed, which provides the preview Windows SDK ref pack pinned above -->
+    <PublicNuGetSource Condition="'$(PublicNuGetSource)' == ''">https://api.nuget.org/v3/index.json</PublicNuGetSource>
+
+    <!-- Restore the CsWinRT package being tested from the local build output -->
+    <RestoreSources>$(CsWinRTPackageSource);$(PublicNuGetSource)</RestoreSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(CsWinRTPackageVersion)" />
+  </ItemGroup>
 </Project>

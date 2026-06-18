@@ -1,29 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
-  </PropertyGroup>
 
   <!--
-    The CsWinRT package version, and the folder it was built into, are supplied by the
-    build that produced the package ('build.cmd' locally, or the CI pack step). They
-    default to the local 'build.cmd x64 Release' output so the smoke test can also be built
-    by hand after a local package build.
+    End-to-end consumption smoke test: a .NET app that consumes the real
+    'Microsoft.Windows.CsWinRT' NuGet package exactly as a customer would. Building and running
+    it exercises the Windows SDK projection generator, the interop generator, and the
+    'WinRT.Runtime' ref/impl assemblies. Shared configuration (target framework, NuGet sources,
+    and the CsWinRT package reference) lives in the parent 'Directory.Build.props'.
   -->
   <PropertyGroup>
-    <CsWinRTPackageVersion Condition="'$(CsWinRTPackageVersion)' == ''">0.0.0-private.0</CsWinRTPackageVersion>
-    <CsWinRTPackageSource Condition="'$(CsWinRTPackageSource)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..', '_build', 'x64', 'Release', 'cswinrt', 'bin'))</CsWinRTPackageSource>
-
-    <!-- Public NuGet feed, which provides the preview Windows SDK ref pack pinned above. -->
-    <PublicNuGetSource Condition="'$(PublicNuGetSource)' == ''">https://api.nuget.org/v3/index.json</PublicNuGetSource>
-
-    <!-- Restore the CsWinRT package being tested from the local build output -->
-    <RestoreSources>$(CsWinRTPackageSource);$(PublicNuGetSource)</RestoreSources>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(CsWinRTPackageVersion)" />
-  </ItemGroup>
 </Project>
