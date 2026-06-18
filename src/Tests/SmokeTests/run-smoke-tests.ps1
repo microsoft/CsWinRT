@@ -70,6 +70,32 @@ function Invoke-Dotnet {
     }
 }
 
+function Assert-WinMDDefinesType {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Path,
+        [Parameter(Mandatory = $true)] [string] $Namespace,
+        [Parameter(Mandatory = $true)] [string] $TypeName
+    )
+
+    # Deliberately lightweight inspection (no managed-metadata dependencies, works in any
+    # PowerShell host): a Windows Runtime metadata file carries the 'WindowsRuntime 1.4'
+    # metadata version, and a type's namespace and name are stored as separate, null-terminated
+    # entries in the metadata strings heap.
+    $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($Path))
+
+    if (-not $text.Contains('WindowsRuntime 1.4')) {
+        throw "'$Path' is not a Windows Runtime metadata (.winmd) file."
+    }
+
+    foreach ($name in @($Namespace, $TypeName)) {
+        if (-not $text.Contains("$name`0")) {
+            throw "'$Path' does not define '$Namespace.$TypeName' (missing '$name')."
+        }
+    }
+
+    Write-Host "Verified '$([IO.Path]::GetFileName($Path))' defines '$Namespace.$TypeName'." -ForegroundColor DarkGray
+}
+
 # ---- Consumption: build and run (must not crash) ----
 Write-Host "`n=== Consumption smoke test ===" -ForegroundColor Green
 Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
@@ -89,8 +115,20 @@ if ($LASTEXITCODE -ne 0) {
     throw "Consumption smoke test crashed or failed with exit code $LASTEXITCODE."
 }
 
-# ---- Authoring: build only ----
+# ---- Authoring: build, then verify the generated Windows Runtime metadata ----
 Write-Host "`n=== Authoring smoke test ===" -ForegroundColor Green
 Invoke-Dotnet (@('build', $authoringProject) + $commonBuildArgs)
+
+# The authoring build emits a '.winmd' next to the component assembly. Verify it was produced
+# and that it defines the expected Windows Runtime type.
+$authoringWinMD = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'bin')) -Filter 'Authoring.winmd' -Recurse -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if ($null -eq $authoringWinMD) {
+    throw "The authoring build did not produce 'Authoring.winmd'."
+}
+
+Assert-WinMDDefinesType -Path $authoringWinMD.FullName -Namespace 'Authoring' -TypeName 'Greeter'
 
 Write-Host "`nAll smoke tests passed." -ForegroundColor Green
