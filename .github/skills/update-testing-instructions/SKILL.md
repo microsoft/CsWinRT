@@ -68,7 +68,17 @@ Launch an explore agent to verify:
 - **Project settings** are current: output type, TFM, `CsWinRTComponent` setting, AOT mode
 - **What it tests** description is accurate
 
-### Step 7: verify TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
+### Step 7: verify smoke tests (`src/Tests/SmokeTests/`)
+
+Launch an explore agent (or inspect directly) to verify:
+
+- **Project list** is accurate — the `Consumption/` app and the `Authoring/` component, kept out of `cswinrt.slnx`
+- **Isolation** is intact: blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled)
+- **Shared configuration** in `Directory.Build.props` is current: TFM (`.1` revision), pinned `WindowsSdkPackageVersion`, `RestoreSources` (local package output + public NuGet), and the `CsWinRTPackageVersion`/`CsWinRTPackageSource` defaults
+- **What each test does** is accurate (the consumption app's `JsonObject.Parse`/`Stringify` call; the authoring component's class and `.winmd` verification)
+- **How they run** is current: the `run-smoke-tests.ps1` runner, and the invocations in `src/build.cmd` and `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`
+
+### Step 8: verify TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
 
 Launch an explore agent to verify:
 
@@ -76,7 +86,7 @@ Launch an explore agent to verify:
 - **"Referenced from" list** is current
 - **"When to update" guidance** is still correct
 
-### Step 8: verify the "deciding where to add tests" table
+### Step 9: verify the "deciding where to add tests" table
 
 Check every row in the routing table against the actual test projects. Verify:
 
@@ -85,7 +95,7 @@ Check every row in the routing table against the actual test projects. Verify:
 - No new test project categories exist that should be added as rows
 - The `TestComponentCSharp` guidance is still accurate
 
-### Step 9: verify code examples
+### Step 10: verify code examples
 
 For each code example in the testing skill, verify it matches the conventions actually used in the test files:
 
@@ -94,7 +104,7 @@ For each code example in the testing skill, verify it matches the conventions ac
 - **Generator test pattern**: verify the `VerifySources` call matches the actual method signature and style. Check an actual test method in `Test_CustomPropertyProviderGenerator` to confirm
 - **Analyzer test pattern**: verify the `VerifyAnalyzerAsync` call matches the actual method signature and style. Check an actual test method in the analyzer test files to confirm
 
-### Step 10: update the testing instructions
+### Step 11: update the testing instructions
 
 Apply surgical edits to `.github/skills/testing/SKILL.md` to fix any discrepancies found. Typical updates include:
 
@@ -115,17 +125,17 @@ Apply surgical edits to `.github/skills/testing/SKILL.md` to fix any discrepanci
 - Do not add unnecessary commentary or explanation beyond what's needed for test placement guidance
 </style_rules>
 
-### Step 11: update this skill if needed
+### Step 12: update this skill if needed
 
 If significant changes to the test suite were discovered (e.g. test projects added or removed, new categories of tests, changed validation criteria), also update this skill file (`.github/skills/update-testing-instructions/SKILL.md`) to reflect those changes. In particular:
 
-- The **per-project verification steps** (steps 2–7) must stay in sync with the actual test projects. If a test project is added or removed, add or remove its verification step accordingly.
+- The **per-project verification steps** (steps 2–8) must stay in sync with the actual test projects. If a test project is added or removed, add or remove its verification step accordingly.
 - The **verification criteria** for each step should reflect what is actually worth checking. If a project gains new aspects worth validating (e.g. new test helper classes, new build settings), add those to the checklist.
-- The **code example verification step** (step 9) should list all code examples present in the testing skill.
+- The **code example verification step** (step 10) should list all code examples present in the testing skill.
 
 This ensures the skill remains useful and accurate for future runs.
 
-### Step 12: summarize changes
+### Step 13: summarize changes
 
 After editing, provide a clear summary of what was updated and why, so the user can review the changes before committing.
 
