@@ -96,6 +96,7 @@ Launch an explore agent to verify:
 
 - **Resolver classes** in `Resolvers/` are complete and accurately described (including `InterfaceIIDResolver`, which resolves IIDs from generated `ABI.InterfaceIIDs` types)
 - **Reference classes** in `References/` are complete (note the CsWinRT public key and system public key tokens come from `WellKnownPublicKeys`/`WellKnownPublicKeyTokens` in `WinRT.Generator.Core`)
+- **Implementation-only types inventory** — verify the "Implementation-only types consumed from WinRT.Runtime" list in the `SKILL.md` "Control flow between generated code and WinRT.Runtime" section is complete and current. Cross-check its categories and representative type names against the WinRT.Runtime type references in `References/InteropReferences.cs` and against the `[WindowsRuntimeImplementationOnlyMember]`-marked types (and the stripped folders `ABI/`, `NativeObjects/`, and most of `InteropServices/`) in `src/WinRT.Runtime2/`. If implementation-only APIs were added to or removed from WinRT.Runtime, update the inventory accordingly
 - **Well-known interface IIDs** are current (native interface entry order, and the `ReservedIIDsMap` set — verify whether `IMarshal` is included; it is currently excluded because it can be user-overridden)
 - **Marshaller type resolution** logic is current
 
