@@ -248,6 +248,40 @@ namespace Generator
             return 0;
         }
 
+        // Returns the set of fully qualified interface names which should be ignored when determining whether
+        // to report the AOT compatibility warning (CsWinRT1028) for non-partial classes.  When a class only
+        // implements WinRT interfaces present in this set (such as the custom mapped System.IDisposable), the
+        // warning is suppressed.  Classes still get vtables generated for these interfaces when marked partial.
+        // The list is configured via the 'CsWinRTAotWarningSuppressedInterfaces' MSBuild property (surfaced
+        // through .editorconfig) as a semicolon, comma or whitespace separated list of fully qualified type names.
+        public static ImmutableHashSet<string> GetCsWinRTAotWarningSuppressedInterfaces(this AnalyzerConfigOptionsProvider provider)
+        {
+            if (provider.GlobalOptions.TryGetValue("build_property.CsWinRTAotWarningSuppressedInterfaces", out var suppressedInterfacesStr) &&
+                !string.IsNullOrWhiteSpace(suppressedInterfacesStr))
+            {
+                var builder = ImmutableHashSet.CreateBuilder<string>(StringComparer.Ordinal);
+                foreach (var suppressedInterface in suppressedInterfacesStr.Split(new[] { ';', ',', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    // Normalize away any 'global::' prefix so the value can be compared against the display string
+                    // of an interface symbol regardless of how the user specified it in the project.
+                    var normalizedInterface = suppressedInterface.Trim();
+                    if (normalizedInterface.StartsWith("global::", StringComparison.Ordinal))
+                    {
+                        normalizedInterface = normalizedInterface.Substring("global::".Length);
+                    }
+
+                    if (normalizedInterface.Length > 0)
+                    {
+                        builder.Add(normalizedInterface);
+                    }
+                }
+
+                return builder.ToImmutable();
+            }
+
+            return ImmutableHashSet<string>.Empty;
+        }
+
         public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))

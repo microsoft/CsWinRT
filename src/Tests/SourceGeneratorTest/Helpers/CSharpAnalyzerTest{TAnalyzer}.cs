@@ -68,6 +68,10 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest) { TestCode = source };
 
+        // Some diagnostics (eg. CsWinRT1028) are declared with multiple descriptors sharing the same id
+        // (a warning and an info variant). Resolve that ambiguity in markup by using the first matching descriptor.
+        test.MarkupOptions = MarkupOptions.UseFirstDescriptor;
+
         string winrtRuntimeAssemblyLocation = typeof(ComWrappersSupport).Assembly.Location;
 
         // Given we use a different nuget feed, we pass nuget.config.

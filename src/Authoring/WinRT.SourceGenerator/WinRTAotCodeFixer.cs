@@ -64,6 +64,7 @@ namespace WinRT.SourceGenerator
 
                 var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
                 var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
+                var csWinRTAotWarningSuppressedInterfaces = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningSuppressedInterfaces();
                 var allowUnsafe = GeneratorHelper.AllowUnsafe(context.Compilation);
                 var isCsWinRTCcwLookupTableGeneratorEnabled = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTCcwLookupTableGeneratorEnabled();
 
@@ -102,6 +103,17 @@ namespace WinRT.SourceGenerator
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
+                                    // If this interface was explicitly configured to be ignored for the AOT
+                                    // compatibility warning (e.g. the custom mapped System.IDisposable, which is
+                                    // commonly implemented by types that are never passed across the WinRT ABI),
+                                    // don't let it contribute to the warning.  A vtable is still generated for it
+                                    // when the class is marked partial.
+                                    if (csWinRTAotWarningSuppressedInterfaces.Count > 0 &&
+                                        csWinRTAotWarningSuppressedInterfaces.Contains(iface.ToDisplayString()))
+                                    {
+                                        continue;
+                                    }
+
                                     if (!iface.IsGenericType &&
                                         GeneratorHelper.IsOldProjectionAssembly(iface.ContainingAssembly))
                                     {

@@ -1525,4 +1525,81 @@ public class DiagnosticAnalyzerTests
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_OnlyImplementsSuppressedInterface_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+
+            class Test : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2"),
+                ("CsWinRTAotWarningSuppressedInterfaces", "System.IDisposable")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_NotConfigured_OnlyImplementsIDisposable_Warns()
+    {
+        const string source = """
+            using System;
+
+            class {|CsWinRT1028:Test|} : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_AlsoImplementsNonSuppressedInterface_Warns()
+    {
+        const string source = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+
+            class {|CsWinRT1028:Test|} : IDisposable, IEnumerable<int>
+            {
+                public void Dispose()
+                {
+                }
+
+                public IEnumerator<int> GetEnumerator() => throw null;
+
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2"),
+                ("CsWinRTAotWarningSuppressedInterfaces", "System.IDisposable")
+            ]);
+    }
 }
