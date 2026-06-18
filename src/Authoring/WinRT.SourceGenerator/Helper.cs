@@ -248,15 +248,21 @@ namespace Generator
             return 0;
         }
 
-        // Returns the set of fully qualified interface names which should be ignored when determining whether
-        // to report the AOT compatibility warning (CsWinRT1028) for non-partial classes.  When a class only
-        // implements WinRT interfaces present in this set (such as the custom mapped System.IDisposable), the
-        // warning is suppressed.  Classes still get vtables generated for these interfaces when marked partial.
-        // The list is configured via the 'cswinrt_aot_warning_suppressed_interfaces' .editorconfig option as a
-        // comma separated list of fully qualified type names.  Note that ';' cannot be used as a separator since
-        // .editorconfig treats it (and '#') as a comment character.  Because it is read from the .editorconfig
-        // options of the syntax tree the type is declared in, it can be scoped to specific folders or files using
-        // .editorconfig sections.
+        /// <summary>
+        /// Returns the set of fully qualified interface names which should be ignored when determining whether
+        /// to report the AOT compatibility warning (CsWinRT1028) for non-partial classes. When a class only
+        /// implements WinRT interfaces present in this set (such as the custom mapped <see cref="System.IDisposable"/>),
+        /// the warning is suppressed. Classes still get vtables generated for these interfaces when marked partial.
+        /// </summary>
+        /// <param name="options">The <see cref="AnalyzerConfigOptions"/> to read the configuration from.</param>
+        /// <returns>The set of fully qualified interface names to ignore for the warning.</returns>
+        /// <remarks>
+        /// The list is configured via the 'cswinrt_aot_warning_suppressed_interfaces' .editorconfig option as a
+        /// comma separated list of fully qualified type names. Note that ';' cannot be used as a separator since
+        /// .editorconfig treats it (and '#') as a comment character. Because it is read from the .editorconfig
+        /// options of the syntax tree the type is declared in, it can be scoped to specific folders or files using
+        /// .editorconfig sections.
+        /// </remarks>
         public static ImmutableHashSet<string> GetCsWinRTAotWarningSuppressedInterfaces(this AnalyzerConfigOptions options)
         {
             if (options.TryGetValue("cswinrt_aot_warning_suppressed_interfaces", out var suppressedInterfacesStr) &&
