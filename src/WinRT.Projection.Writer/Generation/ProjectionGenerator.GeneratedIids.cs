@@ -84,6 +84,12 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
+                {
+                    continue;
+                }
+
                 if (type.IsGeneric)
                 {
                     continue;

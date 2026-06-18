@@ -265,6 +265,13 @@ internal static class ClassFactory
 
             TypeDefinition staticIface = factory.Type;
 
+            // Skip static members from a removed static factory interface: the interface is omitted
+            // from the projection and ABI, so its IID / ABI Methods class would not exist to dispatch to.
+            if (staticIface.IsRemoved)
+            {
+                continue;
+            }
+
             // Compute the objref name for this static factory interface.
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
 
@@ -284,9 +291,17 @@ internal static class ClassFactory
             // Methods
             foreach (MethodDefinition method in staticIface.GetNonSpecialMethods())
             {
+                // Skip removed static methods (omitted from the projection)
+                if (method.IsRemoved)
+                {
+                    continue;
+                }
+
                 MethodSignatureInfo sig = new(method);
                 string mname = method.GetRawName();
                 writer.WriteLine();
+
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, method);
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
@@ -309,8 +324,19 @@ internal static class ClassFactory
             // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
             {
+                // MIDL places '[Deprecated]' on the event 'add' accessor, not on the Event row.
+                if (evt.AddMethod is { IsRemoved: true })
+                {
+                    continue;
+                }
+
                 string evtName = evt.GetRawName();
                 writer.WriteLine();
+
+                if (evt.AddMethod is { } addMethod)
+                {
+                    CustomAttributeFactory.WriteObsoleteAttribute(writer, addMethod);
+                }
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
@@ -343,6 +369,16 @@ internal static class ClassFactory
             {
                 string propName = prop.GetRawName();
                 (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
+                // MIDL places '[Deprecated]' on the accessor (the getter for read/write properties),
+                // not on the Property row, so removal/deprecation is checked on the accessor.
+                MethodDefinition? accessor = getter ?? setter;
+
+                if (accessor is { IsRemoved: true })
+                {
+                    continue;
+                }
+
                 string propType = InterfaceFactory.WritePropType(context, prop);
 
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
@@ -350,8 +386,13 @@ internal static class ClassFactory
                     state = new StaticPropertyAccessorState
                     {
                         PropTypeText = propType,
+                        DeprecationAccessor = accessor,
                     };
                     properties[propName] = state;
+                }
+                else
+                {
+                    state.DeprecationAccessor ??= accessor;
                 }
 
                 if (getter is not null && !state.HasGetter)
@@ -377,6 +418,11 @@ internal static class ClassFactory
         {
             StaticPropertyAccessorState s = kv.Value;
             writer.WriteLine();
+
+            if (s.DeprecationAccessor is { } deprecationAccessor)
+            {
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, deprecationAccessor);
+            }
 
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
