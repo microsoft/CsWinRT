@@ -154,6 +154,7 @@ These docs describe the *design* of the generated code patterns. If the actual g
 
 - `marshalling-arrays.md` includes the element marshaller infrastructure (runtime interfaces, runtime array marshaller classes, generated element marshaller types, selection logic table)
 - `marshalling-generic-interfaces.md` includes the collection element marshaller infrastructure (runtime interfaces, GetMany adapter extension methods, generated element marshaller types, emission/reuse pattern)
+- The "implementation details only" APIs in `WinRT.Runtime.dll` that the generator consumes (the runtime element-marshaller interfaces, array marshaller classes, etc.) are marked with `[WindowsRuntimeImplementationOnlyMember]` and stripped from the `WinRT.Runtime.dll` reference assembly. If this marking scheme changes, update the `SKILL.md` "Version compatibility" section and the runtime-interface descriptions in both reference docs accordingly
 
 ### Step 14: update this skill if needed
 

@@ -27,6 +27,7 @@ Launch parallel explore agents for each of the 12 CsWinRT 3.0 projects listed in
    - T4 templates (`.tt` files) are accurately listed
    - Project settings (TFM, language version, nullable, unsafe, etc.) are current
    - Namespace organization matches
+   - Reference assembly build is documented: the dual implementation/reference build driven by `CsWinRTBuildReferenceAssembly`, the `WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY` / `WINDOWS_RUNTIME_REFERENCE_ASSEMBLY` / `WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE` compilation symbols, the `[WindowsRuntimeImplementationOnlyMember]` marker attribute (`Attributes/WindowsRuntimeImplementationOnlyMemberAttribute.cs`), the `BannedSymbols.txt` + `Microsoft.CodeAnalysis.BannedApiAnalyzers` guard (`RS0030` as error), the reference-assembly-only `WindowsRuntimeObject()` constructor (`CSWINRT3001` obsolete diagnostic), and packaging into `ref\net10.0\` alongside the implementation in `lib\net10.0\` (`src/build.cmd`, `nuget/Microsoft.Windows.CsWinRT.nuspec`)
 
 2. **WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)**
    - Source generators listed still exist and generate what's described

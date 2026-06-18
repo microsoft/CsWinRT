@@ -173,13 +173,16 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 - **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 - **Strong-name signed** with `key.snk`
 - **AOT compatible**: `IsAotCompatible = true`
+- **Dual-built**: produces both the implementation assembly and a stripped **reference assembly** (see "Reference assembly" below); the reference build adds a `Microsoft.CodeAnalysis.BannedApiAnalyzers` reference
 
 **Directory structure:**
 
 ```
 WinRT.Runtime2/
-├── WindowsRuntimeObject.cs          # Base class for ALL projected runtime classes
+├── WindowsRuntimeObject.cs          # Base class for ALL projected runtime classes (partial; reference + shared surface)
+├── WindowsRuntimeObject.Impl.cs     # Implementation-only half of WindowsRuntimeObject (excluded from the reference assembly)
 ├── WindowsRuntimeInspectable.cs     # Fallback type for unknown native objects
+├── BannedSymbols.txt                # Banned API list for the reference assembly build (blocks implementation-only types from leaking)
 ├── ABI/                             # ABI type mappings (managed ↔ native)
 │   ├── System/                      # Primitives, String, Uri, DateTimeOffset, collections, etc.
 │   ├── Windows.Foundation/          # Foundation types (Point, Rect, Size, etc.)
@@ -241,6 +244,17 @@ WinRT.Runtime2/
 - **Reference counting**: mimics COM `AddRef`/`Release` with managed lease counts and GC memory pressure tracking.
 - **T4 templates**: 6 `.tt` files generate constants (`HRESULT` codes, interface IIDs, XAML class names) and specialized marshallers (blittable array types).
 - **Feature switches**: opt-in/opt-out runtime features are controlled via `[FeatureSwitchDefinition]`-annotated properties in `WindowsRuntimeFeatureSwitches` (`Properties/WindowsRuntimeFeatureSwitches.cs`). Each switch is backed by an `AppContext` configuration property (e.g. `CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION`) and wired to an MSBuild property (e.g. `CsWinRTEnableManifestFreeActivation`) in `nuget/Microsoft.Windows.CsWinRT.targets`, which emits `RuntimeHostConfigurationOption` items with `Trim="true"`. This lets ILLink (trimming) and ILC (Native AOT) treat the switch values as constants and dead-code-eliminate all code behind disabled switches, making opt-in features fully pay-for-play.
+
+**Reference assembly:**
+
+`WinRT.Runtime` is built **twice**: once as the implementation assembly (the actual `WinRT.Runtime.dll` that runs) and once as a lightweight **reference assembly** that downstream tooling and `ProjectReference` consumers compile against. The reference build is selected via the `CsWinRTBuildReferenceAssembly` MSBuild property and strips out every implementation-only type and member, so none of them are exposed on the public API surface.
+
+- **Compilation symbols**: the implementation build defines `WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY`; the reference build defines `WINDOWS_RUNTIME_REFERENCE_ASSEMBLY`. Members that differ between the two (e.g. the explicit interface implementations on `WindowsRuntimeObject`, which become `throw null` stubs) are guarded with `#if`/`#elif` on these symbols. An entire source file can opt out of the reference assembly by placing `#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE` at the top: the `RemoveWindowsRuntimeImplementationOnlyFiles` target removes those files (plus the whole `ABI/`, `NativeObjects/`, `Exceptions/`, `Windows.UI.Xaml.Interop/`, and most `InteropServices/` subfolders) before `CoreCompile`.
+- **`ProduceReferenceAssembly = false`**: the implementation build disables the SDK's automatic reference assembly, because `WinRT.Runtime` ships its own (the SDK-generated one would leak the implementation-only types to consumers and break reference projections).
+- **`[WindowsRuntimeImplementationOnlyMember]`** (`Attributes/WindowsRuntimeImplementationOnlyMemberAttribute.cs`): an `internal sealed`, `[Conditional("WINDOWS_RUNTIME_REFERENCE_ASSEMBLY")]` marker placed on implementation-only types/members (including most of the marker attributes under `Attributes/`). It replaces the older `[Obsolete] + [EditorBrowsable(Never)]` combination, makes the intent explicit, and is only ever emitted into the reference assembly (where it is stripped along with the members it marks).
+- **Banned API analyzer**: the reference build references `Microsoft.CodeAnalysis.BannedApiAnalyzers` and lists `WindowsRuntimeImplementationOnlyMemberAttribute` in `BannedSymbols.txt`, with `RS0030` promoted to an error, so the build fails if any implementation-only type ever leaks into the reference surface. It also suppresses warnings that only appear in the stripped build (`CS8597`, `IDE0005`, `IDE0380`).
+- **Reference-assembly-only `WindowsRuntimeObject()` constructor**: a parameterless `protected` constructor exists only in the reference assembly (`#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY`). It is marked `[Obsolete(..., DiagnosticId = "CSWINRT3001")]`, so user code that derives from `WindowsRuntimeObject` gets the `CSWINRT3001` warning; because the constructor is absent from the implementation assembly, doing so throws `MissingMethodException` at runtime. Only CsWinRT-generated projections may derive from `WindowsRuntimeObject`. The related messages live in `Properties/WindowsRuntimeConstants.cs`.
+- **Packaging**: the implementation assembly ships in `lib\net10.0\` of the `Microsoft.Windows.CsWinRT` NuGet package, and the reference assembly (with its XML documentation, trimmed to the reference surface) ships in `ref\net10.0\`. The dual build and staging are driven by `src/build.cmd` and the Azure Pipelines build steps.
 
 **Types projected in WinRT.Runtime:**
 
@@ -713,6 +727,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0097`, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0010`, `9999` |
+| Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` (deriving from `WindowsRuntimeObject`) |
 
 ---
 
