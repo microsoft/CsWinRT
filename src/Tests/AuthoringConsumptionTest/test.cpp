@@ -977,10 +977,27 @@ TEST(AuthoringTest, AsyncMethodClass)
 TEST(AuthoringTest, DeprecatedMembersClass)
 {
     DeprecatedMembersClass obj;
+
+    // Members marked [Deprecated(DeprecationType.Deprecate)] and the new members remain fully usable.
     obj.OldMethod();
     obj.NewMethod();
-    EXPECT_EQ(obj.OldProp(), L"");
-    EXPECT_EQ(obj.NewProp(), L"");
+    EXPECT_EQ(obj.OldProp(), L"OldProp");
+    EXPECT_EQ(obj.NewProp(), L"NewProp");
+
+    // Members marked [Deprecated(DeprecationType.Remove)] keep their vtable slot and dispatch to the
+    // authored implementation, so existing callers compiled against them keep working.
+    obj.RemovedMethod();
+    EXPECT_EQ(obj.RemovedProp(), L"RemovedProp");
+
+    // The same applies to static members, which dispatch through the generated static factory.
+    DeprecatedMembersClass::OldStatic();
+    DeprecatedMembersClass::RemovedStatic();
+    DeprecatedMembersClass::NewStatic();
+
+    // Events of every deprecation kind can be subscribed to and revoked.
+    auto oldToken = obj.OldEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
+    auto removedToken = obj.RemovedEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
+    auto newToken = obj.NewEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
 }
 
 TEST(AuthoringTest, FullFeaturedClass)
