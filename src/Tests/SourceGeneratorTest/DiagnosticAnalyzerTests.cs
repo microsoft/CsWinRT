@@ -1525,4 +1525,179 @@ public class DiagnosticAnalyzerTests
 
         await CSharpAnalyzerTest<RuntimeClassCastAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotWarningLevel", "3")]);
     }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_OnlyImplementsSuppressedInterface_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+
+            class Test : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            analyzerConfigOptions:
+            [
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_NotConfigured_OnlyImplementsIDisposable_Warns()
+    {
+        const string source = """
+            using System;
+
+            class {|CsWinRT1028:Test|} : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_AlsoImplementsNonSuppressedInterface_Warns()
+    {
+        const string source = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+
+            class {|CsWinRT1028:Test|} : IDisposable, IEnumerable<int>
+            {
+                public void Dispose()
+                {
+                }
+
+                public IEnumerator<int> GetEnumerator() => throw null;
+
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            analyzerConfigOptions:
+            [
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_ScopedToFolder_OnlySuppressesInThatFolder()
+    {
+        const string suppressedSource = """
+            using System;
+
+            class Suppressed : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        const string otherSource = """
+            using System;
+
+            class {|CsWinRT1028:Other|} : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        // The scoped .editorconfig only applies to files under the 'Suppressed' folder, so the type declared
+        // there does not warn while the one under the 'Other' folder still does.
+        const string scopedEditorConfig = """
+            [*.cs]
+            cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            sources:
+            [
+                ("/Suppressed/Suppressed.cs", suppressedSource),
+                ("/Other/Other.cs", otherSource)
+            ],
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            scopedEditorConfigs:
+            [
+                ("/Suppressed/.editorconfig", scopedEditorConfig)
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_GenericCollection_RequiresAllTransitiveMappedInterfaces()
+    {
+        const string source = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+
+            sealed class TestDisposable : IDisposable, IList<int>
+            {
+                public void Dispose() { }
+                public int this[int index] { get => throw null; set { } }
+                public int Count => 0;
+                public bool IsReadOnly => false;
+                public void Add(int item) { }
+                public void Clear() { }
+                public bool Contains(int item) => false;
+                public void CopyTo(int[] array, int arrayIndex) { }
+                public IEnumerator<int> GetEnumerator() => throw null;
+                public int IndexOf(int item) => 0;
+                public void Insert(int index, int item) { }
+                public bool Remove(int item) => false;
+                public void RemoveAt(int index) { }
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        // Implementing IList<int> transitively implements IEnumerable<int> and IEnumerable, which are also custom
+        // mapped WinRT interfaces, so all of them (along with IDisposable) need to be listed to suppress the warning.
+        // The list is comma separated.
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            analyzerConfigOptions:
+            [
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable, System.Collections.Generic.IList<int>, System.Collections.Generic.IEnumerable<int>, System.Collections.IEnumerable")
+            ]);
+    }
 }

@@ -63,10 +63,26 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync"/>
     /// <param name="source">The source code to analyze.</param>
-    /// <param name="editorconfig">The .editorconfig properties to use.</param>
+    /// <param name="editorconfig">The MSBuild properties (surfaced as 'build_property.*' .editorconfig entries) to use.</param>
     public static Task VerifyAnalyzerAsync(string source, params (string PropertyName, object PropertyValue)[] editorconfig)
     {
+        return VerifyAnalyzerAsync(source, editorconfig, Array.Empty<(string, object)>());
+    }
+
+    /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync"/>
+    /// <param name="source">The source code to analyze.</param>
+    /// <param name="editorconfig">The MSBuild properties (surfaced as 'build_property.*' .editorconfig entries) to use.</param>
+    /// <param name="analyzerConfigOptions">The raw (non 'build_property.*') .editorconfig options to use.</param>
+    public static Task VerifyAnalyzerAsync(
+        string source,
+        (string PropertyName, object PropertyValue)[] editorconfig,
+        (string Key, object Value)[] analyzerConfigOptions)
+    {
         CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest) { TestCode = source };
+
+        // Some diagnostics (eg. CsWinRT1028) are declared with multiple descriptors sharing the same id
+        // (a warning and an info variant). Resolve that ambiguity in markup by using the first matching descriptor.
+        test.MarkupOptions = MarkupOptions.UseFirstDescriptor;
 
         string winrtRuntimeAssemblyLocation = typeof(ComWrappersSupport).Assembly.Location;
 
@@ -76,19 +92,91 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nugetConfigFilePath);
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(winrtRuntimeAssemblyLocation));
 
-        // Add any editorconfig properties, if present
-        if (editorconfig.Length > 0)
+        // Add any editorconfig properties and raw analyzer config options, if present
+        if (editorconfig.Length > 0 || analyzerConfigOptions.Length > 0)
         {
+            string configLines = string.Join(
+                Environment.NewLine,
+                editorconfig.Select(static p => $"build_property.{p.PropertyName} = {p.PropertyValue}")
+                    .Concat(analyzerConfigOptions.Select(static o => $"{o.Key} = {o.Value}")));
+
             test.SolutionTransforms.Add((solution, projectId) =>
                 solution.AddAnalyzerConfigDocument(
                     DocumentId.CreateNewId(projectId),
                     "CsWinRTSourceGeneratorTest.editorconfig",
                     SourceText.From($"""
                         is_global = true
-                        {string.Join(Environment.NewLine, editorconfig.Select(static p => $"build_property.{p.PropertyName} = {p.PropertyValue}"))}
+                        {configLines}
                         """,
                         Encoding.UTF8),
                 filePath: "/CsWinRTSourceGeneratorTest.editorconfig"));
+        }
+
+        return test.RunAsync(CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Runs the analyzer against multiple source files, allowing scoped (non-global) .editorconfig documents
+    /// to be added at specific paths so that path based .editorconfig scoping can be verified.
+    /// </summary>
+    /// <param name="sources">The source files (path and content, with markup) to analyze.</param>
+    /// <param name="editorconfig">The MSBuild properties (surfaced as global 'build_property.*' entries) to use.</param>
+    /// <param name="scopedEditorConfigs">The scoped .editorconfig documents (path and content) to add.</param>
+    public static Task VerifyAnalyzerAsync(
+        (string FilePath, string Content)[] sources,
+        (string PropertyName, object PropertyValue)[] editorconfig,
+        (string FilePath, string Content)[] scopedEditorConfigs)
+    {
+        CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest);
+
+        // Some diagnostics (eg. CsWinRT1028) are declared with multiple descriptors sharing the same id
+        // (a warning and an info variant). Resolve that ambiguity in markup by using the first matching descriptor.
+        test.MarkupOptions = MarkupOptions.UseFirstDescriptor;
+
+        foreach (var (filePath, content) in sources)
+        {
+            test.TestState.Sources.Add((filePath, content));
+        }
+
+        string winrtRuntimeAssemblyLocation = typeof(ComWrappersSupport).Assembly.Location;
+
+        // Given we use a different nuget feed, we pass nuget.config.
+        string nugetConfigFilePath = Path.Combine(Path.GetDirectoryName(winrtRuntimeAssemblyLocation), "nuget.config");
+
+        test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nugetConfigFilePath);
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(winrtRuntimeAssemblyLocation));
+
+        // Add the global build properties as a global analyzer config document.
+        if (editorconfig.Length > 0)
+        {
+            string configLines = string.Join(
+                Environment.NewLine,
+                editorconfig.Select(static p => $"build_property.{p.PropertyName} = {p.PropertyValue}"));
+
+            test.SolutionTransforms.Add((solution, projectId) =>
+                solution.AddAnalyzerConfigDocument(
+                    DocumentId.CreateNewId(projectId),
+                    "CsWinRTSourceGeneratorTest.editorconfig",
+                    SourceText.From($"""
+                        is_global = true
+                        {configLines}
+                        """,
+                        Encoding.UTF8),
+                filePath: "/CsWinRTSourceGeneratorTest.editorconfig"));
+        }
+
+        // Add the scoped (non-global) .editorconfig documents at their respective paths.
+        foreach (var (filePath, content) in scopedEditorConfigs)
+        {
+            string editorConfigPath = filePath;
+            string editorConfigContent = content;
+
+            test.SolutionTransforms.Add((solution, projectId) =>
+                solution.AddAnalyzerConfigDocument(
+                    DocumentId.CreateNewId(projectId),
+                    Path.GetFileName(editorConfigPath),
+                    SourceText.From(editorConfigContent, Encoding.UTF8),
+                    filePath: editorConfigPath));
         }
 
         return test.RunAsync(CancellationToken.None);

@@ -35,6 +35,34 @@ To help with this, there is a `code fixer` that will produce diagnostics when su
 
 In `Auto` mode, it is recommended to set the `CsWinRTAotWarningLevel` to 2 and go through all the warnings and mark such types `partial` or suppress the warning if those types are not passed across the WinRT ABI. By default, if you reference the CsWinRT package, the `CsWinRTAotWarningLevel` is set to 1. If you don't have a CsWinRT package reference, then the .NET default is to set `CsWinRTAotWarningLevel` to 1 if you have marked your binary as AOT compatible either by using `IsAotCompatible` or `PublishAot`. Even though it is only by default enabled as warnings for AOT scenarios, you should manually set it to 1 or 2 if you support trimming and address them.
 
+Some WinRT mapped built-in .NET interfaces, such as `System.IDisposable`, are commonly implemented by types that are never passed across the WinRT ABI, which can make the level 2 warnings noisy. To reduce this noise, you can use the `cswinrt_aot_warning_suppressed_interfaces` `.editorconfig` option to specify a list of fully qualified interface names that should be ignored when deciding whether to report the `CsWinRT1028` (class not marked partial) warning. When a class only implements WinRT interfaces from this list, the warning is suppressed. The value is a comma separated list of fully qualified type names, for example:
+
+```ini
+[*.cs]
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
+```
+
+For generic interfaces, use the closed, constructed form as it is rendered in C# (so `System.Collections.Generic.IList<int>`, using the `int` keyword, not `System.Int32`). Each implemented interface is matched individually, so a type that implements an interface which brings in other mapped WinRT interfaces needs each of them listed. For example, `System.Collections.Generic.IList<int>` also implements `IEnumerable<int>` and `IEnumerable`, which are mapped as well:
+
+```ini
+[*.cs]
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable, System.Collections.Generic.IList<int>, System.Collections.Generic.IEnumerable<int>, System.Collections.IEnumerable
+```
+
+Because it is configured through `.editorconfig`, it can be scoped to specific folders or files using `.editorconfig` sections. For example, you can suppress the warning for `System.IDisposable` in one folder while still getting the warning everywhere else:
+
+```ini
+# Applies everywhere
+[*.cs]
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
+
+# Only for files under the Controls folder
+[Controls/**.cs]
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable, System.ComponentModel.INotifyPropertyChanged
+```
+
+Note that suppressing the warning for an interface does not stop a vtable from being generated for it. If a class is marked `partial`, the source generator still generates the vtable including those interfaces so it remains AOT compatible when passed across the WinRT ABI.
+
 In `Auto` mode, the source generator also detects other scenarios such as boxing of arrays and instantiations of generic WinRT types for which it generates code that will allow the WinRT vtable for it to be looked up when passed across the WinRT ABI. In `OptIn` mode, for such types (boxed arrays, generic types) that are passed across the WinRT boundary, an assembly attribute `WinRT.GeneratedWinRTExposedExternalType`, can be placed in the project for each type to have the same code generated for it. This will also typically require `AllowUnsafeBlocks` to be enabled for your project as the generated code does make use of unsafe blocks.
 
 In general, this also means that if your app or library has a dependency on another library that uses or returns types falling into one of those above scenarios, that library needs to have also been ran with the updated CsWinRT version for your app or library to be AOT compatible.  This is similar to the general .NET requirement where all your dependencies need to be AOT compatible for your app or library to be AOT compatible.

@@ -98,10 +98,33 @@ namespace WinRT.SourceGenerator
                             bool implementsWinRTInterfaces = false;
                             bool implementsCustomMappedInterfaces = false;
                             bool implementsGenericInterfaces = false;
+
+                            // Read the optional list of WinRT interfaces to ignore for the AOT compatibility
+                            // warning.  This is read from the .editorconfig options for the syntax tree the type
+                            // is declared in (rather than globally), so it can be scoped to specific folders or
+                            // files via .editorconfig sections.
+                            var suppressedInterfaces = ImmutableHashSet<string>.Empty;
+                            var declaringSyntaxTree = namedType.Locations.FirstOrDefault(static location => location.SourceTree is not null)?.SourceTree;
+                            if (declaringSyntaxTree is not null)
+                            {
+                                suppressedInterfaces = context.Options.AnalyzerConfigOptionsProvider.GetOptions(declaringSyntaxTree).GetCsWinRTAotWarningSuppressedInterfaces();
+                            }
+
                             foreach (var iface in namedType.AllInterfaces)
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
+                                    // If this interface was configured to be ignored for the AOT compatibility
+                                    // warning (e.g. the custom mapped System.IDisposable, which is commonly
+                                    // implemented by types that are never passed across the WinRT ABI), don't let
+                                    // it contribute to the warning.  A vtable is still generated for it when the
+                                    // class is marked partial.
+                                    if (suppressedInterfaces.Count > 0 &&
+                                        suppressedInterfaces.Contains(iface.ToDisplayString()))
+                                    {
+                                        continue;
+                                    }
+
                                     if (!iface.IsGenericType &&
                                         GeneratorHelper.IsOldProjectionAssembly(iface.ContainingAssembly))
                                     {
