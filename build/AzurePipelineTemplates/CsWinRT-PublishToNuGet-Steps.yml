@@ -124,6 +124,25 @@ steps:
         commit=$(Build.SourceVersion)"
       packDestination: $(ob_outputDirectory)\packages
 
+  # Build and run the end-to-end smoke tests against the freshly packed NuGet package. These
+  # verify that the real package (ref/lib assemblies, generators, and build targets) works for
+  # a consuming app and a component author, fully isolated from the repo build infrastructure.
+  # The smoke tests restore the package being tested from the packed output above, and all other
+  # dependencies (notably the preview Windows SDK ref pack) from public NuGet.
+  - task: UseDotNet@2
+    displayName: Use .NET SDK for smoke tests
+    inputs:
+      packageType: sdk
+      version: $(_DotnetVersion)
+
+  - task: PowerShell@2
+    displayName: Run smoke tests
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)"
+      workingDirectory: $(Build.SourcesDirectory)
+
   - ${{ if eq(parameters.IsGitHub, false) }}:
 
   # NuGet signing
