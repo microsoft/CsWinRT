@@ -1,0 +1,11 @@
+<Project>
+
+  <!--
+    Intentionally blank.
+
+    Counterpart to the blank 'Directory.Build.props' in this folder: it stops MSBuild from
+    importing the repository's 'src/Directory.Build.targets', keeping the smoke tests fully
+    isolated from how CsWinRT itself is built.
+  -->
+
+</Project>

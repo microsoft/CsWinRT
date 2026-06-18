@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Intentionally blank.
+
+    The smoke tests consume the real 'Microsoft.Windows.CsWinRT' NuGet package exactly as
+    an external customer would. This file exists only to stop MSBuild from walking up into
+    the repository's own build infrastructure ('src/Directory.Build.props'), keeping the
+    smoke tests fully isolated from how CsWinRT itself is built. All project configuration
+    lives in the individual '.csproj' files.
+  -->
+
+</Project>
