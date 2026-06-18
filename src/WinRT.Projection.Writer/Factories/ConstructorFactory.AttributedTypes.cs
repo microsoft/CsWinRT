@@ -64,6 +64,13 @@ internal static partial class ConstructorFactory
         {
             AttributedType factory = kv.Value;
 
+            // Skip constructors generated from a removed factory interface: the interface is omitted
+            // from the projection and ABI, so its IID / ABI Methods class would not exist to dispatch to.
+            if (factory.Type is { IsRemoved: true })
+            {
+                continue;
+            }
+
             if (factory.Activatable)
             {
                 WriteFactoryConstructors(writer, context, factory.Type, classType);
@@ -106,12 +113,23 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
+                // Skip removed constructor overloads; the factory vtable slot is preserved (methodIndex
+                // still advances) so the remaining constructors dispatch through the correct slot.
+                if (method.IsRemoved)
+                {
+                    methodIndex++;
+
+                    continue;
+                }
+
                 MethodSignatureInfo sig = new(method);
                 string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Parameters.Count.ToString(CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
                 writer.WriteLine();
+
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, method);
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
