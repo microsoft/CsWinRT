@@ -1657,4 +1657,47 @@ public class DiagnosticAnalyzerTests
                 ("/Suppressed/.editorconfig", scopedEditorConfig)
             ]);
     }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_GenericCollection_SuppressingListAlsoCoversBaseInterfaces()
+    {
+        const string source = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+
+            sealed class TestDisposable : IDisposable, IList<int>
+            {
+                public void Dispose() { }
+                public int this[int index] { get => throw null; set { } }
+                public int Count => 0;
+                public bool IsReadOnly => false;
+                public void Add(int item) { }
+                public void Clear() { }
+                public bool Contains(int item) => false;
+                public void CopyTo(int[] array, int arrayIndex) { }
+                public IEnumerator<int> GetEnumerator() => throw null;
+                public int IndexOf(int item) => 0;
+                public void Insert(int index, int item) { }
+                public bool Remove(int item) => false;
+                public void RemoveAt(int index) { }
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        // Implementing IList<int> transitively implements ICollection<int>, IEnumerable<int> and IEnumerable.
+        // Listing just IList<int> (and IDisposable) is enough since suppressing an interface also covers the
+        // base interfaces it brings in.  The list is comma separated (';' is an .editorconfig comment character).
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            analyzerConfigOptions:
+            [
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable, System.Collections.Generic.IList<int>")
+            ]);
+    }
 }

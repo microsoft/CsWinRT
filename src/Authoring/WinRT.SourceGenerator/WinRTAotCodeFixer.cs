@@ -110,17 +110,41 @@ namespace WinRT.SourceGenerator
                                 suppressedInterfaces = context.Options.AnalyzerConfigOptionsProvider.GetOptions(declaringSyntaxTree).GetCsWinRTAotWarningSuppressedInterfaces();
                             }
 
+                            // Expand the configured list into the full set of interfaces to ignore.  In addition to
+                            // the explicitly listed interfaces, we also ignore the base interfaces that those listed
+                            // interfaces require (e.g. listing 'IList<int>' also covers the 'ICollection<int>',
+                            // 'IEnumerable<int>' and 'IEnumerable' it brings in), so callers don't have to enumerate
+                            // every transitively implemented interface.
+                            var ignoredInterfaces = ImmutableHashSet<string>.Empty;
+                            if (suppressedInterfaces.Count > 0)
+                            {
+                                var ignoredBuilder = ImmutableHashSet.CreateBuilder<string>(StringComparer.Ordinal);
+                                foreach (var iface in namedType.AllInterfaces)
+                                {
+                                    if (suppressedInterfaces.Contains(iface.ToDisplayString()))
+                                    {
+                                        ignoredBuilder.Add(iface.ToDisplayString());
+                                        foreach (var baseInterface in iface.AllInterfaces)
+                                        {
+                                            ignoredBuilder.Add(baseInterface.ToDisplayString());
+                                        }
+                                    }
+                                }
+
+                                ignoredInterfaces = ignoredBuilder.ToImmutable();
+                            }
+
                             foreach (var iface in namedType.AllInterfaces)
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
-                                    // If this interface was explicitly configured to be ignored for the AOT
-                                    // compatibility warning (e.g. the custom mapped System.IDisposable, which is
-                                    // commonly implemented by types that are never passed across the WinRT ABI),
-                                    // don't let it contribute to the warning.  A vtable is still generated for it
-                                    // when the class is marked partial.
-                                    if (suppressedInterfaces.Count > 0 &&
-                                        suppressedInterfaces.Contains(iface.ToDisplayString()))
+                                    // If this interface was configured to be ignored for the AOT compatibility
+                                    // warning (e.g. the custom mapped System.IDisposable, which is commonly
+                                    // implemented by types that are never passed across the WinRT ABI), don't let
+                                    // it contribute to the warning.  A vtable is still generated for it when the
+                                    // class is marked partial.
+                                    if (ignoredInterfaces.Count > 0 &&
+                                        ignoredInterfaces.Contains(iface.ToDisplayString()))
                                     {
                                         continue;
                                     }

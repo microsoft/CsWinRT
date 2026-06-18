@@ -35,11 +35,18 @@ To help with this, there is a `code fixer` that will produce diagnostics when su
 
 In `Auto` mode, it is recommended to set the `CsWinRTAotWarningLevel` to 2 and go through all the warnings and mark such types `partial` or suppress the warning if those types are not passed across the WinRT ABI. By default, if you reference the CsWinRT package, the `CsWinRTAotWarningLevel` is set to 1. If you don't have a CsWinRT package reference, then the .NET default is to set `CsWinRTAotWarningLevel` to 1 if you have marked your binary as AOT compatible either by using `IsAotCompatible` or `PublishAot`. Even though it is only by default enabled as warnings for AOT scenarios, you should manually set it to 1 or 2 if you support trimming and address them.
 
-Some WinRT mapped built-in .NET interfaces, such as `System.IDisposable`, are commonly implemented by types that are never passed across the WinRT ABI, which can make the level 2 warnings noisy. To reduce this noise, you can use the `cswinrt_aot_warning_suppressed_interfaces` `.editorconfig` option to specify a list of fully qualified interface names that should be ignored when deciding whether to report the `CsWinRT1028` (class not marked partial) warning. When a class only implements WinRT interfaces from this list, the warning is suppressed. The value is a semicolon separated list of fully qualified type names, for example:
+Some WinRT mapped built-in .NET interfaces, such as `System.IDisposable`, are commonly implemented by types that are never passed across the WinRT ABI, which can make the level 2 warnings noisy. To reduce this noise, you can use the `cswinrt_aot_warning_suppressed_interfaces` `.editorconfig` option to specify a list of fully qualified interface names that should be ignored when deciding whether to report the `CsWinRT1028` (class not marked partial) warning. When a class only implements WinRT interfaces from this list, the warning is suppressed. The value is a **comma** separated list of fully qualified type names (a `;` cannot be used as a separator because `.editorconfig` treats it, and `#`, as a comment character), for example:
 
 ```ini
 [*.cs]
 cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
+```
+
+For generic interfaces, use the closed, constructed form as it is rendered in C# (so `System.Collections.Generic.IList<int>`, using the `int` keyword, not `System.Int32`). Suppressing an interface also covers the base interfaces it requires, so listing `System.Collections.Generic.IList<int>` automatically covers the `ICollection<int>`, `IEnumerable<int>` and `IEnumerable` that it brings in:
+
+```ini
+[*.cs]
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable, System.Collections.Generic.IList<int>
 ```
 
 Because it is configured through `.editorconfig`, it can be scoped to specific folders or files using `.editorconfig` sections. For example, you can suppress the warning for `System.IDisposable` in one folder while still getting the warning everywhere else:
@@ -51,7 +58,7 @@ cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
 
 # Only for files under the Controls folder
 [Controls/**.cs]
-cswinrt_aot_warning_suppressed_interfaces = System.IDisposable;System.ComponentModel.INotifyPropertyChanged
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable, System.ComponentModel.INotifyPropertyChanged
 ```
 
 Note that suppressing the warning for an interface does not stop a vtable from being generated for it. If a class is marked `partial`, the source generator still generates the vtable including those interfaces so it remains AOT compatible when passed across the WinRT ABI.

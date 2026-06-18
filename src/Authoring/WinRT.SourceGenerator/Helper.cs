@@ -253,16 +253,17 @@ namespace Generator
         // implements WinRT interfaces present in this set (such as the custom mapped System.IDisposable), the
         // warning is suppressed.  Classes still get vtables generated for these interfaces when marked partial.
         // The list is configured via the 'cswinrt_aot_warning_suppressed_interfaces' .editorconfig option as a
-        // semicolon, comma or whitespace separated list of fully qualified type names.  Because it is read from
-        // the .editorconfig options of the syntax tree the type is declared in, it can be scoped to specific
-        // folders or files using .editorconfig sections.
+        // comma separated list of fully qualified type names.  Note that ';' cannot be used as a separator since
+        // .editorconfig treats it (and '#') as a comment character.  Because it is read from the .editorconfig
+        // options of the syntax tree the type is declared in, it can be scoped to specific folders or files using
+        // .editorconfig sections.
         public static ImmutableHashSet<string> GetCsWinRTAotWarningSuppressedInterfaces(this AnalyzerConfigOptions options)
         {
             if (options.TryGetValue("cswinrt_aot_warning_suppressed_interfaces", out var suppressedInterfacesStr) &&
                 !string.IsNullOrWhiteSpace(suppressedInterfacesStr))
             {
                 var builder = ImmutableHashSet.CreateBuilder<string>(StringComparer.Ordinal);
-                foreach (var suppressedInterface in suppressedInterfacesStr.Split(new[] { ';', ',', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var suppressedInterface in suppressedInterfacesStr.Split(new[] { ',', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     // Normalize away any 'global::' prefix so the value can be compared against the display string
                     // of an interface symbol regardless of how the user specified it in the editorconfig.
