@@ -1659,7 +1659,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task AotWarningSuppressedInterfaces_GenericCollection_SuppressingListAlsoCoversBaseInterfaces()
+    public async Task AotWarningSuppressedInterfaces_GenericCollection_RequiresAllTransitiveMappedInterfaces()
     {
         const string source = """
             using System;
@@ -1685,9 +1685,9 @@ public class DiagnosticAnalyzerTests
             }
             """;
 
-        // Implementing IList<int> transitively implements ICollection<int>, IEnumerable<int> and IEnumerable.
-        // Listing just IList<int> (and IDisposable) is enough since suppressing an interface also covers the
-        // base interfaces it brings in.  The list is comma separated (';' is an .editorconfig comment character).
+        // Implementing IList<int> transitively implements IEnumerable<int> and IEnumerable, which are also custom
+        // mapped WinRT interfaces, so all of them (along with IDisposable) need to be listed to suppress the warning.
+        // The list is comma separated.
         await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
             source,
             editorconfig:
@@ -1697,7 +1697,7 @@ public class DiagnosticAnalyzerTests
             ],
             analyzerConfigOptions:
             [
-                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable, System.Collections.Generic.IList<int>")
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable, System.Collections.Generic.IList<int>, System.Collections.Generic.IEnumerable<int>, System.Collections.IEnumerable")
             ]);
     }
 }

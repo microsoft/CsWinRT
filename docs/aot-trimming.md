@@ -42,11 +42,11 @@ Some WinRT mapped built-in .NET interfaces, such as `System.IDisposable`, are co
 cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
 ```
 
-For generic interfaces, use the closed, constructed form as it is rendered in C# (so `System.Collections.Generic.IList<int>`, using the `int` keyword, not `System.Int32`). Suppressing an interface also covers the base interfaces it requires, so listing `System.Collections.Generic.IList<int>` automatically covers the `ICollection<int>`, `IEnumerable<int>` and `IEnumerable` that it brings in:
+For generic interfaces, use the closed, constructed form as it is rendered in C# (so `System.Collections.Generic.IList<int>`, using the `int` keyword, not `System.Int32`). Each implemented interface is matched individually, so a type that implements an interface which brings in other mapped WinRT interfaces needs each of them listed. For example, `System.Collections.Generic.IList<int>` also implements `IEnumerable<int>` and `IEnumerable`, which are mapped as well:
 
 ```ini
 [*.cs]
-cswinrt_aot_warning_suppressed_interfaces = System.IDisposable, System.Collections.Generic.IList<int>
+cswinrt_aot_warning_suppressed_interfaces = System.IDisposable, System.Collections.Generic.IList<int>, System.Collections.Generic.IEnumerable<int>, System.Collections.IEnumerable
 ```
 
 Because it is configured through `.editorconfig`, it can be scoped to specific folders or files using `.editorconfig` sections. For example, you can suppress the warning for `System.IDisposable` in one folder while still getting the warning everywhere else:
