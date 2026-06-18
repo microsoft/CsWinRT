@@ -371,6 +371,23 @@ internal static class AbiInterfaceFactory
         // this order: methods first, then properties (setter before getter), then events.
         HashSet<MethodDefinition> propertyAccessors = [.. type.GetPropertyAccessors()];
 
+        // Map each property accessor (getter/setter) to its property, so a removed property (whose
+        // removal marker is on the getter per the MIDL convention) can stub both accessor bodies.
+        Dictionary<MethodDefinition, PropertyDefinition> propertyMap = [];
+
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            if (prop.GetMethod is { } propertyGetter)
+            {
+                propertyMap[propertyGetter] = prop;
+            }
+
+            if (prop.SetMethod is { } propertySetter)
+            {
+                propertyMap[propertySetter] = prop;
+            }
+        }
+
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
         void EmitOneDoAbi(MethodDefinition method)
         {
@@ -390,6 +407,20 @@ internal static class AbiInterfaceFactory
                 [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
                 private static unsafe int Do_Abi_{{vm}}({{doAbiParams}})
                 """);
+
+            // A removed member (DeprecationType.Remove) keeps its vtable slot for ABI compatibility,
+            // but is no longer on the projected interface, so its CCW entry returns E_NOTIMPL.
+            if (IsAbiMemberRemoved(method, eventMap, propertyMap))
+            {
+                writer.WriteLine();
+                writer.WriteLine("""
+                    {
+                        return unchecked((int)0x80004001);
+                    }
+                    """);
+
+                return;
+            }
 
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt2))
             {
@@ -451,6 +482,27 @@ internal static class AbiInterfaceFactory
                 EmitOneDoAbi(r);
             }
         }
+    }
+
+    /// <summary>
+    /// Determines whether the CCW entry for <paramref name="method"/> must be stubbed because the
+    /// member is removed (<c>DeprecationType.Remove</c>). The removal marker lives on the property
+    /// getter / event add accessor (MIDL convention), so both accessors of a removed property or
+    /// event are reported as removed.
+    /// </summary>
+    private static bool IsAbiMemberRemoved(MethodDefinition method, Dictionary<MethodDefinition, EventDefinition>? eventMap, Dictionary<MethodDefinition, PropertyDefinition> propertyMap)
+    {
+        if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt))
+        {
+            return evt.AddMethod is { IsRemoved: true };
+        }
+
+        if (propertyMap.TryGetValue(method, out PropertyDefinition? prop))
+        {
+            return (prop.GetMethod ?? prop.SetMethod) is { IsRemoved: true };
+        }
+
+        return method.IsRemoved;
     }
 
     /// <summary>
