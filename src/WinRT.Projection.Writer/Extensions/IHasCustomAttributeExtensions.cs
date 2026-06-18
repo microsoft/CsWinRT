@@ -94,5 +94,44 @@ internal static class IHasCustomAttributeExtensions
         {
             return member.GetAttribute(WellKnownNamespaces.WindowsFoundationMetadata, name);
         }
+
+        /// <summary>
+        /// Gets whether the member carries a <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute.
+        /// </summary>
+        public bool IsDeprecated => member.HasWindowsFoundationMetadataAttribute("DeprecatedAttribute");
+
+        /// <summary>
+        /// Gets whether the member is marked as removed: it carries a
+        /// <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute whose <c>DeprecationType</c>
+        /// is <c>Remove</c>. A removed member is omitted from the projection, while its ABI vtable
+        /// slot is preserved (stubbed to return <c>E_NOTIMPL</c>) for binary compatibility.
+        /// </summary>
+        /// <remarks>
+        /// <c>DeprecatedAttribute(string message, DeprecationType type, ...)</c>: the second fixed
+        /// argument is the <c>DeprecationType</c> enum, where <c>Deprecate</c> is 0 and <c>Remove</c> is 1.
+        /// </remarks>
+        public bool IsRemoved =>
+            member.GetWindowsFoundationMetadataAttribute("DeprecatedAttribute") is { Signature.FixedArguments: [_, { Element: int deprecationType }, ..] }
+            && deprecationType == 1;
+
+        /// <summary>
+        /// Gets whether the member is deprecated but not removed (i.e. it is projected with an
+        /// <c>[Obsolete]</c> attribute rather than being omitted).
+        /// </summary>
+        public bool IsDeprecatedNotRemoved => member.IsDeprecated && !member.IsRemoved;
+
+        /// <summary>
+        /// Gets the message from the member's <c>[Windows.Foundation.Metadata.Deprecated]</c>
+        /// attribute (the first fixed argument), or <see langword="null"/> if the member is not
+        /// deprecated or the attribute carries no message.
+        /// </summary>
+        /// <remarks>
+        /// <c>DeprecatedAttribute(string message, ...)</c>: the first fixed argument is the message.
+        /// AsmResolver returns <c>Utf8String</c> for string custom-attribute args, so it is converted.
+        /// </remarks>
+        public string? DeprecatedMessage =>
+            member.GetWindowsFoundationMetadataAttribute("DeprecatedAttribute") is { Signature.FixedArguments: [{ Element: { } message }, ..] }
+                ? message.ToString()
+                : null;
     }
 }
