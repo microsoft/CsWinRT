@@ -1922,6 +1922,36 @@ namespace AuthoringTest
         public double Transform(double value) => value + 0.5;
     }
 
+    // Auto-generated overload names must skip any name the author already claimed: here the author
+    // names one overload "M2" (the auto-generated pattern), so the remaining overload becomes "M3"
+    public sealed class OverloadCollisionClass
+    {
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string M(string s) => s;
+
+        [Windows.Foundation.Metadata.Overload("M2")]
+        public int M(int i) => i * 2;
+
+        public bool M(bool b) => !b;
+    }
+
+    // [DefaultOverload] is on a non-first overload: it must keep the original name while the
+    // author-specified name on the first-declared overload is still honored
+    public interface IDefaultOverloadNotFirst
+    {
+        [Windows.Foundation.Metadata.Overload("GetByIndex")]
+        int Get(int index);
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        string Get(string key);
+    }
+
+    public sealed class DefaultOverloadNotFirstClass : IDefaultOverloadNotFirst
+    {
+        public int Get(int index) => index + 100;
+        public string Get(string key) => "key:" + key;
+    }
+
     public sealed class NonActivatableType
     {
         private readonly string _text;

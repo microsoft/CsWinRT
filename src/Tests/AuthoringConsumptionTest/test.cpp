@@ -779,6 +779,60 @@ TEST(AuthoringTest, CustomOverloadNames)
         EXPECT_EQ(rawClass->TransformNumber(5, &result), S_OK);
         EXPECT_EQ(result, 10);
     }
+    {
+        // The auto-generated overload coexists with the author-named one: because "TransformNumber"
+        // is author-specified, it does not consume a numeric suffix, so Transform(double) becomes
+        // "Transform2" (not "Transform3")
+        double result = 0.0;
+        EXPECT_EQ(rawClass->Transform2(1.0, &result), S_OK);
+        EXPECT_EQ(result, 1.5);
+    }
+}
+
+TEST(AuthoringTest, CustomOverloadNamesCollision)
+{
+    // The author names one overload "M2" (matching the auto-generated pattern), so the
+    // auto-generated name for the remaining overload must skip "M2" and become "M3"
+    OverloadCollisionClass obj;
+    EXPECT_EQ(obj.M(hstring(L"abc")), hstring(L"abc"));
+    EXPECT_EQ(obj.M(21), 42);
+    EXPECT_TRUE(obj.M(false));
+
+    using class_abi_type = winrt::impl::abi_t<IOverloadCollisionClassClass>;
+    IOverloadCollisionClassClass classIface = obj.as<IOverloadCollisionClassClass>();
+    auto raw = static_cast<class_abi_type*>(winrt::get_abi(classIface));
+    {
+        int32_t result = 0;
+        EXPECT_EQ(raw->M2(21, &result), S_OK);
+        EXPECT_EQ(result, 42);
+    }
+    {
+        bool result = false;
+        EXPECT_EQ(raw->M3(false, &result), S_OK);
+        EXPECT_TRUE(result);
+    }
+}
+
+TEST(AuthoringTest, CustomOverloadNamesDefaultNotFirst)
+{
+    // [DefaultOverload] is on the second-declared overload, so it keeps the original ABI name
+    // ("Get") while the author-specified name on the first overload ("GetByIndex") is honored
+    DefaultOverloadNotFirstClass obj;
+    EXPECT_EQ(obj.Get(5), 105);
+    EXPECT_EQ(obj.Get(hstring(L"abc")), hstring(L"key:abc"));
+
+    IDefaultOverloadNotFirst iface = obj;
+    EXPECT_EQ(iface.Get(7), 107);
+    EXPECT_EQ(iface.Get(hstring(L"z")), hstring(L"key:z"));
+
+    // The author-specified name lives on the non-default (first-declared) overload
+    using abi_type = winrt::impl::abi_t<IDefaultOverloadNotFirst>;
+    auto raw = static_cast<abi_type*>(winrt::get_abi(iface));
+    {
+        int32_t result = 0;
+        EXPECT_EQ(raw->GetByIndex(7, &result), S_OK);
+        EXPECT_EQ(result, 107);
+    }
 }
 
 TEST(AuthoringTest, NonActivatableFactory)
