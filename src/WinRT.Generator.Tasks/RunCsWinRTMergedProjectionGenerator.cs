@@ -93,6 +93,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// <remarks>If not set, no debug repro will be produced.</remarks>
     public string? DebugReproDirectory { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether to emit the 'ProjectionTypesInitializer' module initializer
+    /// (Assembly.SetEntryAssembly) into 'WinRT.Component.dll'. Only needed under JIT to
+    /// enable TypeMap discovery, AOT uses a separate exe-project workaround.
+    /// </summary>
+    public bool EmitEntryPointInitializer { get; set; }
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -222,6 +229,11 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
 
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
+
+        if (EmitEntryPointInitializer)
+        {
+            AppendResponseFileCommand(args, "--emit-entry-point-initializer", "true");
+        }
 
         // Add any additional arguments that are not statically known
         foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])

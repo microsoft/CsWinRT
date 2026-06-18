@@ -57,6 +57,16 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
     public required int MaxDegreesOfParallelism { get; init; }
 
+    /// <summary>
+    /// Gets whether to emit the <c>ProjectionTypesInitializer</c> module initializer
+    /// (calls <c>Assembly.SetEntryAssembly</c>) into <c>WinRT.Component.dll</c>. Only
+    /// needed under JIT to enable <c>[TypeMapAssemblyTarget]</c> discovery at the merged
+    /// component dll; AOT uses a separate exe-project workaround. Will become
+    /// unnecessary once the <c>TypeMappingEntryAssembly</c> MSBuild property is available.
+    /// </summary>
+    [CommandLineArgumentName("--emit-entry-point-initializer")]
+    public bool EmitEntryPointInitializer { get; init; }
+
     /// <inheritdoc/>
     public required CancellationToken Token { get; init; }
 
