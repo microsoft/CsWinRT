@@ -42,15 +42,15 @@ Some WinRT mapped built-in .NET interfaces, such as `System.IDisposable`, are co
 cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
 ```
 
-Because it is configured through `.editorconfig`, it can be scoped to specific folders or files using `.editorconfig` sections. For example, you can ignore `System.IDisposable` for a folder of legacy types while still getting the warning everywhere else:
+Because it is configured through `.editorconfig`, it can be scoped to specific folders or files using `.editorconfig` sections. For example, you can suppress the warning for `System.IDisposable` in one folder while still getting the warning everywhere else:
 
 ```ini
 # Applies everywhere
 [*.cs]
 cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
 
-# Only for files under the Legacy folder
-[Legacy/**.cs]
+# Only for files under the Controls folder
+[Controls/**.cs]
 cswinrt_aot_warning_suppressed_interfaces = System.IDisposable;System.IFormattable
 ```
 
