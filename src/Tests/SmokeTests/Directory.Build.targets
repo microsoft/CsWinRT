@@ -7,5 +7,4 @@
     importing the repository's 'src/Directory.Build.targets', keeping the smoke tests fully
     isolated from how CsWinRT itself is built.
   -->
-
 </Project>

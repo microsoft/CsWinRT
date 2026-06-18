@@ -9,5 +9,4 @@
     smoke tests fully isolated from how CsWinRT itself is built. All project configuration
     lives in the individual '.csproj' files.
   -->
-
 </Project>
