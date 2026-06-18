@@ -1545,8 +1545,11 @@ public class DiagnosticAnalyzerTests
             editorconfig:
             [
                 ("CsWinRTAotOptimizerEnabled", "auto"),
-                ("CsWinRTAotWarningLevel", "2"),
-                ("CsWinRTAotWarningSuppressedInterfaces", "System.IDisposable")
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            analyzerConfigOptions:
+            [
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable")
             ]);
     }
 
@@ -1598,8 +1601,60 @@ public class DiagnosticAnalyzerTests
             editorconfig:
             [
                 ("CsWinRTAotOptimizerEnabled", "auto"),
-                ("CsWinRTAotWarningLevel", "2"),
-                ("CsWinRTAotWarningSuppressedInterfaces", "System.IDisposable")
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            analyzerConfigOptions:
+            [
+                ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task AotWarningSuppressedInterfaces_ScopedToFolder_OnlySuppressesInThatFolder()
+    {
+        const string suppressedSource = """
+            using System;
+
+            class Suppressed : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        const string otherSource = """
+            using System;
+
+            class {|CsWinRT1028:Other|} : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        // The scoped .editorconfig only applies to files under the 'Suppressed' folder, so the type declared
+        // there does not warn while the one under the 'Other' folder still does.
+        const string scopedEditorConfig = """
+            [*.cs]
+            cswinrt_aot_warning_suppressed_interfaces = System.IDisposable
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            sources:
+            [
+                ("/Suppressed/Suppressed.cs", suppressedSource),
+                ("/Other/Other.cs", otherSource)
+            ],
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
+            ],
+            scopedEditorConfigs:
+            [
+                ("/Suppressed/.editorconfig", scopedEditorConfig)
             ]);
     }
 }

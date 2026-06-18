@@ -64,7 +64,6 @@ namespace WinRT.SourceGenerator
 
                 var typeMapper = new TypeMapper(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
                 var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
-                var csWinRTAotWarningSuppressedInterfaces = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningSuppressedInterfaces();
                 var allowUnsafe = GeneratorHelper.AllowUnsafe(context.Compilation);
                 var isCsWinRTCcwLookupTableGeneratorEnabled = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTCcwLookupTableGeneratorEnabled();
 
@@ -99,6 +98,18 @@ namespace WinRT.SourceGenerator
                             bool implementsWinRTInterfaces = false;
                             bool implementsCustomMappedInterfaces = false;
                             bool implementsGenericInterfaces = false;
+
+                            // Read the optional list of WinRT interfaces to ignore for the AOT compatibility
+                            // warning.  This is read from the .editorconfig options for the syntax tree the type
+                            // is declared in (rather than globally), so it can be scoped to specific folders or
+                            // files via .editorconfig sections.
+                            var suppressedInterfaces = ImmutableHashSet<string>.Empty;
+                            var declaringSyntaxTree = namedType.Locations.FirstOrDefault(static location => location.SourceTree is not null)?.SourceTree;
+                            if (declaringSyntaxTree is not null)
+                            {
+                                suppressedInterfaces = context.Options.AnalyzerConfigOptionsProvider.GetOptions(declaringSyntaxTree).GetCsWinRTAotWarningSuppressedInterfaces();
+                            }
+
                             foreach (var iface in namedType.AllInterfaces)
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
@@ -108,8 +119,8 @@ namespace WinRT.SourceGenerator
                                     // commonly implemented by types that are never passed across the WinRT ABI),
                                     // don't let it contribute to the warning.  A vtable is still generated for it
                                     // when the class is marked partial.
-                                    if (csWinRTAotWarningSuppressedInterfaces.Count > 0 &&
-                                        csWinRTAotWarningSuppressedInterfaces.Contains(iface.ToDisplayString()))
+                                    if (suppressedInterfaces.Count > 0 &&
+                                        suppressedInterfaces.Contains(iface.ToDisplayString()))
                                     {
                                         continue;
                                     }
