@@ -409,8 +409,14 @@ internal static class AbiInterfaceFactory
                 """);
 
             // A removed member (DeprecationType.Remove) keeps its vtable slot for ABI compatibility,
-            // but is no longer on the projected interface, so its CCW entry returns E_NOTIMPL.
-            if (IsAbiMemberRemoved(method, eventMap, propertyMap))
+            // but is no longer on the projected interface. When consuming a Windows Runtime type, a
+            // managed object implementing the interface cannot supply the removed member (it is not on
+            // the projected interface), so its CCW entry returns E_NOTIMPL. In component (authoring) mode
+            // the dispatch target is the authored implementation (the authored class for instance
+            // members, or the generated activation/static factory that forwards to it), which still
+            // defines the member, so the entry keeps dispatching to that implementation to preserve
+            // binary compatibility for existing native callers.
+            if (!context.Settings.Component && IsAbiMemberRemoved(method, eventMap, propertyMap))
             {
                 writer.WriteLine();
                 writer.WriteLine("""
