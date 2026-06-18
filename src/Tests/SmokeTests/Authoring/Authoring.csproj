@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end authoring smoke test.
+
+    A Windows Runtime component library that consumes the real 'Microsoft.Windows.CsWinRT'
+    NuGet package exactly as a component author would, with no dependency on the CsWinRT
+    repository build infrastructure (see the blank 'Directory.Build.props'/'.targets' and
+    the local 'Directory.Packages.props' in the parent folder). Building it exercises the
+    WinMD generator, the reference projection generator, and the forwarder (impl) generator
+    end-to-end.
+  -->
+
+  <PropertyGroup>
+    <!--
+      CsWinRT 3.0 requires the '.1' Windows TFM revision, which selects the 'cswinrt3'
+      Windows SDK projection reference assemblies. The matching preview SDK ref pack is
+      pinned via 'WindowsSdkPackageVersion' (mirroring 'src/WinRT.Internal'), so the build
+      uses the real .NET SDK targeting pack rather than any locally-built projection.
+    -->
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
+
+    <!-- Build this library as a Windows Runtime component. -->
+    <CsWinRTComponent>true</CsWinRTComponent>
+  </PropertyGroup>
+
+  <!--
+    The CsWinRT package version, and the folder it was built into, are supplied by the
+    build that produced the package ('build.cmd' locally, or the CI pack step). They
+    default to the local 'build.cmd x64 Release' output so the smoke test can also be built
+    by hand after a local package build.
+  -->
+  <PropertyGroup>
+    <CsWinRTPackageVersion Condition="'$(CsWinRTPackageVersion)' == ''">0.0.0-private.0</CsWinRTPackageVersion>
+    <CsWinRTPackageSource Condition="'$(CsWinRTPackageSource)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..', '_build', 'x64', 'Release', 'cswinrt', 'bin'))</CsWinRTPackageSource>
+
+    <!-- Public NuGet feed, which provides the preview Windows SDK ref pack pinned above. -->
+    <PublicNuGetSource Condition="'$(PublicNuGetSource)' == ''">https://api.nuget.org/v3/index.json</PublicNuGetSource>
+
+    <!--
+      Override all inherited NuGet sources: restore the CsWinRT package being tested from the
+      local build output, and everything else (notably the pinned preview Windows SDK ref
+      pack) from public NuGet.
+    -->
+    <RestoreSources>$(CsWinRTPackageSource);$(PublicNuGetSource)</RestoreSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(CsWinRTPackageVersion)" />
+  </ItemGroup>
+
+</Project>
