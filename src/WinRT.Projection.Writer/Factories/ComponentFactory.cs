@@ -172,7 +172,11 @@ internal static class ComponentFactory
             {
                 foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    if (method.IsConstructor)
+                    // Removed members (DeprecationType.Remove) are omitted from the factory class: the
+                    // projected factory/static interface drops them, their vtable slot is stubbed to
+                    // E_NOTIMPL, and generated code cannot call the authored member anyway (the C#
+                    // compiler treats a call to a '[Deprecated(Remove)]' member as an error).
+                    if (method.IsConstructor || method.IsRemoved)
                     {
                         continue;
                     }
@@ -184,7 +188,7 @@ internal static class ComponentFactory
             {
                 foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    if (method.IsConstructor)
+                    if (method.IsConstructor || method.IsRemoved)
                     {
                         continue;
                     }
@@ -193,10 +197,20 @@ internal static class ComponentFactory
                 }
                 foreach (PropertyDefinition prop in info.Type.Properties)
                 {
+                    if ((prop.GetMethod ?? prop.SetMethod) is { IsRemoved: true })
+                    {
+                        continue;
+                    }
+
                     WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
                 }
                 foreach (EventDefinition evt in info.Type.Events)
                 {
+                    if (evt.AddMethod is { IsRemoved: true })
+                    {
+                        continue;
+                    }
+
                     WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
                 }
             }
