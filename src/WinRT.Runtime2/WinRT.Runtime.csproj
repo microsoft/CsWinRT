@@ -173,7 +173,15 @@
       <Compile Remove="InteropServices\ProjectionDllExports\**\*.cs" />
       <Compile Remove="InteropServices\ProjectionImpls\**\*.cs" />
       <Compile Remove="InteropServices\Streams\**\*.cs" />
-      <Compile Remove="InteropServices\TypeMapGroups\**\*.cs" />
+
+      <!--
+        Note: 'InteropServices\TypeMapGroups' is intentionally NOT removed. Unlike the other
+        implementation-only types, the type map group types are referenced by generated code
+        (the '[assembly: TypeMapAssemblyTarget<T>]' attributes emitted by the CsWinRT source
+        generator), which is compiled against the reference assembly. They must therefore remain
+        in the reference assembly; they are instead marked '[Obsolete]' (CSWINRT3002) and hidden,
+        only in the reference assembly, to discourage direct use in user code.
+      -->
       <Compile Remove="InteropServices\TypeMapInfo\**\*.cs" />
       <Compile Remove="InteropServices\Vtables\**\*.cs" />
       <Compile Remove="InteropServices\WeakReferences\**\*.cs" />
