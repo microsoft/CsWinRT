@@ -195,16 +195,22 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Returns whether the type declares a parameterless instance constructor.
+        /// Returns whether the type declares a parameterless instance constructor that is usable for
+        /// default activation, i.e. one that is not marked as removed (<c>[Deprecated(DeprecationType.Remove)]</c>).
         /// </summary>
-        /// <returns><see langword="true"/> if the type has a default constructor; otherwise <see langword="false"/>.</returns>
-        public bool HasDefaultConstructor()
+        /// <remarks>
+        /// A removed default constructor is omitted from the projection, so the type is no longer
+        /// default-activatable: the activation factory cannot emit <c>new T()</c> for it (the C# compiler
+        /// treats a call to a removed member as an error), and default activation returns <c>E_NOTIMPL</c> instead.
+        /// </remarks>
+        /// <returns><see langword="true"/> if the type has a non-removed default constructor; otherwise <see langword="false"/>.</returns>
+        public bool HasActivatableDefaultConstructor()
         {
             foreach (MethodDefinition m in type.Methods)
             {
                 if (m.IsDefaultConstructor)
                 {
-                    return true;
+                    return !m.IsRemoved;
                 }
             }
 
