@@ -129,6 +129,10 @@ steps:
   # a consuming app and a component author, fully isolated from the repo build infrastructure.
   # The smoke tests restore the package being tested from the packed output above, and all other
   # dependencies (notably the preview Windows SDK ref pack) from the CsWinRTDependencies feed.
+  #
+  # Each smoke test runs as its own step with 'continueOnError' (so a failure only marks the job
+  # as 'SucceededWithIssues' and makes it obvious which one failed); a final gate step below turns
+  # any such issue into an actual failure. This mirrors the unit test steps in CsWinRT-Test-Steps.yml.
   - task: UseDotNet@2
     displayName: Use .NET SDK for smoke tests
     inputs:
@@ -136,12 +140,34 @@ steps:
       version: $(_DotnetVersion)
 
   - task: PowerShell@2
-    displayName: Run smoke tests
+    displayName: Run Consumption smoke test
+    continueOnError: true
     inputs:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
-      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)"
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption
       workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Authoring smoke test
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring
+      workingDirectory: $(Build.SourcesDirectory)
+
+  # Fail the job if any smoke test above failed. Each smoke test uses 'continueOnError', so an
+  # individual failure only marks the job as 'SucceededWithIssues'; this turns that into a real
+  # failure, while still letting every smoke test run and report first.
+  - task: PowerShell@2
+    displayName: Fail if any smoke test failed
+    condition: eq(variables['Agent.JobStatus'], 'SucceededWithIssues')
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.logissue type=error]One or more smoke tests failed. See above for details."
+        exit 1
 
   - ${{ if eq(parameters.IsGitHub, false) }}:
 

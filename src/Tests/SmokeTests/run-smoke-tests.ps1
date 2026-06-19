@@ -25,11 +25,19 @@
 .PARAMETER PackageVersion
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
+.PARAMETER Test
+    Which smoke test(s) to run: 'Consumption', 'Authoring', or 'All' (the default). The CI runs
+    each test as its own step (passing a single value), so an individual failure is reported in
+    isolation; local builds use the default 'All'.
+
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
 
 .EXAMPLE
     ./run-smoke-tests.ps1 -PackageSource ../../_build/x64/Release/cswinrt/bin -PackageVersion 0.0.0-private.0
+
+.EXAMPLE
+    ./run-smoke-tests.ps1 -PackageSource ./packages -PackageVersion 3.0.0-preview.1 -Test Consumption
 #>
 
 [CmdletBinding()]
@@ -39,6 +47,9 @@ param (
 
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
+
+    [ValidateSet('All', 'Consumption', 'Authoring')]
+    [string] $Test = 'All',
 
     [string] $Configuration = 'Release'
 )
@@ -96,39 +107,51 @@ function Assert-WinMDDefinesType {
     Write-Host "Verified '$([IO.Path]::GetFileName($Path))' defines '$Namespace.$TypeName'." -ForegroundColor DarkGray
 }
 
-# ---- Consumption: build and run (must not crash) ----
-Write-Host "`n=== Consumption smoke test ===" -ForegroundColor Green
-Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
+# Consumption: build and run (must not crash).
+function Invoke-ConsumptionSmokeTest {
+    Write-Host "`n=== Consumption smoke test ===" -ForegroundColor Green
+    Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
 
-# Locate and run the freshly built app, asserting a clean (zero) exit code.
-$consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'bin')) -Filter 'Consumption.exe' -Recurse |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
+    # Locate and run the freshly built app, asserting a clean (zero) exit code.
+    $consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'bin')) -Filter 'Consumption.exe' -Recurse |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
 
-if ($null -eq $consumptionExe) {
-    throw "Could not find the built 'Consumption.exe'."
+    if ($null -eq $consumptionExe) {
+        throw "Could not find the built 'Consumption.exe'."
+    }
+
+    Write-Host "Running '$($consumptionExe.FullName)'" -ForegroundColor DarkGray
+    & $consumptionExe.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "Consumption smoke test crashed or failed with exit code $LASTEXITCODE."
+    }
 }
 
-Write-Host "Running '$($consumptionExe.FullName)'" -ForegroundColor DarkGray
-& $consumptionExe.FullName
-if ($LASTEXITCODE -ne 0) {
-    throw "Consumption smoke test crashed or failed with exit code $LASTEXITCODE."
+# Authoring: build, then verify the generated Windows Runtime metadata.
+function Invoke-AuthoringSmokeTest {
+    Write-Host "`n=== Authoring smoke test ===" -ForegroundColor Green
+    Invoke-Dotnet (@('build', $authoringProject) + $commonBuildArgs)
+
+    # The authoring build emits a '.winmd' next to the component assembly. Verify it was produced
+    # and that it defines the expected Windows Runtime type.
+    $authoringWinMD = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'bin')) -Filter 'Authoring.winmd' -Recurse -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if ($null -eq $authoringWinMD) {
+        throw "The authoring build did not produce 'Authoring.winmd'."
+    }
+
+    Assert-WinMDDefinesType -Path $authoringWinMD.FullName -Namespace 'Authoring' -TypeName 'Greeter'
 }
 
-# ---- Authoring: build, then verify the generated Windows Runtime metadata ----
-Write-Host "`n=== Authoring smoke test ===" -ForegroundColor Green
-Invoke-Dotnet (@('build', $authoringProject) + $commonBuildArgs)
-
-# The authoring build emits a '.winmd' next to the component assembly. Verify it was produced
-# and that it defines the expected Windows Runtime type.
-$authoringWinMD = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'bin')) -Filter 'Authoring.winmd' -Recurse -ErrorAction SilentlyContinue |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
-
-if ($null -eq $authoringWinMD) {
-    throw "The authoring build did not produce 'Authoring.winmd'."
+if ($Test -in @('All', 'Consumption')) {
+    Invoke-ConsumptionSmokeTest
 }
 
-Assert-WinMDDefinesType -Path $authoringWinMD.FullName -Namespace 'Authoring' -TypeName 'Greeter'
+if ($Test -in @('All', 'Authoring')) {
+    Invoke-AuthoringSmokeTest
+}
 
-Write-Host "`nAll smoke tests passed." -ForegroundColor Green
+Write-Host "`nSmoke tests passed." -ForegroundColor Green
