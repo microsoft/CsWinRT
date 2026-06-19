@@ -81,6 +81,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <_CsWinRTSdkProjectionAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Sdk.Projection.dll'))</_CsWinRTSdkProjectionAssemblyPath>
 
+    <!--
+      The 'WinRT.Runtime' implementation assembly, used by the projection and interop generators.
+
+      The NuGet package ships 'WinRT.Runtime' twice: the reference assembly under 'ref/net10.0'
+      (the compile-time asset, so it is what '@(ReferencePathWithRefAssemblies)' and
+      '@(ReferencePath)' resolve to) and the implementation assembly under 'lib/net10.0' (the one
+      that actually runs). The reference assembly has all implementation-only types stripped (e.g.
+      'WindowsRuntimeObjectReferenceValue', 'RestrictedErrorInfo', the marshallers). The projection
+      and interop generators produce/inspect *implementation* code that uses those types, so each of
+      them swaps the 'WinRT.Runtime' reference assembly for this implementation assembly.
+    -->
+    <CsWinRTRuntimeImplementationAssemblyPath Condition="'$(CsWinRTRuntimeImplementationAssemblyPath)' == ''">$([MSBuild]::NormalizePath('$(CsWinRTPath)', 'lib', 'net10.0', 'WinRT.Runtime.dll'))</CsWinRTRuntimeImplementationAssemblyPath>
+
     <DefineConstants Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(DefineConstants);CSWINRT_REFERENCE_PROJECTION</DefineConstants>    
   </PropertyGroup>
 
@@ -171,10 +184,18 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
+    <!-- Pass the 'WinRT.Runtime' implementation assembly (not the reference assembly) to the generator -->
+    <ItemGroup>
+      <_InteropReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" Condition="'%(FileName)' != 'WinRT.Runtime'" />
+      <_InteropReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" />
+      <_InteropImplementationAssemblyPaths Include="@(ReferencePath)" Condition="'%(FileName)' != 'WinRT.Runtime'" />
+      <_InteropImplementationAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" />
+    </ItemGroup>
+
     <!-- Invoke 'cswinrtinteropgen' -->
     <RunCsWinRTInteropGenerator
-      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
-      ImplementationAssemblyPaths="@(ReferencePath)"      
+      ReferenceAssemblyPaths="@(_InteropReferenceAssemblyPaths)"
+      ImplementationAssemblyPaths="@(_InteropImplementationAssemblyPaths)"
       OutputAssemblyPath="@(IntermediateAssembly)"
       WinRTSdkProjectionAssemblyPath="$(_CsWinRTSdkProjectionAssemblyPath)"
       WinRTSdkXamlProjectionAssemblyPath="$(_CsWinRTSdkXamlAssemblyPath)"
@@ -326,7 +347,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_WinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_ReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
                          Condition="'%(_ReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
         <_WinMDPathsList Include="$(CsWinRTInteropMetadata)" />
-        <_MergedProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
+
+        <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
+        <_MergedProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" Condition="'%(FileName)' != 'WinRT.Runtime'" />
+        <_MergedProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" />
         <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkProjectionAssemblyPath)" />
         <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkXamlAssemblyPath)" Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'" />
     </ItemGroup>
@@ -397,8 +421,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <ItemGroup>
-      <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd'))" />
+
+      <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd')) and '%(FileName)' != 'WinRT.Runtime'" />
+      <_ComponentProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" />
       <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
+
       <!-- Add the current project's .winmd so the projection generator can process it -->
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
       <_ComponentWinMDPaths Include="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(AssemblyName).winmd'))"
@@ -479,11 +507,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_SdkWinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_SdkReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
                          Condition="'%(_SdkReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
         <_SdkWinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+
+        <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
+        <_SdkProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" Condition="'%(FileName)' != 'WinRT.Runtime'" />
+        <_SdkProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" />
     </ItemGroup>
 
     <RunCsWinRTMergedProjectionGenerator
       Condition="'$(_SdkProjectionImplExists)' != 'true'"
-      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      ReferenceAssemblyPaths="@(_SdkProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_SdkWinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
@@ -561,7 +593,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_SdkXamlWinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_SdkXamlReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
                          Condition="'%(_SdkXamlReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
         <_SdkXamlWinMDPathsList Include="$(CsWinRTInteropMetadata)" />
-        <_SdkXamlProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
+
+        <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
+        <_SdkXamlProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" Condition="'%(FileName)' != 'WinRT.Runtime'" />
+        <_SdkXamlProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" />
         <_SdkXamlProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkProjectionAssemblyPath)" />
     </ItemGroup>
 

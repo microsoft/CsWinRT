@@ -47,6 +47,14 @@
     <CsWinRTRefGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTRefGenEffectiveToolsDirectory>
     <CsWinRTWinMDGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTWinMDGenEffectiveToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
+
+    <!--
+      Repo-internal builds do not ship a 'WinRT.Runtime' reference assembly (under 'ref/net10.0'),
+      so the package-layout default in 'Microsoft.Windows.CsWinRT.CsWinRTGen.targets' does not
+      resolve. Point the projection and interop generators at the 'WinRT.Runtime' implementation
+      assembly built in this solution instead.
+    -->
+    <CsWinRTRuntimeImplementationAssemblyPath>$(MSBuildThisFileDirectory)WinRT.Runtime2\bin\$(Configuration)\net10.0\WinRT.Runtime.dll</CsWinRTRuntimeImplementationAssemblyPath>
   </PropertyGroup>
 
   <PropertyGroup>
