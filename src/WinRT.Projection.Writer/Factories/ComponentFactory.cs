@@ -86,7 +86,10 @@ internal static class ComponentFactory
         // Writes the body of the 'ActivateInstance' method (it throws for non-activatable types)
         void WriteActivateInstanceBody(IndentedTextWriter writer)
         {
-            bool isActivatable = !type.IsStatic && type.HasDefaultConstructor();
+            // A type whose default constructor is removed ([Deprecated(DeprecationType.Remove)]) is no longer
+            // default-activatable: 'new T()' cannot be emitted (it would call the removed authored member),
+            // so default activation falls through to the 'throw' below, which marshals to E_NOTIMPL.
+            bool isActivatable = !type.IsStatic && type.HasActivatableDefaultConstructor();
 
             if (isActivatable)
             {
