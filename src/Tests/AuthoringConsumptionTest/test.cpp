@@ -978,7 +978,11 @@ TEST(AuthoringTest, DeprecatedMembersClass)
 {
     DeprecatedMembersClass obj;
 
-    // Members marked [Deprecated(DeprecationType.Deprecate)] and the new members remain fully usable.
+    // Members marked [Deprecated(DeprecationType.Remove)] are omitted from the projection, so they are
+    // intentionally not referenced here. Their ABI vtable slot is still preserved (stubbed to E_NOTIMPL):
+    // the new members below sit after the removed slots in vtable order, so their correct dispatch confirms
+    // the removed slots remain in place and the layout did not shift. The deprecated members and the new
+    // members both remain projected and fully usable.
     obj.OldMethod();
     obj.NewMethod();
     EXPECT_EQ(obj.OldProp(), L"OldProp");
@@ -989,14 +993,6 @@ TEST(AuthoringTest, DeprecatedMembersClass)
 
     auto oldToken = obj.OldEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
     auto newToken = obj.NewEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
-
-    // Members marked [Deprecated(DeprecationType.Remove)] are omitted from the projection but keep their
-    // vtable slot, stubbed to return E_NOTIMPL. The new members above sit after the removed slots in
-    // vtable order and still dispatch correctly, which proves the removed slots remain in place.
-    EXPECT_THROW(obj.RemovedMethod(), hresult_not_implemented);
-    EXPECT_THROW(obj.RemovedProp(), hresult_not_implemented);
-    EXPECT_THROW(DeprecatedMembersClass::RemovedStatic(), hresult_not_implemented);
-    EXPECT_THROW(obj.RemovedEvent([](IInspectable const&, int32_t const&) {}), hresult_not_implemented);
 }
 
 TEST(AuthoringTest, FullFeaturedClass)
