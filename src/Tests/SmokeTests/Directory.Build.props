@@ -25,11 +25,18 @@
     <CsWinRTPackageVersion Condition="'$(CsWinRTPackageVersion)' == ''">0.0.0-private.0</CsWinRTPackageVersion>
     <CsWinRTPackageSource Condition="'$(CsWinRTPackageSource)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '_build', 'x64', 'Release', 'cswinrt', 'bin'))</CsWinRTPackageSource>
 
-    <!-- Public NuGet feed, which provides the preview Windows SDK ref pack pinned above -->
-    <PublicNuGetSource Condition="'$(PublicNuGetSource)' == ''">https://api.nuget.org/v3/index.json</PublicNuGetSource>
+    <!--
+      The CsWinRTDependencies feed (the repository's standard feed, see 'nuget.config') provides
+      the preview Windows SDK ref pack pinned above, just like the rest of the repo (e.g.
+      'src/WinRT.Internal') resolves the public Windows SDK targeting pack from it.
+    -->
+    <CsWinRTDependenciesSource Condition="'$(CsWinRTDependenciesSource)' == ''">https://pkgs.dev.azure.com/shine-oss/CsWinRT/_packaging/CsWinRTDependencies/nuget/v3/index.json</CsWinRTDependenciesSource>
 
-    <!-- Restore the CsWinRT package being tested from the local build output -->
-    <RestoreSources>$(CsWinRTPackageSource);$(PublicNuGetSource)</RestoreSources>
+    <!--
+      Override all inherited NuGet sources with just the local CsWinRT build output (for the
+      package under test) and the CsWinRTDependencies feed (for everything else).
+    -->
+    <RestoreSources>$(CsWinRTPackageSource);$(CsWinRTDependenciesSource)</RestoreSources>
   </PropertyGroup>
 
   <ItemGroup>

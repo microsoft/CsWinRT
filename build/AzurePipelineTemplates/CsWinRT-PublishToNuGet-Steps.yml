@@ -128,7 +128,7 @@ steps:
   # verify that the real package (ref/lib assemblies, generators, and build targets) works for
   # a consuming app and a component author, fully isolated from the repo build infrastructure.
   # The smoke tests restore the package being tested from the packed output above, and all other
-  # dependencies (notably the preview Windows SDK ref pack) from public NuGet.
+  # dependencies (notably the preview Windows SDK ref pack) from the CsWinRTDependencies feed.
   - task: UseDotNet@2
     displayName: Use .NET SDK for smoke tests
     inputs:
