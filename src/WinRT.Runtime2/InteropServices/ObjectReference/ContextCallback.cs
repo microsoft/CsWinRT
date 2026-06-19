@@ -49,8 +49,7 @@ internal static unsafe class ContextCallback
         // We can just store a pointer to the callback to invoke in the context,
         // so we don't need to allocate another closure or anything. The callback
         // will be kept alive automatically, because 'comCallData' is address exposed.
-        // We only do this if we can use C# 11, and if we're on modern .NET, to be safe.
-        // In the callback below, we can then just retrieve the Action again to invoke it.
+        // In 'InvokeCallback' below, we then invoke the current caller-provided callback.
         comCallData.pUserDefined = &callbackData;
 
         // Stub to invoke on the target context
