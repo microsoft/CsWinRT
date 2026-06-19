@@ -984,20 +984,19 @@ TEST(AuthoringTest, DeprecatedMembersClass)
     EXPECT_EQ(obj.OldProp(), L"OldProp");
     EXPECT_EQ(obj.NewProp(), L"NewProp");
 
-    // Members marked [Deprecated(DeprecationType.Remove)] keep their vtable slot and dispatch to the
-    // authored implementation, so existing callers compiled against them keep working.
-    obj.RemovedMethod();
-    EXPECT_EQ(obj.RemovedProp(), L"RemovedProp");
-
-    // The same applies to static members, which dispatch through the generated static factory.
     DeprecatedMembersClass::OldStatic();
-    DeprecatedMembersClass::RemovedStatic();
     DeprecatedMembersClass::NewStatic();
 
-    // Events of every deprecation kind can be subscribed to and revoked.
     auto oldToken = obj.OldEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
-    auto removedToken = obj.RemovedEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
     auto newToken = obj.NewEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
+
+    // Members marked [Deprecated(DeprecationType.Remove)] are omitted from the projection but keep their
+    // vtable slot, stubbed to return E_NOTIMPL. The new members above sit after the removed slots in
+    // vtable order and still dispatch correctly, which proves the removed slots remain in place.
+    EXPECT_THROW(obj.RemovedMethod(), hresult_not_implemented);
+    EXPECT_THROW(obj.RemovedProp(), hresult_not_implemented);
+    EXPECT_THROW(DeprecatedMembersClass::RemovedStatic(), hresult_not_implemented);
+    EXPECT_THROW(obj.RemovedEvent([](IInspectable const&, int32_t const&) {}), hresult_not_implemented);
 }
 
 TEST(AuthoringTest, FullFeaturedClass)

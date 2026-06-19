@@ -395,9 +395,17 @@ internal static class AbiInterfaceFactory
             MethodSignatureInfo sig = new(method);
             string mname = method.GetRawName();
 
-            // If this method is an event add accessor, emit the per-event ConditionalWeakTable
-            // before the Do_Abi method.
-            if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
+            // A removed member (DeprecationType.Remove) keeps its vtable slot for ABI compatibility, but
+            // is no longer part of the projection, so its CCW entry returns E_NOTIMPL. This applies in
+            // both consuming and component (authoring) mode: the projected interface omits the member, and
+            // generated code cannot dispatch to it even in component mode, because the C# compiler treats a
+            // call to a '[Deprecated(Remove)]' member as an obsolete-as-error (CS0619). The vtable slot is
+            // preserved so the layout stays stable for existing native callers.
+            bool removed = IsAbiMemberRemoved(method, eventMap, propertyMap);
+
+            // If this method is an event add accessor, emit the per-event ConditionalWeakTable before the
+            // Do_Abi method. Removed events are stubbed to E_NOTIMPL and never use the table, so it is skipped.
+            if (!removed && eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
             {
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
@@ -408,15 +416,7 @@ internal static class AbiInterfaceFactory
                 private static unsafe int Do_Abi_{{vm}}({{doAbiParams}})
                 """);
 
-            // A removed member (DeprecationType.Remove) keeps its vtable slot for ABI compatibility,
-            // but is no longer on the projected interface. When consuming a Windows Runtime type, a
-            // managed object implementing the interface cannot supply the removed member (it is not on
-            // the projected interface), so its CCW entry returns E_NOTIMPL. In component (authoring) mode
-            // the dispatch target is the authored implementation (the authored class for instance
-            // members, or the generated activation/static factory that forwards to it), which still
-            // defines the member, so the entry keeps dispatching to that implementation to preserve
-            // binary compatibility for existing native callers.
-            if (!context.Settings.Component && IsAbiMemberRemoved(method, eventMap, propertyMap))
+            if (removed)
             {
                 writer.WriteLine();
                 writer.WriteLine("""
