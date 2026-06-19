@@ -110,9 +110,7 @@ internal static class IHasCustomAttributeExtensions
         /// <c>DeprecatedAttribute(string message, DeprecationType type, ...)</c>: the second fixed
         /// argument is the <c>DeprecationType</c> enum, where <c>Deprecate</c> is 0 and <c>Remove</c> is 1.
         /// </remarks>
-        public bool IsRemoved =>
-            member.GetWindowsFoundationMetadataAttribute("DeprecatedAttribute") is { Signature.FixedArguments: [_, { Element: int deprecationType }, ..] }
-            && deprecationType == 1;
+        public bool IsRemoved => member.GetWindowsFoundationMetadataAttribute("DeprecatedAttribute") is { Signature.FixedArguments: [_, { Element: 1 }, ..] };
 
         /// <summary>
         /// Gets whether the member is deprecated but not removed (i.e. it is projected with an
@@ -129,9 +127,17 @@ internal static class IHasCustomAttributeExtensions
         /// <c>DeprecatedAttribute(string message, ...)</c>: the first fixed argument is the message.
         /// AsmResolver returns <c>Utf8String</c> for string custom-attribute args, so it is converted.
         /// </remarks>
-        public string? DeprecatedMessage =>
-            member.GetWindowsFoundationMetadataAttribute("DeprecatedAttribute") is { Signature.FixedArguments: [{ Element: { } message }, ..] }
-                ? message.ToString()
-                : null;
+        public string? DeprecatedMessage
+        {
+            get
+            {
+                if (member.GetWindowsFoundationMetadataAttribute("DeprecatedAttribute") is not { Signature.FixedArguments: [{ Element: { } message }, ..] })
+                {
+                    return null;
+                }
+
+                return message.ToString();
+            }
+        }
     }
 }
