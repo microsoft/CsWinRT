@@ -134,7 +134,7 @@ internal static class ReferenceImplFactory
             {{visibility}} static unsafe class {{nameStripped}}ReferenceImpl
             {
                 [FixedAddressValueType]
-                private static readonly ReferenceVftbl Vftbl;
+                private static readonly IReferenceVftbl Vftbl;
             
                 static {{nameStripped}}ReferenceImpl()
                 {

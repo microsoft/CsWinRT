@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
-#pragma warning disable IDE1006
+#pragma warning disable CS1591, IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
@@ -14,8 +14,9 @@ namespace WindowsRuntime.InteropServices;
 /// Binding type for the <c>IReference`1</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1"/>
+[WindowsRuntimeImplementationOnlyMember]
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct IReferenceVftbl
+public unsafe struct IReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -32,7 +33,7 @@ internal unsafe struct IReferenceVftbl
     /// <param name="value">The resulting value.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT get_ValueUnsafe(void* thisPtr, void* value)
+    internal static HRESULT get_ValueUnsafe(void* thisPtr, void* value)
     {
         return ((IReferenceVftbl*)*(void***)thisPtr)->get_Value(thisPtr, value);
     }
