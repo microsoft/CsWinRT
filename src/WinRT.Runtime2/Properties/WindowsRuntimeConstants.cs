@@ -38,6 +38,21 @@ internal static class WindowsRuntimeConstants
     public const string WindowsRuntimeTypeMapGroupObsoleteDiagnosticId = "CSWINRT3002";
 
     /// <summary>
+    /// A message for the Windows Runtime component assembly attributes (see <c>WindowsRuntimeComponentAssemblyAttribute</c> and <c>WindowsRuntimeComponentAssemblyExportsTypeAttribute</c>).
+    /// </summary>
+    public const string WindowsRuntimeComponentAssemblyObsoleteMessage =
+        "This attribute is a private implementation detail, and it must never be used directly. It is only meant to be applied to " +
+        "authored Windows Runtime component assemblies by CsWinRT (produced by the CsWinRT source generator), to mark them and " +
+        "identify their generated activation factory entry point. It is not considered part of the versioned API surface, and it " +
+        "may be modified or removed across any version change for 'WinRT.Runtime.dll'. Using it in user code is undefined behavior " +
+        "and not supported.";
+
+    /// <summary>
+    /// The diagnostic id for the Windows Runtime component assembly attributes.
+    /// </summary>
+    public const string WindowsRuntimeComponentAssemblyObsoleteDiagnosticId = "CSWINRT3003";
+
+    /// <summary>
     /// The URL format for all custom diagnostics for CsWinRT.
     /// </summary>
     /// <remarks>
