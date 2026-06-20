@@ -449,6 +449,11 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IReference<winrt::hresult> BoxedHResult();
         static Windows::Foundation::IReference<winrt::hresult> RoundtripHResult(Windows::Foundation::IReference<winrt::hresult> const& value);
 
+        static Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName>> GetReferenceTypeNameList();
+        static int32_t CountReferenceTypeNameList(Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName>> const& value);
+        static Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<winrt::hresult>> GetReferenceHResultList();
+        static int32_t CountReferenceHResultList(Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<winrt::hresult>> const& value);
+
         static Windows::Foundation::IInspectable EmptyString();
         static Windows::Foundation::IInspectable BoxedDelegate();
         static Windows::Foundation::IInspectable BoxedEnum();

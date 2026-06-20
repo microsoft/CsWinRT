@@ -3912,6 +3912,50 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void ReferenceTypeNameListProjectsAsTypeList()
+        {
+            // 'IVector<IReference<TypeName>>' projects to the public 'IList<Type>', but the ABI marshaller keeps
+            // the 'Nullable<Type>' element marker, so it targets the correct 'IVector<IReference<TypeName>>' IID
+            // and boxes/unboxes each element via 'TypeMarshaller'. The list returned from native round-trips with
+            // usable 'Type' elements (this is the return-only direction, created entirely in C++).
+            IList<Type> list = Class.GetReferenceTypeNameList();
+
+            Assert.AreEqual(2, list.Count);
+            Assert.AreEqual(typeof(Class), list[0]);
+            Assert.AreEqual(typeof(int), list[1]);
+        }
+
+        [TestMethod]
+        public void ReferenceTypeNameListAsParameter()
+        {
+            // Passing a managed 'IList<Type>' to a native 'IVector<IReference<TypeName>>' parameter (the native
+            // side only reads the count here, which is element-agnostic)
+            Assert.AreEqual(2, Class.CountReferenceTypeNameList(new List<Type> { typeof(Class), typeof(int) }));
+        }
+
+        [TestMethod]
+        public void ReferenceHResultListProjectsAsExceptionList()
+        {
+            // 'IVector<IReference<HResult>>' projects to the public 'IList<Exception>', but the ABI marshaller keeps
+            // the 'Nullable<Exception>' element marker, so it targets the correct 'IVector<IReference<HResult>>' IID
+            // and boxes/unboxes each element via 'ExceptionMarshaller'. The list returned from native round-trips
+            // with usable 'Exception' elements (this is the return-only direction, created entirely in C++).
+            IList<Exception> list = Class.GetReferenceHResultList();
+
+            Assert.AreEqual(1, list.Count);
+            Assert.IsNotNull(list[0]);
+            Assert.AreEqual(unchecked((int)0x80070057), list[0].HResult); // 'E_INVALIDARG'
+        }
+
+        [TestMethod]
+        public void ReferenceHResultListAsParameter()
+        {
+            // Passing a managed 'IList<Exception>' to a native 'IVector<IReference<HResult>>' parameter (the native
+            // side only reads the count here, which is element-agnostic)
+            Assert.AreEqual(2, Class.CountReferenceHResultList(new List<Exception> { new ArgumentException(), new InvalidOperationException() }));
+        }
+
+        [TestMethod]
         public void TypeInfoGenerics()
         {
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));

@@ -534,6 +534,15 @@ namespace TestComponentCSharp
         static Windows.Foundation.IReference<Windows.Foundation.HResult> BoxedHResult{ get; };
         static Windows.Foundation.IReference<Windows.Foundation.HResult> RoundtripHResult(Windows.Foundation.IReference<Windows.Foundation.HResult> value);
 
+        // Generic collections of these reference-projected types: 'IVector<IReference<TypeName>>' and
+        // 'IVector<IReference<HResult>>' both project to 'IList<Type>' / 'IList<Exception>', which collide
+        // with the canonical 'IVector<TypeName>' / 'IVector<HResult>' IIDs. These members exist to verify the
+        // projection still compiles; the matching unit tests document the (broken) runtime behavior.
+        static Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> > GetReferenceTypeNameList();
+        static Int32 CountReferenceTypeNameList(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> > value);
+        static Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.Foundation.HResult> > GetReferenceHResultList();
+        static Int32 CountReferenceHResultList(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.Foundation.HResult> > value);
+
         // Other
         static Object EmptyString { get; };
 
