@@ -524,6 +524,16 @@ namespace TestComponentCSharp
 
         static String GetTypeNameForType(Windows.UI.Xaml.Interop.TypeName type);
 
+        // 'IReference<WUX.Interop.TypeName>' projects to 'System.Type' ('TypeName' is a Windows Runtime value type
+        // but projects to the reference type 'System.Type', so it must project as 'Type', not 'Nullable<Type>').
+        static Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> BoxedTypeName{ get; };
+        static Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> RoundtripTypeName(Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> value);
+
+        // 'IReference<HResult>' projects to 'System.Exception' ('HResult' is a Windows Runtime value type but
+        // projects to the reference type 'System.Exception', so it must project as 'Exception', not 'Nullable<Exception>').
+        static Windows.Foundation.IReference<Windows.Foundation.HResult> BoxedHResult{ get; };
+        static Windows.Foundation.IReference<Windows.Foundation.HResult> RoundtripHResult(Windows.Foundation.IReference<Windows.Foundation.HResult> value);
+
         // Other
         static Object EmptyString { get; };
 

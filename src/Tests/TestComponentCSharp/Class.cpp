@@ -1914,6 +1914,27 @@ namespace winrt::TestComponentCSharp::implementation
         return type.Name;
     }
 
+    IReference<Windows::UI::Xaml::Interop::TypeName> Class::BoxedTypeName()
+    {
+        return winrt::box_value(winrt::xaml_typename<winrt::TestComponentCSharp::Class>()).as<IReference<Windows::UI::Xaml::Interop::TypeName>>();
+    }
+
+    IReference<Windows::UI::Xaml::Interop::TypeName> Class::RoundtripTypeName(IReference<Windows::UI::Xaml::Interop::TypeName> const& value)
+    {
+        return value;
+    }
+
+    IReference<winrt::hresult> Class::BoxedHResult()
+    {
+        // Box a known failure 'HRESULT' ('E_INVALIDARG') as 'IReference<HResult>'
+        return winrt::box_value(winrt::hresult{ static_cast<int32_t>(0x80070057) }).as<IReference<winrt::hresult>>();
+    }
+
+    IReference<winrt::hresult> Class::RoundtripHResult(IReference<winrt::hresult> const& value)
+    {
+        return value;
+    }
+
     WF::IInspectable Class::EmptyString()
     {
         return winrt::box_value(hstring{});
