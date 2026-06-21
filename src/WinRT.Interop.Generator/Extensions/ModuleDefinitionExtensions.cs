@@ -70,46 +70,42 @@ internal static partial class ModuleDefinitionExtensions
         // Use a visited set to guard against cycles in the transitive assembly reference graph.
         // Such cycles are possible (eg. mutual references between assemblies) and would otherwise
         // cause this method to recurse infinitely, leading to a stack overflow.
-        return ReferencesAssembly(module, assemblyName, []);
-    }
-
-    /// <inheritdoc cref="ReferencesAssembly(ModuleDefinition, Utf8String)"/>
-    /// <param name="module"><inheritdoc cref="ReferencesAssembly(ModuleDefinition, Utf8String)" path="/param[@name='module']"/></param>
-    /// <param name="assemblyName"><inheritdoc cref="ReferencesAssembly(ModuleDefinition, Utf8String)" path="/param[@name='assemblyName']"/></param>
-    /// <param name="visitedModules">The set of modules that have already been traversed, to avoid cycles.</param>
-    private static bool ReferencesAssembly(ModuleDefinition module, Utf8String assemblyName, HashSet<ModuleDefinition> visitedModules)
-    {
-        // Skip modules we've already visited, to break reference cycles
-        if (!visitedModules.Add(module))
+        static bool ReferencesAssemblyCore(ModuleDefinition module, Utf8String assemblyName, HashSet<ModuleDefinition> visitedModules)
         {
-            return false;
-        }
-
-        // Check all direct assembly references and check if they match
-        foreach (AssemblyReference reference in module.AssemblyReferences)
-        {
-            if (reference.Name == assemblyName)
+            // Skip modules we've already visited, to break reference cycles
+            if (!visitedModules.Add(module))
             {
-                return true;
+                return false;
             }
 
-            // Try to resolve the current assembly, skip it if it fails
-            if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+            // Check all direct assembly references and check if they match
+            foreach (AssemblyReference reference in module.AssemblyReferences)
             {
-                continue;
-            }
-
-            // Also traverse the entire transitive dependency graph and check those assemblies
-            foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
-            {
-                if (ReferencesAssembly(transitiveModule, assemblyName, visitedModules))
+                if (reference.Name == assemblyName)
                 {
                     return true;
                 }
+
+                // Try to resolve the current assembly, skip it if it fails
+                if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+                {
+                    continue;
+                }
+
+                // Also traverse the entire transitive dependency graph and check those assemblies
+                foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
+                {
+                    if (ReferencesAssemblyCore(transitiveModule, assemblyName, visitedModules))
+                    {
+                        return true;
+                    }
+                }
             }
+
+            return false;
         }
 
-        return false;
+        return ReferencesAssemblyCore(module, assemblyName, []);
     }
 
     /// <summary>
@@ -121,39 +117,36 @@ internal static partial class ModuleDefinitionExtensions
     {
         // Use a visited set to guard against cycles in the transitive assembly reference graph,
         // which would otherwise cause infinite recursion and a stack overflow (see 'ReferencesAssembly').
-        return EnumerateAssemblyReferences(module, []);
-    }
-
-    /// <inheritdoc cref="EnumerateAssemblyReferences(ModuleDefinition)"/>
-    /// <param name="module"><inheritdoc cref="EnumerateAssemblyReferences(ModuleDefinition)" path="/param[@name='module']"/></param>
-    /// <param name="visitedModules">The set of modules that have already been traversed, to avoid cycles.</param>
-    private static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(ModuleDefinition module, HashSet<ModuleDefinition> visitedModules)
-    {
-        // Skip modules we've already visited, to break reference cycles
-        if (!visitedModules.Add(module))
+        static IEnumerable<AssemblyReference> EnumerateAssemblyReferencesCore(ModuleDefinition module, HashSet<ModuleDefinition> visitedModules)
         {
-            yield break;
-        }
-
-        foreach (AssemblyReference reference in module.AssemblyReferences)
-        {
-            yield return reference;
-
-            // Try to resolve the current assembly, skip it if it fails
-            if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+            // Skip modules we've already visited, to break reference cycles
+            if (!visitedModules.Add(module))
             {
-                continue;
+                yield break;
             }
 
-            // Also enumerate all transitive references as well
-            foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
+            foreach (AssemblyReference reference in module.AssemblyReferences)
             {
-                foreach (AssemblyReference transitiveReference in EnumerateAssemblyReferences(transitiveModule, visitedModules))
+                yield return reference;
+
+                // Try to resolve the current assembly, skip it if it fails
+                if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
                 {
-                    yield return transitiveReference;
+                    continue;
+                }
+
+                // Also enumerate all transitive references as well
+                foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
+                {
+                    foreach (AssemblyReference transitiveReference in EnumerateAssemblyReferencesCore(transitiveModule, visitedModules))
+                    {
+                        yield return transitiveReference;
+                    }
                 }
             }
         }
+
+        return EnumerateAssemblyReferencesCore(module, []);
     }
 
     /// <summary>
