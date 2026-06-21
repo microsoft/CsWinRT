@@ -25,7 +25,7 @@ namespace WindowsRuntime.Generator.DebugRepro;
 internal static class DebugReproPacker
 {
     /// <summary>
-    /// Generates a hashed filename by appending a Shake128 hash of the original file path.
+    /// Generates a hashed filename by appending a hash of the original file path.
     /// </summary>
     /// <param name="filePath">The original file path.</param>
     /// <returns>The hashed filename in the form <c>{name}_{HEX}{ext}</c>.</returns>
@@ -33,8 +33,8 @@ internal static class DebugReproPacker
     {
         string fileName = Path.GetFileName(Path.Normalize(filePath));
         byte[] utf8Data = Encoding.UTF8.GetBytes(filePath);
-        byte[] hashData = Shake128.HashData(utf8Data, outputLength: 16);
-        string hash = Convert.ToHexString(hashData);
+        byte[] hashData = SHA256.HashData(utf8Data);
+        string hash = Convert.ToHexString(hashData.AsSpan(0, 16));
 
         return $"{Path.GetFileNameWithoutExtension(fileName)}_{hash}{Path.GetExtension(fileName)}";
     }
