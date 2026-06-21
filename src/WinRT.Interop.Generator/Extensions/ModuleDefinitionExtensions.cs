@@ -105,7 +105,7 @@ internal static partial class ModuleDefinitionExtensions
             return false;
         }
 
-        return ReferencesAssemblyCore(module, assemblyName, []);
+        return ReferencesAssemblyCore(module, assemblyName, new HashSet<ModuleDefinition>(SignatureComparer.IgnoreVersion));
     }
 
     /// <summary>
@@ -146,7 +146,7 @@ internal static partial class ModuleDefinitionExtensions
             }
         }
 
-        return EnumerateAssemblyReferencesCore(module, []);
+        return EnumerateAssemblyReferencesCore(module, new HashSet<ModuleDefinition>(SignatureComparer.IgnoreVersion));
     }
 
     /// <summary>
