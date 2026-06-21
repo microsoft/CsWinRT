@@ -33,8 +33,30 @@ namespace ABI.WinRT.Interop
         private delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4;
 #pragma warning restore CS0649
 
+        // Thread-static recursion guard used to validate the concern raised in
+        // https://github.com/microsoft/CsWinRT/pull/1865. It tracks the nesting depth of
+        // 'ContextCallback' invocations on the current thread, so we can detect whether the
+        // dispatch is ever reentered on the same thread (see 'ContextCallback' below).
+        [ThreadStatic]
+        private static int s_contextCallbackDepth;
+
         public static void ContextCallback(IntPtr contextCallbackPtr, delegate*<object, void> callback, delegate*<object, void> onFailCallback, object state)
         {
+            // Validation guard for https://github.com/microsoft/CsWinRT/pull/1865: detect whether the
+            // 'IContextCallback' dispatch can ever be reentered on the same thread (eg. if the native call
+            // below pumps messages on an STA thread while waiting for the callback to complete on the target
+            // context, and that pump dispatches another call that ends up back here on this same thread). If
+            // that ever happens, the thread-static state approach explored in that PR would be unsafe, so we
+            // fail fast with a useful message to surface how common this actually is in real world scenarios.
+            if (s_contextCallbackDepth > 0)
+            {
+                Environment.FailFast(
+                    "ABI.WinRT.Interop.IContextCallbackVftbl.ContextCallback was invoked recursively on the same thread " +
+                    "(managed thread id: " + Environment.CurrentManagedThreadId + ", depth: " + s_contextCallbackDepth + "). The " +
+                    "'IContextCallback' dispatch was reentered before a previous call on this thread returned, which would make " +
+                    "the thread-static state approach explored in https://github.com/microsoft/CsWinRT/pull/1865 unsafe.");
+            }
+
             ComCallData comCallData;
             comCallData.dwDispid = 0;
             comCallData.dwReserved = 0;
@@ -69,13 +91,27 @@ namespace ABI.WinRT.Interop
 
             Guid iid = IID.IID_ICallbackWithNoReentrancyToApplicationSTA;
 
-            int hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
-                contextCallbackPtr,
-                (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
-                &comCallData,
-                &iid,
-                /* iMethod */ 5,
-                IntPtr.Zero);
+            // Mark that we're now dispatching on this thread. The reentrancy window is the native call
+            // below, so we only need to track recursion across it. We always reset the depth afterwards
+            // (even if the dispatch throws) so a later, legitimate call on this thread isn't misdetected.
+            s_contextCallbackDepth++;
+
+            int hresult;
+
+            try
+            {
+                hresult = (*(IContextCallbackVftbl**)contextCallbackPtr)->ContextCallback_4(
+                    contextCallbackPtr,
+                    (IntPtr)(delegate* unmanaged<ComCallData*, int>)&InvokeCallback,
+                    &comCallData,
+                    &iid,
+                    /* iMethod */ 5,
+                    IntPtr.Zero);
+            }
+            finally
+            {
+                s_contextCallbackDepth--;
+            }
 
             if (hresult < 0)
             {
