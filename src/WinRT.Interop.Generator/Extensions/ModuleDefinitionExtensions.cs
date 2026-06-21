@@ -67,6 +67,24 @@ internal static partial class ModuleDefinitionExtensions
     /// <returns>Whether the module references the Windows Runtime assembly.</returns>
     public static bool ReferencesAssembly(this ModuleDefinition module, Utf8String assemblyName)
     {
+        // Use a visited set to guard against cycles in the transitive assembly reference graph.
+        // Such cycles are possible (eg. mutual references between assemblies) and would otherwise
+        // cause this method to recurse infinitely, leading to a stack overflow.
+        return ReferencesAssembly(module, assemblyName, []);
+    }
+
+    /// <inheritdoc cref="ReferencesAssembly(ModuleDefinition, Utf8String)"/>
+    /// <param name="module"><inheritdoc cref="ReferencesAssembly(ModuleDefinition, Utf8String)" path="/param[@name='module']"/></param>
+    /// <param name="assemblyName"><inheritdoc cref="ReferencesAssembly(ModuleDefinition, Utf8String)" path="/param[@name='assemblyName']"/></param>
+    /// <param name="visitedModules">The set of modules that have already been traversed, to avoid cycles.</param>
+    private static bool ReferencesAssembly(ModuleDefinition module, Utf8String assemblyName, HashSet<ModuleDefinition> visitedModules)
+    {
+        // Skip modules we've already visited, to break reference cycles
+        if (!visitedModules.Add(module))
+        {
+            return false;
+        }
+
         // Check all direct assembly references and check if they match
         foreach (AssemblyReference reference in module.AssemblyReferences)
         {
@@ -84,7 +102,7 @@ internal static partial class ModuleDefinitionExtensions
             // Also traverse the entire transitive dependency graph and check those assemblies
             foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
             {
-                if (transitiveModule.ReferencesAssembly(assemblyName))
+                if (ReferencesAssembly(transitiveModule, assemblyName, visitedModules))
                 {
                     return true;
                 }
@@ -101,6 +119,22 @@ internal static partial class ModuleDefinitionExtensions
     /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
     public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module)
     {
+        // Use a visited set to guard against cycles in the transitive assembly reference graph,
+        // which would otherwise cause infinite recursion and a stack overflow (see 'ReferencesAssembly').
+        return EnumerateAssemblyReferences(module, []);
+    }
+
+    /// <inheritdoc cref="EnumerateAssemblyReferences(ModuleDefinition)"/>
+    /// <param name="module"><inheritdoc cref="EnumerateAssemblyReferences(ModuleDefinition)" path="/param[@name='module']"/></param>
+    /// <param name="visitedModules">The set of modules that have already been traversed, to avoid cycles.</param>
+    private static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(ModuleDefinition module, HashSet<ModuleDefinition> visitedModules)
+    {
+        // Skip modules we've already visited, to break reference cycles
+        if (!visitedModules.Add(module))
+        {
+            yield break;
+        }
+
         foreach (AssemblyReference reference in module.AssemblyReferences)
         {
             yield return reference;
@@ -114,7 +148,7 @@ internal static partial class ModuleDefinitionExtensions
             // Also enumerate all transitive references as well
             foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
             {
-                foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences())
+                foreach (AssemblyReference transitiveReference in EnumerateAssemblyReferences(transitiveModule, visitedModules))
                 {
                     yield return transitiveReference;
                 }
