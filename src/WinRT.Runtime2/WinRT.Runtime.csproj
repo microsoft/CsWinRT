@@ -168,6 +168,15 @@
       <Compile Remove="InteropServices\InteropDllImports\**\*.cs" />
       <Compile Remove="InteropServices\Marshalers\**\*.cs" />
       <Compile Remove="InteropServices\Marshalling\**\*.cs" />
+
+      <!--
+        The 'RestrictedErrorInfoExceptionMarshaller' type is actually public, and it should
+        be included in reference assemblies as well. Because it's the only really public
+        type in this folder, we just add it back to the compilation manually, for simplicity.
+      -->
+      <Compile Include="InteropServices\Marshalling\RestrictedErrorInfoExceptionMarshaller.cs" />
+
+      <!-- Remove the other folders with implementation-only types -->
       <Compile Remove="InteropServices\ObjectReference\**\*.cs" />
       <Compile Remove="InteropServices\Placeholders\**\*.cs" />
       <Compile Remove="InteropServices\ProjectionDllExports\**\*.cs" />
