@@ -133,6 +133,8 @@ steps:
   # Each smoke test runs as its own step with 'continueOnError' (so a failure only marks the job
   # as 'SucceededWithIssues' and makes it obvious which one failed); a final gate step below turns
   # any such issue into an actual failure. This mirrors the unit test steps in CsWinRT-Test-Steps.yml.
+  # Each test runs twice: once on CoreCLR and once with Native AOT, so a failure points at the exact
+  # runtime. Native AOT publishes are x64 (this job only runs on an x64 host).
   - task: UseDotNet@2
     displayName: Use .NET SDK for smoke tests
     inputs:
@@ -140,21 +142,39 @@ steps:
       version: $(_DotnetVersion)
 
   - task: PowerShell@2
-    displayName: Run Consumption smoke test
+    displayName: Run Consumption smoke test (CoreCLR)
     continueOnError: true
     inputs:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
-      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
 
   - task: PowerShell@2
-    displayName: Run Authoring smoke test
+    displayName: Run Consumption smoke test (NAOT)
     continueOnError: true
     inputs:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
-      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption -Runtime NativeAot
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Authoring smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Authoring smoke test (NAOT)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring -Runtime NativeAot
       workingDirectory: $(Build.SourcesDirectory)
 
   # Fail the job if any smoke test above failed. Each smoke test uses 'continueOnError', so an

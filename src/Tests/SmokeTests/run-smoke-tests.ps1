@@ -30,6 +30,12 @@
     each test as its own step (passing a single value), so an individual failure is reported in
     isolation; local builds use the default 'All'.
 
+.PARAMETER Runtime
+    Which runtime to target: 'CoreCLR' (the default) builds and runs on the managed runtime;
+    'NativeAot' publishes the project with Native AOT ('PublishAot=true', win-x64), exercising the
+    full publish pipeline (projection and interop generators, then ILC). The CI runs both as
+    separate steps so a failure points at the exact runtime.
+
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
 
@@ -37,7 +43,7 @@
     ./run-smoke-tests.ps1 -PackageSource ../../_build/x64/Release/cswinrt/bin -PackageVersion 0.0.0-private.0
 
 .EXAMPLE
-    ./run-smoke-tests.ps1 -PackageSource ./packages -PackageVersion 3.0.0-preview.1 -Test Consumption
+    ./run-smoke-tests.ps1 -PackageSource ./packages -PackageVersion 3.0.0-preview.1 -Test Consumption -Runtime NativeAot
 #>
 
 [CmdletBinding()]
@@ -51,10 +57,17 @@ param (
     [ValidateSet('All', 'Consumption', 'Authoring')]
     [string] $Test = 'All',
 
+    [ValidateSet('CoreCLR', 'NativeAot')]
+    [string] $Runtime = 'CoreCLR',
+
     [string] $Configuration = 'Release'
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Native AOT publishes are always x64: the NuGet publish job that runs the smoke tests only runs
+# on an x64 host.
+$nativeAotRid = 'win-x64'
 
 $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
@@ -107,13 +120,23 @@ function Assert-WinMDDefinesType {
     Write-Host "Verified '$([IO.Path]::GetFileName($Path))' defines '$Namespace.$TypeName'." -ForegroundColor DarkGray
 }
 
-# Consumption: build and run (must not crash).
+# Consumption: build (CoreCLR) or Native AOT publish, then run (must not crash).
 function Invoke-ConsumptionSmokeTest {
-    Write-Host "`n=== Consumption smoke test ===" -ForegroundColor Green
-    Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
+    Write-Host "`n=== Consumption smoke test ($Runtime) ===" -ForegroundColor Green
 
-    # Locate and run the freshly built app, asserting a clean (zero) exit code.
+    if ($Runtime -eq 'NativeAot') {
+        # Publish the whole app with Native AOT (self-contained, no managed host).
+        Invoke-Dotnet (@('publish', $consumptionProject, '--runtime', $nativeAotRid, '-p:PublishAot=true') + $commonBuildArgs)
+    }
+    else {
+        Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
+    }
+
+    # Locate the freshly built app, asserting a clean (zero) exit code when run. A Native AOT
+    # publish drops a self-contained '.exe' under a 'publish' folder, so filter to it; a CoreCLR
+    # build leaves the '.exe' directly under the target framework folder.
     $consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'bin')) -Filter 'Consumption.exe' -Recurse |
+        Where-Object { $Runtime -ne 'NativeAot' -or $_.FullName -match '\\publish\\' } |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
@@ -128,9 +151,16 @@ function Invoke-ConsumptionSmokeTest {
     }
 }
 
-# Authoring: build, then verify the generated Windows Runtime metadata.
+# Authoring: build and verify the generated Windows Runtime metadata (CoreCLR), or just verify the
+# component publishes cleanly with Native AOT (we don't load the published output).
 function Invoke-AuthoringSmokeTest {
-    Write-Host "`n=== Authoring smoke test ===" -ForegroundColor Green
+    Write-Host "`n=== Authoring smoke test ($Runtime) ===" -ForegroundColor Green
+
+    if ($Runtime -eq 'NativeAot') {
+        Invoke-Dotnet (@('publish', $authoringProject, '--runtime', $nativeAotRid, '-p:PublishAot=true') + $commonBuildArgs)
+        return
+    }
+
     Invoke-Dotnet (@('build', $authoringProject) + $commonBuildArgs)
 
     # The authoring build emits a '.winmd' next to the component assembly. Verify it was produced
