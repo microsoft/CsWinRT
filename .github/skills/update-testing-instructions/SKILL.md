@@ -72,11 +72,11 @@ Launch an explore agent to verify:
 
 Launch an explore agent (or inspect directly) to verify:
 
-- **Project list** is accurate — the `Consumption/` app and the `Authoring/` component, kept out of `cswinrt.slnx`
+- **Project list** is accurate — the `Consumption/` app, the `Authoring/` component, and the `Projection/` reference projection, kept out of `cswinrt.slnx`
 - **Isolation** is intact: blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled)
-- **Shared configuration** in `Directory.Build.props` is current: TFM (`.1` revision), pinned `WindowsSdkPackageVersion`, `RestoreSources` (local package output + public NuGet), and the `CsWinRTPackageVersion`/`CsWinRTPackageSource` defaults
-- **What each test does** is accurate (the consumption app's `JsonObject.Parse`/`Stringify` call; the authoring component's class and `.winmd` verification)
-- **How they run** is current: the `run-smoke-tests.ps1` runner, and the invocations in `src/build.cmd` and `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`
+- **Shared configuration** in `Directory.Build.props` is current: TFM (`.1` revision), pinned `WindowsSdkPackageVersion`, `RestoreSources` (local package output + public NuGet), `DisableRuntimeMarshalling`, and the `CsWinRTPackageVersion`/`CsWinRTPackageSource` defaults
+- **What each test does** is accurate (the consumption app's `JsonObject.Parse`/`Stringify` call; the authoring component's class and `.winmd` verification; the projection library's reference projection over the authoring component's `.winmd`, verifying a forwarder and a `ref` assembly are produced)
+- **How they run** is current: the `run-smoke-tests.ps1` runner (its `-Test` and `-Runtime` parameters — consumption/authoring run on both CoreCLR and Native AOT, projection on CoreCLR only), and the invocations in `src/build.cmd` and `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`
 
 ### Step 8: verify TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
 

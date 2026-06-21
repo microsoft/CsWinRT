@@ -318,9 +318,9 @@ call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.n
 :smoketest
 rem Build and run the end-to-end smoke tests against the just-built NuGet package. These
 rem verify that the real package (ref/lib assemblies, generators, and build targets) works
-rem for a consuming app and a component author, fully isolated from the repo build
-rem infrastructure. They run only on x64 (matching the native build tools packaged for the
-rem host architecture) and can be skipped by setting 'cswinrt_run_smoke_tests=false'.
+rem for a consuming app, a component author, and a projection author, fully isolated from the
+rem repo build infrastructure. They run only on x64 (matching the native build tools packaged
+rem for the host architecture) and can be skipped by setting 'cswinrt_run_smoke_tests=false'.
 if /I not "%cswinrt_platform%"=="x64" goto :eof
 if /I "%cswinrt_run_smoke_tests%"=="false" goto :eof
 

@@ -16,6 +16,11 @@
       * Authoring: a Windows Runtime component library is built, validating WinMD
         generation, the reference projection, and the forwarder assembly.
 
+      * Projection: a class library generates a reference projection for a third-party
+        component's '.winmd' (reusing the one emitted by the authoring test), validating the
+        reference projection generator and the forwarder generator, exactly as a NuGet
+        projection author would.
+
     The smoke tests reference the package via 'RestoreSources' (see the '.csproj' files), so
     no global NuGet configuration changes are required.
 
@@ -26,15 +31,16 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'Authoring', or 'All' (the default). The CI runs
-    each test as its own step (passing a single value), so an individual failure is reported in
+    Which smoke test(s) to run: 'Consumption', 'Authoring', 'Projection', or 'All' (the default). The
+    CI runs each test as its own step (passing a single value), so an individual failure is reported in
     isolation; local builds use the default 'All'.
 
 .PARAMETER Runtime
     Which runtime to target: 'CoreCLR' (the default) builds and runs on the managed runtime;
     'NativeAot' publishes the project with Native AOT ('PublishAot=true', win-x64), exercising the
     full publish pipeline (projection and interop generators, then ILC). The CI runs both as
-    separate steps so a failure points at the exact runtime.
+    separate steps so a failure points at the exact runtime. The 'Projection' test is build-only and
+    therefore CoreCLR-only; it is skipped for 'NativeAot'.
 
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
@@ -54,7 +60,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'Authoring')]
+    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -72,6 +78,7 @@ $nativeAotRid = 'win-x64'
 $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
+$projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
 
 # Resolve the package source to an absolute path (NuGet rejects relative '--source' values).
 $resolvedPackageSource = (Resolve-Path -Path $PackageSource).Path
@@ -176,12 +183,47 @@ function Invoke-AuthoringSmokeTest {
     Assert-WinMDDefinesType -Path $authoringWinMD.FullName -Namespace 'Authoring' -TypeName 'Greeter'
 }
 
+# Projection: build a reference projection for a third-party component's '.winmd' (CoreCLR only). This
+# is a build-time artifact, so there is nothing to publish with Native AOT.
+function Invoke-ProjectionSmokeTest {
+    Write-Host "`n=== Projection smoke test ($Runtime) ===" -ForegroundColor Green
+
+    if ($Runtime -eq 'NativeAot') {
+        Write-Host "Skipping the projection smoke test for Native AOT (a reference projection is a build-time artifact)." -ForegroundColor DarkGray
+        return
+    }
+
+    Invoke-Dotnet (@('build', $projectionProject) + $commonBuildArgs)
+
+    # Building a reference projection produces a forwarder assembly (from 'cswinrtimplgen') next to a
+    # 'ref' reference assembly (compiled from the 'cswinrtprojectionrefgen' sources). Verify both were
+    # produced, which confirms the package wired up and ran both generators correctly.
+    $projectionAssemblies = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Projection', 'bin')) -Filter 'Projection.dll' -Recurse -ErrorAction SilentlyContinue
+
+    $forwarder = $projectionAssemblies | Where-Object { $_.FullName -notmatch '\\ref\\' } | Select-Object -First 1
+    $referenceAssembly = $projectionAssemblies | Where-Object { $_.FullName -match '\\ref\\' } | Select-Object -First 1
+
+    if ($null -eq $forwarder) {
+        throw "The projection build did not produce the 'Projection.dll' forwarder assembly."
+    }
+
+    if ($null -eq $referenceAssembly) {
+        throw "The projection build did not produce the 'ref\Projection.dll' reference assembly."
+    }
+
+    Write-Host "Verified the projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
+}
+
 if ($Test -in @('All', 'Consumption')) {
     Invoke-ConsumptionSmokeTest
 }
 
 if ($Test -in @('All', 'Authoring')) {
     Invoke-AuthoringSmokeTest
+}
+
+if ($Test -in @('All', 'Projection')) {
+    Invoke-ProjectionSmokeTest
 }
 
 Write-Host "`nSmoke tests passed." -ForegroundColor Green

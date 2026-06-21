@@ -51,7 +51,7 @@ Contains various testing-related projects:
 
 - [`ObjectLifetimeTests`](../src/Tests/ObjectLifetimeTests): A WinUI application-style MSTest project validating reference tracking, garbage collection behavior, and XAML element lifetime.
 
-- [`SmokeTests`](../src/Tests/SmokeTests): Minimal, isolated end-to-end smoke tests that consume the real `Microsoft.Windows.CsWinRT` NuGet package — a consumption app (`Consumption`) and an authoring component (`Authoring`) — to verify the produced package works correctly outside the repository build infrastructure.
+- [`SmokeTests`](../src/Tests/SmokeTests): Minimal, isolated end-to-end smoke tests that consume the real `Microsoft.Windows.CsWinRT` NuGet package — a consumption app (`Consumption`), an authoring component (`Authoring`), and a reference projection for a third-party `.winmd` (`Projection`) — to verify the produced package works correctly outside the repository build infrastructure.
 
 - [`AuthoringTest`](../src/Tests/AuthoringTest): A C#-authored WinRT component (`CsWinRTComponent=true`) covering a broad set of authoring type patterns.  Companion projects exercise consuming authored components — `AuthoringTest2`/`AuthoringTest3`, the `AuthoringConsumptionTest*` C++ consumers, and the WUX (`Windows.UI.Xaml`) and WinUI variants — several of which are still work in progress.
 
