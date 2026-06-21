@@ -737,6 +737,8 @@ Almost everything the generated code calls into lives in `WinRT.Runtime.dll` as 
 
 Because these APIs are absent from the `WinRT.Runtime.dll` reference assembly, the generated `WinRT.Interop.dll` references types that exist only in the implementation assembly, and the generator emits assembly-level `[IgnoresAccessChecksTo]` to reach the non-public members among them. This is also why `cswinrtinteropgen` must be version-matched to the `WinRT.Runtime.dll` it targets (see "Version compatibility" above): the shape of these types can change at any time.
 
+> **Note:** A small subset of the types listed above is not stripped but instead kept **public but hidden** in the reference assembly — most notably the three type map group types, which are marked reference-assembly-only `[Obsolete(DiagnosticId = "CSWINRT3002")]` + `[EditorBrowsable(Never)]`. The reason: those types are also named by the CsWinRT source generator's `[assembly: TypeMapAssemblyTarget<TGroup>]` output, which is compiled into user code **against the reference assembly**, so stripping them would break that compilation. The interop generator is unaffected by the distinction (it always resolves the implementation assembly), but it must still treat them as unstable, version-matched implementation details. See the "Two strategies for implementation-only API" note in `.github/copilot-instructions.md` for the full rationale and the other cases (`CSWINRT3003`, `CSWINRT3004`).
+
 ## Key patterns and conventions
 
 ### Naming conventions for generated types
