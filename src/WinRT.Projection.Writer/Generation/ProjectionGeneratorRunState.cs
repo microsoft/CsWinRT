@@ -48,6 +48,14 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentDictionary<string, string> AuthoredTypeNameToMetadataMap { get; } = [];
 
     /// <summary>
+    /// Gets the (projected-type-name -> source <c>.winmd</c> stem) map populated as a side effect of
+    /// emitting the per-type <c>[WindowsRuntimeType]</c> marker (see
+    /// <see cref="Factories.MetadataAttributeFactory.WriteWinRTMetadataAttributeBody"/>). It is emitted at the
+    /// end of generation as the centralized, trimmable <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// </summary>
+    public ConcurrentDictionary<string, string> WindowsRuntimeMetadataTypeEntries { get; } = [];
+
+    /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a
     /// projection file" concurrently without a torn read. Use <see cref="ProjectionFileWritten"/>
     /// to query (after the parallel loop completes) and <see cref="MarkProjectionFileWritten"/>

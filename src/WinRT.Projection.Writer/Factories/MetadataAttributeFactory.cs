@@ -79,7 +79,8 @@ internal static class MetadataAttributeFactory
     }
 
     /// <summary>
-    /// Writes a <c>[WindowsRuntimeMetadata("&lt;stem&gt;")]</c> attribute decorating <paramref name="type"/> with its source <c>.winmd</c> module name.
+    /// Writes the per-type <c>[WindowsRuntimeType]</c> marker decorating <paramref name="type"/>, and records the
+    /// type's source <c>.winmd</c> stem into the centralized metadata-types map for later emission.
     /// Skipped entirely in reference-projection mode.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -98,18 +99,20 @@ internal static class MetadataAttributeFactory
     }
 
     /// <inheritdoc cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
-    /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode.</returns>
+    /// <returns>A callback emitting the marker (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode.</returns>
     public static IndentedTextWriterCallback WriteWinRTMetadataAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
         return writer => WriteWinRTMetadataAttributeBody(writer, context, type);
     }
 
     /// <summary>
-    /// Writes just the attribute body (no trailing newline) for <see cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.
-    /// In reference-projection mode this emits nothing: <c>[WindowsRuntimeMetadata]</c> is an implementation-only
-    /// type, stripped from the <c>WinRT.Runtime</c> reference assembly that a reference projection compiles against.
-    /// It is only consumed (by the interop generator) from implementation projections, never from the reference
-    /// projections shipped in Windows Runtime projection NuGet packages.
+    /// Writes just the marker body (no trailing newline) for <see cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>,
+    /// and records the type's source <c>.winmd</c> stem into <see cref="ProjectionEmitContext.WindowsRuntimeMetadataTypeEntries"/>
+    /// for the centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// In reference-projection mode this emits nothing and records nothing: <c>[WindowsRuntimeType]</c> is an
+    /// implementation-only type, stripped from the <c>WinRT.Runtime</c> reference assembly that a reference projection
+    /// compiles against. It is only consumed (by the interop generator) from implementation projections, never from the
+    /// reference projections shipped in Windows Runtime projection NuGet packages.
     /// </summary>
     internal static void WriteWinRTMetadataAttributeBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -118,9 +121,19 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        string path = context.Cache.GetSourcePath(type);
-        string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-        writer.Write($"[WindowsRuntimeMetadata(\"{stem}\")]");
+        writer.Write("[WindowsRuntimeType]");
+
+        // Record the type -> .winmd-stem mapping for the centralized lookup type. The metadata value is build-time
+        // only (consumed by the interop generator), so keeping it off the type itself lets it be trimmed away.
+        if (context.WindowsRuntimeMetadataTypeEntries is { } entries)
+        {
+            string path = context.Cache.GetSourcePath(type);
+            string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
+            (string typeNs, string typeName) = type.Names();
+            string globalName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
+
+            _ = entries.TryAdd(globalName, stem);
+        }
     }
 
     /// <summary>
@@ -535,6 +548,43 @@ internal static class MetadataAttributeFactory
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         WriteInterfaceMapClass(settings, sortedEntries, "WindowsRuntimeExclusiveToInterface", "WindowsRuntimeExclusiveToInterfaces", "WindowsRuntimeExclusiveToInterfaces.cs");
+    }
+
+    /// <summary>
+    /// Writes the generated <c>WindowsRuntimeMetadataTypes.cs</c> file: an <c>ABI</c> namespace-level static class
+    /// decorated with one <c>[WindowsRuntimeMetadata(typeof(&lt;type&gt;), "&lt;stem&gt;")]</c> per projected type,
+    /// mapping it to the source <c>.winmd</c> module name. This centralizes the (build-time only) metadata mapping so
+    /// it can be trimmed away when not needed, mirroring <see cref="WriteDefaultInterfacesClass"/>.
+    /// </summary>
+    /// <param name="settings">The active projection settings.</param>
+    /// <param name="sortedEntries">The (projected-type-name -> <c>.winmd</c> stem) entries, sorted for determinism.</param>
+    public static void WriteWindowsRuntimeMetadataTypesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
+    {
+        if (sortedEntries.Count == 0)
+        {
+            return;
+        }
+
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter w = wOwner.Writer;
+        WriteFileHeader(w);
+        w.WriteLine("using System;");
+        w.WriteLine("using WindowsRuntime;");
+        w.WriteLine();
+        w.WriteLine("#pragma warning disable CSWINRT3001");
+        w.WriteLine();
+        w.WriteLine("namespace ABI");
+        using (w.WriteBlock())
+        {
+            foreach (KeyValuePair<string, string> kv in sortedEntries)
+            {
+                w.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value}\")]");
+            }
+
+            w.WriteLine("internal static class WindowsRuntimeMetadataTypes;");
+        }
+
+        w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeMetadataTypes.cs"));
     }
 
     /// <summary>
