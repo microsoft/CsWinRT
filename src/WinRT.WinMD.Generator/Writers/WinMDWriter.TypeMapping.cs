@@ -199,7 +199,7 @@ internal sealed partial class WinMDWriter
             }
 
             // For Windows Runtime types from projection assemblies, use the Windows Runtime contract assembly name
-            // from the '[WindowsRuntimeMetadata]' attribute instead of the projection assembly name.
+            // from the centralized ABI.WindowsRuntimeMetadataTypes lookup type instead of the projection assembly name.
             // E.g., 'StackPanel' from 'Microsoft.WinUI' → 'Microsoft.UI.Xaml' in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
             TypeDefinition? resolvedType = SafeResolve(typeRef);

@@ -16,14 +16,15 @@ internal static class TypeDefinitionExtensions
     extension(TypeDefinition type)
     {
         /// <summary>
-        /// Checks whether the type is a Windows Runtime type (has the <c>[WindowsRuntimeMetadata]</c> attribute).
+        /// Checks whether the type is a Windows Runtime type (has the <c>[WindowsRuntimeType]</c> marker).
         /// </summary>
         /// <remarks>
-        /// Types marked with <c>[WindowsRuntimeMetadata]</c> are projected Windows Runtime types that come
-        /// from CsWinRT-generated projection assemblies. This attribute indicates the type has a
-        /// corresponding Windows Runtime definition and carries metadata about its contract assembly.
+        /// Types marked with <c>[WindowsRuntimeType]</c> are projected Windows Runtime types that come
+        /// from CsWinRT-generated projection assemblies. This marker indicates the type has a corresponding
+        /// Windows Runtime definition. The source contract assembly is recorded separately on the centralized
+        /// <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type (the <c>WindowsRuntimeAssemblyName</c> property).
         /// </remarks>
-        public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").Any();
+        public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeTypeAttribute").Any();
 
         /// <summary>
         /// Checks whether the type is a Windows Runtime API contract (has the <c>[ApiContract]</c> attribute).
@@ -69,33 +70,26 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Gets the Windows Runtime contract assembly name from <c>[WindowsRuntimeMetadata]</c> attribute on the type, if present.
+        /// Gets the Windows Runtime contract assembly name (i.e. the source <c>.winmd</c> module name) for the type, if available.
         /// </summary>
         /// <returns>
         /// The Windows Runtime contract assembly name (e.g. <c>"Microsoft.UI.Xaml"</c>), or <see langword="null"/>
-        /// if the type does not have a <c>[WindowsRuntimeMetadata]</c> attribute.
+        /// if no mapping is found for the type.
         /// </returns>
         /// <remarks>
-        /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original
-        /// Windows Runtime contract assembly name so the WinMD can reference types correctly.
+        /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original Windows Runtime
+        /// contract assembly name so the WinMD can reference types correctly. The mapping is no longer carried on each
+        /// type: it lives on the centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type in the implementation
+        /// projection (so the build-time-only metadata can be trimmed away), and is read from the type's declaring module.
         /// </remarks>
         public string? WindowsRuntimeAssemblyName
         {
             get
             {
-                // If the type doesn't have the '[WindowsRuntimeMetadata]' attribute, stop here
-                if (type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").FirstOrDefault() is not CustomAttribute attribute)
-                {
-                    return null;
-                }
-
-                // Extract the assembly name from the attribute signature, if possible
-                if (attribute.Signature is { FixedArguments: [{ Element: object assemblyName }] })
-                {
-                    return assemblyName.ToString();
-                }
-
-                return null;
+                return type.DeclaringModule is { } module &&
+                       module.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace?.Value, type.Name?.Value), out string? stem)
+                    ? stem
+                    : null;
             }
         }
     }
