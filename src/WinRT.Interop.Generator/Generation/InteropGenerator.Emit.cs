@@ -146,12 +146,12 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'IReadOnlyCollection<KeyValuePair<TKey, TValue>>' types
-        DefineIReadOnlyCollectionKeyValuePair2Types(args, discoveryState, emitState, interopReferences, module);
+        DefineIReadOnlyCollectionKeyValuePair2Types(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Emit interop types for 'ICollection<KeyValuePair<TKey, TValue>>' types
-        DefineICollectionKeyValuePair2Types(args, discoveryState, emitState, interopReferences, module);
+        DefineICollectionKeyValuePair2Types(args, discoveryState, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -329,6 +329,7 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     nativeDelegateType: nativeDelegateType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition delegateComWrappersCallbackType);
@@ -338,6 +339,7 @@ internal partial class InteropGenerator
                     delegateComWrappersCallbackType: delegateComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     get_ReferenceIidMethod: get_ReferenceIidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -384,6 +386,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Delegate.Proxy(
                     delegateType: typeSignature,
                     comWrappersMarshallerAttributeType: delegateComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -402,6 +405,7 @@ internal partial class InteropGenerator
                     InteropTypeDefinitionBuilder.EventSource.EventHandler1(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
+                        interopDefinitions: interopDefinitions,
                         interopReferences: interopReferences,
                         module: module,
                         eventSourceType: out _);
@@ -411,6 +415,7 @@ internal partial class InteropGenerator
                     InteropTypeDefinitionBuilder.EventSource.EventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
+                        interopDefinitions: interopDefinitions,
                         interopReferences: interopReferences,
                         module: module,
                         eventSourceType: out _);
@@ -420,6 +425,7 @@ internal partial class InteropGenerator
                     InteropTypeDefinitionBuilder.EventSource.VectorChangedEventHandler1(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
+                        interopDefinitions: interopDefinitions,
                         interopReferences: interopReferences,
                         emitState: emitState,
                         module: module,
@@ -430,6 +436,7 @@ internal partial class InteropGenerator
                     InteropTypeDefinitionBuilder.EventSource.MapChangedEventHandler2(
                         delegateType: typeSignature,
                         marshallerType: marshallerType,
+                        interopDefinitions: interopDefinitions,
                         interopReferences: interopReferences,
                         emitState: emitState,
                         module: module,
@@ -476,6 +483,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IEnumerator1.ElementMarshaller(
                     enumeratorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -500,6 +508,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerator1.Methods(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     enumeratorMethodsType: out _);
@@ -507,6 +516,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerator1.NativeObject(
                     enumeratorType: typeSignature,
                     iteratorMethodsType: iteratorMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     nativeObjectType: out TypeDefinition nativeObjectType);
@@ -515,6 +525,7 @@ internal partial class InteropGenerator
                     enumeratorType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -524,6 +535,7 @@ internal partial class InteropGenerator
                     enumeratorType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition enumeratorComWrappersMarshallerType);
@@ -532,6 +544,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: enumeratorComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -549,6 +562,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: enumeratorComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -602,6 +616,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerable1.Interface(
                     enumerableType: typeSignature,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -626,6 +641,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerable1.Methods(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     enumerableMethodsType: out _);
@@ -633,6 +649,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IEnumerable1.NativeObject(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     nativeObjectType: out TypeDefinition nativeObjectType);
@@ -641,6 +658,7 @@ internal partial class InteropGenerator
                     enumerableType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -650,6 +668,7 @@ internal partial class InteropGenerator
                     enumerableType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     marshallerType: out TypeDefinition enumerableComWrappersMarshallerType);
@@ -658,6 +677,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: enumerableComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -675,6 +695,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: enumerableComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -744,6 +765,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyList1.IVectorViewMethods(
                     readOnlyListType: typeSignature,
                     vftblType: vftblType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -752,6 +774,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyList1.Methods(
                     readOnlyListType: typeSignature,
                     vectorViewMethodsType: vectorViewMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -760,6 +783,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyList1.NativeObject(
                     readOnlyListType: typeSignature,
                     vectorViewMethodsType: vectorViewMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -769,6 +793,7 @@ internal partial class InteropGenerator
                     readOnlyListType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -778,6 +803,7 @@ internal partial class InteropGenerator
                     readOnlyListType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition readOnlyListComWrappersMarshallerType);
@@ -786,6 +812,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: readOnlyListComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -803,6 +830,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: readOnlyListComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -856,6 +884,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IList1.Interface(
                     listType: typeSignature,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -880,6 +909,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IList1.IVectorMethods(
                     listType: typeSignature,
                     vftblType: vftblType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -888,6 +918,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IList1.Methods(
                     listType: typeSignature,
                     vectorMethodsType: vectorMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -896,6 +927,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IList1.NativeObject(
                     listType: typeSignature,
                     vectorMethodsType: vectorMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -905,6 +937,7 @@ internal partial class InteropGenerator
                     listType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -914,6 +947,7 @@ internal partial class InteropGenerator
                     listType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition listComWrappersMarshallerType);
@@ -922,6 +956,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: listComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -939,6 +974,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: listComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1009,6 +1045,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.IMapViewMethods(
                     readOnlyDictionaryType: typeSignature,
                     vftblType: vftblType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1017,6 +1054,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.Methods(
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1025,6 +1063,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyDictionary2.NativeObject(
                     readOnlyDictionaryType: typeSignature,
                     mapViewMethodsType: mapViewMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1034,6 +1073,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1043,6 +1083,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition readOnlyDictionaryComWrappersMarshallerType);
@@ -1051,6 +1092,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: readOnlyDictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1068,6 +1110,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: readOnlyDictionaryComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1121,6 +1164,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IDictionary2.Interface(
                     dictionaryType: typeSignature,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1146,6 +1190,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IDictionary2.IMapMethods(
                     dictionaryType: typeSignature,
                     vftblType: vftblType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1154,6 +1199,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IDictionary2.Methods(
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1162,6 +1208,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IDictionary2.NativeObject(
                     dictionaryType: typeSignature,
                     mapMethodsType: mapMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1171,6 +1218,7 @@ internal partial class InteropGenerator
                     dictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1180,6 +1228,7 @@ internal partial class InteropGenerator
                     dictionaryType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition dictionaryComWrappersMarshallerType);
@@ -1188,6 +1237,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: dictionaryComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1205,6 +1255,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: dictionaryComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1248,6 +1299,7 @@ internal partial class InteropGenerator
         try
         {
             InteropTypeDefinitionBuilder.KeyValuePair.Methods(
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 methodsType: out methodsType);
@@ -1302,6 +1354,7 @@ internal partial class InteropGenerator
                     get_IidMethod: get_IidMethod,
                     keyAccessorMethod: keyAccessorMethod,
                     valueAccessorMethod: valueAccessorMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1320,6 +1373,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.KeyValuePair.Proxy(
                     keyValuePairType: typeSignature,
                     comWrappersMarshallerAttributeType: marshallerAttributeType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1388,6 +1442,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IMapChangedEventArgs1.NativeObject(
                     argsType: typeSignature,
                     argsMethodsType: argsMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition nativeObjectType);
@@ -1396,6 +1451,7 @@ internal partial class InteropGenerator
                     argsType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1405,6 +1461,7 @@ internal partial class InteropGenerator
                     argsType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition argsComWrappersMarshallerType);
@@ -1413,6 +1470,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: argsComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1430,6 +1488,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: argsComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1490,6 +1549,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
                     vectorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1497,6 +1557,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceCallback(
                     vectorType: typeSignature,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1505,6 +1566,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableVector1.Methods(
                     vectorType: typeSignature,
                     eventSourceCallbackType: callbackType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
@@ -1512,6 +1574,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableVector1.NativeObject(
                     vectorType: typeSignature,
                     factoryType: factoryType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1521,6 +1584,7 @@ internal partial class InteropGenerator
                     vectorType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1530,6 +1594,7 @@ internal partial class InteropGenerator
                     vectorType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
@@ -1538,6 +1603,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: comWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1555,6 +1621,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1615,6 +1682,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
                     mapType: typeSignature,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1622,6 +1690,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableMap2.EventSourceCallback(
                     mapType: typeSignature,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1630,6 +1699,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableMap2.Methods(
                     mapType: typeSignature,
                     eventSourceCallbackType: callbackType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
@@ -1637,6 +1707,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableMap2.NativeObject(
                     mapType: typeSignature,
                     factoryType: factoryType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1646,6 +1717,7 @@ internal partial class InteropGenerator
                     mapType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1655,6 +1727,7 @@ internal partial class InteropGenerator
                     mapType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
@@ -1663,6 +1736,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: comWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1680,6 +1754,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: comWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1749,6 +1824,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IAsyncActionWithProgress1.NativeObject(
                     actionType: typeSignature,
                     actionMethodsType: actionMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition nativeObjectType);
@@ -1757,6 +1833,7 @@ internal partial class InteropGenerator
                     actionType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1766,6 +1843,7 @@ internal partial class InteropGenerator
                     actionType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition actionComWrappersMarshallerType);
@@ -1774,6 +1852,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: actionComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1791,6 +1870,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: actionComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1860,6 +1940,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IAsyncOperation1.NativeObject(
                     operationType: typeSignature,
                     operationMethodsType: operationMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition nativeObjectType);
@@ -1868,6 +1949,7 @@ internal partial class InteropGenerator
                     operationType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1877,6 +1959,7 @@ internal partial class InteropGenerator
                     operationType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition operationComWrappersMarshallerType);
@@ -1885,6 +1968,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: operationComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1902,6 +1986,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1971,6 +2056,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IAsyncOperationWithProgress2.NativeObject(
                     operationType: typeSignature,
                     operationMethodsType: operationMethodsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition nativeObjectType);
@@ -1979,6 +2065,7 @@ internal partial class InteropGenerator
                     operationType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -1988,6 +2075,7 @@ internal partial class InteropGenerator
                     operationType: typeSignature,
                     nativeObjectType: nativeObjectType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition operationComWrappersMarshallerType);
@@ -1996,6 +2084,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     interfaceComWrappersCallbackType: operationComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -2013,6 +2102,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.Proxy(
                     interfaceType: typeSignature,
                     comWrappersMarshallerAttributeType: operationComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -2039,12 +2129,14 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIReadOnlyCollectionKeyValuePair2Types(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -2065,6 +2157,7 @@ internal partial class InteropGenerator
             {
                 InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.ForwarderAttribute(
                     readOnlyCollectionType: readOnlyCollectionType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     forwarderAttributeType: out TypeDefinition forwarderAttributeType);
@@ -2072,6 +2165,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IReadOnlyCollectionKeyValuePair2.InterfaceImpl(
                     readOnlyCollectionType: readOnlyCollectionType,
                     forwarderAttributeType: forwarderAttributeType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -2096,12 +2190,14 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineICollectionKeyValuePair2Types(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         InteropGeneratorEmitState emitState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -2122,6 +2218,7 @@ internal partial class InteropGenerator
             {
                 InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.ForwarderAttribute(
                     collectionType: collectionType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     forwarderAttributeType: out TypeDefinition forwarderAttributeType);
@@ -2129,6 +2226,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.ICollectionKeyValuePair2.InterfaceImpl(
                     collectionType: collectionType,
                     forwarderAttributeType: forwarderAttributeType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -2179,6 +2277,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.SzArray.Marshaller(
                     arrayType: typeSignature,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -2187,6 +2286,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.ComWrappersCallback(
                     arrayType: typeSignature,
                     marshallerType: marshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition arrayComWrappersCallbackType);
@@ -2218,6 +2318,7 @@ internal partial class InteropGenerator
                     arrayInterfaceEntriesImplType: arrayInterfaceEntriesImplType,
                     arrayComWrappersCallbackType: arrayComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition arrayComWrappersMarshallerType);
@@ -2225,6 +2326,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.SzArray.Proxy(
                     arrayType: typeSignature,
                     comWrappersMarshallerAttributeType: arrayComWrappersMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -2442,6 +2544,7 @@ internal partial class InteropGenerator
                     userDefinedType: typeSignature,
                     interfaceEntriesType: interfaceEntriesType,
                     interfaceEntriesImplType: interfaceEntriesImplType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
@@ -2465,6 +2568,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
                     comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,

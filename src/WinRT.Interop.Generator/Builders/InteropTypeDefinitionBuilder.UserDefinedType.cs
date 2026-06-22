@@ -86,7 +86,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "InterfaceEntriesImpl"),
                 entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
@@ -100,6 +100,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
         /// <param name="interfaceEntriesType">The <see cref="TypeDefinition"/> for the interface entries type returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="interfaceEntriesImplType">The <see cref="TypeDefinition"/> for the interface entries implementation type returned by <see cref="InterfaceEntriesImpl"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -107,6 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature userDefinedType,
             TypeDefinition interfaceEntriesType,
             TypeDefinition interfaceEntriesImplType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -114,7 +116,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -180,6 +182,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -187,6 +190,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Proxy(
             TypeSignature userDefinedType,
             TypeDefinition comWrappersMarshallerAttributeType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -201,7 +205,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
                     mappedMetadata: null,
                     runtimeClassName: null,
                     metadataTypeName: null,
@@ -218,7 +222,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // For authored component types, the runtime class name is the type's own fully-qualified name.
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
                     mappedMetadata: null,
                     runtimeClassName: MetadataTypeNameGenerator.GetMetadataTypeName(userDefinedType, useWindowsUIXamlProjections),
                     metadataTypeName: null,
@@ -244,7 +248,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
                     mappedMetadata: null,
                     runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                     metadataTypeName: null,

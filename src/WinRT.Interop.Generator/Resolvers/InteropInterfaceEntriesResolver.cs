@@ -60,7 +60,6 @@ internal static class InteropInterfaceEntriesResolver
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
                     type: genericTypeSignature,
                     interopDefinitions: interopDefinitions,
-                    interopReferences: interopReferences,
                     emitState: emitState);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);

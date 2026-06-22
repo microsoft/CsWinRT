@@ -22,11 +22,13 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the forwarder attribute for a <see cref="System.Collections.Generic.IReadOnlyCollection{T}"/> of <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
         /// <param name="readOnlyCollectionType">The <see cref="GenericInstanceTypeSignature"/> for the generic interface type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="forwarderAttributeType">The resulting marshaller type.</param>
         public static void ForwarderAttribute(
             GenericInstanceTypeSignature readOnlyCollectionType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition forwarderAttributeType)
@@ -39,6 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyCollectionType: readOnlyCollectionType,
                 readOnlyDictionaryType: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([keyType, valueType]),
                 readOnlyListType: interopReferences.IReadOnlyList1.MakeGenericReferenceType([keyValuePairType]),
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 forwarderAttributeType: out forwarderAttributeType);
@@ -49,6 +52,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="readOnlyCollectionType">The <see cref="GenericInstanceTypeSignature"/> for the generic interface type.</param>
         /// <param name="forwarderAttributeType">The type returned by <see cref="ForwarderAttribute"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -56,6 +60,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceImpl(
             GenericInstanceTypeSignature readOnlyCollectionType,
             TypeDefinition forwarderAttributeType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -71,7 +76,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyCollectionType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, interopReferences.RuntimeContext, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, interopDefinitions, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
