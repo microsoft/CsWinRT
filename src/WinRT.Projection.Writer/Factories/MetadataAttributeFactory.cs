@@ -80,30 +80,45 @@ internal static class MetadataAttributeFactory
 
     /// <summary>
     /// Writes a <c>[WindowsRuntimeMetadata("&lt;stem&gt;")]</c> attribute decorating <paramref name="type"/> with its source <c>.winmd</c> module name.
+    /// Skipped entirely in reference-projection mode.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    /// <param name="cache">The metadata cache used to resolve the source module path.</param>
-    public static void WriteWinRTMetadataAttribute(IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
+    public static void WriteWinRTMetadataAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        WriteWinRTMetadataAttributeBody(writer, type, cache);
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
+        WriteWinRTMetadataAttributeBody(writer, context, type);
+
         writer.WriteLine();
     }
 
-    /// <inheritdoc cref="WriteWinRTMetadataAttribute(IndentedTextWriter, TypeDefinition, MetadataCache)"/>
-    /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template.</returns>
-    public static IndentedTextWriterCallback WriteWinRTMetadataAttribute(TypeDefinition type, MetadataCache cache)
+    /// <inheritdoc cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
+    /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode.</returns>
+    public static IndentedTextWriterCallback WriteWinRTMetadataAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return writer => WriteWinRTMetadataAttributeBody(writer, type, cache);
+        return writer => WriteWinRTMetadataAttributeBody(writer, context, type);
     }
 
     /// <summary>
-    /// Writes just the attribute body (no trailing newline) for <see cref="WriteWinRTMetadataAttribute(IndentedTextWriter, TypeDefinition, MetadataCache)"/>.
-    /// Used by the callback variant to allow the attribute to be inlined inside a multiline raw-string template line.
+    /// Writes just the attribute body (no trailing newline) for <see cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.
+    /// In reference-projection mode this emits nothing: <c>[WindowsRuntimeMetadata]</c> is an implementation-only
+    /// type, stripped from the <c>WinRT.Runtime</c> reference assembly that a reference projection compiles against.
+    /// It is only consumed (by the interop generator) from implementation projections, never from the reference
+    /// projections shipped in Windows Runtime projection NuGet packages.
     /// </summary>
-    internal static void WriteWinRTMetadataAttributeBody(IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
+    internal static void WriteWinRTMetadataAttributeBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string path = cache.GetSourcePath(type);
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
+        string path = context.Cache.GetSourcePath(type);
         string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
         writer.Write($"[WindowsRuntimeMetadata(\"{stem}\")]");
     }

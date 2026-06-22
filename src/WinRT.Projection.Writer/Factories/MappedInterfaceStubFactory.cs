@@ -138,7 +138,7 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IEnumerableMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "GetEnumerator", $"IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
+        EmitUnsafeAccessor(writer, context, "GetEnumerator", $"IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
 
         writer.WriteLine();
         writer.WriteLine($"public IEnumerator<{t}> GetEnumerator() => {prefix}GetEnumerator(null, {objRefName});");
@@ -159,7 +159,7 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IEnumeratorMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Current",  t,      $"{prefix}Current",  ""),
             new("MoveNext", "bool", $"{prefix}MoveNext", "")]);
 
@@ -207,9 +207,9 @@ internal static class MappedInterfaceStubFactory
         // 'Keys'/'Values' take the projected runtime class directly (passed as 'this'), rather than the
         // interface object reference like the other accessors. This lets the returned collection be cached
         // in the public property's backing 'field' so it preserves reference identity across accesses.
-        EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessor(writer, context, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessor(writer, context, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count",        "int",               $"{prefix}Count",        ""),
             new("Item",         v,                   $"{prefix}Item",         $", {k} key"),
             new("Item",         "void",              $"{prefix}Item",         $", {k} key, {v} value"),
@@ -269,9 +269,9 @@ internal static class MappedInterfaceStubFactory
         // 'Keys'/'Values' take the projected runtime class directly (passed as 'this'), rather than the
         // interface object reference like the other accessors. This lets the returned collection be cached
         // in the public property's backing 'field' so it preserves reference identity across accesses.
-        EmitUnsafeAccessor(writer, "Keys", $"IEnumerable<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessor(writer, "Values", $"IEnumerable<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessor(writer, context, "Keys", $"IEnumerable<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessor(writer, context, "Values", $"IEnumerable<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count",       "int",               $"{prefix}Count",       ""),
             new("Item",        v,                   $"{prefix}Item",        $", {k} key"),
             new("ContainsKey", "bool",              $"{prefix}ContainsKey", $", {k} key"),
@@ -302,7 +302,7 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count", "int", $"{prefix}Count", ""),
             new("Item",  t,     $"{prefix}Item",  ", int index")]);
 
@@ -349,7 +349,7 @@ internal static class MappedInterfaceStubFactory
         string prefix = "IListMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count",    "int",  $"{prefix}Count",    ""),
             new("Item",     t,      $"{prefix}Item",     ", int index"),
             new("Item",     "void", $"{prefix}Item",     $", int index, {t} value"),
@@ -393,8 +393,25 @@ internal static class MappedInterfaceStubFactory
     /// (<c>WindowsRuntimeObjectReference objRef</c>); a few accessors (e.g. dictionary
     /// <c>Keys</c>/<c>Values</c>) instead take the projected runtime class (<c>WindowsRuntimeObject</c>).
     /// </summary>
-    private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams, string receiver = "WindowsRuntimeObjectReference objRef")
+    private static void EmitUnsafeAccessor(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        string accessName,
+        string returnType,
+        string functionName,
+        string interopType,
+        string extraParams,
+        string receiver = "WindowsRuntimeObjectReference objRef")
     {
+        // The '[UnsafeAccessor]' extern is impl-only plumbing for the stub member bodies; in a reference
+        // projection those bodies are not bound (the reference assembly only needs the public member
+        // signatures), so the extern (which typically references the implementation-only
+        // 'WindowsRuntimeObjectReference') is omitted.
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         UnsafeAccessorFactory.EmitStaticMethod(
             writer,
             accessName: accessName,
@@ -408,17 +425,18 @@ internal static class MappedInterfaceStubFactory
     /// <summary>
     /// Emits a sequence of <c>[UnsafeAccessor]</c> static extern declarations sharing the same
     /// <paramref name="interopType"/>. Each row of <paramref name="accessors"/> is forwarded to
-    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, string, string, string, string, string, string)"/>.
+    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, ProjectionEmitContext, string, string, string, string, string, string)"/>.
     /// Used by the collection-stub emitters which emit table-shaped sets of accessors.
     /// </summary>
     private static void EmitUnsafeAccessors(
         IndentedTextWriter writer,
+        ProjectionEmitContext context,
         string interopType,
         params ReadOnlySpan<(string AccessName, string ReturnType, string FunctionName, string ExtraParams)> accessors)
     {
         foreach ((string accessName, string returnType, string functionName, string extraParams) in accessors)
         {
-            EmitUnsafeAccessor(writer, accessName, returnType, functionName, interopType, extraParams);
+            EmitUnsafeAccessor(writer, context, accessName, returnType, functionName, interopType, extraParams);
         }
     }
 

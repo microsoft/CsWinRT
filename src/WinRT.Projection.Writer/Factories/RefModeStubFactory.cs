@@ -14,23 +14,6 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static class RefModeStubFactory
 {
     /// <summary>
-    /// Emits the body of an <c>_objRef_*</c> property getter in reference projection mode.
-    /// </summary>
-    /// <param name="writer">The writer to emit to.</param>
-    public static void EmitRefModeObjRefGetterBody(IndentedTextWriter writer)
-    {
-        writer.WriteLine();
-        writer.WriteLine(isMultiline: true, """
-            {
-                get
-                {
-                    throw null;
-                }
-            }
-            """);
-    }
-
-    /// <summary>
     /// Emits the synthetic <c>private TypeName() { throw null; }</c> ctor used in reference
     /// projection mode to suppress the C# compiler's implicit public default constructor when
     /// no explicit ctors are emitted by <c>WriteAttributedTypes</c>.
@@ -41,6 +24,28 @@ internal static class RefModeStubFactory
     {
         writer.WriteLine();
         writer.WriteLine($"private {typeName}() {{ throw null; }}");
+    }
+
+    /// <summary>
+    /// Emits the closing <c>)</c> of a constructor parameter list followed by a <c>throw null</c> body,
+    /// for constructors emitted in reference projection mode. The caller must already have written the
+    /// constructor signature up to (but not including) the closing <c>)</c> of the parameter list.
+    /// </summary>
+    /// <remarks>
+    /// Reference projections only need the public constructor signatures (their bodies are never run and
+    /// are stripped from the produced reference assembly), so the body is emitted as <c>throw null</c>
+    /// rather than the real activation logic, which would reference implementation-only 'WinRT.Runtime'
+    /// types (object references, activation factory callbacks, ABI IID accessors).
+    /// </remarks>
+    /// <param name="writer">The writer to emit to.</param>
+    public static void EmitRefModeConstructorBody(IndentedTextWriter writer)
+    {
+        writer.WriteLine(isMultiline: true, """
+            )
+            {
+                throw null;
+            }
+            """);
     }
 
     /// <summary>

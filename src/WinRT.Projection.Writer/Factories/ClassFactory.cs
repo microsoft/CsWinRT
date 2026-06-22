@@ -226,7 +226,7 @@ internal static class ClassFactory
     {
         using (context.EnterPlatformSuppressionScope(string.Empty))
         {
-            IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+            IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
             IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
             IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, false);
             writer.WriteLine(isMultiline: true, $$"""
@@ -453,31 +453,32 @@ internal static class ClassFactory
     /// </summary>
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
-        writer.WriteLine();
-
+        // The static factory '_objRef_*' field is a private implementation detail typed as the
+        // implementation-only 'WindowsRuntimeObjectReference', so it is omitted from reference
+        // projections (which compile against the stripped 'WinRT.Runtime' reference assembly).
         if (context.Settings.ReferenceProjection)
         {
-            writer.WriteLine($"private static WindowsRuntimeObjectReference {objRefName} => throw null;");
+            return;
         }
-        else
-        {
-            IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
 
-            writer.WriteLine(isMultiline: true, $$"""
-                private static WindowsRuntimeObjectReference {{objRefName}}
+        writer.WriteLine();
+
+        IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
+
+        writer.WriteLine(isMultiline: true, $$"""
+            private static WindowsRuntimeObjectReference {{objRefName}}
+            {
+                get
                 {
-                    get
+                    var __{{objRefName}} = field;
+                    if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
                     {
-                        var __{{objRefName}} = field;
-                        if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
-                        {
-                            return __{{objRefName}};
-                        }
-                        return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
+                        return __{{objRefName}};
                     }
+                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
                 }
-                """);
-        }
+            }
+            """);
     }
 
     /// <summary>
@@ -510,7 +511,7 @@ internal static class ClassFactory
         int gcPressure = GetGcPressureAmount(type);
 
         // Header attributes + class declaration as a single multiline template.
-        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
         IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
 

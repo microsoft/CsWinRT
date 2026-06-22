@@ -34,35 +34,29 @@ internal static partial class ConstructorFactory
             }
         }
 
-        if (needsClassObjRef)
+        // The activation factory '_objRef_*' field is a private implementation detail typed as the
+        // implementation-only 'WindowsRuntimeObjectReference', so it is omitted from reference projections
+        // (which compile against the stripped 'WinRT.Runtime' reference assembly).
+        if (needsClassObjRef && !context.Settings.ReferenceProjection)
         {
             string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
             writer.WriteLine();
             writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
-
-            if (context.Settings.ReferenceProjection)
-            {
-                // in ref mode the activation factory objref getter body is just 'throw null;'.
-                RefModeStubFactory.EmitRefModeObjRefGetterBody(writer);
-            }
-            else
-            {
-                writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                {
+                    get
                     {
-                        get
+                        var __{{objRefName}} = field;
+                        if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
                         {
-                            var __{{objRefName}} = field;
-                            if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
-                            {
-                                return __{{objRefName}};
-                            }
-                            return field = WindowsRuntimeObjectReference.GetActivationFactory("{{fullName}}");
+                            return __{{objRefName}};
                         }
+                        return field = WindowsRuntimeObjectReference.GetActivationFactory("{{fullName}}");
                     }
-                    """);
-            }
+                }
+                """);
         }
 
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, context.Cache))
@@ -122,6 +116,18 @@ internal static partial class ConstructorFactory
 
                 writer.Write($"public unsafe {typeName}(");
                 MethodFactory.WriteParameterList(writer, context, sig);
+
+                // In ref mode the constructor keeps its public signature but gets a 'throw null' body,
+                // and the args struct + factory callback class below are skipped (they are private
+                // implementation details referencing implementation-only 'WinRT.Runtime' types).
+                if (context.Settings.ReferenceProjection)
+                {
+                    RefModeStubFactory.EmitRefModeConstructorBody(writer);
+                    methodIndex++;
+
+                    continue;
+                }
+
                 writer.Write(isMultiline: true, """
                     )
                       :base(
@@ -165,9 +171,20 @@ internal static partial class ConstructorFactory
         }
         else
         {
-            // No factory type means [Activatable(uint version)] - emit a default ctor that calls
-            // the WindowsRuntimeObject base constructor with the activation factory objref.
-            // The default interface IID is needed too.
+            // No factory type means '[Activatable(uint version)]',  emit a parameterless default ctor
+            if (context.Settings.ReferenceProjection)
+            {
+                // Ref mode keeps the public signature with a 'throw null' body (the impl-mode body
+                // calls the base ctor with implementation-only activation types).
+                writer.WriteLine();
+                writer.Write($"public {typeName}(");
+                RefModeStubFactory.EmitRefModeConstructorBody(writer);
+
+                return;
+            }
+
+            // The impl-mode default ctor calls the 'WindowsRuntimeObject' base constructor with
+            // the activation factory object reference. The default interface IID is needed too.
             string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
 

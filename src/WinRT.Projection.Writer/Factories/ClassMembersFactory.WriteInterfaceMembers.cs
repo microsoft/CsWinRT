@@ -19,9 +19,16 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class ClassMembersFactory
 {
-    private static void WriteInterfaceMembersRecursive(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType, TypeDefinition declaringType,
+    private static void WriteInterfaceMembersRecursive(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        TypeDefinition classType,
+        TypeDefinition declaringType,
         GenericInstanceTypeSignature? currentInstance,
-        HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
+        HashSet<string> writtenMethods,
+        IDictionary<string, PropertyAccessorState> propertyState,
+        HashSet<string> writtenEvents,
+        HashSet<TypeDefinition> writtenInterfaces)
     {
         GenericContext genericContext = new(currentInstance, null);
 
@@ -238,10 +245,10 @@ internal static partial class ClassMembersFactory
             genericInteropType = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(currentInstance, TypedefNameType.StaticAbiClass);
         }
 
-        // Compute the platform attribute string from the interface type's [ContractVersion]
+        // Compute the platform attribute string from the interface type's '[ContractVersion]'
         // attribute. In ref mode, this is prepended to each member emission so the projected
-        // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
-        // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
+        // class members carry '[SupportedOSPlatform("WindowsX.Y.Z.0")]' mirroring the interface's
+        // contract version. Only emitted in ref mode ('WritePlatformAttribute' internally returns
         // immediately if not ref)
         string platformAttribute = CustomAttributeFactory.GetPlatformAttribute(context, ifaceType);
 
@@ -251,7 +258,7 @@ internal static partial class ClassMembersFactory
             string name = method.GetRawName();
 
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
-            // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
+            // This prevents collapsing distinct overloads like 'Format(double)' and 'Format(ulong)'.
             MethodSignatureInfo sig = new(method, genericContext);
             string key = sig.GetDedupeKey(name);
 
@@ -309,13 +316,21 @@ internal static partial class ClassMembersFactory
                 string platformTrimmed = platformAttribute.TrimEnd('\r', '\n');
 
                 writer.WriteLine();
-                UnsafeAccessorFactory.EmitStaticMethod(
-                    writer,
-                    accessName: name,
-                    returnType: unsafeRet.Format(),
-                    functionName: accessorName,
-                    interopType: genericInteropType,
-                    parameterList: $"WindowsRuntimeObjectReference thisReference{accessorParams}");
+
+                // The '[UnsafeAccessor]' extern is impl-only plumbing for the dispatch body; in ref mode
+                // the body is 'throw null' (see 'body' above), so the extern (which references the
+                // implementation-only 'WindowsRuntimeObjectReference') is omitted.
+                if (!context.Settings.ReferenceProjection)
+                {
+                    UnsafeAccessorFactory.EmitStaticMethod(
+                        writer,
+                        accessName: name,
+                        returnType: unsafeRet.Format(),
+                        functionName: accessorName,
+                        interopType: genericInteropType,
+                        parameterList: $"WindowsRuntimeObjectReference thisReference{accessorParams}");
+                }
+
                 writer.WriteLine(isMultiline: true, $$"""
                     {{platformTrimmed}}
                     {{access}}{{methodSpecForThis}}{{ret}} {{name}}({{parms}}) => {{body}}
