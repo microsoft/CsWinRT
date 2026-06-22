@@ -287,7 +287,7 @@ The generator processes two categories of assemblies:
 - `System.Collections.Concurrent.ConditionalWeakTable<,>` — Memory semantics conflict
 
 **Type inclusion criteria:**
-- Must be a projected Windows Runtime type (marked with `[WindowsRuntimeMetadata]` or similar)
+- Must be a projected Windows Runtime type. A type is recognized as projected in any of three ways: it carries the per-type `[WindowsRuntimeMetadata]` attribute (implementation projections and types in `WinRT.Runtime.dll`); it is a public type from an authored component assembly (`IsComponentWindowsRuntimeType`); or it is defined in a reference projection assembly marked `[WindowsRuntimeReferenceAssembly]` (`IsReferenceProjectionWindowsRuntimeType`). The latter two do **not** carry the per-type `[WindowsRuntimeMetadata]` attribute — reference projections shipped in NuGet packages have it stripped (it is an implementation-only attribute, absent from the `WinRT.Runtime.dll` reference assembly they compile against), so the interop generator recognizes them by their assembly-level marker instead.
 - Generic types must be fully constructed (no open generic parameters)
 - Type hierarchy must be fully resolvable (no missing dependencies)
 - Must not be a managed-only type (types that never cross the Windows Runtime boundary)

@@ -116,6 +116,17 @@ internal static class WindowsRuntimeExtensions
         public bool IsComponentWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeComponentAssembly: true };
 
         /// <summary>
+        /// Gets a value indicating whether the type is from a Windows Runtime reference projection assembly.
+        /// </summary>
+        /// <remarks>
+        /// Types in a reference projection assembly (marked with <c>[WindowsRuntimeReferenceAssembly]</c>) are
+        /// projected Windows Runtime types, but they do not carry the per-type <c>[WindowsRuntimeMetadata]</c>
+        /// attribute that implementation projections use (it is stripped from reference projections). This mirrors
+        /// how authored component assemblies expose projected types without that attribute (the <c>IsComponentWindowsRuntimeType</c> extension property).
+        /// </remarks>
+        public bool IsReferenceProjectionWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeReferenceAssembly: true };
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="Guid"/> type.</returns>
@@ -725,8 +736,10 @@ internal static class WindowsRuntimeExtensions
                     return false;
                 }
 
-                // The type also must be a projected type
-                return type.IsProjectedWindowsRuntimeType;
+                // The type also must be a projected type (recognized either by its '[WindowsRuntimeMetadata]'
+                // attribute, for implementation projections, or by being defined in a reference projection
+                // assembly, which doesn't carry that per-type attribute).
+                return type.IsProjectedWindowsRuntimeType || type.IsReferenceProjectionWindowsRuntimeType;
             }
         }
 
@@ -1006,8 +1019,9 @@ internal static class WindowsRuntimeExtensions
 
             // For all other cases, just check that the type is projected. This will also include manually
             // projected types that are defined in 'WinRT.Runtime.dll' (same attributes). Public types from
-            // authored component assemblies are also considered Windows Runtime types.
-            return type.IsProjectedWindowsRuntimeType || type.IsComponentWindowsRuntimeType;
+            // authored component assemblies, and types from reference projection assemblies, are also
+            // considered Windows Runtime types (they don't carry the per-type '[WindowsRuntimeMetadata]' attribute).
+            return type.IsProjectedWindowsRuntimeType || type.IsComponentWindowsRuntimeType || type.IsReferenceProjectionWindowsRuntimeType;
         }
 
         /// <summary>
@@ -1073,8 +1087,9 @@ internal static class WindowsRuntimeExtensions
             TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
 
             // For all other cases, first check that the type is projected. Public types from authored
-            // component assemblies are also considered projected, even without '[WindowsRuntimeMetadata]'.
-            if (!type.IsProjectedWindowsRuntimeType && !type.IsComponentWindowsRuntimeType)
+            // component assemblies, and types from reference projection assemblies, are also considered
+            // projected, even without '[WindowsRuntimeMetadata]'.
+            if (!type.IsProjectedWindowsRuntimeType && !type.IsComponentWindowsRuntimeType && !type.IsReferenceProjectionWindowsRuntimeType)
             {
                 return false;
             }
