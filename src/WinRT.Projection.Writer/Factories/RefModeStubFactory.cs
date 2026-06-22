@@ -18,12 +18,24 @@ internal static class RefModeStubFactory
     /// projection mode to suppress the C# compiler's implicit public default constructor when
     /// no explicit ctors are emitted by <c>WriteAttributedTypes</c>.
     /// </summary>
+    /// <remarks>
+    /// For an unsealed class the ctor is emitted as <c>private protected</c> rather than <c>private</c>:
+    /// a projected class can derive from another projected class (e.g. <c>UriActionEntity : ActionEntity</c>),
+    /// and the derived class's own synthetic ctor implicitly chains to the base's parameterless ctor. The
+    /// real <c>WindowsRuntimeObjectReference</c>-based ctor that derived classes chain to in the
+    /// implementation projection is not emitted in a reference projection, so the synthetic ctor must be
+    /// accessible to derived classes in the same projection. It stays non-public, so it still suppresses the
+    /// implicit public default constructor.
+    /// </remarks>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="typeName">The type name to emit the synthetic constructor for.</param>
-    public static void EmitSyntheticPrivateCtor(IndentedTextWriter writer, string typeName)
+    /// <param name="isSealed">Whether the type is sealed (and so can never be a base class).</param>
+    public static void EmitSyntheticPrivateCtor(IndentedTextWriter writer, string typeName, bool isSealed)
     {
+        string accessibility = isSealed ? "private" : "private protected";
+
         writer.WriteLine();
-        writer.WriteLine($"private {typeName}() {{ throw null; }}");
+        writer.WriteLine($"{accessibility} {typeName}() {{ throw null; }}");
     }
 
     /// <summary>

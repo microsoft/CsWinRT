@@ -606,7 +606,7 @@ internal static class ClassFactory
 
             if (!hasRefModeCtors)
             {
-                RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName);
+                RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName, type.IsSealed);
             }
         }
 
