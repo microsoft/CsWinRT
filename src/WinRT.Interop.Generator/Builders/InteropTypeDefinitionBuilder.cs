@@ -750,7 +750,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="ns">The namespace for the type.</param>
     /// <param name="name">The type name.</param>
-    /// <param name="mappedMetadata">The name of the mapped metadata for the proxy type (if <see langword="null"/>, the attribute will be omitted).</param>
+    /// <param name="mappedMetadata">Signals whether the proxy represents a Windows Runtime metadata type: when non-<see langword="null"/>, the <c>[WindowsRuntimeType]</c> marker is emitted (the string value itself is not emitted; the runtime only checks for the marker's presence). When <see langword="null"/>, no marker is emitted.</param>
     /// <param name="runtimeClassName">The runtime class name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="metadataTypeName">The metadata type name for the managed type (if <see langword="null"/>, the attribute will be omitted).</param>
     /// <param name="mappedType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for (if <see langword="null"/>, the attribute will be omitted).</param>
@@ -781,14 +781,13 @@ internal static partial class InteropTypeDefinitionBuilder
 
         module.TopLevelTypes.Add(proxyType);
 
-        // Add the '[WindowsRuntimeMappedMetadata]' attribute with the provided .winmd name, if available
+        // Mark metadata-type proxies with '[WindowsRuntimeType]' (the runtime only checks for its presence).
+        // Proxies that don't represent a Windows Runtime metadata type (mappedMetadata is null) stay unmarked.
         if (mappedMetadata is not null)
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
-                constructor: interopReferences.WindowsRuntimeMappedMetadataAttribute_ctor,
-                signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: interopReferences.String,
-                    value: mappedMetadata))));
+                constructor: interopReferences.WindowsRuntimeTypeAttribute_ctor,
+                signature: new CustomAttributeSignature()));
         }
 
         // Add the '[WindowsRuntimeClassName]' attribute with the provided runtime class name, if available

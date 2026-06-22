@@ -572,8 +572,8 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            // This is a proxy for Windows Runtime arrays, so we also need to emit the '[WindowsRuntimeMappedMetadata]'
-            // attribute, so that during 'TypeName' marshalling we can detect whether the type is a metadata type. Note
+            // This is a proxy for Windows Runtime arrays, so we also need to emit the '[WindowsRuntimeType]'
+            // marker, so that during 'TypeName' marshalling we can detect whether the type is a metadata type. Note
             // that arrays with element types that are not Windows Runtime types will still have entries in the marshalling
             // type map (as they're treated the same as normal user-defined types), so this allows us to distinguish them.
             InteropTypeDefinitionBuilder.Proxy(
