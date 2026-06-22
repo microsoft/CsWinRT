@@ -126,16 +126,18 @@ steps:
 
   # Build and run the end-to-end smoke tests against the freshly packed NuGet package. These
   # verify that the real package (ref/lib assemblies, generators, and build targets) works for
-  # a consuming app, a component author, and a projection author, fully isolated from the repo build
-  # infrastructure. The smoke tests restore the package being tested from the packed output above, and
-  # all other dependencies (notably the preview Windows SDK ref pack) from the CsWinRTDependencies feed.
+  # a consuming app, a component author, a projection author, and the Windows SDK projection packages,
+  # fully isolated from the repo build infrastructure. The smoke tests restore the package being tested
+  # from the packed output above, and all other dependencies (notably the preview Windows SDK ref pack
+  # and 'Microsoft.Windows.SDK.Contracts') from the CsWinRTDependencies feed.
   #
   # Each smoke test runs as its own step with 'continueOnError' (so a failure only marks the job
   # as 'SucceededWithIssues' and makes it obvious which one failed); a final gate step below turns
   # any such issue into an actual failure. This mirrors the unit test steps in CsWinRT-Test-Steps.yml.
   # The consumption and authoring tests each run twice: once on CoreCLR and once with Native AOT, so a
-  # failure points at the exact runtime. The projection test is build-only, so it runs once on CoreCLR.
-  # Native AOT publishes are x64 (this job only runs on an x64 host).
+  # failure points at the exact runtime. The projection, Windows SDK projection, and Windows SDK XAML
+  # projection tests are build-only, so they run once on CoreCLR. Native AOT publishes are x64 (this job
+  # only runs on an x64 host).
   - task: UseDotNet@2
     displayName: Use .NET SDK for smoke tests
     inputs:
@@ -185,6 +187,24 @@ steps:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Projection -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Windows SDK projection smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test WindowsSdkProjection -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Windows SDK XAML projection smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test WindowsSdkXamlProjection -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
 
   # Fail the job if any smoke test above failed. Each smoke test uses 'continueOnError', so an

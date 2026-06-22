@@ -21,6 +21,16 @@
         reference projection generator and the forwarder generator, exactly as a NuGet
         projection author would.
 
+      * WindowsSdkProjection: a class library generates the base Windows SDK reference projection
+        from the 'Microsoft.Windows.SDK.Contracts' '.winmd' files, exactly as the
+        'Microsoft.Windows.SDK.NET.Ref' projection package is produced. This validates that the full
+        Windows SDK surface generates and compiles against the packaged 'WinRT.Runtime' reference
+        assembly, catching reference-projection codegen regressions before they break that package.
+
+      * WindowsSdkXamlProjection: as above, but for the 'Windows.UI.Xaml' surface, which references the
+        base Windows SDK reference projection (mirroring how the UWP XAML projection package depends on
+        the base Windows SDK projection package).
+
     The smoke tests reference the package via 'RestoreSources' (see the '.csproj' files), so
     no global NuGet configuration changes are required.
 
@@ -31,16 +41,17 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'Authoring', 'Projection', or 'All' (the default). The
-    CI runs each test as its own step (passing a single value), so an individual failure is reported in
-    isolation; local builds use the default 'All'.
+    Which smoke test(s) to run: 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection',
+    'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as its own step (passing a
+    single value), so an individual failure is reported in isolation; local builds use the default 'All'.
 
 .PARAMETER Runtime
     Which runtime to target: 'CoreCLR' (the default) builds and runs on the managed runtime;
     'NativeAot' publishes the project with Native AOT ('PublishAot=true', win-x64), exercising the
     full publish pipeline (projection and interop generators, then ILC). The CI runs both as
-    separate steps so a failure points at the exact runtime. The 'Projection' test is build-only and
-    therefore CoreCLR-only; it is skipped for 'NativeAot'.
+    separate steps so a failure points at the exact runtime. The 'Projection', 'WindowsSdkProjection',
+    and 'WindowsSdkXamlProjection' tests are build-only and therefore CoreCLR-only; they are skipped for
+    'NativeAot'.
 
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
@@ -60,7 +71,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection')]
+    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -79,6 +90,8 @@ $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
+$windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
+$windowsSdkXamlProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkXamlProjection', 'WindowsSdkXamlProjection.csproj')
 
 # Resolve the package source to an absolute path (NuGet rejects relative '--source' values).
 $resolvedPackageSource = (Resolve-Path -Path $PackageSource).Path
@@ -188,30 +201,60 @@ function Invoke-AuthoringSmokeTest {
 function Invoke-ProjectionSmokeTest {
     Write-Host "`n=== Projection smoke test ($Runtime) ===" -ForegroundColor Green
 
+    Invoke-ReferenceProjectionSmokeTest -Name 'Projection' -Project $projectionProject
+}
+
+# Windows SDK projection: build the base Windows SDK reference projection, exactly as the
+# 'Microsoft.Windows.SDK.NET.Ref' projection package is produced (CoreCLR only; build-time artifact).
+function Invoke-WindowsSdkProjectionSmokeTest {
+    Write-Host "`n=== Windows SDK projection smoke test ($Runtime) ===" -ForegroundColor Green
+
+    Invoke-ReferenceProjectionSmokeTest -Name 'WindowsSdkProjection' -Project $windowsSdkProjectionProject
+}
+
+# Windows SDK XAML projection: build the 'Windows.UI.Xaml' reference projection (which references the
+# base Windows SDK reference projection above), exactly as the UWP XAML projection package is produced
+# (CoreCLR only; build-time artifact).
+function Invoke-WindowsSdkXamlProjectionSmokeTest {
+    Write-Host "`n=== Windows SDK XAML projection smoke test ($Runtime) ===" -ForegroundColor Green
+
+    Invoke-ReferenceProjectionSmokeTest -Name 'WindowsSdkXamlProjection' -Project $windowsSdkXamlProjectionProject
+}
+
+# Shared implementation for the reference-projection smoke tests. Building a reference projection produces
+# a forwarder assembly (from 'cswinrtimplgen') next to a 'ref' reference assembly (compiled from the
+# 'cswinrtprojectionrefgen' sources). Verifying both were produced confirms the package wired up and ran
+# both generators correctly, and that the generated reference projection compiled against the packaged
+# 'WinRT.Runtime' reference assembly. A reference projection is a build-time artifact, so there is nothing
+# to publish with Native AOT and these tests run on CoreCLR only.
+function Invoke-ReferenceProjectionSmokeTest {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Name,
+        [Parameter(Mandatory = $true)] [string] $Project
+    )
+
     if ($Runtime -eq 'NativeAot') {
-        Write-Host "Skipping the projection smoke test for Native AOT (a reference projection is a build-time artifact)." -ForegroundColor DarkGray
+        Write-Host "Skipping the $Name smoke test for Native AOT (a reference projection is a build-time artifact)." -ForegroundColor DarkGray
         return
     }
 
-    Invoke-Dotnet (@('build', $projectionProject) + $commonBuildArgs)
+    Invoke-Dotnet (@('build', $Project) + $commonBuildArgs)
 
-    # Building a reference projection produces a forwarder assembly (from 'cswinrtimplgen') next to a
-    # 'ref' reference assembly (compiled from the 'cswinrtprojectionrefgen' sources). Verify both were
-    # produced, which confirms the package wired up and ran both generators correctly.
-    $projectionAssemblies = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Projection', 'bin')) -Filter 'Projection.dll' -Recurse -ErrorAction SilentlyContinue
+    $projectDirectory = [IO.Path]::GetDirectoryName($Project)
+    $assemblies = Get-ChildItem -Path ([IO.Path]::Combine($projectDirectory, 'bin')) -Filter "$Name.dll" -Recurse -ErrorAction SilentlyContinue
 
-    $forwarder = $projectionAssemblies | Where-Object { $_.FullName -notmatch '\\ref\\' } | Select-Object -First 1
-    $referenceAssembly = $projectionAssemblies | Where-Object { $_.FullName -match '\\ref\\' } | Select-Object -First 1
+    $forwarder = $assemblies | Where-Object { $_.FullName -notmatch '\\ref\\' } | Select-Object -First 1
+    $referenceAssembly = $assemblies | Where-Object { $_.FullName -match '\\ref\\' } | Select-Object -First 1
 
     if ($null -eq $forwarder) {
-        throw "The projection build did not produce the 'Projection.dll' forwarder assembly."
+        throw "The $Name build did not produce the '$Name.dll' forwarder assembly."
     }
 
     if ($null -eq $referenceAssembly) {
-        throw "The projection build did not produce the 'ref\Projection.dll' reference assembly."
+        throw "The $Name build did not produce the 'ref\$Name.dll' reference assembly."
     }
 
-    Write-Host "Verified the projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
+    Write-Host "Verified the $Name projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
 }
 
 if ($Test -in @('All', 'Consumption')) {
@@ -224,6 +267,14 @@ if ($Test -in @('All', 'Authoring')) {
 
 if ($Test -in @('All', 'Projection')) {
     Invoke-ProjectionSmokeTest
+}
+
+if ($Test -in @('All', 'WindowsSdkProjection')) {
+    Invoke-WindowsSdkProjectionSmokeTest
+}
+
+if ($Test -in @('All', 'WindowsSdkXamlProjection')) {
+    Invoke-WindowsSdkXamlProjectionSmokeTest
 }
 
 Write-Host "`nSmoke tests passed." -ForegroundColor Green

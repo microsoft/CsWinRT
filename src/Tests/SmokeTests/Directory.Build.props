@@ -36,7 +36,9 @@
     <!--
       The CsWinRTDependencies feed (the repository's standard feed, see 'nuget.config') provides
       the preview Windows SDK ref pack pinned above, just like the rest of the repo (e.g.
-      'src/WinRT.Internal') resolves the public Windows SDK targeting pack from it.
+      'src/WinRT.Internal') resolves the public Windows SDK targeting pack from it. It also provides
+      'Microsoft.Windows.SDK.Contracts', whose '.winmd' files the Windows SDK reference-projection
+      smoke tests project (see 'WindowsSdkContracts.targets').
     -->
     <CsWinRTDependenciesSource Condition="'$(CsWinRTDependenciesSource)' == ''">https://pkgs.dev.azure.com/shine-oss/CsWinRT/_packaging/CsWinRTDependencies/nuget/v3/index.json</CsWinRTDependenciesSource>
 

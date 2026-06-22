@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end smoke test: generate the 'Windows.UI.Xaml' Windows SDK reference projection, exactly as
+    the UWP XAML projection NuGet package is produced. Building it runs the reference projection generator
+    ('cswinrtprojectionrefgen') over the full Windows SDK metadata, but only emits the 'Windows.UI.Xaml'
+    surface (and the few 'Windows.UI'/'Windows.ApplicationModel' helper types that belong with it). Like
+    the real package, this projection depends on the base Windows SDK projection for every 'Windows.*'
+    type it references, so it references the sibling 'WindowsSdkProjection' smoke test's generated
+    reference assembly. Compiling the result against that reference assembly and the packaged
+    'WinRT.Runtime' *reference* assembly catches reference-projection codegen regressions in the XAML
+    surface (which were the bulk of them).
+
+    The namespace include/exclude filters below mirror the 'Windows.UI.Xaml' filter set the projection
+    generator applies for 'WinRT.Sdk.Xaml.Projection' (see 'WriteWindowsSdkFilters' in
+    'src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Generate.cs'). Shared configuration
+    comes from the parent 'Directory.Build.props', and the Windows SDK '.winmd' inputs from the shared
+    'WindowsSdkContracts.targets'.
+  -->
+  <PropertyGroup>
+
+    <!-- Produce a reference projection (and its forwarder), the artifacts a projection author ships -->
+    <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+
+    <CsWinRTIncludes>
+      Windows.UI.Colors;
+      Windows.UI.ColorHelper;
+      Windows.UI.IColorHelper;
+      Windows.UI.IColors;
+      Windows.UI.Text.FontWeights;
+      Windows.UI.Text.IFontWeights;
+      Windows.UI.Xaml;
+      Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper;
+      Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper
+    </CsWinRTIncludes>
+    <CsWinRTExcludes>
+      Windows;
+      Windows.UI.Xaml.Interop;
+      Windows.UI.Xaml.Data.BindableAttribute;
+      Windows.UI.Xaml.Markup.ContentPropertyAttribute
+    </CsWinRTExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <!--
+      Build the base Windows SDK reference projection first, and compile against its generated reference
+      assembly so the 'Windows.*' projected types this projection references resolve. The 'ProjectReference'
+      is for build ordering only ('ReferenceOutputAssembly'/'Private' are both 'false'); the reference
+      assembly is added explicitly below, mirroring how a consumer compiles against a reference projection.
+    -->
+    <ProjectReference Include="..\WindowsSdkProjection\WindowsSdkProjection.csproj" ReferenceOutputAssembly="false" Private="false" />
+
+    <Reference Include="WindowsSdkProjection">
+      <HintPath>$(MSBuildThisFileDirectory)..\WindowsSdkProjection\bin\$(Configuration)\$(TargetFramework)\ref\WindowsSdkProjection.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Download 'Microsoft.Windows.SDK.Contracts' and stage its '.winmd' files into '@(CsWinRTInputs)' -->
+  <Import Project="..\WindowsSdkContracts.targets" />
+</Project>
