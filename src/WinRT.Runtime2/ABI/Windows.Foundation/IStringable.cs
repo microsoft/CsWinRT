@@ -33,7 +33,7 @@ namespace ABI.Windows.Foundation;
 /// <summary>
 /// ABI type for <see cref="global::Windows.Foundation.IStringable"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.IStringable")]
 [WindowsRuntimeMappedType(typeof(global::Windows.Foundation.IStringable))]
 file static class IStringable;

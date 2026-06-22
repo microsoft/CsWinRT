@@ -33,7 +33,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Matrix3x2"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.matrix3x2"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Matrix3x2>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Matrix3x2")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Matrix3x2))]

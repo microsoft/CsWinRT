@@ -12,7 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventregistrationtoken"/>
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.EventRegistrationToken>")]
 [WindowsRuntimeReferenceType(typeof(EventRegistrationToken?))]
 [ABI.WindowsRuntime.InteropServices.EventRegistrationTokenComWrappersMarshaller]

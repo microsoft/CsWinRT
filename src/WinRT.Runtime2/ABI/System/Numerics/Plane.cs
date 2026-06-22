@@ -33,7 +33,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Plane"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.plane"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Plane>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Plane")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Plane))]

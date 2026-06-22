@@ -31,7 +31,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="uint"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt32>")]
 [WindowsRuntimeMetadataTypeName("UInt32")]
 [WindowsRuntimeMappedType(typeof(uint))]

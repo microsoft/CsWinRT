@@ -32,7 +32,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="global::System.IDisposable"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.IClosable")]
 [WindowsRuntimeMappedType(typeof(global::System.IDisposable))]
 file static class IDisposable;
