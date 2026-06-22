@@ -6,6 +6,7 @@ using System.Globalization;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
@@ -204,5 +205,60 @@ internal static partial class ConstructorFactory
 
             writer.WriteLine("}");
         }
+    }
+
+    /// <summary>
+    /// Determines whether <see cref="WriteAttributedTypes"/> emits at least one parameterless public
+    /// constructor for the given runtime class (a default <c>[Activatable]</c> ctor, an activation-factory
+    /// method with no parameters, or a composable-factory method with no user parameters).
+    /// </summary>
+    /// <remarks>
+    /// Used in reference-projection mode to decide whether an unsealed class already exposes a
+    /// parameterless constructor that derived projected classes can chain to, or whether a synthetic
+    /// non-public one must be emitted (see <see cref="RefModeStubFactory.EmitSyntheticPrivateCtor"/>).
+    /// </remarks>
+    public static bool EmitsParameterlessConstructor(TypeDefinition classType, MetadataCache cache)
+    {
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, cache))
+        {
+            AttributedType factory = kv.Value;
+
+            // A default '[Activatable(uint version)]' (no factory interface) emits 'public TypeName()'.
+            if (factory.Activatable && factory.Type is null)
+            {
+                return true;
+            }
+
+            if (factory.Type is null)
+            {
+                continue;
+            }
+
+            // An activation- or composable-factory method emits a parameterless ctor when it has no user
+            // parameters. Composable factory methods carry two trailing ABI parameters (the base and inner
+            // interfaces) that are not surfaced on the projected constructor, so they are excluded.
+            if (factory.Activatable || factory.Composable)
+            {
+                foreach (MethodDefinition method in factory.Type.Methods)
+                {
+                    if (method.IsSpecial)
+                    {
+                        continue;
+                    }
+
+                    MethodSignatureInfo sig = new(method);
+                    int userParamCount = factory.Composable && sig.Parameters.Count >= 2
+                        ? sig.Parameters.Count - 2
+                        : sig.Parameters.Count;
+
+                    if (userParamCount == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }

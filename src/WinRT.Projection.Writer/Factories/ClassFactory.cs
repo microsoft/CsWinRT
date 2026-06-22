@@ -578,35 +578,42 @@ internal static class ClassFactory
         }
         else
         {
-            // In ref mode, if WriteAttributedTypes will not emit any public constructors,
-            // we need a 'private TypeName() { throw null; }' to suppress the C# compiler's
-            // implicit public default constructor (which would expose an unintended API).
-            // either:
-            //  - factory.activatable is true (parameterless or parameterized — Activatable
-            //    always emits at least one ctor), OR
-            //  - factory.composable && factory.type && factory.type.MethodList().size() > 0
-            //    (composable factories with NO methods don't emit any ctors).
-            bool hasRefModeCtors = false;
-            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
+            // In ref mode, a synthetic non-public parameterless ctor is emitted in two situations:
+            //
+            //  1. To suppress the C# compiler's implicit public default constructor (which would expose
+            //     an unintended API) when 'WriteAttributedTypes' emits no constructors at all.
+            //  2. To give derived projected classes a base-chain target. A derived class's ref-mode ctor
+            //     implicitly calls 'base()', but the real 'WindowsRuntimeObjectReference'-based base ctor
+            //     is not emitted in ref mode, so an unsealed class must expose an accessible parameterless
+            //     ctor unless it already emits a public one (a default '[Activatable]', or a factory /
+            //     composable method with no user parameters).
+            //
+            // Sealed classes can never be a base, so they only need case 1; unsealed classes need a
+            // parameterless ctor whenever they don't already emit one (which also covers case 1).
+            if (type.IsSealed)
             {
-                AttributedType factory = kv.Value;
-
-                if (factory.Activatable)
+                bool hasRefModeCtors = false;
+                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
                 {
-                    hasRefModeCtors = true;
-                    break;
+                    AttributedType factory = kv.Value;
+
+                    // Activatable always emits at least one ctor; a composable factory only emits ctors
+                    // when it has methods (a composable factory with no methods emits none).
+                    if (factory.Activatable || (factory.Composable && factory.Type is not null && factory.Type.Methods.Count > 0))
+                    {
+                        hasRefModeCtors = true;
+                        break;
+                    }
                 }
 
-                if (factory.Composable && factory.Type is not null && factory.Type.Methods.Count > 0)
+                if (!hasRefModeCtors)
                 {
-                    hasRefModeCtors = true;
-                    break;
+                    RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName, isSealed: true);
                 }
             }
-
-            if (!hasRefModeCtors)
+            else if (!ConstructorFactory.EmitsParameterlessConstructor(type, context.Cache))
             {
-                RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName, type.IsSealed);
+                RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName, isSealed: false);
             }
         }
 
