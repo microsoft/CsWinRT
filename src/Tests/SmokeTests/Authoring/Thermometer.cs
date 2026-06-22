@@ -5,8 +5,9 @@ namespace Authoring;
 // A richer set of authored Windows Runtime types, exercised end-to-end by the projection smoke
 // test: building the component produces 'Authoring.winmd', which the projection smoke test then
 // generates a reference projection for. Between them, these cover the main projection shapes:
-// enums, a flags enum, a struct, a delegate, an interface, and a runtime class with multiple
-// constructors, instance methods, properties, an event, and static members.
+// enums, a flags enum, a struct, a delegate, an interface, a sealed runtime class with multiple
+// constructors, instance methods, properties, an event, and static members, and an unsealed
+// (derivable) runtime class.
 
 public enum Season
 {
@@ -89,3 +90,16 @@ public sealed class Thermometer : IThermometer
         return new Measurement { Value = _temperature, Season = CurrentSeason };
     }
 }
+
+// TODO: uncomment this when authoring unsealed classes is supported
+// public class Weather
+// {
+//     public string Location { get; set; }
+// 
+//     public Season CurrentSeason { get; set; }
+// 
+//     public int Forecast()
+//     {
+//         return CurrentSeason == Season.Winter ? -5 : 20;
+//     }
+// }
