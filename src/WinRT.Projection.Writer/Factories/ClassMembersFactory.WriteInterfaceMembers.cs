@@ -91,14 +91,14 @@ internal static partial class ClassMembersFactory
             }
 
             // Emit GetInterface() / GetDefaultInterface() impl for this interface BEFORE its
-            // members. For
-            // overridable interfaces or non-exclusive direct interfaces, emit
+            // members. For overridable interfaces or non-exclusive direct interfaces, emit
             // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
-            // The IWindowsRuntimeInterface<T> markers are NOT emitted in ref mode (gated by
-            // !context.Settings.ReferenceProjection here). The 'internal new
-            // GetDefaultInterface()' helper IS emitted in both modes since it's referenced by
-            // overrides on derived classes.
+            // Both helpers are implementation-only: they return 'WindowsRuntimeObjectReferenceValue'
+            // (which is stripped from the 'WinRT.Runtime' reference assembly), and are only ever
+            // called from the ABI marshallers (which are themselves implementation-only and not
+            // emitted in ref mode). They are therefore gated off in reference-projection mode, where
+            // they would otherwise be dead code that fails to compile against the reference assembly.
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
@@ -111,15 +111,15 @@ internal static partial class ClassMembersFactory
                     }
                     """);
             }
-            else if (impl.IsDefaultInterface() && !classType.IsSealed)
+            else if (impl.IsDefaultInterface() && !classType.IsSealed && !context.Settings.ReferenceProjection)
             {
                 // 'internal new GetDefaultInterface()' helper whenever the interface is the
                 // default interface and the class is unsealed -- regardless of exclusive-to
-                // status. In ref-projection mode this is the only branch that emits the helper
-                // (the prior 'IWindowsRuntimeInterface<T>.GetInterface' branch is gated off).
-                // In non-ref mode this branch is only reached when the prior branch's
+                // status. This branch is only reached when the prior branch's
                 // IsInterfaceInInheritanceList check fails (i.e., ExclusiveTo default interfaces),
-                // because non-exclusive default interfaces are routed to the prior branch.
+                // because non-exclusive default interfaces are routed to the prior branch. Like the
+                // prior branch, this helper is implementation-only (see above), so it is gated off
+                // in reference-projection mode.
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
                 bool hasBaseType = false;
 
