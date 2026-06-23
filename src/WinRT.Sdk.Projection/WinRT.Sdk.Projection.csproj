@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <IsAotCompatible>true</IsAotCompatible>
-    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 
     <!--
       When WindowsSdkXaml=true, generate WinRT.Sdk.Xaml.Projection.dll (the Windows.UI.Xaml projection)

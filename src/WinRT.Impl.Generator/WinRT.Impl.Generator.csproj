@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
-    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Impl Generator v$(VersionString)</Description>
@@ -14,9 +13,6 @@
     <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <FileVersion>$(VersionNumber)</FileVersion>
 
-    <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
-    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
-      
     <!-- Set the root namespace to match the other projects -->
     <RootNamespace>WindowsRuntime.ImplGenerator</RootNamespace>
 
@@ -32,17 +28,6 @@
          'new(StringComparer.Ordinal)' pattern with later analyzer versions. Simplifying to a
          collection literal would drop the comparer, so the suggestion is not actually correct. -->
     <NoWarn>$(NoWarn);IDE0028</NoWarn>
-  </PropertyGroup>
-
-  <!-- NativeAOT and optimization options (same as 'WinRT.Interop.Generator') -->
-  <PropertyGroup>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <OptimizationPreference>Speed</OptimizationPreference>
-    <StackTraceSupport Condition="'$(Configuration)' == 'Release'">false</StackTraceSupport>
-    <UseSystemResourceKeys Condition="'$(Configuration)' == 'Release'">true</UseSystemResourceKeys>
-    <ControlFlowGuard>Guard</ControlFlowGuard>
-    <IlcDehydrate>false</IlcDehydrate>
-    <IlcResilient>false</IlcResilient>
   </PropertyGroup>
 
   <ItemGroup>

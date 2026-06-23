@@ -3,12 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <IsAotCompatible>true</IsAotCompatible>
-    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 
-    <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
-    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
-      
     <!-- Set the root namespace to match the other projects -->
     <RootNamespace>WindowsRuntime.ProjectionWriter</RootNamespace>
 

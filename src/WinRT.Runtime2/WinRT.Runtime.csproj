@@ -3,8 +3,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <IsAotCompatible>true</IsAotCompatible>
-    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
@@ -13,12 +11,6 @@
     <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <FileVersion>$(VersionNumber)</FileVersion>
 
-    <!--
-      Emit the '[module: SkipLocalsInit]' attribute, to further reduce runtime overhead. This is especially useful when
-      using 'stackalloc'. See: https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.skiplocalsinitattribute.
-    -->
-    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
-      
     <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
     <RootNamespace>WindowsRuntime</RootNamespace>
       
