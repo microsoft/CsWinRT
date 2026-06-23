@@ -19,6 +19,9 @@
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0108;CS0109;CS0114;CS0219;CS0628;CS0660;CA2257</WarningsNotAsErrors>
 
+    <!-- Generated projections surface evaluation-only ('[Experimental]') Windows Runtime APIs, so 'CS8305' is expected -->
+    <NoWarn>$(NoWarn);CS8305</NoWarn>
+
     <!-- Projections should not require runtime marshalling. -->
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
     <CsWinRTAotOptimizerEnabled Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">Auto</CsWinRTAotOptimizerEnabled>
