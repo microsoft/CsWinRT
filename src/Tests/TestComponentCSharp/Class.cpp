@@ -230,6 +230,23 @@ namespace winrt::TestComponentCSharp::implementation
         _nonBlittableStruct = nonBlittableStruct;
     }
 
+    Class::Class(int32_t intProperty, array_view<TestComponentCSharp::ComposedNonBlittableStruct const> nonBlittableStructs, array_view<winrt::Windows::Foundation::DateTime const> dateTimes, array_view<winrt::hresult const> hresults) :
+        Class(intProperty, L"")
+    {
+        if (nonBlittableStructs.size() > 0)
+        {
+            _nonBlittableStruct = nonBlittableStructs[0];
+        }
+        if (dateTimes.size() > 0)
+        {
+            _dateTime = dateTimes[0];
+        }
+        if (hresults.size() > 0)
+        {
+            _hr = hresults[0];
+        }
+    }
+
     void Class::TypeProperty(Windows::UI::Xaml::Interop::TypeName val)
     {
         _typeProperty = val;
