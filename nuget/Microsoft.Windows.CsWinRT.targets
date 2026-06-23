@@ -332,8 +332,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <Message Condition="'$(_CsWinRTRunProjectionRefGen)' != 'true'"
              Text="cswinrtprojectionrefgen: skipped (no namespaces to project)" Importance="$(CsWinRTMessageImportance)" />
-    <Message Condition="'$(_CsWinRTRunProjectionRefGen)' == 'true'"
-             Text="cswinrtprojectionrefgen: @(_CsWinRTRefInputs->Count()) input(s), @(_CsWinRTRefIncludes->Count()) include(s), @(_CsWinRTRefExcludes->Count()) exclude(s)" Importance="$(CsWinRTMessageImportance)" />
     <RunCsWinRTProjectionRefGenerator
         Condition="'$(_CsWinRTRunProjectionRefGen)' == 'true'"
         InputWinMDPaths="@(_CsWinRTRefInputs)"
