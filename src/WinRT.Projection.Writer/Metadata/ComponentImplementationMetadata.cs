@@ -3,49 +3,41 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
 
 /// <summary>
-/// Indexes implementation details of the authored Windows Runtime component(s) being projected,
-/// read from their managed implementation assemblies (<c>.dll</c>). These details are not present
-/// in the <c>.winmd</c> metadata, so they have to be read from the compiled assemblies directly.
+/// Resolves authored Windows Runtime types from the managed implementation assemblies (<c>.dll</c>)
+/// of the component(s) being projected, by full name. The managed assemblies carry implementation
+/// details (such as the <c>static</c> fields backing XAML dependency properties) that are not
+/// present in the <c>.winmd</c> metadata, so consumers resolve the managed type here and inspect it
+/// directly.
 /// </summary>
 /// <remarks>
-/// The only detail currently tracked is whether an authored type registers any XAML dependency
-/// properties (modelled as <c>static</c> fields of type <c>DependencyProperty</c>), which drives
-/// whether the generated activation factory needs to force the authored type's class constructor
-/// to run before the type is activated.
+/// Loading only builds a name index over the assemblies' types. No per-type analysis is performed
+/// up front: callers resolve just the types they care about (see
+/// <see cref="ComponentStaticConstructorAnalyzer"/>), keeping the cost proportional to what is used.
 /// </remarks>
 internal sealed class ComponentImplementationMetadata
 {
-    /// <summary>
-    /// Per-type record: whether the type itself declares a <c>static</c> <c>DependencyProperty</c>
-    /// field, and the full name of its base type (used to walk authored base types).
-    /// </summary>
-    private readonly record struct TypeRecord(bool DeclaresDependencyProperty, string? BaseTypeFullName);
+    /// <summary>The authored types indexed by full name (ordinal, the default string equality).</summary>
+    private readonly Dictionary<string, TypeDefinition> _typesByFullName;
 
-    /// <summary>The authored types indexed by full name.</summary>
-    private readonly Dictionary<string, TypeRecord> _typesByFullName;
-
-    private ComponentImplementationMetadata(Dictionary<string, TypeRecord> typesByFullName)
+    private ComponentImplementationMetadata(Dictionary<string, TypeDefinition> typesByFullName)
     {
         _typesByFullName = typesByFullName;
     }
 
     /// <summary>
-    /// Loads the metadata for the given managed implementation assemblies. When the input is empty,
-    /// the returned instance is empty and <see cref="RequiresStaticConstructor"/> conservatively
-    /// reports that every type needs its class constructor.
+    /// Loads the managed implementation assemblies and indexes their types by full name. When the
+    /// input is empty, the returned instance resolves nothing and <see cref="Resolve"/> always
+    /// returns <see langword="null"/>.
     /// </summary>
-    /// <param name="assemblyPaths">The managed implementation assembly paths to scan.</param>
+    /// <param name="assemblyPaths">The managed implementation assembly paths to load.</param>
     /// <returns>The loaded metadata.</returns>
     public static ComponentImplementationMetadata Load(IEnumerable<string> assemblyPaths)
     {
-        // Type full names are compared ordinally, which is the default string equality used here
-        Dictionary<string, TypeRecord> typesByFullName = [];
+        Dictionary<string, TypeDefinition> typesByFullName = [];
 
         foreach (string assemblyPath in assemblyPaths)
         {
@@ -62,7 +54,7 @@ internal sealed class ComponentImplementationMetadata
                     continue;
                 }
 
-                _ = typesByFullName.TryAdd(fullName, new TypeRecord(DeclaresDependencyProperty(type), type.BaseType?.FullName));
+                _ = typesByFullName.TryAdd(fullName, type);
             }
         }
 
@@ -70,73 +62,14 @@ internal sealed class ComponentImplementationMetadata
     }
 
     /// <summary>
-    /// Determines whether the activation factory for the authored type identified by
-    /// <paramref name="typeFullName"/> must force the type's class constructor to run before
-    /// activation, i.e. whether the type (or any authored base type) registers a dependency property.
+    /// Resolves the authored type with the given full name from the loaded implementation
+    /// assemblies, or <see langword="null"/> if no such type is present (e.g. a framework type, or
+    /// when no implementation assemblies were loaded).
     /// </summary>
-    /// <param name="typeFullName">The full name of the authored type.</param>
-    /// <returns><see langword="true"/> if the static constructor is required; otherwise, <see langword="false"/>.</returns>
-    /// <remarks>
-    /// If the type is not found among the scanned implementation assemblies, this returns
-    /// <see langword="true"/>: we cannot prove the constructor is unnecessary, so it is kept (this
-    /// preserves the previous behavior whenever no implementation assemblies are available). The
-    /// hierarchy walk stops at the first base type outside the scanned assemblies (e.g. a framework
-    /// base type), because framework dependency properties are registered by the framework itself.
-    /// </remarks>
-    public bool RequiresStaticConstructor(string typeFullName)
+    /// <param name="fullName">The full name of the type to resolve.</param>
+    /// <returns>The resolved <see cref="TypeDefinition"/>, or <see langword="null"/>.</returns>
+    public TypeDefinition? Resolve(string fullName)
     {
-        if (!_typesByFullName.ContainsKey(typeFullName))
-        {
-            return true;
-        }
-
-        HashSet<string> visited = [];
-        string? current = typeFullName;
-
-        while (current is not null && visited.Add(current) && _typesByFullName.TryGetValue(current, out TypeRecord record))
-        {
-            if (record.DeclaresDependencyProperty)
-            {
-                return true;
-            }
-
-            current = record.BaseTypeFullName;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Returns whether <paramref name="type"/> declares any <c>static</c> field whose type is the
-    /// XAML <c>DependencyProperty</c> (in either <c>Microsoft.UI.Xaml</c> or <c>Windows.UI.Xaml</c>).
-    /// </summary>
-    /// <param name="type">The type to inspect.</param>
-    /// <returns><see langword="true"/> if the type declares such a field; otherwise, <see langword="false"/>.</returns>
-    private static bool DeclaresDependencyProperty(TypeDefinition type)
-    {
-        foreach (FieldDefinition field in type.Fields)
-        {
-            if (!field.IsStatic)
-            {
-                continue;
-            }
-
-            TypeSignature? fieldType = field.Signature?.FieldType;
-
-            if (fieldType is null)
-            {
-                continue;
-            }
-
-            (string ns, string name) = fieldType.Names();
-
-            if (name == WellKnownTypeNames.DependencyProperty &&
-                (ns == WellKnownNamespaces.MicrosoftUIXaml || ns == WellKnownNamespaces.WindowsUIXaml))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return _typesByFullName.GetValueOrDefault(fullName);
     }
 }

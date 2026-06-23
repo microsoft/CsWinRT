@@ -56,7 +56,7 @@ internal static class ComponentFactory
     /// <param name="emitStaticConstructor">
     /// Whether to emit the static constructor that forces the authored type's class constructor to
     /// run before activation. Only needed when the type registers dependency properties (see
-    /// <see cref="Metadata.ComponentImplementationMetadata.RequiresStaticConstructor"/>).
+    /// <see cref="Metadata.ComponentStaticConstructorAnalyzer.RequiresStaticConstructor(string)"/>).
     /// </param>
     public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool emitStaticConstructor)
     {

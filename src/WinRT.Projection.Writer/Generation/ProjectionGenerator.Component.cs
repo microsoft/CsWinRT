@@ -44,6 +44,7 @@ internal sealed partial class ProjectionGenerator
         // so consult the authored component's managed implementation assemblies to decide which
         // activation factories actually need to force the authored type's class constructor to run
         ComponentImplementationMetadata implementationMetadata = ComponentImplementationMetadata.Load(_settings.ComponentImplementationAssemblies);
+        ComponentStaticConstructorAnalyzer staticConstructorAnalyzer = new(implementationMetadata);
 
         foreach ((_, NamespaceMembers members) in _cache.Namespaces)
         {
@@ -68,7 +69,7 @@ internal sealed partial class ProjectionGenerator
 
                     _ = set.Add(type);
 
-                    if (implementationMetadata.RequiresStaticConstructor(type.FullName))
+                    if (staticConstructorAnalyzer.RequiresStaticConstructor(type.FullName))
                     {
                         _ = requiringStaticConstructor.Add(type);
                     }
