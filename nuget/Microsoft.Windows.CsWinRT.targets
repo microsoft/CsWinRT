@@ -326,14 +326,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       In that case, running the tool is a pure no-op, so we skip launching it entirely.
     -->
     <PropertyGroup>
-      <_CsWinRTRunProjectionRefGen>false</_CsWinRTRunProjectionRefGen>
-      <_CsWinRTRunProjectionRefGen Condition="'@(_CsWinRTRefIncludes)' != ''">true</_CsWinRTRunProjectionRefGen>
+      <_CsWinRTRunProjectionRefGenerator>false</_CsWinRTRunProjectionRefGenerator>
+      <_CsWinRTRunProjectionRefGenerator Condition="'@(_CsWinRTRefIncludes)' != ''">true</_CsWinRTRunProjectionRefGenerator>
     </PropertyGroup>
 
-    <Message Condition="'$(_CsWinRTRunProjectionRefGen)' != 'true'"
-             Text="cswinrtprojectionrefgen: skipped (no namespaces to project)" Importance="$(CsWinRTMessageImportance)" />
+    <Message Condition="'$(_CsWinRTRunProjectionRefGenerator)' != 'true'"
+             Text="cswinrtprojectionrefgen: skipped (no namespaces to project)" Importance="Low" />
     <RunCsWinRTProjectionRefGenerator
-        Condition="'$(_CsWinRTRunProjectionRefGen)' == 'true'"
+        Condition="'$(_CsWinRTRunProjectionRefGenerator)' == 'true'"
         InputWinMDPaths="@(_CsWinRTRefInputs)"
         OutputDirectory="$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
         TargetFramework="$(CsWinRTExeTFM)"
