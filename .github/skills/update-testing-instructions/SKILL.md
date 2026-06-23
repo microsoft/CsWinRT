@@ -72,11 +72,11 @@ Launch an explore agent to verify:
 
 Launch an explore agent (or inspect directly) to verify:
 
-- **Project list** is accurate — the `Consumption/` app, the `Authoring/` component, and the `Projection/` reference projection, kept out of `cswinrt.slnx`
+- **Project list** is accurate — the `Consumption/` app, the `Authoring/` component, the `Projection/` reference projection, and the `WindowsSdkProjection/`/`WindowsSdkXamlProjection/` Windows SDK reference projections, kept out of `cswinrt.slnx`
 - **Isolation** is intact: blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled)
-- **Shared configuration** in `Directory.Build.props` is current: TFM (`.1` revision), pinned `WindowsSdkPackageVersion`, `RestoreSources` (local package output + public NuGet), `DisableRuntimeMarshalling`, and the `CsWinRTPackageVersion`/`CsWinRTPackageSource` defaults
-- **What each test does** is accurate (the consumption app's `JsonObject.Parse`/`Stringify` call; the authoring component's class and `.winmd` verification; the projection library's reference projection over the authoring component's `.winmd`, verifying a forwarder and a `ref` assembly are produced)
-- **How they run** is current: the `run-smoke-tests.ps1` runner (its `-Test` and `-Runtime` parameters — consumption/authoring run on both CoreCLR and Native AOT, projection on CoreCLR only), and the invocations in `src/build.cmd` and `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`
+- **Shared configuration** in `Directory.Build.props` is current: TFM (`.1` revision; the two Windows SDK projection tests override to plain `net10.0`), pinned `WindowsSdkPackageVersion`, `RestoreSources` (local package output + the `CsWinRTDependencies` feed, which provides the preview Windows SDK ref pack and `Microsoft.Windows.SDK.Contracts`), `DisableRuntimeMarshalling`, and the `CsWinRTPackageVersion`/`CsWinRTPackageSource` defaults. Also verify `WindowsSdkContracts.targets` (the shared SDK `.winmd` staging the two SDK projection tests import)
+- **What each test does** is accurate (the consumption app's `JsonObject.Parse`/`Stringify` call; the authoring component's class and `.winmd` verification; the `Projection`/`WindowsSdkProjection`/`WindowsSdkXamlProjection` libraries' reference projections, each verifying a forwarder and a `ref` assembly are produced — `Projection` over the authoring component's `.winmd`, the SDK ones over the `Microsoft.Windows.SDK.Contracts` `.winmd` files)
+- **How they run** is current: the `run-smoke-tests.ps1` runner (its `-Test` and `-Runtime` parameters — consumption/authoring run on both CoreCLR and Native AOT, the three reference-projection tests on CoreCLR only via the shared forwarder + `ref` assembly verification), and the invocations in `src/build.cmd` and `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`
 
 ### Step 8: verify TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
 

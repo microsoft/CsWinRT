@@ -222,25 +222,27 @@ public async Task InvalidType_Warns()
 
 ### 6. Smoke tests (`src/Tests/SmokeTests/`)
 
-**What it tests:** End-to-end consumption of the **real** `Microsoft.Windows.CsWinRT` NuGet package — a consuming app, an authoring component, and a third-party projection — fully isolated from the repository build infrastructure. Validates that the packaged `ref`/`lib` assemblies, the build targets, and all post-build generators work correctly for an external customer.
+**What it tests:** End-to-end consumption of the **real** `Microsoft.Windows.CsWinRT` NuGet package — a consuming app, an authoring component, a third-party projection, and the Windows SDK reference projections — fully isolated from the repository build infrastructure. Validates that the packaged `ref`/`lib` assemblies, the build targets, and all post-build generators work correctly for an external customer.
 
 **When to add tests here:** For verifying that the produced NuGet package works in a real, isolated environment (correct `ref`/`lib` assemblies referenced, generators running). Keep these minimal — they are smoke tests, not feature coverage. Use `UnitTest/` or `FunctionalTests/` for marshalling/feature coverage instead.
 
-**Project structure:** Three standalone projects, intentionally kept out of `cswinrt.slnx` (the package they consume only exists after the build packs it). They are isolated from the repo build infrastructure via blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled). All shared configuration lives in `Directory.Build.props`, so each `.csproj` only carries what makes it different.
+**Project structure:** Five standalone projects, intentionally kept out of `cswinrt.slnx` (the package they consume only exists after the build packs it). They are isolated from the repo build infrastructure via blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled). All shared configuration lives in `Directory.Build.props`, so each `.csproj` only carries what makes it different; the two Windows SDK projection tests additionally share `WindowsSdkContracts.targets` (which stages the SDK `.winmd` inputs).
 
 **Existing tests:**
 | Project | Tests |
 |---------|-------|
 | `Consumption/` | An `Exe` that calls `JsonObject.Parse(...)` then `Stringify()` from `Windows.Data.Json`, exercising the Windows SDK projection, the interop generator, and the `WinRT.Runtime` ref/impl assemblies |
-| `Authoring/` | A `CsWinRTComponent` library exposing a minimal `Greeter` class, exercising WinMD generation, the reference projection, and the forwarder assembly |
+| `Authoring/` | A `CsWinRTComponent` library exposing a `Greeter` class plus a richer catalog of authored type shapes in `Thermometer.cs` (enums, a flags enum, a struct, a delegate, an interface, and a sealed runtime class with constructors, properties, an event, and static members), exercising WinMD generation, the reference projection, and the forwarder assembly. The breadth deliberately gives the `Projection` smoke test more projection shapes to cover |
 | `Projection/` | A `CsWinRTGenerateReferenceProjection` library that generates a reference projection for the `Authoring` component's `.winmd` (reused via a build-ordering `ProjectReference`), exercising `cswinrtprojectionrefgen` and `cswinrtimplgen`, exactly as a NuGet projection author would |
+| `WindowsSdkProjection/` | A `CsWinRTGenerateReferenceProjection` library that generates the base Windows SDK reference projection from the `Microsoft.Windows.SDK.Contracts` `.winmd` files (staged by `WindowsSdkContracts.targets`), exactly as the `Microsoft.Windows.SDK.NET.Ref` projection package is produced. Catches reference-projection codegen regressions against the full Windows SDK surface |
+| `WindowsSdkXamlProjection/` | As `WindowsSdkProjection`, but for the `Windows.UI.Xaml` surface; it references the `WindowsSdkProjection` reference assembly, mirroring how the UWP XAML projection package depends on the base Windows SDK projection package |
 
 **Shared configuration (`Directory.Build.props`):**
-- **TFM:** `net10.0-windows10.0.26100.1` (the `.1` CsWinRT 3.0 revision), with a pinned `WindowsSdkPackageVersion` so the build uses the real .NET SDK targeting pack (mirrors `src/WinRT.Internal`)
-- `RestoreSources` overrides all inherited NuGet sources: the local CsWinRT build output (`CsWinRTPackageSource`) plus public NuGet (`PublicNuGetSource`)
+- **TFM:** `net10.0-windows10.0.26100.1` (the `.1` CsWinRT 3.0 revision), with a pinned `WindowsSdkPackageVersion` so the build uses the real .NET SDK targeting pack (mirrors `src/WinRT.Internal`). The two Windows SDK projection tests override this to plain `net10.0` (a `-windows` TFM would implicitly reference the prebuilt Windows SDK projection they regenerate, colliding with every generated type), exactly as `src/WinRT.Sdk.Projection`
+- `RestoreSources` overrides all inherited NuGet sources: the local CsWinRT build output (`CsWinRTPackageSource`) plus the `CsWinRTDependencies` feed (`CsWinRTDependenciesSource`), which provides the preview Windows SDK ref pack and `Microsoft.Windows.SDK.Contracts`
 - `CsWinRTPackageVersion`/`CsWinRTPackageSource` default to the local `build.cmd x64 Release` output and are overridden by the build/CI that produced the package
 
-**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds the projection library verifying it produces both a forwarder and a `ref` reference assembly. The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the projection test is build-only and runs on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
+**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly (shared verification). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the three reference-projection tests are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
 
 ## Deciding where to add tests
 
@@ -256,7 +258,7 @@ public async Task InvalidType_Warns()
 | GC/reference tracking behavior | `ObjectLifetimeTests/` |
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
 | WinRT component authoring patterns | `AuthoringTest/` |
-| The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/` or `Authoring/`) |
+| The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/`, `Authoring/`, or a reference-projection project) |
 | Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
 
 ## Test component: TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
