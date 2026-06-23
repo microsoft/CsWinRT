@@ -3,7 +3,6 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>$(DotNetVersion)</TargetFramework>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
 
     <!-- Common metadata properties for publishing -->

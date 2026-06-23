@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(TestsBuildTFMs)</TargetFrameworks>
     <IsPackable>false</IsPackable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

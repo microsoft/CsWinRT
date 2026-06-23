@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetVersion)</TargetFramework>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Generator core shared infrastructure v$(VersionString)</Description>

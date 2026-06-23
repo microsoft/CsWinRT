@@ -49,6 +49,9 @@
     <!-- Enforce the same language version for all projects -->
     <LangVersion>14.0</LangVersion>
 
+    <!-- Allow unsafe code in all projects (the runtime and build tools rely heavily on pointers and other unsafe constructs for interop) -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
     <!--
       Treat all warnings as errors, only in release configurations. This allows the dev inner loop to remain
       convenient, without errors while testing things out and prototyping things, while still ensuring that

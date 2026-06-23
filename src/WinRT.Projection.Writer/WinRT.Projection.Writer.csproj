@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetVersion)</TargetFramework>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!-- Set the root namespace to match the other projects -->
     <RootNamespace>WindowsRuntime.ProjectionWriter</RootNamespace>
