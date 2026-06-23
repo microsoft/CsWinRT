@@ -250,6 +250,28 @@ internal static partial class ConstructorFactory
             writer.WriteLine($"global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
+        // For non-blittable struct params (structs with mapped value-type, string, Nullable<T>,
+        // or other reference-typed fields), emit an ABI struct local + per-field marshaller
+        // conversion. The factory function pointer signature expects the ABI struct by value, so
+        // the projected value must be marshalled before the call (and disposed after it).
+        bool hasNonBlittableStructInput = false;
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParameterInfo p = sig.Parameters[i];
+
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                continue;
+            }
+
+            hasNonBlittableStructInput = true;
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            string abiType = AbiTypeHelpers.GetAbiStructTypeName(context, p.Type);
+            string marshaller = AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type);
+            writer.WriteLine($"{abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
+        }
+
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings).
         bool hasNonBlittableArray = false;
@@ -307,7 +329,7 @@ internal static partial class ConstructorFactory
 
         writer.WriteLine("void* __retval = default;");
 
-        if (hasNonBlittableArray)
+        if (hasNonBlittableArray || hasNonBlittableStructInput)
         {
             writer.WriteLine(isMultiline: true, """
                 try
@@ -558,6 +580,10 @@ internal static partial class ConstructorFactory
             {
                 writer.Write($"__{raw}");
             }
+            else if (context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                writer.Write($"__{raw}");
+            }
             else
             {
                 writer.Write(pname);
@@ -591,8 +617,9 @@ internal static partial class ConstructorFactory
             writer.WriteLine("}");
         }
 
-        // Close try and emit finally with cleanup for non-blittable PassArray params.
-        if (hasNonBlittableArray)
+        // Close try and emit finally with cleanup for non-blittable PassArray params and
+        // non-blittable struct input params.
+        if (hasNonBlittableArray || hasNonBlittableStructInput)
         {
             writer.DecreaseIndent();
             writer.WriteLine(isMultiline: true, """
@@ -601,6 +628,22 @@ internal static partial class ConstructorFactory
                 {
                 """);
             writer.IncreaseIndent();
+
+            // Dispose pre-marshalled ABI struct input locals (frees any HSTRING / boxed
+            // reference fields the per-field ConvertToUnmanaged may have allocated).
+            for (int i = 0; i < paramCount; i++)
+            {
+                ParameterInfo p = sig.Parameters[i];
+
+                if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+                {
+                    continue;
+                }
+
+                string raw = p.GetRawName();
+                writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type)}.Dispose(__{raw});");
+            }
+
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];

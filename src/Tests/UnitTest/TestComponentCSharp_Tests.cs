@@ -2283,6 +2283,30 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestNonBlittableStructConstructor()
+        {
+            // Activation factory taking a non-blittable struct by value. This exercises the
+            // projection's constructor marshalling for complex (non-blittable) struct inputs.
+            var val = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct() { i32 = 42 },
+                strings = new NonBlittableStringStruct() { str = "I like tacos" },
+                bools = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty
+            };
+
+            var instance = new Class(5, "foo", val);
+
+            Assert.AreEqual(42, instance.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.AreEqual("I like tacos", instance.ComposedNonBlittableStructProperty.strings.str);
+            Assert.IsTrue(instance.ComposedNonBlittableStructProperty.bools.w);
+            Assert.IsFalse(instance.ComposedNonBlittableStructProperty.bools.x);
+            Assert.IsTrue(instance.ComposedNonBlittableStructProperty.bools.y);
+            Assert.IsFalse(instance.ComposedNonBlittableStructProperty.bools.z);
+            Assert.AreEqual(5, instance.IntProperty);
+        }
+
+        [TestMethod]
         public void TestBlittableArrays()
         {
             int[] arr = new[] { 2, 4, 6, 8 };

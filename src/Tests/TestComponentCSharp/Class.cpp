@@ -224,6 +224,12 @@ namespace winrt::TestComponentCSharp::implementation
         _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
     }
 
+    Class::Class(int32_t intProperty, hstring const& stringProperty, ComposedNonBlittableStruct const& nonBlittableStruct) :
+        Class(intProperty, stringProperty)
+    {
+        _nonBlittableStruct = nonBlittableStruct;
+    }
+
     void Class::TypeProperty(Windows::UI::Xaml::Interop::TypeName val)
     {
         _typeProperty = val;
