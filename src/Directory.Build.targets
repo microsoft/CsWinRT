@@ -1,15 +1,78 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <LangVersion>preview</LangVersion>
+  <!-- Properties for AOT and marshalling -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj' and $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" >
+
+    <!--
+      Show full details for all trim/AOT warnings produced during builds.
+      Normally, the linker would only show a generic warning per assembly.
+    -->
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+
+    <!--
+      Enable AOT support for libraries. Note: for applications, we must enable AOT directly
+      in the .csproj, because doing it here causes the property to not be visible early
+      enough by the MSIX tooling, which causes the publishing to run incorrectly.
+    -->
+    <IsAotCompatible Condition="'$(OutputType)' == 'Library'">true</IsAotCompatible>
+
+    <!-- Emit the [DisableRuntimeMarshalling] attribute (also enables the associated analyzer) -->
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!--
+      Emit the '[module: SkipLocalsInit]' attribute, to further reduce runtime overhead. This is especially useful when
+      using 'stackalloc'. See: https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.skiplocalsinitattribute.
+    -->
+    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
   </PropertyGroup>
 
+  <!-- NativeAOT and optimization options -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj' and $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0')) and '$(PublishAot)' == 'true'" >
+
+    <!-- Misc NativeAOT options to save size and maximize speed -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <StackTraceSupport Condition="'$(Configuration)' == 'Release'">false</StackTraceSupport>
+    <UseSystemResourceKeys Condition="'$(Configuration)' == 'Release'">true</UseSystemResourceKeys>
+
+    <!--
+      Enable CFG (Control Flow Guard), to make the resulting native binary more resilient to some exploit types.
+      Also see: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/security#control-flow-guard.
+      And: https://learn.microsoft.com/en-us/windows/win32/secbp/control-flow-guard#how-does-cfg-really-work.
+    -->
+    <ControlFlowGuard>Guard</ControlFlowGuard>
+
+    <!--
+      "It disables data dehydration. This is something we primarily added for linux because our data structures have lots of pointers in them
+      (e.g. vtables point to the method bodies) and on linux each such pointers costs 24 bytes of bookkeeping in the linux exe file format.
+      So this generates data structures in a dehydrated form on disk to avoid the penalty. The executables get smaller (much smaller on linux),
+      but we need to rehydrate them when the process starts.
+      [...]
+      Rehydrated data affects the size of private working set.
+      [...]
+      Setting IlcDehydrate=false might reduce private working set by about 30 MB."
+      (suggested by Michal Strehovsky, @michals, Native AOT lead)
+
+      In local testing, this results in a small launch performance improvement, and a small memory use reduction as well.
+    -->
+    <IlcDehydrate>false</IlcDehydrate>
+
+    <!--
+      By default, NativeAOT will ignore issues where assemblies fail to be resolved (eg. due to incorrect package authoring).
+      For any references to them, it will silently replace them with throwing stubs instead, without emitting any warnings.
+      Disabling this property changes this behavior and ensures publish builds will fail instead if this case is hit.
+    -->
+    <IlcResilient>false</IlcResilient>
+  </PropertyGroup>
+
+  <!-- Setup the generated folders -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
     <GeneratedFilesRootDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'Generated Files'))</GeneratedFilesRootDir>
     <GeneratedFilesDir>$([MSBuild]::NormalizeDirectory('$(GeneratedFilesRootDir)', '$(TargetFramework)'))</GeneratedFilesDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'">
+
     <!-- Set in targets file to ensure we set it after .NET SDK sets it default based on TFM -->
     <_TargetPlatformVersionUsesCsWinRT3>true</_TargetPlatformVersionUsesCsWinRT3>      
   </PropertyGroup>
@@ -21,16 +84,18 @@
   </ItemGroup>
     
   <ItemGroup>
-    <!-- This repo builds the SDK projection assemblies from source, so remove
-         any SDK-injected ref packages. -->
+
+    <!-- This repo builds the SDK projection assemblies from source, so remove any SDK-injected ref packages -->
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
   </ItemGroup>
 
-  <!-- WinRT.Internal consumes the Windows SDK projection directly to compile
-       WindowsRuntime.Internal.idl bindings, so it must keep the CsWinRT3 ref
-       packs that the .NET SDK adds for the 'net*-windows*.*.1' TFMs. -->
+  <!--
+    WinRT.Internal consumes the Windows SDK projection directly to compile
+    WindowsRuntime.Internal.idl bindings, so it must keep the CsWinRT3 ref
+    packs that the .NET SDK adds for the 'net*-windows*.*.1' TFMs.
+  -->
   <ItemGroup Condition="'$(MSBuildProjectName)' != 'WinRT.Internal'">
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.CsWinRT3.Windows" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.CsWinRT3.Xaml" />
@@ -86,8 +151,7 @@
     <ItemGroup>
       <Compile Include="$(GeneratedSkipLocalsInitFile)" />
     </ItemGroup>
-  </Target>
-    
+  </Target>    
 
   <!-- For C# projects, we use embedded pdbs, but we still need to submit symbols to the symbol server,
        so we extract the pdb to submit. -->
@@ -111,5 +175,4 @@
       <FileWrites Include="$(_OutputPdbPath)" />
     </ItemGroup>
   </Target>
-
 </Project>
