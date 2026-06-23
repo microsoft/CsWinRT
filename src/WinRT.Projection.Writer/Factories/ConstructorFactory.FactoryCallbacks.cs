@@ -250,10 +250,9 @@ internal static partial class ConstructorFactory
             writer.WriteLine($"global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
-        // For non-blittable struct params (structs with mapped value-type, string, Nullable<T>,
-        // or other reference-typed fields), emit an ABI struct local + per-field marshaller
-        // conversion. The factory function pointer signature expects the ABI struct by value, so
-        // the projected value must be marshalled before the call (and disposed after it).
+        // For non-blittable struct params, declare the ABI struct local default-initialized here;
+        // the marshaller conversion is emitted inside the try below, so a throwing
+        // ConvertToUnmanaged on a later param still hits the finally that disposes the others.
         bool hasNonBlittableStructInput = false;
         for (int i = 0; i < paramCount; i++)
         {
@@ -266,10 +265,8 @@ internal static partial class ConstructorFactory
 
             hasNonBlittableStructInput = true;
             string raw = p.GetRawName();
-            string pname = IdentifierEscaping.EscapeIdentifier(raw);
             string abiType = AbiTypeHelpers.GetAbiStructTypeName(context, p.Type);
-            string marshaller = AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type);
-            writer.WriteLine($"{abiType} __{raw} = {marshaller}.ConvertToUnmanaged({pname});");
+            writer.WriteLine($"{abiType} __{raw} = default;");
         }
 
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
@@ -336,6 +333,22 @@ internal static partial class ConstructorFactory
                 {
                 """);
             writer.IncreaseIndent();
+        }
+
+        // Marshal the non-blittable struct ABI locals inside the try (see declarations above).
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParameterInfo p = sig.Parameters[i];
+
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                continue;
+            }
+
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            string marshaller = AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type);
+            writer.WriteLine($"__{raw} = {marshaller}.ConvertToUnmanaged({pname});");
         }
 
         // For System.Type params, pre-marshal to TypeReference (must be declared OUTSIDE the
