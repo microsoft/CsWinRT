@@ -13,11 +13,15 @@
 
     The namespace include/exclude filters below mirror the 'Windows.UI.Xaml' filter set the projection
     generator applies for 'WinRT.Sdk.Xaml.Projection' (see 'WriteWindowsSdkFilters' in
-    'src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Generate.cs'). Shared configuration
-    comes from the parent 'Directory.Build.props', and the Windows SDK '.winmd' inputs from the shared
+    'src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Generate.cs'). The remaining shared
+    configuration (NuGet sources, the CsWinRT package reference) comes from the parent
+    'Directory.Build.props', and the Windows SDK '.winmd' inputs from the shared
     'WindowsSdkContracts.targets'.
   -->
   <PropertyGroup>
+
+    <!-- Build as plain 'net10.0' (see notes in 'WindowsSdkProjection.csproj') -->
+    <TargetFramework>net10.0</TargetFramework>
 
     <!-- Produce a reference projection (and its forwarder), the artifacts a projection author ships -->
     <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
