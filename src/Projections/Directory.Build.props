@@ -1,9 +1,5 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
-
   <PropertyGroup>
-    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-
     <!--
       Don't fail builds for well known warnings in projections that are lower priority:
 
@@ -22,16 +18,10 @@
     <!-- Generated projections surface evaluation-only ('[Experimental]') Windows Runtime APIs, so 'CS8305' is expected -->
     <NoWarn>$(NoWarn);CS8305</NoWarn>
 
-    <!-- Projections should not require runtime marshalling. -->
-    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
-    <CsWinRTAotOptimizerEnabled Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 6">Auto</CsWinRTAotOptimizerEnabled>
-
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
-    <IsAotCompatible>true</IsAotCompatible>
+    <!-- Projection settings -->
     <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-
 </Project>
