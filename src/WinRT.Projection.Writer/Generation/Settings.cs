@@ -103,6 +103,14 @@ internal sealed class Settings
     public bool Component { get; init; }
 
     /// <summary>
+    /// Gets the paths to the managed implementation assemblies of the authored Windows Runtime
+    /// component(s) being projected. Used in component mode to inspect implementation details that
+    /// are absent from the input <c>.winmd</c> metadata (e.g. the <c>static</c> fields backing XAML
+    /// dependency properties). May be empty when those assemblies are not available.
+    /// </summary>
+    public HashSet<string> ComponentImplementationAssemblies { get; } = [];
+
+    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

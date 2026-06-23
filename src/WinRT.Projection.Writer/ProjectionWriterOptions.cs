@@ -47,6 +47,19 @@ public sealed class ProjectionWriterOptions
     public bool Component { get; init; }
 
     /// <summary>
+    /// Optional paths to the managed implementation assemblies (<c>.dll</c>) of the authored
+    /// Windows Runtime component(s) being projected. Only meaningful in <see cref="Component"/> mode.
+    /// </summary>
+    /// <remarks>
+    /// The input <c>.winmd</c> metadata does not carry implementation details such as the
+    /// <c>static</c> fields backing XAML dependency properties, so the writer consults these
+    /// managed assemblies to decide whether each generated activation factory needs to force the
+    /// authored type's class constructor to run before activation. When the list is empty (e.g. the
+    /// managed assembly is not available yet), the writer conservatively keeps that constructor.
+    /// </remarks>
+    public IReadOnlyList<string> ComponentImplementationAssemblyPaths { get; init; } = [];
+
+    /// <summary>
     /// Make exclusive-to interfaces public in the projection (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; init; }
