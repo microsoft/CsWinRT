@@ -3,7 +3,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -116,7 +115,7 @@ internal static unsafe class ContextCallback
         }
 
         // Reset the static field to avoid keeping the state alive for longer
-        Volatile.Write(ref LocalContextCallbackState, null);
+        LocalContextCallbackState = null;
 
         return hresult;
     }
