@@ -153,10 +153,10 @@ internal static class MappedInterfaceStubFactory
         }
 
         writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
-            public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({{objRefName}});
+        writer.WriteLine(isMultiline: true, $"""
+            public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({objRefName});
             public void Reset() => throw new NotSupportedException();
-            public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({{objRefName}});
+            public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({objRefName});
             """);
     }
 
@@ -206,8 +206,8 @@ internal static class MappedInterfaceStubFactory
         if (context.Settings.ReferenceProjection)
         {
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                public IEnumerator<{{t}}> GetEnumerator() => throw null;
+            writer.WriteLine(isMultiline: true, $"""
+                public IEnumerator<{t}> GetEnumerator() => throw null;
                 global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null;
                 """);
 
@@ -240,11 +240,11 @@ internal static class MappedInterfaceStubFactory
         if (context.Settings.ReferenceProjection)
         {
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
+            writer.WriteLine(isMultiline: true, $"""
                 public bool MoveNext() => throw null;
                 public void Reset() => throw null;
                 public void Dispose() => throw null;
-                public {{t}} Current => throw null;
+                public {t} Current => throw null;
                 object global::System.Collections.IEnumerator.Current => throw null;
                 """);
 
@@ -390,13 +390,13 @@ internal static class MappedInterfaceStubFactory
         if (context.Settings.ReferenceProjection)
         {
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                public {{v}} this[{{k}} key] => throw null;
-                public IEnumerable<{{k}}> Keys => throw null;
-                public IEnumerable<{{v}}> Values => throw null;
+            writer.WriteLine(isMultiline: true, $"""
+                public {v} this[{k} key] => throw null;
+                public IEnumerable<{k}> Keys => throw null;
+                public IEnumerable<{v}> Values => throw null;
                 public int Count => throw null;
-                public bool ContainsKey({{k}} key) => throw null;
-                public bool TryGetValue({{k}} key, out {{v}} value) => throw null;
+                public bool ContainsKey({k} key) => throw null;
+                public bool TryGetValue({k} key, out {v} value) => throw null;
                 """);
 
             return;
@@ -446,9 +446,9 @@ internal static class MappedInterfaceStubFactory
         if (context.Settings.ReferenceProjection)
         {
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
+            writer.WriteLine(isMultiline: true, $"""
                 [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
-                public {{t}} this[int index] => throw null;
+                public {t} this[int index] => throw null;
                 public int Count => throw null;
                 """);
 
@@ -468,10 +468,10 @@ internal static class MappedInterfaceStubFactory
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // EmitGenericEnumerable invocation.
         writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $"""
             [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
-            public {{t}} this[int index] => {{prefix}}Item(null, {{objRefName}}, index);
-            public int Count => {{prefix}}Count(null, {{objRefName}});
+            public {t} this[int index] => {prefix}Item(null, {objRefName}, index);
+            public int Count => {prefix}Count(null, {objRefName});
             """);
     }
 
