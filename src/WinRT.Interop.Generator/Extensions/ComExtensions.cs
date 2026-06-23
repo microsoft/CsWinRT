@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator;

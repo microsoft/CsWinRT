@@ -35,6 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WinRT.Generator.Core\WinRT.Generator.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="WinRT.Projection.Writer.TestRunner" />
   </ItemGroup>
 

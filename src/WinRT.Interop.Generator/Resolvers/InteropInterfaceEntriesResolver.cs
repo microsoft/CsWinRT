@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;

@@ -24,5 +24,8 @@
     <InternalsVisibleTo Include="cswinrtprojectiongen" />
     <InternalsVisibleTo Include="cswinrtprojectionrefgen" />
     <InternalsVisibleTo Include="cswinrtwinmdgen" />
+
+    <!-- The projection writer library consumes shared helpers (e.g. SignatureComparer.IgnoreVersion). -->
+    <InternalsVisibleTo Include="WinRT.Projection.Writer" />
   </ItemGroup>
 </Project>

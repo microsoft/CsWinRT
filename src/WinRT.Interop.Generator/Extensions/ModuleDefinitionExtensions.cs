@@ -9,6 +9,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
 

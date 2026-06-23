@@ -3,19 +3,17 @@
 
 using AsmResolver.DotNet.Signatures;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.Generator;
 
 /// <summary>
 /// Extensions for <see cref="SignatureComparer"/>.
 /// </summary>
 internal static class SignatureComparerExtensions
 {
-#pragma warning disable IDE0052 // TODO: remove this once Roslyn bug is fixed
     /// <summary>
     /// Backing field for the <see cref="IgnoreVersion"/> extension property.
     /// </summary>
     private static readonly SignatureComparer IgnoreVersion = new(SignatureComparisonFlags.VersionAgnostic);
-#pragma warning restore IDE0052
 
     extension(SignatureComparer)
     {

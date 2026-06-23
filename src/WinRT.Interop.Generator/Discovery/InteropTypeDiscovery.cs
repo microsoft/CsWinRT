@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
