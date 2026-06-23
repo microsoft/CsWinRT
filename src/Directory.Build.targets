@@ -14,7 +14,7 @@
       in the .csproj, because doing it here causes the property to not be visible early
       enough by the MSIX tooling, which causes the publishing to run incorrectly.
     -->
-    <IsAotCompatible Condition="'$(OutputType)' == 'Library'">true</IsAotCompatible>
+    <IsAotCompatible Condition="'$(OutputType)' == 'Library' and '$(IsAotCompatible)' == ''">true</IsAotCompatible>
 
     <!-- Emit the [DisableRuntimeMarshalling] attribute (also enables the associated analyzer) -->
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
