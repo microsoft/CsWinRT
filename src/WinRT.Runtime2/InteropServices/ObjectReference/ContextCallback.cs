@@ -68,10 +68,14 @@ internal static unsafe class ContextCallback
         ref object? localContextCallbackState = ref LocalContextCallbackState;
 
         // Store the state object in the thread static to pass to the callback.
-        // We don't need a volatile write here, we have a memory barrier below.
         // A thread local is the most efficient solution for this, given that
         // we need the state to be somewhere on the managed heap to be valid.
         // The GC doesn't allow cross-thread access to managed stack variables.
+        // We're not using a volatile write, as it wouldn't actually help at all.
+        // Volatile writes disallow the write operations to be moved before memory
+        // operations that precede them, but they have nothing to say with respect
+        // to memory operations after them (whereas here we specifically need this
+        // write to not be reordered before following reads from that static field).
         if (localContextCallbackState is null)
         {
             localContextCallbackState = state;
