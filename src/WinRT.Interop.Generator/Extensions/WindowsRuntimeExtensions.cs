@@ -1178,7 +1178,7 @@ internal static class WindowsRuntimeExtensions
         /// This method resolves the underlying type definition from the signature and retrieves its Windows Runtime metadata name.
         /// For generic instance types, it uses the generic type definition. For array types, it uses the base element type.
         /// For other types, it resolves the type definition directly. The metadata name is recovered from the implementation
-        /// projection for types coming from reference projections (see the <c>TypeDefinition</c> overload of this method).
+        /// projection for types coming from reference projections (see the <see cref="TypeDefinition"/> overload of this method).
         /// </para>
         /// </remarks>
         public Utf8String? GetWindowsRuntimeMetadataName(InteropDefinitions interopDefinitions)
