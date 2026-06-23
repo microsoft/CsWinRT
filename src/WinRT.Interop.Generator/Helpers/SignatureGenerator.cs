@@ -175,7 +175,7 @@ internal static partial class SignatureGenerator
         if (type.IsComponentWindowsRuntimeType &&
             interopDefinitions.WindowsRuntimeComponentModule is { } componentModule)
         {
-            return InterfaceIIDResolver.TryGetIID(componentModule, type.FullName!, out iid);
+            return InterfaceIIDResolver.TryGetIID(componentModule, type.FullName, out iid);
         }
 
         iid = Guid.Empty;

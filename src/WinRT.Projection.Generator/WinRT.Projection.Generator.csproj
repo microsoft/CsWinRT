@@ -24,8 +24,8 @@
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
 
-    <!-- Temporarily suppress warnings for 'Microsoft.CodeAnalysis.CSharp' -->    
-    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026;IDE0028</NoWarn>
+    <!-- Suppress trim/AOT analyzer warnings from the 'Microsoft.CodeAnalysis.CSharp' reference (Roslyn is not trim-safe) -->
+    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

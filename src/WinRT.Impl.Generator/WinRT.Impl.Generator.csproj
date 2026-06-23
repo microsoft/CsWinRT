@@ -23,11 +23,6 @@
     <IsBuildTool>true</IsBuildTool>
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
-
-    <!-- Suppress IDE0028 ('Collection initialization can be simplified'), which fires on the
-         'new(StringComparer.Ordinal)' pattern with later analyzer versions. Simplifying to a
-         collection literal would drop the comparer, so the suggestion is not actually correct. -->
-    <NoWarn>$(NoWarn);IDE0028</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
