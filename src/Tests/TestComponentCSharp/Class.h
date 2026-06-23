@@ -99,6 +99,7 @@ namespace winrt::TestComponentCSharp::implementation
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
+        Class(int32_t intProperty, hstring const& stringProperty, ComposedNonBlittableStruct const& nonBlittableStruct);
         static int32_t StaticIntProperty();
         static void StaticIntProperty(int32_t value);
         static winrt::event_token StaticIntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);

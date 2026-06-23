@@ -211,6 +211,8 @@ namespace TestComponentCSharp
         Class();
         Class(Int32 intProperty);
         Class(Int32 intProperty, String stringProperty);
+        // Activation factory taking a non-blittable struct by value.
+        Class(Int32 intProperty, String stringProperty, ComposedNonBlittableStruct nonBlittableStruct);
 
         Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
         String GetTypePropertyAbiName();

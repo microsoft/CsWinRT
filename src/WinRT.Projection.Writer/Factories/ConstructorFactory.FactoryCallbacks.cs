@@ -250,6 +250,25 @@ internal static partial class ConstructorFactory
             writer.WriteLine($"global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
+        // For non-blittable struct params, declare the ABI struct local default-initialized here;
+        // the marshaller conversion is emitted inside the try below, so a throwing
+        // ConvertToUnmanaged on a later param still hits the finally that disposes the others.
+        bool hasNonBlittableStructInput = false;
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParameterInfo p = sig.Parameters[i];
+
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                continue;
+            }
+
+            hasNonBlittableStructInput = true;
+            string raw = p.GetRawName();
+            string abiType = AbiTypeHelpers.GetAbiStructTypeName(context, p.Type);
+            writer.WriteLine($"{abiType} __{raw} = default;");
+        }
+
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings).
         bool hasNonBlittableArray = false;
@@ -307,13 +326,29 @@ internal static partial class ConstructorFactory
 
         writer.WriteLine("void* __retval = default;");
 
-        if (hasNonBlittableArray)
+        if (hasNonBlittableArray || hasNonBlittableStructInput)
         {
             writer.WriteLine(isMultiline: true, """
                 try
                 {
                 """);
             writer.IncreaseIndent();
+        }
+
+        // Marshal the non-blittable struct ABI locals inside the try (see declarations above).
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParameterInfo p = sig.Parameters[i];
+
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                continue;
+            }
+
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            string marshaller = AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type);
+            writer.WriteLine($"__{raw} = {marshaller}.ConvertToUnmanaged({pname});");
         }
 
         // For System.Type params, pre-marshal to TypeReference (must be declared OUTSIDE the
@@ -558,6 +593,10 @@ internal static partial class ConstructorFactory
             {
                 writer.Write($"__{raw}");
             }
+            else if (context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                writer.Write($"__{raw}");
+            }
             else
             {
                 writer.Write(pname);
@@ -591,8 +630,9 @@ internal static partial class ConstructorFactory
             writer.WriteLine("}");
         }
 
-        // Close try and emit finally with cleanup for non-blittable PassArray params.
-        if (hasNonBlittableArray)
+        // Close try and emit finally with cleanup for non-blittable PassArray params and
+        // non-blittable struct input params.
+        if (hasNonBlittableArray || hasNonBlittableStructInput)
         {
             writer.DecreaseIndent();
             writer.WriteLine(isMultiline: true, """
@@ -601,6 +641,22 @@ internal static partial class ConstructorFactory
                 {
                 """);
             writer.IncreaseIndent();
+
+            // Dispose pre-marshalled ABI struct input locals (frees any HSTRING / boxed
+            // reference fields the per-field ConvertToUnmanaged may have allocated).
+            for (int i = 0; i < paramCount; i++)
+            {
+                ParameterInfo p = sig.Parameters[i];
+
+                if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+                {
+                    continue;
+                }
+
+                string raw = p.GetRawName();
+                writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type)}.Dispose(__{raw});");
+            }
+
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
