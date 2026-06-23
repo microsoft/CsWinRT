@@ -30,6 +30,14 @@ internal sealed class ProjectionGeneratorRunState
     public Dictionary<string, HashSet<TypeDefinition>> ComponentByModule { get; }
 
     /// <summary>
+    /// Gets the subset of <see cref="ComponentActivatable"/> whose activation factory must force the
+    /// authored type's class constructor to run before activation (because the type, or an authored
+    /// base type, registers a dependency property). Read-only after construction; safe for concurrent
+    /// reads from any work item.
+    /// </summary>
+    public HashSet<TypeDefinition> ComponentActivatableRequiringStaticConstructor { get; }
+
+    /// <summary>
     /// Gets the (projected-type-name -> default-interface-name) map populated by namespace
     /// work items via <see cref="Factories.MetadataAttributeFactory.AddDefaultInterfaceEntry"/>.
     /// </summary>
@@ -69,12 +77,15 @@ internal sealed class ProjectionGeneratorRunState
     /// </summary>
     /// <param name="componentActivatable">The flat set of activatable runtime classes.</param>
     /// <param name="componentByModule">The activatable classes grouped by source module name.</param>
+    /// <param name="componentActivatableRequiringStaticConstructor">The subset of activatable classes whose activation factory must force the authored type's class constructor to run.</param>
     public ProjectionGeneratorRunState(
         HashSet<TypeDefinition> componentActivatable,
-        Dictionary<string, HashSet<TypeDefinition>> componentByModule)
+        Dictionary<string, HashSet<TypeDefinition>> componentByModule,
+        HashSet<TypeDefinition> componentActivatableRequiringStaticConstructor)
     {
         ComponentActivatable = componentActivatable;
         ComponentByModule = componentByModule;
+        ComponentActivatableRequiringStaticConstructor = componentActivatableRequiringStaticConstructor;
     }
 
     /// <summary>

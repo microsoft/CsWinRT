@@ -137,7 +137,7 @@ internal sealed partial class ProjectionGenerator
 
                 if (_settings.Component && componentActivatable.Contains(type))
                 {
-                    ComponentFactory.WriteFactoryClass(writer, context, type);
+                    ComponentFactory.WriteFactoryClass(writer, context, type, state.ComponentActivatableRequiringStaticConstructor.Contains(type));
                 }
             }
             else if (kind is TypeKind.Delegate or TypeKind.Enum or TypeKind.Interface)

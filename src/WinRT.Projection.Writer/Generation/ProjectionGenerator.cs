@@ -55,11 +55,12 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     {
         HashSet<TypeDefinition> componentActivatable;
         Dictionary<string, HashSet<TypeDefinition>> componentByModule;
+        HashSet<TypeDefinition> componentActivatableRequiringStaticConstructor;
 
         // Phase 1: discover the activatable runtime classes (component mode only).
         try
         {
-            (componentActivatable, componentByModule) = DiscoverComponentActivatableTypes();
+            (componentActivatable, componentByModule, componentActivatableRequiringStaticConstructor) = DiscoverComponentActivatableTypes();
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -68,7 +69,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
         _token.ThrowIfCancellationRequested();
 
-        ProjectionGeneratorRunState state = new(componentActivatable, componentByModule);
+        ProjectionGeneratorRunState state = new(componentActivatable, componentByModule, componentActivatableRequiringStaticConstructor);
 
         // Phase 2: parallel emission. All file writes happen below; wrap the whole emission
         // pipeline in a single try/catch so any unexpected failure surfaces as an

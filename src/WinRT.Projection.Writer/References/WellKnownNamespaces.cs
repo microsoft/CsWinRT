@@ -37,4 +37,14 @@ internal static class WellKnownNamespaces
     /// The <c>Windows.UI.Xaml.Interop</c> namespace.
     /// </summary>
     public const string WindowsUIXamlInterop = "Windows.UI.Xaml.Interop";
+
+    /// <summary>
+    /// The <c>Windows.UI.Xaml</c> namespace (UWP XAML, where <c>DependencyProperty</c> lives in that mode).
+    /// </summary>
+    public const string WindowsUIXaml = "Windows.UI.Xaml";
+
+    /// <summary>
+    /// The <c>Microsoft.UI.Xaml</c> namespace (WinUI, where <c>DependencyProperty</c> lives in that mode).
+    /// </summary>
+    public const string MicrosoftUIXaml = "Microsoft.UI.Xaml";
 }

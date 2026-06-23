@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -24,17 +25,24 @@ internal sealed partial class ProjectionGenerator
     /// <list type="bullet">
     /// <item><description><c>ComponentActivatable</c> -- the flat set of all activatable classes</description></item>
     /// <item><description><c>ByModule</c> -- the same set keyed by source module name (used to emit per-module activation-factory entry points in <see cref="WriteComponentModuleFile"/>)</description></item>
+    /// <item><description><c>RequiringStaticConstructor</c> -- the subset of activatable classes whose activation factory must force the authored type's class constructor to run (because the type, or an authored base type, registers a dependency property)</description></item>
     /// </list>
     /// </returns>
-    private (HashSet<TypeDefinition> ComponentActivatable, Dictionary<string, HashSet<TypeDefinition>> ByModule) DiscoverComponentActivatableTypes()
+    private (HashSet<TypeDefinition> ComponentActivatable, Dictionary<string, HashSet<TypeDefinition>> ByModule, HashSet<TypeDefinition> RequiringStaticConstructor) DiscoverComponentActivatableTypes()
     {
-        HashSet<TypeDefinition> componentActivatable = [];
+        HashSet<TypeDefinition> componentActivatable = new(SignatureComparer.IgnoreVersion);
         Dictionary<string, HashSet<TypeDefinition>> componentByModule = [];
+        HashSet<TypeDefinition> requiringStaticConstructor = new(SignatureComparer.IgnoreVersion);
 
         if (!_settings.Component)
         {
-            return (componentActivatable, componentByModule);
+            return (componentActivatable, componentByModule, requiringStaticConstructor);
         }
+
+        // The .winmd metadata does not carry the static fields backing XAML dependency properties,
+        // so consult the authored component's managed implementation assemblies to decide which
+        // activation factories actually need to force the authored type's class constructor to run
+        ComponentImplementationMetadata implementationMetadata = ComponentImplementationMetadata.Load(_settings.ComponentImplementationAssemblies);
 
         foreach ((_, NamespaceMembers members) in _cache.Namespaces)
         {
@@ -53,16 +61,21 @@ internal sealed partial class ProjectionGenerator
 
                     if (!componentByModule.TryGetValue(moduleName, out HashSet<TypeDefinition>? set))
                     {
-                        set = [];
+                        set = new(SignatureComparer.IgnoreVersion);
                         componentByModule[moduleName] = set;
                     }
 
                     _ = set.Add(type);
+
+                    if (implementationMetadata.RequiresStaticConstructor(type.FullName))
+                    {
+                        _ = requiringStaticConstructor.Add(type);
+                    }
                 }
             }
         }
 
-        return (componentActivatable, componentByModule);
+        return (componentActivatable, componentByModule, requiringStaticConstructor);
     }
 
     /// <summary>

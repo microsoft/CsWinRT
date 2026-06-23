@@ -14,7 +14,7 @@
       
     <!--
       The writer enables the strictest analysis posture (AnalysisLevel=latest +
-      AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The five entries
+      AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The six entries
       below are intentional permanent suppressions. They are scoped at the project level
       because each one fires across many sites where the writer's emission patterns
       can't reasonably comply with the IDE rule the analyzer surfaces (most recent
@@ -24,9 +24,10 @@
     -->
     <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
     <!-- IDE0022: Use expression body for method — writer prefers block bodies for emission helpers, even when short, for visual consistency with surrounding multi-statement methods. -->
+    <!-- IDE0028: Collection initialization can be simplified — fires on the 'new(SignatureComparer.IgnoreVersion)' pattern, but simplifying to a collection literal would drop the comparer, so the suggestion is not correct. -->
     <!-- IDE0046: 'if' statement can be simplified — early-return guards are more readable than nested ternaries when the branch produces a literal/sentinel and the rest of the method continues. -->
     <!-- IDE0060: Remove unused parameter — keep for API consistency across factory helpers. -->
-    <NoWarn>$(NoWarn);IDE0010;IDE0022;IDE0046;IDE0060;IDE0072</NoWarn>
+    <NoWarn>$(NoWarn);IDE0010;IDE0022;IDE0028;IDE0046;IDE0060;IDE0072</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
