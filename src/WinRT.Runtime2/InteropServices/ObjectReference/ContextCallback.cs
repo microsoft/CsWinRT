@@ -105,10 +105,6 @@ internal static unsafe class ContextCallback
             comCallData.dwReserved = 0;
             comCallData.pUserDefined = &callbackData;
 
-            // Add a memory barrier to be extra safe that the target thread will be able to see
-            // the write we just did on 'LocalContextCallbackState' with the state to pass to the callback.
-            Thread.MemoryBarrier();
-
             // Marshal the supplied callback on the target context
             hresult = IContextCallbackVftbl.ContextCallbackUnsafe(
                 thisPtr: contextCallbackPtr,
