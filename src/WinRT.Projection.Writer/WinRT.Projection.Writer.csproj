@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
@@ -19,15 +18,6 @@
     -->
     <InformationalVersion>$(VersionString)</InformationalVersion>
       
-    <!-- Same settings as 'WinRT.Runtime' -->
-    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
-    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Features>strict</Features>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
     <!--
       The writer enables the strictest analysis posture (AnalysisLevel=latest +
       AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The five entries

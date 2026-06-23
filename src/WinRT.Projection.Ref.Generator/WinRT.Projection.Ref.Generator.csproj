@@ -2,7 +2,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
@@ -24,15 +23,6 @@
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtprojectionrefgen</AssemblyName>
       
-    <!-- Same settings as 'WinRT.Runtime' -->
-    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
-    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Features>strict</Features>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
     <!-- Used to enable publishing project in build -->
     <IsBuildTool>true</IsBuildTool>
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>

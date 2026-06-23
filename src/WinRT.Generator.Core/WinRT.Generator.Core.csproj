@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
@@ -19,15 +18,6 @@
 
     <!-- Set the root namespace (we ignore the '.Core' suffix) -->
     <RootNamespace>WindowsRuntime.Generator</RootNamespace>
-
-    <!-- Same settings as the other generator projects -->
-    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
-    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Features>strict</Features>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
