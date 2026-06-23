@@ -27,7 +27,7 @@ internal sealed partial class ProjectionGenerator
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = state.ExclusiveToInterfaceEntries;
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
         HashSet<TypeDefinition> componentActivatable = state.ComponentActivatable;
-        ProjectionEmitContext context = new(_settings, _cache, ns, state.WindowsRuntimeMetadataTypeEntries);
+        ProjectionEmitContext context = new(_settings, _cache, ns, _staticConstructorAnalyzer, state.WindowsRuntimeMetadataTypeEntries);
         using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter writer = writerOwner.Writer;
 
@@ -137,7 +137,7 @@ internal sealed partial class ProjectionGenerator
 
                 if (_settings.Component && componentActivatable.Contains(type))
                 {
-                    ComponentFactory.WriteFactoryClass(writer, context, type, state.ComponentActivatableRequiringStaticConstructor.Contains(type));
+                    ComponentFactory.WriteFactoryClass(writer, context, type);
                 }
             }
             else if (kind is TypeKind.Delegate or TypeKind.Enum or TypeKind.Interface)

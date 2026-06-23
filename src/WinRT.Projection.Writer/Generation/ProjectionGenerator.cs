@@ -49,18 +49,26 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     private readonly CancellationToken _token = token;
 
     /// <summary>
+    /// Analyzes the component's managed implementation assemblies to decide which activation
+    /// factories must force the authored type's class constructor to run. Created once and shared
+    /// by every emit context, so its memoization cache is reused across namespaces. Empty (and
+    /// unused) outside component mode, where no implementation assemblies are provided.
+    /// </summary>
+    private readonly ComponentStaticConstructorAnalyzer _staticConstructorAnalyzer =
+        new(ComponentImplementationMetadata.Load(settings.ComponentImplementationAssemblies));
+
+    /// <summary>
     /// Runs the projection-generation pipeline end-to-end.
     /// </summary>
     public void Run()
     {
         HashSet<TypeDefinition> componentActivatable;
         Dictionary<string, HashSet<TypeDefinition>> componentByModule;
-        HashSet<TypeDefinition> componentActivatableRequiringStaticConstructor;
 
         // Phase 1: discover the activatable runtime classes (component mode only).
         try
         {
-            (componentActivatable, componentByModule, componentActivatableRequiringStaticConstructor) = DiscoverComponentActivatableTypes();
+            (componentActivatable, componentByModule) = DiscoverComponentActivatableTypes();
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -69,7 +77,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
         _token.ThrowIfCancellationRequested();
 
-        ProjectionGeneratorRunState state = new(componentActivatable, componentByModule, componentActivatableRequiringStaticConstructor);
+        ProjectionGeneratorRunState state = new(componentActivatable, componentByModule);
 
         // Phase 2: parallel emission. All file writes happen below; wrap the whole emission
         // pipeline in a single try/catch so any unexpected failure surfaces as an

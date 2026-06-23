@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
@@ -19,7 +19,9 @@ namespace WindowsRuntime.ProjectionWriter.Metadata;
 /// so they only exist in the managed implementation assemblies, not in the <c>.winmd</c> metadata.
 /// The analyzer resolves each queried type lazily via <see cref="ComponentImplementationMetadata"/>
 /// and walks its base chain on demand, memoizing the result per visited type so that shared
-/// hierarchies (e.g. several controls deriving from a common authored base) are traversed once.
+/// hierarchies (e.g. several controls deriving from a common authored base) are traversed once. A
+/// single instance is shared by all per-namespace emit contexts and queried from the parallel
+/// emission work items, so the memoization cache is concurrent.
 /// </remarks>
 internal sealed class ComponentStaticConstructorAnalyzer
 {
@@ -27,10 +29,11 @@ internal sealed class ComponentStaticConstructorAnalyzer
     private readonly ComponentImplementationMetadata _metadata;
 
     /// <summary>
-    /// Memoizes, per visited type, whether it requires the class constructor to run. Keyed with the
+    /// Memoizes, per visited type, whether it requires the class constructor to run. Concurrent
+    /// because the analyzer is queried from the parallel emission work items. Keyed with the
     /// version-agnostic <see cref="SignatureComparer"/>, the standard comparer for AsmResolver entities.
     /// </summary>
-    private readonly Dictionary<TypeDefinition, bool> _cache = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<TypeDefinition, bool> _cache = new(SignatureComparer.IgnoreVersion);
 
     /// <summary>
     /// Creates a new <see cref="ComponentStaticConstructorAnalyzer"/> over the given metadata.

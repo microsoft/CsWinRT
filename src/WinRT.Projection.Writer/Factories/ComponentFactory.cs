@@ -53,16 +53,16 @@ internal static class ComponentFactory
     /// <param name="writer">The writer to emit the factory class to.</param>
     /// <param name="context">The active projection emit context.</param>
     /// <param name="type">The activatable runtime class to emit a factory for.</param>
-    /// <param name="emitStaticConstructor">
-    /// Whether to emit the static constructor that forces the authored type's class constructor to
-    /// run before activation. Only needed when the type registers dependency properties (see
-    /// <see cref="Metadata.ComponentStaticConstructorAnalyzer.RequiresStaticConstructor(string)"/>).
-    /// </param>
-    public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool emitStaticConstructor)
+    public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         (string typeNs, string typeName) = type.Names();
         string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
         string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
+
+        // The static constructor that forces the authored type's class constructor to run before
+        // activation is only needed when the type registers dependency properties, so consult the
+        // component's managed implementation assemblies (the .winmd doesn't carry those fields).
+        bool emitStaticConstructor = context.StaticConstructorAnalyzer.RequiresStaticConstructor(type.FullName);
 
         // Writes the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
         void WriteBaseInterfaceList(IndentedTextWriter writer)
