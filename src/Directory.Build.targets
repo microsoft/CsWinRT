@@ -22,8 +22,11 @@
     <!--
       Emit the '[module: SkipLocalsInit]' attribute, to further reduce runtime overhead. This is especially useful when
       using 'stackalloc'. See: https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.skiplocalsinitattribute.
+      The C# compiler requires unsafe code to be allowed in order to use '[SkipLocalsInit]' (otherwise it produces
+      CS0227), so this is only enabled for projects that opt into unsafe blocks. Projects that don't allow unsafe
+      code wouldn't benefit from it anyway (it's only meaningful in combination with eg. 'stackalloc').
     -->
-    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
+    <EmitSkipLocalsInitAttribute Condition="'$(AllowUnsafeBlocks)' == 'true'">true</EmitSkipLocalsInitAttribute>
   </PropertyGroup>
 
   <!-- NativeAOT and optimization options -->
