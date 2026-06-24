@@ -5,6 +5,13 @@
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
+
+    <!--
+      This project intentionally exercises private-implementation-detail APIs from 'WinRT.Runtime'
+      (e.g. 'HStringMarshaller', 'WellKnownInterfaceIIDs', 'WindowsRuntimeObjectReferenceValue'), which
+      are marked obsolete via the 'CSWINRT3001' diagnostic. We deliberately test these here, so suppress it.
+    -->
+    <NoWarn>$(NoWarn);CSWINRT3001</NoWarn>
     <SelfContained>true</SelfContained>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <OutputType>exe</OutputType>
