@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -12,6 +11,8 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
+
+#pragma warning disable IDE0045
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -66,8 +67,6 @@ internal static partial class ConstructorFactory
     /// <c>out void* innerInterface</c> params. Iteration over user params is bounded by
     /// <paramref name="userParamCount"/> (defaults to all params).</param>
     /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/> user params (used for composable factories).</param>
-    [SuppressMessage("Style", "IDE0045:Convert to conditional expression",
-        Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
     private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
         int paramCount = userParamCount >= 0 ? userParamCount : sig.Parameters.Count;
@@ -471,7 +470,7 @@ internal static partial class ConstructorFactory
             }
         }
 
-        // Emit CopyToUnmanaged for non-blittable PassArray params.
+        // Emit 'CopyToUnmanaged' for non-blittable PassArray params
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
@@ -510,7 +509,7 @@ internal static partial class ConstructorFactory
             {
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
-                // Data pointer type must match the array marshaller's CopyToUnmanaged signature.
+                // Data pointer type must match the array marshaller's 'CopyToUnmanaged' signature
                 string dataParamType;
 
                 if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
@@ -559,7 +558,7 @@ internal static partial class ConstructorFactory
 
         if (isComposable)
         {
-            // Composable extras: baseInterface (void*), out innerInterface (void**)
+            // Composable extras: 'baseInterface (void*), out innerInterface (void**)'
             writer.Write("void*, void**, ");
         }
 
@@ -580,12 +579,12 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
-            // For string params, use the marshalled HString from the fixed block.
-            // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
+            // For enums, cast to underlying type. For 'bool', cast to 'byte'. For 'char', cast to 'ushort'.
+            // For 'string' params, use the marshalled 'HSTRING' from the fixed block.
+            // For runtime class / 'object' / generic instance params, use '__<name>.GetThisPtrUnsafe()'.
             if (context.AbiTypeKindResolver.IsEnumType(p.Type))
             {
-                // No cast needed: function pointer signature uses the projected enum type.
+                // No cast needed: function pointer signature uses the projected enum type
                 writer.Write(pname);
             }
             else if (p.Type is CorLibTypeSignature corlibBool &&
@@ -630,7 +629,7 @@ internal static partial class ConstructorFactory
 
         if (isComposable)
         {
-            // Pass __baseInterface.GetThisPtrUnsafe() and &__innerInterface.
+            // Pass '__baseInterface.GetThisPtrUnsafe()' and '&__innerInterface'
             writer.Write(isMultiline: true, """
                 ,
                   __baseInterface.GetThisPtrUnsafe(),
@@ -648,7 +647,7 @@ internal static partial class ConstructorFactory
 
         writer.WriteLine("retval = __retval;");
 
-        // Close fixed blocks (innermost first).
+        // Close fixed blocks (innermost first)
         for (int i = 0; i < fixedNesting; i++)
         {
             writer.DecreaseIndent();
@@ -667,8 +666,8 @@ internal static partial class ConstructorFactory
                 """);
             writer.IncreaseIndent();
 
-            // Dispose pre-marshalled ABI struct input locals (frees any HSTRING / boxed
-            // reference fields the per-field ConvertToUnmanaged may have allocated).
+            // Dispose pre-marshalled ABI struct input locals (frees any 'HSTRING' / boxed
+            // reference fields the per-field 'ConvertToUnmanaged' may have allocated).
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -702,7 +701,7 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
-                // Mapped value types (DateTime/TimeSpan) need no disposal or pool return.
+                // Mapped value types ('DateTime'/'TimeSpan') need no disposal or pool return
                 if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
                     continue;
@@ -713,7 +712,7 @@ internal static partial class ConstructorFactory
 
                 if (szArr.BaseType.IsHResultException())
                 {
-                    // HResult ABI is just an int; no per-element Dispose, only the pool return.
+                    // 'HResult' ABI is just an 'int': no per-element 'Dispose', only the pool return
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                         if ({{names.ArrayFromPool}} is not null)
@@ -743,7 +742,7 @@ internal static partial class ConstructorFactory
                 }
                 else
                 {
-                    // Complex structs use a typed <ABI struct>* (no cast); ref types use void**.
+                    // Complex structs use a typed <ABI struct>* (no cast), ref types use 'void**'
                     string disposeDataParamType;
                     string fixedPtrType;
                     string disposeCastType;
@@ -779,7 +778,7 @@ internal static partial class ConstructorFactory
                         """);
                 }
 
-                // Pool storage type matches the InlineArray16<storageT> setup.
+                // Pool storage type matches the 'InlineArray16<storageT>' setup
                 string poolStorageT = AbiTypeHelpers.GetArrayElementStorageType(context, szArr.BaseType);
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
