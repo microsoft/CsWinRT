@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -65,6 +66,8 @@ internal static partial class ConstructorFactory
     /// <c>out void* innerInterface</c> params. Iteration over user params is bounded by
     /// <paramref name="userParamCount"/> (defaults to all params).</param>
     /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/> user params (used for composable factories).</param>
+    [SuppressMessage("Style", "IDE0045:Convert to conditional expression",
+        Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
     private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
         int paramCount = userParamCount >= 0 ? userParamCount : sig.Parameters.Count;
@@ -509,28 +512,22 @@ internal static partial class ConstructorFactory
 
                 // Data pointer type must match the array marshaller's CopyToUnmanaged signature.
                 string dataParamType;
-                string dataCastType;
 
                 if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
                     dataParamType = AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*";
-                    dataCastType = "(" + AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*)";
                 }
                 else if (szArr.BaseType.IsHResultException())
                 {
                     dataParamType = "global::ABI.System.Exception*";
-                    dataCastType = "(global::ABI.System.Exception*)";
                 }
                 else if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
                 {
-                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
-                    dataParamType = abiStructName + "*";
-                    dataCastType = "(" + abiStructName + "*)";
+                    dataParamType = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType) + "*";
                 }
                 else
                 {
                     dataParamType = "void**";
-                    dataCastType = "(void**)";
                 }
 
                 UnsafeAccessorFactory.EmitStaticMethod(
@@ -540,7 +537,7 @@ internal static partial class ConstructorFactory
                     functionName: $"CopyToUnmanaged_{raw}",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
                     parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
-                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, {dataCastType}_{raw});");
+                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, ({dataParamType})_{raw});");
             }
         }
 
