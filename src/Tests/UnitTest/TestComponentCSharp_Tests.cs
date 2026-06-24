@@ -52,7 +52,7 @@ namespace UnitTest
 
     public interface ITestCSharp<T>
     {
-        void TestMethod<T>();
+        void TestMethod<TMethod>();
     }
 
     [TestClass]
