@@ -4480,6 +4480,10 @@ namespace UnitTest
         //    }
         //}
 
+        // 'TestPnpPropertiesInLoop' is a manual stress helper kept 'private' so MSTest doesn't auto-run it
+        // (PnP enumeration is environment-dependent). The '[TestMethod]' is retained for easy ad-hoc runs, so
+        // suppress MSTEST0003 ("test method signature is invalid") for this intentionally-private method.
+#pragma warning disable MSTEST0003
         [TestMethod]
         private async Task TestPnpPropertiesInLoop()
         {
@@ -4488,6 +4492,7 @@ namespace UnitTest
                 await TestPnpPropertiesAsync();
             }
         }
+#pragma warning restore MSTEST0003
 
         private async Task TestPnpPropertiesAsync()
         {
