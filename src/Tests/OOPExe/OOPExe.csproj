@@ -6,6 +6,12 @@
     <Platforms>x64;x86</Platforms>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
+
+    <!--
+      The CsWin32 source generator emits a 'winmdroot' namespace/type that trips 'CS8981' ("the type name
+      only contains lower-cased ascii characters"). This is generated code we don't control, so suppress it.
+    -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
