@@ -96,14 +96,18 @@
     <Features>$(Features);strict</Features>
 
     <!--
-      Generate documentation files. In theory this should only be abled for published, non source generator projects.
-      However, this is always enabled to work around https://github.com/dotnet/roslyn/issues/41640. Until that's fixed,
-      source generators will also produce an .xml file with their documentation. Note that this doesn't really impact
-      NuGet packages, since the analyzer binaries are packed manually after build, so the .xml files aren't included.
-      When this workaround is no longer needed, the same property should also removed for the \samples directory.
-      Once that issue is fixed, this should be moved down to the src\ specific .props file again, and otherwise disabled.
+      Generate documentation files, but only for the actual product projects (ie. those with the 'WinRT.' prefix
+      in their name). We don't care about XML docs for non-product projects (tests, samples, benchmarks, the local
+      projection projects, etc.), and enabling it there would also enforce 'CS1591' on all their public members and
+      on generated projection code, which isn't actionable.
+
+      In theory this should only be enabled for published, non source generator projects. However, it's enabled for
+      all product projects (including the source generator) to work around https://github.com/dotnet/roslyn/issues/41640.
+      Until that's fixed, source generators will also produce an .xml file with their documentation. Note that this
+      doesn't really impact NuGet packages, since the analyzer binaries are packed manually after build, so the .xml
+      files aren't included. Once that issue is fixed, this should be restricted to published projects only.
     -->
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile Condition="$(MSBuildProjectName.StartsWith('WinRT.'))">true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!-- Set overrides to point to folder where they are built in solution -->
