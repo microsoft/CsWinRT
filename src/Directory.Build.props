@@ -66,11 +66,15 @@
     -->
     <AnalysisLevel>latest</AnalysisLevel>
 
-    <!-- Import the global configs from the CodeStyle package (enables all IDExxxx warnings)-->
-    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
-
-    <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!--
+      Enable all IDExxxx code-style rules and enforce them during build, but only for the actual product
+      projects (ie. those with the 'WinRT.' prefix in their name). We don't want to impose the repo's strict
+      code-style rules on non-product projects (tests, samples, benchmarks, the local projection projects, etc.):
+      they would surface a large number of non-actionable IDExxxx warnings (and 'EnableGenerateDocumentationFile'
+      from IDE0005, which requires docs to be generated) on code we don't ship, including generated projection code.
+    -->
+    <AnalysisLevelStyle Condition="$(MSBuildProjectName.StartsWith('WinRT.'))">latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild Condition="$(MSBuildProjectName.StartsWith('WinRT.'))">true</EnforceCodeStyleInBuild>
       
     <!--
       Suppress ref safety warnings in unsafe contexts (see https://github.com/dotnet/csharplang/issues/6476).
