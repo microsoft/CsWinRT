@@ -18,6 +18,15 @@
       only contains lower-cased ascii characters"). This is generated code we don't control, so suppress it.
     -->
     <NoWarn>$(NoWarn);CS8981</NoWarn>
+
+    <!--
+      This project intentionally calls Windows Runtime APIs annotated with '[SupportedOSPlatform]' for a
+      higher Windows version than the project's minimum (e.g. the 'Warning*' types exercised by
+      'TestSupportedOSPlatformWarnings', which exist specifically to verify the platform warnings, and the
+      'DisplayInformation' interop extensions). These deliberately trip 'CA1416', so suppress it here rather
+      than raising the minimum target platform (which would defeat the purpose of those tests).
+    -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
     <SelfContained>true</SelfContained>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <OutputType>exe</OutputType>
