@@ -41,6 +41,14 @@
   <PropertyGroup Label="Globals" Condition="'$(MSBuildProjectExtension)' == '.csproj'">
 
     <!--
+      Classify "public" (product) projects, ie. the ones we actually ship, which are all named with a 'WinRT.'
+      prefix. This is used below to scope the repo's strict analysis (code-style enforcement and XML documentation)
+      to just those projects, leaving non-product projects (tests, samples, benchmarks, the local projection
+      projects, etc.) out of it. Note: 'StartsWith(...)' returns 'true'/'false', so compare against 'true' below.
+    -->
+    <IsPublicProject>$(MSBuildProjectName.StartsWith('WinRT.'))</IsPublicProject>
+
+    <!--
       Centralize the .NET version used by all projects. This makes it much easier to try out different
       .NET versions without touching every project file, as well as reverting any changes, if needed.
     -->
@@ -67,14 +75,14 @@
     <AnalysisLevel>latest</AnalysisLevel>
 
     <!--
-      Enable all IDExxxx code-style rules and enforce them during build, but only for the actual product
-      projects (ie. those with the 'WinRT.' prefix in their name). We don't want to impose the repo's strict
-      code-style rules on non-product projects (tests, samples, benchmarks, the local projection projects, etc.):
-      they would surface a large number of non-actionable IDExxxx warnings (and 'EnableGenerateDocumentationFile'
-      from IDE0005, which requires docs to be generated) on code we don't ship, including generated projection code.
+      Enable all IDExxxx code-style rules and enforce them during build, but only for the public (product) projects.
+      We don't want to impose the repo's strict code-style rules on non-product projects (tests, samples, benchmarks,
+      the local projection projects, etc.): they would surface a large number of non-actionable IDExxxx warnings (and
+      'EnableGenerateDocumentationFile' from IDE0005, which requires docs to be generated) on code we don't ship,
+      including generated projection code.
     -->
-    <AnalysisLevelStyle Condition="$(MSBuildProjectName.StartsWith('WinRT.'))">latest-all</AnalysisLevelStyle>
-    <EnforceCodeStyleInBuild Condition="$(MSBuildProjectName.StartsWith('WinRT.'))">true</EnforceCodeStyleInBuild>
+    <AnalysisLevelStyle Condition="'$(IsPublicProject)' == 'true'">latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild Condition="'$(IsPublicProject)' == 'true'">true</EnforceCodeStyleInBuild>
       
     <!--
       Suppress ref safety warnings in unsafe contexts (see https://github.com/dotnet/csharplang/issues/6476).
@@ -100,10 +108,9 @@
     <Features>$(Features);strict</Features>
 
     <!--
-      Generate documentation files, but only for the actual product projects (ie. those with the 'WinRT.' prefix
-      in their name). We don't care about XML docs for non-product projects (tests, samples, benchmarks, the local
-      projection projects, etc.), and enabling it there would also enforce 'CS1591' on all their public members and
-      on generated projection code, which isn't actionable.
+      Generate documentation files, but only for the public (product) projects. We don't care about XML docs for
+      non-product projects (tests, samples, benchmarks, the local projection projects, etc.), and enabling it there
+      would also enforce 'CS1591' on all their public members and on generated projection code, which isn't actionable.
 
       In theory this should only be enabled for published, non source generator projects. However, it's enabled for
       all product projects (including the source generator) to work around https://github.com/dotnet/roslyn/issues/41640.
@@ -111,7 +118,7 @@
       doesn't really impact NuGet packages, since the analyzer binaries are packed manually after build, so the .xml
       files aren't included. Once that issue is fixed, this should be restricted to published projects only.
     -->
-    <GenerateDocumentationFile Condition="$(MSBuildProjectName.StartsWith('WinRT.'))">true</GenerateDocumentationFile>
+    <GenerateDocumentationFile Condition="'$(IsPublicProject)' == 'true'">true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!-- Set overrides to point to folder where they are built in solution -->
