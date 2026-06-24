@@ -5,6 +5,15 @@
     <Platforms>x64;x86</Platforms>
     <ProjectName>BuildDeterminismComponent</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
+
+    <!--
+      This component uses Windows-only APIs (e.g. 'Windows.Foundation.Point/Rect', 'Microsoft.UI.Xaml'),
+      which trip 'CA1416' since the project targets a platform-agnostic 'net10.0' TFM. We can't switch to a
+      '-windows' TFM to satisfy the analyzer because the determinism test harness ('BuildDeterminismTest')
+      hard-codes the 'net10.0' TFM and output path, so suppress 'CA1416' instead. The component is only ever
+      built and run on Windows.
+    -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <CsWinRTGenerateInteropAssembly>true</CsWinRTGenerateInteropAssembly>
   </PropertyGroup>
