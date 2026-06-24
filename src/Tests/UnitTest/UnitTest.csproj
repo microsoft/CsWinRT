@@ -27,6 +27,14 @@
       than raising the minimum target platform (which would defeat the purpose of those tests).
     -->
     <NoWarn>$(NoWarn);CA1416</NoWarn>
+
+    <!--
+      The CsWin32 source generator emits a 'CoRegisterClassObject' P/Invoke (in 'Ole32') that uses COM
+      marshalling, which trips 'IL2050' (COM interop correctness under trimming) and 'CA1420' (requires
+      runtime marshalling, which is disabled repo-wide). This is generated code we don't control, so
+      suppress both here.
+    -->
+    <NoWarn>$(NoWarn);IL2050;CA1420</NoWarn>
     <SelfContained>true</SelfContained>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <OutputType>exe</OutputType>
