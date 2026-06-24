@@ -2307,6 +2307,33 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestNonBlittableArrayConstructor()
+        {
+            // Activation factory taking arrays of non-blittable struct, mapped value-type, and
+            // HResult/Exception elements by value (constructor PassArray marshalling).
+            var structVal = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct() { i32 = 42 },
+                strings = new NonBlittableStringStruct() { str = "I like tacos" },
+                bools = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty
+            };
+            var dateTime = new DateTimeOffset(2021, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            var exception = new ArgumentException();
+
+            var instance = new Class(
+                9,
+                new[] { structVal },
+                new[] { dateTime },
+                new Exception[] { exception });
+
+            Assert.AreEqual(9, instance.IntProperty);
+            Assert.AreEqual("I like tacos", instance.ComposedNonBlittableStructProperty.strings.str);
+            Assert.AreEqual(dateTime, instance.DateTimeProperty);
+            Assert.IsNotNull(instance.HResultProperty);
+        }
+
+        [TestMethod]
         public void TestBlittableArrays()
         {
             int[] arr = new[] { 2, 4, 6, 8 };
