@@ -20,7 +20,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// Activates a new Windows Runtime sealed instance.
     /// </summary>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
-    /// <param name="defaultInterface">The resulting default interface pointer.</param>
+    /// <param name="inspectableInterface">The resulting <c>IInspectable</c> interface pointer.</param>
     /// <exception cref="Exception">Thrown if activating the instance fails.</exception>
     /// <remarks>
     /// This shared factory helper can be used to activate Windows Runtime sealed types that have a parameterless constructor.
@@ -28,15 +28,15 @@ internal static unsafe class WindowsRuntimeActivationHelper
     /// </remarks>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ActivateInstanceUnsafe(WindowsRuntimeObjectReference activationFactoryObjectReference, out void* defaultInterface)
+    public static void ActivateInstanceUnsafe(WindowsRuntimeObjectReference activationFactoryObjectReference, out void* inspectableInterface)
     {
         using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
 
-        fixed (void** defaultInterfacePtr = &defaultInterface)
+        fixed (void** inspectableInterfacePtr = &inspectableInterface)
         {
             HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
                 thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
-                instance: defaultInterfacePtr);
+                instance: inspectableInterfacePtr);
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
         }
