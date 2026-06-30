@@ -2604,6 +2604,77 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public unsafe void TestCollectionExpressionReadOnlyInterfaceMarshalling()
+        {
+            // Collection expressions targeting a read-only collection interface ('IEnumerable<T>',
+            // 'IReadOnlyList<T>', 'IReadOnlyCollection<T>') lower to compiler synthesized backing types
+            // ('<>z__ReadOnlyArray<T>' for multiple elements and '<>z__ReadOnlySingleElementList<T>' for
+            // a single element). Marshalling them across the WinRT ABI builds a CCW for the synthesized type.
+            IEnumerable<int> enumerable = [10, 20, 30];
+            Assert.AreEqual(60, SumViaIterator(enumerable));
+
+            IReadOnlyList<int> readOnlyList = [10, 20, 30];
+            Assert.AreEqual(60, SumViaIterator(readOnlyList));
+
+            IReadOnlyCollection<int> readOnlyCollection = [10, 20, 30];
+            Assert.AreEqual(60, SumViaIterator(readOnlyCollection));
+
+            // Single element uses the '<>z__ReadOnlySingleElementList<int>' backing type
+            IEnumerable<int> singleElement = [42];
+            Assert.AreEqual(42, SumViaIterator(singleElement));
+
+            // The synthesized backing type implements 'IEnumerable<int>', 'IReadOnlyList<int>', and
+            // 'IList<int>', so its CCW exposes 'IIterable<int>', 'IVectorView<int>', and 'IVector<int>'
+            AssertCcwExposesCollectionInterfaces([10, 20, 30]);
+            AssertCcwExposesCollectionInterfaces([42]);
+
+            // Values must be sequential from 0 because the native bindable setter validates them
+            IReadOnlyList<int> bindable = [0, 1, 2];
+            TestObject.BindableIterableProperty = bindable;
+            Assert.AreEqual(bindable, TestObject.BindableIterableProperty);
+
+            int SumViaIterator(IEnumerable<int> values)
+            {
+                int sum = 0;
+                var iterator = TestObject.GetIteratorForCollection(values);
+                while (iterator.MoveNext())
+                {
+                    sum += iterator.Current;
+                }
+
+                return sum;
+            }
+
+            static void AssertCcwExposesCollectionInterfaces(IReadOnlyList<int> source)
+            {
+                Guid iidIIterableInt = new("81A643FB-F51C-5565-83C4-F96425777B66");
+                Guid iidIVectorViewInt = new("8D720CDF-3934-5D3F-9A55-40E8063B086A");
+                Guid iidIVectorInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
+
+                void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(source);
+
+                try
+                {
+                    AssertHasInterface(ccw, in iidIIterableInt);
+                    AssertHasInterface(ccw, in iidIVectorViewInt);
+                    AssertHasInterface(ccw, in iidIVectorInt);
+                }
+                finally
+                {
+                    _ = Marshal.Release((nint)ccw);
+                }
+
+                static void AssertHasInterface(void* ccw, in Guid iid)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in iid, out nint interfaceCcw));
+                    Assert.AreNotEqual(IntPtr.Zero, interfaceCcw);
+
+                    _ = Marshal.Release(interfaceCcw);
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();

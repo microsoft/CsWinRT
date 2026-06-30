@@ -884,6 +884,18 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void Collections_ReadOnly_List_Call_CollectionExpression()
+        {
+            // Collection expressions typed as 'IReadOnlyList<string>' use a compiler synthesized
+            // backing type that marshals to native as a CCW exposing 'IVectorView<string>'.
+            Tests.Collection6Call((IReadOnlyList<string> a, out IReadOnlyList<string> b) =>
+            {
+                b = [.. a];
+                return [.. a];
+            });
+        }
+
+        [TestMethod]
         public void TestComposable()
         {
             HierarchyA hierarchyA = new HierarchyA();
