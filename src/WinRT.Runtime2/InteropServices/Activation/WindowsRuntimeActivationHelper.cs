@@ -42,6 +42,45 @@ internal static unsafe class WindowsRuntimeActivationHelper
         }
     }
 
+    /// <param name="iid">The IID of the default interface pointer (from the activation factory) to return.</param>
+    /// <param name="defaultInterface">The resulting default interface pointer.</param>
+    /// <inheritdoc cref="ActivateInstanceUnsafe(WindowsRuntimeObjectReference, out void*)"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ActivateInstanceUnsafe(
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid,
+        out void* defaultInterface)
+    {
+        void* inspectableInterface;
+
+        // Get the 'IInspectable' object from the activation factory (same as above)
+        using (WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue())
+        {
+            HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
+                thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
+                instance: &inspectableInterface);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        }
+
+        // Query the 'IInspectable' object for the default interface, which is what callers expect.
+        // We only need this when using the parameterless constructor, since in this case we must
+        // go through 'IActivationFactory', which only declares 'IInspectable' as the return type
+        // for 'CreateInstance'. For other constructors instead, those would be declared on each
+        // specialized factory type, and would return the default interface directly.
+        try
+        {
+            fixed (void** defaultInterfacePtr = &defaultInterface)
+            {
+                IUnknownVftbl.QueryInterfaceUnsafe(inspectableInterface, in iid, out defaultInterface).Assert();
+            }
+        }
+        finally
+        {
+            _ = IUnknownVftbl.ReleaseUnsafe(inspectableInterface);
+        }
+    }
+
     /// <summary>
     /// Activates a new Windows Runtime instance.
     /// </summary>
