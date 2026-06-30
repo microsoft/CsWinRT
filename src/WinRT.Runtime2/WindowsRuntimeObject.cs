@@ -88,24 +88,10 @@ public abstract unsafe class WindowsRuntimeObject :
 
         // This constructor is only meant to be used for sealed types, so there's never a non-delegating (inner) return value.
         // See additional notes in the overload below for more details about how and when that parameter is necessary.
-        // The activation factory returns the 'IInspectable' interface for the activated instance, so we need to do a
-        // 'QueryInterface' for the default interface.
         WindowsRuntimeActivationHelper.ActivateInstanceUnsafe(
             activationFactoryObjectReference: activationFactoryObjectReference,
-            inspectableInterface: out void* inspectableInterface);
-
-        void* defaultInterface;
-
-        try
-        {
-            IUnknownVftbl.QueryInterfaceUnsafe(inspectableInterface, in iid, out defaultInterface).Assert();
-        }
-        finally
-        {
-#pragma warning disable IDE0058 // Return value is discarded, but can't use _ given we used it for the parameter.
-            IUnknownVftbl.ReleaseUnsafe(inspectableInterface);
-#pragma warning restore IDE0058
-        }
+            iid: in iid,
+            defaultInterface: out void* defaultInterface);
 
         // The inner interface pointer isn't used for non-composable types, so we just pass 'null'
         void* innerInterface = null;
