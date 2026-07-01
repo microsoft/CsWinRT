@@ -565,24 +565,32 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter w = wOwner.Writer;
-        WriteFileHeader(w);
-        w.WriteLine("using System;");
-        w.WriteLine("using WindowsRuntime;");
-        w.WriteLine();
-        w.WriteLine("#pragma warning disable CSWINRT3001");
-        w.WriteLine();
-        w.WriteLine("namespace ABI");
-        using (w.WriteBlock())
+        // Writes all the entries for the metadata mappings
+        void WriteMetadataEntries(IndentedTextWriter writer)
         {
             foreach (KeyValuePair<string, string> kv in sortedEntries)
             {
-                w.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value}\")]");
+                writer.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value}\")]");
             }
-
-            w.WriteLine("internal static class WindowsRuntimeMetadataTypes;");
         }
+
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+
+        IndentedTextWriter w = wOwner.Writer;
+
+        WriteFileHeader(w);
+
+        w.WriteLine($"""
+            using System;
+            using WindowsRuntime;
+
+            #pragma warning disable CSWINRT3001
+
+            namespace ABI;
+
+            {WriteMetadataEntries}
+            internal static class WindowsRuntimeMetadataTypes;
+            """);
 
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeMetadataTypes.cs"));
     }
@@ -605,24 +613,32 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter w = wOwner.Writer;
-        WriteFileHeader(w);
-        w.WriteLine("using System;");
-        w.WriteLine("using WindowsRuntime;");
-        w.WriteLine();
-        w.WriteLine("#pragma warning disable CSWINRT3001");
-        w.WriteLine();
-        w.WriteLine("namespace ABI");
-        using (w.WriteBlock())
+        // Writes all the entries for the interface mappings
+        void WriteInterfaceMappings(IndentedTextWriter writer)
         {
             foreach (KeyValuePair<string, string> kv in sortedEntries)
             {
-                w.WriteLine($"[{attributeName}(typeof({kv.Key}), typeof({kv.Value}))]");
+                writer.WriteLine($"[{attributeName}(typeof({kv.Key}), typeof({kv.Value}))]");
             }
-
-            w.WriteLine($"internal static class {className};");
         }
+
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+
+        IndentedTextWriter w = wOwner.Writer;
+
+        WriteFileHeader(w);
+
+        w.WriteLine($"""
+            using System;
+            using WindowsRuntime;
+
+            #pragma warning disable CSWINRT3001
+
+            namespace ABI;
+
+            {WriteInterfaceMappings}
+            internal static class {className};
+            """);
 
         w.FlushToFile(Path.Combine(settings.OutputFolder, fileName));
     }
