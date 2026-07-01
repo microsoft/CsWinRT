@@ -20,7 +20,6 @@
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
   </ItemGroup>
 
   <ItemGroup>
