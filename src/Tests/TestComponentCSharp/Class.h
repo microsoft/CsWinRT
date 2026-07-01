@@ -99,6 +99,8 @@ namespace winrt::TestComponentCSharp::implementation
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
+        Class(int32_t intProperty, hstring const& stringProperty, ComposedNonBlittableStruct const& nonBlittableStruct);
+        Class(int32_t intProperty, array_view<TestComponentCSharp::ComposedNonBlittableStruct const> nonBlittableStructs, array_view<winrt::Windows::Foundation::DateTime const> dateTimes, array_view<winrt::hresult const> hresults);
         static int32_t StaticIntProperty();
         static void StaticIntProperty(int32_t value);
         static winrt::event_token StaticIntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);

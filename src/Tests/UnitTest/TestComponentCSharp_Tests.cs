@@ -2283,6 +2283,57 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestNonBlittableStructConstructor()
+        {
+            // Activation factory taking a non-blittable struct by value. This exercises the
+            // projection's constructor marshalling for complex (non-blittable) struct inputs.
+            var val = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct() { i32 = 42 },
+                strings = new NonBlittableStringStruct() { str = "I like tacos" },
+                bools = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty
+            };
+
+            var instance = new Class(5, "foo", val);
+
+            Assert.AreEqual(42, instance.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.AreEqual("I like tacos", instance.ComposedNonBlittableStructProperty.strings.str);
+            Assert.IsTrue(instance.ComposedNonBlittableStructProperty.bools.w);
+            Assert.IsFalse(instance.ComposedNonBlittableStructProperty.bools.x);
+            Assert.IsTrue(instance.ComposedNonBlittableStructProperty.bools.y);
+            Assert.IsFalse(instance.ComposedNonBlittableStructProperty.bools.z);
+            Assert.AreEqual(5, instance.IntProperty);
+        }
+
+        [TestMethod]
+        public void TestNonBlittableArrayConstructor()
+        {
+            // Activation factory taking arrays of non-blittable struct, mapped value-type, and
+            // HResult/Exception elements by value (constructor PassArray marshalling).
+            var structVal = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct() { i32 = 42 },
+                strings = new NonBlittableStringStruct() { str = "I like tacos" },
+                bools = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty
+            };
+            var dateTime = new DateTimeOffset(2021, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            var exception = new ArgumentException();
+
+            var instance = new Class(
+                9,
+                new[] { structVal },
+                new[] { dateTime },
+                new Exception[] { exception });
+
+            Assert.AreEqual(9, instance.IntProperty);
+            Assert.AreEqual("I like tacos", instance.ComposedNonBlittableStructProperty.strings.str);
+            Assert.AreEqual(dateTime, instance.DateTimeProperty);
+            Assert.IsNotNull(instance.HResultProperty);
+        }
+
+        [TestMethod]
         public void TestBlittableArrays()
         {
             int[] arr = new[] { 2, 4, 6, 8 };

@@ -12,6 +12,8 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+#pragma warning disable IDE0045
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class ConstructorFactory
@@ -250,6 +252,25 @@ internal static partial class ConstructorFactory
             writer.WriteLine($"global::ABI.System.Exception __{raw} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({pname});");
         }
 
+        // For non-blittable struct params, declare the ABI struct local default-initialized here;
+        // the marshaller conversion is emitted inside the try below, so a throwing
+        // ConvertToUnmanaged on a later param still hits the finally that disposes the others.
+        bool hasNonBlittableStructInput = false;
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParameterInfo p = sig.Parameters[i];
+
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                continue;
+            }
+
+            hasNonBlittableStructInput = true;
+            string raw = p.GetRawName();
+            string abiType = AbiTypeHelpers.GetAbiStructTypeName(context, p.Type);
+            writer.WriteLine($"{abiType} __{raw} = default;");
+        }
+
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings).
         bool hasNonBlittableArray = false;
@@ -277,13 +298,14 @@ internal static partial class ConstructorFactory
             string raw = p.GetRawName();
             string callName = IdentifierEscaping.EscapeIdentifier(raw);
             ArrayTempNames names = new(raw);
+            string storageT = AbiTypeHelpers.GetArrayElementStorageType(context, szArr.BaseType);
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                Unsafe.SkipInit(out InlineArray16<nint> {{names.InlineArray}});
-                nint[] {{names.ArrayFromPool}} = null;
-                Span<nint> {{names.Span}} = {{callName}}.Length <= 16
+                Unsafe.SkipInit(out InlineArray16<{{storageT}}> {{names.InlineArray}});
+                {{storageT}}[] {{names.ArrayFromPool}} = null;
+                Span<{{storageT}}> {{names.Span}} = {{callName}}.Length <= 16
                     ? {{names.InlineArray}}[..{{callName}}.Length]
-                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
                 """);
 
             if (szArr.BaseType.IsString())
@@ -307,13 +329,29 @@ internal static partial class ConstructorFactory
 
         writer.WriteLine("void* __retval = default;");
 
-        if (hasNonBlittableArray)
+        if (hasNonBlittableArray || hasNonBlittableStructInput)
         {
             writer.WriteLine(isMultiline: true, """
                 try
                 {
                 """);
             writer.IncreaseIndent();
+        }
+
+        // Marshal the non-blittable struct ABI locals inside the try (see declarations above).
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParameterInfo p = sig.Parameters[i];
+
+            if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                continue;
+            }
+
+            string raw = p.GetRawName();
+            string pname = IdentifierEscaping.EscapeIdentifier(raw);
+            string marshaller = AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type);
+            writer.WriteLine($"__{raw} = {marshaller}.ConvertToUnmanaged({pname});");
         }
 
         // For System.Type params, pre-marshal to TypeReference (must be declared OUTSIDE the
@@ -432,7 +470,7 @@ internal static partial class ConstructorFactory
             }
         }
 
-        // Emit CopyToUnmanaged for non-blittable PassArray params.
+        // Emit 'CopyToUnmanaged' for non-blittable PassArray params
         for (int i = 0; i < paramCount; i++)
         {
             ParameterInfo p = sig.Parameters[i];
@@ -470,14 +508,35 @@ internal static partial class ConstructorFactory
             else
             {
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+
+                // Data pointer type must match the array marshaller's 'CopyToUnmanaged' signature
+                string dataParamType;
+
+                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
+                {
+                    dataParamType = AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*";
+                }
+                else if (szArr.BaseType.IsHResultException())
+                {
+                    dataParamType = "global::ABI.System.Exception*";
+                }
+                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
+                {
+                    dataParamType = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType) + "*";
+                }
+                else
+                {
+                    dataParamType = "void**";
+                }
+
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "CopyToUnmanaged",
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{raw}",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
-                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, void** data");
-                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, (void**)_{raw});");
+                    parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
+                writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, ({dataParamType})_{raw});");
             }
         }
 
@@ -499,7 +558,7 @@ internal static partial class ConstructorFactory
 
         if (isComposable)
         {
-            // Composable extras: baseInterface (void*), out innerInterface (void**)
+            // Composable extras: 'baseInterface (void*), out innerInterface (void**)'
             writer.Write("void*, void**, ");
         }
 
@@ -520,12 +579,12 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
-            // For string params, use the marshalled HString from the fixed block.
-            // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
+            // For enums, cast to underlying type. For 'bool', cast to 'byte'. For 'char', cast to 'ushort'.
+            // For 'string' params, use the marshalled 'HSTRING' from the fixed block.
+            // For runtime class / 'object' / generic instance params, use '__<name>.GetThisPtrUnsafe()'.
             if (context.AbiTypeKindResolver.IsEnumType(p.Type))
             {
-                // No cast needed: function pointer signature uses the projected enum type.
+                // No cast needed: function pointer signature uses the projected enum type
                 writer.Write(pname);
             }
             else if (p.Type is CorLibTypeSignature corlibBool &&
@@ -558,6 +617,10 @@ internal static partial class ConstructorFactory
             {
                 writer.Write($"__{raw}");
             }
+            else if (context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+            {
+                writer.Write($"__{raw}");
+            }
             else
             {
                 writer.Write(pname);
@@ -566,7 +629,7 @@ internal static partial class ConstructorFactory
 
         if (isComposable)
         {
-            // Pass __baseInterface.GetThisPtrUnsafe() and &__innerInterface.
+            // Pass '__baseInterface.GetThisPtrUnsafe()' and '&__innerInterface'
             writer.Write(isMultiline: true, """
                 ,
                   __baseInterface.GetThisPtrUnsafe(),
@@ -584,15 +647,16 @@ internal static partial class ConstructorFactory
 
         writer.WriteLine("retval = __retval;");
 
-        // Close fixed blocks (innermost first).
+        // Close fixed blocks (innermost first)
         for (int i = 0; i < fixedNesting; i++)
         {
             writer.DecreaseIndent();
             writer.WriteLine("}");
         }
 
-        // Close try and emit finally with cleanup for non-blittable PassArray params.
-        if (hasNonBlittableArray)
+        // Close try and emit finally with cleanup for non-blittable PassArray params and
+        // non-blittable struct input params.
+        if (hasNonBlittableArray || hasNonBlittableStructInput)
         {
             writer.DecreaseIndent();
             writer.WriteLine(isMultiline: true, """
@@ -601,6 +665,22 @@ internal static partial class ConstructorFactory
                 {
                 """);
             writer.IncreaseIndent();
+
+            // Dispose pre-marshalled ABI struct input locals (frees any 'HSTRING' / boxed
+            // reference fields the per-field 'ConvertToUnmanaged' may have allocated).
+            for (int i = 0; i < paramCount; i++)
+            {
+                ParameterInfo p = sig.Parameters[i];
+
+                if (!context.AbiTypeKindResolver.IsNonBlittableStruct(p.Type))
+                {
+                    continue;
+                }
+
+                string raw = p.GetRawName();
+                writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type)}.Dispose(__{raw});");
+            }
+
             for (int i = 0; i < paramCount; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -621,8 +701,27 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
+                // Mapped value types ('DateTime'/'TimeSpan') need no disposal or pool return
+                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
+                {
+                    continue;
+                }
+
                 string raw = p.GetRawName();
                 ArrayTempNames names = new(raw);
+
+                if (szArr.BaseType.IsHResultException())
+                {
+                    // 'HResult' ABI is just an 'int': no per-element 'Dispose', only the pool return
+                    writer.WriteLine();
+                    writer.WriteLine(isMultiline: true, $$"""
+                        if ({{names.ArrayFromPool}} is not null)
+                        {
+                            global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return({{names.ArrayFromPool}});
+                        }
+                        """);
+                    continue;
+                }
 
                 if (szArr.BaseType.IsString())
                 {
@@ -643,6 +742,25 @@ internal static partial class ConstructorFactory
                 }
                 else
                 {
+                    // Complex structs use a typed <ABI struct>* (no cast), ref types use 'void**'
+                    string disposeDataParamType;
+                    string fixedPtrType;
+                    string disposeCastType;
+
+                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
+                    {
+                        string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
+                        disposeDataParamType = abiStructName + "* data";
+                        fixedPtrType = abiStructName + "*";
+                        disposeCastType = string.Empty;
+                    }
+                    else
+                    {
+                        disposeDataParamType = "void** data";
+                        fixedPtrType = "void*";
+                        disposeCastType = "(void**)";
+                    }
+
                     writer.WriteLine();
                     UnsafeAccessorFactory.EmitStaticMethod(
                         writer,
@@ -650,20 +768,23 @@ internal static partial class ConstructorFactory
                         returnType: "void",
                         functionName: $"Dispose_{raw}",
                         interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
-                        parameterList: "uint length, void** data");
+                        parameterList: $"uint length, {disposeDataParamType}");
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
-                        fixed(void* _{{raw}} = {{names.Span}})
+                        fixed({{fixedPtrType}} _{{raw}} = {{names.Span}})
                         {
-                            Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, (void**)_{{raw}});
+                            Dispose_{{raw}}(null, (uint) {{names.Span}}.Length, {{disposeCastType}}_{{raw}});
                         }
                         """);
                 }
+
+                // Pool storage type matches the 'InlineArray16<storageT>' setup
+                string poolStorageT = AbiTypeHelpers.GetArrayElementStorageType(context, szArr.BaseType);
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
                     if ({{names.ArrayFromPool}} is not null)
                     {
-                        global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
+                        global::System.Buffers.ArrayPool<{{poolStorageT}}>.Shared.Return({{names.ArrayFromPool}});
                     }
                     """);
             }

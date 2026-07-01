@@ -11,6 +11,17 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// Include/exclude type filter using longest-prefix-match semantics: type/namespace is checked
 /// against each prefix in the include/exclude lists, and the longest matching prefix wins.
 /// </summary>
+/// <remarks>
+/// The semantics are:
+/// <list type="bullet">
+///   <item>If there are no include and no exclude rules at all, everything is included.</item>
+///   <item>Otherwise a type is included only if the longest matching rule is an include; if no
+///   rule matches (even when only exclude rules are present), the type is <b>excluded</b>.</item>
+///   <item>On an equal-length include/exclude tie, the <b>exclude</b> wins.</item>
+/// </list>
+/// In other words, once any rule exists the filter behaves as a whitelist: excludes only carve
+/// exceptions out of includes, they do not by themselves include everything else.
+/// </remarks>
 internal sealed class TypeFilter
 {
     private readonly List<string> _include;
@@ -19,8 +30,8 @@ internal sealed class TypeFilter
     /// <summary>
     /// Initializes a new <see cref="TypeFilter"/> with the given include and exclude prefix lists.
     /// </summary>
-    /// <param name="include">The include prefixes (a type matches if any prefix matches; empty means match-all).</param>
-    /// <param name="exclude">The exclude prefixes (a type is rejected if any prefix matches and no include prefix wins).</param>
+    /// <param name="include">The include prefixes (a type matches if any prefix matches).</param>
+    /// <param name="exclude">The exclude prefixes (a type is rejected if any prefix matches and no longer include prefix wins).</param>
     public TypeFilter(IEnumerable<string> include, IEnumerable<string> exclude)
     {
         _include = [.. include.OrderByDescending(s => s.Length)];
@@ -29,7 +40,7 @@ internal sealed class TypeFilter
 
     /// <summary>
     /// Returns whether the given type name passes the include/exclude filter.
-    /// Rules are sorted by descending prefix length (with includes winning ties over excludes);
+    /// Rules are sorted by descending prefix length (with excludes winning ties over includes);
     /// the first matching rule wins. Match semantics split the full type name into
     /// <c>namespace.typeName</c> parts and treat the rule prefix as either a namespace-prefix or
     /// a namespace + typename-prefix.
@@ -57,7 +68,7 @@ internal sealed class TypeFilter
             name = fullName[(dot + 1)..];
         }
 
-        // Walk both lists in descending length order; on tie, includes win over excludes.
+        // Walk both lists in descending length order; on tie, excludes win over includes.
         // (Both _include and _exclude are pre-sorted by descending length in the constructor.)
         int incIdx = 0;
         int excIdx = 0;
@@ -83,8 +94,8 @@ internal sealed class TypeFilter
             }
             else
             {
-                // Equal length: include wins (this is the documented tie-breaker).
-                pickInclude = incRule.Length >= excRule.Length;
+                // Equal length: exclude wins.
+                pickInclude = incRule.Length > excRule.Length;
             }
 
             string rule = pickInclude ? incRule! : excRule!;
@@ -104,8 +115,10 @@ internal sealed class TypeFilter
             }
         }
 
-        // No rule matched. If we have any include rules, default-exclude; else default-include.
-        return _include.Count == 0;
+        // No rule matched. Since at least one rule exists (the both-empty case returned true
+        // above), default to exclude. This means an excludes-only configuration (no includes)
+        // projects nothing rather than everything-but-excluded.
+        return false;
     }
 
     private static bool Match(string typeNamespace, string typeName, string rule)

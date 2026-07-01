@@ -67,31 +67,45 @@ internal static partial class ModuleDefinitionExtensions
     /// <returns>Whether the module references the Windows Runtime assembly.</returns>
     public static bool ReferencesAssembly(this ModuleDefinition module, Utf8String assemblyName)
     {
-        // Check all direct assembly references and check if they match
-        foreach (AssemblyReference reference in module.AssemblyReferences)
+        // Use a visited set to guard against cycles in the transitive assembly reference graph.
+        // Such cycles are possible (eg. mutual references between assemblies) and would otherwise
+        // cause this method to recurse infinitely, leading to a stack overflow.
+        static bool ReferencesAssemblyCore(ModuleDefinition module, Utf8String assemblyName, HashSet<ModuleDefinition> visitedModules)
         {
-            if (reference.Name == assemblyName)
+            // Skip modules we've already visited, to break reference cycles
+            if (!visitedModules.Add(module))
             {
-                return true;
+                return false;
             }
 
-            // Try to resolve the current assembly, skip it if it fails
-            if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+            // Check all direct assembly references and check if they match
+            foreach (AssemblyReference reference in module.AssemblyReferences)
             {
-                continue;
-            }
-
-            // Also traverse the entire transitive dependency graph and check those assemblies
-            foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
-            {
-                if (transitiveModule.ReferencesAssembly(assemblyName))
+                if (reference.Name == assemblyName)
                 {
                     return true;
                 }
+
+                // Try to resolve the current assembly, skip it if it fails
+                if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+                {
+                    continue;
+                }
+
+                // Also traverse the entire transitive dependency graph and check those assemblies
+                foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
+                {
+                    if (ReferencesAssemblyCore(transitiveModule, assemblyName, visitedModules))
+                    {
+                        return true;
+                    }
+                }
             }
+
+            return false;
         }
 
-        return false;
+        return ReferencesAssemblyCore(module, assemblyName, new HashSet<ModuleDefinition>(SignatureComparer.IgnoreVersion));
     }
 
     /// <summary>
@@ -101,25 +115,38 @@ internal static partial class ModuleDefinitionExtensions
     /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
     public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module)
     {
-        foreach (AssemblyReference reference in module.AssemblyReferences)
+        // Use a visited set to guard against cycles in the transitive assembly reference graph,
+        // which would otherwise cause infinite recursion and a stack overflow (see 'ReferencesAssembly').
+        static IEnumerable<AssemblyReference> EnumerateAssemblyReferencesCore(ModuleDefinition module, HashSet<ModuleDefinition> visitedModules)
         {
-            yield return reference;
-
-            // Try to resolve the current assembly, skip it if it fails
-            if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+            // Skip modules we've already visited, to break reference cycles
+            if (!visitedModules.Add(module))
             {
-                continue;
+                yield break;
             }
 
-            // Also enumerate all transitive references as well
-            foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
+            foreach (AssemblyReference reference in module.AssemblyReferences)
             {
-                foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences())
+                yield return reference;
+
+                // Try to resolve the current assembly, skip it if it fails
+                if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
                 {
-                    yield return transitiveReference;
+                    continue;
+                }
+
+                // Also enumerate all transitive references as well
+                foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
+                {
+                    foreach (AssemblyReference transitiveReference in EnumerateAssemblyReferencesCore(transitiveModule, visitedModules))
+                    {
+                        yield return transitiveReference;
+                    }
                 }
             }
         }
+
+        return EnumerateAssemblyReferencesCore(module, new HashSet<ModuleDefinition>(SignatureComparer.IgnoreVersion));
     }
 
     /// <summary>

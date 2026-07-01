@@ -237,26 +237,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ResolveCsWinRToolsDirectory"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'">
 
-    <!--
-      Skip the reference projection generator entirely for an authored component that does not reference
-      any input .winmd files. Such a project is only authoring its own Windows Runtime types (described by
-      the .winmd that 'cswinrtwinmdgen' emits and projected into 'WinRT.Component.dll' by
-      'cswinrtprojectiongen'), so there is nothing for 'cswinrtprojectionrefgen' to project here. Skipping
-      it keeps authoring-only builds faster and avoids emitting projection support code into the component's
-      own assembly. The '@(CsWinRTInputs)' item is populated by the 'CsWinRTRemoveWinMDReferences' dependency
-      above, so it is only reliable in the target body (not in a target condition).
-    -->
-    <PropertyGroup>
-      <_CsWinRTSkipProjectionRefGeneration Condition="'$(CsWinRTComponent)' == 'true' and '@(CsWinRTInputs)' == ''">true</_CsWinRTSkipProjectionRefGeneration>
-    </PropertyGroup>
-
     <ItemGroup>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.winmd'"></CsWinRTDetectWindowsMetadata>
     </ItemGroup>
 
-    <Error Condition="'$(_CsWinRTSkipProjectionRefGeneration)' != 'true' and '$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
-      Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
+    <Error Condition="'$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
+           Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
 
     <PropertyGroup>
       <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
@@ -332,10 +319,26 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTRefInputs Include="@(_CsWinRTRefInteropInputs)" />
     </ItemGroup>
 
-    <Message Condition="'$(_CsWinRTSkipProjectionRefGeneration)' == 'true'" Text="cswinrtprojectionrefgen: skipped (authored component with no input metadata)" Importance="$(CsWinRTMessageImportance)" />
-    <Message Condition="'$(_CsWinRTSkipProjectionRefGeneration)' != 'true'" Text="cswinrtprojectionrefgen: @(_CsWinRTRefInputs->Count()) input(s), @(_CsWinRTRefIncludes->Count()) include(s), @(_CsWinRTRefExcludes->Count()) exclude(s)" Importance="$(CsWinRTMessageImportance)" />
+    <!--
+      Only run 'cswinrtprojectionrefgen' if there is actually something to project. With no
+      includes, the namespace filter excludes everything, so the generator emits no projection
+      sources (and no base files either, since those are only written alongside a projection).
+      In that case, running the tool is a pure no-op, so we skip launching it entirely.
+    -->
+    <PropertyGroup>
+      <_CsWinRTRunProjectionRefGenerator>false</_CsWinRTRunProjectionRefGenerator>
+      <_CsWinRTRunProjectionRefGenerator Condition="'@(_CsWinRTRefIncludes)' != ''">true</_CsWinRTRunProjectionRefGenerator>
+    </PropertyGroup>
+
+    <Message Condition="'$(_CsWinRTRunProjectionRefGenerator)' != 'true'"
+             Text="cswinrtprojectionrefgen: skipped (no namespaces to project)"
+             Importance="Low" />
+    <Message Condition="'$(_CsWinRTRunProjectionRefGenerator)' == 'true'"
+             Text="cswinrtprojectionrefgen: @(_CsWinRTRefInputs->Count()) input(s), @(_CsWinRTRefIncludes->Count()) include(s), @(_CsWinRTRefExcludes->Count()) exclude(s)"
+             Importance="Low" />
+
     <RunCsWinRTProjectionRefGenerator
-        Condition="'$(_CsWinRTSkipProjectionRefGeneration)' != 'true'"
+        Condition="'$(_CsWinRTRunProjectionRefGenerator)' == 'true'"
         InputWinMDPaths="@(_CsWinRTRefInputs)"
         OutputDirectory="$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
         TargetFramework="$(CsWinRTExeTFM)"
