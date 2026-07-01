@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using WindowsRuntime;
 
 namespace Windows.UI.Xaml.Interop;
@@ -9,9 +8,6 @@ namespace Windows.UI.Xaml.Interop;
 /// <summary>
 /// Provides basic guidance about the origin of a type.
 /// </summary>
-/// <remarks>
-/// This type is required for ABI projection of the <see cref="Type"/> class, but marshalling it is not supported.
-/// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typekind"/>
 [WindowsRuntimeImplementationOnlyMember]
 public enum TypeKind

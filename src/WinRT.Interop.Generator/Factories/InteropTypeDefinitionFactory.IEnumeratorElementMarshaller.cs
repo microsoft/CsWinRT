@@ -28,11 +28,13 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for an unmanaged value type.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
             GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState)
         {
@@ -49,6 +51,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 isValueType: true,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
         }
@@ -57,11 +60,13 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a managed value type.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
             GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState)
         {
@@ -79,6 +84,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 isValueType: true,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
 
@@ -119,11 +125,13 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
             GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState)
         {
@@ -144,6 +152,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToUnmanaged(keyType, valueType),
                 isValueType: isValueType,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
         }
@@ -152,11 +161,13 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a <see cref="System.Nullable{T}"/> type.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition NullableValueType(
             GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState)
         {
@@ -173,6 +184,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeNullableTypeElementMarshallerConvertToUnmanaged(underlyingType),
                 isValueType: true,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
         }
@@ -181,11 +193,13 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a reference type.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ReferenceType(
             GenericInstanceTypeSignature enumeratorType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState)
         {
@@ -201,6 +215,7 @@ internal partial class InteropTypeDefinitionFactory
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeElementMarshallerConvertToUnmanaged(elementType),
                 isValueType: false,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
         }
@@ -212,6 +227,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="interfaceType">The interface type the element marshaller type should implement.</param>
         /// <param name="convertToUnmanagedInterfaceMethod">The <c>ConvertToUnmanaged</c> interface method being implemented.</param>
         /// <param name="isValueType">Indicates whether the element marshaller type should be emitted as a value type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <returns>The resulting element marshaller type.</returns>
@@ -220,6 +236,7 @@ internal partial class InteropTypeDefinitionFactory
             TypeSignature interfaceType,
             MemberReference convertToUnmanagedInterfaceMethod,
             bool isValueType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState)
         {
@@ -231,7 +248,7 @@ internal partial class InteropTypeDefinitionFactory
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(elementType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(elementType, interopReferences.RuntimeContext, "ElementMarshaller"),
+                name: InteropUtf8NameFactory.TypeName(elementType, interopDefinitions, "ElementMarshaller"),
                 attributes: attributes,
                 baseType: baseType)
             {

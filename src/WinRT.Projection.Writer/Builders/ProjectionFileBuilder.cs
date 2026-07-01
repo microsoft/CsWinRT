@@ -94,7 +94,7 @@ internal static class ProjectionFileBuilder
         string enumUnderlyingType = isFlags ? "uint" : "int";
         string typeName = type.GetRawName();
 
-        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
         IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
         IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
@@ -174,7 +174,7 @@ internal static class ProjectionFileBuilder
         string projectionName = type.GetRawName();
 
         // Header attributes + struct declaration as a single multiline template.
-        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback valueTypeAttr = MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(context, type);
         IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
         IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
@@ -321,7 +321,7 @@ internal static class ProjectionFileBuilder
 
         MethodSignatureInfo sig = new(invoke);
 
-        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, false);
         IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
         string guidAttr = context.Settings.ReferenceProjection
@@ -349,7 +349,7 @@ internal static class ProjectionFileBuilder
     {
         string typeName = type.GetRawName();
 
-        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, true);
 
         writer.WriteLine();

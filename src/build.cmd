@@ -314,6 +314,23 @@ set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_conf
 rem Now call pack
 echo Creating nuget package
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_ref=%net10_runtime_ref%;net10_runtime_ref_xml=%net10_runtime_ref_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;cswinrtprojectionrefgen_x64=%cswinrtprojectionrefgen_x64%;cswinrtprojectionrefgen_arm64=%cswinrtprojectionrefgen_arm64%;cswinrtwinmdgen_x64=%cswinrtwinmdgen_x64%;cswinrtwinmdgen_arm64=%cswinrtwinmdgen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+
+:smoketest
+rem Build and run the end-to-end smoke tests against the just-built NuGet package. These
+rem verify that the real package (ref/lib assemblies, generators, and build targets) works
+rem for a consuming app, a component author, and a projection author, fully isolated from the
+rem repo build infrastructure. They run only on x64 (matching the native build tools packaged
+rem for the host architecture) and can be skipped by setting 'cswinrt_run_smoke_tests=false'.
+if /I not "%cswinrt_platform%"=="x64" goto :eof
+if /I "%cswinrt_run_smoke_tests%"=="false" goto :eof
+
+echo Running smoke tests for %cswinrt_platform% %cswinrt_configuration%
+call :exec powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%this_dir%Tests\SmokeTests\run-smoke-tests.ps1" -PackageSource "%cswinrt_bin_dir%" -PackageVersion %cswinrt_version_string% -Configuration %cswinrt_configuration%
+if ErrorLevel 1 (
+ echo.
+ echo ERROR: Smoke tests failed
+ exit /b !ErrorLevel!
+)
 goto :eof
 
 :exec

@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    The smoke tests are isolated from the repository's central package management
+    ('src/Directory.Packages.props'). They reference exactly one package and pin its
+    version directly on the 'PackageReference' (so it can be supplied by the build that
+    produced the package), so central package management is turned off here. This local
+    file also shadows the repository one, so the smoke tests never inherit its versions.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

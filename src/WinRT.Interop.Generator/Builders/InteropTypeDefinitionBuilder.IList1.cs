@@ -27,6 +27,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -34,6 +35,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Interface(
             GenericInstanceTypeSignature listType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -42,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Interface"),
+                name: InteropUtf8NameFactory.TypeName(listType, interopDefinitions, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -97,7 +99,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Otherwise, we must construct a new specialized vtable type
             vftblType = WellKnownTypeDefinitionFactory.IList1Vftbl(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Vftbl"),
+                name: InteropUtf8NameFactory.TypeName(listType, interopDefinitions, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
                 interopReferences: interopReferences);
 
@@ -109,6 +111,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -116,6 +119,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void IVectorMethods(
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -126,7 +130,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             vectorMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "IVectorMethods"),
+                name: InteropUtf8NameFactory.TypeName(listType, interopDefinitions, "IVectorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -204,6 +208,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="vectorMethodsType">The type returned by <see cref="IVectorMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -211,6 +216,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Methods(
             GenericInstanceTypeSignature listType,
             TypeDefinition vectorMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -221,7 +227,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             listMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(listType, interopDefinitions, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -522,6 +528,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="vectorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IVectorMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -529,6 +536,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void NativeObject(
             GenericInstanceTypeSignature listType,
             TypeDefinition vectorMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -547,6 +555,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: listType,
                 nativeObjectBaseType: windowsRuntimeList4Type,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
@@ -558,6 +567,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -566,6 +576,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature listType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -576,6 +587,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: listType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out callbackType);
@@ -587,6 +599,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="listType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -594,6 +607,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature listType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -602,6 +616,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: listType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
@@ -633,7 +648,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(listType, interopDefinitions, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -1018,7 +1033,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(listType, interopDefinitions, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -1046,7 +1061,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the type map attributes for some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropDefinitions, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
         /// <param name="interfaceImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceImpl"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>

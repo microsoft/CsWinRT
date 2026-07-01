@@ -39,12 +39,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the marshaller for some SZ array type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void Marshaller(
             SzArrayTypeSignature arrayType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -59,6 +61,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.BlittableValueType(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -67,6 +70,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.KeyValuePair(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState);
 
@@ -75,6 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.KeyValuePair(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -83,6 +88,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.NullableValueType(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState);
 
@@ -91,6 +97,7 @@ internal partial class InteropTypeDefinitionBuilder
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.NullableValueType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -99,6 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ManagedValueType(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState);
 
@@ -107,6 +115,7 @@ internal partial class InteropTypeDefinitionBuilder
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ManagedValueType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -115,6 +124,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.UnmanagedValueType(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState);
 
@@ -123,6 +133,7 @@ internal partial class InteropTypeDefinitionBuilder
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.UnmanagedValueType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -131,6 +142,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Object(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -139,6 +151,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.String(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -147,6 +160,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Type(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -155,6 +169,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.Exception(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -163,6 +178,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ReferenceType(
                     arrayType: arrayType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState);
 
@@ -171,6 +187,7 @@ internal partial class InteropTypeDefinitionBuilder
                 marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.ReferenceType(
                     arrayType: arrayType,
                     elementMarshallerType: elementMarshallerType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(marshallerType);
@@ -182,12 +199,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="marshallerType">The type returned by <see cref="Marshaller"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void ComWrappersCallback(
             SzArrayTypeSignature arrayType,
             TypeDefinition marshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition callbackType)
@@ -195,7 +214,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             callbackType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "ComWrappersCallback"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopDefinitions, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -334,7 +353,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopDefinitions, "Impl"),
                 vftblType: interopDefinitions.IReferenceArrayVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -402,7 +421,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopDefinitions, "InterfaceEntriesImpl"),
                 entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
@@ -418,6 +437,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -427,6 +447,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition arrayInterfaceEntriesImplType,
             TypeDefinition arrayComWrappersCallbackType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -434,7 +455,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopDefinitions, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -537,6 +558,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -544,6 +566,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Proxy(
             SzArrayTypeSignature arrayType,
             TypeDefinition comWrappersMarshallerAttributeType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -555,7 +578,7 @@ internal partial class InteropTypeDefinitionBuilder
             // type map (as they're treated the same as normal user-defined types), so this allows us to distinguish them.
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopDefinitions),
                 mappedMetadata: "Windows.Foundation.FoundationContract",
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,

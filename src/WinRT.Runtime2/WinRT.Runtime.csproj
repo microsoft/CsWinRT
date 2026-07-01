@@ -168,12 +168,29 @@
       <Compile Remove="InteropServices\InteropDllImports\**\*.cs" />
       <Compile Remove="InteropServices\Marshalers\**\*.cs" />
       <Compile Remove="InteropServices\Marshalling\**\*.cs" />
+
+      <!--
+        The 'RestrictedErrorInfoExceptionMarshaller' type is actually public, and it should
+        be included in reference assemblies as well. Because it's the only really public
+        type in this folder, we just add it back to the compilation manually, for simplicity.
+      -->
+      <Compile Include="InteropServices\Marshalling\RestrictedErrorInfoExceptionMarshaller.cs" />
+
+      <!-- Remove the other folders with implementation-only types -->
       <Compile Remove="InteropServices\ObjectReference\**\*.cs" />
       <Compile Remove="InteropServices\Placeholders\**\*.cs" />
       <Compile Remove="InteropServices\ProjectionDllExports\**\*.cs" />
       <Compile Remove="InteropServices\ProjectionImpls\**\*.cs" />
       <Compile Remove="InteropServices\Streams\**\*.cs" />
-      <Compile Remove="InteropServices\TypeMapGroups\**\*.cs" />
+
+      <!--
+        Note: 'InteropServices\TypeMapGroups' is intentionally NOT removed. Unlike the other
+        implementation-only types, the type map group types are referenced by generated code
+        (the '[assembly: TypeMapAssemblyTarget<T>]' attributes emitted by the CsWinRT source
+        generator), which is compiled against the reference assembly. They must therefore remain
+        in the reference assembly; they are instead marked '[Obsolete]' (CSWINRT3002) and hidden,
+        only in the reference assembly, to discourage direct use in user code.
+      -->
       <Compile Remove="InteropServices\TypeMapInfo\**\*.cs" />
       <Compile Remove="InteropServices\Vtables\**\*.cs" />
       <Compile Remove="InteropServices\WeakReferences\**\*.cs" />

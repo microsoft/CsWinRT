@@ -287,7 +287,7 @@ The generator processes two categories of assemblies:
 - `System.Collections.Concurrent.ConditionalWeakTable<,>` — Memory semantics conflict
 
 **Type inclusion criteria:**
-- Must be a projected Windows Runtime type (marked with `[WindowsRuntimeMetadata]` or similar)
+- Must be a projected Windows Runtime type. A type is recognized as projected in any of three ways: it carries the per-type `[WindowsRuntimeMetadata]` attribute (implementation projections and types in `WinRT.Runtime.dll`); it is a public type from an authored component assembly (`IsComponentWindowsRuntimeType`); or it is defined in a reference projection assembly marked `[WindowsRuntimeReferenceAssembly]` (`IsReferenceProjectionWindowsRuntimeType`). The latter two do **not** carry the per-type `[WindowsRuntimeMetadata]` attribute — reference projections shipped in NuGet packages have it stripped (it is an implementation-only attribute, absent from the `WinRT.Runtime.dll` reference assembly they compile against), so the interop generator recognizes them by their assembly-level marker instead.
 - Generic types must be fully constructed (no open generic parameters)
 - Type hierarchy must be fully resolvable (no missing dependencies)
 - Must not be a managed-only type (types that never cross the Windows Runtime boundary)
@@ -736,6 +736,8 @@ Almost everything the generated code calls into lives in `WinRT.Runtime.dll` as 
 - **IID table and error helpers** (`WindowsRuntime.InteropServices`) — `WellKnownInterfaceIIDs` (the generator emits `get_IID(...)` calls and reads the reserved-IID set) and `RestrictedErrorInfo` (`ThrowExceptionForHR`, etc., used in generated async/collection bodies to translate HRESULTs to exceptions).
 
 Because these APIs are absent from the `WinRT.Runtime.dll` reference assembly, the generated `WinRT.Interop.dll` references types that exist only in the implementation assembly, and the generator emits assembly-level `[IgnoresAccessChecksTo]` to reach the non-public members among them. This is also why `cswinrtinteropgen` must be version-matched to the `WinRT.Runtime.dll` it targets (see "Version compatibility" above): the shape of these types can change at any time.
+
+> **Note:** A small subset of the types listed above is not stripped but instead kept **public but hidden** in the reference assembly — most notably the three type map group types, which are marked reference-assembly-only `[Obsolete(DiagnosticId = "CSWINRT3002")]` + `[EditorBrowsable(Never)]`. The reason: those types are also named by the CsWinRT source generator's `[assembly: TypeMapAssemblyTarget<TGroup>]` output, which is compiled into user code **against the reference assembly**, so stripping them would break that compilation. The interop generator is unaffected by the distinction (it always resolves the implementation assembly), but it must still treat them as unstable, version-matched implementation details. See the "Two strategies for implementation-only API" note in `.github/copilot-instructions.md` for the full rationale and the other cases (`CSWINRT3003`, `CSWINRT3004`).
 
 ## Key patterns and conventions
 

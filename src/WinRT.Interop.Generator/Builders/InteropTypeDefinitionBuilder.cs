@@ -42,7 +42,7 @@ internal static partial class InteropTypeDefinitionBuilder
         out MethodDefinition get_IidMethod)
     {
         IID(
-            name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, interopDefinitions),
             interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: GuidGenerator.CreateIID(interfaceType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -84,12 +84,14 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
     /// <param name="nativeObjectBaseType">The <see cref="TypeSignature"/> for the base native object type.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="nativeObjectType">The resulting native object type.</param>
     private static void NativeObject(
         TypeSignature typeSignature,
         TypeSignature nativeObjectBaseType,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition nativeObjectType)
@@ -97,7 +99,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal sealed class' type
         nativeObjectType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "NativeObject"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopDefinitions, "NativeObject"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: nativeObjectBaseType.ToTypeDefOrRef());
 
@@ -119,6 +121,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
     /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
     /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="callbackType">The resulting callback type.</param>
@@ -127,6 +130,7 @@ internal static partial class InteropTypeDefinitionBuilder
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
         MethodDefinition get_IidMethod,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition callbackType)
@@ -134,7 +138,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal abstract class' type
         callbackType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "ComWrappersCallback"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopDefinitions, "ComWrappersCallback"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef())
         {
@@ -251,6 +255,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
     /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
     /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -258,6 +263,7 @@ internal static partial class InteropTypeDefinitionBuilder
         TypeSignature typeSignature,
         TypeDefinition nativeObjectType,
         MethodDefinition get_IidMethod,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition marshallerType)
@@ -265,7 +271,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal sealed class' type
         marshallerType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopDefinitions, "ComWrappersMarshallerAttribute"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -312,6 +318,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the generic interface type.</param>
     /// <param name="interfaceComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
     /// <param name="get_IidMethod">The 'IID' get method for <paramref name="typeSignature"/>.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="module">The module that will contain the type being created.</param>
@@ -320,6 +327,7 @@ internal static partial class InteropTypeDefinitionBuilder
         TypeSignature typeSignature,
         TypeDefinition interfaceComWrappersCallbackType,
         MethodDefinition get_IidMethod,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         InteropGeneratorEmitState emitState,
         ModuleDefinition module,
@@ -328,7 +336,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // We're declaring an 'internal static class' type
         marshallerType = new(
             ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "Marshaller"),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopDefinitions, "Marshaller"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -704,6 +712,7 @@ internal static partial class InteropTypeDefinitionBuilder
     /// </summary>
     /// <param name="interfaceType">The <see cref="TypeSignature"/> for the mapped type the proxy type is for.</param>
     /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance for the marshaller attribute type.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -711,6 +720,7 @@ internal static partial class InteropTypeDefinitionBuilder
     public static void Proxy(
         TypeSignature interfaceType,
         TypeDefinition comWrappersMarshallerAttributeType,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections,
@@ -723,7 +733,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // when marshalling 'TypeName' instances. Nobody would need a runtime class name here.
         Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(interfaceType, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, interopDefinitions),
             mappedMetadata: null,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),

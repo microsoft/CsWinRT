@@ -60,7 +60,6 @@ internal static class InteropInterfaceEntriesResolver
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
                     type: genericTypeSignature,
                     interopDefinitions: interopDefinitions,
-                    interopReferences: interopReferences,
                     emitState: emitState);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
@@ -113,7 +112,9 @@ internal static class InteropInterfaceEntriesResolver
 
             // Handle the common case for all normally projected, non-generic Windows Runtime interface types. For those, all the
             // interop code will just live in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
-            if (interfaceType.IsProjectedWindowsRuntimeType)
+            // The interface is recognized either by its '[WindowsRuntimeMetadata]' attribute (implementation projections) or by being
+            // defined in a reference projection assembly (reference projections don't carry that per-type attribute).
+            if (interfaceType.IsProjectedWindowsRuntimeType || interfaceType.IsReferenceProjectionWindowsRuntimeType)
             {
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
                     type: interfaceType,

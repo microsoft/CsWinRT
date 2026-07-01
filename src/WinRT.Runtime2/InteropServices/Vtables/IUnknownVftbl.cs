@@ -5,14 +5,17 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+#pragma warning disable CS1591
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Binding type for the <c>IUnknown</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/unknwn/nn-unknwn-iunknown"/>
+[WindowsRuntimeImplementationOnlyMember]
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct IUnknownVftbl
+public unsafe struct IUnknownVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -26,7 +29,7 @@ internal unsafe struct IUnknownVftbl
     /// <param name="ppvObject">The address of a pointer to an interface with the IID specified in the <paramref name="riid"/> parameter.</param>
     /// <returns>This method returns <c>S_OK</c> if the interface is supported, and <c>E_NOINTERFACE</c> otherwise.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT QueryInterfaceUnsafe(void* thisPtr, Guid* riid, void** ppvObject)
+    internal static HRESULT QueryInterfaceUnsafe(void* thisPtr, Guid* riid, void** ppvObject)
     {
         return ((IUnknownVftbl*)*(void***)thisPtr)->QueryInterface(thisPtr, riid, ppvObject);
     }
@@ -36,7 +39,7 @@ internal unsafe struct IUnknownVftbl
     /// <param name="pvObject">The pointer to an interface with the IID specified in the <paramref name="iid"/> parameter.</param>
     /// <inheritdoc cref="QueryInterfaceUnsafe(void*, Guid*, void**)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT QueryInterfaceUnsafe(void* thisPtr, in Guid iid, out void* pvObject)
+    internal static HRESULT QueryInterfaceUnsafe(void* thisPtr, in Guid iid, out void* pvObject)
     {
         fixed (Guid* riid = &iid)
         fixed (void** ppvObject = &pvObject)
@@ -51,7 +54,7 @@ internal unsafe struct IUnknownVftbl
     /// <param name="thisPtr">The target COM object.</param>
     /// <returns>The method returns the new reference count.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint AddRefUnsafe(void* thisPtr)
+    internal static uint AddRefUnsafe(void* thisPtr)
     {
         return ((IUnknownVftbl*)*(void***)thisPtr)->AddRef(thisPtr);
     }
@@ -62,7 +65,7 @@ internal unsafe struct IUnknownVftbl
     /// <param name="thisPtr">The target COM object.</param>
     /// <returns>The method returns the new reference count.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint ReleaseUnsafe(void* thisPtr)
+    internal static uint ReleaseUnsafe(void* thisPtr)
     {
         return ((IUnknownVftbl*)*(void***)thisPtr)->Release(thisPtr);
     }

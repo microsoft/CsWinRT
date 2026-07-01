@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
-
 using System;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+using System.ComponentModel;
+#endif
 
 namespace WindowsRuntime.InteropServices;
 
@@ -16,7 +17,13 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 /// <seealso cref="System.Runtime.CompilerServices.ReferenceAssemblyAttribute"/>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
-[WindowsRuntimeImplementationOnlyMember]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[Obsolete(
+    WindowsRuntimeConstants.WindowsRuntimeComponentAssemblyObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.WindowsRuntimeComponentAssemblyObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+#endif
 public sealed class WindowsRuntimeComponentAssemblyExportsTypeAttribute : Attribute
 {
     /// <summary>

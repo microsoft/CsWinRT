@@ -92,6 +92,17 @@ internal static partial class ConstructorFactory
                 writer.Write($"{(i > 0 ? ", " : "")}{p}");
             }
 
+            // In ref mode the composable constructor keeps its public signature but gets a 'throw null'
+            // body; the base call and the args struct + factory callback class below are skipped (they
+            // are private implementation details referencing implementation-only 'WinRT.Runtime' types).
+            if (context.Settings.ReferenceProjection)
+            {
+                RefModeStubFactory.EmitRefModeConstructorBody(writer);
+                methodIndex++;
+
+                continue;
+            }
+
             writer.Write(isMultiline: true, """
                 )
                   :base(
@@ -142,11 +153,9 @@ internal static partial class ConstructorFactory
                 }
                 """);
 
-            // Emit args struct + callback class for parameterized composable factories.
-            // skips both the args struct AND the callback class entirely in ref mode. The
-            // public ctor above still references these types, but reference assemblies don't
-            // need their bodies' references to resolve (only the public API surface matters).
-            if (!isParameterless && !context.Settings.ReferenceProjection)
+            // Emit the args struct + factory callback class for parameterized composable factories.
+            // (Ref mode 'continue'd above before reaching here, since it emits no factory plumbing.)
+            if (!isParameterless)
             {
                 EmitFactoryArgsStruct(writer, context, sig, argsName, userParamCount);
                 string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, composableType);

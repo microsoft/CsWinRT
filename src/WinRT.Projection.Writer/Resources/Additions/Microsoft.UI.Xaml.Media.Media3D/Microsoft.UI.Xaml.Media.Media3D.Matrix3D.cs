@@ -3,8 +3,8 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 {
     using global::Windows.Foundation;
 
-    [WindowsRuntimeMetadata("Microsoft.UI")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeMetadata("Microsoft.UI")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Media.Media3D.Matrix3D>")]
     [ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
 #endif
@@ -406,6 +406,9 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 
         private readonly string ConvertToString(string format, IFormatProvider provider)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             if (IsIdentity)
             {
                 return "Identity";
@@ -446,6 +449,7 @@ namespace Microsoft.UI.Xaml.Media.Media3D
             handler.AppendFormatted(separator);
             handler.AppendFormatted(_m44, format);
             return handler.ToStringAndClear();
+#endif
         }
 
         public readonly override int GetHashCode()

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end authoring smoke test: a Windows Runtime component library that consumes the real
+    'Microsoft.Windows.CsWinRT' NuGet package exactly as a component author would. Building it
+    exercises the WinMD generator, the reference projection generator, and the forwarder (impl)
+    generator. Shared configuration (target framework, NuGet sources, and the CsWinRT package
+    reference) lives in the parent 'Directory.Build.props'.
+  -->
+  <PropertyGroup>
+
+    <!-- Build this library as a Windows Runtime component -->
+    <CsWinRTComponent>true</CsWinRTComponent>
+  </PropertyGroup>
+</Project>

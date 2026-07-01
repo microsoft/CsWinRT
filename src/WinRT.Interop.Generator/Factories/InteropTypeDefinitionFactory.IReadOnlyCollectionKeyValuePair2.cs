@@ -26,6 +26,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="readOnlyCollectionType">The <see cref="GenericInstanceTypeSignature"/> for the generic interface type.</param>
         /// <param name="readOnlyDictionaryType">The <see cref="TypeSignature"/> for the corresponding <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="readOnlyListType">The <see cref="TypeSignature"/> for the corresponding <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="forwarderAttributeType">The resulting marshaller type.</param>
@@ -36,6 +37,7 @@ internal partial class InteropTypeDefinitionFactory
             GenericInstanceTypeSignature readOnlyCollectionType,
             TypeSignature readOnlyDictionaryType,
             TypeSignature readOnlyListType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition forwarderAttributeType)
@@ -43,7 +45,7 @@ internal partial class InteropTypeDefinitionFactory
             // We're declaring an 'internal sealed class' type
             forwarderAttributeType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyCollectionType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, interopReferences.RuntimeContext, "ForwarderAttribute"),
+                name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, interopDefinitions, "ForwarderAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.DynamicInterfaceCastableForwarderAttribute);
 

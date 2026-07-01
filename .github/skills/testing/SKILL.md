@@ -13,7 +13,7 @@ Before adding tests, always check whether tests for the same functionality alrea
 
 ## Test project overview
 
-CsWinRT 3.0 has 5 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
+CsWinRT 3.0 has 6 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
 
 ### 1. Unit tests (`src/Tests/UnitTest/`)
 
@@ -25,8 +25,8 @@ CsWinRT 3.0 has 5 primary test project areas, each serving a different purpose. 
 - **Test framework:** MSTest (`[TestClass]`, `[TestMethod]`, `Assert.*`)
 - **TFM:** Variable via `$(AppBuildTFMs)`, multi-platform (x86/x64)
 - **Output type:** Exe, self-contained, AOT-enabled
-- **Key dependencies:** MSTest.TestFramework, MSTest.Engine, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json
-- **References:** WinRT.SourceGenerator2 (as analyzer), Test/Windows/WinAppSDK projections
+- **Key dependencies:** MSTest.TestFramework, MSTest.Engine, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
+- **References:** WinRT.SourceGenerator2 (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
 
 **Test organization:**
 - Single namespace: `UnitTest`
@@ -132,9 +132,16 @@ return 100;
 | Test class | What it tests |
 |------------|---------------|
 | `Test_CustomPropertyProviderGenerator` | `CustomPropertyProviderGenerator` source generator output |
-| `Test_GeneratedCustomPropertyProviderAttributeArgumentAnalyzer` | CSWINRT2004–2008 diagnostics |
 | `Test_GeneratedCustomPropertyProviderTargetTypeAnalyzer` | CSWINRT2000–2001 diagnostics |
 | `Test_GeneratedCustomPropertyProviderExistingMemberImplementationAnalyzer` | CSWINRT2003 diagnostic |
+| `Test_GeneratedCustomPropertyProviderAttributeArgumentAnalyzer` | CSWINRT2004–2008 diagnostics |
+| `Test_ComImportInterfaceAnalyzer` | CSWINRT2009 diagnostic (casts to `[ComImport]` interfaces) |
+| `Test_ValidApiContractEnumTypeAnalyzer` | CSWINRT2010 diagnostic |
+| `Test_ValidContractVersionAttributeAnalyzer` | CSWINRT2011–2013 diagnostics |
+| `Test_ApiContractTypeRequiresContractVersionAnalyzer` | CSWINRT2014 diagnostic |
+| `Test_PublicTypeRequiresVersioningAnalyzer` | CSWINRT2015 diagnostic |
+| `Test_PublicTypeRequiresContractVersionAnalyzer` | CSWINRT2016 diagnostic |
+| `Test_PublicTypeMixedVersioningAttributesAnalyzer` | CSWINRT2017 diagnostic |
 
 **Test helpers (in `Helpers/`):**
 - `CSharpGeneratorTest<TGenerator>` — runs a generator on source code and compares output
@@ -183,6 +190,7 @@ public async Task InvalidType_Warns()
 
 - Use `{|DIAGNOSTIC_ID:target|}` inline syntax to mark expected diagnostics
 - Or use explicit `expectedDiagnostics` array with `DiagnosticResult` for complex cases
+- Pass `isCsWinRTComponent: true` to `VerifyAnalyzerAsync` for analyzers that only apply to authored components (e.g. the contract-versioning analyzers)
 - Test naming convention: `Condition_ExpectedBehavior` (e.g. `NullPropertyName_Warns`, `ValidClass_DoesNotWarn`)
 
 ### 4. Object lifetime tests (`src/Tests/ObjectLifetimeTests/`)
@@ -201,17 +209,40 @@ public async Task InvalidType_Warns()
 - `AsyncQueue` helper for scheduling actions on UI thread and forcing GC
 - Tests named `BasicTestN()`, `CycleTestN()`, `LeakTestN()`
 
-### 5. Authoring tests (`src/Tests/AuthoringTest/`) — currently disabled, WIP
+### 5. Authoring tests (`src/Tests/AuthoringTest/`)
 
-**What it tests:** Authoring a WinRT component in C# — validates that diverse type patterns (enums, structs, classes, interfaces, delegates, collections, XAML controls, async operations, data binding types) can be successfully projected as a WinRT component.
+**What it tests:** Authoring a WinRT component in C# — validates that diverse type patterns (enums, structs, classes, interfaces, delegates, collections, XAML controls, async operations, data binding types, and contract-versioning attributes) can be successfully projected as a WinRT component. The component itself builds (build-time validation); the C++ consumption tests that exercise it (`AuthoringConsumptionTest*`) are not yet enabled in the solution.
 
-**When to add tests here:** Currently disabled. When enabled, for testing new WinRT component authoring scenarios.
+**When to add tests here:** For testing new WinRT component authoring scenarios — new type shapes, attributes, or versioning patterns.
 
 **Project settings:**
-- **Type:** Class library with `CsWinRTComponent=true`
-- **TFM:** `net10.0`
-- **Release x64:** NativeAOT self-contained mode
+- **Type:** `CsWinRTComponent=true` class library; Release x64 publishes as a Native AOT shared library (`OutputType=Exe`, `PublishAot=true`, `SelfContained=true`, `NativeLib=Shared`)
+- **TFM:** `net10.0-windows10.0.26100.1`
 - Build-time validation (compilation succeeds = test passes)
+
+### 6. Smoke tests (`src/Tests/SmokeTests/`)
+
+**What it tests:** End-to-end consumption of the **real** `Microsoft.Windows.CsWinRT` NuGet package — a consuming app, an authoring component, a third-party projection, and the Windows SDK reference projections — fully isolated from the repository build infrastructure. Validates that the packaged `ref`/`lib` assemblies, the build targets, and all post-build generators work correctly for an external customer.
+
+**When to add tests here:** For verifying that the produced NuGet package works in a real, isolated environment (correct `ref`/`lib` assemblies referenced, generators running). Keep these minimal — they are smoke tests, not feature coverage. Use `UnitTest/` or `FunctionalTests/` for marshalling/feature coverage instead.
+
+**Project structure:** Five standalone projects, intentionally kept out of `cswinrt.slnx` (the package they consume only exists after the build packs it). They are isolated from the repo build infrastructure via blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled). All shared configuration lives in `Directory.Build.props`, so each `.csproj` only carries what makes it different; the two Windows SDK projection tests additionally share `WindowsSdkContracts.targets` (which stages the SDK `.winmd` inputs).
+
+**Existing tests:**
+| Project | Tests |
+|---------|-------|
+| `Consumption/` | An `Exe` that calls `JsonObject.Parse(...)` then `Stringify()` from `Windows.Data.Json`, exercising the Windows SDK projection, the interop generator, and the `WinRT.Runtime` ref/impl assemblies |
+| `Authoring/` | A `CsWinRTComponent` library exposing a `Greeter` class plus a richer catalog of authored type shapes in `Thermometer.cs` (enums, a flags enum, a struct, a delegate, an interface, and a sealed runtime class with constructors, properties, an event, and static members), exercising WinMD generation, the reference projection, and the forwarder assembly. The breadth deliberately gives the `Projection` smoke test more projection shapes to cover |
+| `Projection/` | A `CsWinRTGenerateReferenceProjection` library that generates a reference projection for the `Authoring` component's `.winmd` (reused via a build-ordering `ProjectReference`), exercising `cswinrtprojectionrefgen` and `cswinrtimplgen`, exactly as a NuGet projection author would |
+| `WindowsSdkProjection/` | A `CsWinRTGenerateReferenceProjection` library that generates the base Windows SDK reference projection from the `Microsoft.Windows.SDK.Contracts` `.winmd` files (staged by `WindowsSdkContracts.targets`), exactly as the `Microsoft.Windows.SDK.NET.Ref` projection package is produced. Catches reference-projection codegen regressions against the full Windows SDK surface |
+| `WindowsSdkXamlProjection/` | As `WindowsSdkProjection`, but for the `Windows.UI.Xaml` surface; it references the `WindowsSdkProjection` reference assembly, mirroring how the UWP XAML projection package depends on the base Windows SDK projection package |
+
+**Shared configuration (`Directory.Build.props`):**
+- **TFM:** `net10.0-windows10.0.26100.1` (the `.1` CsWinRT 3.0 revision), with a pinned `WindowsSdkPackageVersion` so the build uses the real .NET SDK targeting pack (mirrors `src/WinRT.Internal`). The two Windows SDK projection tests override this to plain `net10.0` (a `-windows` TFM would implicitly reference the prebuilt Windows SDK projection they regenerate, colliding with every generated type), exactly as `src/WinRT.Sdk.Projection`
+- `RestoreSources` overrides all inherited NuGet sources: the local CsWinRT build output (`CsWinRTPackageSource`) plus the `CsWinRTDependencies` feed (`CsWinRTDependenciesSource`), which provides the preview Windows SDK ref pack and `Microsoft.Windows.SDK.Contracts`
+- `CsWinRTPackageVersion`/`CsWinRTPackageSource` default to the local `build.cmd x64 Release` output and are overridden by the build/CI that produced the package
+
+**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly (shared verification). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the three reference-projection tests are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
 
 ## Deciding where to add tests
 
@@ -226,14 +257,15 @@ public async Task InvalidType_Warns()
 | An analyzer diagnostic | `SourceGenerator2Test/` (new `Test_*Analyzer` class or add to existing) |
 | GC/reference tracking behavior | `ObjectLifetimeTests/` |
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
-| WinRT component authoring patterns | `AuthoringTest/` (when enabled) |
+| WinRT component authoring patterns | `AuthoringTest/` |
+| The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/`, `Authoring/`, or a reference-projection project) |
 | Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
 
 ## Test component: TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
 
-A **WinRT test component** (defined in `class.idl`, implemented in C++) that complements the general `TestComponent` from the [TestWinRT](https://github.com/microsoft/TestWinRT/) submodule. It tests scenarios specific to the C#/WinRT language projection.
+A **WinRT test component** (defined in `TestComponentCSharp.idl`, implemented in C++) that complements the general `TestComponent` from the [TestWinRT](https://github.com/microsoft/TestWinRT/) submodule. It tests scenarios specific to the C#/WinRT language projection.
 
-**When to update this project:** When you need to validate generated projection code patterns or cross-ABI control flow — e.g. a C# type calling a method on a projected object with specific parameters, and the native implementation validating the result. New types and members can be added to `class.idl` as needed.
+**When to update this project:** When you need to validate generated projection code patterns or cross-ABI control flow — e.g. a C# type calling a method on a projected object with specific parameters, and the native implementation validating the result. New types and members can be added to `TestComponentCSharp.idl` as needed.
 
 **Referenced from:** unit tests (`UnitTest/`), functional tests (`FunctionalTests/`), and projection test projects (`Projections/Test/`).
 

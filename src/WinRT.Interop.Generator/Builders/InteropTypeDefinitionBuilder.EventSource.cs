@@ -24,12 +24,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="System.EventHandler{TEventArgs}"/> type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="eventSourceType">The resulting event source type.</param>
         public static void EventHandler1(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
@@ -41,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
                 baseEventSourceType: interopReferences.EventHandler1EventSource,
                 baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor(eventArgsType),
                 marshallerType: marshallerType,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 eventSourceType: out eventSourceType);
@@ -51,12 +54,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="System.EventHandler{TSender, TEventArgs}"/> type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="eventSourceType">The resulting event source type.</param>
         public static void EventHandler2(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
@@ -69,6 +74,7 @@ internal partial class InteropTypeDefinitionBuilder
                 baseEventSourceType: interopReferences.EventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor(senderType, eventArgsType),
                 marshallerType: marshallerType,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 eventSourceType: out eventSourceType);
@@ -79,6 +85,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -86,6 +93,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void VectorChangedEventHandler1(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -98,6 +106,7 @@ internal partial class InteropTypeDefinitionBuilder
                 baseEventSourceType: interopReferences.VectorChangedEventHandler1EventSource,
                 baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor(elementType),
                 marshallerType: marshallerType,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 eventSourceType: out eventSourceType);
@@ -111,6 +120,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -118,6 +128,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void MapChangedEventHandler2(
             GenericInstanceTypeSignature delegateType,
             TypeDefinition marshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -131,6 +142,7 @@ internal partial class InteropTypeDefinitionBuilder
                 baseEventSourceType: interopReferences.MapChangedEventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor(keyType, valueType),
                 marshallerType: marshallerType,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 eventSourceType: out eventSourceType);
@@ -146,6 +158,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="baseEventSourceType">The <see cref="TypeReference"/> for the base event source type.</param>
         /// <param name="baseEventSource_ctor">The <see cref="MemberReference"/> for the constructor of the base event source type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="eventSourceType">The resulting event source type.</param>
@@ -154,6 +167,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeReference baseEventSourceType,
             MemberReference baseEventSource_ctor,
             TypeDefinition marshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
@@ -163,7 +177,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             eventSourceType = new(
                 ns: "ABI.WindowsRuntime.InteropServices"u8,
-                name: InteropUtf8NameFactory.TypeName(baseEventSourceSignature, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(baseEventSourceSignature, interopDefinitions),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: baseEventSourceSignature.ToTypeDefOrRef());
 

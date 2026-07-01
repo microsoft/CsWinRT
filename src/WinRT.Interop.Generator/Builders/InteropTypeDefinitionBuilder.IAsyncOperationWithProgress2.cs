@@ -43,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             operationMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopDefinitions, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -141,12 +141,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="operationMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
         public static void NativeObject(
             GenericInstanceTypeSignature operationType,
             TypeDefinition operationMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition nativeObjectType)
@@ -160,6 +162,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: operationType,
                 nativeObjectBaseType: windowsRuntimeAsyncOperationWithProgress2Type,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
@@ -171,6 +174,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="operationType">The <see cref="TypeSignature"/> for the async operation type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="operationType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -179,6 +183,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature operationType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -189,6 +194,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: operationType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out callbackType);
@@ -200,6 +206,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="operationType">The <see cref="GenericInstanceTypeSignature"/> for the async operation type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="operationType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -207,6 +214,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature operationType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -215,6 +223,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: operationType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
@@ -245,7 +254,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopDefinitions, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -475,7 +484,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopDefinitions, "Impl"),
                 vftblType: interopDefinitions.IAsyncOperationWithProgressVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

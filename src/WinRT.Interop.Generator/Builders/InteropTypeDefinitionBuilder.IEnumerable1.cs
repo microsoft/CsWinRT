@@ -28,6 +28,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -35,6 +36,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Interface(
             GenericInstanceTypeSignature enumerableType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -43,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "Interface"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopDefinitions, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -92,7 +94,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             iterableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "IIterableMethods"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopDefinitions, "IIterableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -211,12 +213,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="iterableMethodsType">The type returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="enumerableMethodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature enumerableType,
             TypeDefinition iterableMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition enumerableMethodsType)
@@ -226,7 +230,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             enumerableMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopDefinitions, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -258,12 +262,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="iterableMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIterableMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
         public static void NativeObject(
             GenericInstanceTypeSignature enumerableType,
             TypeDefinition iterableMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition nativeObjectType)
@@ -276,6 +282,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: enumerableType,
                 nativeObjectBaseType: windowsRuntimeEnumerable1Type,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
@@ -287,6 +294,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -295,6 +303,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature enumerableType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -305,6 +314,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: enumerableType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out callbackType);
@@ -316,6 +326,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="enumerableType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -323,6 +334,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature enumerableType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -331,6 +343,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: enumerableType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
@@ -360,7 +373,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopDefinitions, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -445,7 +458,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopDefinitions, "Impl"),
                 vftblType: interopDefinitions.IEnumerable1Vftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

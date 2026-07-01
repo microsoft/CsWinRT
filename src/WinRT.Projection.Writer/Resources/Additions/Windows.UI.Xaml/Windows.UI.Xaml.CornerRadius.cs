@@ -3,8 +3,8 @@ namespace Windows.UI.Xaml
 {
     using global::Windows.Foundation;
 
-    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.CornerRadius>")]
     [ABI.Windows.UI.Xaml.CornerRadiusComWrappersMarshaller]
 #endif
@@ -53,6 +53,9 @@ namespace Windows.UI.Xaml
 
         private readonly string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             char listSeparator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
             // Initial capacity [64] is an estimate based on a sum of:
@@ -67,6 +70,7 @@ namespace Windows.UI.Xaml
             handler.AppendFormatted(listSeparator);
             InternalAddToHandler(_BottomLeft, ref handler);
             return handler.ToStringAndClear();
+#endif
         }
 
         private static void InternalAddToHandler(double l, ref DefaultInterpolatedStringHandler handler)
