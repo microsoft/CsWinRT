@@ -60,12 +60,14 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     /// <param name="allowUnsafeBlocks">Whether to enable unsafe blocks.</param>
     /// <param name="languageVersion">The language version to use to run the test.</param>
     /// <param name="isCsWinRTComponent">Whether to set the <c>"CsWinRTComponent"</c> MSBuild property to <see langword="true"/>.</param>
+    /// <param name="generatedSource">An additional source file to add to the compilation as generated code, or <see langword="null"/> to not add one.</param>
     public static Task VerifyAnalyzerAsync(
         string source,
         ReadOnlySpan<DiagnosticResult> expectedDiagnostics = default,
         bool allowUnsafeBlocks = true,
         LanguageVersion languageVersion = LanguageVersion.CSharp14,
-        bool isCsWinRTComponent = false)
+        bool isCsWinRTComponent = false,
+        string generatedSource = null)
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(allowUnsafeBlocks, languageVersion) { TestCode = source };
 
@@ -74,6 +76,14 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(CoreApplication).Assembly.Location));
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Button).Assembly.Location));
         test.TestState.ExpectedDiagnostics.AddRange([.. expectedDiagnostics]);
+
+        // Add an additional source file that is treated as generated code (the '.g.cs' suffix is recognized by the
+        // analysis framework). This is used to validate that diagnostics are suppressed for applications of the
+        // attribute that appear in generated code, when the analyzer opts out of generated code analysis.
+        if (generatedSource is not null)
+        {
+            test.TestState.Sources.Add(("NativeExposedTypes.g.cs", generatedSource));
+        }
 
         // Configure the desired MSBuild properties via a global analyzer config file
         if (isCsWinRTComponent)
