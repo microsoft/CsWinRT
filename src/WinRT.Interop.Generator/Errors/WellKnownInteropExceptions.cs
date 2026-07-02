@@ -879,6 +879,22 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Failed to discover native exposed types.
+    /// </summary>
+    public static WellKnownInteropException DiscoverNativeExposedTypesError(string? name, Exception exception)
+    {
+        return Exception(101, $"Failed to discover native exposed types (from '[WindowsRuntimeNativeExposedType]' attributes) for module '{name}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to resolve a type specified in a '[WindowsRuntimeNativeExposedType]' attribute.
+    /// </summary>
+    public static WellKnownInteropWarning NativeExposedTypeNotResolvedWarning(TypeSignature typeSignature, ModuleDefinition module)
+    {
+        return Warning(102, $"Failed to resolve the type '{typeSignature}' specified in a '[WindowsRuntimeNativeExposedType]' attribute while processing module '{module}': CCW marshalling code for it will not be generated.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
