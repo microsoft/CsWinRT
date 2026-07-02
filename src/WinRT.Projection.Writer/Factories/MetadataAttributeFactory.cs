@@ -130,7 +130,14 @@ internal static class MetadataAttributeFactory
             string path = context.Cache.GetSourcePath(type);
             string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
             (string typeNs, string typeName) = type.Names();
-            string globalName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
+
+            // The centralized lookup references each type via 'typeof(...)', so the recorded name must match where
+            // the type is actually emitted. In component mode, projected types are wrapped in the 'ABI.Impl.<Ns>'
+            // namespace (see 'WriteBeginProjectedNamespace'), so mirror that same prefix here. Without it the
+            // 'typeof(...)' fails to resolve (authored exclusive-to interfaces live under 'ABI.Impl.<Ns>', not
+            // '<Ns>'), and the key wouldn't match the '(Namespace, Name)' the interop generator computes for the type.
+            string emittedNs = context.Settings.Component ? $"ABI.Impl.{typeNs}" : typeNs;
+            string globalName = TypedefNameWriter.BuildGlobalQualifiedName(emittedNs, typeName);
 
             _ = entries.TryAdd(globalName, stem);
         }
