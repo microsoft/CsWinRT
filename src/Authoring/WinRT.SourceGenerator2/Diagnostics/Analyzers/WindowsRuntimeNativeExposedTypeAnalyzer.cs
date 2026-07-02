@@ -1,0 +1,207 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
+
+namespace WindowsRuntime.SourceGenerator.Diagnostics;
+
+/// <summary>
+/// A diagnostic analyzer that validates uses of <c>[WindowsRuntimeNativeExposedType]</c>. The attribute is only
+/// meaningful when applied with a concrete, non generic projected Windows Runtime class type, as CCW marshalling
+/// code is generated automatically for every other kind of type. It also reports redundant applications of the
+/// attribute that target a type already used by another application in the same assembly.
+/// </summary>
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
+{
+    /// <inheritdoc/>
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
+    [
+        DiagnosticDescriptors.NativeExposedTypeNotInstantiable,
+        DiagnosticDescriptors.NativeExposedTypeNotProjectedClass,
+        DiagnosticDescriptors.NativeExposedTypeDuplicate
+    ];
+
+    /// <inheritdoc/>
+    public override void Initialize(AnalysisContext context)
+    {
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+
+        context.RegisterCompilationAction(static context =>
+        {
+            // Get the '[WindowsRuntimeNativeExposedType]' symbol
+            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeNativeExposedTypeAttribute") is not { } nativeExposedTypeAttributeType)
+            {
+                return;
+            }
+
+            // Get the '[WindowsRuntimeMetadata]' symbol, which is used to detect projected Windows Runtime types
+            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeMetadataAttribute") is not { } windowsRuntimeMetadataAttributeType)
+            {
+                return;
+            }
+
+            IAssemblySymbol assemblySymbol = context.Compilation.Assembly;
+
+            // Collect the valid target types across all applications of the attribute in the assembly (including
+            // the ones in generated code), so that a type used both in user code and in generated code is still
+            // detected as a duplicate. This list is only used to report duplicate applications of the attribute.
+            List<ITypeSymbol> validTargetTypes = [];
+
+            foreach (AttributeData attribute in assemblySymbol.GetAttributes(nativeExposedTypeAttributeType))
+            {
+                if (attribute is { ConstructorArguments: [{ Value: ITypeSymbol targetType }] } &&
+                    Classify(targetType, windowsRuntimeMetadataAttributeType) is NativeExposedTypeKind.Valid)
+                {
+                    validTargetTypes.Add(targetType);
+                }
+            }
+
+            // Classify and report each application of the attribute. Applications in generated code are
+            // suppressed by the analysis framework, because this analyzer opts out of generated code analysis,
+            // so only applications authored in user code are ever reported.
+            foreach (AttributeData attribute in assemblySymbol.GetAttributes(nativeExposedTypeAttributeType))
+            {
+                // Skip malformed applications, eg. where the argument does not bind to a type
+                if (attribute is not { ConstructorArguments: [{ Value: ITypeSymbol targetType }] })
+                {
+                    continue;
+                }
+
+                Location? location = attribute.GetArgumentLocation(0, context.CancellationToken) ?? attribute.GetLocation(context.CancellationToken);
+
+                NativeExposedTypeKind kind = Classify(targetType, windowsRuntimeMetadataAttributeType);
+
+                // The type cannot be instantiated, so no CCW would ever be created for it
+                if (kind is NativeExposedTypeKind.NotInstantiable)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.NativeExposedTypeNotInstantiable,
+                        location,
+                        targetType));
+                }
+
+                // The type is not a projected class, so CCW marshalling code is already generated for it
+                else if (kind is NativeExposedTypeKind.NotProjectedClass)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.NativeExposedTypeNotProjectedClass,
+                        location,
+                        targetType));
+                }
+
+                // The type is valid, but it is also targeted by another application of the attribute
+                else if (CountOccurrences(validTargetTypes, targetType) > 1)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.NativeExposedTypeDuplicate,
+                        location,
+                        targetType));
+                }
+            }
+        });
+    }
+
+    /// <summary>
+    /// Classifies a target type used with <c>[WindowsRuntimeNativeExposedType]</c>.
+    /// </summary>
+    /// <param name="type">The target type to classify.</param>
+    /// <param name="windowsRuntimeMetadataAttributeType">The <c>[WindowsRuntimeMetadata]</c> symbol.</param>
+    /// <returns>The <see cref="NativeExposedTypeKind"/> classification for <paramref name="type"/>.</returns>
+    private static NativeExposedTypeKind Classify(ITypeSymbol type, INamedTypeSymbol windowsRuntimeMetadataAttributeType)
+    {
+        // A type that cannot be instantiated can never have a CCW created for it, so the attribute is meaningless
+        if (!IsInstantiable(type))
+        {
+            return NativeExposedTypeKind.NotInstantiable;
+        }
+
+        // A valid target is a non generic projected Windows Runtime class. CCW marshalling code is generated
+        // automatically for every other kind of type, so the attribute is only ever needed for projected classes.
+        return type is INamedTypeSymbol { TypeKind: TypeKind.Class, IsGenericType: false } namedType &&
+               namedType.HasAttributeWithType(windowsRuntimeMetadataAttributeType)
+            ? NativeExposedTypeKind.Valid
+            : NativeExposedTypeKind.NotProjectedClass;
+    }
+
+    /// <summary>
+    /// Counts how many times a given type appears in a sequence of types.
+    /// </summary>
+    /// <param name="types">The sequence of types to search.</param>
+    /// <param name="type">The type to count occurrences of.</param>
+    /// <returns>The number of times <paramref name="type"/> appears in <paramref name="types"/>.</returns>
+    private static int CountOccurrences(List<ITypeSymbol> types, ITypeSymbol type)
+    {
+        int count = 0;
+
+        foreach (ITypeSymbol candidate in types)
+        {
+            if (SymbolEqualityComparer.Default.Equals(candidate, type))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Checks whether a given type can be instantiated.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <returns>Whether <paramref name="type"/> can be instantiated.</returns>
+    private static bool IsInstantiable(ITypeSymbol type)
+    {
+        // Array types can always be instantiated
+        if (type is IArrayTypeSymbol)
+        {
+            return true;
+        }
+
+        // Any other non named type (eg. a pointer type or a type parameter) cannot be instantiated
+        if (type is not INamedTypeSymbol namedType)
+        {
+            return false;
+        }
+
+        // An unbound generic type definition (eg. 'typeof(List<>)') cannot be instantiated
+        if (namedType.IsUnboundGenericType)
+        {
+            return false;
+        }
+
+        // Interfaces, abstract classes, and static classes cannot be instantiated
+        if (namedType.TypeKind is TypeKind.Interface || namedType.IsAbstract || namedType.IsStatic)
+        {
+            return false;
+        }
+
+        // Classes, structs, enums, and delegates can be instantiated
+        return namedType.TypeKind is TypeKind.Class or TypeKind.Struct or TypeKind.Enum or TypeKind.Delegate;
+    }
+
+    /// <summary>
+    /// The classification of a target type used with <c>[WindowsRuntimeNativeExposedType]</c>.
+    /// </summary>
+    private enum NativeExposedTypeKind
+    {
+        /// <summary>
+        /// The target type cannot be instantiated (eg. an interface, an abstract class, or a generic type definition).
+        /// </summary>
+        NotInstantiable,
+
+        /// <summary>
+        /// The target type can be instantiated, but it is not a projected Windows Runtime class.
+        /// </summary>
+        NotProjectedClass,
+
+        /// <summary>
+        /// The target type is a valid, non generic projected Windows Runtime class.
+        /// </summary>
+        Valid
+    }
+}

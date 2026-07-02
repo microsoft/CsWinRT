@@ -24,3 +24,6 @@ CSWINRT2014 | WindowsRuntime.SourceGenerator | Warning | API contract type missi
 CSWINRT2015 | WindowsRuntime.SourceGenerator | Info | Public authored type missing version metadata
 CSWINRT2016 | WindowsRuntime.SourceGenerator | Warning | Public authored type missing 'ContractVersionAttribute'
 CSWINRT2017 | WindowsRuntime.SourceGenerator | Warning | Public authored type mixing '[ContractVersion]' and '[Version]'
+CSWINRT2018 | WindowsRuntime.SourceGenerator | Warning | '[WindowsRuntimeNativeExposedType]' target type cannot be instantiated
+CSWINRT2019 | WindowsRuntime.SourceGenerator | Warning | '[WindowsRuntimeNativeExposedType]' target type is not a projected class
+CSWINRT2020 | WindowsRuntime.SourceGenerator | Warning | Duplicate '[WindowsRuntimeNativeExposedType]' target type
