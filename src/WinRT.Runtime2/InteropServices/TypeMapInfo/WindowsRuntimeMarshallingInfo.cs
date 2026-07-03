@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-#pragma warning disable IDE0008, IDE0046
+#pragma warning disable IDE0008
 
 namespace WindowsRuntime.InteropServices;
 

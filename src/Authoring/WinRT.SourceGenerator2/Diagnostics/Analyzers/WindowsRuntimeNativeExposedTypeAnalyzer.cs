@@ -45,14 +45,12 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            IAssemblySymbol assemblySymbol = context.Compilation.Assembly;
+            List<ITypeSymbol> validTargetTypes = [];
 
             // Collect the valid target types across all applications of the attribute in the assembly (including
             // the ones in generated code), so that a type used both in user code and in generated code is still
             // detected as a duplicate. This list is only used to report duplicate applications of the attribute.
-            List<ITypeSymbol> validTargetTypes = [];
-
-            foreach (AttributeData attribute in assemblySymbol.GetAttributes(nativeExposedTypeAttributeType))
+            foreach (AttributeData attribute in context.Compilation.Assembly.GetAttributes(nativeExposedTypeAttributeType))
             {
                 if (attribute is { ConstructorArguments: [{ Value: ITypeSymbol targetType }] } &&
                     Classify(targetType, windowsRuntimeMetadataAttributeType) is NativeExposedTypeKind.Valid)
@@ -64,7 +62,7 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
             // Classify and report each application of the attribute. Applications in generated code are
             // suppressed by the analysis framework, because this analyzer opts out of generated code analysis,
             // so only applications authored in user code are ever reported.
-            foreach (AttributeData attribute in assemblySymbol.GetAttributes(nativeExposedTypeAttributeType))
+            foreach (AttributeData attribute in context.Compilation.Assembly.GetAttributes(nativeExposedTypeAttributeType))
             {
                 // Skip malformed applications, eg. where the argument does not bind to a type
                 if (attribute is not { ConstructorArguments: [{ Value: ITypeSymbol targetType }] })
@@ -84,19 +82,17 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
                         location,
                         targetType));
                 }
-
-                // The type is not a projected class, so CCW marshalling code is already generated for it
                 else if (kind is NativeExposedTypeKind.NotProjectedClass)
                 {
+                    // The type is not a projected class, so CCW marshalling code is already generated for it
                     context.ReportDiagnostic(Diagnostic.Create(
                         DiagnosticDescriptors.NativeExposedTypeNotProjectedClass,
                         location,
                         targetType));
                 }
-
-                // The type is valid, but it is also targeted by another application of the attribute
                 else if (CountOccurrences(validTargetTypes, targetType) > 1)
                 {
+                    // The type is valid, but it is also targeted by another application of the attribute
                     context.ReportDiagnostic(Diagnostic.Create(
                         DiagnosticDescriptors.NativeExposedTypeDuplicate,
                         location,
@@ -122,10 +118,14 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
 
         // A valid target is a non generic projected Windows Runtime class. CCW marshalling code is generated
         // automatically for every other kind of type, so the attribute is only ever needed for projected classes.
-        return type is INamedTypeSymbol { TypeKind: TypeKind.Class, IsGenericType: false } namedType &&
-               namedType.HasAttributeWithType(windowsRuntimeMetadataAttributeType)
-            ? NativeExposedTypeKind.Valid
-            : NativeExposedTypeKind.NotProjectedClass;
+        if (type is not INamedTypeSymbol { TypeKind: TypeKind.Class, IsGenericType: false } namedType ||
+            !namedType.HasAttributeWithType(windowsRuntimeMetadataAttributeType))
+        {
+            return NativeExposedTypeKind.NotProjectedClass;
+        }
+
+        // The type is a valid, non-generic and projected runtime class
+        return NativeExposedTypeKind.Valid;
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
     /// <param name="types">The sequence of types to search.</param>
     /// <param name="type">The type to count occurrences of.</param>
     /// <returns>The number of times <paramref name="type"/> appears in <paramref name="types"/>.</returns>
-    private static int CountOccurrences(List<ITypeSymbol> types, ITypeSymbol type)
+    private static int CountOccurrences(IEnumerable<ITypeSymbol> types, ITypeSymbol type)
     {
         int count = 0;
 
