@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-#pragma warning disable IDE0008
+#pragma warning disable IDE0008, IDE0046
 
 namespace WindowsRuntime.InteropServices;
 
@@ -594,6 +594,28 @@ internal sealed class WindowsRuntimeMarshallingInfo
 
             // Delegate to the vtable provider to produce the first vtable entries
             ComWrappers.ComInterfaceEntry* vtableEntries = comWrappersMarshaller.ComputeVtables(out int count);
+
+            // When the attribute instance did not override 'ComputeVtables', it will just return 'null',
+            // which we can detect here. The reason for this is that we want to include the type of the
+            // object we failed to marshal in the exception message, but that wouldn't be available from
+            // the 'ComputeVtables' method itself. Returning 'null' is just an efficient way to signal the
+            // failure, rather than having that method throw and then catch and re-throw from here.
+            if (vtableEntries is null)
+            {
+                // Throws an exception with a message that includes the type of the object we failed to marshal
+                [DoesNotReturn]
+                [StackTraceHidden]
+                void ThrowNotSupportedException(WindowsRuntimeComWrappersMarshallerAttribute comWrappersMarshaller)
+                {
+                    throw new NotSupportedException(
+                        $"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation ('{comWrappersMarshaller.GetType()}') associated with the " +
+                        $"metadata provider type '{_metadataProviderType}' does not support '{nameof(WindowsRuntimeComWrappersMarshallerAttribute.ComputeVtables)}'. " +
+                        $"If marshalling instances of this type is required, consider using '{nameof(WindowsRuntimeNativeExposedTypeAttribute)}' to explicitly enable generating " +
+                        $"marshalling code for this scenario. Additionally, please file an issue at https://github.com/microsoft/CsWinRT.");
+                }
+
+                ThrowNotSupportedException(comWrappersMarshaller);
+            }
 
             return _vtableInfo ??= new(vtableEntries, count);
         }
