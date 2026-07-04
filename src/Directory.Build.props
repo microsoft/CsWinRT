@@ -90,6 +90,10 @@
 
   <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+
+    <!-- For C# projects, we use embedded pdbs, but we still need to submit symbols to the symbol server,
+     so we extract the pdb to submit. -->
+    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">

@@ -107,10 +107,6 @@
 
   <!-- For C# projects, we use embedded pdbs, but we still need to submit symbols to the symbol server,
        so we extract the pdb to submit. -->
-  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" PrivateAssets="All" GeneratePathProperty="true" />
-  </ItemGroup>
-
   <Target Name="CopyEmbeddedSymbols" 
           AfterTargets="Build" 
           Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != '' and '$(ProduceOnlyReferenceAssembly)' != 'true' and '$(PkgMicrosoft_DiaSymReader_Pdb2Pdb)' != ''"
