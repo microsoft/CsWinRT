@@ -29,6 +29,10 @@ Properties consumers may set on the vcxproj:
                                             WindowsSdkPackageVersion to pass to the aggregator.
                                             Falls back to a value picked from any component ref
                                             metadata, then to the SDK default.
+  CsWinRTNativeConsumerUseWindowsUIXamlProjections
+                                            Set to 'true' to make the aggregator use UWP XAML
+                                            (Windows.UI.Xaml) projections instead of WinUI. Falls
+                                            back to the value exposed by any referenced component.
   CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to opt out of the arch-correct
                                             replacement of WinRT.Host.dll / .mui in the
                                             consumer's ReferenceCopyLocalPaths.
@@ -75,6 +79,12 @@ Properties consumers may set on the vcxproj:
                                                 Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
       <_CsWinRTComponentSdkPackageVersionValues Include="%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)"
                                                 Condition="'%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
+
+      <!-- Optional UWP XAML (Windows.UI.Xaml) projection flag contributed by either ref source. -->
+      <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)"
+                                                          Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
+      <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(CsWinRTNativeComponent.CsWinRTComponentUseWindowsUIXamlProjections)"
+                                                          Condition="'%(CsWinRTNativeComponent.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -100,6 +110,10 @@ Properties consumers may set on the vcxproj:
       <!-- WindowsSdkPackageVersion: consumer override wins, otherwise first non-empty value from refs, otherwise empty. -->
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(CsWinRTNativeConsumerWindowsSdkPackageVersion)' != ''">$(CsWinRTNativeConsumerWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">@(_CsWinRTComponentSdkPackageVersionValues->Distinct())</_CsWinRTAggregatorWindowsSdkPackageVersion>
+
+      <!-- UWP XAML (Windows.UI.Xaml) projections: consumer override wins, otherwise the value exposed by any referenced component, otherwise empty (WinUI default). -->
+      <_CsWinRTAggregatorUseWindowsUIXamlProjections Condition="'$(CsWinRTNativeConsumerUseWindowsUIXamlProjections)' != ''">$(CsWinRTNativeConsumerUseWindowsUIXamlProjections)</_CsWinRTAggregatorUseWindowsUIXamlProjections>
+      <_CsWinRTAggregatorUseWindowsUIXamlProjections Condition="'$(_CsWinRTAggregatorUseWindowsUIXamlProjections)' == ''">@(_CsWinRTComponentUseWindowsUIXamlProjectionsValues->Distinct())</_CsWinRTAggregatorUseWindowsUIXamlProjections>
     </PropertyGroup>
 
     <!-- Inputs for incremental gating: any change to the targets file or any component artifact re-runs the aggregator. -->
@@ -164,6 +178,9 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' != ''"
                                 Include="    &lt;WindowsSdkPackageVersion&gt;$(_CsWinRTAggregatorWindowsSdkPackageVersion)&lt;/WindowsSdkPackageVersion&gt;" />
+      <!-- Match the referenced component's XAML flavor (WUX vs WinUI). -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorUseWindowsUIXamlProjections)' == 'true'"
+                                Include="    &lt;CsWinRTUseWindowsUIXamlProjections&gt;true&lt;/CsWinRTUseWindowsUIXamlProjections&gt;" />
       <!-- Project-local IntermediateOutputPath so artifacts land in a path this targets file owns. -->
       <_CsWinRTTempProjectLines Include="    &lt;BaseIntermediateOutputPath&gt;$(_CsWinRTTempProjectBaseIntermediateDir)&lt;/BaseIntermediateOutputPath&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateConfigDir)&lt;/IntermediateOutputPath&gt;" />

@@ -115,8 +115,12 @@ internal partial class ProjectionGenerator
 
         PathAssemblyResolver resolver = new(resolverPaths);
 
-        bool isWindowsSdkMode = args.WindowsSdkOnly || args.WindowsUIXamlProjection;
         bool isComponentMode = args.AssemblyName == "WinRT.Component";
+
+        // 'WindowsUIXamlProjection' also flows to component mode (for the TypeMapAssemblyTarget union),
+        // but must not put it into Windows SDK mode: the SDK 'Windows.UI.Xaml' namespace comes from
+        // 'WinRT.Sdk.Xaml.Projection.dll', so component mode is never Windows SDK mode.
+        bool isWindowsSdkMode = (args.WindowsSdkOnly || args.WindowsUIXamlProjection) && !isComponentMode;
 
         // In component mode, read the component .winmd files directly to get the WinRT type
         // includes. The .winmd is the authoritative source of WinRT types and only contains
