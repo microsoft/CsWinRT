@@ -305,6 +305,31 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
+    The redirect above only runs via 'BeforeTargets="GetTargetPath"', which covers the managed ProjectReference
+    protocol. Native (C++/WinUI) and cross-target-framework consumers resolve through
+    'GetTargetPathWithTargetPlatformMoniker' directly, bypassing it, and compile against the forwarder (CS1069).
+    Override that target for reference projections so the item also carries '%(ReferenceAssembly)' on that path.
+  -->
+  <Target
+      Name="GetTargetPathWithTargetPlatformMoniker"
+      BeforeTargets="GetTargetPath"
+      DependsOnTargets="$(GetTargetPathWithTargetPlatformMonikerDependsOn)"
+      Returns="@(TargetPathWithTargetPlatformMoniker)">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetPath)">
+        <TargetPlatformMoniker>$(TargetPlatformMoniker)</TargetPlatformMoniker>
+        <TargetPlatformIdentifier>$(TargetPlatformIdentifier)</TargetPlatformIdentifier>
+        <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
+        <TargetFrameworkVersion>$(TargetFrameworkVersion.TrimStart('vV'))</TargetFrameworkVersion>
+        <ReferenceAssembly Condition="'$(ProduceReferenceAssembly)' == 'true'">$(TargetRefPath)</ReferenceAssembly>
+        <CopyUpToDateMarker>@(CopyUpToDateMarker)</CopyUpToDateMarker>
+        <ReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(_CsWinRTRefAssemblyPath)</ReferenceAssembly>
+        <CsWinRTInputs Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">@(CsWinRTInputs)</CsWinRTInputs>
+      </TargetPathWithTargetPlatformMoniker>
+    </ItemGroup>
+  </Target>
+
+  <!--
     ============================================================
                         _RunCsWinRTMergedProjectionGenerator
 
