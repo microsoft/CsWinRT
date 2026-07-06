@@ -227,6 +227,14 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest (Package)/AuthoringWinUITest (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="arm64" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Deploy Solution="*|x64" />
+      <Deploy Solution="*|x86" />
+    </Project>
     <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest/AuthoringWinUITest.vcxproj" Id="493c7729-2f21-4198-ab09-bdf56bf501d3">
       <Platform Solution="*|ARM" Project="Win32" />
       <Platform Solution="*|ARM64" Project="arm64" />
