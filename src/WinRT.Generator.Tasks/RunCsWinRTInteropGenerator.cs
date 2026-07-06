@@ -18,6 +18,16 @@ namespace Microsoft.NET.Build.Tasks;
 public sealed class RunCsWinRTInteropGenerator : ToolTask
 {
     /// <summary>
+    /// The default marshalling mode, used when none is specified.
+    /// </summary>
+    private const string DefaultMarshallingMode = "minimal";
+
+    /// <summary>
+    /// The set of valid marshalling modes (compared case-insensitively).
+    /// </summary>
+    private static readonly string[] ValidMarshallingModes = ["all", "minimal", "strict"];
+
+    /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
     /// the entire surface area for compilation. These assemblies, specificaly the ones
     /// for Windows Runtime projections are the set of assemblies that will contribute
@@ -98,9 +108,9 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
 
     /// <summary>
     /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
-    /// user-defined/CCW/generic types (one of <c>all</c>, <c>minimal</c>, or <c>strict</c>).
+    /// user-defined/CCW/generic types (one of <c>"all"</c>, <c>"minimal"</c>, or <c>"strict"</c>).
     /// </summary>
-    /// <remarks>If not set, it will default to <c>minimal</c> (i.e. analyzing every assembly except those from the BCL).</remarks>
+    /// <remarks>If not set, it will default to <c>"minimal"</c> (i.e. analyzing every assembly except those from the BCL).</remarks>
     public string MarshallingMode { get; set; } = DefaultMarshallingMode;
 
     /// <summary>
@@ -133,16 +143,6 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     /// Gets or sets additional arguments to pass to the tool.
     /// </summary>
     public ITaskItem[]? AdditionalArguments { get; set; }
-
-    /// <summary>
-    /// The default marshalling mode, used when none is specified.
-    /// </summary>
-    private const string DefaultMarshallingMode = "minimal";
-
-    /// <summary>
-    /// The set of valid marshalling modes (compared case-insensitively).
-    /// </summary>
-    private static readonly string[] ValidMarshallingModes = ["all", "minimal", "strict"];
 
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtinteropgen.exe";
