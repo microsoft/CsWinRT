@@ -261,6 +261,26 @@ internal static class ResponseFileParser
             return true;
         }
 
+        // Enum-typed arguments are parsed by name (case-insensitively), so that MSBuild values such
+        // as 'all' round-trip to the matching enum member (e.g. 'All'). Numeric values are rejected,
+        // as they carry no meaning in a response file and would silently accept out-of-range inputs.
+        if (targetType.IsEnum)
+        {
+            if (rawValue.Length > 0 &&
+                !char.IsAsciiDigit(rawValue[0]) &&
+                rawValue[0] != '-' &&
+                Enum.TryParse(targetType, rawValue, ignoreCase: true, out object? parsedEnum))
+            {
+                converted = parsedEnum;
+
+                return true;
+            }
+
+            converted = null;
+
+            return false;
+        }
+
         // For primitives ('bool', 'int', etc.) we rely on the standard 'Convert.ChangeType', which
         // is AOT-safe for the built-in primitives and uses invariant culture for deterministic parsing.
         try
