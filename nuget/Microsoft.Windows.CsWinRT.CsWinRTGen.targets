@@ -45,6 +45,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGeneratorStandardErrorImportance Condition="'$(CsWinRTGeneratorStandardErrorImportance)' == ''">High</CsWinRTGeneratorStandardErrorImportance>
     <CsWinRTGeneratorLogStandardErrorAsError Condition="'$(CsWinRTGeneratorLogStandardErrorAsError)' == ''">true</CsWinRTGeneratorLogStandardErrorAsError>
 
+    <!--
+      The marshalling mode controls which assemblies 'cswinrtinteropgen' analyzes to discover
+      user-defined/CCW/generic types that need marshalling code:
+        - 'all' (default): analyze all assemblies, even those not referencing any CsWinRT assembly.
+          This lets projects that don't target a Windows TFM (e.g. a class library with just MVVM
+          viewmodels) contribute the marshalling code their types need.
+        - 'minimal': same as 'all', but skipping assemblies from the .NET base class library (BCL),
+          to reduce binary size.
+        - 'strict': only analyze assemblies referencing the Windows Runtime assembly (i.e. those
+          targeting a Windows TFM).
+    -->
+    <CsWinRTMarshallingMode Condition="'$(CsWinRTMarshallingMode)' == ''">all</CsWinRTMarshallingMode>
+
     <!-- Emits a SetEntryAssembly module initializer into WinRT.Component.dll to enable JIT TypeMap discovery.
          Not needed for AOT (handled via a separate exe-project workaround). Will become unnecessary once
          the TypeMappingEntryAssembly MSBuild property is available. -->
@@ -133,6 +146,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
@@ -185,6 +199,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      MarshallingMode="$(CsWinRTMarshallingMode)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       ValidateWinRTRuntimeDllVersion2References="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)"
       EnableIncrementalGeneration="$(CsWinRTGeneratorEnableIncrementalGeneration)"

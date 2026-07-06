@@ -97,6 +97,13 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
+    /// user-defined/CCW/generic types (one of <c>all</c>, <c>minimal</c>, or <c>strict</c>).
+    /// </summary>
+    /// <remarks>If not set, it will default to <c>all</c> (i.e. analyzing every assembly).</remarks>
+    public string MarshallingMode { get; set; } = DefaultMarshallingMode;
+
+    /// <summary>
     /// Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.
     /// </summary>
     public bool ValidateWinRTRuntimeAssemblyVersion { get; set; } = true;
@@ -126,6 +133,16 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     /// Gets or sets additional arguments to pass to the tool.
     /// </summary>
     public ITaskItem[]? AdditionalArguments { get; set; }
+
+    /// <summary>
+    /// The default marshalling mode, used when none is specified.
+    /// </summary>
+    private const string DefaultMarshallingMode = "all";
+
+    /// <summary>
+    /// The set of valid marshalling modes (compared case-insensitively).
+    /// </summary>
+    private static readonly string[] ValidMarshallingModes = ["all", "minimal", "strict"];
 
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtinteropgen.exe";
@@ -219,7 +236,33 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        // The marshalling mode must be one of the well-known values (compared case-insensitively).
+        if (!IsValidMarshallingMode(MarshallingMode))
+        {
+            Log.LogWarning("Invalid 'MarshallingMode' value '{0}'. It must be one of 'all', 'minimal', or 'strict'.", MarshallingMode);
+
+            return false;
+        }
+
         return true;
+    }
+
+    /// <summary>
+    /// Checks whether a given marshalling mode value is valid (i.e. one of the well-known values).
+    /// </summary>
+    /// <param name="marshallingMode">The marshalling mode value to check.</param>
+    /// <returns>Whether <paramref name="marshallingMode"/> is a valid marshalling mode.</returns>
+    private static bool IsValidMarshallingMode(string marshallingMode)
+    {
+        foreach (string validMode in ValidMarshallingModes)
+        {
+            if (validMode.Equals(marshallingMode, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc/>
@@ -271,6 +314,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());
         AppendResponseFileCommand(args, "--enable-incremental-generation", EnableIncrementalGeneration.ToString());
