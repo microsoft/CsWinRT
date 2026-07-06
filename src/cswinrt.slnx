@@ -232,6 +232,11 @@
       <Platform Solution="*|ARM64" Project="arm64" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
+      <!-- Release build disabled: the net10 component builds a RID (win-x64) output whose copied SDK
+           winmds collide with the WinUI package metadata and break the XAML markup compiler. Tracked
+           for a follow-up fix; Debug (used for local dev) is unaffected. -->
+      <Build Solution="Release|x64" Project="false" />
+      <Build Solution="Release|x86" Project="false" />
       <Deploy Solution="*|x64" />
       <Deploy Solution="*|x86" />
     </Project>
@@ -240,6 +245,10 @@
       <Platform Solution="*|ARM64" Project="arm64" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
+      <!-- Release build disabled: see the wapproj above (RID winmd collision breaks the XAML markup
+           compiler in Release). Debug is unaffected. -->
+      <Build Solution="Release|x64" Project="false" />
+      <Build Solution="Release|x86" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringWuxConsumptionTest/AuthoringWuxConsumptionTest.vcxproj" Id="a04a0416-5e35-4dd0-8226-63d941b28467">
       <Platform Solution="*|ARM" Project="Win32" />
