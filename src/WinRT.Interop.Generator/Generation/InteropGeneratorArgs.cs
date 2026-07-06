@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
@@ -47,6 +48,12 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// <summary>Gets whether to use <c>Windows.UI.Xaml</c> projections.</summary>
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
+
+    /// <summary>Gets the marshalling mode, controlling which assemblies are analyzed to discover user-defined/CCW/generic types.</summary>
+    /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.All"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--marshalling-mode")]
+    [DefaultValue(CsWinRTMarshallingMode.All)]
+    public CsWinRTMarshallingMode MarshallingMode { get; init; }
 
     /// <summary>Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.</summary>
     [CommandLineArgumentName("--validate-winrt-runtime-assembly-version")]

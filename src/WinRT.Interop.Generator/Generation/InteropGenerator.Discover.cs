@@ -241,10 +241,10 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
-        // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
-        // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
-        if (!module.ReferencesWindowsRuntimeAssembly && !module.IsWindowsRuntimeModule)
+        // Determine whether this module should be analyzed, based on the configured marshalling mode.
+        // Modules that reference the Windows Runtime assembly (i.e. those targeting a Windows TFM) are
+        // always analyzed; the mode only affects modules that don't reference any CsWinRT assembly.
+        if (!ShouldProcessModule(args, module))
         {
             return;
         }
@@ -277,6 +277,43 @@ internal partial class InteropGenerator
 
         // Discover all SZ array types
         DiscoverSzArrayTypes(args, discoveryState, module);
+    }
+
+    /// <summary>
+    /// Determines whether a given module should be analyzed for discovery, based on the marshalling mode.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="module">The module to check.</param>
+    /// <returns>Whether <paramref name="module"/> should be analyzed for discovery.</returns>
+    /// <remarks>
+    /// Modules that reference the Windows Runtime assembly were built targeting a Windows TFM (i.e.
+    /// <c>netX.0-windows10.0.XXXX.0</c>), and the Windows Runtime assembly itself, are always analyzed,
+    /// regardless of the marshalling mode. Only modules that don't reference any CsWinRT assembly are
+    /// subject to the mode-specific filtering.
+    /// </remarks>
+    private static bool ShouldProcessModule(InteropGeneratorArgs args, ModuleDefinition module)
+    {
+        return args.MarshallingMode switch
+        {
+            // 'All' analyzes every module, even those not referencing any CsWinRT assembly.
+            CsWinRTMarshallingMode.All => true,
+
+            // 'Minimal' analyzes every module except those from the BCL. Non-BCL modules are checked
+            // first, as that is the common case for user code and avoids the more expensive Windows
+            // Runtime reference lookup (a BCL module can only match via the checks that follow if a
+            // future framework assembly were to reference the Windows Runtime assembly).
+            CsWinRTMarshallingMode.Minimal =>
+                !module.IsBaseClassLibraryModule ||
+                module.IsWindowsRuntimeModule ||
+                module.ReferencesWindowsRuntimeAssembly,
+
+            // 'Strict' only analyzes modules referencing the Windows Runtime assembly. This matches the
+            // historical behavior, effectively filtering to '-windows' TFM projects.
+            CsWinRTMarshallingMode.Strict => module.IsWindowsRuntimeModule || module.ReferencesWindowsRuntimeAssembly,
+
+            // The marshalling mode is always one of the values above (validated during argument parsing).
+            _ => throw new ArgumentOutOfRangeException(nameof(args), args.MarshallingMode, "Unexpected marshalling mode.")
+        };
     }
 
     /// <summary>

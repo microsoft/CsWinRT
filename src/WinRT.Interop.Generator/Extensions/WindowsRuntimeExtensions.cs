@@ -8,6 +8,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.References;
 
 #pragma warning disable IDE0046
@@ -1115,6 +1116,14 @@ internal static class WindowsRuntimeExtensions
         /// </summary>
         /// <returns>Whether the module is the Windows Runtime assembly.</returns>
         public bool IsWindowsRuntimeModule => module.Name == WellKnownMetadataNames.WinRTRuntimeModuleName;
+
+        /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> belongs to the .NET base class library (BCL), i.e. the
+        /// default set of libraries shipped by the .NET SDK (the runtime shared frameworks). Detection is based on
+        /// the assembly's public key token (see <see cref="BaseClassLibraryIdentity"/>).
+        /// </summary>
+        /// <returns>Whether the module is a .NET base class library / framework assembly.</returns>
+        public bool IsBaseClassLibraryModule => BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(module.Assembly?.GetPublicKeyToken());
 
         /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
