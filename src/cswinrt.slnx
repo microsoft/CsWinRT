@@ -232,11 +232,13 @@
       <Platform Solution="*|ARM64" Project="arm64" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
-      <!-- Release build disabled: the net10 component builds a RID (win-x64) output whose copied SDK
-           winmds collide with the WinUI package metadata and break the XAML markup compiler. Tracked
-           for a follow-up fix; Debug (used for local dev) is unaffected. -->
+      <!-- AuthoringWinUITest JIT-hosts the managed AuthoringTest component. In Release|x64 (only),
+           AuthoringTest's Directory.Build.props builds it as a NativeAOT self-contained component,
+           so there is no managed .dll to JIT-host and its self-contained winmd set collides with the
+           WinUI package metadata in the XAML markup compiler. Skip Release|x64 (the AOT config); Debug
+           and Release|x86 build the managed component and work. AuthoringConsumptionTest covers the
+           Release|x64 AOT native-consumption scenario. -->
       <Build Solution="Release|x64" Project="false" />
-      <Build Solution="Release|x86" Project="false" />
       <Deploy Solution="*|x64" />
       <Deploy Solution="*|x86" />
     </Project>
@@ -245,10 +247,9 @@
       <Platform Solution="*|ARM64" Project="arm64" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
-      <!-- Release build disabled: see the wapproj above (RID winmd collision breaks the XAML markup
-           compiler in Release). Debug is unaffected. -->
+      <!-- Skip Release|x64: AuthoringTest is NativeAOT self-contained there and can't be JIT-hosted
+           (see the wapproj above). Debug and Release|x86 build the managed component. -->
       <Build Solution="Release|x64" Project="false" />
-      <Build Solution="Release|x86" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringWuxConsumptionTest/AuthoringWuxConsumptionTest.vcxproj" Id="a04a0416-5e35-4dd0-8226-63d941b28467">
       <Platform Solution="*|ARM" Project="Win32" />
