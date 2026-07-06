@@ -50,9 +50,9 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     public required bool UseWindowsUIXamlProjections { get; init; }
 
     /// <summary>Gets the marshalling mode, controlling which assemblies are analyzed to discover user-defined/CCW/generic types.</summary>
-    /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.All"/> when not specified in the response file.</remarks>
+    /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.Minimal"/> when not specified in the response file.</remarks>
     [CommandLineArgumentName("--marshalling-mode")]
-    [DefaultValue(CsWinRTMarshallingMode.All)]
+    [DefaultValue(CsWinRTMarshallingMode.Minimal)]
     public CsWinRTMarshallingMode MarshallingMode { get; init; }
 
     /// <summary>Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.</summary>

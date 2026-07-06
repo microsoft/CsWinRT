@@ -48,15 +48,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!--
       The marshalling mode controls which assemblies 'cswinrtinteropgen' analyzes to discover
       user-defined/CCW/generic types that need marshalling code:
-        - 'all' (default): analyze all assemblies, even those not referencing any CsWinRT assembly.
-          This lets projects that don't target a Windows TFM (e.g. a class library with just MVVM
-          viewmodels) contribute the marshalling code their types need.
-        - 'minimal': same as 'all', but skipping assemblies from the .NET base class library (BCL),
-          to reduce binary size.
+        - 'minimal' (default): analyze all assemblies (even those not referencing any CsWinRT
+          assembly), except those from the .NET base class library (BCL). This lets projects that
+          don't target a Windows TFM (e.g. a class library with just MVVM viewmodels) contribute
+          the marshalling code their types need, while skipping the BCL to reduce binary size.
+        - 'all': same as 'minimal', but also analyze assemblies from the .NET base class library (BCL).
         - 'strict': only analyze assemblies referencing the Windows Runtime assembly (i.e. those
           targeting a Windows TFM).
     -->
-    <CsWinRTMarshallingMode Condition="'$(CsWinRTMarshallingMode)' == ''">all</CsWinRTMarshallingMode>
+    <CsWinRTMarshallingMode Condition="'$(CsWinRTMarshallingMode)' == ''">minimal</CsWinRTMarshallingMode>
 
     <!-- Emits a SetEntryAssembly module initializer into WinRT.Component.dll to enable JIT TypeMap discovery.
          Not needed for AOT (handled via a separate exe-project workaround). Will become unnecessary once

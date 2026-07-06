@@ -16,12 +16,12 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 internal enum CsWinRTMarshallingMode
 {
     /// <summary>
-    /// Analyzes all assemblies, including those that don't reference any CsWinRT assembly. This is the default.
+    /// Analyzes all assemblies, including those that don't reference any CsWinRT assembly.
     /// </summary>
     All,
 
     /// <summary>
-    /// Analyzes all assemblies except those from the .NET base class library (BCL), to reduce binary size.
+    /// Analyzes all assemblies except those from the .NET base class library (BCL), to reduce binary size. This is the default.
     /// </summary>
     Minimal,
 

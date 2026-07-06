@@ -136,25 +136,26 @@ Below are the most commonly used MSBuild properties. For a full list, refer to t
 | `CsWinRTGenerateProjection` | `true` | Generate C# projection sources from `.winmd` metadata. |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet distribution). |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode. |
-| `CsWinRTMarshallingMode` | `all` | Controls which assemblies the interop generator analyzes for marshalling code (`all`, `minimal`, or `strict`). See below. |
+| `CsWinRTMarshallingMode` | `minimal` | Controls which assemblies the interop generator analyzes for marshalling code (`all`, `minimal`, or `strict`). See below. |
 | `CsWinRTIncludes` | *(empty)* | Semicolon-separated namespaces to include in the projection. |
 | `CsWinRTExcludes` | `Windows;Microsoft` | Semicolon-separated namespaces to exclude from the projection. |
 | `CsWinRTMessageImportance` | `normal` | Build message verbosity (`normal` or `high`). |
 
 ### Marshalling mode
 
-By default (`all`), the interop generator analyzes **every** assembly in the app to discover user-defined
+By default (`minimal`), the interop generator analyzes **every** assembly in the app to discover user-defined
 (CCW) types and generic instantiations that need marshalling code — even assemblies that don't target a
-Windows TFM and don't reference any CsWinRT assembly. This means a plain `.NET` class library (e.g. one
-holding MVVM viewmodels) no longer needs to target a `-windows` TFM just so its types can be marshalled to
-native code.
+Windows TFM and don't reference any CsWinRT assembly — with the exception of the .NET base class library
+(BCL). This means a plain `.NET` class library (e.g. one holding MVVM viewmodels) no longer needs to target
+a `-windows` TFM just so its types can be marshalled to native code, while the BCL is skipped to keep the
+generated interop assembly small.
 
 `CsWinRTMarshallingMode` controls this behavior:
 
 | Value | Behavior |
 |-------|----------|
-| `all` (default) | Analyze all assemblies, including those that don't reference any CsWinRT assembly. |
-| `minimal` | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
+| `all` | Analyze all assemblies, including those from the .NET base class library (BCL). |
+| `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
 | `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
 
 Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode.
