@@ -230,6 +230,7 @@ The generator is invoked via a response file: `cswinrtinteropgen.exe @path/to/re
 | `--winrt-component-assembly-path` | `string?` | `WinRT.Component.dll` path (for authored components) |
 | `--generated-assembly-directory` | `string` | Output folder for `WinRT.Interop.dll` |
 | `--use-windows-ui-xaml-projections` | `bool` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI |
+| `--marshalling-mode` | `CsWinRTMarshallingMode` | Which assemblies to analyze for discovery: `All` (default), `Minimal` (skip BCL), or `Strict` (only WinRT-referencing) |
 | `--validate-winrt-runtime-assembly-version` | `bool` | Check version compatibility |
 | `--validate-winrt-runtime-dll-version-2-references` | `bool` | Reject CsWinRT 2.x references |
 | `--enable-incremental-generation` | `bool` | Enable incremental generation (caching) |
@@ -281,6 +282,11 @@ The generator processes two categories of assemblies:
 - `WinRT.Sdk.Xaml.Projection.dll` — Precompiled UWP XAML projection (optional)
 - `WinRT.Projection.dll` — 3rd-party component projections (optional)
 - `WinRT.Component.dll` — Authored component projections (optional)
+
+**Marshalling mode** (`--marshalling-mode`, `ShouldProcessModule` in `InteropGenerator.Discover.cs`): controls which modules are analyzed for discovery. Modules referencing the Windows Runtime assembly (i.e. those built targeting a Windows TFM) are **always** analyzed; the mode only affects modules that don't reference any CsWinRT assembly:
+- `All` (default) — analyze every module, even plain `.NET` assemblies. This lets projects that don't target a Windows TFM (e.g. a class library with just MVVM viewmodels) contribute the marshalling code their types need.
+- `Minimal` — analyze every module except those from the BCL (detected via well-known .NET/Microsoft public key tokens, see `BaseClassLibraryIdentity` in `WinRT.Generator.Core` and the `ModuleDefinition.IsBaseClassLibraryModule` extension), to reduce binary size.
+- `Strict` — only analyze modules referencing the Windows Runtime assembly (the historical behavior). Corresponds to `!ReferencesWindowsRuntimeAssembly && !IsWindowsRuntimeModule → skip`.
 
 **Type exclusions** (`Helpers/TypeExclusions.cs`):
 - `System.Threading.Tasks.Task<T>` — Cannot be marshalled across Windows Runtime boundary
