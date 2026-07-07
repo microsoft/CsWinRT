@@ -321,14 +321,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
-
-        // The opt-in assemblies are optional, so only emit them when at least one is present
-        if (MarshallingEnabledAssemblies is { Length: > 0 })
-        {
-            string marshallingEnabledAssembliesArg = string.Join(",", MarshallingEnabledAssemblies.Select(static assembly => assembly.ItemSpec));
-
-            AppendResponseFileCommand(args, "--marshalling-enabled-assembly-names", marshallingEnabledAssembliesArg);
-        }
+        AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());
         AppendResponseFileCommand(args, "--enable-incremental-generation", EnableIncrementalGeneration.ToString());
@@ -367,6 +360,21 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         if (commandValue is not null)
         {
             AppendResponseFileCommand(args, commandName, commandValue);
+        }
+    }
+
+    /// <summary>
+    /// Appends an optional command line argument, with a comma-separated list of item specs as its value, to the response file arguments.
+    /// </summary>
+    /// <param name="args">The command line arguments being built.</param>
+    /// <param name="commandName">The command name to append.</param>
+    /// <param name="commandItems">The optional items whose item specs to append as a comma-separated list.</param>
+    /// <remarks>This method will not append the command if <paramref name="commandItems"/> is <see langword="null"/> or empty.</remarks>
+    private static void AppendResponseFileOptionalCommand(StringBuilder args, string commandName, ITaskItem[]? commandItems)
+    {
+        if (commandItems is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, commandName, string.Join(",", commandItems.Select(static item => item.ItemSpec)));
         }
     }
 }
