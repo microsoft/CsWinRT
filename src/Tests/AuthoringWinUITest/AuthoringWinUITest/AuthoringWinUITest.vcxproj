@@ -69,7 +69,17 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <!-- Disable Whole Program Optimization (LTCG). The C++/WinRT + WinUI markup build links twice
+         (a /WINMD:ONLY metadata pass with /LTCG:incremental, then the /WINMD:NO exe pass with /LTCG).
+         The XAML metadata-provider sources (XamlTypeInfo.g.cpp / XamlMetaDataProvider.cpp) are
+         regenerated and recompiled by MarkupCompilePass2 *after* the metadata link, but the exe link
+         reuses the stale incremental LTCG cache (.iobj) that predates that recompile, so the freshly
+         built objects are ignored and their symbols (XamlTypeInfoProvider, XamlMetaDataProvider,
+         the generated WinMain and the MainWindow connectors) come up as unresolved externals
+         (LNK2001/LNK1120) in Release. This only affects Release|x86 (the only Release config that
+         builds this JIT-host test app). LTCG provides no value for a test app, so turn it off to make
+         the exe link consume the up-to-date objects. -->
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
