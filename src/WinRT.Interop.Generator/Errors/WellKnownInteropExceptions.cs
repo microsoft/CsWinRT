@@ -861,7 +861,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// <summary>
     /// An assembly specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows, so the entry is redundant.
     /// </summary>
-    public static WellKnownInteropMessage MarshallingEnabledAssemblyTargetsWindowsMessage(string name)
+    public static WellKnownGeneratorMessage MarshallingEnabledAssemblyTargetsWindowsMessage(string name)
     {
         return Message(99,
             $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows and is therefore always analyzed. " +
@@ -871,7 +871,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// <summary>
     /// Assemblies were specified via 'CsWinRTMarshallingEnabledAssembly', but the marshalling mode is 'all'.
     /// </summary>
-    public static WellKnownInteropMessage MarshallingEnabledAssembliesRedundantInAllModeMessage()
+    public static WellKnownGeneratorMessage MarshallingEnabledAssembliesRedundantInAllModeMessage()
     {
         return Message(100,
             "One or more assemblies were specified via 'CsWinRTMarshallingEnabledAssembly', but the 'CsWinRTMarshallingMode' is set to 'all', " +
@@ -907,7 +907,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// <param name="id">The message id.</param>
     /// <param name="message">The message text.</param>
     /// <returns>The resulting message.</returns>
-    private static WellKnownInteropMessage Message(int id, string message)
+    private static WellKnownGeneratorMessage Message(int id, string message)
     {
         return new($"{ErrorPrefix}{id:0000}", message);
     }

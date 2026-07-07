@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
+using ConsoleAppFramework;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.Generator.References;
@@ -638,7 +639,7 @@ internal partial class InteropGenerator
         // single message for the whole set (rather than one per entry), and skip the per-entry checks below.
         if (args.MarshallingMode == CsWinRTMarshallingMode.All)
         {
-            WellKnownInteropExceptions.MarshallingEnabledAssembliesRedundantInAllModeMessage().Log();
+            WellKnownInteropExceptions.MarshallingEnabledAssembliesRedundantInAllModeMessage().Log(ConsoleApp.Log);
 
             return;
         }
@@ -669,7 +670,7 @@ internal partial class InteropGenerator
             else if (module.IsWindowsRuntimeModule || module.ReferencesWindowsRuntimeAssembly)
             {
                 // The entry resolves to an assembly that already targets Windows, so it's always analyzed anyway
-                WellKnownInteropExceptions.MarshallingEnabledAssemblyTargetsWindowsMessage(entry).Log();
+                WellKnownInteropExceptions.MarshallingEnabledAssemblyTargetsWindowsMessage(entry).Log(ConsoleApp.Log);
             }
         }
     }
