@@ -1131,11 +1131,14 @@ internal static class WindowsRuntimeExtensions
         /// </summary>
         /// <returns>Whether the module targets a legacy or portable runtime.</returns>
         /// <remarks>
-        /// Such modules (with a <c>netstandard</c> or <c>mscorlib</c> corlib) cannot reference the Windows Runtime
-        /// projections (which require targeting modern .NET), so they never contain marshalling-relevant types.
-        /// Moreover, any generic instantiations they contain are scoped to their own corlib, which the emit phase
-        /// (which uses the application's runtime corlib) cannot resolve, so attempting to generate marshalling code
-        /// for them would fail. Skipping these modules avoids both problems.
+        /// The entire interop generator infrastructure identifies well-known types (including custom-mapped types
+        /// such as <c>IEnumerable&lt;T&gt;</c>) by comparing against type references scoped to the modern .NET corlib
+        /// (e.g. <c>System.Runtime</c>), which is also the corlib the emit phase uses. Modules targeting a legacy or
+        /// portable runtime declare those same types against a different corlib (<c>netstandard</c> or <c>mscorlib</c>),
+        /// which <c>AsmResolver</c>'s <c>SignatureComparer</c> treats as a distinct scope. As a result, the generator
+        /// cannot match (and therefore cannot marshal) their types, and attempting to do so would fail during emit.
+        /// Such modules could in principle still use custom-mapped types that need marshalling, but for simplicity
+        /// they are skipped entirely.
         /// </remarks>
         public bool TargetsLegacyRuntime
         {

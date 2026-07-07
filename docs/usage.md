@@ -158,7 +158,7 @@ generated interop assembly small.
 | `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
 | `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
 
-Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. Assemblies targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework) are never analyzed, since they cannot reference the Windows Runtime projections in the first place.
+Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. Assemblies targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework) are never analyzed, since the interop generator can only marshal types declared against a modern .NET runtime.
 
 ### Opting in specific assemblies
 
