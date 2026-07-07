@@ -61,8 +61,9 @@ WinRT.Interop.Generator/
 ├── Errors/                                 # Error/warning infrastructure
 │   ├── UnhandledInteropException.cs        # Wraps unexpected errors with phase context
 │   ├── WellKnownInteropException.cs        # Structured errors with CSWINRTINTEROPGEN### codes
-│   ├── WellKnownInteropExceptions.cs       # Factory for all error/warning codes (80+ codes)
-│   └── WellKnownInteropWarning.cs          # Non-fatal warnings (can be promoted to errors)
+│   ├── WellKnownInteropExceptions.cs       # Factory for all error/warning/message codes (100+ codes)
+│   ├── WellKnownInteropWarning.cs          # Non-fatal warnings (can be promoted to errors)
+│   └── WellKnownInteropMessage.cs          # Informational messages (never promoted to errors)
 ├── Extensions/                             # Extension methods (23 files)
 │   ├── WindowsRuntimeExtensions.cs         # Core: IsProjectedWindowsRuntimeType, IsBlittable, etc.
 │   ├── TypeSignatureExtensions.cs          # GetAbiType, EnumerateAllInterfaces, etc.
@@ -231,6 +232,7 @@ The generator is invoked via a response file: `cswinrtinteropgen.exe @path/to/re
 | `--generated-assembly-directory` | `string` | Output folder for `WinRT.Interop.dll` |
 | `--use-windows-ui-xaml-projections` | `bool` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI |
 | `--marshalling-mode` | `CsWinRTMarshallingMode` | Which assemblies to analyze for discovery: `All`, `Minimal` (default; skip BCL), or `Strict` (only WinRT-referencing) |
+| `--marshalling-enabled-assembly-names` | `string[]` | Assembly names (`.dll`/directory ignored) always analyzed regardless of mode (from the `CsWinRTMarshallingEnabledAssembly` item) |
 | `--validate-winrt-runtime-assembly-version` | `bool` | Check version compatibility |
 | `--validate-winrt-runtime-dll-version-2-references` | `bool` | Reject CsWinRT 2.x references |
 | `--enable-incremental-generation` | `bool` | Enable incremental generation (caching) |
@@ -287,6 +289,10 @@ The generator processes two categories of assemblies:
 - `All` — analyze every module, even plain `.NET` assemblies (including the BCL).
 - `Minimal` (default) — analyze every module except those from the BCL (detected via well-known .NET/Microsoft public key tokens, see `BaseClassLibraryIdentity` in `WinRT.Generator.Core` and the `ModuleDefinition.IsBaseClassLibraryModule` extension), to reduce binary size. This still lets projects that don't target a Windows TFM (e.g. a class library with just MVVM viewmodels) contribute the marshalling code their types need.
 - `Strict` — only analyze modules referencing the Windows Runtime assembly (the historical behavior). Corresponds to `!ReferencesWindowsRuntimeAssembly && !IsWindowsRuntimeModule → skip`.
+
+**Legacy-runtime skip** (`ModuleDefinition.TargetsLegacyRuntime` in `InteropGenerator.Discover.cs`): regardless of mode, modules targeting a legacy/portable runtime (i.e. a `netstandard` or `mscorlib` corlib scope) are **never** analyzed. Such assemblies cannot reference the Windows Runtime projections (which require modern .NET), so they contain no marshalling-relevant types; and their generic instantiations are scoped to a corlib that the emit phase (which uses the application's runtime corlib, e.g. `System.Runtime`) cannot resolve — attempting to generate marshalling code for them would fail with `CSWINRTINTEROPGEN0055`/`0020`. This matters because `AsmResolver`'s `SignatureComparer` treats different corlib assembly scopes (`System.Runtime`, `System.Private.CoreLib`, `netstandard`, `mscorlib`) as distinct.
+
+**Opt-in assemblies** (`--marshalling-enabled-assembly-names`, from the `CsWinRTMarshallingEnabledAssembly` MSBuild item): assemblies listed here are **always** analyzed (matched by simple name, ignoring `.dll`/directory), regardless of the mode — checked first in `ShouldProcessModule`. This lets users fine-tune size (e.g. `strict` mode + a few opted-in assemblies). It does **not** override the legacy-runtime skip (legacy assemblies still can't be marshalled). `ValidateMarshallingEnabledAssemblies` emits three diagnostics: `CSWINRTINTEROPGEN0098` (warning: entry doesn't match any referenced assembly), `CSWINRTINTEROPGEN0099` (message: entry already targets Windows, redundant), and `CSWINRTINTEROPGEN0100` (message: mode is `all`, all entries redundant).
 
 **Type exclusions** (`Helpers/TypeExclusions.cs`):
 - `System.Threading.Tasks.Task<T>` — Cannot be marshalled across Windows Runtime boundary

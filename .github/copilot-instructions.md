@@ -711,7 +711,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0011`, `9999` |
 | Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5021`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
-| Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0097`, `9999` |
+| Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0010`, `9999` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
