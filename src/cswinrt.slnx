@@ -233,8 +233,13 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
       <!-- Skip Release|x64: AuthoringTest is NativeAOT there, so the managed component this JIT host
-           needs doesn't exist. Debug and Release|x86 build the managed component. -->
+           needs doesn't exist. -->
       <Build Solution="Release|x64" Project="false" />
+      <!-- Skip Release|x86: this is the only Release config that builds the app, and the C++/WinRT
+           app intermittently fails to link its XAML-generated code (MainWindow/App connectors,
+           XamlMetaDataProvider, WinMain) in the LTCG Release build. The functional coverage for this
+           JIT-host authoring test is provided by the Debug configurations. -->
+      <Build Solution="Release|x86" Project="false" />
       <Deploy Solution="*|x64" />
       <Deploy Solution="*|x86" />
     </Project>
@@ -245,6 +250,8 @@
       <Build Solution="*|ARM64" Project="false" />
       <!-- Skip Release|x64: AuthoringTest is NativeAOT there (see wapproj above). -->
       <Build Solution="Release|x64" Project="false" />
+      <!-- Skip Release|x86: LTCG Release link of the XAML-generated code fails (see wapproj above). -->
+      <Build Solution="Release|x86" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringWuxConsumptionTest/AuthoringWuxConsumptionTest.vcxproj" Id="a04a0416-5e35-4dd0-8226-63d941b28467">
       <Platform Solution="*|ARM" Project="Win32" />
