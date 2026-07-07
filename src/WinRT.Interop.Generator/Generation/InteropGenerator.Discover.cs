@@ -260,23 +260,9 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Skip modules targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework). The entire
-        // interop generator infrastructure identifies well-known types (including custom-mapped types such as
-        // 'IEnumerable<T>') by comparing against type references scoped to the modern .NET corlib (e.g.
-        // 'System.Runtime'), which is also the corlib the emit phase uses. A legacy-runtime module declares those
-        // same types against a different corlib ('netstandard' or 'mscorlib'), which AsmResolver's 'SignatureComparer'
-        // treats as a distinct scope, so the generator can't match them and marshalling code for them would fail to
-        // generate. Such modules could in principle still use custom-mapped types that need marshalling, but for
-        // simplicity we skip them entirely. This was not an issue before the marshalling mode was introduced, as
-        // only assemblies referencing the Windows Runtime were analyzed, and those always target a modern .NET runtime.
-        if (module.TargetsLegacyRuntime)
-        {
-            return;
-        }
-
-        // Determine whether this module should be analyzed, based on the configured marshalling mode
-        // and the explicitly opted-in assemblies. Modules that reference the Windows Runtime assembly
-        // (i.e. those targeting a Windows TFM) are always analyzed; the mode only affects the others.
+        // Determine whether this module should be analyzed, based on the runtime it targets, the configured
+        // marshalling mode, and the explicitly opted-in assemblies. Modules that reference the Windows Runtime
+        // assembly (i.e. those targeting a Windows TFM) are always analyzed; the mode only affects the others.
         if (!ShouldProcessModule(args, discoveryState, module))
         {
             return;
@@ -320,14 +306,29 @@ internal partial class InteropGenerator
     /// <param name="module">The module to check.</param>
     /// <returns>Whether <paramref name="module"/> should be analyzed for discovery.</returns>
     /// <remarks>
-    /// Modules that reference the Windows Runtime assembly were built targeting a Windows TFM (i.e.
-    /// <c>netX.0-windows10.0.XXXX.0</c>), and the Windows Runtime assembly itself, are always analyzed,
-    /// regardless of the marshalling mode. Assemblies explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c>
-    /// are also always analyzed. Only modules that don't reference any CsWinRT assembly and aren't opted in
-    /// are subject to the mode-specific filtering.
+    /// Modules targeting a legacy or portable runtime are never analyzed. Otherwise, modules that reference the
+    /// Windows Runtime assembly were built targeting a Windows TFM (i.e. <c>netX.0-windows10.0.XXXX.0</c>), and
+    /// the Windows Runtime assembly itself, are always analyzed, regardless of the marshalling mode. Assemblies
+    /// explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c> are also always analyzed. Only modules
+    /// that don't reference any CsWinRT assembly and aren't opted in are subject to the mode-specific filtering.
     /// </remarks>
     private static bool ShouldProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
     {
+        // Never analyze modules targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework), even
+        // when opted in. The entire interop generator infrastructure identifies well-known types (including custom-
+        // mapped types such as 'IEnumerable<T>') by comparing against type references scoped to the modern .NET
+        // corlib (e.g. 'System.Runtime'), which is also the corlib the emit phase uses. A legacy-runtime module
+        // declares those same types against a different corlib ('netstandard' or 'mscorlib'), which AsmResolver's
+        // 'SignatureComparer' treats as a distinct scope, so the generator can't match them and marshalling code for
+        // them would fail to generate. Such modules could in principle still use custom-mapped types that need
+        // marshalling, but for simplicity we skip them entirely. This was not an issue before the marshalling mode
+        // was introduced, as only assemblies referencing the Windows Runtime were analyzed, and those always target
+        // a modern .NET runtime.
+        if (module.TargetsLegacyRuntime)
+        {
+            return false;
+        }
+
         // Assemblies explicitly opted in via 'CsWinRTMarshallingEnabledAssembly' are always analyzed,
         // regardless of the marshalling mode. This lets users fine-tune which assemblies are analyzed
         // (e.g. using the 'strict' mode while opting in a few specific assemblies they know are needed).
