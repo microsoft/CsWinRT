@@ -55,6 +55,14 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [DefaultValue(CsWinRTMarshallingMode.Minimal)]
     public CsWinRTMarshallingMode MarshallingMode { get; init; }
 
+    /// <summary>Gets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.</summary>
+    /// <remarks>
+    /// Each entry is an assembly name (the <c>.dll</c> extension and any directory are ignored). This lets users
+    /// analyze specific assemblies without switching to a broader marshalling mode. Defaults to an empty array.
+    /// </remarks>
+    [CommandLineArgumentName("--marshalling-enabled-assembly-names")]
+    public string[] MarshallingEnabledAssemblyNames { get; init; } = [];
+
     /// <summary>Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.</summary>
     [CommandLineArgumentName("--validate-winrt-runtime-assembly-version")]
     public required bool ValidateWinRTRuntimeAssemblyVersion { get; init; }

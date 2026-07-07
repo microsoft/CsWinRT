@@ -118,6 +118,13 @@ internal sealed class InteropGeneratorDiscoveryState
     public required RuntimeContext RuntimeContext { get; init; }
 
     /// <summary>
+    /// Gets the set of assembly names (without extension) explicitly opted in for analysis via
+    /// <c>CsWinRTMarshallingEnabledAssembly</c>, regardless of the marshalling mode. The set uses a
+    /// case-insensitive comparer, and is empty if no assemblies were opted in.
+    /// </summary>
+    public required IReadOnlySet<string> MarshallingEnabledAssemblyNames { get; init; }
+
+    /// <summary>
     /// Gets the loaded modules.
     /// </summary>
     public IReadOnlyDictionary<string, ModuleDefinition> Modules => _modules;

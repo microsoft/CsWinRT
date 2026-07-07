@@ -147,6 +147,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
@@ -200,6 +201,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
       MarshallingMode="$(CsWinRTMarshallingMode)"
+      MarshallingEnabledAssemblies="@(CsWinRTMarshallingEnabledAssembly)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       ValidateWinRTRuntimeDllVersion2References="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)"
       EnableIncrementalGeneration="$(CsWinRTGeneratorEnableIncrementalGeneration)"
