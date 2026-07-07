@@ -1126,6 +1126,29 @@ internal static class WindowsRuntimeExtensions
         public bool IsBaseClassLibraryModule => BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(module.Assembly?.GetPublicKeyToken());
 
         /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> targets a legacy or portable runtime (i.e. .NET Standard
+        /// or .NET Framework), as opposed to a modern .NET runtime, based on its corlib scope.
+        /// </summary>
+        /// <returns>Whether the module targets a legacy or portable runtime.</returns>
+        /// <remarks>
+        /// Such modules (with a <c>netstandard</c> or <c>mscorlib</c> corlib) cannot reference the Windows Runtime
+        /// projections (which require targeting modern .NET), so they never contain marshalling-relevant types.
+        /// Moreover, any generic instantiations they contain are scoped to their own corlib, which the emit phase
+        /// (which uses the application's runtime corlib) cannot resolve, so attempting to generate marshalling code
+        /// for them would fail. Skipping these modules avoids both problems.
+        /// </remarks>
+        public bool TargetsLegacyRuntime
+        {
+            get
+            {
+                Utf8String? corLibName = module.CorLibTypeFactory.CorLibScope?.Name;
+
+                return corLibName == WellKnownMetadataNames.NetStandardAssemblyName ||
+                       corLibName == WellKnownMetadataNames.MSCorLibAssemblyName;
+            }
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module references the Windows Runtime assembly.</returns>
@@ -1170,6 +1193,16 @@ file static class WellKnownMetadataNames
     /// The current name of the WinRT runtime module.
     /// </summary>
     public static readonly Utf8String WinRTRuntimeModuleName = "WinRT.Runtime.dll"u8;
+
+    /// <summary>
+    /// The assembly name of the .NET Standard corlib (used by portable assemblies).
+    /// </summary>
+    public static readonly Utf8String NetStandardAssemblyName = "netstandard"u8;
+
+    /// <summary>
+    /// The assembly name of the .NET Framework corlib (used by legacy .NET Framework assemblies).
+    /// </summary>
+    public static readonly Utf8String MSCorLibAssemblyName = "mscorlib"u8;
 
     /// <summary>
     /// The <c>"WindowsRuntime"</c> text.
