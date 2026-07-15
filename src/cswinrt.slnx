@@ -295,7 +295,10 @@
       <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
+      <Deploy Solution="*|x64" />
     </Project>
     <Project Path="Tests/OOPExe/OOPExe.csproj">
       <Platform Solution="*|ARM" Project="ARM" />

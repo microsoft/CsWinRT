@@ -30,8 +30,8 @@
     <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</AppBuildTFMs>
     <LibBuildTFMs>net10.0</LibBuildTFMs>
     <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</LibBuildTFMs>
-    <TestsBuildTFMs>net10.0-windows10.0.19041.0</TestsBuildTFMs>
-    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0-windows10.0.19041.0</TestsBuildTFMs>
+    <TestsBuildTFMs>net10.0-windows10.0.26100.1</TestsBuildTFMs>
+    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0-windows10.0.26100.1</TestsBuildTFMs>
     <FunctionalTestsBuildTFMs>net10.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
     <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
