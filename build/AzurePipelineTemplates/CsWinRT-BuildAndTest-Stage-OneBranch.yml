@@ -154,11 +154,16 @@ jobs:
       displayName: "Checkout TestWinRT"
       
 # Build Steps 
+    # Build the full solution (not SetupForBuildOnly) so the CsWinRT build tooling
+    # (WinRT.Generator.Tasks.dll and the generator executables) is built and staged.
+    # The standalone "Build Object Lifetime Tests" step below relies on that tooling,
+    # which is only produced via the solution's BuildDependency ordering, not as a
+    # ProjectReference a single-project build would build in time (otherwise MSB4062).
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
-        SetupForBuildOnly: true
+        SetupForBuildOnly: false
 
     - task: MSBuild@1
       displayName: Build Object Lifetime Tests
