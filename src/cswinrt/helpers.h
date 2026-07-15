@@ -1229,6 +1229,11 @@ namespace cswinrt
                     { 1, "10.0.10586.0" },
                 }
             },
+            { "Windows.Management.Update.Cluster.ClusterNativeUpdatingContract",
+                {
+                    { 1, "10.0.28000.0" },
+                }
+            },
             { "Windows.Management.Update.WindowsUpdateContract",
                 {
                     { 1, "10.0.22621.0" },
