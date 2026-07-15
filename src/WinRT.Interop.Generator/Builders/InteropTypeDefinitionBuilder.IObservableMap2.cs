@@ -531,6 +531,9 @@ internal partial class InteropTypeDefinitionBuilder
             implType.Methods.Add(makeMapChangedMethod);
             implType.Methods.Add(get_MapChangedTableMethod);
             implType.Properties.Add(mapChangedTableProperty);
+
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, mapType, "Impl");
         }
     }
 }
