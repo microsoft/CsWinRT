@@ -109,20 +109,22 @@ stages:
         SetupForBuildOnly: true
 
     # Build only the CsWinRT build tooling (the generator executables and
-    # WinRT.Generator.Tasks.dll), not the whole solution. The standalone
-    # "Build Object Lifetime Tests" step below needs this tooling, which is
-    # produced via the solution's BuildDependency ordering rather than as a
-    # ProjectReference a single-project build would build in time (otherwise
-    # MSB4062). Targeting the projects by name builds just their closure
-    # (plus WinRT.Generator.Core / WinRT.Projection.Writer), and the solution
-    # maps the x64 platform to AnyCPU for these projects so the outputs land
-    # where Directory.Build.props expects them.
+    # WinRT.Generator.Tasks.dll) plus WinRT.Internal (which produces
+    # WindowsRuntime.Internal.winmd, consumed by the Windows projection),
+    # not the whole solution. The standalone "Build Object Lifetime Tests"
+    # step below needs these, which are produced via the solution's
+    # BuildDependency ordering rather than as ProjectReferences a
+    # single-project build would build in time (otherwise MSB4062 /
+    # CSWINRTPROJECTIONREFGEN0005). Targeting the projects by name builds just
+    # their closure (WinRT.Generator.Core / WinRT.Projection.Writer /
+    # WinRT.Runtime), and the solution maps the x64 platform to AnyCPU for
+    # these projects so the outputs land where Directory.Build.props expects.
     - task: MSBuild@1
       displayName: Build CsWinRT build tooling
       condition: succeeded()
       inputs:
         solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-        msbuildArguments: /restore /t:WinRT_Generator_Tasks;WinRT_Impl_Generator;WinRT_Interop_Generator;WinRT_Projection_Generator;WinRT_Projection_Ref_Generator;WinRT_WinMD_Generator /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+        msbuildArguments: /restore /t:WinRT_Generator_Tasks;WinRT_Impl_Generator;WinRT_Interop_Generator;WinRT_Projection_Generator;WinRT_Projection_Ref_Generator;WinRT_WinMD_Generator;WinRT_Internal /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
