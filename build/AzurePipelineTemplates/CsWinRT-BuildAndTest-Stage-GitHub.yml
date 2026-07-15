@@ -102,16 +102,29 @@ stages:
       displayName: "Checkout TestWinRT"
 
 # Build Steps
-    # Build the full solution (not SetupForBuildOnly) so the CsWinRT build tooling
-    # (WinRT.Generator.Tasks.dll and the generator executables) is built and staged.
-    # The standalone "Build Object Lifetime Tests" step below relies on that tooling,
-    # which is only produced via the solution's BuildDependency ordering, not as a
-    # ProjectReference a single-project build would build in time (otherwise MSB4062).
     - template: CsWinRT-Build-Steps.yml@self
       parameters:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
-        SetupForBuildOnly: false
+        SetupForBuildOnly: true
+
+    # Build only the CsWinRT build tooling (the generator executables and
+    # WinRT.Generator.Tasks.dll), not the whole solution. The standalone
+    # "Build Object Lifetime Tests" step below needs this tooling, which is
+    # produced via the solution's BuildDependency ordering rather than as a
+    # ProjectReference a single-project build would build in time (otherwise
+    # MSB4062). Targeting the projects by name builds just their closure
+    # (plus WinRT.Generator.Core / WinRT.Projection.Writer), and the solution
+    # maps the x64 platform to AnyCPU for these projects so the outputs land
+    # where Directory.Build.props expects them.
+    - task: MSBuild@1
+      displayName: Build CsWinRT build tooling
+      condition: succeeded()
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
+        msbuildArguments: /restore /t:WinRT_Generator_Tasks;WinRT_Impl_Generator;WinRT_Interop_Generator;WinRT_Projection_Generator;WinRT_Projection_Ref_Generator;WinRT_WinMD_Generator /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
 
     - task: MSBuild@1
       displayName: Build Object Lifetime Tests
