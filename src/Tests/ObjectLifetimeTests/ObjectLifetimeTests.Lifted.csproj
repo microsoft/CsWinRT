@@ -14,6 +14,7 @@
         <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
         <WindowsPackageType>MSIX</WindowsPackageType>
         <UseWinUI>true</UseWinUI>
+        <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
         <UseRidGraph>true</UseRidGraph>
         <AppxIncludeWindowsMetadataReferenceFromProjectReferences>false</AppxIncludeWindowsMetadataReferenceFromProjectReferences>
@@ -63,10 +64,120 @@
         <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
+    <!-- The following workarounds are temporary until we have a WinUI package that addresses them. -->
+
+    <!-- When UseWinUI==true, MSTest references the WinUI flavor of MSTest.TestFramework.Extensions.dll,
+         which references the CsWinRT 2.x Microsoft.WinUI and Microsoft.InteractiveExperiences.Projection
+         assemblies. For now, we redirect to the non-WinUI version of them until they are updated. -->
+    <Target Name="_CsWinRTUsePlainMSTestFrameworkExtensions" BeforeTargets="ResolveAssemblyReferences">
+        <PropertyGroup>
+            <_MSTestExtWinUIHintPath>@(Reference->WithMetadataValue('Identity','MSTest.TestFramework.Extensions')->'%(HintPath)')</_MSTestExtWinUIHintPath>
+            <_MSTestExtPlainHintPath>$(_MSTestExtWinUIHintPath.Replace('winui/', '').Replace('winui\', ''))</_MSTestExtPlainHintPath>
+        </PropertyGroup>
+        <ItemGroup Condition="'$(_MSTestExtPlainHintPath)' != ''">
+            <Reference Remove="MSTest.TestFramework.Extensions" />
+            <Reference Include="MSTest.TestFramework.Extensions">
+                <HintPath>$(_MSTestExtPlainHintPath)</HintPath>
+            </Reference>
+        </ItemGroup>
+    </Target>
+
     <ItemGroup>
         <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
         <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
+        <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />    
     </ItemGroup>
+
+    <!-- CsWinRT 3.0 strips the SDK/WinUI winmds from @(ReferencePath) for the C# compile, but the WinUI
+         markup passes read @(ReferencePath) and need them (else WMC1007/WMC9999). Feed the WinUI + Windows
+         SDK winmds for the markup passes, then restore. Pass1 and Pass2 each need their own add/remove pair. -->
+    <PropertyGroup>
+        <_CsWinRTMarkupSdkWinMDFolder>$(NuGetPackageRoot)microsoft.windows.sdk.net.ref\10.0.26100.85-preview\winmd\windows\</_CsWinRTMarkupSdkWinMDFolder>
+    </PropertyGroup>
+    <ItemGroup>
+        <_CsWinRTMarkupSdkWinMDs Include="$(_CsWinRTMarkupSdkWinMDFolder)*.winmd" />
+    </ItemGroup>
+
+    <!-- This project never gets the .NET BCL ref assemblies in @(ReferencePath), so the winmds'/projections' System.*/mscorlib references are
+         unresolvable by genxbf (WMC1006/WMC9999) and csc (CS0518). Resolve the ref-pack BCL folder to inject. -->
+    <Target Name="_CsWinRTComputeFrameworkRefs" DependsOnTargets="ResolveFrameworkReferences">
+        <PropertyGroup>
+            <_CsWinRTNetCoreRefPackPath>@(ResolvedFrameworkReference->WithMetadataValue('Identity','Microsoft.NETCore.App')->'%(TargetingPackPath)')</_CsWinRTNetCoreRefPackPath>
+            <_CsWinRTNetCoreRefDir>$(_CsWinRTNetCoreRefPackPath)\ref\net$(TargetFrameworkVersion.TrimStart('vV'))\</_CsWinRTNetCoreRefDir>
+        </PropertyGroup>
+        <ItemGroup>
+            <_CsWinRTNetCoreRefAssemblies Include="$(_CsWinRTNetCoreRefDir)*.dll" />
+        </ItemGroup>
+    </Target>
+
+    <!-- Inject the BCL ref assemblies (and the core MSTest.TestFramework/testhost compile assets, also
+         missing from this project's reference set) into @(ReferencePathWithRefAssemblies) once, before the
+         passes that consume it: XamlPreCompile, MarkupCompilePass2, and CoreCompile. -->
+    <Target Name="_CsWinRTAddFrameworkRefsToRefAssemblies"
+            BeforeTargets="XamlPreCompile;MarkupCompilePass2;CoreCompile"
+            DependsOnTargets="FindReferenceAssembliesForReferences;ResolvePackageAssets;_CsWinRTComputeFrameworkRefs"
+            Condition="'$(_CsWinRTFrameworkRefsAdded)' != 'true'">
+        <ItemGroup>
+            <ReferencePathWithRefAssemblies Include="@(_CsWinRTNetCoreRefAssemblies)" />
+            <ReferencePathWithRefAssemblies Include="@(ResolvedCompileFileDefinitions->WithMetadataValue('Filename','MSTest.TestFramework'))" />
+            <ReferencePathWithRefAssemblies Include="@(ResolvedCompileFileDefinitions->WithMetadataValue('Filename','testhost'))" />
+        </ItemGroup>
+        <PropertyGroup>
+            <_CsWinRTFrameworkRefsAdded>true</_CsWinRTFrameworkRefsAdded>
+        </PropertyGroup>
+    </Target>
+
+    <!-- MarkupCompilePass1 must resolve XAML types against winmds, not the net10 projection DLLs (whose
+         deps like System.Runtime.InteropServices 10.0.0.0 genxbf can't resolve -> WMC9999). genxbf uses
+         @(ReferencePath) as its resolution set, so swap in the winmds + BCL for Pass1, then restore. -->
+    <Target Name="_CsWinRTUseWinMDsOnlyForMarkupCompilePass1" BeforeTargets="MarkupCompilePass1" DependsOnTargets="ResolveReferences;_CsWinRTComputeFrameworkRefs">
+        <ItemGroup>
+            <_CsWinRTPass1SavedReferencePath Include="@(ReferencePath)" />
+            <ReferencePath Remove="@(ReferencePath)" />
+            <ReferencePath Include="@(CsWinRTInputs);@(_CsWinRTMarkupSdkWinMDs);@(_CsWinRTNetCoreRefAssemblies)" />
+        </ItemGroup>
+    </Target>
+    <Target Name="_CsWinRTRestoreReferencePathAfterMarkupCompilePass1" AfterTargets="MarkupCompilePass1">
+        <ItemGroup>
+            <ReferencePath Remove="@(ReferencePath)" />
+            <ReferencePath Include="@(_CsWinRTPass1SavedReferencePath)" />
+        </ItemGroup>
+    </Target>
+
+    <!-- MarkupCompilePass2 resolves against the compiled assembly's references, so (unlike Pass1) it needs
+         the CsWinRT 3.0 reference-projection ref assemblies (real types), not winmds/forwarders (WMC9999).
+         Swap @(ReferencePath) to @(ReferencePathWithRefAssemblies) like CoreCompile, then restore. -->
+    <Target Name="_CsWinRTUseRefAssembliesForMarkupCompilePass2" BeforeTargets="MarkupCompilePass2" DependsOnTargets="ResolveReferences;FindReferenceAssembliesForReferences">
+        <ItemGroup>
+            <_CsWinRTPass2SavedReferencePath Include="@(ReferencePath)" />
+            <ReferencePath Remove="@(ReferencePath)" />
+            <ReferencePath Include="@(ReferencePathWithRefAssemblies)" />
+        </ItemGroup>
+    </Target>
+    <Target Name="_CsWinRTRestoreReferencePathAfterMarkupCompilePass2" AfterTargets="MarkupCompilePass2">
+        <ItemGroup>
+            <ReferencePath Remove="@(ReferencePath)" />
+            <ReferencePath Include="@(_CsWinRTPass2SavedReferencePath)" />
+        </ItemGroup>
+    </Target>
+
+    <!-- XamlPreCompile compiles with References="@(ReferencePath)" while CoreCompile uses
+         @(ReferencePathWithRefAssemblies); only the latter honors CsWinRT 3.0's ref-assembly redirect, so
+         the raw @(ReferencePath) resolves WinUI types to the forwarder (CS1069). Swap to match CoreCompile,
+         then restore. -->
+    <Target Name="_CsWinRTUseRefAssembliesForXamlPreCompile" BeforeTargets="XamlPreCompile" DependsOnTargets="FindReferenceAssembliesForReferences">
+        <ItemGroup>
+            <_CsWinRTXamlPreCompileSavedReferencePath Include="@(ReferencePath)" />
+            <ReferencePath Remove="@(ReferencePath)" />
+            <ReferencePath Include="@(ReferencePathWithRefAssemblies)" />
+        </ItemGroup>
+    </Target>
+    <Target Name="_CsWinRTRestoreReferencePathAfterXamlPreCompile" AfterTargets="XamlPreCompile">
+        <ItemGroup>
+            <ReferencePath Remove="@(ReferencePath)" />
+            <ReferencePath Include="@(_CsWinRTXamlPreCompileSavedReferencePath)" />
+        </ItemGroup>
+    </Target>
     
     <ItemGroup>
         <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
