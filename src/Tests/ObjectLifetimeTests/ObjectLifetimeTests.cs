@@ -334,7 +334,8 @@ namespace ObjectLifetimeTests
             _asyncQueue.Run();
         }
 
-        // E [TestMethod]
+        // Temporary disabling due to issue with Tag binding.
+        // [TestMethod]
         public void BasicTest6b()
         {
             _asyncQueue
