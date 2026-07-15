@@ -126,7 +126,7 @@ jobs:
   # that can't run in the other environment.
   - job: Tests
     displayName: Run Tests
-    condition: false
+    condition: succeeded()
     dependsOn: []
     pool:
       type: windows
