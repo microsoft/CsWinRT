@@ -1239,8 +1239,7 @@ namespace Generator
                     {
                         if (methodSymbol.Parameters[paramsIdx].RefKind != RefKind.Out)
                         {
-                            var argumentType = context.SemanticModel.GetTypeInfo(invocation.ArgumentList.Arguments[idx].Expression);
-                            AddVtableAttributesForType(argumentType, methodSymbol.Parameters[paramsIdx].Type);
+                            AddVtableAttributesForExpression(invocation.ArgumentList.Arguments[idx].Expression, methodSymbol.Parameters[paramsIdx].Type);
                         }
 
                         // The method parameter can be declared as params which means
@@ -1269,8 +1268,7 @@ namespace Generator
                     {
                         if (methodSymbol.Parameters[paramsIdx].RefKind != RefKind.Out)
                         {
-                            var argumentType = context.SemanticModel.GetTypeInfo(objectCreation.ArgumentList.Arguments[idx].Expression);
-                            AddVtableAttributesForType(argumentType, methodSymbol.Parameters[paramsIdx].Type);
+                            AddVtableAttributesForExpression(objectCreation.ArgumentList.Arguments[idx].Expression, methodSymbol.Parameters[paramsIdx].Type);
                         }
 
                         if (!methodSymbol.Parameters[paramsIdx].IsParams)
@@ -1293,7 +1291,7 @@ namespace Generator
                      (isGeneratedBindableCustomPropertyClass = GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation, propertySymbol.ContainingSymbol)) ||
                      SymbolEqualityComparer.Default.Equals(propertySymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
-                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), propertySymbol.Type, isGeneratedBindableCustomPropertyClass);
+                    AddVtableAttributesForExpression(assignment.Right, propertySymbol.Type, isGeneratedBindableCustomPropertyClass);
                 }
                 else if (leftSymbol is IFieldSymbol fieldSymbol &&
                     // WinRT interfaces don't have fields, so we don't need to check for them.
@@ -1301,7 +1299,7 @@ namespace Generator
                      (isGeneratedBindableCustomPropertyClass = GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation, fieldSymbol.ContainingSymbol)) ||
                      SymbolEqualityComparer.Default.Equals(fieldSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
                 {
-                    AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(assignment.Right), fieldSymbol.Type, isGeneratedBindableCustomPropertyClass);
+                    AddVtableAttributesForExpression(assignment.Right, fieldSymbol.Type, isGeneratedBindableCustomPropertyClass);
                 }
             }
             else if (context.Node is VariableDeclarationSyntax variableDeclaration)
@@ -1314,8 +1312,7 @@ namespace Generator
                     {
                         if (variable.Initializer != null)
                         {
-                            var instantiatedType = context.SemanticModel.GetTypeInfo(variable.Initializer.Value);
-                            AddVtableAttributesForType(instantiatedType, namedType);
+                            AddVtableAttributesForExpression(variable.Initializer.Value, namedType);
                         }
                     }
                 }
@@ -1328,8 +1325,7 @@ namespace Generator
                     var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
                     if (leftSymbol is INamedTypeSymbol namedType)
                     {
-                        var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.Initializer.Value);
-                        AddVtableAttributesForType(instantiatedType, namedType);
+                        AddVtableAttributesForExpression(propertyDeclaration.Initializer.Value, namedType);
                     }
                 }
                 else if (propertyDeclaration.ExpressionBody != null)
@@ -1337,8 +1333,7 @@ namespace Generator
                     var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
                     if (leftSymbol is INamedTypeSymbol namedType)
                     {
-                        var instantiatedType = context.SemanticModel.GetTypeInfo(propertyDeclaration.ExpressionBody.Expression);
-                        AddVtableAttributesForType(instantiatedType, namedType);
+                        AddVtableAttributesForExpression(propertyDeclaration.ExpressionBody.Expression, namedType);
                     }
                 }
             }
@@ -1346,14 +1341,13 @@ namespace Generator
             {
                 // Detect scenarios where the method or property being returned from is doing a box or cast of the type
                 // in the return statement.
-                var returnSymbol = context.SemanticModel.GetTypeInfo(returnDeclaration.Expression);
                 var parent = returnDeclaration.Ancestors().OfType<MemberDeclarationSyntax>().FirstOrDefault();
                 if (parent is MethodDeclarationSyntax methodDeclaration)
                 {
                     var methodReturnSymbol = context.SemanticModel.GetSymbolInfo(methodDeclaration.ReturnType).Symbol;
                     if (methodReturnSymbol is ITypeSymbol typeSymbol)
                     {
-                        AddVtableAttributesForType(returnSymbol, typeSymbol);
+                        AddVtableAttributesForExpression(returnDeclaration.Expression, typeSymbol);
                     }
                 }
                 else if (parent is BasePropertyDeclarationSyntax propertyDeclarationSyntax)
@@ -1361,7 +1355,7 @@ namespace Generator
                     var propertyTypeSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclarationSyntax.Type).Symbol;
                     if (propertyTypeSymbol is ITypeSymbol typeSymbol)
                     {
-                        AddVtableAttributesForType(returnSymbol, typeSymbol);
+                        AddVtableAttributesForExpression(returnDeclaration.Expression, typeSymbol);
                     }
                 }
             }
@@ -1398,6 +1392,41 @@ namespace Generator
 #endif
 
             return vtableAttributes.ToImmutableArray();
+
+            // Looks through parenthesized, cast, conditional (ternary) and switch expressions to reach the concrete
+            // leaf expressions that actually flow into the given target, gathering vtable information for each of them.
+            // This is required because eg. the type of a conditional or switch expression is just the common type of
+            // all of its branches (usually 'object' or an interface), which hides the concrete types that are the ones
+            // being boxed or cast and thus needing CCW vtable entries.
+            void AddVtableAttributesForExpression(ExpressionSyntax expression, ITypeSymbol convertedToTypeSymbol, bool isGeneratedBindableCustomPropertyClass = false)
+            {
+                switch (expression)
+                {
+                    case ParenthesizedExpressionSyntax parenthesizedExpression:
+                        AddVtableAttributesForExpression(parenthesizedExpression.Expression, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        break;
+                    // The cast target type can itself be a concrete type being boxed or cast (eg. '(List<int>)value'), so
+                    // process it directly, but also look through to the operand to catch the concrete type being cast to
+                    // something more general (eg. '(object)new List<string>()'), which the cast type alone would hide.
+                    case CastExpressionSyntax castExpression:
+                        AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(castExpression), convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        AddVtableAttributesForExpression(castExpression.Expression, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        break;
+                    case ConditionalExpressionSyntax conditionalExpression:
+                        AddVtableAttributesForExpression(conditionalExpression.WhenTrue, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        AddVtableAttributesForExpression(conditionalExpression.WhenFalse, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        break;
+                    case SwitchExpressionSyntax switchExpression:
+                        foreach (var switchExpressionArm in switchExpression.Arms)
+                        {
+                            AddVtableAttributesForExpression(switchExpressionArm.Expression, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        }
+                        break;
+                    default:
+                        AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(expression), convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        break;
+                }
+            }
 
             // Helper to directly use 'AddVtableAttributesForTypeDirect' with 'TypeInfo' values
             void AddVtableAttributesForType(Microsoft.CodeAnalysis.TypeInfo instantiatedType, ITypeSymbol convertedToTypeSymbol, bool isGeneratedBindableCustomPropertyClass = false)

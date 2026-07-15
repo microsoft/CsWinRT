@@ -338,6 +338,34 @@ if (RunAndGetException(() => ComWrappersSupport.CreateCCWForObject(new ManagedOn
 }
 #endif
 
+// Regression test for https://github.com/microsoft/CsWinRT/issues/1947: the AOT source generator has to look
+// through conditional (ternary) and switch expressions (as well as casts) to discover the concrete generic types
+// being boxed. The 'List<T>' types below only ever appear inside those expressions, so without that discovery their
+// CCWs would be missing the 'IVector<T>' vtable under Native AOT and the runtime class name check would fail.
+ccw = MarshalInspectable<object>.CreateMarshaler(BoxListViaTernary(true));
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Int32>"))
+{
+    return 139;
+}
+
+ccw = MarshalInspectable<object>.CreateMarshaler(BoxListViaTernary(false));
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<String>"))
+{
+    return 140;
+}
+
+ccw = MarshalInspectable<object>.CreateMarshaler(BoxListViaSwitch(0));
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<UInt8>"))
+{
+    return 141;
+}
+
+ccw = MarshalInspectable<object>.CreateMarshaler(BoxListViaSwitch(1));
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Single>"))
+{
+    return 142;
+}
+
 return 100;
 
 
@@ -388,6 +416,25 @@ unsafe bool CheckRuntimeClassName(IObjectReference objRef, string expected)
     {
         WindowsDeleteString(__retval);
     }
+}
+
+// Boxes a generic list through a conditional (ternary) expression, so the concrete element types are only
+// ever reachable through the ternary branches (see issue #1947).
+static object BoxListViaTernary(bool flag)
+{
+    object boxed = flag ? new List<int>() : (object)new List<string>();
+    return boxed;
+}
+
+// Same as 'BoxListViaTernary', but exercising a switch expression instead of a conditional expression.
+static object BoxListViaSwitch(int selector)
+{
+    object boxed = selector switch
+    {
+        0 => new List<byte>(),
+        _ => (object)new List<float>()
+    };
+    return boxed;
 }
 
 sealed partial class ManagedProperties : IProperties1, IUriHandler
