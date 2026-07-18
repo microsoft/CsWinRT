@@ -154,6 +154,18 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
 
+  <!--
+    Force full (non-incremental) LTCG for Release C++/wapproj builds by importing an ItemDefinitionGroup
+    (ForceNonIncrementalLTCG.targets) at the end of Microsoft.Cpp.targets. Full LTCG is required by
+    CastGuard (/guard:cast, set above), which is incompatible with the '/LTCG:incremental' default of
+    WholeProgramOptimization. Doing it as an item default (imported after the Cpp default) means it also
+    applies to @(Link) objects added later by WinUI's XAML C++ targets. Guarded so a project that sets
+    $(ForceImportAfterCppTargets) itself is not overridden; the file's IDG is Release-scoped internally.
+  -->
+  <PropertyGroup Condition="('$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj') and '$(ForceImportAfterCppTargets)' == ''">
+    <ForceImportAfterCppTargets>$(MSBuildThisFileDirectory)ForceNonIncrementalLTCG.targets</ForceImportAfterCppTargets>
+  </PropertyGroup>
+
   <Import Project="Strings.props" />
 
   <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\nuget\Microsoft.Windows.CsWinRT.props" />
