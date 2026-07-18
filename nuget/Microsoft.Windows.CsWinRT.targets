@@ -79,6 +79,66 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <Error Text="Support for .NET 6 and .NET 7 ended with C#/WinRT 2.2. For .NET 6 or .NET 7 support, use C#/WinRT version 2.2.x." />
   </Target>
 
+  <!--
+    Resolve Windows metadata from the .NET SDK projection ref pack when no Windows SDK is registered.
+
+    The default 'CsWinRTWindowsMetadata' above (from '$(WindowsSDKVersion)' or '$(TargetPlatformVersion)')
+    is a bare Windows SDK version number, e.g. '10.0.19041.0'. When that bare version is passed to
+    'cswinrt.exe' as '-input', the tool locates the metadata by reading the Windows SDK install root from
+    the registry ('HKLM\SOFTWARE\Microsoft\Windows Kits\Installed Roots\KitsRoot10'). On hosts without a
+    registered Windows SDK (clean CI agents, containers, SDK-less developer machines) that lookup throws
+    "Could not find the Windows SDK in the registry", which cascades into downstream (e.g. XAML) failures.
+
+    For modern .NET TFMs (e.g. 'net*-windows10.0.x'), the .NET SDK auto-restores the
+    'Microsoft.Windows.SDK.NET.Ref' projection ref pack, which ships the Windows metadata (.winmd) files -
+    versioned to match '$(TargetPlatformVersion)' - under its '\winmd' folder. 'cswinrt.exe' already
+    accepts '-input <folder>', so we can point 'CsWinRTWindowsMetadata' at that folder and have projection
+    and authoring work with no registered Windows SDK. Setting the property here covers both the projection
+    response file ('-input $(CsWinRTWindowsMetadata)') and the authoring source generator (which reads the
+    'CsWinRTWindowsMetadata' compiler-visible property).
+
+    This is intentionally gated so that machines with a registered Windows SDK (Visual Studio, SDK-installed
+    CI) keep their existing behavior byte-for-byte. It only takes effect when ALL of the following hold:
+      - 'CsWinRTWindowsMetadata' is still the bare-version default: it is non-empty, is not one of the
+        tool's own sentinels ('local'/'sdk'/'sdk+'), and does not point at an existing path (an explicit
+        file/folder provided by the user is left untouched).
+      - No Windows SDK is registered (the 'KitsRoot10' registry value is empty).
+      - The 'Microsoft.Windows.SDK.NET.Ref' ref pack was resolved and its '\winmd' folder exists.
+  -->
+  <Target Name="CsWinRTResolveWindowsMetadataFromSdkRefPack"
+          Condition="$(CsWinRTEnabled)"
+          DependsOnTargets="ResolveReferences"
+          BeforeTargets="CsWinRTGenerateProjection;CsWinRTSetAuthoringWinMDs;GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore">
+
+    <PropertyGroup>
+      <!-- Empty when no Windows SDK is registered. Mirrors the 32-bit-then-default view order used by cswinrt.exe. -->
+      <_CsWinRTKitsRoot10>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', null, Microsoft.Win32.RegistryView.Registry32, Microsoft.Win32.RegistryView.Registry64))</_CsWinRTKitsRoot10>
+
+      <!-- True only when the current value is a bare SDK version that needs the registry to resolve. -->
+      <_CsWinRTWindowsMetadataIsBareVersion Condition="'$(CsWinRTWindowsMetadata)' != '' and
+                                                       '$(CsWinRTWindowsMetadata)' != 'local' and
+                                                       '$(CsWinRTWindowsMetadata)' != 'sdk' and
+                                                       '$(CsWinRTWindowsMetadata)' != 'sdk+' and
+                                                       !Exists('$(CsWinRTWindowsMetadata)')">true</_CsWinRTWindowsMetadataIsBareVersion>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(_CsWinRTKitsRoot10)' == '' and '$(_CsWinRTWindowsMetadataIsBareVersion)' == 'true'">
+      <!-- The ref pack resolves as several targeting-pack items (Windows/Xaml/CsWinRT3) that share one root; de-duplicate. -->
+      <_CsWinRTSdkNetRefPackDir Include="@(ResolvedTargetingPack->'%(Path)')"
+                               Condition="'%(ResolvedTargetingPack.NuGetPackageId)' == 'Microsoft.Windows.SDK.NET.Ref'" />
+      <_CsWinRTSdkNetRefPackDirDistinct Include="@(_CsWinRTSdkNetRefPackDir->Distinct())" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(_CsWinRTKitsRoot10)' == '' and '$(_CsWinRTWindowsMetadataIsBareVersion)' == 'true'">
+      <_CsWinRTSdkNetRefPackWinMDDir Condition="'@(_CsWinRTSdkNetRefPackDirDistinct)' != ''">@(_CsWinRTSdkNetRefPackDirDistinct)\winmd</_CsWinRTSdkNetRefPackWinMDDir>
+      <CsWinRTWindowsMetadata Condition="'$(_CsWinRTSdkNetRefPackWinMDDir)' != '' and Exists('$(_CsWinRTSdkNetRefPackWinMDDir)')">$(_CsWinRTSdkNetRefPackWinMDDir)</CsWinRTWindowsMetadata>
+    </PropertyGroup>
+
+    <Message Condition="'$(_CsWinRTSdkNetRefPackWinMDDir)' != '' and '$(CsWinRTWindowsMetadata)' == '$(_CsWinRTSdkNetRefPackWinMDDir)'"
+             Importance="$(CsWinRTMessageImportance)"
+             Text="C#/WinRT: no Windows SDK is registered; using Windows metadata from the .NET SDK projection ref pack: '$(_CsWinRTSdkNetRefPackWinMDDir)'." />
+  </Target>
+
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
   <Target Name="CsWinRTSetGeneratorProperties" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore">
     <PropertyGroup>

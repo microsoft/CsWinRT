@@ -90,6 +90,16 @@ Windows Metadata is required for all C#/WinRT projections, and can be supplied b
 
 If a Windows SDK is installed, $(WindowsSDKVersion) is defined when building from a VS command prompt.
 
+If no Windows SDK is registered on the machine (for example on clean CI agents, containers, or SDK-less
+developer machines), the default `$(WindowsSDKVersion)`/`$(TargetPlatformVersion)` value is a bare SDK
+version number that `cswinrt.exe` can only resolve through the registry, so the build would otherwise fail
+with "Could not find the Windows SDK in the registry". In that case, for modern .NET TFMs (e.g.
+`net*-windows10.0.x`), C#/WinRT automatically falls back to the Windows metadata (`.winmd`) files shipped in
+the `Microsoft.Windows.SDK.NET.Ref` projection ref pack that the .NET SDK restores (its `\winmd` folder,
+versioned to `$(TargetPlatformVersion)`). This fallback only applies when no Windows SDK is registered and
+`$(CsWinRTWindowsMetadata)` is still the bare-version default; an explicit `$(CsWinRTWindowsMetadata)` value
+(a path, or `local`/`sdk`) and registered-SDK builds are unaffected.
+
 ## Consuming and Producing 
 
 The C#/WinRT package can be used both to consume WinRT types, and to produce them (via CsWinRTComponent).  It is also possible to combine these settings and do both.  For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).
