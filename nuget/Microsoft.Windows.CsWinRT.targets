@@ -123,7 +123,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
 
     <ItemGroup Condition="'$(_CsWinRTKitsRoot10)' == '' and '$(_CsWinRTWindowsMetadataIsBareVersion)' == 'true'">
-      <!-- The ref pack resolves as several targeting-pack items (Windows/Xaml/CsWinRT3) that share one root; de-duplicate. -->
+      <!--
+        The ref pack resolves as several targeting-pack items (Windows/Xaml/CsWinRT3) that share one root; de-duplicate.
+        We resolve the folder from the actually-restored targeting pack rather than scanning for a pack whose version
+        string equals '$(TargetPlatformVersion)'. The restored ref-pack version does not always string-match the TPV
+        (e.g. a '10.0.26100.67-preview' ref pack for a project targeting '10.0.26100.0'); @(ResolvedTargetingPack) goes
+        through the SDK's own targeting-pack resolution, so it tolerates preview/suffix versions that an exact-match
+        lookup would miss.
+      -->
       <_CsWinRTSdkNetRefPackDir Include="@(ResolvedTargetingPack->'%(Path)')"
                                Condition="'%(ResolvedTargetingPack.NuGetPackageId)' == 'Microsoft.Windows.SDK.NET.Ref'" />
       <_CsWinRTSdkNetRefPackDirDistinct Include="@(_CsWinRTSdkNetRefPackDir->Distinct())" />
