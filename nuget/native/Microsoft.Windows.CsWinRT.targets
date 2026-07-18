@@ -134,11 +134,20 @@ Properties consumers may set on the vcxproj:
     (via <ProjectReference> for project sources and <Reference HintPath=...> for package
     sources), builds it with CsWinRTBuildForNativeConsumer=true, and copies the merged
     hosting bundle to the consumer's output directory.
+
+    Runs AfterTargets="Link" (not BeforeTargets): the merged bundle (WinRT.Component.dll and
+    friends) is a runtime JIT-hosting asset that the native consumer never links against, so it
+    only needs to exist in $(OutDir) before output-group harvest / run, both of which happen
+    after the link. Attaching to the pre-link window would (via this target's heavy
+    ResolveProjectReferences/ResolveAssemblyReferences dependency chain) perturb the C++ pre-link
+    target ordering - notably pushing the WinUI markup compiler's ComputeXamlGeneratedCLOutputs
+    after ComputeLinkSwitches, which drops the XAML-generated objects from the final link. Running
+    after the link keeps this feature entirely out of the link input computation.
     ============================================================
   -->
   <Target Name="CsWinRTGenerateComponentInterop"
           DependsOnTargets="_DetectCsWinRTNativeComponentReferences"
-          BeforeTargets="Link"
+          AfterTargets="Link"
           Inputs="@(_CsWinRTAggregatorInputs)"
           Outputs="$(OutDir)WinRT.Component.dll"
           Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
