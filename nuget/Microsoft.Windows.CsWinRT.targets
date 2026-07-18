@@ -143,7 +143,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <Message Condition="'$(_CsWinRTSdkNetRefPackWinMDDir)' != '' and '$(CsWinRTWindowsMetadata)' == '$(_CsWinRTSdkNetRefPackWinMDDir)'"
              Importance="$(CsWinRTMessageImportance)"
-             Text="C#/WinRT: no Windows SDK is registered; using Windows metadata from the .NET SDK projection ref pack: '$(_CsWinRTSdkNetRefPackWinMDDir)'." />
+             Text="C#/WinRT: no Windows SDK is registered; using Windows metadata from the Windows SDK projection ref pack: '$(_CsWinRTSdkNetRefPackWinMDDir)'." />
   </Target>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
