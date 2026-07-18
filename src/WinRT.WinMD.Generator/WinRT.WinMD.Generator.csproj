@@ -57,6 +57,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WinRT.Generator.Core\WinRT.Generator.Core.csproj" />
+    <ProjectReference Include="..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

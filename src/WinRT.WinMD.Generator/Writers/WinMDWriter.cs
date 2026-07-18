@@ -53,6 +53,13 @@ internal sealed partial class WinMDWriter
     private readonly ModuleDefinition _inputModule;
 
     /// <summary>
+    /// The lookup from a projected Windows Runtime type (by namespace and name) to the source
+    /// <c>.winmd</c> module name (its "stem") that defines it, built from the input Windows Runtime
+    /// metadata. Used to resolve the correct contract assembly name for referenced projected types.
+    /// </summary>
+    private readonly IReadOnlyDictionary<(string? Namespace, string? Name), string> _windowsRuntimeMetadataNames;
+
+    /// <summary>
     /// The runtime context used for resolving type references across assemblies.
     /// May be <see langword="null"/> if the input module has no runtime context.
     /// </summary>
@@ -86,15 +93,21 @@ internal sealed partial class WinMDWriter
     /// <param name="version">The version string for the output assembly (e.g. <c>"1.0.0.0"</c>).</param>
     /// <param name="mapper">The <see cref="TypeMapper"/> for .NET-to-Windows Runtime type mapping.</param>
     /// <param name="inputModule">The input <see cref="ModuleDefinition"/> to read types from.</param>
+    /// <param name="windowsRuntimeMetadataNames">
+    /// The lookup from a projected Windows Runtime type (by namespace and name) to the source
+    /// <c>.winmd</c> module name that defines it, used to resolve contract assembly names.
+    /// </param>
     public WinMDWriter(
         string assemblyName,
         string version,
         TypeMapper mapper,
-        ModuleDefinition inputModule)
+        ModuleDefinition inputModule,
+        IReadOnlyDictionary<(string? Namespace, string? Name), string> windowsRuntimeMetadataNames)
     {
         _version = version;
         _mapper = mapper;
         _inputModule = inputModule;
+        _windowsRuntimeMetadataNames = windowsRuntimeMetadataNames;
         _runtimeContext = inputModule.RuntimeContext;
 
         // Create the output WinMD module
