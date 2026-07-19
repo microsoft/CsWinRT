@@ -64,14 +64,15 @@ namespace ObjectLifetimeTests.Lifted
             // has a version that has a 2.x dependency. Since we make it use the version of the extensions
             // without that dependency, that seems to cause issues where testhost's UnitTestClient.Run expects
             // to be launched passing --parentprocessid but it isn't.  So we detect and workaround that for now.
-            if (Environment.CommandLine.Contains("--parentprocessid"))
-            {
-                Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(Environment.CommandLine);
-            }
-            else
-            {
+            // For now, always run the tests in-process, even when --parentprocessid is set.
+            //if (Environment.CommandLine.Contains("--parentprocessid"))
+            //{
+            //    Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(Environment.CommandLine);
+            //}
+            //else
+            //{
                 RunTestsInProcess();
-            }
+            //}
         }
 
         // In-process runner for the standalone launch. The [TestMethod]s marshal work to the UI-thread
