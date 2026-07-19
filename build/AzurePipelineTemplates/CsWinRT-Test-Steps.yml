@@ -34,6 +34,20 @@ steps:
         --no-build
       testRunTitle: Source Generator 2 Tests
 
+# Experiment: run the Object Lifetime tests in-process (launch the packaged app directly, no
+# --parentprocessid, exercising App.OnLaunched's RunTestsInProcess path) in this job's environment,
+# right after the Source Generator 2 tests, to compare with the same run in the separate Tests job. The
+# app is built as part of the cswinrt.slnx build. Gated to x64 (the arch that activates on the x64
+# agent and matches the Tests job); warn-only so it doesn't fail the build. Log published via StagingFolder.
+  - task: PowerShell@2
+    displayName: Run Object Lifetime Tests (In-Process)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-InProc"
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests
