@@ -191,3 +191,15 @@ jobs:
       inputs:
         testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
+
+# Run Object Lifetime Tests in-process by launching the packaged app directly (no --parentprocessid),
+# which exercises App.OnLaunched's RunTestsInProcess path; the app self-exits with the pass/fail code.
+    - task: PowerShell@2
+      displayName: Run Object Lifetime Tests (In-Process)
+      condition: succeeded()
+      # Some tests currently fail on CsWinRT 3.0; don't fail the pipeline on test failures for now.
+      continueOnError: true
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
+        arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)"
