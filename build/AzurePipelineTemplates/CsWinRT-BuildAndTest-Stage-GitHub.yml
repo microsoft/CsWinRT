@@ -108,17 +108,10 @@ stages:
         BuildPlatform: $(BuildPlatform) 
         SetupForBuildOnly: true
 
-    # Build only the CsWinRT build tooling (the generator executables and
-    # WinRT.Generator.Tasks.dll) plus WinRT.Internal (which produces
-    # WindowsRuntime.Internal.winmd, consumed by the Windows projection),
-    # not the whole solution. The standalone "Build Object Lifetime Tests"
-    # step below needs these, which are produced via the solution's
-    # BuildDependency ordering rather than as ProjectReferences a
-    # single-project build would build in time (otherwise MSB4062 /
-    # CSWINRTPROJECTIONREFGEN0005). Targeting the projects by name builds just
-    # their closure (WinRT.Generator.Core / WinRT.Projection.Writer /
-    # WinRT.Runtime), and the solution maps the x64 platform to AnyCPU for
-    # these projects so the outputs land where Directory.Build.props expects.
+    # Build just the CsWinRT build tooling (generator exes + WinRT.Generator.Tasks.dll)
+    # and WinRT.Internal (WindowsRuntime.Internal.winmd), which the standalone "Build
+    # Object Lifetime Tests" step below needs. Build by target name so the solution's
+    # BuildDependency ordering and x64->AnyCPU platform mapping apply.
     - task: MSBuild@1
       displayName: Build CsWinRT build tooling
       condition: succeeded()
