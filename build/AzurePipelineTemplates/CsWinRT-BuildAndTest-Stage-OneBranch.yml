@@ -182,17 +182,16 @@ jobs:
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
-# Run Object Lifetime Tests. Disabled: the VSTest task can't run these tests in this packaged
-# CsWinRT 3.0 app - MSTest discovers no tests (see logs). The in-process step below runs them instead.
+# Run Object Lifetime Tests via VSTest with diagnostics enabled, to investigate why MSTest discovers
+# no tests in the packaged CsWinRT 3.0 app. continueOnError so it doesn't fail the build.
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
-      enabled: false
       condition: succeeded()
-      # Some tests currently fail on CsWinRT 3.0; don't fail the pipeline on test failures for now.
       continueOnError: true
       inputs:
         testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
         searchFolder: $(Build.SourcesDirectory)\src
+        diagnosticsEnabled: true
 
 # Run Object Lifetime Tests in-process by launching the packaged app directly (no --parentprocessid),
 # which exercises App.OnLaunched's RunTestsInProcess path; the app self-exits with the pass/fail code.
