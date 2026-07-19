@@ -152,7 +152,7 @@ stages:
       inputs:
         targetType: filePath
         filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
-        arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)"
+        arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-InProc"
 
 # Copy the VSTest diagnostics into the staging folder (published below) and echo them to the log.
     - task: PowerShell@2
@@ -164,8 +164,16 @@ stages:
         script: |
           $dest = Join-Path "$(StagingFolder)" 'vstest-diag'
           New-Item -ItemType Directory -Force $dest | Out-Null
-          $roots = @("$(Agent.TempDirectory)", "$(Common.TestResultsDirectory)") | Where-Object { $_ -and (Test-Path $_) }
-          $files = foreach ($r in $roots) { Get-ChildItem $r -Recurse -File -Include 'log.*.txt','*.trx','*.diag' -ErrorAction SilentlyContinue }
+          $roots = @(
+            "$(Agent.TempDirectory)",
+            "$(Common.TestResultsDirectory)",
+            "$(StagingFolder)\TestResults",
+            "$(Build.SourcesDirectory)\TestResults",
+            $env:TEMP
+          ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
+          $patterns = 'log.*.txt','*.host.*.txt','*.datacollector.*.txt','*.trx','*.diag'
+          $files = foreach ($r in $roots) { Get-ChildItem $r -Recurse -File -Include $patterns -ErrorAction SilentlyContinue }
+          $files = $files | Sort-Object FullName -Unique
           if (-not $files) { Write-Host "No VSTest diagnostics found under: $($roots -join '; ')"; return }
           foreach ($f in $files) {
               Copy-Item $f.FullName $dest -Force -ErrorAction SilentlyContinue

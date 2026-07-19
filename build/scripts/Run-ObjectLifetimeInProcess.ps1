@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param(
     # The 'win-<plat>' output folder of ObjectLifetimeTests.Lifted (contains the loose MSIX layout).
-    [Parameter(Mandatory = $true)] [string] $LayoutDir
+    [Parameter(Mandatory = $true)] [string] $LayoutDir,
+
+    # Optional folder to copy the in-process test log into (so it can be published as an artifact).
+    [string] $OutputDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -89,6 +92,12 @@ if (Test-Path $logPath) {
     Write-Host "----- Object Lifetime in-process test output -----"
     Get-Content $logPath | ForEach-Object { Write-Host $_ }
     Write-Host "--------------------------------------------------"
+
+    # Copy the log into the output folder so it can be published as an artifact.
+    if ($OutputDir) {
+        New-Item -ItemType Directory -Force $OutputDir | Out-Null
+        Copy-Item $logPath (Join-Path $OutputDir 'objectlifetime-inproc.log') -Force
+    }
 } else {
     Write-Host "No in-process test log found at $logPath"
 }
