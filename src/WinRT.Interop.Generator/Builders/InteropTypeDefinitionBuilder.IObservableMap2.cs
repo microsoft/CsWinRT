@@ -526,14 +526,14 @@ internal partial class InteropTypeDefinitionBuilder
                 implType: out implType,
                 vtableMethods: [add_MapChangedMethod, remove_MapChangedMethod]);
 
+            // Track the type (it may be needed by COM interface entries for user-defined types)
+            emitState.TrackTypeDefinition(implType, mapType, "Impl");
+
             // Add the members for the conditional weak table
             implType.Fields.Add(mapChangedTableField);
             implType.Methods.Add(makeMapChangedMethod);
             implType.Methods.Add(get_MapChangedTableMethod);
             implType.Properties.Add(mapChangedTableProperty);
-
-            // Track the type (it may be needed by COM interface entries for user-defined types)
-            emitState.TrackTypeDefinition(implType, mapType, "Impl");
         }
     }
 }
