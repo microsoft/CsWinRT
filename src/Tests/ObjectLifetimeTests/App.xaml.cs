@@ -80,10 +80,21 @@ namespace ObjectLifetimeTests.Lifted
         {
             System.Threading.Tasks.Task.Run(() =>
             {
-                // Log via the framework Logger; under VSTest the test host captures OnLogMessage. In-process
-                // there's no subscriber and a packaged Release app has no console, so route it to Trace.
+                // Log via the framework Logger; under VSTest the test host captures OnLogMessage. For the
+                // direct (in-process) launch there's no subscriber and a packaged app has no console, so tee
+                // each message to Trace and to a log file in the package temp folder that the pipeline reads
+                // back afterwards (see build/scripts/Run-ObjectLifetimeInProcess.ps1).
+                string logPath = System.IO.Path.Combine(
+                    Windows.Storage.ApplicationData.Current.TemporaryFolder.Path, "objectlifetime-inproc.log");
+
+                try { System.IO.File.Delete(logPath); } catch { }
+
                 Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler onLogMessage =
-                    message => System.Diagnostics.Trace.WriteLine(message);
+                    message =>
+                    {
+                        System.Diagnostics.Trace.WriteLine(message);
+                        try { System.IO.File.AppendAllText(logPath, message + System.Environment.NewLine); } catch { }
+                    };
 
                 Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage += onLogMessage;
 

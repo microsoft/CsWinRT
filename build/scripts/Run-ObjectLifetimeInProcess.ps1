@@ -83,4 +83,15 @@ public static class PackagedAppRunner
 
 $exit = [PackagedAppRunner]::Run($aumid)
 Write-Host "In-process Object Lifetime run exited with code $exit"
+
+# Surface the framework log the app wrote to its package temp folder.
+$logPath = Join-Path $env:LOCALAPPDATA "Packages\$($pkg.PackageFamilyName)\TempState\objectlifetime-inproc.log"
+if (Test-Path $logPath) {
+    Write-Host "----- Object Lifetime in-process test output -----"
+    Get-Content $logPath | ForEach-Object { Write-Host $_ }
+    Write-Host "--------------------------------------------------"
+} else {
+    Write-Host "No in-process test log found at $logPath"
+}
+
 exit $exit
