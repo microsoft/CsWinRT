@@ -27,9 +27,8 @@ $pkg = Get-AppxPackage -Name $identityName
 if (-not $pkg) { throw "Package $identityName is not registered" }
 $aumid = "$($pkg.PackageFamilyName)!$appId"
 
-# Launch the packaged app directly (no --parentprocessid), so App.OnLaunched takes the
-# RunTestsInProcess path. That runner self-exits via Environment.Exit(0 on pass, 1 on failure);
-# activate it, wait for it to exit, and surface that code.
+# Launch directly (no --parentprocessid) so the app runs RunTestsInProcess and self-exits with the
+# pass/fail code; wait for it and surface that code.
 Write-Host "Launching $aumid directly (exercises RunTestsInProcess)"
 
 Add-Type -TypeDefinition @'

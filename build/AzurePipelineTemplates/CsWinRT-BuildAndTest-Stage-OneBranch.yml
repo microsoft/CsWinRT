@@ -182,9 +182,11 @@ jobs:
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
-# Run Object Lifetime Tests
+# Run Object Lifetime Tests. Disabled: the VSTest task can't run these tests in this packaged
+# CsWinRT 3.0 app - MSTest discovers no tests (see logs). The in-process step below runs them instead.
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
+      enabled: false
       condition: succeeded()
       # Some tests currently fail on CsWinRT 3.0; don't fail the pipeline on test failures for now.
       continueOnError: true
