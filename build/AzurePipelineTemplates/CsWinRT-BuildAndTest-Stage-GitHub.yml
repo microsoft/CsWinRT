@@ -130,13 +130,16 @@ stages:
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
         
-# Run Object Lifetime Tests via VSTest with the vstest.console /Diag engine log enabled, to
-# investigate why MSTest discovers no tests in the packaged CsWinRT 3.0 app. diagnosticsEnabled only
-# collects dumps on catastrophic failures (crash/hang); this run completes cleanly with 0 tests, so we
-# pass /Diag via otherConsoleOptions to get the discovery log written straight into the published
-# folder. continueOnError so it doesn't fail the build.
+# Run Object Lifetime Tests via VSTest. Currently DISABLED: VSTest discovery finds 0 tests because
+# MSTest.TestAdapter.dll's module initializer (MSTestExecutor.SetPlatformLogger) references the CsWinRT
+# 2.x type WinRT.ComWrappersSupport, which no longer exists in the CsWinRT 3.0 WinRT.Runtime (3.0.0.0)
+# the app deploys. The adapter's <Module> initializer throws TypeLoadException, VSTest skips the whole
+# adapter, and reports "No test is available". Root-caused from the vstest.console /Diag log. Kept (not
+# removed) so it can be re-enabled once a CsWinRT 3.0-compatible MSTest adapter is available. Use the
+# in-process runner below in the meantime.
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
+      enabled: false
       condition: succeeded()
       continueOnError: true
       inputs:
@@ -147,6 +150,7 @@ stages:
 
 # Run Object Lifetime Tests in-process by launching the packaged app directly (no --parentprocessid),
 # which exercises App.OnLaunched's RunTestsInProcess path; the app self-exits with the pass/fail code.
+# This is the actual test gate while VSTest discovery is broken (see above).
     - task: PowerShell@2
       displayName: Run Object Lifetime Tests (In-Process)
       condition: succeeded()
@@ -157,11 +161,11 @@ stages:
         filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
         arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-InProc"
 
-# Echo the vstest.console /Diag logs (written into $(StagingFolder)\vstest-diag by the VSTest step
-# above, and published below) to the build log for inline visibility. Falls back to scraping the temp
-# dirs in case /Diag was ignored.
+# Echo the vstest.console /Diag logs to the build log and publish them. DISABLED alongside the VSTest
+# step above; re-enable together with it.
     - task: PowerShell@2
       displayName: Collect VSTest diagnostics
+      enabled: false
       condition: succeededOrFailed()
       continueOnError: true
       inputs:
