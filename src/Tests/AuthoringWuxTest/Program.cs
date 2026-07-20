@@ -178,17 +178,9 @@ public static class XamlExceptionTypes
         const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
 
         return
-            RestrictedErrorInfo.GetExceptionForHR(E_XAMLPARSEFAILED) is Exception &&
-            RestrictedErrorInfo.GetExceptionForHR(E_LAYOUTCYCLE) is Exception &&
-            RestrictedErrorInfo.GetExceptionForHR(E_ELEMENTNOTENABLED) is Exception &&
-            RestrictedErrorInfo.GetExceptionForHR(E_ELEMENTNOTAVAILABLE) is Exception;
-
-        /*
-        return
-            RestrictedErrorInfo.GetExceptionForHR(E_XAMLPARSEFAILED)?.GetType() == typeof(Windows.UI.Xaml.Markup.XamlParseException) &&
-            RestrictedErrorInfo.GetExceptionForHR(E_LAYOUTCYCLE)?.GetType() == typeof(Windows.UI.Xaml.LayoutCycleException) &&
-            RestrictedErrorInfo.GetExceptionForHR(E_ELEMENTNOTENABLED)?.GetType() == typeof(Windows.UI.Xaml.Automation.ElementNotEnabledException) &&
-            RestrictedErrorInfo.GetExceptionForHR(E_ELEMENTNOTAVAILABLE)?.GetType() == typeof(Windows.UI.Xaml.Automation.ElementNotAvailableException);
-        */
+            RestrictedErrorInfo.GetExceptionForHR(E_XAMLPARSEFAILED)?.GetType().FullName == "Windows.UI.Xaml.XamlParseException" &&
+            RestrictedErrorInfo.GetExceptionForHR(E_LAYOUTCYCLE)?.GetType().FullName == "Windows.UI.Xaml.LayoutCycleException" &&
+            RestrictedErrorInfo.GetExceptionForHR(E_ELEMENTNOTENABLED)?.GetType().FullName == "Windows.UI.Xaml.ElementNotEnabledException" &&
+            RestrictedErrorInfo.GetExceptionForHR(E_ELEMENTNOTAVAILABLE)?.GetType().FullName == "Windows.UI.Xaml.ElementNotAvailableException";
     }
 }
