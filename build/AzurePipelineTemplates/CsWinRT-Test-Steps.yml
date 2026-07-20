@@ -22,10 +22,14 @@ steps:
         --no-build
       testRunTitle: Unit Tests
 
-# Run Source Generator 2 Tests
+# Run Source Generator 2 Tests. Gated to x64 only: these are Roslyn analyzer/source-generator tests,
+# which are architecture-independent (the compiler runs the analyzer the same regardless of the target
+# platform), so running them x86 adds no coverage. The x86 (32-bit) test host loads the full .NET 10
+# reference pack plus WinUI/CsWinRT references across 100+ cases and exhausts the ~2-4 GB address space
+# on memory-constrained pools (e.g. the OneBranch managed pool), throwing OutOfMemoryException.
   - task: DotNetCoreCLI@2
     displayName: Run Source Generator 2 Tests
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
     inputs:
       command: test
       projects: 'src/Tests/SourceGenerator2Test/SourceGenerator2Test.csproj'
