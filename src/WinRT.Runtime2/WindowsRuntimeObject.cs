@@ -90,6 +90,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // See additional notes in the overload below for more details about how and when that parameter is necessary.
         WindowsRuntimeActivationHelper.ActivateInstanceUnsafe(
             activationFactoryObjectReference: activationFactoryObjectReference,
+            iid: in iid,
             defaultInterface: out void* defaultInterface);
 
         // The inner interface pointer isn't used for non-composable types, so we just pass 'null'
