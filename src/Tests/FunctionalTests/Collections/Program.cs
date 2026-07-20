@@ -630,11 +630,111 @@ if (instance.CountKeyValuePairsWithGetMany(emptyDict) != 0)
     return 101;
 }
 
+// Collection expressions targeting a read-only collection interface ('IEnumerable<T>',
+// 'IReadOnlyList<T>', 'IReadOnlyCollection<T>') lower to compiler synthesized backing types
+// ('<>z__ReadOnlyArray<T>' for multiple elements and '<>z__ReadOnlySingleElementList<T>' for a
+// single element). Marshalling them across the WinRT ABI builds a CCW for the synthesized type.
+IEnumerable<int> collectionExpressionEnumerable = [10, 20, 30];
+if (SumViaIterator(instance, collectionExpressionEnumerable) != 60)
+{
+    return 106;
+}
+
+IReadOnlyList<int> collectionExpressionReadOnlyList = [10, 20, 30];
+if (SumViaIterator(instance, collectionExpressionReadOnlyList) != 60)
+{
+    return 107;
+}
+
+IReadOnlyCollection<int> collectionExpressionReadOnlyCollection = [10, 20, 30];
+if (SumViaIterator(instance, collectionExpressionReadOnlyCollection) != 60)
+{
+    return 108;
+}
+
+// Single element uses the '<>z__ReadOnlySingleElementList<int>' backing type
+IEnumerable<int> collectionExpressionSingleElement = [42];
+if (SumViaIterator(instance, collectionExpressionSingleElement) != 42)
+{
+    return 109;
+}
+
+// The synthesized backing type implements 'IEnumerable<int>', 'IReadOnlyList<int>', and 'IList<int>',
+// so its CCW exposes 'IIterable<int>', 'IVectorView<int>', and 'IVector<int>'
+if (!CcwExposesCollectionInterfaces([10, 20, 30]))
+{
+    return 110;
+}
+
+if (!CcwExposesCollectionInterfaces([42]))
+{
+    return 111;
+}
+
+// Values must be sequential from 0 because the native bindable setter validates them
+IReadOnlyList<int> collectionExpressionBindable = [0, 1, 2];
+instance.BindableIterableProperty = collectionExpressionBindable;
+if (collectionExpressionBindable != instance.BindableIterableProperty)
+{
+    return 112;
+}
+
+// 'IReadOnlyList<string>' marshals back to native as a CCW exposing 'IVectorView<string>'
+instance2.Collection6Call((IReadOnlyList<string> a, out IReadOnlyList<string> b) =>
+{
+    b = [.. a];
+    return [.. a];
+});
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
 
 static bool AllEqual<T>(T[] x, params T[][] list) => list.All((y) => x.SequenceEqual(y));
+
+static int SumViaIterator(Class target, IEnumerable<int> values)
+{
+    int sum = 0;
+    var iterator = target.GetIteratorForCollection(values);
+    while (iterator.MoveNext())
+    {
+        sum += iterator.Current;
+    }
+
+    return sum;
+}
+
+static unsafe bool CcwExposesCollectionInterfaces(IReadOnlyList<int> source)
+{
+    Guid iidIIterableInt = new("81A643FB-F51C-5565-83C4-F96425777B66");
+    Guid iidIVectorViewInt = new("8D720CDF-3934-5D3F-9A55-40E8063B086A");
+    Guid iidIVectorInt = new("B939AF5B-B45D-5489-9149-61442C1905FE");
+
+    void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(source);
+
+    try
+    {
+        return HasInterface(ccw, in iidIIterableInt)
+            && HasInterface(ccw, in iidIVectorViewInt)
+            && HasInterface(ccw, in iidIVectorInt);
+    }
+    finally
+    {
+        _ = Marshal.Release((nint)ccw);
+    }
+
+    static unsafe bool HasInterface(void* ccw, in Guid iid)
+    {
+        if (Marshal.QueryInterface((nint)ccw, in iid, out nint interfaceCcw) != 0 || interfaceCcw == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        _ = Marshal.Release(interfaceCcw);
+
+        return true;
+    }
+}
 
 static Func<TA1, TA2, TA1> ActionToFunction<TA1, TA2>(Action<TA1, TA2> action) =>
     (a1, a2) =>
