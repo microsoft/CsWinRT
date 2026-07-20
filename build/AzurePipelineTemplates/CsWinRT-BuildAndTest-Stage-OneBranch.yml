@@ -51,10 +51,7 @@ jobs:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
-#    - template: CsWinRT-Test-Steps.yml@self
-#      parameters:
-#        BuildConfiguration: $(BuildConfiguration)
-#        BuildPlatform: $(BuildPlatform) 
+    - template: CsWinRT-Test-Steps.yml@self
 
 # Signing
     - task: onebranch.pipeline.signing@1
