@@ -36,7 +36,7 @@ internal static class WindowsRuntimeMetadataNameResolver
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The resulting metadata-name lookup.</returns>
     public static FrozenDictionary<(string? Namespace, string? Name), string> Build(
-        IReadOnlyList<string> winmdPaths,
+        IEnumerable<string> winMDPaths,
         string windowsMetadata,
         CancellationToken token)
     {

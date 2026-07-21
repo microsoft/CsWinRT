@@ -117,7 +117,7 @@ internal partial class ProjectionGenerator
 
         bool isComponentMode = args.AssemblyName == "WinRT.Component";
 
-        // 'WindowsUIXamlProjection' also flows to component mode (for the TypeMapAssemblyTarget union),
+        // 'WindowsUIXamlProjection' also flows to component mode (for the '[TypeMapAssemblyTarget]' union),
         // but must not put it into Windows SDK mode: the SDK 'Windows.UI.Xaml' namespace comes from
         // 'WinRT.Sdk.Xaml.Projection.dll', so component mode is never Windows SDK mode.
         bool isWindowsSdkMode = (args.WindowsSdkOnly || args.WindowsUIXamlProjection) && !isComponentMode;
