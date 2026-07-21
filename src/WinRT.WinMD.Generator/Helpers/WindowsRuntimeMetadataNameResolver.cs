@@ -31,7 +31,7 @@ internal static class WindowsRuntimeMetadataNameResolver
     /// <summary>
     /// Builds the <c>(namespace, name)</c> to source <c>.winmd</c> stem lookup from the given inputs.
     /// </summary>
-    /// <param name="winmdPaths">The input <c>.winmd</c> file or directory paths (third party components and internal metadata).</param>
+    /// <param name="winMDPaths">The input <c>.winmd</c> file or directory paths (third party components and internal metadata).</param>
     /// <param name="windowsMetadata">The Windows metadata token (path, directory, <c>"local"</c>, <c>"sdk"</c>, <c>"sdk+"</c>, or a version).</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The resulting metadata-name lookup.</returns>
@@ -43,7 +43,7 @@ internal static class WindowsRuntimeMetadataNameResolver
         Dictionary<(string?, string?), string> builder = [];
 
         // Add all explicit .winmd inputs (third party components and internal metadata)
-        foreach (string winmdPath in winmdPaths)
+        foreach (string winmdPath in winMDPaths)
         {
             token.ThrowIfCancellationRequested();
 
