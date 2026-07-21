@@ -8,9 +8,9 @@ using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionWriter;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
 namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
@@ -79,7 +79,7 @@ internal static partial class ReferenceProjectionGenerator
 
         foreach (string input in args.InputPaths)
         {
-            inputPaths.AddRange(WindowsMetadataExpander.Expand(input));
+            inputPaths.AddRange(WindowsMetadataExpander.Expand<WellKnownReferenceProjectionGeneratorExceptions>(input));
         }
 
         // Make sure the output directory exists. ProjectionWriter.Run will also create it but creating

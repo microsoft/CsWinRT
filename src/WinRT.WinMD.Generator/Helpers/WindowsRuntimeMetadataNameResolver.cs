@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.Generator.Helpers;
+using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Helpers;
 
@@ -35,12 +36,12 @@ internal static class WindowsRuntimeMetadataNameResolver
     /// <param name="windowsMetadata">The Windows metadata token (path, directory, <c>"local"</c>, <c>"sdk"</c>, <c>"sdk+"</c>, or a version).</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The resulting metadata-name lookup.</returns>
-    public static FrozenDictionary<(string? Namespace, string? Name), string> Build(
+    public static FrozenDictionary<(string Namespace, string Name), string> Build(
         IEnumerable<string> winMDPaths,
         string windowsMetadata,
         CancellationToken token)
     {
-        Dictionary<(string?, string?), string> builder = [];
+        Dictionary<(string, string), string> builder = [];
 
         // Add all explicit .winmd inputs (third party components and internal metadata)
         foreach (string winmdPath in winMDPaths)
@@ -52,7 +53,7 @@ internal static class WindowsRuntimeMetadataNameResolver
 
         // Expand the Windows metadata token (path | directory | "local" | "sdk[+]" | version[+]) into
         // actual .winmd file paths (or directories to scan), the same way the projection generators do.
-        foreach (string path in WindowsMetadataExpander.Expand(windowsMetadata))
+        foreach (string path in WindowsMetadataExpander.Expand<WellKnownWinMDExceptions>(windowsMetadata))
         {
             token.ThrowIfCancellationRequested();
 
@@ -68,7 +69,7 @@ internal static class WindowsRuntimeMetadataNameResolver
     /// </summary>
     /// <param name="builder">The lookup being populated.</param>
     /// <param name="path">The <c>.winmd</c> file or directory path.</param>
-    private static void AddPath(Dictionary<(string?, string?), string> builder, string path)
+    private static void AddPath(Dictionary<(string, string), string> builder, string path)
     {
         if (File.Exists(path))
         {
@@ -95,7 +96,7 @@ internal static class WindowsRuntimeMetadataNameResolver
     /// </summary>
     /// <param name="builder">The lookup being populated.</param>
     /// <param name="winmdPath">The <c>.winmd</c> file path.</param>
-    private static void AddWinMD(Dictionary<(string?, string?), string> builder, string winmdPath)
+    private static void AddWinMD(Dictionary<(string, string), string> builder, string winmdPath)
     {
         ModuleDefinition module;
 
@@ -114,15 +115,20 @@ internal static class WindowsRuntimeMetadataNameResolver
 
         foreach (TypeDefinition type in module.TopLevelTypes)
         {
-            // Skip the '<Module>' pseudo-type and any non-public types (Windows Runtime types are public)
-            if (!type.IsPublic || type.Name?.Value is not { } name || name.StartsWith('<'))
+            // Skip the '<Module>' pseudo-type and any non-public types (Windows Runtime types are public).
+            // Windows Runtime types always have a namespace, so a null namespace/name (only possible for
+            // the '<Module>' pseudo-type) is skipped as well.
+            if (!type.IsPublic ||
+                type.Namespace?.Value is not { } @namespace ||
+                type.Name?.Value is not { } name ||
+                name.StartsWith('<'))
             {
                 continue;
             }
 
             // First .winmd defining a given (namespace, name) wins; duplicate contract definitions
             // across metadata files are not expected in practice.
-            _ = builder.TryAdd((type.Namespace?.Value, name), stem);
+            _ = builder.TryAdd((@namespace, name), stem);
         }
     }
 }

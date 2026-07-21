@@ -35,7 +35,7 @@ internal static partial class WinMDGenerator
 
         // Build the (namespace, name) -> source '.winmd' stem lookup from the input Windows Runtime
         // metadata, used to resolve the contract assembly name for referenced projected types.
-        FrozenDictionary<(string?, string?), string> windowsRuntimeMetadataNames = WindowsRuntimeMetadataNameResolver.Build(
+        FrozenDictionary<(string Namespace, string Name), string> windowsRuntimeMetadataNames = WindowsRuntimeMetadataNameResolver.Build(
             args.WinMDPaths,
             args.WindowsMetadata,
             args.Token);

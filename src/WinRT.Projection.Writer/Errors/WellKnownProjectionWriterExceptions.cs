@@ -59,22 +59,6 @@ internal static class WellKnownProjectionWriterExceptions
     }
 
     /// <summary>
-    /// The orchestrator could not locate the Windows SDK install root in the registry.
-    /// </summary>
-    public static WellKnownProjectionWriterException WindowsSdkNotFound()
-    {
-        return Exception(5008, "Could not find the Windows SDK in the registry.");
-    }
-
-    /// <summary>
-    /// The orchestrator could not read a Windows SDK platform XML file.
-    /// </summary>
-    public static WellKnownProjectionWriterException CannotReadWindowsSdkXml(string xmlPath)
-    {
-        return Exception(5009, $"Could not read the Windows SDK's XML at '{xmlPath}'.");
-    }
-
-    /// <summary>
     /// An emission helper detected a programming error (e.g. an unexpected null state).
     /// </summary>
     public static WellKnownProjectionWriterException UnreachableEmissionState(string message)

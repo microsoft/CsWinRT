@@ -9,8 +9,8 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
 #pragma warning disable IDE0008
@@ -159,7 +159,7 @@ internal static partial class ReferenceProjectionGenerator
 
         foreach (string inputPath in args.InputPaths)
         {
-            expandedInputPaths.AddRange(WindowsMetadataExpander.Expand(inputPath));
+            expandedInputPaths.AddRange(WindowsMetadataExpander.Expand<WellKnownReferenceProjectionGeneratorExceptions>(inputPath));
         }
 
         args.Token.ThrowIfCancellationRequested();

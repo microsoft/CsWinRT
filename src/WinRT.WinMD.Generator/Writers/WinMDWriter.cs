@@ -57,7 +57,7 @@ internal sealed partial class WinMDWriter
     /// <c>.winmd</c> module name (its "stem") that defines it, built from the input Windows Runtime
     /// metadata. Used to resolve the correct contract assembly name for referenced projected types.
     /// </summary>
-    private readonly IReadOnlyDictionary<(string? Namespace, string? Name), string> _windowsRuntimeMetadataNames;
+    private readonly IReadOnlyDictionary<(string Namespace, string Name), string> _windowsRuntimeMetadataNames;
 
     /// <summary>
     /// The runtime context used for resolving type references across assemblies.
@@ -102,7 +102,7 @@ internal sealed partial class WinMDWriter
         string version,
         TypeMapper mapper,
         ModuleDefinition inputModule,
-        IReadOnlyDictionary<(string? Namespace, string? Name), string> windowsRuntimeMetadataNames)
+        IReadOnlyDictionary<(string Namespace, string Name), string> windowsRuntimeMetadataNames)
     {
         _version = version;
         _mapper = mapper;

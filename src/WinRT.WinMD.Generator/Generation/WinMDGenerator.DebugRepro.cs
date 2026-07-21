@@ -9,8 +9,8 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
-using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.WinMDGenerator.Errors;
 
 #pragma warning disable IDE0008
@@ -250,7 +250,7 @@ internal static partial class WinMDGenerator
         // environment (e.g. a registered SDK installation).
         List<string> expandedWindowsMetadataPaths = [];
 
-        foreach (string expanded in WindowsMetadataExpander.Expand(args.WindowsMetadata))
+        foreach (string expanded in WindowsMetadataExpander.Expand<WellKnownWinMDExceptions>(args.WindowsMetadata))
         {
             // The expander may return either individual files or directories; we want individual
             // files in the bundled repro so the layout is fully self-describing.
