@@ -136,9 +136,46 @@ Below are the most commonly used MSBuild properties. For a full list, refer to t
 | `CsWinRTGenerateProjection` | `true` | Generate C# projection sources from `.winmd` metadata. |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet distribution). |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode. |
+| `CsWinRTMarshallingMode` | `minimal` | Controls which assemblies the interop generator analyzes for marshalling code (`all`, `minimal`, or `strict`). See below. |
 | `CsWinRTIncludes` | *(empty)* | Semicolon-separated namespaces to include in the projection. |
 | `CsWinRTExcludes` | `Windows;Microsoft` | Semicolon-separated namespaces to exclude from the projection. |
 | `CsWinRTMessageImportance` | `normal` | Build message verbosity (`normal` or `high`). |
+
+### Marshalling mode
+
+By default (`minimal`), the interop generator analyzes **every** assembly in the app to discover user-defined
+(CCW) types and generic instantiations that need marshalling code — even assemblies that don't target a
+Windows TFM and don't reference any CsWinRT assembly — with the exception of the .NET base class library
+(BCL). This means a plain `.NET` class library (e.g. one holding MVVM viewmodels) no longer needs to target
+a `-windows` TFM just so its types can be marshalled to native code, while the BCL is skipped to keep the
+generated interop assembly small.
+
+`CsWinRTMarshallingMode` controls this behavior:
+
+| Value | Behavior |
+|-------|----------|
+| `all` | Analyze all assemblies, including those from the .NET base class library (BCL). |
+| `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
+| `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
+
+Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. Assemblies targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework) are never analyzed, since the interop generator can only marshal types declared against a modern .NET runtime.
+
+### Opting in specific assemblies
+
+The `CsWinRTMarshallingEnabledAssembly` item lets you force the interop generator to analyze specific assemblies, regardless of the marshalling mode. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
+
+```xml
+<PropertyGroup>
+  <CsWinRTMarshallingMode>strict</CsWinRTMarshallingMode>
+</PropertyGroup>
+
+<ItemGroup>
+  <CsWinRTMarshallingEnabledAssembly Include="MyApp.ViewModels" />
+  <CsWinRTMarshallingEnabledAssembly Include="MyApp.Models" />
+</ItemGroup>
+```
+
+Each item is an assembly name (the `.dll` extension is optional). The interop generator reports a warning if an entry doesn't match any referenced assembly, and an informational message if an entry is redundant (e.g. it already targets Windows, or the mode is `all` and thus already analyzes everything).
 
 ## Author and consume a C#/WinRT component
 

@@ -18,6 +18,16 @@ namespace Microsoft.NET.Build.Tasks;
 public sealed class RunCsWinRTInteropGenerator : ToolTask
 {
     /// <summary>
+    /// The default marshalling mode, used when none is specified.
+    /// </summary>
+    private const string DefaultMarshallingMode = "minimal";
+
+    /// <summary>
+    /// The set of valid marshalling modes (compared case-insensitively).
+    /// </summary>
+    private static readonly string[] ValidMarshallingModes = ["all", "minimal", "strict"];
+
+    /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
     /// the entire surface area for compilation. These assemblies, specificaly the ones
     /// for Windows Runtime projections are the set of assemblies that will contribute
@@ -95,6 +105,19 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     /// </summary>
     /// <remarks>If not set, it will default to <see langword="false"/> (i.e. using <c>Microsoft.UI.Xaml</c> projections).</remarks>
     public bool UseWindowsUIXamlProjections { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
+    /// user-defined/CCW/generic types (one of <c>"all"</c>, <c>"minimal"</c>, or <c>"strict"</c>).
+    /// </summary>
+    /// <remarks>If not set, it will default to <c>"minimal"</c> (i.e. analyzing every assembly except those from the BCL).</remarks>
+    public string MarshallingMode { get; set; } = DefaultMarshallingMode;
+
+    /// <summary>
+    /// Gets or sets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.
+    /// </summary>
+    /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
+    public ITaskItem[]? MarshallingEnabledAssemblies { get; set; }
 
     /// <summary>
     /// Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.
@@ -219,7 +242,33 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        // The marshalling mode must be one of the well-known values (compared case-insensitively).
+        if (!IsValidMarshallingMode(MarshallingMode))
+        {
+            Log.LogWarning("Invalid 'MarshallingMode' value '{0}'. It must be one of 'all', 'minimal', or 'strict'.", MarshallingMode);
+
+            return false;
+        }
+
         return true;
+    }
+
+    /// <summary>
+    /// Checks whether a given marshalling mode value is valid (i.e. one of the well-known values).
+    /// </summary>
+    /// <param name="marshallingMode">The marshalling mode value to check.</param>
+    /// <returns>Whether <paramref name="marshallingMode"/> is a valid marshalling mode.</returns>
+    private static bool IsValidMarshallingMode(string marshallingMode)
+    {
+        foreach (string validMode in ValidMarshallingModes)
+        {
+            if (validMode.Equals(marshallingMode, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc/>
@@ -271,6 +320,8 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
+        AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());
         AppendResponseFileCommand(args, "--enable-incremental-generation", EnableIncrementalGeneration.ToString());
@@ -309,6 +360,21 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         if (commandValue is not null)
         {
             AppendResponseFileCommand(args, commandName, commandValue);
+        }
+    }
+
+    /// <summary>
+    /// Appends an optional command line argument, with a comma-separated list of item specs as its value, to the response file arguments.
+    /// </summary>
+    /// <param name="args">The command line arguments being built.</param>
+    /// <param name="commandName">The command name to append.</param>
+    /// <param name="commandItems">The optional items whose item specs to append as a comma-separated list.</param>
+    /// <remarks>This method will not append the command if <paramref name="commandItems"/> is <see langword="null"/> or empty.</remarks>
+    private static void AppendResponseFileOptionalCommand(StringBuilder args, string commandName, ITaskItem[]? commandItems)
+    {
+        if (commandItems is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, commandName, string.Join(",", commandItems.Select(static item => item.ItemSpec)));
         }
     }
 }

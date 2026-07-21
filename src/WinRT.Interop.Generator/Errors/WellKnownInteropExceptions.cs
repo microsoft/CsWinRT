@@ -849,6 +849,36 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// An assembly specified via 'CsWinRTMarshallingEnabledAssembly' could not be found among the referenced assemblies.
+    /// </summary>
+    public static WellKnownInteropWarning MarshallingEnabledAssemblyNotFoundWarning(string name)
+    {
+        return Warning(98,
+            $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' could not be found among the referenced assemblies. " +
+            $"Ensure the value matches the name of a referenced assembly (the '.dll' extension is optional), or remove the entry.");
+    }
+
+    /// <summary>
+    /// An assembly specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows, so the entry is redundant.
+    /// </summary>
+    public static WellKnownGeneratorMessage MarshallingEnabledAssemblyTargetsWindowsMessage(string name)
+    {
+        return Message(99,
+            $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows and is therefore always analyzed. " +
+            $"This entry is redundant and can be removed.");
+    }
+
+    /// <summary>
+    /// Assemblies were specified via 'CsWinRTMarshallingEnabledAssembly', but the marshalling mode is 'all'.
+    /// </summary>
+    public static WellKnownGeneratorMessage MarshallingEnabledAssembliesRedundantInAllModeMessage()
+    {
+        return Message(100,
+            "One or more assemblies were specified via 'CsWinRTMarshallingEnabledAssembly', but the 'CsWinRTMarshallingMode' is set to 'all', " +
+            "which already analyzes every assembly. These entries are redundant and will not affect compilation.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
@@ -867,6 +897,17 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// <param name="message">The warning message.</param>
     /// <returns>The resulting warning.</returns>
     private static WellKnownInteropWarning Warning(int id, string message)
+    {
+        return new($"{ErrorPrefix}{id:0000}", message);
+    }
+
+    /// <summary>
+    /// Creates a new message with the specified id and message text.
+    /// </summary>
+    /// <param name="id">The message id.</param>
+    /// <param name="message">The message text.</param>
+    /// <returns>The resulting message.</returns>
+    private static WellKnownGeneratorMessage Message(int id, string message)
     {
         return new($"{ErrorPrefix}{id:0000}", message);
     }
