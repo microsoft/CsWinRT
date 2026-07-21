@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
@@ -47,6 +48,20 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// <summary>Gets whether to use <c>Windows.UI.Xaml</c> projections.</summary>
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
+
+    /// <summary>Gets the marshalling mode, controlling which assemblies are analyzed to discover user-defined/CCW/generic types.</summary>
+    /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.Minimal"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--marshalling-mode")]
+    [DefaultValue(CsWinRTMarshallingMode.Minimal)]
+    public CsWinRTMarshallingMode MarshallingMode { get; init; }
+
+    /// <summary>Gets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.</summary>
+    /// <remarks>
+    /// Each entry is an assembly name (the <c>.dll</c> extension and any directory are ignored). This lets users
+    /// analyze specific assemblies without switching to a broader marshalling mode. Defaults to an empty array.
+    /// </remarks>
+    [CommandLineArgumentName("--marshalling-enabled-assembly-names")]
+    public string[] MarshallingEnabledAssemblyNames { get; init; } = [];
 
     /// <summary>Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.</summary>
     [CommandLineArgumentName("--validate-winrt-runtime-assembly-version")]

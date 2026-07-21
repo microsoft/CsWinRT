@@ -8,6 +8,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.References;
 
 #pragma warning disable IDE0046
@@ -1117,6 +1118,40 @@ internal static class WindowsRuntimeExtensions
         public bool IsWindowsRuntimeModule => module.Name == WellKnownMetadataNames.WinRTRuntimeModuleName;
 
         /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> belongs to the .NET base class library (BCL), i.e. the
+        /// default set of libraries shipped by the .NET SDK (the runtime shared frameworks). Detection is based on
+        /// the assembly's public key token (see <see cref="BaseClassLibraryIdentity"/>).
+        /// </summary>
+        /// <returns>Whether the module is a .NET base class library / framework assembly.</returns>
+        public bool IsBaseClassLibraryModule => BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(module.Assembly?.GetPublicKeyToken());
+
+        /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> targets a legacy or portable runtime (i.e. .NET Standard
+        /// or .NET Framework), as opposed to a modern .NET runtime, based on its corlib scope.
+        /// </summary>
+        /// <returns>Whether the module targets a legacy or portable runtime.</returns>
+        /// <remarks>
+        /// The entire interop generator infrastructure identifies well-known types (including custom-mapped types
+        /// such as <c>IEnumerable&lt;T&gt;</c>) by comparing against type references scoped to the modern .NET corlib
+        /// (e.g. <c>System.Runtime</c>), which is also the corlib the emit phase uses. Modules targeting a legacy or
+        /// portable runtime declare those same types against a different corlib (<c>netstandard</c> or <c>mscorlib</c>),
+        /// which <c>AsmResolver</c>'s <c>SignatureComparer</c> treats as a distinct scope. As a result, the generator
+        /// cannot match (and therefore cannot marshal) their types, and attempting to do so would fail during emit.
+        /// Such modules could in principle still use custom-mapped types that need marshalling, but for simplicity
+        /// they are skipped entirely.
+        /// </remarks>
+        public bool TargetsLegacyRuntime
+        {
+            get
+            {
+                Utf8String? corLibName = module.CorLibTypeFactory.CorLibScope?.Name;
+
+                return corLibName == WellKnownMetadataNames.NetStandardAssemblyName ||
+                       corLibName == WellKnownMetadataNames.MSCorLibAssemblyName;
+            }
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module references the Windows Runtime assembly.</returns>
@@ -1161,6 +1196,16 @@ file static class WellKnownMetadataNames
     /// The current name of the WinRT runtime module.
     /// </summary>
     public static readonly Utf8String WinRTRuntimeModuleName = "WinRT.Runtime.dll"u8;
+
+    /// <summary>
+    /// The assembly name of the .NET Standard corlib (used by portable assemblies).
+    /// </summary>
+    public static readonly Utf8String NetStandardAssemblyName = "netstandard"u8;
+
+    /// <summary>
+    /// The assembly name of the .NET Framework corlib (used by legacy .NET Framework assemblies).
+    /// </summary>
+    public static readonly Utf8String MSCorLibAssemblyName = "mscorlib"u8;
 
     /// <summary>
     /// The <c>"WindowsRuntime"</c> text.
