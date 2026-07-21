@@ -32,7 +32,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Exception"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.hresult"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.HResult>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.HResult")]
 [WindowsRuntimeMappedType(typeof(global::System.Exception))]

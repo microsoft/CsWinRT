@@ -31,7 +31,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="ulong"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt64>")]
 [WindowsRuntimeMetadataTypeName("UInt64")]
 [WindowsRuntimeMappedType(typeof(ulong))]

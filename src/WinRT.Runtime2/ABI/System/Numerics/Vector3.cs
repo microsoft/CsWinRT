@@ -33,7 +33,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Vector3"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector3"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Vector3")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Vector3))]

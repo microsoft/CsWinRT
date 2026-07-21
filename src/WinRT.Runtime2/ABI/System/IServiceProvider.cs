@@ -32,7 +32,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="global::System.IServiceProvider"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeMetadataTypeName("Microsoft.UI.Xaml.IXamlServiceProvider")]
 [WindowsRuntimeMappedType(typeof(global::System.IServiceProvider))]
 file static class IServiceProvider;

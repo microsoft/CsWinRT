@@ -265,7 +265,7 @@ Not all WinRT types are generated automatically by the projection writer into SD
 
 #### Custom-mapped types
 
-These are built-in C#/.NET types that are mapped to WinRT types. Because the .NET type already exists in the BCL (and is not owned by CsWinRT), it cannot be "projected" in the usual sense. Instead, CsWinRT associates the necessary WinRT metadata with it via attributes such as `[WindowsRuntimeMappedMetadata]` and dedicated ABI marshalling code in the `ABI/System/` directory. Some of these types map to identically-named WinRT types (e.g. `int` ↔ `Int32`, `Guid` ↔ `Guid`), while others map to a different WinRT type entirely. The `EventHandler` delegate is especially noteworthy: the non-generic `System.EventHandler` is handled as a special case (see `ABI/System/EventHandler.cs`), while `System.EventHandler<TEventArgs>` maps to `Windows.Foundation.EventHandler<T>`, and `System.EventHandler<TSender, TEventArgs>` (a two-parameter generic delegate projected by CsWinRT) maps to `Windows.Foundation.TypedEventHandler<TSender, TResult>`.
+These are built-in C#/.NET types that are mapped to WinRT types. Because the .NET type already exists in the BCL (and is not owned by CsWinRT), it cannot be "projected" in the usual sense. Instead, CsWinRT associates the necessary WinRT metadata with it via attributes such as `[WindowsRuntimeType]` (a parameterless marker; see below) and dedicated ABI marshalling code in the `ABI/System/` directory. Some of these types map to identically-named WinRT types (e.g. `int` ↔ `Int32`, `Guid` ↔ `Guid`), while others map to a different WinRT type entirely. The `EventHandler` delegate is especially noteworthy: the non-generic `System.EventHandler` is handled as a special case (see `ABI/System/EventHandler.cs`), while `System.EventHandler<TEventArgs>` maps to `Windows.Foundation.EventHandler<T>`, and `System.EventHandler<TSender, TEventArgs>` (a two-parameter generic delegate projected by CsWinRT) maps to `Windows.Foundation.TypedEventHandler<TSender, TResult>`.
 
 The following table lists all custom-mapped types where the .NET type maps to a **differently-named** WinRT type:
 
@@ -322,6 +322,12 @@ These are WinRT types that are defined directly in `WinRT.Runtime` rather than b
 - **Foundation types** such as `IStringable`, `Point`, `Rect`, `Size`, `PropertyType`, and `EventRegistrationToken` are here because they are referenced by marshalling infrastructure or vtable definitions within `WinRT.Runtime`.
 
 Some of these types — particularly the bindable collection interfaces (`IEnumerable`, `IList`) and XAML-related types — have **different IIDs and/or runtime class names** depending on whether `Windows.UI.Xaml.*` (UWP XAML) or `Microsoft.UI.Xaml.*` (WinUI) support is being used (controlled by the `CsWinRTUseWindowsUIXamlProjections` MSBuild property). This requires further special handling in both the generated projection code and the interop generator to ensure that the correct marshalling and metadata info is associated with them at publish time.
+
+#### The `[WindowsRuntimeType]` marker and the metadata-types lookup
+
+Every projected type, plus every proxy type for a custom-mapped type, is tagged with the parameterless, implementation-only **`[WindowsRuntimeType]`** marker (`Attributes/WindowsRuntimeTypeAttribute.cs`). The runtime and the build tools only ever check for the *presence* of this marker to decide whether a type participates in Windows Runtime marshalling — they never read any per-type metadata value at runtime. Proxy types are distinguished from projected types by `[WindowsRuntimeMappedType]` (which proxies carry to point at their public type); the `System.EventHandler` proxy intentionally stays unmarked, as it is a pure custom type rather than a real Windows Runtime metadata type.
+
+The mapping from a projected type to its source `.winmd` module name (its "contract"/"stem") — needed only by build-time tooling (the interop and WinMD generators) — is **not** stored on each type. Instead, the projection generator emits a single centralized, fully trimmable lookup type, **`ABI.WindowsRuntimeMetadataTypes`**, carrying one **`[WindowsRuntimeMetadata(typeof(T), "stem")]`** entry per projected type (`Attributes/WindowsRuntimeMetadataAttribute.cs`, repurposed to a `(Type, string)`, `class`-targeting, `AllowMultiple` attribute). This mirrors how `ABI.WindowsRuntimeDefaultInterfaces` centralizes default interfaces, and lets the metadata be dead-code-eliminated when unused. Both the marker and the lookup type are implementation-only and are stripped from reference projections. `WinRT.Runtime`'s own manually-projected types do not contribute to a lookup type: the interop generator addresses them with the well-known `#CsWinRT` assembly identifier, and the WinMD generator reads their contract from the real `[ContractVersion]` metadata in the `WinRT.Runtime` reference assembly.
 
 ### 2. WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)
 
@@ -635,7 +641,7 @@ A small build project that produces **`WindowsRuntime.Internal.winmd`** — the 
 
 **Project settings:**
 
-- **Target**: `net10.0-windows10.0.26100.1` (the `.1` TFM revision selects the `cswinrt3` Windows SDK projection reference assemblies, which carry `[WindowsRuntimeMetadata]` attributes the WinMD generator reads)
+- **Target**: `net10.0-windows10.0.26100.1` (the `.1` TFM revision selects the `cswinrt3` Windows SDK projection reference assemblies, which carry the `[ContractVersion]` (and `[WindowsRuntimeType]`) Windows Runtime metadata the WinMD generator reads)
 - **Assembly name**: `WindowsRuntime.Internal`
 - **Nullable**: `disable` (the Windows Runtime type system does not support nullability annotations)
 - **WindowsSdkPackageVersion**: pinned (e.g. `10.0.26100.85-preview`) so the .NET SDK adds the implicit framework reference to the matching `Microsoft.Windows.SDK.NET.Ref` package

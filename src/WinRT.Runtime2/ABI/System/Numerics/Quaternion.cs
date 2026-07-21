@@ -33,7 +33,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Quaternion"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.quaternion"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Quaternion>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Quaternion")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Quaternion))]

@@ -15,7 +15,7 @@ namespace Windows.Foundation.Metadata;
 /// Indicates the version of the API contract.
 /// </summary>
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 #elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]

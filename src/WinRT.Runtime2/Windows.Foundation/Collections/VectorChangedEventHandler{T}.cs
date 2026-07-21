@@ -17,6 +17,6 @@ namespace Windows.Foundation.Collections;
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
 #elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 #endif
 public delegate void VectorChangedEventHandler<T>(IObservableVector<T> sender, IVectorChangedEventArgs @event);

@@ -604,7 +604,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the type map entries. We only need one in the marshalling external type map. We can use 'IEnumerable'
         // as the trim target for the specialized RCW type (since the 'IReadOnlyList' interface does not exist in .NET).
-        // This is also why we don't need to emit the '[WindowsRuntimeMappedMetadata]' attribute on the proxy type above.
+        // This is also why we don't need to emit the '[WindowsRuntimeType]' marker on the proxy type above.
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,

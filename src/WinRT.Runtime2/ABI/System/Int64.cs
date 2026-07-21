@@ -31,7 +31,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="long"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Int64>")]
 [WindowsRuntimeMetadataTypeName("Int64")]
 [WindowsRuntimeMappedType(typeof(long))]

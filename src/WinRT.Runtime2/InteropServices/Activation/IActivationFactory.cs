@@ -13,7 +13,7 @@ namespace WindowsRuntime.InteropServices;
 /// <see href="https://learn.microsoft.com/windows/win32/api/activation/nn-activation-iactivationfactory"/>
 [Guid("00000035-0000-0000-C000-000000000046")]
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 #endif
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IActivationFactory

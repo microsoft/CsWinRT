@@ -4,7 +4,7 @@ namespace Windows.UI.Xaml.Media.Media3D
     using global::Windows.Foundation;
 
 #if !CSWINRT_REFERENCE_PROJECTION
-    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Media.Media3D.Matrix3D>")]
     [ABI.Windows.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
 #endif

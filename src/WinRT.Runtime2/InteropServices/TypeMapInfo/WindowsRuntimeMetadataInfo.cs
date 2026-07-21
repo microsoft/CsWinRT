@@ -197,9 +197,11 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// <returns>The resulting <see cref="WindowsRuntimeMetadataInfo"/> instance.</returns>
     private static WindowsRuntimeMetadataInfo CreateMetadataInfo(Type metadataProviderType)
     {
-        return metadataProviderType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false)
-            ? new(metadataProviderType, metadataProviderType)
-            : new(metadataProviderType, publicType: null);
+        // A projected type is its own metadata source and public type. A proxy type (for a custom-mapped
+        // type) instead carries '[WindowsRuntimeMappedType]' pointing to the public type, resolved lazily.
+        return metadataProviderType.IsDefined(typeof(WindowsRuntimeMappedTypeAttribute), inherit: false)
+            ? new(metadataProviderType, publicType: null)
+            : new(metadataProviderType, metadataProviderType);
     }
 
     /// <summary>
@@ -210,7 +212,7 @@ internal sealed class WindowsRuntimeMetadataInfo
     private static WindowsRuntimeMetadataInfo? GetMetadataProviderType(Type managedType)
     {
         // Same as above: if the type is a projected type, then it is also used as the metadata source
-        if (managedType.IsDefined(typeof(WindowsRuntimeMetadataAttribute), inherit: false) && !managedType.IsGenericType)
+        if (managedType.IsDefined(typeof(WindowsRuntimeTypeAttribute), inherit: false) && !managedType.IsGenericType)
         {
             return new(managedType, managedType);
         }

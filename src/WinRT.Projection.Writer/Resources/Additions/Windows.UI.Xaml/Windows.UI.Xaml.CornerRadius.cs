@@ -4,7 +4,7 @@ namespace Windows.UI.Xaml
     using global::Windows.Foundation;
 
 #if !CSWINRT_REFERENCE_PROJECTION
-    [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+    [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.CornerRadius>")]
     [ABI.Windows.UI.Xaml.CornerRadiusComWrappersMarshaller]
 #endif

@@ -25,7 +25,7 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeTypeAttribute);
 
         /// <summary>
         /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime reference assembly.
@@ -778,61 +778,30 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Gets the Windows Runtime metadata name for a <see cref="TypeDefinition"/>, if available.
-        /// </summary>
-        /// <returns>The Windows Runtime metadata name from the <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
-        public Utf8String? GetWindowsRuntimeMetadataName()
-        {
-            CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
-
-            return attribute?.Signature?.FixedArguments?[0]?.Element as Utf8String;
-        }
-
-        /// <summary>
-        /// Gets the Windows Runtime metadata name for a <see cref="TypeDefinition"/>, recovering it from the
-        /// implementation projection when the type comes from a reference projection.
+        /// Gets the Windows Runtime metadata name for a <see cref="TypeDefinition"/> (i.e. the source <c>.winmd</c> module name).
         /// </summary>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <returns>The Windows Runtime metadata name (i.e. the source <c>.winmd</c> module name), or <see langword="null"/> if not found.</returns>
+        /// <returns>The Windows Runtime metadata name, or <see langword="null"/> if not found.</returns>
         /// <remarks>
         /// <para>
-        /// The per-type <c>[WindowsRuntimeMetadata]</c> attribute is present on implementation projections, the
-        /// authored component projection, and manually projected types in <c>WinRT.Runtime.dll</c>, so for those the
-        /// value is read directly off the type.
+        /// The type -> source <c>.winmd</c> stem mapping is no longer carried on each projected type. It lives on the
+        /// centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type in the implementation projection (so the
+        /// build-time-only metadata can be trimmed away when unused). This selects the right implementation projection for
+        /// the type (via <see cref="GetImplementationProjectionModule"/>) and looks the type up by namespace and name.
         /// </para>
         /// <para>
-        /// Reference projections shipped in Windows Runtime projection NuGet packages have that attribute stripped (it
-        /// is an implementation-only attribute, absent from the <c>WinRT.Runtime.dll</c> reference assembly they compile
-        /// against). For a type defined in such a reference projection, the source <c>.winmd</c> stem is recovered from
-        /// the matching type in the implementation projection (located via <see cref="GetImplementationProjectionModule"/>),
-        /// which retains it. That is the authoritative value the interop type-name marker must agree with: the projection
-        /// writer encodes the very same stem into the <c>[UnsafeAccessorType]</c> references it emits into that
-        /// implementation projection, so falling back to the reference projection's own assembly name (which can differ
-        /// from the stem, e.g. when several <c>.winmd</c> files are merged into one projection) would produce mismatched names.
+        /// This is the authoritative value the interop type-name marker must agree with: the projection writer encodes the
+        /// very same stem into the <c>[UnsafeAccessorType]</c> references it emits into that implementation projection. It
+        /// works uniformly for types resolved from implementation projections and from reference projections (the latter
+        /// don't carry the lookup type, but resolve to the same implementation projection that does).
         /// </para>
         /// </remarks>
         public Utf8String? GetWindowsRuntimeMetadataName(InteropDefinitions interopDefinitions)
         {
-            // Fast path: the attribute is present directly on the type (implementation projections, authored
-            // components, and 'WinRT.Runtime.dll' types all carry '[WindowsRuntimeMetadata]').
-            if (type.GetWindowsRuntimeMetadataName() is { } metadataName)
+            if (type.GetImplementationProjectionModule(interopDefinitions) is { } projectionModule &&
+                projectionModule.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace, type.Name), out Utf8String? metadataName))
             {
                 return metadataName;
-            }
-
-            // The only remaining case we can recover is a type from a reference projection, whose per-type attribute
-            // was stripped. For those, the metadata name lives on the matching type in the implementation projection.
-            if (!type.IsReferenceProjectionWindowsRuntimeType)
-            {
-                return null;
-            }
-
-            // Resolve the equivalent type in the right implementation projection (via the cached top-level types
-            // lookup) and read the '[WindowsRuntimeMetadata]' attribute off it, which it retains.
-            if (type.GetImplementationProjectionModule(interopDefinitions) is { } projectionModule &&
-                projectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectionType))
-            {
-                return projectionType.GetWindowsRuntimeMetadataName();
             }
 
             return null;
@@ -1259,9 +1228,9 @@ file static class WellKnownMetadataNames
     public static readonly Utf8String WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices"u8;
 
     /// <summary>
-    /// The <c>"WindowsRuntimeMetadataAttribute"</c> text.
+    /// The <c>"WindowsRuntimeTypeAttribute"</c> text.
     /// </summary>
-    public static readonly Utf8String WindowsRuntimeMetadataAttribute = "WindowsRuntimeMetadataAttribute"u8;
+    public static readonly Utf8String WindowsRuntimeTypeAttribute = "WindowsRuntimeTypeAttribute"u8;
 
     /// <summary>
     /// The <c>"WindowsRuntimeReferenceAssemblyAttribute"</c> text.

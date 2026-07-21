@@ -32,7 +32,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.DateTime>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.DateTime")]
 [WindowsRuntimeMappedType(typeof(global::System.DateTimeOffset))]

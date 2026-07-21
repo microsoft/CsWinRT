@@ -18,7 +18,7 @@ namespace Windows.Storage.Streams;
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
 #elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 #endif
 public interface IInputStream : IDisposable
 {

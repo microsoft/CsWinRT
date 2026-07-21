@@ -25,7 +25,7 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Uri"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.uri"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.Uri")]
 [WindowsRuntimeMappedType(typeof(global::System.Uri))]
 [UriComWrappersMarshaller]
