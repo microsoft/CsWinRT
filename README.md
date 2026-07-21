@@ -25,6 +25,7 @@ Generated C# source can be compiled into interop assemblies, similar to how [C++
 - [C#/WinRT version history](docs/version-history.md)
 - [Repository structure](docs/structure.md)
 - [COM Interop guide](docs/interop.md)
+- [Object lifetime and reference tracking](docs/memory-management.md)
 - Related projects
     - [xlang](https://github.com/microsoft/xlang)
     - [Windows App SDK](https://github.com/microsoft/WindowsAppSDK)
