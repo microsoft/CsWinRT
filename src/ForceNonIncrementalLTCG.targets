@@ -1,0 +1,25 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Imported at the very end of Microsoft.Cpp.targets via $(ForceImportAfterCppTargets) (set in
+    Directory.Build.props). This makes 'UseLinkTimeCodeGeneration' (full, non-incremental LTCG) the
+    DEFAULT for every @(Link) item in Release C++ builds.
+
+    Full LTCG is required because the repo enables CastGuard (/guard:cast), which is incompatible with the
+    '/LTCG:incremental' that WholeProgramOptimization=true otherwise defaults to.
+
+    An ItemDefinitionGroup here (rather than in Directory.Build.props/targets) works because it is imported
+    AFTER the Cpp WholeProgramOptimization ItemDefinitionGroup, so it is the last one processed and wins.
+    Being an item *default*, it also applies to @(Link) items added at any point - including the object
+    files WinUI's XAML C++ targets ('ComputeXamlGeneratedCLOutputs') add later via
+    '@(Obj->...->ClearMetadata())'. Those otherwise fall back to the '/LTCG:incremental' default, and since
+    the 'Link' task batches per %(Link.LinkTimeCodeGeneration) they get split into a separate, failing
+    incremental sub-link.
+  -->
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
+    <Link>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+
+</Project>

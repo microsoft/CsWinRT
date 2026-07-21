@@ -9,9 +9,9 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionGenerator.Errors;
-using WindowsRuntime.ProjectionWriter.Helpers;
 
 #pragma warning disable IDE0008
 
@@ -236,7 +236,7 @@ internal static partial class ProjectionGenerator
         // a special value that depends on the host environment (e.g. a registered SDK installation).
         List<string> expandedWindowsMetadataPaths = [];
 
-        foreach (string expanded in WindowsMetadataExpander.Expand(args.WindowsMetadata))
+        foreach (string expanded in WindowsMetadataExpander.Expand<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata))
         {
             // The expander may return either individual files or directories; we want individual
             // files in the bundled repro so the layout is fully self-describing.

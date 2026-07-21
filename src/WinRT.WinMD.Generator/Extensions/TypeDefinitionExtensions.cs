@@ -21,7 +21,7 @@ internal static class TypeDefinitionExtensions
         /// <remarks>
         /// Types marked with <c>[WindowsRuntimeMetadata]</c> are projected Windows Runtime types that come
         /// from CsWinRT-generated projection assemblies. This attribute indicates the type has a
-        /// corresponding Windows Runtime definition and carries metadata about its contract assembly.
+        /// corresponding Windows Runtime definition.
         /// </remarks>
         public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").Any();
 
@@ -62,37 +62,6 @@ internal static class TypeDefinitionExtensions
                 if (attribute.Signature is { FixedArguments: [{ Element: uint version }] })
                 {
                     return (int)version;
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets the Windows Runtime contract assembly name from <c>[WindowsRuntimeMetadata]</c> attribute on the type, if present.
-        /// </summary>
-        /// <returns>
-        /// The Windows Runtime contract assembly name (e.g. <c>"Microsoft.UI.Xaml"</c>), or <see langword="null"/>
-        /// if the type does not have a <c>[WindowsRuntimeMetadata]</c> attribute.
-        /// </returns>
-        /// <remarks>
-        /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original
-        /// Windows Runtime contract assembly name so the WinMD can reference types correctly.
-        /// </remarks>
-        public string? WindowsRuntimeAssemblyName
-        {
-            get
-            {
-                // If the type doesn't have the '[WindowsRuntimeMetadata]' attribute, stop here
-                if (type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").FirstOrDefault() is not CustomAttribute attribute)
-                {
-                    return null;
-                }
-
-                // Extract the assembly name from the attribute signature, if possible
-                if (attribute.Signature is { FixedArguments: [{ Element: object assemblyName }] })
-                {
-                    return assemblyName.ToString();
                 }
 
                 return null;

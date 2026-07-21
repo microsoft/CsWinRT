@@ -30,8 +30,8 @@
     <AppBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</AppBuildTFMs>
     <LibBuildTFMs>net10.0</LibBuildTFMs>
     <LibBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0</LibBuildTFMs>
-    <TestsBuildTFMs>net10.0-windows10.0.19041.0</TestsBuildTFMs>
-    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0-windows10.0.19041.0</TestsBuildTFMs>
+    <TestsBuildTFMs>net10.0-windows10.0.26100.1</TestsBuildTFMs>
+    <TestsBuildTFMs Condition="'$(CIBuildReason)' == 'CI'">net10.0-windows10.0.26100.1</TestsBuildTFMs>
     <FunctionalTestsBuildTFMs>net10.0</FunctionalTestsBuildTFMs>
     <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
     <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
@@ -90,6 +90,10 @@
 
   <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+
+    <!-- For C# projects, we use embedded pdbs, but we still need to submit symbols to the symbol server,
+     so we extract the pdb to submit. -->
+    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
@@ -149,6 +153,18 @@
       <PreprocessorDefinitions>VERSION_NUMBER=\"$(VersionNumber)\";VERSION_COMMAS=$(VersionNumber.Replace('.', ','));FILE_DESCRIPTION=\"C#/WinRT v$(VersionString)\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
+
+  <!--
+    Force full (non-incremental) LTCG for Release C++/wapproj builds by importing an ItemDefinitionGroup
+    (ForceNonIncrementalLTCG.targets) at the end of Microsoft.Cpp.targets. Full LTCG is required by
+    CastGuard (/guard:cast, set above), which is incompatible with the '/LTCG:incremental' default of
+    WholeProgramOptimization. Doing it as an item default (imported after the Cpp default) means it also
+    applies to @(Link) objects added later by WinUI's XAML C++ targets. Guarded so a project that sets
+    $(ForceImportAfterCppTargets) itself is not overridden; the file's IDG is Release-scoped internally.
+  -->
+  <PropertyGroup Condition="('$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj') and '$(ForceImportAfterCppTargets)' == ''">
+    <ForceImportAfterCppTargets>$(MSBuildThisFileDirectory)ForceNonIncrementalLTCG.targets</ForceImportAfterCppTargets>
+  </PropertyGroup>
 
   <Import Project="Strings.props" />
 

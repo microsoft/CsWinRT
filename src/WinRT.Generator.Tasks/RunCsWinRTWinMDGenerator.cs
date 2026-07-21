@@ -29,6 +29,18 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
     public ITaskItem[]? ReferenceAssemblyPaths { get; set; }
 
     /// <summary>
+    /// Gets or sets the input .winmd paths (third party components and internal metadata) used to
+    /// resolve the source Windows Runtime contract assembly name for referenced projected types.
+    /// </summary>
+    public ITaskItem[]? WinMDPaths { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Windows metadata token (a literal path, directory, <c>local</c>, <c>sdk</c>,
+    /// <c>sdk+</c>, or a version like <c>10.0.26100.0</c>) used to resolve Windows SDK contract names.
+    /// </summary>
+    public string? WindowsMetadata { get; set; }
+
+    /// <summary>
     /// Gets or sets the output .winmd file path.
     /// </summary>
     [Required]
@@ -153,6 +165,14 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
 
         string referenceAssemblyPathsArg = string.Join(",", ReferenceAssemblyPaths!.Select(static path => path.ItemSpec));
         AppendResponseFileCommand(args, "--reference-assembly-paths", referenceAssemblyPathsArg);
+
+        if (WinMDPaths is { Length: > 0 })
+        {
+            string winmdPathsArg = string.Join(",", WinMDPaths.Select(static path => path.ItemSpec));
+            AppendResponseFileCommand(args, "--winmd-paths", winmdPathsArg);
+        }
+
+        AppendResponseFileOptionalCommand(args, "--windows-metadata", string.IsNullOrEmpty(WindowsMetadata) ? null : WindowsMetadata);
 
         AppendResponseFileCommand(args, "--output-winmd-path", OutputWinmdPath!);
         AppendResponseFileCommand(args, "--assembly-version", AssemblyVersion!);

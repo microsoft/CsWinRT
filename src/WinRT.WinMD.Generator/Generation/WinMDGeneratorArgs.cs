@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Attributes;
@@ -19,6 +20,15 @@ internal sealed class WinMDGeneratorArgs : IGeneratorArgs
     /// <summary>Gets the input reference .dll paths for type resolution.</summary>
     [CommandLineArgumentName("--reference-assembly-paths")]
     public required string[] ReferenceAssemblyPaths { get; init; }
+
+    /// <summary>Gets the input .winmd paths (third party components and internal metadata) used to resolve contract assembly names for referenced projected types.</summary>
+    [CommandLineArgumentName("--winmd-paths")]
+    public string[] WinMDPaths { get; init; } = [];
+
+    /// <summary>Gets the Windows metadata token (path, directory, <c>local</c>, <c>sdk</c>, <c>sdk+</c>, or a version) expanded to the Windows SDK .winmd files.</summary>
+    [CommandLineArgumentName("--windows-metadata")]
+    [DefaultValue("")]
+    public string WindowsMetadata { get; init; } = "";
 
     /// <summary>Gets the output .winmd file path.</summary>
     [CommandLineArgumentName("--output-winmd-path")]

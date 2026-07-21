@@ -230,25 +230,42 @@
     <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest (Package)/AuthoringWinUITest (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="arm64" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <!-- Skip Release|x64: AuthoringTest is NativeAOT there, so the managed component this JIT host
+           needs doesn't exist. -->
+      <Build Solution="Release|x64" Project="false" />
+      <!-- Skip Release|x86: this is the only Release config that builds the app, and the C++/WinRT app
+           fails to link its XAML-generated code (MainWindow connectors, XamlMetaDataProvider, WinMain)
+           with LNK2001/LNK1120 because the markup-generated implementation objects don't reliably reach
+           the exe link under the wapproj+solution double build. (Disabling LTCG was tried and did not
+           help.) The functional coverage for this JIT-host authoring test comes from the Debug configs. -->
+      <Build Solution="Release|x86" Project="false" />
       <Deploy Solution="*|x64" />
       <Deploy Solution="*|x86" />
     </Project>
     <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest/AuthoringWinUITest.vcxproj" Id="493c7729-2f21-4198-ab09-bdf56bf501d3">
       <Platform Solution="*|ARM" Project="Win32" />
       <Platform Solution="*|ARM64" Project="arm64" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <!-- Skip Release|x64: AuthoringTest is NativeAOT there (see wapproj above). -->
+      <Build Solution="Release|x64" Project="false" />
+      <!-- Skip Release|x86: XAML-generated code fails to link (see wapproj above). -->
+      <Build Solution="Release|x86" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringWuxConsumptionTest/AuthoringWuxConsumptionTest.vcxproj" Id="a04a0416-5e35-4dd0-8226-63d941b28467">
       <Platform Solution="*|ARM" Project="Win32" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringWuxTest/AuthoringWuxTest.csproj">
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/BuildDeterminismTest/BuildDeterminismComponent/BuildDeterminismComponent.csproj">
       <Platform Solution="*|ARM" Project="x64" />
@@ -278,7 +295,10 @@
       <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
+      <Deploy Solution="*|x64" />
     </Project>
     <Project Path="Tests/OOPExe/OOPExe.csproj">
       <Platform Solution="*|ARM" Project="ARM" />

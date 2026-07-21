@@ -29,6 +29,10 @@ Properties consumers may set on the vcxproj:
                                             WindowsSdkPackageVersion to pass to the aggregator.
                                             Falls back to a value picked from any component ref
                                             metadata, then to the SDK default.
+  CsWinRTNativeConsumerUseWindowsUIXamlProjections
+                                            Set to 'true' to make the aggregator use UWP XAML
+                                            (Windows.UI.Xaml) projections instead of WinUI. Falls
+                                            back to the value exposed by any referenced component.
   CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to opt out of the arch-correct
                                             replacement of WinRT.Host.dll / .mui in the
                                             consumer's ReferenceCopyLocalPaths.
@@ -75,6 +79,12 @@ Properties consumers may set on the vcxproj:
                                                 Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
       <_CsWinRTComponentSdkPackageVersionValues Include="%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)"
                                                 Condition="'%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
+
+      <!-- Optional UWP XAML (Windows.UI.Xaml) projection flag contributed by either ref source. -->
+      <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)"
+                                                          Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
+      <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(CsWinRTNativeComponent.CsWinRTComponentUseWindowsUIXamlProjections)"
+                                                          Condition="'%(CsWinRTNativeComponent.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -100,6 +110,10 @@ Properties consumers may set on the vcxproj:
       <!-- WindowsSdkPackageVersion: consumer override wins, otherwise first non-empty value from refs, otherwise empty. -->
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(CsWinRTNativeConsumerWindowsSdkPackageVersion)' != ''">$(CsWinRTNativeConsumerWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">@(_CsWinRTComponentSdkPackageVersionValues->Distinct())</_CsWinRTAggregatorWindowsSdkPackageVersion>
+
+      <!-- UWP XAML (Windows.UI.Xaml) projections: consumer override wins, otherwise the value exposed by any referenced component, otherwise empty (WinUI default). -->
+      <_CsWinRTAggregatorUseWindowsUIXamlProjections Condition="'$(CsWinRTNativeConsumerUseWindowsUIXamlProjections)' != ''">$(CsWinRTNativeConsumerUseWindowsUIXamlProjections)</_CsWinRTAggregatorUseWindowsUIXamlProjections>
+      <_CsWinRTAggregatorUseWindowsUIXamlProjections Condition="'$(_CsWinRTAggregatorUseWindowsUIXamlProjections)' == ''">@(_CsWinRTComponentUseWindowsUIXamlProjectionsValues->Distinct())</_CsWinRTAggregatorUseWindowsUIXamlProjections>
     </PropertyGroup>
 
     <!-- Inputs for incremental gating: any change to the targets file or any component artifact re-runs the aggregator. -->
@@ -120,11 +134,20 @@ Properties consumers may set on the vcxproj:
     (via <ProjectReference> for project sources and <Reference HintPath=...> for package
     sources), builds it with CsWinRTBuildForNativeConsumer=true, and copies the merged
     hosting bundle to the consumer's output directory.
+
+    Runs AfterTargets="Link" (not BeforeTargets): the merged bundle (WinRT.Component.dll and
+    friends) is a runtime JIT-hosting asset that the native consumer never links against, so it
+    only needs to exist in $(OutDir) before output-group harvest / run, both of which happen
+    after the link. Attaching to the pre-link window would (via this target's heavy
+    ResolveProjectReferences/ResolveAssemblyReferences dependency chain) perturb the C++ pre-link
+    target ordering - notably pushing the WinUI markup compiler's ComputeXamlGeneratedCLOutputs
+    after ComputeLinkSwitches, which drops the XAML-generated objects from the final link. Running
+    after the link keeps this feature entirely out of the link input computation.
     ============================================================
   -->
   <Target Name="CsWinRTGenerateComponentInterop"
           DependsOnTargets="_DetectCsWinRTNativeComponentReferences"
-          BeforeTargets="Link"
+          AfterTargets="Link"
           Inputs="@(_CsWinRTAggregatorInputs)"
           Outputs="$(OutDir)WinRT.Component.dll"
           Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
@@ -164,6 +187,9 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' != ''"
                                 Include="    &lt;WindowsSdkPackageVersion&gt;$(_CsWinRTAggregatorWindowsSdkPackageVersion)&lt;/WindowsSdkPackageVersion&gt;" />
+      <!-- Match the referenced component's XAML flavor (WUX vs WinUI). -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorUseWindowsUIXamlProjections)' == 'true'"
+                                Include="    &lt;CsWinRTUseWindowsUIXamlProjections&gt;true&lt;/CsWinRTUseWindowsUIXamlProjections&gt;" />
       <!-- Project-local IntermediateOutputPath so artifacts land in a path this targets file owns. -->
       <_CsWinRTTempProjectLines Include="    &lt;BaseIntermediateOutputPath&gt;$(_CsWinRTTempProjectBaseIntermediateDir)&lt;/BaseIntermediateOutputPath&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateConfigDir)&lt;/IntermediateOutputPath&gt;" />
@@ -255,6 +281,39 @@ Properties consumers may set on the vcxproj:
                                Condition="'@(_CsWinRTHostingItemsToReplace)' != ''" />
       <ReferenceCopyLocalPaths Include="$(_CsWinRTHostMuiPath)"
                                Condition="'@(_CsWinRTHostingItemsToReplace)' != '' and Exists('$(_CsWinRTHostMuiPath)')" />
+    </ItemGroup>
+
+  </Target>
+
+  <!--
+    ============================================================
+            _CsWinRTAddGeneratedBundleToOutputGroups
+
+    CsWinRTGenerateComponentInterop copies the generated hosting bundle
+    (WinRT.Component.dll and friends) into $(OutDir) as loose files, which belong
+    to no output group and so are never harvested into a wapproj / MSIX package.
+    DesktopBridgeCopyLocalOutputGroup returns @(ReferenceCopyLocalPaths), so add the
+    bundle to it during the harvest invocation (the files exist by then). The Exists
+    guard makes this a no-op when there are no component references.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTAddGeneratedBundleToOutputGroups"
+          BeforeTargets="DesktopBridgeCopyLocalOutputGroup"
+          Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
+
+    <ItemGroup>
+      <_CsWinRTGeneratedBundle Include="$(OutDir)WinRT.Component.dll" />
+      <_CsWinRTGeneratedBundle Include="$(OutDir)WinRT.Interop.dll" />
+      <_CsWinRTGeneratedBundle Include="$(OutDir)WinRT.Projection.dll" />
+      <_CsWinRTGeneratedBundle Include="$(OutDir)WinRT.Sdk.Projection.dll" />
+      <_CsWinRTGeneratedBundle Include="$(OutDir)WinRT.Sdk.Xaml.Projection.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="@(_CsWinRTGeneratedBundle)"
+                               Condition="Exists('%(Identity)')">
+        <DestinationSubDirectory></DestinationSubDirectory>
+      </ReferenceCopyLocalPaths>
     </ItemGroup>
 
   </Target>

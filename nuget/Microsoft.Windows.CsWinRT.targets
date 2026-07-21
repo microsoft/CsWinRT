@@ -233,9 +233,24 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <UsingTask TaskName="RunCsWinRTProjectionRefGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
 
-  <Target Name="CsWinRTGenerateProjection"
+  <!--
+    Computes the include/exclude filters and the final WinMD input list for 'cswinrtprojectionrefgen',
+    and writes a hash of all property inputs to a cache file. The cache file is used as an input of
+    CsWinRTGenerateProjection so that changes to filters/flags (which are not files, and so can't be
+    tracked by timestamp alone) still correctly invalidate its incremental build. This target only
+    computes inputs; all destructive/file-producing work happens in CsWinRTGenerateProjection.
+  -->
+  <Target Name="_CsWinRTComputeProjectionRefGenInputs"
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ResolveCsWinRToolsDirectory"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'">
+
+    <PropertyGroup>
+      <!-- Cache and stamp files live under the intermediate output path (obj). -->
+      <_RunCsWinRTProjectionRefGenPropertyInputsCachePath Condition="'$(_RunCsWinRTProjectionRefGenPropertyInputsCachePath)' == ''">$(IntermediateOutputPath)$(MSBuildProjectName).cswinrtprojectionrefgen.cache</_RunCsWinRTProjectionRefGenPropertyInputsCachePath>
+      <_RunCsWinRTProjectionRefGenPropertyInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_RunCsWinRTProjectionRefGenPropertyInputsCachePath)'))</_RunCsWinRTProjectionRefGenPropertyInputsCachePath>
+      <_CsWinRTProjectionRefGenStampFile Condition="'$(_CsWinRTProjectionRefGenStampFile)' == ''">$(IntermediateOutputPath)$(MSBuildProjectName).cswinrtprojectionrefgen.stamp</_CsWinRTProjectionRefGenStampFile>
+      <_CsWinRTProjectionRefGenStampFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_CsWinRTProjectionRefGenStampFile)'))</_CsWinRTProjectionRefGenStampFile>
+    </PropertyGroup>
 
     <ItemGroup>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
@@ -273,12 +288,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTContinueOnError>false</CsWinRTContinueOnError>
       <CsWinRTContinueOnError Condition="'$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'">true</CsWinRTContinueOnError>
     </PropertyGroup>
-
-    <ItemGroup>
-      <CsWinRTFilesToDelete Include="$(CsWinRTGeneratedFilesDir)*.cs"/>
-    </ItemGroup>
-    <Delete Files="@(CsWinRTFilesToDelete)" />
-    <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
 
     <!--
       Reconstruct the include/exclude/input lists for the new C# generator from the historical
@@ -330,6 +339,62 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTRunProjectionRefGenerator Condition="'@(_CsWinRTRefIncludes)' != ''">true</_CsWinRTRunProjectionRefGenerator>
     </PropertyGroup>
 
+    <!--
+      Hash all property inputs that affect generation. These are not files, so the timestamp-based
+      Inputs/Outputs check on CsWinRTGenerateProjection can't observe them directly; writing their hash
+      to a cache file turns a property change into a timestamp change it can see.
+    -->
+    <ItemGroup>
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTFilters)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTIncludes)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExcludes)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTComponent)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExeTFM)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGeneratedFilesDir)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTRefGenEffectiveToolsDirectory)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(_CsWinRTRunProjectionRefGenerator)" />
+    </ItemGroup>
+
+    <Hash ItemsToHash="@(_CsWinRTProjectionRefGenInputsCacheToHash)">
+      <Output TaskParameter="HashResult" PropertyName="_CsWinRTProjectionRefGenInputsCacheHash" />
+    </Hash>
+
+    <WriteLinesToFile
+      Lines="$(_CsWinRTProjectionRefGenInputsCacheHash)"
+      File="$(_RunCsWinRTProjectionRefGenPropertyInputsCachePath)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+
+    <!--
+      If generation is expected to produce sources but the generated directory currently has none
+      (e.g. the user manually deleted the 'Generated Files' folder), delete the stamp so the
+      incremental check re-runs generation instead of leaving the compile with missing source files.
+    -->
+    <ItemGroup Condition="'$(_CsWinRTRunProjectionRefGenerator)' == 'true'">
+      <_CsWinRTExistingGeneratedFiles Include="$(CsWinRTGeneratedFilesDir)*.cs" />
+    </ItemGroup>
+    <Delete
+      Condition="'$(_CsWinRTRunProjectionRefGenerator)' == 'true' and '@(_CsWinRTExistingGeneratedFiles)' == '' and Exists('$(_CsWinRTProjectionRefGenStampFile)')"
+      Files="$(_CsWinRTProjectionRefGenStampFile)" />
+  </Target>
+
+  <Target Name="CsWinRTGenerateProjection"
+          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ResolveCsWinRToolsDirectory;_CsWinRTComputeProjectionRefGenInputs"
+          Condition="'$(CsWinRTGenerateProjection)' == 'true'"
+          Inputs="@(CsWinRTInputs);$(CsWinRTInteropMetadata);$(_RunCsWinRTProjectionRefGenPropertyInputsCachePath);$(MSBuildAllProjects)"
+          Outputs="$(_CsWinRTProjectionRefGenStampFile)">
+
+    <ItemGroup>
+      <CsWinRTFilesToDelete Include="$(CsWinRTGeneratedFilesDir)*.cs"/>
+    </ItemGroup>
+    <Delete Files="@(CsWinRTFilesToDelete)" />
+    <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
+
     <Message Condition="'$(_CsWinRTRunProjectionRefGenerator)' != 'true'"
              Text="cswinrtprojectionrefgen: skipped (no namespaces to project)" Importance="Low" />
     <Message Condition="'$(_CsWinRTRunProjectionRefGenerator)' == 'true'"
@@ -350,6 +415,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
         CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
         ContinueOnError="$(CsWinRTContinueOnError)" />
+
+    <!-- Write the stamp used as this target's Output. -->
+    <Touch Files="$(_CsWinRTProjectionRefGenStampFile)" AlwaysCreate="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_CsWinRTProjectionRefGenStampFile)" />
+      <FileWrites Include="$(_RunCsWinRTProjectionRefGenPropertyInputsCachePath)" />
+    </ItemGroup>
   </Target>
 
   <!-- Note: GenerateTargetFrameworkMonikerAttribute is conditional upon @(Compile) not being empty -->

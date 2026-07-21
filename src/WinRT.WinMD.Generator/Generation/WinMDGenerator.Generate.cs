@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Frozen;
 using System.IO;
 using AsmResolver.DotNet;
 using WindowsRuntime.WinMDGenerator.Helpers;
@@ -32,11 +33,19 @@ internal static partial class WinMDGenerator
     {
         TypeMapper mapper = new(args.UseWindowsUIXamlProjections);
 
+        // Build the (namespace, name) -> source '.winmd' stem lookup from the input Windows Runtime
+        // metadata, used to resolve the contract assembly name for referenced projected types.
+        FrozenDictionary<(string Namespace, string Name), string> windowsRuntimeMetadataNames = WindowsRuntimeMetadataNameResolver.Build(
+            args.WinMDPaths,
+            args.WindowsMetadata,
+            args.Token);
+
         WinMDWriter writer = new(
             state.AssemblyName,
             args.AssemblyVersion,
             mapper,
-            state.InputModule);
+            state.InputModule,
+            windowsRuntimeMetadataNames);
 
         // Process all public types from the input assembly (internal or private types aren't authored)
         foreach (TypeDefinition type in state.PublicTypes)
