@@ -140,13 +140,10 @@
   <ItemGroup>
     <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
-    <None Include="WinRT.Host.runtimeconfig.json">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringTest">
-      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0\AuthoringTest.winmd</HintPath>
+      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
@@ -162,7 +159,7 @@
       <Project>{7B803846-91AE-4B98-AC93-D3FCFB2DE5AA}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\WinRT.Runtime\WinRT.Runtime.csproj">
+    <ProjectReference Include="..\..\..\WinRT.Runtime2\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
@@ -172,9 +169,12 @@
     </ProjectReference>
     <ProjectReference Include="..\..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- CsWinRT JIT-host targets. Shipped as build\native\Microsoft.Windows.CsWinRT.targets in the package. -->
+  <Import Project="..\..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" />
     <Import Project="..\..\..\packages\Microsoft.Web.WebView2.1.0.3179.45\build\native\Microsoft.Web.WebView2.targets" Condition="Exists('..\..\..\packages\Microsoft.Web.WebView2.1.0.3179.45\build\native\Microsoft.Web.WebView2.targets')" />

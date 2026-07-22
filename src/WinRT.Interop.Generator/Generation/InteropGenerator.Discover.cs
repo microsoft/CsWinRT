@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
+using ConsoleAppFramework;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.Generator.References;
@@ -52,9 +53,23 @@ internal partial class InteropGenerator
         // module load will go through this object, rather than using the assembly resolver directly.
         RuntimeContext runtimeContext = new(targetRuntime, pathAssemblyResolver);
 
+        // Build the set of assembly names explicitly opted in for analysis via 'CsWinRTMarshallingEnabledAssembly'.
+        // Each entry is normalized to its bare assembly name (dropping any directory and the '.dll' extension), so
+        // that it can be matched against the simple name of the loaded assemblies during discovery.
+        HashSet<string> marshallingEnabledAssemblyNames = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string assemblyName in args.MarshallingEnabledAssemblyNames)
+        {
+            _ = marshallingEnabledAssemblyNames.Add(Path.GetFileNameWithoutExtension(assemblyName));
+        }
+
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
-        InteropGeneratorDiscoveryState discoveryState = new() { RuntimeContext = runtimeContext };
+        InteropGeneratorDiscoveryState discoveryState = new()
+        {
+            RuntimeContext = runtimeContext,
+            MarshallingEnabledAssemblyNames = marshallingEnabledAssemblyNames
+        };
 
         // First, load the special 'WinRT.Sdk.Projection.dll', 'WinRT.Sdk.Xaml.Projection.dll', 'WinRT.Projection.dll'
         // and 'WinRT.Component.dll' modules (the last three are optional). These are necessary for surfacing some
@@ -98,6 +113,10 @@ internal partial class InteropGenerator
 
         // Validate referenced assemblies for CsWinRT 2.x
         ValidateWinRTRuntimeDllVersion2References(args, discoveryState);
+
+        // Validate the assemblies explicitly opted in via 'CsWinRTMarshallingEnabledAssembly', reporting
+        // any that don't exist or that are redundant (this only emits diagnostics, it doesn't affect state)
+        ValidateMarshallingEnabledAssemblies(args, discoveryState);
 
         return discoveryState;
     }
@@ -241,10 +260,10 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // We're only interested in harvesting .dll-s which reference the Windows SDK projections.
-        // This is true for all .dll-s that were built targeting 'netX.0-windows10.0.XXXX.0'.
-        // So this check effectively lets us filter all .dll-s that were in projects with this TFM.
-        if (!module.ReferencesWindowsRuntimeAssembly && !module.IsWindowsRuntimeModule)
+        // Determine whether this module should be analyzed, based on the runtime it targets, the configured
+        // marshalling mode, and the explicitly opted-in assemblies. Modules that reference the Windows Runtime
+        // assembly (i.e. those targeting a Windows TFM) are always analyzed; the mode only affects the others.
+        if (!ShouldProcessModule(args, discoveryState, module))
         {
             return;
         }
@@ -277,6 +296,69 @@ internal partial class InteropGenerator
 
         // Discover all SZ array types
         DiscoverSzArrayTypes(args, discoveryState, module);
+    }
+
+    /// <summary>
+    /// Determines whether a given module should be analyzed for discovery, based on the marshalling mode.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="module">The module to check.</param>
+    /// <returns>Whether <paramref name="module"/> should be analyzed for discovery.</returns>
+    /// <remarks>
+    /// Modules targeting a legacy or portable runtime are never analyzed. Otherwise, modules that reference the
+    /// Windows Runtime assembly were built targeting a Windows TFM (i.e. <c>netX.0-windows10.0.XXXX.0</c>), and
+    /// the Windows Runtime assembly itself, are always analyzed, regardless of the marshalling mode. Assemblies
+    /// explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c> are also always analyzed. Only modules
+    /// that don't reference any CsWinRT assembly and aren't opted in are subject to the mode-specific filtering.
+    /// </remarks>
+    private static bool ShouldProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
+    {
+        // Never analyze modules targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework), even
+        // when opted in. The entire interop generator infrastructure identifies well-known types (including custom-
+        // mapped types such as 'IEnumerable<T>') by comparing against type references scoped to the modern .NET
+        // corlib (e.g. 'System.Runtime'), which is also the corlib the emit phase uses. A legacy-runtime module
+        // declares those same types against a different corlib ('netstandard' or 'mscorlib'), which AsmResolver's
+        // 'SignatureComparer' treats as a distinct scope, so the generator can't match them and marshalling code for
+        // them would fail to generate. Such modules could in principle still use custom-mapped types that need
+        // marshalling, but for simplicity we skip them entirely. This was not an issue before the marshalling mode
+        // was introduced, as only assemblies referencing the Windows Runtime were analyzed, and those always target
+        // a modern .NET runtime.
+        if (module.TargetsLegacyRuntime)
+        {
+            return false;
+        }
+
+        // Assemblies explicitly opted in via 'CsWinRTMarshallingEnabledAssembly' are always analyzed,
+        // regardless of the marshalling mode. This lets users fine-tune which assemblies are analyzed
+        // (e.g. using the 'strict' mode while opting in a few specific assemblies they know are needed).
+        if (module.Assembly?.Name is { } assemblyName &&
+            discoveryState.MarshallingEnabledAssemblyNames.Contains(assemblyName.Value))
+        {
+            return true;
+        }
+
+        return args.MarshallingMode switch
+        {
+            // 'All' analyzes every module, even those not referencing any CsWinRT assembly.
+            CsWinRTMarshallingMode.All => true,
+
+            // 'Minimal' analyzes every module except those from the BCL. Non-BCL modules are checked
+            // first, as that is the common case for user code and avoids the more expensive Windows
+            // Runtime reference lookup (a BCL module can only match via the checks that follow if a
+            // future framework assembly were to reference the Windows Runtime assembly).
+            CsWinRTMarshallingMode.Minimal =>
+                !module.IsBaseClassLibraryModule ||
+                module.IsWindowsRuntimeModule ||
+                module.ReferencesWindowsRuntimeAssembly,
+
+            // 'Strict' only analyzes modules referencing the Windows Runtime assembly. This matches the
+            // historical behavior, effectively filtering to '-windows' TFM projects.
+            CsWinRTMarshallingMode.Strict => module.IsWindowsRuntimeModule || module.ReferencesWindowsRuntimeAssembly,
+
+            // The marshalling mode is always one of the values above (validated during argument parsing).
+            _ => throw new ArgumentOutOfRangeException(nameof(args), args.MarshallingMode, "Unexpected marshalling mode.")
+        };
     }
 
     /// <summary>
@@ -540,6 +622,60 @@ internal partial class InteropGenerator
             .Order();
 
         throw WellKnownInteropExceptions.WinRTRuntimeDllVersion2References(invalidModuleNames);
+    }
+
+    /// <summary>
+    /// Validates the assemblies explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c>, emitting
+    /// diagnostics for entries that can't be found or that are redundant.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    private static void ValidateMarshallingEnabledAssemblies(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
+    {
+        // Fast-path if no assemblies were explicitly opted in
+        if (args.MarshallingEnabledAssemblyNames.Length == 0)
+        {
+            return;
+        }
+
+        // In 'all' mode, every assembly is already analyzed, so all opt-in entries are redundant. We emit a
+        // single message for the whole set (rather than one per entry), and skip the per-entry checks below.
+        if (args.MarshallingMode == CsWinRTMarshallingMode.All)
+        {
+            WellKnownInteropExceptions.MarshallingEnabledAssembliesRedundantInAllModeMessage().Log(ConsoleApp.Log);
+
+            return;
+        }
+
+        // Build a lookup from assembly simple name to the loaded module, so we can match the opt-in entries.
+        // All loaded modules are tracked (even those skipped from analysis), so this correctly recognizes an
+        // opt-in entry that resolves to a real assembly, regardless of whether it ended up being analyzed.
+        Dictionary<string, ModuleDefinition> modulesByAssemblyName = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (ModuleDefinition module in discoveryState.Modules.Values)
+        {
+            if (module.Assembly?.Name is { } assemblyName)
+            {
+                modulesByAssemblyName[assemblyName.Value] = module;
+            }
+        }
+
+        // Iterate the original (non-normalized) entries, so diagnostics echo exactly what the user specified
+        foreach (string entry in args.MarshallingEnabledAssemblyNames)
+        {
+            string assemblyName = Path.GetFileNameWithoutExtension(entry);
+
+            // The entry doesn't match any referenced assembly (likely a typo or a stale reference)
+            if (!modulesByAssemblyName.TryGetValue(assemblyName, out ModuleDefinition? module))
+            {
+                WellKnownInteropExceptions.MarshallingEnabledAssemblyNotFoundWarning(entry).LogOrThrow(args.TreatWarningsAsErrors);
+            }
+            else if (module.IsWindowsRuntimeModule || module.ReferencesWindowsRuntimeAssembly)
+            {
+                // The entry resolves to an assembly that already targets Windows, so it's always analyzed anyway
+                WellKnownInteropExceptions.MarshallingEnabledAssemblyTargetsWindowsMessage(entry).Log(ConsoleApp.Log);
+            }
+        }
     }
 
     /// <summary>

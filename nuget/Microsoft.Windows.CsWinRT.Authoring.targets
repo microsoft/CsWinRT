@@ -174,6 +174,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <!-- Expose WindowsSdkPackageVersion so native consumers' synthesized aggregator
              csproj resolves the same Microsoft.Windows.SDK.NET.Ref pack version. -->
         <CsWinRTComponentWindowsSdkPackageVersion>$(WindowsSdkPackageVersion)</CsWinRTComponentWindowsSdkPackageVersion>
+        <!-- Expose the UWP XAML (Windows.UI.Xaml) projection flag so native consumers' aggregator generates matching (WUX vs WinUI) marshalling. -->
+        <CsWinRTComponentUseWindowsUIXamlProjections>$(CsWinRTUseWindowsUIXamlProjections)</CsWinRTComponentUseWindowsUIXamlProjections>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
     

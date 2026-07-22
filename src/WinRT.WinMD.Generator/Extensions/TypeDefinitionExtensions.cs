@@ -68,29 +68,5 @@ internal static class TypeDefinitionExtensions
                 return null;
             }
         }
-
-        /// <summary>
-        /// Gets the Windows Runtime contract assembly name (i.e. the source <c>.winmd</c> module name) for the type, if available.
-        /// </summary>
-        /// <returns>
-        /// The Windows Runtime contract assembly name (e.g. <c>"Microsoft.UI.Xaml"</c>), or <see langword="null"/>
-        /// if no mapping is found for the type.
-        /// </returns>
-        /// <remarks>
-        /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original Windows Runtime
-        /// contract assembly name so the WinMD can reference types correctly. The mapping is no longer carried on each
-        /// type: it lives on the centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type in the implementation
-        /// projection (so the build-time-only metadata can be trimmed away), and is read from the type's declaring module.
-        /// </remarks>
-        public string? WindowsRuntimeAssemblyName
-        {
-            get
-            {
-                return type.DeclaringModule is { } module &&
-                       module.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace?.Value, type.Name?.Value), out string? stem)
-                    ? stem
-                    : null;
-            }
-        }
     }
 }

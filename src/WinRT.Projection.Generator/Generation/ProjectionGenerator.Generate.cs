@@ -8,9 +8,9 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionWriter;
-using WindowsRuntime.ProjectionWriter.Helpers;
 
 #pragma warning disable IDE0270
 
@@ -115,8 +115,12 @@ internal partial class ProjectionGenerator
 
         PathAssemblyResolver resolver = new(resolverPaths);
 
-        bool isWindowsSdkMode = args.WindowsSdkOnly || args.WindowsUIXamlProjection;
         bool isComponentMode = args.AssemblyName == "WinRT.Component";
+
+        // 'WindowsUIXamlProjection' also flows to component mode (for the '[TypeMapAssemblyTarget]' union),
+        // but must not put it into Windows SDK mode: the SDK 'Windows.UI.Xaml' namespace comes from
+        // 'WinRT.Sdk.Xaml.Projection.dll', so component mode is never Windows SDK mode.
+        bool isWindowsSdkMode = (args.WindowsSdkOnly || args.WindowsUIXamlProjection) && !isComponentMode;
 
         // In component mode, read the component .winmd files directly to get the WinRT type
         // includes. The .winmd is the authoritative source of WinRT types and only contains
@@ -254,7 +258,7 @@ internal partial class ProjectionGenerator
 
         // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into
         // actual .winmd file paths (or directories the writer will recursively scan).
-        winmdInputs.AddRange(WindowsMetadataExpander.Expand(args.WindowsMetadata));
+        winmdInputs.AddRange(WindowsMetadataExpander.Expand<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata));
 
         // When generating 'WinRT.Component.dll', enable component-specific code generation
         // (activation factories, exclusive-to interfaces, etc.).

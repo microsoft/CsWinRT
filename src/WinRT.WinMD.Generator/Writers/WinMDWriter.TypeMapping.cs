@@ -149,8 +149,9 @@ internal sealed partial class WinMDWriter
     /// <list type="bullet">
     ///   <item><see cref="TypeDefinition"/>: checks if already processed in the output module, processes on demand
     ///     if public, or creates an external type reference.</item>
-    ///   <item><see cref="TypeReference"/>: looks up the output mapping, resolves Windows Runtime contract assembly names
-    ///     via <c>[WindowsRuntimeMetadata]</c> attribute, and creates a type reference.</item>
+    ///   <item><see cref="TypeReference"/>: looks up the output mapping, resolves the Windows Runtime contract
+    ///     assembly name (the source <c>.winmd</c> module name) by matching the referenced type against the
+    ///     input Windows Runtime metadata, and creates a type reference.</item>
     ///   <item><see cref="TypeSpecification"/>: creates a new specification with a mapped signature.</item>
     /// </list>
     /// </remarks>
@@ -198,19 +199,25 @@ internal sealed partial class WinMDWriter
                 return declaration.OutputType;
             }
 
-            // For Windows Runtime types from projection assemblies, use the Windows Runtime contract assembly name
-            // from the centralized ABI.WindowsRuntimeMetadataTypes lookup type instead of the projection assembly name.
-            // E.g., 'StackPanel' from 'Microsoft.WinUI' → 'Microsoft.UI.Xaml' in the WinMD.
-            string assembly = GetAssemblyNameFromScope(typeRef.Scope);
-            TypeDefinition? resolvedType = SafeResolve(typeRef);
-
-            if (resolvedType is not null)
+            // Custom-mapped types (e.g. 'PropertyChangedEventHandler' -> 'Microsoft.UI.Xaml.Data.PropertyChangedEventHandler')
+            // can reach here directly (as an event type or base interface) without going through
+            // 'MapTypeSignatureToOutput', so map them to their Windows Runtime namespace, name, and contract assembly.
+            if (_mapper.HasMappingForType(fullName))
             {
-                string? winrtAssembly = resolvedType.WindowsRuntimeAssemblyName;
-                if (winrtAssembly is not null)
-                {
-                    assembly = winrtAssembly;
-                }
+                MappedTypeInfo mappingInfo = _mapper.GetMappedType(fullName).GetMappedTypeInfo();
+
+                return GetOrCreateTypeReference(mappingInfo.Namespace, mappingInfo.Name, mappingInfo.Assembly);
+            }
+
+            // For projection types, resolve the contract assembly (the source '.winmd' module name) by matching the
+            // type's namespace and name against the input Windows Runtime metadata, rather than the projection
+            // assembly name (e.g. 'StackPanel' from 'Microsoft.WinUI' -> 'Microsoft.UI.Xaml'). Reference projections
+            // (used at component build time) don't carry the centralized 'ABI.WindowsRuntimeMetadataTypes' lookup.
+            string assembly = GetAssemblyNameFromScope(typeRef.Scope);
+
+            if (_windowsRuntimeMetadataNames.TryGetValue((@namespace, name), out string? stem))
+            {
+                assembly = stem;
             }
 
             return GetOrCreateTypeReference(@namespace, name, assembly);

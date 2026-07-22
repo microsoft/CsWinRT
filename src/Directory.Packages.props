@@ -23,7 +23,7 @@
     <PackageVersion Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-25565-01" />
     <PackageVersion Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.109" />
     <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.14.1" />
     <PackageVersion Include="Microsoft.VCRTForwarders.140" Version="1.1.0" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />

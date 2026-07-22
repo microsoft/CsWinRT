@@ -36,6 +36,20 @@ namespace ObjectLifetimeTests.Lifted
             this.InitializeComponent();
         }
 
+        // DISABLE_XAML_GENERATED_MAIN drops the XAML-generated Main (it calls the 2.x
+        // WinRT.ComWrappersSupport.InitializeComWrappers(), which is gone in 3.0). Provide our own.
+        [global::System.STAThread]
+        static void Main(string[] args)
+        {
+            global::Microsoft.UI.Xaml.Application.Start((p) =>
+            {
+                var context = new global::Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
+                    global::Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
+                global::System.Threading.SynchronizationContext.SetSynchronizationContext(context);
+                _ = new App();
+            });
+        }
+
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
@@ -43,11 +57,82 @@ namespace ObjectLifetimeTests.Lifted
         /// <param name="args">Details about the launch request and process.</param>        
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.CreateDefaultUI();
             m_window = new MainWindow();
             m_window.Activate();
 
-            Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(Environment.CommandLine);
+            // We are doing workarounds to get this working with CsWinRT 3.0 given testhost extensions
+            // has a version that has a 2.x dependency. Since we make it use the version of the extensions
+            // without that dependency, that seems to cause issues where testhost's UnitTestClient.Run expects
+            // to be launched passing --parentprocessid but it isn't.  So we detect and workaround that for now.
+            if (Environment.CommandLine.Contains("--parentprocessid"))
+            {
+                Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(Environment.CommandLine);
+            }
+            else
+            {
+                RunTestsInProcess();
+            }
+        }
+
+        // In-process runner for the standalone launch. The [TestMethod]s marshal work to the UI-thread
+        // dispatcher and block on it, so they must run off the UI thread (which keeps pumping).
+        private static void RunTestsInProcess()
+        {
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                // Tee the framework log to Trace and to a file in the package temp folder so the direct
+                // (in-process) launch's output can be read back by the pipeline (a packaged app has no console).
+                string logPath = System.IO.Path.Combine(
+                    Windows.Storage.ApplicationData.Current.TemporaryFolder.Path, "objectlifetime-inproc.log");
+
+                try { System.IO.File.Delete(logPath); } catch { }
+
+                Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler onLogMessage =
+                    message =>
+                    {
+                        System.Diagnostics.Trace.WriteLine(message);
+                        try { System.IO.File.AppendAllText(logPath, message + System.Environment.NewLine); } catch { }
+                    };
+
+                Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage += onLogMessage;
+
+                int passed = 0, failed = 0;
+
+                foreach (System.Type type in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+                {
+                    if (type.GetCustomAttributes(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute), false).Length == 0)
+                    {
+                        continue;
+                    }
+
+                    foreach (System.Reflection.MethodInfo method in type.GetMethods())
+                    {
+                        if (method.GetCustomAttributes(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute), false).Length == 0)
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            object instance = System.Activator.CreateInstance(type);
+                            method.Invoke(instance, null);
+                            passed++;
+                            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("PASS  {0}.{1}", type.Name, method.Name);
+                        }
+                        catch (System.Exception ex)
+                        {
+                            failed++;
+                            Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("FAIL  {0}.{1}: {2}", type.Name, method.Name, (ex.InnerException ?? ex).Message);
+                        }
+                    }
+                }
+
+                Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage("Summary: {0} passed, {1} failed.", passed, failed);
+
+                Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage -= onLogMessage;
+
+                System.Environment.Exit(failed == 0 ? 0 : 1);
+            });
         }
 
         public MainWindow m_window { get; set; }

@@ -71,6 +71,9 @@
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
+    <ProjectReference Include="..\..\Projections\Windows.UI.Xaml\Windows.UI.Xaml.csproj">
+      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
+    </ProjectReference>
     <ProjectReference Include="..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
@@ -78,18 +81,18 @@
     <ProjectReference Include="..\..\Authoring\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringWuxTest\AuthoringWuxTest.csproj">
       <Project>{d60cfcad-4a13-4047-91c8-9d7df4753493}</Project>
-      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringWuxTest">
-      <HintPath>..\AuthoringWuxTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0\AuthoringWuxTest.winmd</HintPath>
+      <HintPath>..\AuthoringWuxTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\AuthoringWuxTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
@@ -97,6 +100,8 @@
     <Manifest Include="AuthoringWuxConsumptionTest.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- CsWinRT JIT-host targets. Shipped as build\native\Microsoft.Windows.CsWinRT.targets in the package. -->
+  <Import Project="..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.targets" Condition="Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.targets')" />

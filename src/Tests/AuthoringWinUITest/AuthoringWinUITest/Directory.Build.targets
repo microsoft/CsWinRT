@@ -15,4 +15,24 @@
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
+  <!--
+    The XAML markup compiler resolves managed implementation assemblies from
+    @(ReferencePath) and chokes on the net10 BCL closure of the CsWinRT 3.0 component
+    (WMC1006). It only needs the .winmd metadata, so restrict @(ReferencePath) to
+    winmds for MarkupCompilePass1 and restore it afterwards. Temporary until this
+    filtering is done in the WinUI markup compiler targets.
+  -->
+  <Target Name="_CsWinRTFilterMarkupPass1RefsToWinmd" BeforeTargets="MarkupCompilePass1">
+    <ItemGroup>
+      <_CsWinRTNonWinmdMarkupRefs Include="@(ReferencePath)" Condition="'%(Extension)' != '.winmd'" />
+      <ReferencePath Remove="@(_CsWinRTNonWinmdMarkupRefs)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CsWinRTRestoreMarkupPass1Refs" AfterTargets="MarkupCompilePass1">
+    <ItemGroup>
+      <ReferencePath Include="@(_CsWinRTNonWinmdMarkupRefs)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

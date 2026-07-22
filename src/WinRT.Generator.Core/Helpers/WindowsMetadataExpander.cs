@@ -8,15 +8,15 @@ using System.Security;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Win32;
-using WindowsRuntime.ProjectionWriter.Errors;
+using WindowsRuntime.Generator.Errors;
 
-namespace WindowsRuntime.ProjectionWriter.Helpers;
+namespace WindowsRuntime.Generator.Helpers;
 
 /// <summary>
 /// Expands a Windows metadata token (e.g. <c>"sdk"</c>, <c>"sdk+"</c>, <c>"local"</c>,
 /// <c>"10.0.26100.0"</c>, or a literal path) into the set of <c>.winmd</c> files for that input.
 /// </summary>
-public static partial class WindowsMetadataExpander
+internal static partial class WindowsMetadataExpander
 {
     /// <summary>
     /// Matches an SDK version string like <c>"10.0.26100.0"</c> or <c>"10.0.26100.0+"</c>
@@ -27,11 +27,13 @@ public static partial class WindowsMetadataExpander
 
     /// <summary>
     /// Expands a single Windows metadata token to the resulting set of .winmd file paths
-    /// (or directory paths that should be recursively scanned by the writer).
+    /// (or directory paths that should be recursively scanned by the caller).
     /// </summary>
+    /// <typeparam name="TErr">The per-tool error factory used to construct well-known exceptions.</typeparam>
     /// <param name="token">The token to expand (path, "local", "sdk", "sdk+", or a version string).</param>
-    /// <returns>A list of paths suitable for <see cref="ProjectionWriterOptions.InputPaths"/>.</returns>
-    public static List<string> Expand(string token)
+    /// <returns>A list of concrete <c>.winmd</c> file or directory paths.</returns>
+    public static List<string> Expand<TErr>(string token)
+        where TErr : IWindowsMetadataErrorFactory
     {
         List<string> result = [];
 
@@ -40,7 +42,7 @@ public static partial class WindowsMetadataExpander
             return result;
         }
 
-        // Existing file or directory: pass through as-is (the writer handles both).
+        // Existing file or directory: pass through as-is (the caller handles both).
         if (File.Exists(token) || Directory.Exists(token))
         {
             result.Add(token);
@@ -87,11 +89,11 @@ public static partial class WindowsMetadataExpander
 
             if (string.IsNullOrEmpty(sdkPath))
             {
-                throw WellKnownProjectionWriterExceptions.WindowsSdkNotFound();
+                throw TErr.WindowsSdkNotFound();
             }
 
             string platformXml = Path.Combine(sdkPath, "Platforms", "UAP", sdkVersion, "Platform.xml");
-            AddFilesFromPlatformXml(result, sdkVersion, platformXml, sdkPath);
+            AddFilesFromPlatformXml<TErr>(result, sdkVersion, platformXml, sdkPath);
 
             if (includeExtensions)
             {
@@ -105,7 +107,7 @@ public static partial class WindowsMetadataExpander
 
                         if (File.Exists(xml))
                         {
-                            AddFilesFromPlatformXml(result, sdkVersion, xml, sdkPath);
+                            AddFilesFromPlatformXml<TErr>(result, sdkVersion, xml, sdkPath);
                         }
                     }
                 }
@@ -114,11 +116,12 @@ public static partial class WindowsMetadataExpander
             return result;
         }
 
-        // No expansion matched - return the token as-is so the writer's "file not found" error
+        // No expansion matched - return the token as-is so the caller's "file not found" error
         // surfaces with the original token in the message.
         result.Add(token);
         return result;
     }
+
     private static string TryGetSdkPath()
     {
         if (!OperatingSystem.IsWindows())
@@ -198,11 +201,13 @@ public static partial class WindowsMetadataExpander
         }
         return bestStr;
     }
-    private static void AddFilesFromPlatformXml(List<string> result, string sdkVersion, string xmlPath, string sdkPath)
+
+    private static void AddFilesFromPlatformXml<TErr>(List<string> result, string sdkVersion, string xmlPath, string sdkPath)
+        where TErr : IWindowsMetadataErrorFactory
     {
         if (!File.Exists(xmlPath))
         {
-            throw WellKnownProjectionWriterExceptions.CannotReadWindowsSdkXml(xmlPath);
+            throw TErr.CannotReadWindowsSdkXml(xmlPath);
         }
 
         XmlReaderSettings settings = new() { DtdProcessing = DtdProcessing.Ignore, IgnoreWhitespace = true };

@@ -89,6 +89,13 @@ internal static class ResponseFileBuilder
             return string.Join(',', array);
         }
 
+        // Enum values are serialized by their member name (e.g. 'All'), matching the parser's
+        // case-insensitive, name-based enum handling so the round-trip stays deterministic.
+        if (value is Enum enumValue)
+        {
+            return enumValue.ToString();
+        }
+
         // All other primitive values use invariant culture, matching the parser's
         // invariant 'Convert.ChangeType' so the round-trip is deterministic.
         return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;

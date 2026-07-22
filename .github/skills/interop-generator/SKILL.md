@@ -61,8 +61,9 @@ WinRT.Interop.Generator/
 ├── Errors/                                 # Error/warning infrastructure
 │   ├── UnhandledInteropException.cs        # Wraps unexpected errors with phase context
 │   ├── WellKnownInteropException.cs        # Structured errors with CSWINRTINTEROPGEN### codes
-│   ├── WellKnownInteropExceptions.cs       # Factory for all error/warning codes (80+ codes)
-│   └── WellKnownInteropWarning.cs          # Non-fatal warnings (can be promoted to errors)
+│   ├── WellKnownInteropExceptions.cs       # Factory for all error/warning/message codes (100+ codes)
+│   ├── WellKnownInteropWarning.cs          # Non-fatal warnings (can be promoted to errors)
+│   └── WellKnownInteropMessage.cs          # Informational messages (never promoted to errors)
 ├── Extensions/                             # Extension methods (23 files)
 │   ├── WindowsRuntimeExtensions.cs         # Core: IsProjectedWindowsRuntimeType, IsBlittable, etc.
 │   ├── TypeSignatureExtensions.cs          # GetAbiType, EnumerateAllInterfaces, etc.
@@ -230,6 +231,8 @@ The generator is invoked via a response file: `cswinrtinteropgen.exe @path/to/re
 | `--winrt-component-assembly-path` | `string?` | `WinRT.Component.dll` path (for authored components) |
 | `--generated-assembly-directory` | `string` | Output folder for `WinRT.Interop.dll` |
 | `--use-windows-ui-xaml-projections` | `bool` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI |
+| `--marshalling-mode` | `CsWinRTMarshallingMode` | Which assemblies to analyze for discovery: `All`, `Minimal` (default; skip BCL), or `Strict` (only WinRT-referencing) |
+| `--marshalling-enabled-assembly-names` | `string[]` | Assembly names (`.dll`/directory ignored) always analyzed regardless of mode (from the `CsWinRTMarshallingEnabledAssembly` item) |
 | `--validate-winrt-runtime-assembly-version` | `bool` | Check version compatibility |
 | `--validate-winrt-runtime-dll-version-2-references` | `bool` | Reject CsWinRT 2.x references |
 | `--enable-incremental-generation` | `bool` | Enable incremental generation (caching) |
@@ -281,6 +284,15 @@ The generator processes two categories of assemblies:
 - `WinRT.Sdk.Xaml.Projection.dll` — Precompiled UWP XAML projection (optional)
 - `WinRT.Projection.dll` — 3rd-party component projections (optional)
 - `WinRT.Component.dll` — Authored component projections (optional)
+
+**Marshalling mode** (`--marshalling-mode`, `ShouldProcessModule` in `InteropGenerator.Discover.cs`): controls which modules are analyzed for discovery. Modules referencing the Windows Runtime assembly (i.e. those built targeting a Windows TFM) are **always** analyzed; the mode only affects modules that don't reference any CsWinRT assembly:
+- `All` — analyze every module, even plain `.NET` assemblies (including the BCL).
+- `Minimal` (default) — analyze every module except those from the BCL (detected via well-known .NET/Microsoft public key tokens, see `BaseClassLibraryIdentity` in `WinRT.Generator.Core` and the `ModuleDefinition.IsBaseClassLibraryModule` extension), to reduce binary size. This still lets projects that don't target a Windows TFM (e.g. a class library with just MVVM viewmodels) contribute the marshalling code their types need.
+- `Strict` — only analyze modules referencing the Windows Runtime assembly (the historical behavior). Corresponds to `!ReferencesWindowsRuntimeAssembly && !IsWindowsRuntimeModule → skip`.
+
+**Legacy-runtime skip** (`ModuleDefinition.TargetsLegacyRuntime` in `InteropGenerator.Discover.cs`): regardless of mode, modules targeting a legacy/portable runtime (i.e. a `netstandard` or `mscorlib` corlib scope) are **never** analyzed. The entire generator infrastructure identifies well-known types (including custom-mapped types such as `IEnumerable<T>`) by comparing against type references scoped to the modern .NET corlib (e.g. `System.Runtime`), which the emit phase also uses. Legacy-runtime assemblies declare those same types against a different corlib (`netstandard`/`mscorlib`), which `AsmResolver`'s `SignatureComparer` treats as a distinct scope — so the generator can't match them, and generating marshalling code for them would fail with `CSWINRTINTEROPGEN0055`/`0020`. Such assemblies could in principle still use custom-mapped types that need marshalling, but for simplicity they're skipped entirely.
+
+**Opt-in assemblies** (`--marshalling-enabled-assembly-names`, from the `CsWinRTMarshallingEnabledAssembly` MSBuild item): assemblies listed here are **always** analyzed (matched by simple name, ignoring `.dll`/directory), regardless of the mode — checked first in `ShouldProcessModule`. This lets users fine-tune size (e.g. `strict` mode + a few opted-in assemblies). It does **not** override the legacy-runtime skip (legacy assemblies still can't be marshalled). `ValidateMarshallingEnabledAssemblies` emits three diagnostics: `CSWINRTINTEROPGEN0098` (warning: entry doesn't match any referenced assembly), `CSWINRTINTEROPGEN0099` (message: entry already targets Windows, redundant), and `CSWINRTINTEROPGEN0100` (message: mode is `all`, all entries redundant).
 
 **Type exclusions** (`Helpers/TypeExclusions.cs`):
 - `System.Threading.Tasks.Task<T>` — Cannot be marshalled across Windows Runtime boundary

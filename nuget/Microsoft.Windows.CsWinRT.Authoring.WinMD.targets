@@ -43,12 +43,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_ComputeRunCsWinRTWinMDGeneratorCache"
-    DependsOnTargets="CoreCompile;_ResolveCsWinRTWinMDGenToolsDirectory">
+    DependsOnTargets="CoreCompile;_ResolveCsWinRTWinMDGenToolsDirectory;CsWinRTResolveWindowsMetadata">
 
     <ItemGroup>
       <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTWinMDGenEffectiveToolsDirectory)" />
       <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(AssemblyVersion)" />
+      <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
     </ItemGroup>
 
     <Hash ItemsToHash="@(_RunCsWinRTWinMDGeneratorInputsCacheToHash)">
@@ -73,16 +74,32 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTWinMDGenerator"
-    DependsOnTargets="CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache"
+    DependsOnTargets="CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache;CsWinRTResolveWindowsMetadata"
     AfterTargets="CoreCompile"
     Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies);$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTWinMDOutputPath)"
     Condition="'$(CsWinRTComponent)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
+    <!--
+      Build the list of input .winmd files used to resolve the source Windows Runtime contract
+      assembly name for referenced projected types: third party component metadata (CsWinRTInputs),
+      any .winmd carried on reference paths, and the internal interop metadata. The Windows SDK
+      metadata is passed separately via the 'WindowsMetadata' token.
+    -->
+    <ItemGroup>
+      <_CsWinRTWinMDGenReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+      <_CsWinRTWinMDGenWinMDPaths Include="@(CsWinRTInputs)" />
+      <_CsWinRTWinMDGenWinMDPaths Include="$([MSBuild]::ValueOrDefault('%(_CsWinRTWinMDGenReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
+                                 Condition="'%(_CsWinRTWinMDGenReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
+      <_CsWinRTWinMDGenWinMDPaths Include="$(CsWinRTInteropMetadata)" Condition="'$(CsWinRTInteropMetadata)' != ''" />
+    </ItemGroup>
+
     <!-- Invoke 'cswinrtwinmdgen' -->
     <RunCsWinRTWinMDGenerator
       InputAssemblyPath="@(IntermediateAssembly)"
       ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      WinMDPaths="@(_CsWinRTWinMDGenWinMDPaths)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"
       OutputWinmdPath="$(_CsWinRTWinMDOutputPath)"
       AssemblyVersion="$(AssemblyVersion)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
