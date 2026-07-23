@@ -1,0 +1,8 @@
+{
+  "solution": {
+    "path": "cswinrt.slnx",
+    "projects": [
+      "WinRT.Generator.Tasks\\WinRT.Generator.Tasks.csproj"
+    ]
+  }
+}

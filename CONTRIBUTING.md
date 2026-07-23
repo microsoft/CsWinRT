@@ -79,9 +79,16 @@ Thank you in advance for your contribution!
     src\build.cmd
     ```
 3. (Optional) Open the solution in Visual Studio. This will inherit the necessary environment.
+
+    First build the custom MSBuild task DLL, then open the dev solution filter (which excludes
+    `WinRT.Generator.Tasks`). The filter keeps Visual Studio from rebuilding that DLL while it is
+    loaded, avoiding `MSB3027` file-lock errors when editing shared `.props`/`.targets`.
     ```
-    devenv src\cswinrt.slnx
+    src\build-tasks.cmd
+    devenv src\cswinrt.dev.slnf
     ```
+    Re-run `src\build-tasks.cmd` after editing the task sources (Visual Studio won't rebuild them).
+    Use `src\cswinrt.slnx` directly if you need to build the task project from within Visual Studio.
 
 > [!NOTE]
 > Projection projects under `src/Projections` only generate sources in `Release` by default. To generate them in `Debug`, set the property `GenerateTestProjection` to `true`. This configuration will enable a faster inner loop in Visual Studio. "Generated Files" remain under the Generated Files folder regardless of configuration.
