@@ -156,8 +156,6 @@ steps:
 
   - ${{ if eq(parameters.SetupForBuildOnly, false) }}:
 
-# Builds the full solution (including WinRT.Generator.Tasks). CI always builds cswinrt.slnx, not the
-# VS-only cswinrt.dev.slnf filter, so the task DLL is still built and packaged here.
 # PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
     - task: VSBuild@1
       displayName: Build cswinrt.slnx
