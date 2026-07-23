@@ -117,12 +117,8 @@
     <NativeLibraryPublishedDllPath>$(NativeLibraryPublishFolder)$(NativeLibraryProjectName).dll</NativeLibraryPublishedDllPath>
   </PropertyGroup>
   <!-- .AOT.csproj is a slnx top-level project; it's already published. Just pick up the dll. -->
-  <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
-          Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
-          Inputs="$(NativeLibraryPublishedDllPath)"
-          Outputs="@(ReferenceCopyLocalPaths)">
-    <Error Condition="!Exists('$(NativeLibraryPublishedDllPath)')"
-           Text="Expected published AOT host '$(NativeLibraryPublishedDllPath)' was not produced. Verify slnx built AuthoringConsumptionTest2.AOT.csproj for Release|x64." />
+  <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link" Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'" Inputs="$(NativeLibraryPublishedDllPath)" Outputs="@(ReferenceCopyLocalPaths)">
+    <Error Condition="!Exists('$(NativeLibraryPublishedDllPath)')" Text="Expected published AOT host '$(NativeLibraryPublishedDllPath)' was not produced. Verify slnx built AuthoringConsumptionTest2.AOT.csproj for Release|x64." />
     <ItemGroup>
       <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
     </ItemGroup>
@@ -152,16 +148,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')"
-              Include="AuthoringConsumptionTest2.exe.manifest" />
-    <Manifest Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
-              Include="AuthoringConsumptionTest2.AOT.exe.manifest" />
+    <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="AuthoringConsumptionTest2.exe.manifest" />
+    <Manifest Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'" Include="AuthoringConsumptionTest2.AOT.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <Import Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')"
-          Project="..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
+  <Import Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Project="..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" />
     <Import Project="..\..\packages\Microsoft.Web.WebView2.1.0.3179.45\build\native\Microsoft.Web.WebView2.targets" Condition="Exists('..\..\packages\Microsoft.Web.WebView2.1.0.3179.45\build\native\Microsoft.Web.WebView2.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets" Condition="Exists('..\..\packages\Microsoft.Windows.SDK.BuildTools.10.0.26100.4654\build\Microsoft.Windows.SDK.BuildTools.targets')" />
@@ -171,6 +163,7 @@
     <Import Project="..\..\packages\Microsoft.WindowsAppSDK.Foundation.1.8.251104000\build\native\Microsoft.WindowsAppSDK.Foundation.targets" Condition="Exists('..\..\packages\Microsoft.WindowsAppSDK.Foundation.1.8.251104000\build\native\Microsoft.WindowsAppSDK.Foundation.targets')" />
     <Import Project="..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.targets" Condition="Exists('..\..\packages\Microsoft.WindowsAppSDK.WinUI.1.8.251105000\build\native\Microsoft.WindowsAppSDK.WinUI.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
   </ImportGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -238,8 +231,12 @@
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
-  <Target Name="EnsurePackageReference" BeforeTargets="PrepareForBuild">
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="Required package Microsoft.Windows.CppWinRT not found. Run NuGet restore." />
-    <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="Required package Microsoft.googletest not found. Run NuGet restore." />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
   </Target>
 </Project>
