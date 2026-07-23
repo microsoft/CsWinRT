@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
 
 namespace WindowsRuntime.InteropServices;
 
@@ -15,27 +14,18 @@ namespace WindowsRuntime.InteropServices;
 /// constructor. Activation works differently for composed and sealed types, so these marker types are used to select
 /// the correct constructor overload to invoke.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static class WindowsRuntimeActivationTypes
 {
     /// <summary>
     /// The derived type is a composed Windows Runtime type.
     /// </summary>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     public readonly ref struct DerivedComposed;
 
     /// <summary>
     /// The derived type is a sealed Windows Runtime type.
     /// </summary>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     public readonly ref struct DerivedSealed;
 }

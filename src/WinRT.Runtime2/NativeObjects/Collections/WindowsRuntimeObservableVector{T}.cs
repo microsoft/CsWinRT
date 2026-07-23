@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Windows.Foundation.Collections;
@@ -25,10 +24,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIObservableVectorEventSourceFactory">The <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> factory type for event source objects.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
 [WindowsRuntimeManagedOnlyType]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public abstract class WindowsRuntimeObservableVector<
     T,
     TIIterable,
@@ -130,10 +126,7 @@ public abstract class WindowsRuntimeObservableVector<
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -228,10 +221,7 @@ public abstract class WindowsRuntimeObservableVector<
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

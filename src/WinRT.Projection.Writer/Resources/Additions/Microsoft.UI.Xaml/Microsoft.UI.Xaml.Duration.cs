@@ -3,8 +3,8 @@ namespace Microsoft.UI.Xaml
 {
     using global::Windows.Foundation;
 
-    [WindowsRuntimeMetadata("Microsoft.UI")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Duration>")]
     [ABI.Microsoft.UI.Xaml.DurationComWrappersMarshaller]
 #endif

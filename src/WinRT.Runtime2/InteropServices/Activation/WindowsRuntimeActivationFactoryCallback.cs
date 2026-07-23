@@ -1,28 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Activation factory types to activate Windows Runtime objects with custom logic.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static class WindowsRuntimeActivationFactoryCallback
 {
     /// <summary>
     /// A type containing logic to activate a composed Windows Runtime object.
     /// </summary>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     public abstract class DerivedComposed
     {
         /// <summary>
@@ -43,10 +36,7 @@ public static class WindowsRuntimeActivationFactoryCallback
     /// A type containing logic to activate a sealed Windows Runtime object.
     /// </summary>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#activation"/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     public abstract class DerivedSealed
     {
         /// <summary>

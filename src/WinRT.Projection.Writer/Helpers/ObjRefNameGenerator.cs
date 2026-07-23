@@ -245,9 +245,14 @@ internal static class ObjRefNameGenerator
     /// </summary>
     public static void WriteClassObjRefDefinitions(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Per-interface _objRef_* getters are emitted in BOTH impl and ref modes with full
-        // bodies. (Only the static factory _objRef_* getters become `throw null;` in ref mode --
-        // see WriteStaticFactoryObjRef and WriteAttributedTypes.)
+        // The per-interface '_objRef_*' fields are private implementation details that reference
+        // implementation-only 'WinRT.Runtime' types ('WindowsRuntimeObjectReference', 'NativeObjectReference',
+        // the ABI IID accessors, etc.). A reference projection compiles against the stripped 'WinRT.Runtime'
+        // reference assembly and only needs the public API surface, so none of these are emitted.
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
 
         // Track names emitted so we don't emit duplicates (e.g. when both IFoo and IFoo2
         // produce the same _objRef_<name>).

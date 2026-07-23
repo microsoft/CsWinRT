@@ -23,10 +23,12 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for a blittable value type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition BlittableValueType(
             SzArrayTypeSignature arrayType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -39,6 +41,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerCopyToManaged(elementType),
                 disposeMethod: null,
                 freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -47,11 +50,13 @@ internal partial class InteropTypeDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.UnmanagedValueType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -66,6 +71,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 disposeMethod: null,
                 freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -74,11 +80,13 @@ internal partial class InteropTypeDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.ManagedValueType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -93,6 +101,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerCopyToManaged(elementType, elementAbiType, elementMarshallerTypeSignature),
                 disposeMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerDispose(elementType, elementAbiType, elementMarshallerTypeSignature),
                 freeMethod: interopReferences.WindowsRuntimeManagedValueTypeArrayMarshallerFree(elementType, elementAbiType, elementMarshallerTypeSignature),
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -101,11 +110,13 @@ internal partial class InteropTypeDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.KeyValuePair"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)arrayType.BaseType;
@@ -121,6 +132,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToManaged(keyType, valueType, elementMarshallerTypeSignature),
                 disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -129,11 +141,13 @@ internal partial class InteropTypeDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.NullableValueType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition NullableValueType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)arrayType.BaseType;
@@ -148,6 +162,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeNullableTypeArrayMarshallerCopyToManaged(underlyingType, elementMarshallerTypeSignature),
                 disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -156,11 +171,13 @@ internal partial class InteropTypeDefinitionFactory
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
         /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.ReferenceType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         public static TypeDefinition ReferenceType(
             SzArrayTypeSignature arrayType,
             TypeDefinition elementMarshallerType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -174,6 +191,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeReferenceTypeArrayMarshallerCopyToManaged(elementType, elementMarshallerTypeSignature),
                 disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -181,9 +199,10 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="object"/> type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
-        public static TypeDefinition Object(SzArrayTypeSignature arrayType, InteropReferences interopReferences)
+        public static TypeDefinition Object(SzArrayTypeSignature arrayType, InteropDefinitions interopDefinitions, InteropReferences interopReferences)
         {
             return Marshaller(
                 arrayType: arrayType,
@@ -193,6 +212,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.WindowsRuntimeObjectArrayMarshallerCopyToManaged,
                 disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
                 freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -200,9 +220,10 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="string"/> type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
-        public static TypeDefinition String(SzArrayTypeSignature arrayType, InteropReferences interopReferences)
+        public static TypeDefinition String(SzArrayTypeSignature arrayType, InteropDefinitions interopDefinitions, InteropReferences interopReferences)
         {
             return Marshaller(
                 arrayType: arrayType,
@@ -212,6 +233,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.HStringArrayMarshallerCopyToManaged,
                 disposeMethod: interopReferences.HStringArrayMarshallerDispose,
                 freeMethod: interopReferences.HStringArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -219,9 +241,10 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="System.Type"/> type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
-        public static TypeDefinition Type(SzArrayTypeSignature arrayType, InteropReferences interopReferences)
+        public static TypeDefinition Type(SzArrayTypeSignature arrayType, InteropDefinitions interopDefinitions, InteropReferences interopReferences)
         {
             return Marshaller(
                 arrayType: arrayType,
@@ -231,6 +254,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.TypeArrayMarshallerCopyToManaged,
                 disposeMethod: interopReferences.TypeArrayMarshallerDispose,
                 freeMethod: interopReferences.TypeArrayMarshallerFree,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -238,9 +262,10 @@ internal partial class InteropTypeDefinitionFactory
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for the <see cref="System.Exception"/> type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
-        public static TypeDefinition Exception(SzArrayTypeSignature arrayType, InteropReferences interopReferences)
+        public static TypeDefinition Exception(SzArrayTypeSignature arrayType, InteropDefinitions interopDefinitions, InteropReferences interopReferences)
         {
             return Marshaller(
                 arrayType: arrayType,
@@ -250,6 +275,7 @@ internal partial class InteropTypeDefinitionFactory
                 copyToManagedMethod: interopReferences.ExceptionArrayMarshallerCopyToManaged,
                 freeMethod: interopReferences.WindowsRuntimeBlittableValueTypeArrayMarshallerFree,
                 disposeMethod: null,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences);
         }
 
@@ -263,6 +289,7 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="copyToManagedMethod"> The <c>CopyToManaged</c> implementation method to call.</param>
         /// <param name="disposeMethod">The <c>Dispose</c> implementation method to call, if applicable.</param>
         /// <param name="freeMethod"> The <c>Free</c> implementation method to call.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <returns>The resulting marshaller type.</returns>
         private static TypeDefinition Marshaller(
@@ -273,6 +300,7 @@ internal partial class InteropTypeDefinitionFactory
             IMethodDescriptor copyToManagedMethod,
             IMethodDescriptor? disposeMethod,
             IMethodDescriptor freeMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences)
         {
             TypeSignature elementType = arrayType.BaseType;
@@ -281,7 +309,7 @@ internal partial class InteropTypeDefinitionFactory
             // We're declaring an 'internal static class' type
             TypeDefinition marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "Marshaller"),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopDefinitions, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 

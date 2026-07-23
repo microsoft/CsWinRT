@@ -28,10 +28,12 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the <c>KeyValuePairMethods</c> type to contain shared accessor
         /// methods for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
         /// </summary>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="methodsType">The resulting methods type.</param>
         public static void Methods(
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition methodsType)
@@ -39,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             methodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopReferences.RuntimeContext, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopDefinitions, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -69,8 +71,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = keyValuePairType.TypeArguments[1];
 
             // Prepare the names of the accessor methods, to define or look them up
-            Utf8String get_KeyMethodName = $"get_Key({InteropUtf8NameFactory.TypeName(keyType, interopReferences.RuntimeContext)})";
-            Utf8String get_ValueMethodName = $"get_Value({InteropUtf8NameFactory.TypeName(valueType, interopReferences.RuntimeContext)})";
+            Utf8String get_KeyMethodName = $"get_Key({InteropUtf8NameFactory.TypeName(keyType, interopDefinitions)})";
+            Utf8String get_ValueMethodName = $"get_Value({InteropUtf8NameFactory.TypeName(valueType, interopDefinitions)})";
 
             // Get or define the 'get_Key' accessor method
             if (!methodsType.TryGetMethod(get_KeyMethodName, out keyAccessorMethod!))
@@ -108,6 +110,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="keyValuePairType"/>.</param>
         /// <param name="keyAccessorMethod">The accessor method for the key.</param>
         /// <param name="valueAccessorMethod">The accessor method for the value.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -117,6 +120,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_IidMethod,
             MethodDefinition keyAccessorMethod,
             MethodDefinition valueAccessorMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -125,7 +129,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopReferences.RuntimeContext, "Marshaller"),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopDefinitions, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -242,7 +246,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopDefinitions, "Impl"),
                 vftblType: interopDefinitions.IKeyValuePairVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -272,7 +276,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopDefinitions, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.IKeyValuePairInterfaceEntries,
                 interopReferences: interopReferences,
                 module: module,
@@ -311,7 +315,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerAttributeType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopDefinitions, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -453,6 +457,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -460,6 +465,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Proxy(
             TypeSignature keyValuePairType,
             TypeDefinition comWrappersMarshallerAttributeType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -470,7 +476,7 @@ internal partial class InteropTypeDefinitionBuilder
             // reference the mapped type, so that we can retrieve the original 'Type' instance when marshalling from native.
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(keyValuePairType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(keyValuePairType, interopDefinitions),
                 mappedMetadata: "Windows.Foundation.FoundationContract",
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(keyValuePairType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,

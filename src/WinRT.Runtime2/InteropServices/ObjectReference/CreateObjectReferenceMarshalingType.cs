@@ -1,19 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Specifies the marshaling type to use to marshal a given Windows Runtime object, specifically when creating a <see cref="WindowsRuntimeObjectReference"/> instance.
 /// </summary>
 /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.metadata.marshalingtype"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public enum CreateObjectReferenceMarshalingType
 {
     /// <summary>

@@ -1,0 +1,55 @@
+<Project>
+
+  <!--
+    The smoke tests consume the real 'Microsoft.Windows.CsWinRT' NuGet package exactly as an
+    external customer would. This file (together with the sibling '.targets' and
+    'Directory.Packages.props') shadows the repository's own build infrastructure, so the smoke
+    tests inherit nothing from 'src/Directory.Build.*'.
+
+    All configuration shared by the consumption and authoring smoke tests lives here, so each
+    '.csproj' only carries what makes it different.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
+
+    <!--
+      Opt into disabled runtime marshalling, matching what CsWinRT relies on for interop. An authored
+      component that does not reference any input .winmd files no longer has these attributes emitted
+      for it in generated source (the reference projection generator is skipped), so the consuming
+      project sets them itself, exactly as a real component author would.
+    -->
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+  </PropertyGroup>
+
+  <!--
+    The CsWinRT package version, and the folder it was built into, are supplied by the build
+    that produced the package ('build.cmd' locally, or the CI pack step). They default to the
+    local 'build.cmd x64 Release' output so the smoke tests can also be built by hand after a
+    local package build.
+  -->
+  <PropertyGroup>
+    <CsWinRTPackageVersion Condition="'$(CsWinRTPackageVersion)' == ''">0.0.0-private.0</CsWinRTPackageVersion>
+    <CsWinRTPackageSource Condition="'$(CsWinRTPackageSource)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '_build', 'x64', 'Release', 'cswinrt', 'bin'))</CsWinRTPackageSource>
+
+    <!--
+      The CsWinRTDependencies feed (the repository's standard feed, see 'nuget.config') provides
+      the preview Windows SDK ref pack pinned above, just like the rest of the repo (e.g.
+      'src/WinRT.Internal') resolves the public Windows SDK targeting pack from it. It also provides
+      'Microsoft.Windows.SDK.Contracts', whose '.winmd' files the Windows SDK reference-projection
+      smoke tests project (see 'WindowsSdkContracts.targets').
+    -->
+    <CsWinRTDependenciesSource Condition="'$(CsWinRTDependenciesSource)' == ''">https://pkgs.dev.azure.com/shine-oss/CsWinRT/_packaging/CsWinRTDependencies/nuget/v3/index.json</CsWinRTDependenciesSource>
+
+    <!--
+      Override all inherited NuGet sources with just the local CsWinRT build output (for the
+      package under test) and the CsWinRTDependencies feed (for everything else).
+    -->
+    <RestoreSources>$(CsWinRTPackageSource);$(CsWinRTDependenciesSource)</RestoreSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(CsWinRTPackageVersion)" />
+  </ItemGroup>
+</Project>

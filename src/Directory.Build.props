@@ -47,6 +47,14 @@
     <CsWinRTRefGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTRefGenEffectiveToolsDirectory>
     <CsWinRTWinMDGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTWinMDGenEffectiveToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
+
+    <!--
+      This repo references 'WinRT.Runtime' directly (via project references) rather than as a separate
+      reference assembly laid out under 'ref/net10.0' alongside a 'lib/net10.0' implementation assembly,
+      so there is nothing for the projection and interop generators to swap. Opt out of the swap that
+      'Microsoft.Windows.CsWinRT.CsWinRTGen.targets' performs by default for consumers of the NuGet package.
+    -->
+    <CsWinRTSwapRuntimeReferenceAssembly>false</CsWinRTSwapRuntimeReferenceAssembly>
   </PropertyGroup>
 
   <PropertyGroup>

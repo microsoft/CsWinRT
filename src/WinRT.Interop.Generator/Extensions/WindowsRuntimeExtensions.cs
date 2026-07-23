@@ -26,7 +26,7 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
         /// </summary>
         /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeTypeAttribute);
 
         /// <summary>
         /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime reference assembly.
@@ -115,6 +115,17 @@ internal static class WindowsRuntimeExtensions
         /// Gets a value indicating whether the type is from a Windows Runtime component assembly.
         /// </summary>
         public bool IsComponentWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeComponentAssembly: true };
+
+        /// <summary>
+        /// Gets a value indicating whether the type is from a Windows Runtime reference projection assembly.
+        /// </summary>
+        /// <remarks>
+        /// Types in a reference projection assembly (marked with <c>[WindowsRuntimeReferenceAssembly]</c>) are
+        /// projected Windows Runtime types, but they do not carry the per-type <c>[WindowsRuntimeMetadata]</c>
+        /// attribute that implementation projections use (it is stripped from reference projections). This mirrors
+        /// how authored component assemblies expose projected types without that attribute (the <c>IsComponentWindowsRuntimeType</c> extension property).
+        /// </remarks>
+        public bool IsReferenceProjectionWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeReferenceAssembly: true };
 
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
@@ -726,8 +737,10 @@ internal static class WindowsRuntimeExtensions
                     return false;
                 }
 
-                // The type also must be a projected type
-                return type.IsProjectedWindowsRuntimeType;
+                // The type also must be a projected type (recognized either by its '[WindowsRuntimeMetadata]'
+                // attribute, for implementation projections, or by being defined in a reference projection
+                // assembly, which doesn't carry that per-type attribute).
+                return type.IsProjectedWindowsRuntimeType || type.IsReferenceProjectionWindowsRuntimeType;
             }
         }
 
@@ -766,14 +779,51 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Gets the Windows Runtime metadata name for a <see cref="TypeDefinition"/>, if available.
+        /// Gets the Windows Runtime metadata name for a <see cref="TypeDefinition"/> (i.e. the source <c>.winmd</c> module name).
         /// </summary>
-        /// <returns>The Windows Runtime metadata name from the <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
-        public Utf8String? GetWindowsRuntimeMetadataName()
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <returns>The Windows Runtime metadata name, or <see langword="null"/> if not found.</returns>
+        /// <remarks>
+        /// <para>
+        /// The type -> source <c>.winmd</c> stem mapping is no longer carried on each projected type. It lives on the
+        /// centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type in the implementation projection (so the
+        /// build-time-only metadata can be trimmed away when unused). This selects the right implementation projection for
+        /// the type (via <see cref="GetImplementationProjectionModule"/>) and looks the type up by namespace and name.
+        /// </para>
+        /// <para>
+        /// This is the authoritative value the interop type-name marker must agree with: the projection writer encodes the
+        /// very same stem into the <c>[UnsafeAccessorType]</c> references it emits into that implementation projection. It
+        /// works uniformly for types resolved from implementation projections and from reference projections (the latter
+        /// don't carry the lookup type, but resolve to the same implementation projection that does).
+        /// </para>
+        /// </remarks>
+        public Utf8String? GetWindowsRuntimeMetadataName(InteropDefinitions interopDefinitions)
         {
-            CustomAttribute? attribute = type.FindCustomAttributes("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8).FirstOrDefault();
+            if (type.GetImplementationProjectionModule(interopDefinitions) is { } projectionModule &&
+                projectionModule.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace, type.Name), out Utf8String? metadataName))
+            {
+                return metadataName;
+            }
 
-            return attribute?.Signature?.FixedArguments?[0]?.Element as Utf8String;
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the implementation projection module that contains the marshalling code for a projected <see cref="TypeDefinition"/>.
+        /// </summary>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <returns>
+        /// The <see cref="ModuleDefinition"/> for the implementation projection the type belongs to: the Windows SDK projection
+        /// (<c>WinRT.Sdk.Projection.dll</c>), the Windows SDK XAML projection (<c>WinRT.Sdk.Xaml.Projection.dll</c>), or the merged
+        /// third-party projection (<c>WinRT.Projection.dll</c>); or <see langword="null"/> if that projection is not available.
+        /// </returns>
+        public ModuleDefinition? GetImplementationProjectionModule(InteropDefinitions interopDefinitions)
+        {
+            return type.IsProjectedWindowsSdkType
+                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+                : type.IsProjectedWindowsSdkXamlType
+                    ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+                    : interopDefinitions.WindowsRuntimeProjectionModule;
         }
     }
 
@@ -1007,8 +1057,9 @@ internal static class WindowsRuntimeExtensions
 
             // For all other cases, just check that the type is projected. This will also include manually
             // projected types that are defined in 'WinRT.Runtime.dll' (same attributes). Public types from
-            // authored component assemblies are also considered Windows Runtime types.
-            return type.IsProjectedWindowsRuntimeType || type.IsComponentWindowsRuntimeType;
+            // authored component assemblies, and types from reference projection assemblies, are also
+            // considered Windows Runtime types (they don't carry the per-type '[WindowsRuntimeMetadata]' attribute).
+            return type.IsProjectedWindowsRuntimeType || type.IsComponentWindowsRuntimeType || type.IsReferenceProjectionWindowsRuntimeType;
         }
 
         /// <summary>
@@ -1074,8 +1125,9 @@ internal static class WindowsRuntimeExtensions
             TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
 
             // For all other cases, first check that the type is projected. Public types from authored
-            // component assemblies are also considered projected, even without '[WindowsRuntimeMetadata]'.
-            if (!type.IsProjectedWindowsRuntimeType && !type.IsComponentWindowsRuntimeType)
+            // component assemblies, and types from reference projection assemblies, are also considered
+            // projected, even without '[WindowsRuntimeMetadata]'.
+            if (!type.IsProjectedWindowsRuntimeType && !type.IsComponentWindowsRuntimeType && !type.IsReferenceProjectionWindowsRuntimeType)
             {
                 return false;
             }
@@ -1089,22 +1141,25 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Gets the Windows Runtime metadata name for a <see cref="TypeSignature"/>, if available.
         /// </summary>
-        /// <param name="runtimeContext">The context to assume when resolving types.</param>
-        /// <returns>The Windows Runtime metadata name from the underlying type's <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <returns>The Windows Runtime metadata name for the underlying type, or <see langword="null"/> if not found.</returns>
         /// <remarks>
         /// <para>
         /// This method resolves the underlying type definition from the signature and retrieves its Windows Runtime metadata name.
         /// For generic instance types, it uses the generic type definition. For array types, it uses the base element type.
-        /// For other types, it resolves the type definition directly.
+        /// For other types, it resolves the type definition directly. The metadata name is recovered from the implementation
+        /// projection for types coming from reference projections (see the <see cref="TypeDefinition"/> overload of this method).
         /// </para>
         /// </remarks>
-        public Utf8String? GetWindowsRuntimeMetadataName(RuntimeContext? runtimeContext)
+        public Utf8String? GetWindowsRuntimeMetadataName(InteropDefinitions interopDefinitions)
         {
+            RuntimeContext? runtimeContext = interopDefinitions.RuntimeContext;
+
             return signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(),
-                ArrayTypeSignature array => array.BaseType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(),
-                _ => signature.ToTypeDefOrRef().Resolve(runtimeContext).GetWindowsRuntimeMetadataName()
+                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
+                ArrayTypeSignature array => array.BaseType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
+                _ => signature.ToTypeDefOrRef().Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions)
             };
         }
     }
@@ -1218,9 +1273,9 @@ file static class WellKnownMetadataNames
     public static readonly Utf8String WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices"u8;
 
     /// <summary>
-    /// The <c>"WindowsRuntimeMetadataAttribute"</c> text.
+    /// The <c>"WindowsRuntimeTypeAttribute"</c> text.
     /// </summary>
-    public static readonly Utf8String WindowsRuntimeMetadataAttribute = "WindowsRuntimeMetadataAttribute"u8;
+    public static readonly Utf8String WindowsRuntimeTypeAttribute = "WindowsRuntimeTypeAttribute"u8;
 
     /// <summary>
     /// The <c>"WindowsRuntimeReferenceAssemblyAttribute"</c> text.

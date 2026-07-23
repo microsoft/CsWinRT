@@ -112,6 +112,13 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
                 MetadataAttributeFactory.WriteDefaultInterfacesClass(_settings, sorted);
             }
 
+            if (state.WindowsRuntimeMetadataTypeEntries.Count > 0 && !_settings.ReferenceProjection)
+            {
+                List<KeyValuePair<string, string>> sorted = [.. state.WindowsRuntimeMetadataTypeEntries];
+                sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
+                MetadataAttributeFactory.WriteWindowsRuntimeMetadataTypesClass(_settings, sorted);
+            }
+
             if (!state.ExclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)
             {
                 List<KeyValuePair<string, string>> sorted = [.. state.ExclusiveToInterfaceEntries];

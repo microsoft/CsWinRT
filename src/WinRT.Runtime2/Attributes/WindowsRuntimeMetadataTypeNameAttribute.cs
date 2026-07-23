@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
+
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime;
 
@@ -27,10 +28,7 @@ namespace WindowsRuntime;
     AttributeTargets.Delegate,
     AllowMultiple = false,
     Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public sealed class WindowsRuntimeMetadataTypeNameAttribute : Attribute
 {
     /// <summary>

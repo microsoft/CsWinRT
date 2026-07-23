@@ -1,0 +1,5 @@
+# The smoke tests are isolated from the repository build infrastructure and use the default
+# project-relative build output folders (rather than the repo's '_build' output), so ignore
+# them here to keep build artifacts out of source control.
+bin/
+obj/

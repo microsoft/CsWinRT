@@ -54,6 +54,11 @@ internal sealed class InteropDefinitions
     }
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.
+    /// </summary>
+    public RuntimeContext RuntimeContext => _interopReferences.RuntimeContext;
+
+    /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).
     /// </summary>
     public ModuleDefinition WindowsRuntimeSdkProjectionModule { get; }

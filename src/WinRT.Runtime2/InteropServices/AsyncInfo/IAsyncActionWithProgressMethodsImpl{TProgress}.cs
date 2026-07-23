@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
 using Windows.Foundation;
 
 namespace WindowsRuntime.InteropServices;
@@ -11,10 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <see cref="IAsyncActionWithProgress{TProgress}"/> types.
 /// </summary>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public interface IAsyncActionWithProgressMethodsImpl<TProgress>
 {
     /// <summary>

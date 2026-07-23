@@ -40,7 +40,9 @@ internal static partial class ClassMembersFactory
             // For generic-interface properties, emit the UnsafeAccessor static externs above the
             // property declaration. Note: getter and setter use the same accessor name (because
             // C# allows method overloading on parameter list for the static externs).
-            if (s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
+            // These externs are impl-only plumbing for the accessor bodies; in ref mode the bodies
+            // are 'throw null' so the externs (which reference 'WindowsRuntimeObjectReference') are omitted.
+            if (!context.Settings.ReferenceProjection && s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
             {
                 writer.WriteLine();
                 UnsafeAccessorFactory.EmitStaticMethod(
@@ -52,7 +54,7 @@ internal static partial class ClassMembersFactory
                     parameterList: "WindowsRuntimeObjectReference thisReference");
             }
 
-            if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
+            if (!context.Settings.ReferenceProjection && s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
                 writer.WriteLine();
                 UnsafeAccessorFactory.EmitStaticMethod(

@@ -16,14 +16,15 @@ internal static class TypeDefinitionExtensions
     extension(TypeDefinition type)
     {
         /// <summary>
-        /// Checks whether the type is a Windows Runtime type (has the <c>[WindowsRuntimeMetadata]</c> attribute).
+        /// Checks whether the type is a Windows Runtime type (has the <c>[WindowsRuntimeType]</c> marker).
         /// </summary>
         /// <remarks>
-        /// Types marked with <c>[WindowsRuntimeMetadata]</c> are projected Windows Runtime types that come
-        /// from CsWinRT-generated projection assemblies. This attribute indicates the type has a
-        /// corresponding Windows Runtime definition.
+        /// Types marked with <c>[WindowsRuntimeType]</c> are projected Windows Runtime types that come
+        /// from CsWinRT-generated projection assemblies. This marker indicates the type has a corresponding
+        /// Windows Runtime definition. The source contract assembly is recorded separately on the centralized
+        /// <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type (the <c>WindowsRuntimeAssemblyName</c> property).
         /// </remarks>
-        public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").Any();
+        public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeTypeAttribute").Any();
 
         /// <summary>
         /// Checks whether the type is a Windows Runtime API contract (has the <c>[ApiContract]</c> attribute).

@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -11,10 +8,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the observable map.</typeparam>
 /// <typeparam name="TValue">The type of values in the observable map.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public interface IObservableMapEventSourceFactory<TKey, TValue>
 {
     /// <summary>

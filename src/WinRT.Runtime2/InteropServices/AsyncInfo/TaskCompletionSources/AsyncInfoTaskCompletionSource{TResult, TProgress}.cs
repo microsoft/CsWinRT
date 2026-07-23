@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -19,7 +18,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="TResult">The result type.</typeparam>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
-[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCompletionSource<TResult>
 {
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._cancellationToken"/>

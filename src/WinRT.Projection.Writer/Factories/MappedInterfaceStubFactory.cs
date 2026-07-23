@@ -69,7 +69,7 @@ internal static class MappedInterfaceStubFactory
         switch (ifaceName)
         {
             case "IClosable":
-                EmitDisposable(writer, objRefName);
+                EmitDisposable(writer, context, objRefName);
                 break;
             case "IIterable`1":
                 EmitGenericEnumerable(writer, context, typeArgs, typeArgSigs, objRefName);
@@ -90,38 +90,105 @@ internal static class MappedInterfaceStubFactory
                 EmitReadOnlyList(writer, context, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IBindableIterable":
-                writer.WriteLine();
-                writer.WriteLine($"IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator({objRefName});");
+                EmitNonGenericEnumerable(writer, context, objRefName);
                 break;
             case "IBindableIterator":
-                writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                    public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({{objRefName}});
-                    public void Reset() => throw new NotSupportedException();
-                    public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({{objRefName}});
-                    """);
+                EmitNonGenericEnumerator(writer, context, objRefName);
                 break;
             case "IBindableVector":
-                EmitNonGenericList(writer, objRefName);
+                EmitNonGenericList(writer, context, objRefName);
                 break;
             case "INotifyDataErrorInfo":
-                writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                    public global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({{objRefName}}, propertyName);
-                    public bool HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({{objRefName}}); }
-                    public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
-                    {
-                        add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Subscribe(value);
-                        remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Unsubscribe(value);
-                    }
-                    """);
+                EmitNotifyDataErrorInfo(writer, context, objRefName);
                 break;
         }
     }
-    private static void EmitDisposable(IndentedTextWriter writer, string objRefName)
+
+    private static void EmitDisposable(IndentedTextWriter writer, ProjectionEmitContext context, string objRefName)
     {
+        // In a reference projection the member bodies dispatch to implementation-only plumbing
+        // (the 'ABI.*Methods' helpers, the '[UnsafeAccessor]' externs, and the '_objRef_*' fields,
+        // all of which are absent from the 'WinRT.Runtime' reference assembly), so the entire body is
+        // emitted as a stub. The public member signatures stay identical to the implementation projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine("public void Dispose() => throw null;");
+
+            return;
+        }
+
         writer.WriteLine();
         writer.WriteLine($"public void Dispose() => global::ABI.System.IDisposableMethods.Dispose({objRefName});");
+    }
+
+    private static void EmitNonGenericEnumerable(IndentedTextWriter writer, ProjectionEmitContext context, string objRefName)
+    {
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine("IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null;");
+
+            return;
+        }
+
+        writer.WriteLine();
+        writer.WriteLine($"IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator({objRefName});");
+    }
+
+    private static void EmitNonGenericEnumerator(IndentedTextWriter writer, ProjectionEmitContext context, string objRefName)
+    {
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, """
+                public bool MoveNext() => throw null;
+                public void Reset() => throw null;
+                public object Current => throw null;
+                """);
+
+            return;
+        }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $"""
+            public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({objRefName});
+            public void Reset() => throw new NotSupportedException();
+            public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({objRefName});
+            """);
+    }
+
+    private static void EmitNotifyDataErrorInfo(IndentedTextWriter writer, ProjectionEmitContext context, string objRefName)
+    {
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, """
+                public global::System.Collections.IEnumerable GetErrors(string propertyName) => throw null;
+                public bool HasErrors {get => throw null; }
+                public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
+                {
+                    add => throw null;
+                    remove => throw null;
+                }
+                """);
+
+            return;
+        }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            public global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({{objRefName}}, propertyName);
+            public bool HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({{objRefName}}); }
+            public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
+            {
+                add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Subscribe(value);
+                remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Unsubscribe(value);
+            }
+            """);
     }
 
     private static void EmitGenericEnumerable(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -132,13 +199,28 @@ internal static class MappedInterfaceStubFactory
         }
 
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
+
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection. Only the
+        // projected type name is needed for the signatures; the implementation-only interop plumbing
+        // (interop type, '[UnsafeAccessor]' externs) is not computed or emitted.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $"""
+                public IEnumerator<{t}> GetEnumerator() => throw null;
+                global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null;
+                """);
+
+            return;
+        }
+
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumerableMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessor(writer, "GetEnumerator", $"IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
+        EmitUnsafeAccessor(writer, context, "GetEnumerator", $"IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
 
         writer.WriteLine();
         writer.WriteLine($"public IEnumerator<{t}> GetEnumerator() => {prefix}GetEnumerator(null, {objRefName});");
@@ -153,13 +235,29 @@ internal static class MappedInterfaceStubFactory
         }
 
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
+
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $"""
+                public bool MoveNext() => throw null;
+                public void Reset() => throw null;
+                public void Dispose() => throw null;
+                public {t} Current => throw null;
+                object global::System.Collections.IEnumerator.Current => throw null;
+                """);
+
+            return;
+        }
+
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerator'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumeratorMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Current",  t,      $"{prefix}Current",  ""),
             new("MoveNext", "bool", $"{prefix}MoveNext", "")]);
 
@@ -189,6 +287,36 @@ internal static class MappedInterfaceStubFactory
         string kv = $"KeyValuePair<{k}, {v}>";
         string kvNested = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
 
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection. Only the projected
+        // type names are needed for the signatures; the implementation-only interop plumbing (interop
+        // type, '[UnsafeAccessor]' externs, '_objRef_*' fields) is not computed or emitted.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                public ICollection<{{k}}> Keys => throw null;
+                public ICollection<{{v}}> Values => throw null;
+                public int Count => throw null;
+                public bool IsReadOnly => false;
+                public {{v}} this[{{k}} key]
+                {
+                    get => throw null;
+                    set => throw null;
+                }
+                public void Add({{k}} key, {{v}} value) => throw null;
+                public bool ContainsKey({{k}} key) => throw null;
+                public bool Remove({{k}} key) => throw null;
+                public bool TryGetValue({{k}} key, out {{v}} value) => throw null;
+                public void Add({{kv}} item) => throw null;
+                public void Clear() => throw null;
+                public bool Contains({{kv}} item) => throw null;
+                public void CopyTo({{kv}}[] array, int arrayIndex) => throw null;
+                bool ICollection<{{kv}}>.Remove({{kv}} item) => throw null;
+                """);
+
+            return;
+        }
+
         // Long form (always fully qualified) used for objref field-name computation
         // (matches the form WriteClassObjRefDefinitions emits transitively).
         string kvLong = kvNested;
@@ -207,9 +335,9 @@ internal static class MappedInterfaceStubFactory
         // 'Keys'/'Values' take the projected runtime class directly (passed as 'this'), rather than the
         // interface object reference like the other accessors. This lets the returned collection be cached
         // in the public property's backing 'field' so it preserves reference identity across accesses.
-        EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessor(writer, context, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessor(writer, context, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count",        "int",               $"{prefix}Count",        ""),
             new("Item",         v,                   $"{prefix}Item",         $", {k} key"),
             new("Item",         "void",              $"{prefix}Item",         $", {k} key, {v} value"),
@@ -257,6 +385,23 @@ internal static class MappedInterfaceStubFactory
 
         string k = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string v = WriteTypeNameToString(context, args[1], TypedefNameType.Projected, true);
+
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $"""
+                public {v} this[{k} key] => throw null;
+                public IEnumerable<{k}> Keys => throw null;
+                public IEnumerable<{v}> Values => throw null;
+                public int Count => throw null;
+                public bool ContainsKey({k} key) => throw null;
+                public bool TryGetValue({k} key, out {v} value) => throw null;
+                """);
+
+            return;
+        }
+
         string keyId = EncodeArgIdentifier(context, args[0]);
         string valId = EncodeArgIdentifier(context, args[1]);
         string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -269,9 +414,9 @@ internal static class MappedInterfaceStubFactory
         // 'Keys'/'Values' take the projected runtime class directly (passed as 'this'), rather than the
         // interface object reference like the other accessors. This lets the returned collection be cached
         // in the public property's backing 'field' so it preserves reference identity across accesses.
-        EmitUnsafeAccessor(writer, "Keys", $"IEnumerable<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessor(writer, "Values", $"IEnumerable<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessor(writer, context, "Keys", $"IEnumerable<{k}>", $"{prefix}Keys", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessor(writer, context, "Values", $"IEnumerable<{v}>", $"{prefix}Values", interopType, "", receiver: "WindowsRuntimeObject windowsRuntimeObject");
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count",       "int",               $"{prefix}Count",       ""),
             new("Item",        v,                   $"{prefix}Item",        $", {k} key"),
             new("ContainsKey", "bool",              $"{prefix}ContainsKey", $", {k} key"),
@@ -296,23 +441,37 @@ internal static class MappedInterfaceStubFactory
         }
 
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
+
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $"""
+                [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
+                public {t} this[int index] => throw null;
+                public int Count => throw null;
+                """);
+
+            return;
+        }
+
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count", "int", $"{prefix}Count", ""),
             new("Item",  t,     $"{prefix}Item",  ", int index")]);
 
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<T>'s
         // EmitGenericEnumerable invocation.
         writer.WriteLine();
-        writer.WriteLine(isMultiline: true, $$"""
+        writer.WriteLine(isMultiline: true, $"""
             [global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
-            public {{t}} this[int index] => {{prefix}}Item(null, {{objRefName}}, index);
-            public int Count => {{prefix}}Count(null, {{objRefName}});
+            public {t} this[int index] => {prefix}Item(null, {objRefName}, index);
+            public int Count => {prefix}Count(null, {objRefName});
             """);
     }
 
@@ -343,13 +502,41 @@ internal static class MappedInterfaceStubFactory
         }
 
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
+
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                public int Count => throw null;
+                public bool IsReadOnly => false;
+                
+                [global::System.Runtime.CompilerServices.IndexerName("ListItem")]
+                public {{t}} this[int index]
+                {
+                    get => throw null;
+                    set => throw null;
+                }
+                public int IndexOf({{t}} item) => throw null;
+                public void Insert(int index, {{t}} item) => throw null;
+                public void RemoveAt(int index) => throw null;
+                public void Add({{t}} item) => throw null;
+                public void Clear() => throw null;
+                public bool Contains({{t}} item) => throw null;
+                public void CopyTo({{t}}[] array, int arrayIndex) => throw null;
+                public bool Remove({{t}} item) => throw null;
+                """);
+
+            return;
+        }
+
         string elementId = EncodeArgIdentifier(context, args[0]);
         string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IListMethods_" + elementId + "_";
 
         writer.WriteLine();
-        EmitUnsafeAccessors(writer, interopType, [
+        EmitUnsafeAccessors(writer, context, interopType, [
             new("Count",    "int",  $"{prefix}Count",    ""),
             new("Item",     t,      $"{prefix}Item",     ", int index"),
             new("Item",     "void", $"{prefix}Item",     $", int index, {t} value"),
@@ -393,8 +580,25 @@ internal static class MappedInterfaceStubFactory
     /// (<c>WindowsRuntimeObjectReference objRef</c>); a few accessors (e.g. dictionary
     /// <c>Keys</c>/<c>Values</c>) instead take the projected runtime class (<c>WindowsRuntimeObject</c>).
     /// </summary>
-    private static void EmitUnsafeAccessor(IndentedTextWriter writer, string accessName, string returnType, string functionName, string interopType, string extraParams, string receiver = "WindowsRuntimeObjectReference objRef")
+    private static void EmitUnsafeAccessor(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        string accessName,
+        string returnType,
+        string functionName,
+        string interopType,
+        string extraParams,
+        string receiver = "WindowsRuntimeObjectReference objRef")
     {
+        // The '[UnsafeAccessor]' extern is impl-only plumbing for the stub member bodies; in a reference
+        // projection those bodies are not bound (the reference assembly only needs the public member
+        // signatures), so the extern (which typically references the implementation-only
+        // 'WindowsRuntimeObjectReference') is omitted.
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         UnsafeAccessorFactory.EmitStaticMethod(
             writer,
             accessName: accessName,
@@ -408,22 +612,54 @@ internal static class MappedInterfaceStubFactory
     /// <summary>
     /// Emits a sequence of <c>[UnsafeAccessor]</c> static extern declarations sharing the same
     /// <paramref name="interopType"/>. Each row of <paramref name="accessors"/> is forwarded to
-    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, string, string, string, string, string, string)"/>.
+    /// <see cref="EmitUnsafeAccessor(IndentedTextWriter, ProjectionEmitContext, string, string, string, string, string, string)"/>.
     /// Used by the collection-stub emitters which emit table-shaped sets of accessors.
     /// </summary>
     private static void EmitUnsafeAccessors(
         IndentedTextWriter writer,
+        ProjectionEmitContext context,
         string interopType,
         params ReadOnlySpan<(string AccessName, string ReturnType, string FunctionName, string ExtraParams)> accessors)
     {
         foreach ((string accessName, string returnType, string functionName, string extraParams) in accessors)
         {
-            EmitUnsafeAccessor(writer, accessName, returnType, functionName, interopType, extraParams);
+            EmitUnsafeAccessor(writer, context, accessName, returnType, functionName, interopType, extraParams);
         }
     }
 
-    private static void EmitNonGenericList(IndentedTextWriter writer, string objRefName)
+    private static void EmitNonGenericList(IndentedTextWriter writer, ProjectionEmitContext context, string objRefName)
     {
+        // See 'EmitDisposable' for why the body is stubbed in a reference projection.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, """
+                [global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
+                public object this[int index]
+                {
+                    get => throw null;
+                    set => throw null;
+                }
+                public int Count => throw null;
+                public bool IsReadOnly => false;
+                public bool IsFixedSize => false;
+                public bool IsSynchronized => false;
+                public object SyncRoot => this;
+                public int Add(object value) => throw null;
+                public void Clear() => throw null;
+                public bool Contains(object value) => throw null;
+                public int IndexOf(object value) => throw null;
+                public void Insert(int index, object value) => throw null;
+                public void Remove(object value) => throw null;
+                public void RemoveAt(int index) => throw null;
+                public void CopyTo(Array array, int index) => throw null;
+                """);
+
+            // GetEnumerator is NOT emitted here -- it's handled separately by IBindableIterable's
+            // EmitNonGenericEnumerable invocation.
+            return;
+        }
+
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             [global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]

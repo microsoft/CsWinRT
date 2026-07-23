@@ -173,13 +173,16 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 - **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 - **Strong-name signed** with `key.snk`
 - **AOT compatible**: `IsAotCompatible = true`
+- **Dual-built**: produces both the implementation assembly and a stripped **reference assembly** (see "Reference assembly" below); the reference build adds a `Microsoft.CodeAnalysis.BannedApiAnalyzers` reference
 
 **Directory structure:**
 
 ```
 WinRT.Runtime2/
-├── WindowsRuntimeObject.cs          # Base class for ALL projected runtime classes
+├── WindowsRuntimeObject.cs          # Base class for ALL projected runtime classes (partial; reference + shared surface)
+├── WindowsRuntimeObject.Impl.cs     # Implementation-only half of WindowsRuntimeObject (excluded from the reference assembly)
 ├── WindowsRuntimeInspectable.cs     # Fallback type for unknown native objects
+├── BannedSymbols.txt                # Banned API list for the reference assembly build (blocks implementation-only types from leaking)
 ├── ABI/                             # ABI type mappings (managed ↔ native)
 │   ├── System/                      # Primitives, String, Uri, DateTimeOffset, collections, etc.
 │   ├── Windows.Foundation/          # Foundation types (Point, Rect, Size, etc.)
@@ -242,13 +245,27 @@ WinRT.Runtime2/
 - **T4 templates**: 6 `.tt` files generate constants (`HRESULT` codes, interface IIDs, XAML class names) and specialized marshallers (blittable array types).
 - **Feature switches**: opt-in/opt-out runtime features are controlled via `[FeatureSwitchDefinition]`-annotated properties in `WindowsRuntimeFeatureSwitches` (`Properties/WindowsRuntimeFeatureSwitches.cs`). Each switch is backed by an `AppContext` configuration property (e.g. `CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION`) and wired to an MSBuild property (e.g. `CsWinRTEnableManifestFreeActivation`) in `nuget/Microsoft.Windows.CsWinRT.targets`, which emits `RuntimeHostConfigurationOption` items with `Trim="true"`. This lets ILLink (trimming) and ILC (Native AOT) treat the switch values as constants and dead-code-eliminate all code behind disabled switches, making opt-in features fully pay-for-play.
 
+**Reference assembly:**
+
+`WinRT.Runtime` is built **twice**: once as the implementation assembly (the actual `WinRT.Runtime.dll` that runs) and once as a lightweight **reference assembly** that downstream tooling and `ProjectReference` consumers compile against. The reference build is selected via the `CsWinRTBuildReferenceAssembly` MSBuild property and strips out every implementation-only type and member, so none of them are exposed on the public API surface.
+
+- **Compilation symbols**: the implementation build defines `WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY`; the reference build defines `WINDOWS_RUNTIME_REFERENCE_ASSEMBLY`. Members that differ between the two (e.g. the explicit interface implementations on `WindowsRuntimeObject`, which become `throw null` stubs) are guarded with `#if`/`#elif` on these symbols. An entire source file can opt out of the reference assembly by placing `#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE` at the top: the `RemoveWindowsRuntimeImplementationOnlyFiles` target removes those files (plus the whole `ABI/`, `NativeObjects/`, `Exceptions/`, `Windows.UI.Xaml.Interop/`, and most `InteropServices/` subfolders) before `CoreCompile`.
+- **`ProduceReferenceAssembly = false`**: the implementation build disables the SDK's automatic reference assembly, because `WinRT.Runtime` ships its own (the SDK-generated one would leak the implementation-only types to consumers and break reference projections).
+- **`[WindowsRuntimeImplementationOnlyMember]`** (`Attributes/WindowsRuntimeImplementationOnlyMemberAttribute.cs`): an `internal sealed`, `[Conditional("WINDOWS_RUNTIME_REFERENCE_ASSEMBLY")]` marker placed on implementation-only types/members (including most of the marker attributes under `Attributes/`). For the **common case** (a type/member that nothing outside the implementation assembly needs to reference), it replaces the older `[Obsolete] + [EditorBrowsable(Never)]` combination, makes the intent explicit, and is only ever emitted into the reference assembly (where it is stripped along with the members it marks).
+- **Two strategies for implementation-only API** — there are two ways CsWinRT keeps an implementation detail out of the supported surface, and the choice depends on whether *generated code that compiles against the reference assembly* needs to name the type:
+  1. **Strip it entirely** (the default, preferred): mark it `[WindowsRuntimeImplementationOnlyMember]` (or place it in a file/folder excluded from the reference build) so it is **absent** from the reference assembly. This is the cleanest option and is used for everything that is only reached at runtime or via `[IgnoresAccessChecksTo]` from `WinRT.Interop.dll` (e.g. the ABI marshallers, native object wrappers, vtable helpers).
+  2. **Keep it public but hidden** (the exception): leave the type in the reference assembly, but — only there (`#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY`) — mark it `[Obsolete(..., DiagnosticId = "CSWINRT3xxx", UrlFormat = ...)]` + `[EditorBrowsable(Never)]`. This is required when **CsWinRT-generated code** references the type by name *and that code is compiled against the reference assembly* (so stripping would cause `CS0234`/`CS0246`). Such generated code suppresses the diagnostic (e.g. `#pragma warning disable`), so normal builds are unaffected, while direct use in user code surfaces the obsolete warning. The obsolete message/diagnostic-id constants live in `Properties/WindowsRuntimeConstants.cs`, and each id has a docs page under `docs/diagnostics/`. Current cases: the three type map group types (`CSWINRT3002`; referenced by the source generator's `[assembly: TypeMapAssemblyTarget<TGroup>]` output), the component authoring attributes `WindowsRuntimeComponentAssemblyAttribute`/`WindowsRuntimeComponentAssemblyExportsTypeAttribute` (`CSWINRT3003`; referenced by the authoring source generator's `ManagedExports.g.cs`), and `WindowsRuntimeReferenceAssemblyAttribute` (`CSWINRT3004`; emitted as `[assembly: WindowsRuntimeReferenceAssembly]` by the projection writer's `AssemblyAttributes.cs` base resource, and — unlike the others — also genuinely shipped in the reference projection assemblies of Windows Runtime projection NuGet packages). The reference-assembly-only `WindowsRuntimeObject()` constructor (`CSWINRT3001`) is the same mechanism applied to a constructor.
+- **Banned API analyzer**: the reference build references `Microsoft.CodeAnalysis.BannedApiAnalyzers` and lists `WindowsRuntimeImplementationOnlyMemberAttribute` in `BannedSymbols.txt`, with `RS0030` promoted to an error, so the build fails if any implementation-only type ever leaks into the reference surface. It also suppresses warnings that only appear in the stripped build (`CS8597`, `IDE0005`, `IDE0380`).
+- **Reference-assembly-only `WindowsRuntimeObject()` constructor**: a parameterless `protected` constructor exists only in the reference assembly (`#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY`). It is marked `[Obsolete(..., DiagnosticId = "CSWINRT3001")]`, so user code that derives from `WindowsRuntimeObject` gets the `CSWINRT3001` warning; because the constructor is absent from the implementation assembly, doing so throws `MissingMethodException` at runtime. Only CsWinRT-generated projections may derive from `WindowsRuntimeObject`. The related messages live in `Properties/WindowsRuntimeConstants.cs`.
+- **Packaging**: the implementation assembly ships in `lib\net10.0\` of the `Microsoft.Windows.CsWinRT` NuGet package, and the reference assembly (with its XML documentation, trimmed to the reference surface) ships in `ref\net10.0\`. The dual build and staging are driven by `src/build.cmd` and the Azure Pipelines build steps.
+
 **Types projected in WinRT.Runtime:**
 
 Not all WinRT types are generated automatically by the projection writer into SDK projection assemblies. `WinRT.Runtime` contains two categories of types that require special handling:
 
 #### Custom-mapped types
 
-These are built-in C#/.NET types that are mapped to WinRT types. Because the .NET type already exists in the BCL (and is not owned by CsWinRT), it cannot be "projected" in the usual sense. Instead, CsWinRT associates the necessary WinRT metadata with it via attributes such as `[WindowsRuntimeMappedMetadata]` and dedicated ABI marshalling code in the `ABI/System/` directory. Some of these types map to identically-named WinRT types (e.g. `int` ↔ `Int32`, `Guid` ↔ `Guid`), while others map to a different WinRT type entirely. The `EventHandler` delegate is especially noteworthy: the non-generic `System.EventHandler` is handled as a special case (see `ABI/System/EventHandler.cs`), while `System.EventHandler<TEventArgs>` maps to `Windows.Foundation.EventHandler<T>`, and `System.EventHandler<TSender, TEventArgs>` (a two-parameter generic delegate projected by CsWinRT) maps to `Windows.Foundation.TypedEventHandler<TSender, TResult>`.
+These are built-in C#/.NET types that are mapped to WinRT types. Because the .NET type already exists in the BCL (and is not owned by CsWinRT), it cannot be "projected" in the usual sense. Instead, CsWinRT associates the necessary WinRT metadata with it via attributes such as `[WindowsRuntimeType]` (a parameterless marker; see below) and dedicated ABI marshalling code in the `ABI/System/` directory. Some of these types map to identically-named WinRT types (e.g. `int` ↔ `Int32`, `Guid` ↔ `Guid`), while others map to a different WinRT type entirely. The `EventHandler` delegate is especially noteworthy: the non-generic `System.EventHandler` is handled as a special case (see `ABI/System/EventHandler.cs`), while `System.EventHandler<TEventArgs>` maps to `Windows.Foundation.EventHandler<T>`, and `System.EventHandler<TSender, TEventArgs>` (a two-parameter generic delegate projected by CsWinRT) maps to `Windows.Foundation.TypedEventHandler<TSender, TResult>`.
 
 The following table lists all custom-mapped types where the .NET type maps to a **differently-named** WinRT type:
 
@@ -305,6 +322,12 @@ These are WinRT types that are defined directly in `WinRT.Runtime` rather than b
 - **Foundation types** such as `IStringable`, `Point`, `Rect`, `Size`, `PropertyType`, and `EventRegistrationToken` are here because they are referenced by marshalling infrastructure or vtable definitions within `WinRT.Runtime`.
 
 Some of these types — particularly the bindable collection interfaces (`IEnumerable`, `IList`) and XAML-related types — have **different IIDs and/or runtime class names** depending on whether `Windows.UI.Xaml.*` (UWP XAML) or `Microsoft.UI.Xaml.*` (WinUI) support is being used (controlled by the `CsWinRTUseWindowsUIXamlProjections` MSBuild property). This requires further special handling in both the generated projection code and the interop generator to ensure that the correct marshalling and metadata info is associated with them at publish time.
+
+#### The `[WindowsRuntimeType]` marker and the metadata-types lookup
+
+Every projected type, plus every proxy type for a custom-mapped type, is tagged with the parameterless, implementation-only **`[WindowsRuntimeType]`** marker (`Attributes/WindowsRuntimeTypeAttribute.cs`). The runtime and the build tools only ever check for the *presence* of this marker to decide whether a type participates in Windows Runtime marshalling — they never read any per-type metadata value at runtime. Proxy types are distinguished from projected types by `[WindowsRuntimeMappedType]` (which proxies carry to point at their public type); the `System.EventHandler` proxy intentionally stays unmarked, as it is a pure custom type rather than a real Windows Runtime metadata type.
+
+The mapping from a projected type to its source `.winmd` module name (its "contract"/"stem") — needed only by build-time tooling (the interop and WinMD generators) — is **not** stored on each type. Instead, the projection generator emits a single centralized, fully trimmable lookup type, **`ABI.WindowsRuntimeMetadataTypes`**, carrying one **`[WindowsRuntimeMetadata(typeof(T), "stem")]`** entry per projected type (`Attributes/WindowsRuntimeMetadataAttribute.cs`, repurposed to a `(Type, string)`, `class`-targeting, `AllowMultiple` attribute). This mirrors how `ABI.WindowsRuntimeDefaultInterfaces` centralizes default interfaces, and lets the metadata be dead-code-eliminated when unused. Both the marker and the lookup type are implementation-only and are stripped from reference projections. `WinRT.Runtime`'s own manually-projected types do not contribute to a lookup type: the interop generator addresses them with the well-known `#CsWinRT` assembly identifier, and the WinMD generator reads their contract from the real `[ContractVersion]` metadata in the `WinRT.Runtime` reference assembly.
 
 ### 2. WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)
 
@@ -618,7 +641,7 @@ A small build project that produces **`WindowsRuntime.Internal.winmd`** — the 
 
 **Project settings:**
 
-- **Target**: `net10.0-windows10.0.26100.1` (the `.1` TFM revision selects the `cswinrt3` Windows SDK projection reference assemblies, which carry `[WindowsRuntimeMetadata]` attributes the WinMD generator reads)
+- **Target**: `net10.0-windows10.0.26100.1` (the `.1` TFM revision selects the `cswinrt3` Windows SDK projection reference assemblies, which carry the `[ContractVersion]` (and `[WindowsRuntimeType]`) Windows Runtime metadata the WinMD generator reads)
 - **Assembly name**: `WindowsRuntime.Internal`
 - **Nullable**: `disable` (the Windows Runtime type system does not support nullability annotations)
 - **WindowsSdkPackageVersion**: pinned (e.g. `10.0.26100.85-preview`) so the .NET SDK adds the implicit framework reference to the matching `Microsoft.Windows.SDK.NET.Ref` package
@@ -669,7 +692,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **Compiler strict mode**: `<Features>strict</Features>` in all projects
 - **XML documentation**: generated for all projects
 - **`SkipLocalsInit`**: enabled in runtime and build tools for performance
-- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
+- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes)
 - **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
 ### Naming conventions
@@ -713,7 +736,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0010`, `9999` |
-| Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
+| Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` (deriving from `WindowsRuntimeObject`), `CSWINRT3002` (type map group types), `CSWINRT3003` (component authoring attributes), `CSWINRT3004` (`WindowsRuntimeReferenceAssemblyAttribute`) |
 
 ---
 
