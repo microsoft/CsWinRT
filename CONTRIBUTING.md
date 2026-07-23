@@ -88,7 +88,8 @@ Thank you in advance for your contribution!
     devenv src\cswinrt.dev.slnf
     ```
     Re-run `src\build-tasks.cmd` after editing the task sources (Visual Studio won't rebuild them).
-    Use `src\cswinrt.slnx` directly if you need to build the task project from within Visual Studio.
+    Use `src\cswinrt.slnx` or `src\cswinrt.buildtasks.slnf` if you need to build the task project from
+    within Visual Studio.
 
 > [!NOTE]
 > Projection projects under `src/Projections` only generate sources in `Release` by default. To generate them in `Debug`, set the property `GenerateTestProjection` to `true`. This configuration will enable a faster inner loop in Visual Studio. "Generated Files" remain under the Generated Files folder regardless of configuration.
