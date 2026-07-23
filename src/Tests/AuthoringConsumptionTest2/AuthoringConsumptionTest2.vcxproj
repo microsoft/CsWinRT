@@ -30,8 +30,6 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>AuthoringConsumptionTest2</RootNamespace>
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <_WinMDPlatform>$(Platform)</_WinMDPlatform>
     <_WinMDPlatform Condition="'$(Platform)' == 'Win32'">x86</_WinMDPlatform>
