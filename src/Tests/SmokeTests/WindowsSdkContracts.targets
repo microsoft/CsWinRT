@@ -28,29 +28,41 @@
   </ItemGroup>
 
   <!--
-    Stage the SDK '.winmd' files as projection inputs before the reference projection generator runs.
-    The metadata lives in the downloaded package's 'ref/netstandard2.0' folder. We exclude the union
-    'Windows.winmd' (it would duplicate every contract) and the handful of contracts that the desktop
-    'Microsoft.Windows.SDK.NET.Ref' package omits (phone/embedded/etc.), matching the official Windows
-    SDK projection build in 'WinRT.Sdk.Projection.csproj'.
+    Stage the SDK '.winmd' files as projection inputs. The metadata lives in the downloaded package's
+    'ref/netstandard2.0' folder. We exclude the union 'Windows.winmd' (it would duplicate every contract)
+    and the handful of contracts that the desktop 'Microsoft.Windows.SDK.NET.Ref' package omits
+    (phone/embedded/etc.), matching the official Windows SDK projection build in 'WinRT.Sdk.Projection.csproj'.
+
+    These inputs are added statically (at evaluation time), exactly like the in-repo projection projects
+    feed '@(CsWinRTInputs)' (e.g. 'src/Projections/*/*.csproj' and the sibling 'Projection/Projection.csproj').
+    Doing it statically instead of from a target keeps the inputs in place regardless of how the CsWinRT
+    projection targets are factored: the 'Windows Metadata not provided or detected' check now runs in a
+    private '_CsWinRTComputeProjectionRefGenInputs' target (a dependency of 'CsWinRTGenerateProjection'), so
+    a 'BeforeTargets="CsWinRTGenerateProjection"' hook would add these inputs *after* that check has already
+    run and failed. 'NuGetPackageRoot' and the restored '.winmd' files are both available at evaluation time
+    (the smoke tests always run a full 'dotnet build', which restores first).
   -->
-  <Target Name="_StageWindowsSdkContractsInputs" BeforeTargets="CsWinRTGenerateProjection">
+  <PropertyGroup>
+    <_SdkContractsWinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkContractsPackageName)', '$(_SdkContractsPackageVersion)', 'ref', 'netstandard2.0'))</_SdkContractsWinMDFolder>
+  </PropertyGroup>
 
-    <PropertyGroup>
-      <_SdkContractsWinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkContractsPackageName)', '$(_SdkContractsPackageVersion)', 'ref', 'netstandard2.0'))</_SdkContractsWinMDFolder>
-    </PropertyGroup>
+  <ItemGroup>
+    <CsWinRTInputs Include="$(_SdkContractsWinMDFolder)*.winmd"
+                   Exclude="$(_SdkContractsWinMDFolder)Windows.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Embedded.DeviceLockdown.DeviceLockdownContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Networking.NetworkOperators.NetworkOperatorsFdnContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Phone.PhoneContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Phone.StartScreen.DualSimTileContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.UI.WebUI.Core.WebUICommandBarContract.winmd" />
+  </ItemGroup>
 
+  <!--
+    Fail fast with a targeted message if the SDK metadata didn't restore, before the projection generator
+    reports the generic 'Windows Metadata not provided or detected' error. Anchored to the standard
+    'PrepareForBuild' target (not a CsWinRT-internal one) so it stays independent of target ordering.
+  -->
+  <Target Name="_ValidateWindowsSdkContractsInputs" BeforeTargets="PrepareForBuild">
     <Error Condition="!Exists('$(_SdkContractsWinMDFolder)')"
            Text="Windows SDK metadata folder not found at '$(_SdkContractsWinMDFolder)'. Check that the PackageDownload for $(_SdkContractsPackageName) $(_SdkContractsPackageVersion) succeeded." />
-
-    <ItemGroup>
-      <CsWinRTInputs Include="$(_SdkContractsWinMDFolder)*.winmd"
-                     Exclude="$(_SdkContractsWinMDFolder)Windows.winmd;
-                              $(_SdkContractsWinMDFolder)Windows.Embedded.DeviceLockdown.DeviceLockdownContract.winmd;
-                              $(_SdkContractsWinMDFolder)Windows.Networking.NetworkOperators.NetworkOperatorsFdnContract.winmd;
-                              $(_SdkContractsWinMDFolder)Windows.Phone.PhoneContract.winmd;
-                              $(_SdkContractsWinMDFolder)Windows.Phone.StartScreen.DualSimTileContract.winmd;
-                              $(_SdkContractsWinMDFolder)Windows.UI.WebUI.Core.WebUICommandBarContract.winmd" />
-    </ItemGroup>
   </Target>
 </Project>
