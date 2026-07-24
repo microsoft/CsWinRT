@@ -303,6 +303,62 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
     }
 
     [TestMethod]
+    public async Task ForEachWritableRefVariableReads_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    foreach (ref int x in span)
+                    {
+                        x = 0;                                      // Writing through the alias is valid
+                        Out(out x);                                 // Writing through an 'out' argument is valid
+                        Ref(ref x);                                 // Passing by 'ref' may write, so it is allowed
+                        ref int slot = ref x;                       // A writable 'ref' alias may write, so it is allowed
+                        slot = 1;
+
+                        int value = {|CSWINRT2021:x|};
+                        Value({|CSWINRT2021:x|});
+                        In(in {|CSWINRT2021:x|});
+                        RefReadOnly(in {|CSWINRT2021:x|});
+                        ref readonly int readOnlyReference = ref {|CSWINRT2021:x|};
+                        {|CSWINRT2021:x|}++;
+                        {|CSWINRT2021:x|} += 1;
+
+                        if (value > 0)
+                        {
+                            Value({|CSWINRT2021:x|});               // Nested reads are detected as well
+                        }
+                    }
+                }
+
+                private static void Value(int x)
+                {
+                }
+
+                private static void In(in int x)
+                {
+                }
+
+                private static void RefReadOnly(ref readonly int x)
+                {
+                }
+
+                private static void Out(out int x) => x = 0;
+
+                private static void Ref(ref int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
     public async Task StaticMethod_Warns()
     {
         const string source = """
