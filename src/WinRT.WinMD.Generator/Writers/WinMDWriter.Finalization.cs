@@ -81,10 +81,13 @@ internal sealed partial class WinMDWriter
             CopyCustomAttributes(declaration.InputType, declaration.OutputType);
         }
 
-        // Phase 4: Add overload attributes for methods with the same name
+        // Phase 4: Add overload attributes for overloaded methods. Only interfaces (authored and
+        // synthesized) carry '[Overload]' attributes, since a runtime class exposes its members
+        // through interfaces (where the Windows Runtime ABI method names live). Emitting them on a
+        // class as well would be redundant and could conflict with the names on its interfaces.
         foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
-            if (declaration.OutputType is null)
+            if (declaration.OutputType is not { IsInterface: true })
             {
                 continue;
             }
@@ -426,28 +429,115 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Windows Runtime requires that overloaded methods have unique names. This method finds method groups
-    /// with the same name and assigns <c>[Overload("MethodName2")]</c>, <c>[Overload("MethodName3")]</c>,
-    /// etc. to the second, third, and subsequent overloads.
+    /// with the same name and assigns a unique name to every overload except the default one (the method
+    /// marked with <c>[DefaultOverload]</c>, or the first in metadata order when none is marked), which keeps
+    /// the original name. When the author has applied <c>[Overload("...")]</c> on a method, that name is honored
+    /// as-is; otherwise a unique sequential name (<c>[Overload("MethodName2")]</c>, <c>[Overload("MethodName3")]</c>,
+    /// etc.) is generated, skipping any name already used by another member or a previously assigned overload.
     /// </remarks>
     /// <param name="type">The type to add overload attributes to.</param>
     private void AddOverloadAttributesForType(TypeDefinition type)
     {
-        // Group methods by name to find overloaded methods
-        IEnumerable<IGrouping<string, MethodDefinition>> methodGroups = type.Methods
-            .Where(m => !m.IsConstructor && !m.IsSpecialName)
-            .GroupBy(m => m.Name?.Value ?? "")
-            .Where(g => g.Count() > 1);
+        List<MethodDefinition> methods = [.. type.Methods.Where(m => !m.IsConstructor && !m.IsSpecialName)];
 
-        foreach (IGrouping<string, MethodDefinition> group in methodGroups)
+        // Collect the names already in use within the type, so auto-generated overload names can avoid
+        // collisions: every member name (methods including accessors, properties and events) and any
+        // author-specified overload name. Auto-generated names are added to the set as they are produced,
+        // so they cannot collide with each other across groups (e.g. 'M1' + '2' and 'M' + '12').
+        HashSet<string> reservedNames = new(StringComparer.Ordinal);
+
+        foreach (MethodDefinition method in type.Methods)
         {
-            int overloadIndex = 1;
+            _ = reservedNames.Add(method.Name?.Value ?? "");
 
-            foreach (MethodDefinition method in group.Skip(1))
+            if (_userSpecifiedOverloadNames.TryGetValue(method, out string? userOverloadName))
             {
-                overloadIndex++;
-                string overloadName = $"{group.Key}{overloadIndex}";
+                _ = reservedNames.Add(userOverloadName);
+            }
+        }
+
+        foreach (PropertyDefinition property in type.Properties)
+        {
+            _ = reservedNames.Add(property.Name?.Value ?? "");
+        }
+
+        foreach (EventDefinition @event in type.Events)
+        {
+            _ = reservedNames.Add(@event.Name?.Value ?? "");
+        }
+
+        // Group methods by name to find overloaded methods
+        foreach (IGrouping<string, MethodDefinition> group in methods.GroupBy(m => m.Name?.Value ?? "").Where(g => g.Count() > 1))
+        {
+            // The default overload keeps the original (non-overloaded) name: the one marked with
+            // '[DefaultOverload]', or the first in metadata order when none is marked. Every other
+            // overload needs a unique name (author-specified when present, otherwise auto-generated).
+            MethodDefinition defaultMethod = group.FirstOrDefault(HasDefaultOverloadAttribute) ?? group.First();
+
+            int lastSuffix = 1;
+
+            foreach (MethodDefinition method in group)
+            {
+                if (method == defaultMethod)
+                {
+                    continue;
+                }
+
+                // Honor an author-applied '[Overload("...")]' name when present (see 'RecordUserSpecifiedOverloadName')
+                if (_userSpecifiedOverloadNames.TryGetValue(method, out string? overloadName))
+                {
+                    AddOverloadAttribute(method, overloadName);
+
+                    continue;
+                }
+
+                // Otherwise auto-generate the next sequential name that is not already in use (and reserve it)
+                do
+                {
+                    overloadName = $"{group.Key}{++lastSuffix}";
+                }
+                while (!reservedNames.Add(overloadName));
+
                 AddOverloadAttribute(method, overloadName);
             }
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a method is marked with <c>[Windows.Foundation.Metadata.DefaultOverload]</c>.
+    /// </summary>
+    /// <param name="method">The method to check.</param>
+    /// <returns><see langword="true"/> if the method has the attribute; otherwise, <see langword="false"/>.</returns>
+    private static bool HasDefaultOverloadAttribute(MethodDefinition method)
+    {
+        return method.FindCustomAttributes("Windows.Foundation.Metadata", "DefaultOverloadAttribute").Any();
+    }
+
+    /// <summary>
+    /// Records the overload name explicitly specified by the author via
+    /// <c>[Windows.Foundation.Metadata.Overload("...")]</c> on an input method, so it can be honored
+    /// by <see cref="AddOverloadAttributesForType"/> during finalization.
+    /// </summary>
+    /// <remarks>
+    /// The author-applied <c>[Overload]</c> attribute is intentionally not copied verbatim to the output method
+    /// (see <c>ShouldCopyAttribute</c>); it is re-emitted by <see cref="AddOverloadAttribute"/> as the single
+    /// source of truth, so the overload name is applied only to genuinely overloaded methods and always
+    /// references the Windows Runtime contract assembly.
+    /// </remarks>
+    /// <param name="inputMethod">The input <see cref="MethodDefinition"/> to read the attribute from.</param>
+    /// <param name="outputMethod">The output <see cref="MethodDefinition"/> to associate the name with.</param>
+    private void RecordUserSpecifiedOverloadName(MethodDefinition inputMethod, MethodDefinition outputMethod)
+    {
+        if (inputMethod.FindCustomAttributes("Windows.Foundation.Metadata", "OverloadAttribute").FirstOrDefault() is not CustomAttribute attribute)
+        {
+            return;
+        }
+
+        // The single fixed argument is the overload name. AsmResolver stores attribute string arguments
+        // as 'Utf8String' (not 'System.String'), so it is matched as a non-null element and converted.
+        if (attribute.Signature is { FixedArguments: [{ Element: { } overloadName }] })
+        {
+            _userSpecifiedOverloadNames[outputMethod] = overloadName.ToString()!;
         }
     }
 

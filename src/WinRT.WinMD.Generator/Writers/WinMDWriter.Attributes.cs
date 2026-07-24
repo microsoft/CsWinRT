@@ -356,7 +356,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Filters out attributes that are handled separately by the generator (e.g., <c>[Guid]</c>,
-    /// <c>[Version]</c>), compiler-generated attributes (e.g., from <c>System.Runtime.CompilerServices</c>),
+    /// <c>[Version]</c>, <c>[Overload]</c>), compiler-generated attributes (e.g., from <c>System.Runtime.CompilerServices</c>),
     /// non-public attribute types, and attributes with unreadable signatures.
     /// </remarks>
     /// <param name="attribute">The custom attribute to evaluate.</param>
@@ -371,11 +371,14 @@ internal sealed partial class WinMDWriter
             return false;
         }
 
-        // Skip attributes already handled separately by the generator
+        // Skip attributes already handled separately by the generator.
+        // '[Overload]' is emitted by 'AddOverloadAttributesForType', which honors any author-specified
+        // name (see 'RecordUserSpecifiedOverloadName'), so copying it here would produce duplicates.
         if (attributeTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
             "Windows.Foundation.Metadata.VersionAttribute" or
+            "Windows.Foundation.Metadata.OverloadAttribute" or
             "System.Reflection.DefaultMemberAttribute")
         {
             return false;

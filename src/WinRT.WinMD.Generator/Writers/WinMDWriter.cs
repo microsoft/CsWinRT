@@ -87,6 +87,17 @@ internal sealed partial class WinMDWriter
     private readonly Dictionary<string, TypeReference> _typeReferenceCache = new(StringComparer.Ordinal);
 
     /// <summary>
+    /// Maps an output method to the overload name explicitly specified by the author via
+    /// <c>[Windows.Foundation.Metadata.Overload("...")]</c>.
+    /// </summary>
+    /// <remarks>
+    /// Populated while methods are emitted (see <see cref="RecordUserSpecifiedOverloadName"/>) and consumed
+    /// during finalization by <see cref="AddOverloadAttributesForType"/> to honor author-specified overload
+    /// names instead of auto-generating sequential ones.
+    /// </remarks>
+    private readonly Dictionary<MethodDefinition, string> _userSpecifiedOverloadNames = new();
+
+    /// <summary>
     /// Creates a new <see cref="WinMDWriter"/> instance.
     /// </summary>
     /// <param name="assemblyName">The name for the output WinMD assembly.</param>
