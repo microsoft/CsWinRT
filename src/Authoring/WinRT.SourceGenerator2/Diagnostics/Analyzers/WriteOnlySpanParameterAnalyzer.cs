@@ -121,6 +121,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // foreach (int x in span)
             // {
             // }
+            //
+            // It also handles reading the current element through a writable 'ref' loop variable, such as:
+            //
+            // foreach (ref int x in span)
+            // {
+            //     int y = x;
+            // }
             context.RegisterOperationAction(context =>
             {
                 if (context.Operation is not IForEachLoopOperation operation)
@@ -140,10 +147,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
                     return;
                 }
 
-                // Iterating with a writable 'ref' loop variable may be used to fill the span, so skip it to
-                // avoid false positives (by-value and 'ref readonly' loop variables can only read elements).
-                if (operation.LoopControlVariable is IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref })
+                // Iterating with a writable 'ref' loop variable may be used to fill the span, so the loop
+                // itself is valid. In that case, only the individual reads through the loop variable (which
+                // aliases the current element) are reported. By-value and 'ref readonly' loop variables can
+                // only ever read the elements, so for those the loop itself is reported instead.
+                if (operation.LoopControlVariable is IVariableDeclaratorOperation { Symbol: { RefKind: RefKind.Ref } loopVariable })
                 {
+                    ReportElementReadsThroughLoopVariable(context, operation.Body, loopVariable, parameter);
+
                     return;
                 }
 
@@ -209,13 +220,53 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks whether a given <see cref="System.Span{T}"/> indexer reference is only used to write to the
-    /// target element (which is valid for a fill array), as opposed to also reading its current value.
+    /// Reports all reads of the current element of a write-only <see cref="System.Span{T}"/> parameter that are
+    /// performed through the writable <c>ref</c> loop variable of a <c>foreach</c> loop iterating over it.
     /// </summary>
-    /// <param name="operation">The <see cref="IPropertyReferenceOperation"/> for the indexer access.</param>
-    /// <returns>Whether <paramref name="operation"/> is a write-only usage of the element.</returns>
-    private static bool IsWriteOnlyElementUsage(IPropertyReferenceOperation operation)
+    /// <param name="context">The context to report diagnostics to.</param>
+    /// <param name="loopBody">The body of the <c>foreach</c> loop declaring <paramref name="loopVariable"/>.</param>
+    /// <param name="loopVariable">The writable <c>ref</c> loop variable, aliasing the current element.</param>
+    /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being iterated over.</param>
+    private static void ReportElementReadsThroughLoopVariable(
+        OperationAnalysisContext context,
+        IOperation loopBody,
+        ILocalSymbol loopVariable,
+        IParameterSymbol parameter)
     {
+        foreach (IOperation operation in loopBody.Descendants())
+        {
+            // We only care about references to the loop variable, as those alias an element of the span.
+            // The loop variable can't be captured by a lambda or ref reassigned, so all aliasing usages
+            // of the current element are guaranteed to appear directly in the body of the loop.
+            if (operation is not ILocalReferenceOperation { Local: { } local } ||
+                !SymbolEqualityComparer.Default.Equals(local, loopVariable))
+            {
+                continue;
+            }
+
+            // Skip usages that only write to the element, which are valid for a fill array
+            if (IsWriteOnlyElementUsage(operation))
+            {
+                continue;
+            }
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.WriteOnlySpanParameterRead,
+                operation.Syntax.GetLocation(),
+                parameter.Name));
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a given reference to an element of a write-only <see cref="System.Span{T}"/> parameter is
+    /// only used to write to that element (which is valid for a fill array), as opposed to also reading its value.
+    /// </summary>
+    /// <param name="operation">The operation referencing the element (either an indexer access, or a <c>ref</c> alias).</param>
+    /// <returns>Whether <paramref name="operation"/> is a write-only usage of the element.</returns>
+    private static bool IsWriteOnlyElementUsage(IOperation operation)
+    {
+        // The examples below use an indexer access for the element reference, but the same reasoning
+        // applies verbatim to a 'ref' alias to the element (e.g. a writable 'foreach' loop variable).
         return operation.Parent switch
         {
             // 'span[i] = value' (the element is the target of the assignment): this only writes to the element.
