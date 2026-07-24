@@ -598,6 +598,11 @@ namespace WinRT
                     }
                     return false;
                 }
+                else if (elementType.ShouldProvideIReferenceArrayOfObject())
+                {
+                    builder.Append("Windows.Foundation.IReferenceArray`1<Object>");
+                    return true;
+                }
                 else
                 {
                     return false;

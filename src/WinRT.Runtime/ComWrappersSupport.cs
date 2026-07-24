@@ -379,6 +379,12 @@ namespace WinRT
                     entries.Add(IPropertyValueEntry);
                     entries.Add(ProvideIReferenceArray(type));
                 }
+                else if (elementType.ShouldProvideIReferenceArrayOfObject())
+                {
+                    // Arrays of reference types are boxed as 'IReferenceArray<Object>'.
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReferenceArrayOfObject());
+                }
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>) && Projections.IsTypeWindowsRuntimeType(type))
             {
@@ -1231,6 +1237,20 @@ namespace WinRT
                 Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
 #pragma warning restore IL3050
+        }
+
+        private static ComInterfaceEntry ProvideIReferenceArrayOfObject()
+        {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                throw new NotSupportedException("Support for 'IReferenceArray<T>' is not enabled.");
+            }
+
+            return new ComInterfaceEntry
+            {
+                IID = IID.IID_IReferenceArrayOfObject,
+                Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
+            };
         }
 
         internal sealed class InspectableInfo

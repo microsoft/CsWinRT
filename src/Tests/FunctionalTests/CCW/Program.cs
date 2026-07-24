@@ -366,6 +366,55 @@ if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Single
     return 142;
 }
 
+// Boxing an array of reference types (object, projected class, interface, or non-projected type)
+// produces an 'IReferenceArray<Object>' with both 'IReferenceArray' and 'IPropertyValue' on the vtable.
+Guid IID_IReferenceArrayOfObject = new("9CD7A84F-0C80-59C5-B44E-977841BB43D9");
+Guid IID_IPropertyValue = new("4BD682DD-7554-40E9-9A9B-82654EDE7E62");
+
+ccw = MarshalInspectable<object>.CreateMarshaler(new object[] { new Class(), new Class() });
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 143;
+}
+
+ccw.TryAs<IUnknownVftbl>(IID_IReferenceArrayOfObject, out var referenceArrayCCW);
+if (referenceArrayCCW == null)
+{
+    return 144;
+}
+
+ccw.TryAs<IUnknownVftbl>(IID_IPropertyValue, out var referenceArrayPropertyValueCCW);
+if (referenceArrayPropertyValueCCW == null)
+{
+    return 145;
+}
+
+// Arrays of projected classes and non-projected types box the same way.
+ccw = MarshalInspectable<object>.CreateMarshaler(new Class[] { new Class() });
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 146;
+}
+
+ccw = MarshalInspectable<object>.CreateMarshaler(new ManagedProperties[] { new ManagedProperties(1) });
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 147;
+}
+
+// Round-trip a boxed array of projected objects through native and back, verifying each element marshals.
+var roundTripElement0 = new Class() { IntProperty = 42 };
+var roundTripElement1 = new Class() { IntProperty = 123 };
+object[] roundTripped = Class.UnboxObjectArray(new object[] { roundTripElement0, roundTripElement1 });
+if (roundTripped.Length != 2 ||
+    !ReferenceEquals(roundTripped[0], roundTripElement0) ||
+    !ReferenceEquals(roundTripped[1], roundTripElement1) ||
+    ((Class)roundTripped[0]).IntProperty != 42 ||
+    ((Class)roundTripped[1]).IntProperty != 123)
+{
+    return 148;
+}
+
 return 100;
 
 

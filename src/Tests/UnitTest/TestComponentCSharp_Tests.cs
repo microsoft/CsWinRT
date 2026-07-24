@@ -2718,6 +2718,56 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestReferenceArrayBoxing()
+        {
+            // Arrays of reference types (object, projected class, interface, non-projected) are boxed
+            // as IReferenceArray<Object> (an inspectable array), carrying IReferenceArray and IPropertyValue.
+            object[] objectArray = new object[] { new Class(), new Class() };
+            Class[] classArray = new Class[] { new Class(), new Class() };
+            IProperties1[] interfaceArray = new IProperties1[] { new Class(), new Class() };
+            ManagedType[] nonProjectedArray = new ManagedType[] { new ManagedType(), new ManagedType() };
+
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(objectArray));
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(classArray));
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(interfaceArray));
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(nonProjectedArray));
+
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(objectArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(classArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(interfaceArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(nonProjectedArray));
+
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>",
+                new IInspectable(ComWrappersSupport.CreateCCWForObject(objectArray)).GetRuntimeClassName());
+
+            // Arrays of well-known element types keep their dedicated IReferenceArray<T>.
+            string[] stringArray = new string[] { "a", "b" };
+            Assert.Equal((int)PropertyType.StringArray, Class.GetPropertyType(stringArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<String>", Class.GetName(stringArray));
+        }
+
+        [Fact]
+        public void TestReferenceArrayValueRoundTrip()
+        {
+            // Marshal a boxed array of projected objects to native and back, verifying each element round-trips.
+            var element0 = new Class() { IntProperty = 42 };
+            var element1 = new Class() { IntProperty = 123 };
+            object[] objectArray = new object[] { element0, element1 };
+
+            object[] unboxed = Class.UnboxObjectArray(objectArray);
+            Assert.Equal(2, unboxed.Length);
+            Assert.Same(element0, unboxed[0]);
+            Assert.Same(element1, unboxed[1]);
+            Assert.Equal(42, ((Class)unboxed[0]).IntProperty);
+            Assert.Equal(123, ((Class)unboxed[1]).IntProperty);
+
+            object[] unboxedViaPropertyValue = Class.UnboxObjectArrayUsingPropertyValue(objectArray);
+            Assert.Equal(2, unboxedViaPropertyValue.Length);
+            Assert.Same(element0, unboxedViaPropertyValue[0]);
+            Assert.Same(element1, unboxedViaPropertyValue[1]);
+        }
+
+        [Fact]
         public void TestValueBoxing()
         {
             int i = 42;
