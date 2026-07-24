@@ -2718,6 +2718,35 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestReferenceArrayBoxing()
+        {
+            // Arrays of reference types (object, projected class, interface, non-projected) are boxed
+            // as IReferenceArray<Object> (an inspectable array), carrying IReferenceArray and IPropertyValue.
+            object[] objectArray = new object[] { new Class(), new Class() };
+            Class[] classArray = new Class[] { new Class(), new Class() };
+            IProperties1[] interfaceArray = new IProperties1[] { new Class(), new Class() };
+            ManagedType[] nonProjectedArray = new ManagedType[] { new ManagedType(), new ManagedType() };
+
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(objectArray));
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(classArray));
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(interfaceArray));
+            Assert.Equal((int)PropertyType.InspectableArray, Class.GetPropertyType(nonProjectedArray));
+
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(objectArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(classArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(interfaceArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(nonProjectedArray));
+
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Object>",
+                new IInspectable(ComWrappersSupport.CreateCCWForObject(objectArray)).GetRuntimeClassName());
+
+            // Arrays of well-known element types keep their dedicated IReferenceArray<T>.
+            string[] stringArray = new string[] { "a", "b" };
+            Assert.Equal((int)PropertyType.StringArray, Class.GetPropertyType(stringArray));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<String>", Class.GetName(stringArray));
+        }
+
+        [Fact]
         public void TestValueBoxing()
         {
             int i = 42;
