@@ -2747,6 +2747,27 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestReferenceArrayValueRoundTrip()
+        {
+            // Marshal a boxed array of projected objects to native and back, verifying each element round-trips.
+            var element0 = new Class() { IntProperty = 42 };
+            var element1 = new Class() { IntProperty = 123 };
+            object[] objectArray = new object[] { element0, element1 };
+
+            object[] unboxed = Class.UnboxObjectArray(objectArray);
+            Assert.Equal(2, unboxed.Length);
+            Assert.Same(element0, unboxed[0]);
+            Assert.Same(element1, unboxed[1]);
+            Assert.Equal(42, ((Class)unboxed[0]).IntProperty);
+            Assert.Equal(123, ((Class)unboxed[1]).IntProperty);
+
+            object[] unboxedViaPropertyValue = Class.UnboxObjectArrayUsingPropertyValue(objectArray);
+            Assert.Equal(2, unboxedViaPropertyValue.Length);
+            Assert.Same(element0, unboxedViaPropertyValue[0]);
+            Assert.Same(element1, unboxedViaPropertyValue[1]);
+        }
+
+        [Fact]
         public void TestValueBoxing()
         {
             int i = 42;
