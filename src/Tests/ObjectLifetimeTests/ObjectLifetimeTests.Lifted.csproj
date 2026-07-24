@@ -18,6 +18,16 @@
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
         <UseRidGraph>true</UseRidGraph>
         <AppxIncludeWindowsMetadataReferenceFromProjectReferences>false</AppxIncludeWindowsMetadataReferenceFromProjectReferences>
+
+        <!--
+          The XAML compiler emits a backing field for every 'x:Name'-d element into the generated
+          '*.g.i.cs' files. 'ObjectLifetimePage' deliberately drops its strong references to some of
+          those elements ('MoveCanvas' and '_itemsControlLeakTest' are set to 'null' right after
+          'InitializeComponent()', since the leak tests need them to be collectable) and then looks
+          them back up with 'FindName(...)'. Those fields are therefore only ever assigned, which
+          trips 'CS0414'. This is generated code we don't control, so suppress it.
+        -->
+        <NoWarn>$(NoWarn);CS0414</NoWarn>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
