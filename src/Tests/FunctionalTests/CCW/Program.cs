@@ -366,6 +366,42 @@ if (!CheckRuntimeClassName(ccw, "Windows.Foundation.Collections.IVector`1<Single
     return 142;
 }
 
+// Boxing an array of reference types (object, projected class, interface, or non-projected type)
+// produces an 'IReferenceArray<Object>' with both 'IReferenceArray' and 'IPropertyValue' on the vtable.
+Guid IID_IReferenceArrayOfObject = new("9CD7A84F-0C80-59C5-B44E-977841BB43D9");
+Guid IID_IPropertyValue = new("4BD682DD-7554-40E9-9A9B-82654EDE7E62");
+
+ccw = MarshalInspectable<object>.CreateMarshaler(new object[] { new Class(), new Class() });
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 143;
+}
+
+ccw.TryAs<IUnknownVftbl>(IID_IReferenceArrayOfObject, out var referenceArrayCCW);
+if (referenceArrayCCW == null)
+{
+    return 144;
+}
+
+ccw.TryAs<IUnknownVftbl>(IID_IPropertyValue, out var referenceArrayPropertyValueCCW);
+if (referenceArrayPropertyValueCCW == null)
+{
+    return 145;
+}
+
+// Arrays of projected classes and non-projected types box the same way.
+ccw = MarshalInspectable<object>.CreateMarshaler(new Class[] { new Class() });
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 146;
+}
+
+ccw = MarshalInspectable<object>.CreateMarshaler(new ManagedProperties[] { new ManagedProperties(1) });
+if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 147;
+}
+
 return 100;
 
 

@@ -600,13 +600,8 @@ namespace WinRT
                 }
                 else if (elementType.ShouldProvideIReferenceArrayOfObject())
                 {
-                    builder.Append("Windows.Foundation.IReferenceArray`1<");
-                    if (TryAppendTypeName(typeof(object), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
-                    {
-                        builder.Append('>');
-                        return true;
-                    }
-                    return false;
+                    builder.Append("Windows.Foundation.IReferenceArray`1<Object>");
+                    return true;
                 }
                 else
                 {
