@@ -402,6 +402,19 @@ if (!CheckRuntimeClassName(ccw, "Windows.Foundation.IReferenceArray`1<Object>"))
     return 147;
 }
 
+// Round-trip a boxed array of projected objects through native and back, verifying each element marshals.
+var roundTripElement0 = new Class() { IntProperty = 42 };
+var roundTripElement1 = new Class() { IntProperty = 123 };
+object[] roundTripped = Class.UnboxObjectArray(new object[] { roundTripElement0, roundTripElement1 });
+if (roundTripped.Length != 2 ||
+    !ReferenceEquals(roundTripped[0], roundTripElement0) ||
+    !ReferenceEquals(roundTripped[1], roundTripElement1) ||
+    ((Class)roundTripped[0]).IntProperty != 42 ||
+    ((Class)roundTripped[1]).IntProperty != 123)
+{
+    return 148;
+}
+
 return 100;
 
 
