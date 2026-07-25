@@ -46,7 +46,6 @@ if /I "%cswinrt_platform%" equ "all" (
   )
   call %0 x86 !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
   call %0 x64 !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
-  call %0 arm !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
   call %0 arm64 !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
   goto :eof
 )
@@ -147,15 +146,13 @@ copy /y "%winrt_runtime_bin%WinRT.Runtime.xml" "%winrt_runtime_staging%ref\WinRT
 rem skip tests for now
 goto :package
 
-if "%cswinrt_platform%" NEQ "arm" (
-  if "%cswinrt_platform%" NEQ "arm64" (
-    echo Restore functional tests for %cswinrt_platform% %cswinrt_configuration%
-    for %%a in (%cswinrt_functional_tests%) do (
-      echo Restoring %%a
+if "%cswinrt_platform%" NEQ "arm64" (
+  echo Restore functional tests for %cswinrt_platform% %cswinrt_configuration%
+  for %%a in (%cswinrt_functional_tests%) do (
+    echo Restoring %%a
 
-      rem Do restore separately to workaround issue where specifying TargetFramework causes nuget restore to propagate it to project references causing issues.
-      call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
-    )
+    rem Do restore separately to workaround issue where specifying TargetFramework causes nuget restore to propagate it to project references causing issues.
+    call :exec %msbuild_path%msbuild.exe /t:restore %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% /p:solutiondir=%this_dir% %this_dir%Tests\FunctionalTests\%%a\%%a.csproj
   )
 )
 
@@ -170,8 +167,7 @@ if "%run_functional_tests%" EQU "true" (
 
 if "%cswinrt_build_only%"=="true" goto :eof
 
-rem Tests are not yet enabled for ARM builds (not supported by Project Reunion)
-if %cswinrt_platform%==arm goto :package
+rem Tests are not yet enabled for ARM64 builds (not supported by Project Reunion)
 if %cswinrt_platform%==arm64 goto :package
 
 :test
