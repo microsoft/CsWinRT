@@ -208,6 +208,55 @@ public sealed class Test_WindowsRuntimeNativeExposedTypeAnalyzer
     }
 
     [TestMethod]
+    public async Task ProjectedClassFromReferenceProjection_DoesNotWarn()
+    {
+        const string source = """
+            using WindowsRuntime.InteropServices;
+
+            [assembly: WindowsRuntimeNativeExposedType(typeof(MyProjectedClass))]
+            """;
+
+        const string referenceProjectionSource = """
+            public sealed class MyProjectedClass;
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, referenceProjectionSource: referenceProjectionSource);
+    }
+
+    [TestMethod]
+    public async Task ProjectedStructFromReferenceProjection_Warns()
+    {
+        const string source = """
+            using WindowsRuntime.InteropServices;
+
+            [assembly: WindowsRuntimeNativeExposedType({|CSWINRT2019:typeof(MyProjectedStruct)|})]
+            """;
+
+        const string referenceProjectionSource = """
+            public struct MyProjectedStruct;
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, referenceProjectionSource: referenceProjectionSource);
+    }
+
+    [TestMethod]
+    public async Task DuplicateProjectedClassFromReferenceProjection_BothWarn()
+    {
+        const string source = """
+            using WindowsRuntime.InteropServices;
+
+            [assembly: WindowsRuntimeNativeExposedType({|CSWINRT2020:typeof(MyProjectedClass)|})]
+            [assembly: WindowsRuntimeNativeExposedType({|CSWINRT2020:typeof(MyProjectedClass)|})]
+            """;
+
+        const string referenceProjectionSource = """
+            public sealed class MyProjectedClass;
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, referenceProjectionSource: referenceProjectionSource);
+    }
+
+    [TestMethod]
     public async Task ApplicationInGeneratedCodeOnly_DoesNotWarn()
     {
         const string source = """

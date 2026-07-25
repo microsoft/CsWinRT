@@ -39,11 +39,15 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            // Get the '[WindowsRuntimeMetadata]' symbol, which is used to detect projected Windows Runtime types
-            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeMetadataAttribute") is not { } windowsRuntimeMetadataAttributeType)
+            // Get the '[WindowsRuntimeReferenceAssembly]' symbol, which is used to detect projected Windows Runtime types
+            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyAttribute") is not { } referenceAssemblyAttributeType)
             {
                 return;
             }
+
+            // Also get the '[WindowsRuntimeType]' symbol, if available. This is only used as a fallback for the rare
+            // case of compiling directly against an implementation projection (see 'IsProjectedWindowsRuntimeType').
+            INamedTypeSymbol? windowsRuntimeTypeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeTypeAttribute");
 
             List<ITypeSymbol> validTargetTypes = [];
 
@@ -53,7 +57,7 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
             foreach (AttributeData attribute in context.Compilation.Assembly.GetAttributes(nativeExposedTypeAttributeType))
             {
                 if (attribute is { ConstructorArguments: [{ Value: ITypeSymbol targetType }] } &&
-                    Classify(targetType, windowsRuntimeMetadataAttributeType) is NativeExposedTypeKind.Valid)
+                    Classify(targetType, referenceAssemblyAttributeType, windowsRuntimeTypeAttributeType) is NativeExposedTypeKind.Valid)
                 {
                     validTargetTypes.Add(targetType);
                 }
@@ -72,7 +76,7 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
 
                 Location? location = attribute.GetArgumentLocation(0, context.CancellationToken) ?? attribute.GetLocation(context.CancellationToken);
 
-                NativeExposedTypeKind kind = Classify(targetType, windowsRuntimeMetadataAttributeType);
+                NativeExposedTypeKind kind = Classify(targetType, referenceAssemblyAttributeType, windowsRuntimeTypeAttributeType);
 
                 // The type cannot be instantiated, so no CCW would ever be created for it
                 if (kind is NativeExposedTypeKind.NotInstantiable)
@@ -106,9 +110,13 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
     /// Classifies a target type used with <c>[WindowsRuntimeNativeExposedType]</c>.
     /// </summary>
     /// <param name="type">The target type to classify.</param>
-    /// <param name="windowsRuntimeMetadataAttributeType">The <c>[WindowsRuntimeMetadata]</c> symbol.</param>
+    /// <param name="referenceAssemblyAttributeType">The <c>[WindowsRuntimeReferenceAssembly]</c> symbol.</param>
+    /// <param name="windowsRuntimeTypeAttributeType">The <c>[WindowsRuntimeType]</c> symbol, if it is available.</param>
     /// <returns>The <see cref="NativeExposedTypeKind"/> classification for <paramref name="type"/>.</returns>
-    private static NativeExposedTypeKind Classify(ITypeSymbol type, INamedTypeSymbol windowsRuntimeMetadataAttributeType)
+    private static NativeExposedTypeKind Classify(
+        ITypeSymbol type,
+        INamedTypeSymbol referenceAssemblyAttributeType,
+        INamedTypeSymbol? windowsRuntimeTypeAttributeType)
     {
         // A type that cannot be instantiated can never have a CCW created for it, so the attribute is meaningless
         if (!IsInstantiable(type))
@@ -119,13 +127,43 @@ public sealed class WindowsRuntimeNativeExposedTypeAnalyzer : DiagnosticAnalyzer
         // A valid target is a non generic projected Windows Runtime class. CCW marshalling code is generated
         // automatically for every other kind of type, so the attribute is only ever needed for projected classes.
         if (type is not INamedTypeSymbol { TypeKind: TypeKind.Class, IsGenericType: false } namedType ||
-            !namedType.HasAttributeWithType(windowsRuntimeMetadataAttributeType))
+            !IsProjectedWindowsRuntimeType(namedType, referenceAssemblyAttributeType, windowsRuntimeTypeAttributeType))
         {
             return NativeExposedTypeKind.NotProjectedClass;
         }
 
         // The type is a valid, non-generic and projected runtime class
         return NativeExposedTypeKind.Valid;
+    }
+
+    /// <summary>
+    /// Checks whether a given type is a projected Windows Runtime type.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <param name="referenceAssemblyAttributeType">The <c>[WindowsRuntimeReferenceAssembly]</c> symbol.</param>
+    /// <param name="windowsRuntimeTypeAttributeType">The <c>[WindowsRuntimeType]</c> symbol, if it is available.</param>
+    /// <returns>Whether <paramref name="type"/> is a projected Windows Runtime type.</returns>
+    private static bool IsProjectedWindowsRuntimeType(
+        INamedTypeSymbol type,
+        INamedTypeSymbol referenceAssemblyAttributeType,
+        INamedTypeSymbol? windowsRuntimeTypeAttributeType)
+    {
+        // Projections are consumed as reference projection assemblies, which are marked with
+        // '[assembly: WindowsRuntimeReferenceAssembly]'. All types they contain are projected
+        // Windows Runtime types, so this is the check being used to detect them. Note that the
+        // per-type markers are not visible here, as they are implementation details that are
+        // stripped from reference projections (the same is true for the centralized metadata
+        // lookup type that carries all '[WindowsRuntimeMetadata]' entries).
+        if (type.ContainingAssembly is { } containingAssembly &&
+            containingAssembly.HasAttributeWithType(referenceAssemblyAttributeType))
+        {
+            return true;
+        }
+
+        // Fallback for the rare case of compiling directly against an implementation projection (eg. a local
+        // project reference to a projection project that is not producing a reference projection). Those types
+        // do not have the assembly-level marker, but they do carry the per-type '[WindowsRuntimeType]' marker.
+        return windowsRuntimeTypeAttributeType is not null && type.HasAttributeWithType(windowsRuntimeTypeAttributeType);
     }
 
     /// <summary>
