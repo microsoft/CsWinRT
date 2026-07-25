@@ -80,10 +80,12 @@ Thank you in advance for your contribution!
     ```
 3. (Optional) Open the solution in Visual Studio. This will inherit the necessary environment.
 
-    First build the custom MSBuild task DLL, then open the dev solution filter (which excludes
-    `WinRT.Generator.Tasks`). The filter keeps Visual Studio from rebuilding that DLL while it is
-    loaded, avoiding `MSB3027` file-lock errors when editing shared `.props`/`.targets`.
+    First fetch TestWinRT (required by projects in the solution), build the custom MSBuild task DLL,
+    then open the dev solution filter (which excludes `WinRT.Generator.Tasks`). The filter keeps
+    Visual Studio from rebuilding that DLL while it is loaded, avoiding `MSB3027` file-lock errors
+    when editing shared `.props`/`.targets`.
     ```
+    src\get_testwinrt.cmd
     src\build-tasks.cmd
     devenv src\cswinrt.dev.slnf
     ```
