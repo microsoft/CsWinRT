@@ -1,9 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>14.0</LangVersion>
+    <TargetFramework>$(DotNetVersion)</TargetFramework>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!--
       Suppress the following warning:
@@ -27,28 +25,6 @@
       to the Roslyn code analysis process to try to debug the generators, forcing to pick the path manually.
     -->
     <DebugType>embedded</DebugType>
-
-    <!-- Treat all warnings as errors, only in release configurations (same as in the runtime) -->
-    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
-    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
-
-    <!-- Enable the latest warning wave (same as in the runtime) -->
-    <AnalysisLevel>latest</AnalysisLevel>
-
-    <!-- Import the global configs from the CodeStyle package (enables all IDExxxx warnings)-->
-    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
-
-    <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-
-    <!-- Suppress ref safety warnings in unsafe contexts (same as in the runtime) -->
-    <NoWarn>$(NoWarn);CS8500</NoWarn>
-
-    <!-- Enable the compiler strict mode (same as in the runtime) -->
-    <Features>strict</Features>
-
-    <!-- Generate documentation files (same workaround as in the runtime) -->
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- Roslyn settings -->
     <IsRoslynComponent>true</IsRoslynComponent>

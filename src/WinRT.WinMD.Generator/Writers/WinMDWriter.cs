@@ -95,7 +95,7 @@ internal sealed partial class WinMDWriter
     /// during finalization by <see cref="AddOverloadAttributesForType"/> to honor author-specified overload
     /// names instead of auto-generating sequential ones.
     /// </remarks>
-    private readonly Dictionary<MethodDefinition, string> _userSpecifiedOverloadNames = new();
+    private readonly Dictionary<MethodDefinition, string> _userSpecifiedOverloadNames = [];
 
     /// <summary>
     /// Creates a new <see cref="WinMDWriter"/> instance.

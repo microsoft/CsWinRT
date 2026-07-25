@@ -604,12 +604,16 @@ namespace UnitTest
             {
             }
 
+            // These intentionally override private-implementation-detail base members that are marked
+            // obsolete (CSWINRT3001), to test 'IDynamicInterfaceCastable' behavior, so suppress CS0672.
+#pragma warning disable CS0672 // Member overrides obsolete member
             protected override bool HasUnwrappableNativeObjectReference => true;
 
             protected override bool IsOverridableInterface(in Guid iid)
             {
                 return false;
             }
+#pragma warning restore CS0672 // Member overrides obsolete member
         }
 
         // Workaround for .NET bug (https://github.com/dotnet/runtime/issues/125577) until it is resolved.

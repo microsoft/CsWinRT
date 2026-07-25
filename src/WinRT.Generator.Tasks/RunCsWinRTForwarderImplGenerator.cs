@@ -1,5 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
@@ -154,7 +154,7 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
         // This makes it easy to run the task against a local build of 'cswinrtimplgen'.
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
-            return Path.Combine(CsWinRTToolsDirectory!, ToolName);
+            return Path.Combine(CsWinRTToolsDirectory, ToolName);
         }
 
         // If the architecture is not specified, determine it based on the current process architecture
@@ -168,7 +168,7 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
         // The tool is inside an architecture-specific subfolder, as it's a native binary
         string architectureDirectory = $"win-{effectiveArchitecture}";
 
-        return Path.Combine(CsWinRTToolsDirectory!, architectureDirectory, ToolName);
+        return Path.Combine(CsWinRTToolsDirectory, architectureDirectory, ToolName);
     }
 
     /// <inheritdoc/>

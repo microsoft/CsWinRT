@@ -8,7 +8,7 @@
       some of the C# source files in this project reference Windows Runtime types
       (e.g. 'Windows.UI.ApplicationSettings.AccountsSettingsPane') as well.
     -->
-    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <TargetFramework>$(DotNetVersion)-windows10.0.26100.1</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
 
     <!--
@@ -45,13 +45,8 @@
     <!-- The produced '.dll' is just an intermediate artifact, only the generated '.winmd' is shipped -->
     <IsPackable>false</IsPackable>
 
-    <!--
-      Suppress XML doc warnings for parameters/return doc tags we omit on interop methods.
-      'NETSDK1229' is also suppressed: this project intentionally targets the CsWinRT 3.0
-      preview Windows SDK projections to author Windows Runtime metadata, so the preview
-      warning is not actionable.
-    -->
-    <NoWarn>$(NoWarn);CS1591;1701;CS1702;NETSDK1229</NoWarn>
+    <!-- Suppress XML doc warnings for parameters/return doc tags we omit on interop methods -->
+    <NoWarn>$(NoWarn);CS1591;1701;CS1702</NoWarn>
   </PropertyGroup>
 
   <!--

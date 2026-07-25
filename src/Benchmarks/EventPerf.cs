@@ -59,8 +59,8 @@ namespace Benchmarks
             ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
             int z;
             System.EventHandler<int> s = (object sender, int value) => z = value;
-            return instance;
             GC.KeepAlive(s);
+            return instance;
         }
 
         [Benchmark]
@@ -134,8 +134,8 @@ namespace Benchmarks
             System.EventHandler<int> s = (object sender, int value) => z = value;
             instance.IntPropertyChanged += s;
             instance.IntPropertyChanged -= s;
-            return instance;
             GC.KeepAlive(s);
+            return instance;
         }
 
         [Benchmark]
