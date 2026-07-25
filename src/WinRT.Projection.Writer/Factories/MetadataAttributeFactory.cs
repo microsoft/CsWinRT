@@ -79,33 +79,68 @@ internal static class MetadataAttributeFactory
     }
 
     /// <summary>
-    /// Writes a <c>[WindowsRuntimeMetadata("&lt;stem&gt;")]</c> attribute decorating <paramref name="type"/> with its source <c>.winmd</c> module name.
+    /// Writes the per-type <c>[WindowsRuntimeType]</c> marker decorating <paramref name="type"/>, and records the
+    /// type's source <c>.winmd</c> stem into the centralized metadata-types map for later emission.
+    /// Skipped entirely in reference-projection mode.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    /// <param name="cache">The metadata cache used to resolve the source module path.</param>
-    public static void WriteWinRTMetadataAttribute(IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
+    public static void WriteWinRTMetadataAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        WriteWinRTMetadataAttributeBody(writer, type, cache);
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
+        WriteWinRTMetadataAttributeBody(writer, context, type);
+
         writer.WriteLine();
     }
 
-    /// <inheritdoc cref="WriteWinRTMetadataAttribute(IndentedTextWriter, TypeDefinition, MetadataCache)"/>
-    /// <returns>A callback emitting the attribute body (no trailing newline) so it can be interpolated into a multiline template.</returns>
-    public static IndentedTextWriterCallback WriteWinRTMetadataAttribute(TypeDefinition type, MetadataCache cache)
+    /// <inheritdoc cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>
+    /// <returns>A callback emitting the marker (no trailing newline) so it can be interpolated into a multiline template. Emits nothing in reference-projection mode.</returns>
+    public static IndentedTextWriterCallback WriteWinRTMetadataAttribute(ProjectionEmitContext context, TypeDefinition type)
     {
-        return writer => WriteWinRTMetadataAttributeBody(writer, type, cache);
+        return writer => WriteWinRTMetadataAttributeBody(writer, context, type);
     }
 
     /// <summary>
-    /// Writes just the attribute body (no trailing newline) for <see cref="WriteWinRTMetadataAttribute(IndentedTextWriter, TypeDefinition, MetadataCache)"/>.
-    /// Used by the callback variant to allow the attribute to be inlined inside a multiline raw-string template line.
+    /// Writes just the marker body (no trailing newline) for <see cref="WriteWinRTMetadataAttribute(IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>,
+    /// and records the type's source <c>.winmd</c> stem into <see cref="ProjectionEmitContext.WindowsRuntimeMetadataTypeEntries"/>
+    /// for the centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// In reference-projection mode this emits nothing and records nothing: <c>[WindowsRuntimeType]</c> is an
+    /// implementation-only type, stripped from the <c>WinRT.Runtime</c> reference assembly that a reference projection
+    /// compiles against. It is only consumed (by the interop generator) from implementation projections, never from the
+    /// reference projections shipped in Windows Runtime projection NuGet packages.
     /// </summary>
-    internal static void WriteWinRTMetadataAttributeBody(IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
+    internal static void WriteWinRTMetadataAttributeBody(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string path = cache.GetSourcePath(type);
-        string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-        writer.Write($"[WindowsRuntimeMetadata(\"{stem}\")]");
+        if (context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
+        writer.Write("[WindowsRuntimeType]");
+
+        // Record the type -> .winmd-stem mapping for the centralized lookup type. The metadata value is build-time
+        // only (consumed by the interop generator), so keeping it off the type itself lets it be trimmed away.
+        if (context.WindowsRuntimeMetadataTypeEntries is { } entries)
+        {
+            string path = context.Cache.GetSourcePath(type);
+            string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
+            (string typeNs, string typeName) = type.Names();
+
+            // The centralized lookup references each type via 'typeof(...)', so the recorded name must match where
+            // the type is actually emitted. In component mode, projected types are wrapped in the 'ABI.Impl.<Ns>'
+            // namespace (see 'WriteBeginProjectedNamespace'), so mirror that same prefix here. Without it the
+            // 'typeof(...)' fails to resolve (authored exclusive-to interfaces live under 'ABI.Impl.<Ns>', not
+            // '<Ns>'), and the key wouldn't match the '(Namespace, Name)' the interop generator computes for the type.
+            string emittedNs = context.Settings.Component ? $"ABI.Impl.{typeNs}" : typeNs;
+            string globalName = TypedefNameWriter.BuildGlobalQualifiedName(emittedNs, typeName);
+
+            _ = entries.TryAdd(globalName, stem);
+        }
     }
 
     /// <summary>
@@ -523,6 +558,51 @@ internal static class MetadataAttributeFactory
     }
 
     /// <summary>
+    /// Writes the generated <c>WindowsRuntimeMetadataTypes.cs</c> file: an <c>ABI</c> namespace-level static class
+    /// decorated with one <c>[WindowsRuntimeMetadata(typeof(&lt;type&gt;), "&lt;stem&gt;")]</c> per projected type,
+    /// mapping it to the source <c>.winmd</c> module name. This centralizes the (build-time only) metadata mapping so
+    /// it can be trimmed away when not needed, mirroring <see cref="WriteDefaultInterfacesClass"/>.
+    /// </summary>
+    /// <param name="settings">The active projection settings.</param>
+    /// <param name="sortedEntries">The (projected-type-name -> <c>.winmd</c> stem) entries, sorted for determinism.</param>
+    public static void WriteWindowsRuntimeMetadataTypesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
+    {
+        if (sortedEntries.Count == 0)
+        {
+            return;
+        }
+
+        // Writes all the entries for the metadata mappings
+        void WriteMetadataEntries(IndentedTextWriter writer)
+        {
+            foreach (KeyValuePair<string, string> kv in sortedEntries)
+            {
+                writer.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value}\")]");
+            }
+        }
+
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+
+        IndentedTextWriter w = wOwner.Writer;
+
+        WriteFileHeader(w);
+
+        w.WriteLine($"""
+            using System;
+            using WindowsRuntime;
+
+            #pragma warning disable CSWINRT3001
+
+            namespace ABI;
+
+            {WriteMetadataEntries}
+            internal static class WindowsRuntimeMetadataTypes;
+            """);
+
+        w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeMetadataTypes.cs"));
+    }
+
+    /// <summary>
     /// Shared template for emitting an <c>ABI</c> namespace-level static class decorated with one
     /// <paramref name="attributeName"/> per entry from <paramref name="sortedEntries"/> (mapping
     /// projected type names to interface or proxy type names). Used by both
@@ -540,24 +620,32 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter w = wOwner.Writer;
-        WriteFileHeader(w);
-        w.WriteLine("using System;");
-        w.WriteLine("using WindowsRuntime;");
-        w.WriteLine();
-        w.WriteLine("#pragma warning disable CSWINRT3001");
-        w.WriteLine();
-        w.WriteLine("namespace ABI");
-        using (w.WriteBlock())
+        // Writes all the entries for the interface mappings
+        void WriteInterfaceMappings(IndentedTextWriter writer)
         {
             foreach (KeyValuePair<string, string> kv in sortedEntries)
             {
-                w.WriteLine($"[{attributeName}(typeof({kv.Key}), typeof({kv.Value}))]");
+                writer.WriteLine($"[{attributeName}(typeof({kv.Key}), typeof({kv.Value}))]");
             }
-
-            w.WriteLine($"internal static class {className};");
         }
+
+        using IndentedTextWriterOwner wOwner = IndentedTextWriterPool.GetOrCreate();
+
+        IndentedTextWriter w = wOwner.Writer;
+
+        WriteFileHeader(w);
+
+        w.WriteLine($"""
+            using System;
+            using WindowsRuntime;
+
+            #pragma warning disable CSWINRT3001
+
+            namespace ABI;
+
+            {WriteInterfaceMappings}
+            internal static class {className};
+            """);
 
         w.FlushToFile(Path.Combine(settings.OutputFolder, fileName));
     }

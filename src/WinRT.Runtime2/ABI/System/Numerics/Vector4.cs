@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -34,7 +33,7 @@ namespace ABI.System.Numerics;
 /// ABI type for <see cref="global::System.Numerics.Vector4"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.numerics.vector4"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector4>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Numerics.Vector4")]
 [WindowsRuntimeMappedType(typeof(global::System.Numerics.Vector4))]
@@ -45,10 +44,7 @@ file static class Vector4;
 /// <summary>
 /// Marshaller for <see cref="global::System.Numerics.Vector4"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class Vector4Marshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>

@@ -6,14 +6,17 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
+#pragma warning disable CS1591
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Binding type for the <c>IInspectable</c> interface vtable.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/nn-inspectable-iinspectable"/>
+[WindowsRuntimeImplementationOnlyMember]
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct IInspectableVftbl
+public unsafe struct IInspectableVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -36,7 +39,7 @@ internal unsafe struct IInspectableVftbl
     /// </param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT GetIidsUnsafe(void* thisPtr, uint* iidCount, Guid** iids)
+    internal static HRESULT GetIidsUnsafe(void* thisPtr, uint* iidCount, Guid** iids)
     {
         return ((IInspectableVftbl*)*(void***)thisPtr)->GetIids(thisPtr, iidCount, iids);
     }
@@ -48,7 +51,7 @@ internal unsafe struct IInspectableVftbl
     /// <param name="className">The fully qualified name of the current Windows Runtime object.</param>
     /// <returns>The <c>HRESULT</c> for the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT GetRuntimeClassNameUnsafe(void* thisPtr, HSTRING* className)
+    internal static HRESULT GetRuntimeClassNameUnsafe(void* thisPtr, HSTRING* className)
     {
         return ((IInspectableVftbl*)*(void***)thisPtr)->GetRuntimeClassName(thisPtr, className);
     }
@@ -60,7 +63,7 @@ internal unsafe struct IInspectableVftbl
     /// <param name="trustLevel">The trust level of the current Windows Runtime object. The default is <see cref="TrustLevel.BaseTrust"/>.</param>
     /// <returns>This method always returns <c>S_OK</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT GetTrustLevelUnsafe(void* thisPtr, TrustLevel* trustLevel)
+    internal static HRESULT GetTrustLevelUnsafe(void* thisPtr, TrustLevel* trustLevel)
     {
         return ((IInspectableVftbl*)*(void***)thisPtr)->GetTrustLevel(thisPtr, trustLevel);
     }

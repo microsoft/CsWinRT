@@ -4,7 +4,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -21,7 +20,6 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 /// <typeparam name="TCompletedHandler">The type of completed handler (e.g. for <see cref="IAsyncAction.Completed"/>).</typeparam>
 /// <typeparam name="TProgressHandler">The type of progress handler (e.g. for <see cref="IAsyncActionWithProgress{TProgress}.Progress"/>).</typeparam>
-[SupportedOSPlatform("windows10.0.10240.0")]
 internal abstract partial class UniversalTaskAdapter<
     TResult,
     TProgress,

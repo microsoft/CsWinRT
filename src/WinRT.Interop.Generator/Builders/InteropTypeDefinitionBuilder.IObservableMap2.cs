@@ -25,12 +25,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the event source factory for an <c>IObservableMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="factoryType">The resulting factory type.</param>
         public static void EventSourceFactory(
             GenericInstanceTypeSignature mapType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -42,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             factoryType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "EventSourceFactory"),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopDefinitions, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -88,12 +90,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the cached callback type for the property for the event args for the map.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="callbackType">The resulting callback type.</param>
         public static void EventSourceCallback(
             GenericInstanceTypeSignature mapType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -105,7 +109,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             callbackType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "EventSourceCallback"),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopDefinitions, "EventSourceCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -182,12 +186,14 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
         /// <param name="eventSourceCallbackType">The type returned by <see cref="EventSourceCallback"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="methodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature mapType,
             TypeDefinition eventSourceCallbackType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition methodsType)
@@ -198,7 +204,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             methodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopDefinitions, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -262,6 +268,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
         /// <param name="factoryType">The <see cref="TypeDefinition"/> instance returned by <see cref="EventSourceFactory"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -269,6 +276,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void NativeObject(
             GenericInstanceTypeSignature mapType,
             TypeDefinition factoryType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -295,6 +303,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: mapType,
                 nativeObjectBaseType: windowsRuntimeObservableMap2Type,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
@@ -306,6 +315,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="mapType">The <see cref="TypeSignature"/> for the map type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="mapType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -314,6 +324,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature mapType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -324,6 +335,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: mapType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out callbackType);
@@ -335,6 +347,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="mapType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -342,6 +355,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature mapType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -350,6 +364,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: mapType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
@@ -386,7 +401,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopDefinitions, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -518,7 +533,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopDefinitions, "Impl"),
                 vftblType: interopDefinitions.IObservableMapVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

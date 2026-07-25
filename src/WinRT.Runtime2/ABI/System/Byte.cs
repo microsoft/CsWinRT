@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -32,7 +31,7 @@ namespace ABI.System;
 /// <summary>
 /// ABI type for <see cref="byte"/>.
 /// </summary>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<UInt8>")]
 [WindowsRuntimeMetadataTypeName("UInt8")]
 [WindowsRuntimeMappedType(typeof(byte))]
@@ -43,10 +42,7 @@ file static class Byte;
 /// <summary>
 /// Marshaller for <see cref="byte"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class ByteMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged{T}(T?, CreateComInterfaceFlags, in Guid)"/>

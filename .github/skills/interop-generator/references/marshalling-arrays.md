@@ -189,7 +189,7 @@ Five element marshaller interfaces are defined in `WindowsRuntime.InteropService
 | `IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>` | `KeyValuePair<K,V>` | `ConvertToUnmanaged(KeyValuePair<K,V>)`, `ConvertToManaged(void*)` |
 | `IWindowsRuntimeNullableTypeArrayElementMarshaller<T>` | `Nullable<T>` | `ConvertToUnmanaged(T?)`, `ConvertToManaged(void*)` |
 
-All are `static abstract` interfaces (using the C# static abstract member pattern), `[Obsolete]`, and `[EditorBrowsable(Never)]` — they are implementation details consumed only by generated code.
+All are `static abstract` interfaces (using the C# static abstract member pattern) marked with `[WindowsRuntimeImplementationOnlyMember]`, so they are stripped from the `WinRT.Runtime.dll` reference assembly — they are implementation details consumed only by generated code.
 
 ### Runtime array marshaller classes (in `WinRT.Runtime.dll`)
 

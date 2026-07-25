@@ -401,7 +401,7 @@ internal static class InterfaceFactory
         }
 
         writer.WriteLine();
-        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(type, context.Cache);
+        IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback guidAttr = WriteGuidAttribute(type);
         writer.WriteLine(isMultiline: true, $$"""
             {{metadataAttr}}

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end projection smoke test: a class library that generates a reference projection for a
+    third-party Windows Runtime component, exactly as a NuGet projection author would. Building it
+    exercises the reference projection generator ('cswinrtprojectionrefgen') and the forwarder
+    generator ('cswinrtimplgen'). Shared configuration (target framework, NuGet sources, and the
+    CsWinRT package reference) lives in the parent 'Directory.Build.props'.
+
+    The component being projected is the sibling 'Authoring' smoke test: its build emits an
+    'Authoring.winmd', which this project consumes as its projection input. This avoids hand-authoring
+    a separate '.winmd' just for this test.
+  -->
+  <PropertyGroup>
+
+    <!-- Produce a reference projection (and its forwarder), the artifacts a projection author ships -->
+    <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+
+    <!-- Generate projections for the types in the 'Authoring' namespace of the input '.winmd' below -->
+    <CsWinRTIncludes>Authoring</CsWinRTIncludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <!--
+      Build the 'Authoring' component first so its 'Authoring.winmd' exists before this project runs the
+      projection generator. The reference is for build ordering only ('ReferenceOutputAssembly' and
+      'Private' are both 'false'), mirroring how 'src/WinRT.Internal' depends on the WinMD generator.
+    -->
+    <ProjectReference Include="..\Authoring\Authoring.csproj" ReferenceOutputAssembly="false" Private="false" />
+
+    <!--
+      The Windows Runtime metadata to generate a projection for. The 'Authoring' component shares this
+      folder's 'Directory.Build.props' (same configuration and target framework), so its '.winmd' lands
+      at a deterministic, sibling output path.
+    -->
+    <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\Authoring\bin\$(Configuration)\$(TargetFramework)\Authoring.winmd" />
+  </ItemGroup>
+</Project>

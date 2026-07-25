@@ -163,15 +163,8 @@ internal static partial class SignatureGenerator
         // These are only needed to generate signatures, so we hide them from the reference assemblies, as they're not useful there.
         if (type.IsDelegate)
         {
-            // Determine the right implementation projection .dll to use for the lookup
-            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
-                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
-                : type.IsProjectedWindowsSdkXamlType
-                    ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
-                    : interopDefinitions.WindowsRuntimeProjectionModule;
-
             // Try to get the implementation type via a fast lookup, if we did get a valid projection module
-            if (projectionModule?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is true)
+            if (type.GetImplementationProjectionModule(interopDefinitions)?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is true)
             {
                 return projectedType.TryGetGuidAttribute(interopReferences, out iid);
             }
@@ -182,7 +175,7 @@ internal static partial class SignatureGenerator
         if (type.IsComponentWindowsRuntimeType &&
             interopDefinitions.WindowsRuntimeComponentModule is { } componentModule)
         {
-            return InterfaceIIDResolver.TryGetIID(componentModule, type.FullName!, out iid);
+            return InterfaceIIDResolver.TryGetIID(componentModule, type.FullName, out iid);
         }
 
         iid = Guid.Empty;
@@ -205,11 +198,7 @@ internal static partial class SignatureGenerator
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
         // Determine the right implementation projection .dll (see notes above)
-        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
-            ? interopDefinitions.WindowsRuntimeSdkProjectionModule
-            : type.IsProjectedWindowsSdkXamlType
-                ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
-                : interopDefinitions.WindowsRuntimeProjectionModule;
+        ModuleDefinition? projectionModule = type.GetImplementationProjectionModule(interopDefinitions);
 
         // Use the cached default interfaces lookup for O(1) lookups by (Namespace, Name) key
         if (projectionModule?.GetDefaultInterfacesLookup().TryGetValue((type.Namespace, type.Name), out TypeSignature? signature) is true)

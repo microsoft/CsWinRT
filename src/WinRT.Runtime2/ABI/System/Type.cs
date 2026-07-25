@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -40,15 +39,12 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.Type"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typename"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.UniversalApiContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>")]
 [WindowsRuntimeMetadataTypeName("Windows.UI.Xaml.Interop.TypeName")]
 [WindowsRuntimeMappedType(typeof(global::System.Type))]
 [TypeComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public unsafe struct Type
 {
     /// <summary>
@@ -67,10 +63,7 @@ public unsafe struct Type
 /// <summary>
 /// Marshaller for <see cref="global::System.Type"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class TypeMarshaller
 {
     /// <summary>
@@ -319,13 +312,13 @@ file static class UncachedTypeMarshaller
         {
             // For projected types (not custom-mapped, but possibly manually projected, like e.g. 'IAsyncInfo'), we
             // can always just use the fully qualified type name (as it will always match the one in the .winmd file).
-            // We can check if a given type matches this by just checking whether it has '[WindowsRuntimeMetadata]'.
+            // We can check if a given type matches this by just checking whether it has '[WindowsRuntimeType]'.
             // Note that we're intentionally skipping generic types, as for those we need the 'cswinrtinteropgen' info.
             // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too and
             // for component project types in authoring scenarios.
             if (!value.IsGenericType)
             {
-                if (value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
+                if (value.IsDefined(typeof(WindowsRuntimeTypeAttribute)))
                 {
                     return new(value.FullName!, TypeKind.Metadata);
                 }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -14,7 +13,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="TResult">The result type.</typeparam>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
-[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class TaskWithProgressAdapter<TResult, TProgress> : UniversalTaskAdapter<
     TResult,
     TProgress,

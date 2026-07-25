@@ -42,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // 'IDelegate' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 iid: GuidGenerator.CreateIID(delegateType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -55,7 +55,7 @@ internal partial class InteropTypeDefinitionBuilder
             // scenario. This is different than boxed value type, which instead are
             // just always projected as and using 'Nullable<T>' to represent this.
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Reference"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -104,7 +104,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 vftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Vftbl"),
+                    name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "Vftbl"),
                     senderType: senderType.GetAbiType(interopReferences),
                     argsType: argsType.GetAbiType(interopReferences),
                     interopReferences: interopReferences);
@@ -120,6 +120,7 @@ internal partial class InteropTypeDefinitionBuilder
                 TypeSignature argsType,
                 TypeSignature displaySenderType,
                 TypeSignature displayArgsType,
+                InteropDefinitions interopDefinitions,
                 InteropReferences interopReferences,
                 InteropGeneratorEmitState emitState,
                 ModuleDefinition module,
@@ -139,7 +140,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(sharedEventHandlerType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, interopReferences.RuntimeContext, "Vftbl"),
+                    name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, interopDefinitions, "Vftbl"),
                     senderType: senderType,
                     argsType: argsType,
                     interopReferences: interopReferences);
@@ -162,6 +163,7 @@ internal partial class InteropTypeDefinitionBuilder
                     argsType: argsType.GetAbiType(interopReferences),
                     displaySenderType: interopReferences.Object,
                     displayArgsType: argsType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -174,6 +176,7 @@ internal partial class InteropTypeDefinitionBuilder
                     argsType: interopReferences.Void.MakePointerType(),
                     displaySenderType: senderType,
                     displayArgsType: interopReferences.Object,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -288,7 +291,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -396,7 +399,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "ReferenceImpl"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "ReferenceImpl"),
                 vftblType: interopDefinitions.DelegateReferenceVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -430,7 +433,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.DelegateInterfaceEntries,
                 interopReferences: interopReferences,
                 module: module,
@@ -453,6 +456,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="nativeDelegateType">The type returned by <see cref="NativeDelegateType"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="callbackType">The resulting callback type.</param>
@@ -460,6 +464,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature delegateType,
             TypeDefinition nativeDelegateType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition callbackType)
@@ -467,7 +472,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             callbackType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "ComWrappersCallback"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -538,7 +543,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             nativeDelegateType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "NativeDelegate"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "NativeDelegate"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -685,7 +690,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -785,6 +790,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallbackType"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -794,6 +800,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition delegateComWrappersCallbackType,
             MethodDefinition get_IidMethod,
             MethodDefinition get_ReferenceIidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -802,7 +809,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             marshallerType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Marshaller"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -913,6 +920,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -920,6 +928,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Proxy(
             TypeSignature delegateType,
             TypeDefinition comWrappersMarshallerAttributeType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -930,7 +939,7 @@ internal partial class InteropTypeDefinitionBuilder
             // '[WindowsRuntimeMetadataTypeName]', as that's different than the runtime class name (which uses 'IReference<T>').
             InteropTypeDefinitionBuilder.Proxy(
                 ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopDefinitions),
                 mappedMetadata: "Windows.Foundation.FoundationContract",
                 runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(delegateType, useWindowsUIXamlProjections),
@@ -946,7 +955,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates the type map attributes for some <see cref="Delegate"/> type.
         /// </summary>
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
-        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
+        /// <param name="proxyType">The <see cref="TypeDefinition"/> instance returned by <see cref="Proxy(TypeSignature, TypeDefinition, InteropDefinitions, InteropReferences, ModuleDefinition, bool, out TypeDefinition)"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>

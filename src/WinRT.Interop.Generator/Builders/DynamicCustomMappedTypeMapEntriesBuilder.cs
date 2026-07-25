@@ -38,6 +38,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.IEnumerable.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -47,6 +48,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.IEnumerator.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -56,6 +58,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.IList.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
@@ -83,6 +86,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
@@ -91,6 +95,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
@@ -99,6 +104,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
@@ -107,6 +113,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
@@ -115,11 +122,13 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
             microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
             trimTarget: interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature(),
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         IBindableVectorViewType(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
@@ -131,6 +140,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <param name="windowsUIXamlMetadata">The metadata name for <c>Windows.UI.Xaml</c>.</param>
     /// <param name="microsoftUIXamlMetadata">The metadata name for <c>Microsoft.UI.Xaml</c>.</param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -139,6 +149,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         string windowsUIXamlMetadata,
         string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections,
@@ -157,7 +168,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // that is used, we can't define this proxy type in advance even if the interface type itself is not generic.
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -209,7 +220,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Define the proxy type for the 'ICommand' interface type (it needs a dynamic one, same as the other interface types above)
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -266,7 +277,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Define the proxy type for the 'INotifyCollectionChanged' interface type
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -323,7 +334,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Define the proxy type for the 'INotifyPropertyChanged' interface type
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -364,6 +375,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <param name="windowsUIXamlMetadata">The metadata name for <c>Windows.UI.Xaml</c>.</param>
     /// <param name="microsoftUIXamlMetadata">The metadata name for <c>Microsoft.UI.Xaml</c>.</param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -371,6 +383,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         string windowsUIXamlMetadata,
         string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -382,7 +395,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // able to do lookups correctly (this attribute will be used, since the input type is a normal class type).
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: null,
@@ -417,6 +430,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <param name="windowsUIXamlMetadata">The metadata name for <c>Windows.UI.Xaml</c>.</param>
     /// <param name="microsoftUIXamlMetadata">The metadata name for <c>Microsoft.UI.Xaml</c>.</param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -424,6 +438,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         string windowsUIXamlMetadata,
         string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -434,7 +449,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // metadata type name is not fixed. This type can be instantiated and boxed, so we need both possible names.
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -467,6 +482,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <param name="windowsUIXamlMetadata">The metadata name for <c>Windows.UI.Xaml</c>.</param>
     /// <param name="microsoftUIXamlMetadata">The metadata name for <c>Microsoft.UI.Xaml</c>.</param>
     /// <param name="trimTarget"><inheritdoc cref="TypeMapAttribute{TTypeMapGroup}.TypeMapAttribute(string, Type, Type)" path="/param[@name='trimTarget']/node()"/></param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -474,6 +490,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         string windowsUIXamlMetadata,
         string microsoftUIXamlMetadata,
         TypeSignature trimTarget,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -484,7 +501,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // metadata type name, as above, but we also need to reference the boxed type instantiation for this type.
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopDefinitions),
             mappedMetadata: metadata,
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -514,10 +531,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <summary>
     /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for <c>IBindableVectorView</c>.
     /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     private static void IBindableVectorViewType(
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -533,7 +552,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // a proxy type for it, with the correct runtime class name, and an entry just in the marshalling proxy type map.
         InteropTypeDefinitionBuilder.Proxy(
             ns: InteropUtf8NameFactory.TypeNamespace(adapterType, interopReferences.RuntimeContext),
-            name: InteropUtf8NameFactory.TypeName(adapterType, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(adapterType, interopDefinitions),
             mappedMetadata: null,
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,
@@ -585,7 +604,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the type map entries. We only need one in the marshalling external type map. We can use 'IEnumerable'
         // as the trim target for the specialized RCW type (since the 'IReadOnlyList' interface does not exist in .NET).
-        // This is also why we don't need to emit the '[WindowsRuntimeMappedMetadata]' attribute on the proxy type above.
+        // This is also why we don't need to emit the '[WindowsRuntimeType]' marker on the proxy type above.
         InteropTypeDefinitionBuilder.TypeMapAttributes(
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,

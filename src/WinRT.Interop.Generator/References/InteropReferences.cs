@@ -721,14 +721,9 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeExclusiveToInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeExclusiveToInterfaceAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeTypeAttribute</c>.
     /// </summary>
-    public TypeReference WindowsRuntimeMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataAttribute"u8);
-
-    /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMappedMetadataAttribute</c>.
-    /// </summary>
-    public TypeReference WindowsRuntimeMappedMetadataAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMappedMetadataAttribute"u8);
+    public TypeReference WindowsRuntimeTypeAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeTypeAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeReferenceTypeAttribute</c>.
@@ -2539,12 +2534,12 @@ internal sealed class InteropReferences
             parameterTypes: [_corLibTypeFactory.String]));
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedMetadataAttribute"/>'s constructor.
+    /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeTypeAttribute"/>'s constructor.
     /// </summary>
-    public MemberReference WindowsRuntimeMappedMetadataAttribute_ctor => field ??= WindowsRuntimeMappedMetadataAttribute
+    public MemberReference WindowsRuntimeTypeAttribute_ctor => field ??= WindowsRuntimeTypeAttribute
         .CreateMemberReference(".ctor", MethodSignature.CreateInstance(
             returnType: _corLibTypeFactory.Void,
-            parameterTypes: [_corLibTypeFactory.String]));
+            parameterTypes: []));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="WindowsRuntimeMappedTypeAttribute"/>'s constructor.

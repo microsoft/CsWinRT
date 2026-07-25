@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
+#endif
 
 namespace WindowsRuntime.InteropServices;
 
@@ -13,10 +15,13 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// This type is only meant to be used as type map group for <see cref="System.Runtime.InteropServices.TypeMapping"/> APIs.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[Obsolete(
+    WindowsRuntimeConstants.WindowsRuntimeTypeMapGroupObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.WindowsRuntimeTypeMapGroupObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
 public abstract class DynamicInterfaceCastableImplementationTypeMapGroup
 {
     /// <summary>

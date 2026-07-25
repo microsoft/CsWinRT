@@ -41,15 +41,31 @@ Contains several projects for generating and building projections from the Windo
 
 Contains various testing-related projects:
 
-- [`TestComponentCSharp`](../src/Tests/TestComponentCSharp): This is an implementation of a WinRT test component, defined in `class.idl` and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp tests scenarios specific to the C#/WinRT language projection.
+- [`TestComponentCSharp`](../src/Tests/TestComponentCSharp): An implementation of a WinRT test component, defined in `TestComponentCSharp.idl` and used by the UnitTest and functional test projects.  To complement the general TestComponent above, the TestComponentCSharp tests scenarios specific to the C#/WinRT language projection.
 
-- [`UnitTest`](../src/Tests/UnitTest): Unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
+- [`UnitTest`](../src/Tests/UnitTest): MSTest unit tests for validating the Windows SDK, WinUI, and Test projections generated above, plus core marshalling, COM interop, exceptions, and source-generator integration.  All pull requests should ensure that this project executes without errors.
 
-- [`HostTest`](../src/Tests/HostTest): Unit tests for WinRT.Host.dll, which provides hosting for runtime components written in C#.
+- [`FunctionalTests`](../src/Tests/FunctionalTests): A collection of standalone console applications, each validating a specific interop scenario (async, collections, events, CCW, dynamic casting, structs, and more) under real publishing conditions such as trimming and Native AOT.  Each test reports success with exit code `100`.
+
+- [`SourceGenerator2Test`](../src/Tests/SourceGenerator2Test): MSTest unit tests for the source generators and diagnostic analyzers in `WinRT.SourceGenerator2`, built on the Roslyn testing libraries.
+
+- [`ObjectLifetimeTests`](../src/Tests/ObjectLifetimeTests): A WinUI application-style MSTest project validating reference tracking, garbage collection behavior, and XAML element lifetime.
+
+- [`SmokeTests`](../src/Tests/SmokeTests): Minimal, isolated end-to-end smoke tests that consume the real `Microsoft.Windows.CsWinRT` NuGet package — a consumption app (`Consumption`), an authoring component (`Authoring`), a reference projection for a third-party `.winmd` (`Projection`), and reference projections for the Windows SDK (`WindowsSdkProjection`) and its `Windows.UI.Xaml` surface (`WindowsSdkXamlProjection`) — to verify the produced package works correctly outside the repository build infrastructure.
+
+- [`AuthoringTest`](../src/Tests/AuthoringTest): A C#-authored WinRT component (`CsWinRTComponent=true`) covering a broad set of authoring type patterns.  Companion projects exercise consuming authored components — `AuthoringTest2`/`AuthoringTest3`, the `AuthoringConsumptionTest*` C++ consumers, and the WUX (`Windows.UI.Xaml`) and WinUI variants — several of which are still work in progress.
+
+- [`HostTest`](../src/Tests/HostTest): C++ (gtest) tests for `WinRT.Host.dll`, which provides hosting for runtime components written in C#.
+
+- [`DiagnosticTests`](../src/Tests/DiagnosticTests): Tests for the CsWinRT diagnostic and analyzer rules, driven by positive and negative source snippets.
+
+- [`BuildDeterminismTest`](../src/Tests/BuildDeterminismTest): Builds a component twice and compares the hashes of the generated `WinRT.Interop.dll` to verify deterministic builds.
+
+- [`OOPExe`](../src/Tests/OOPExe): An out-of-process executable harness used by the authoring test scenarios.
 
 ## [`src/TestWinRT`](https://github.com/microsoft/TestWinRT/)
 
-C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo is cloned into the root of the C#/WinRT repo, via `get_testwinrt.cmd`, so that `cswinrt.sln` can resolve its reference to `TestComponent.vcxproj`.  The resulting `TestComponent` and `BenchmarkComponent` files are consumed by the UnitTest and Benchmarks projects above.
+C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo is cloned into the root of the C#/WinRT repo, via `get_testwinrt.cmd`, so that `cswinrt.slnx` can resolve its reference to `TestComponent.vcxproj`.  The resulting `TestComponent` and `BenchmarkComponent` files are consumed by the UnitTest and Benchmarks projects above.
 
 ## [`src/WinRT.Generator.Tasks`](../src/WinRT.Generator.Tasks)
 

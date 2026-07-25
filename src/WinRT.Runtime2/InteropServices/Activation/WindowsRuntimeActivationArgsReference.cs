@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
+
 using System;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -14,10 +15,7 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// This type works around the lack of support for <see cref="TypedReference"/> for byref-like types.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public readonly ref struct WindowsRuntimeActivationArgsReference
 {
     /// <summary>

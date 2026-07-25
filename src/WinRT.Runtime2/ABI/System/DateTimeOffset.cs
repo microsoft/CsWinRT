@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -33,16 +32,13 @@ namespace ABI.System;
 /// ABI type for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.datetime"/>
-[WindowsRuntimeMappedMetadata("Windows.Foundation.FoundationContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.DateTime>")]
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.DateTime")]
 [WindowsRuntimeMappedType(typeof(global::System.DateTimeOffset))]
 [WindowsRuntimeReferenceType(typeof(global::System.DateTimeOffset?))]
 [DateTimeOffsetComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public struct DateTimeOffset
 {
     /// <summary>
@@ -55,10 +51,7 @@ public struct DateTimeOffset
 /// <summary>
 /// Marshaller for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class DateTimeOffsetMarshaller
 {
     /// <summary>

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -26,7 +25,7 @@ namespace ABI.System.ComponentModel;
 /// ABI type for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.data.dataerrorschangedeventargs"/>
-[WindowsRuntimeMappedMetadata("Microsoft.UI.Xaml.WinUIContract")]
+[WindowsRuntimeType]
 [WindowsRuntimeClassName("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")]
 [WindowsRuntimeMappedType(typeof(global::System.ComponentModel.DataErrorsChangedEventArgs))]
 [DataErrorsChangedEventArgsComWrappersMarshaller]
@@ -35,10 +34,7 @@ file static class DataErrorsChangedEventArgs;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class DataErrorsChangedEventArgsMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>

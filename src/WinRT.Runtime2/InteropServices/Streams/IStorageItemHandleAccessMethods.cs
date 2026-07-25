@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.IO;
 using Microsoft.Win32.SafeHandles;
 
@@ -12,10 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// Provides methods for interacting with the <c>IStorageItemHandleAccess</c> COM interface.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/windowsstoragecom/nn-windowsstoragecom-istorageitemhandleaccess"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class IStorageItemHandleAccessMethods
 {
     /// <summary>

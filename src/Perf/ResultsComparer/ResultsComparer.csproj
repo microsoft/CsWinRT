@@ -4,6 +4,13 @@
     <TargetFrameworks>$(PERFLAB_TARGET_FRAMEWORKS)</TargetFrameworks>
     <TargetFramework Condition="'$(TargetFrameworks)' == ''">net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+
+    <!--
+      This is a local-only benchmark results comparer tool (not shipped and not part of the
+      main solution), so XML docs and the repo's strict code-style enforcement aren't applied.
+    -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" />

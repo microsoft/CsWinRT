@@ -286,7 +286,7 @@ For `GetMany` CCW methods, the runtime's collection adapter extension types (`IE
 | `IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>` | `KeyValuePair<K,V>` | `ConvertToUnmanaged(KeyValuePair<K,V>)` |
 | `IWindowsRuntimeNullableTypeElementMarshaller<T>` | `Nullable<T>` | `ConvertToUnmanaged(T?)` |
 
-These are `static abstract` interfaces, `[Obsolete]`, and `[EditorBrowsable(Never)]` — implementation details consumed only by generated code.
+These are `static abstract` interfaces marked with `[WindowsRuntimeImplementationOnlyMember]`, so they are stripped from the `WinRT.Runtime.dll` reference assembly — implementation details consumed only by generated code.
 
 **Runtime consumer example** — a `GetMany` extension method on `IEnumeratorAdapterExtensions`:
 

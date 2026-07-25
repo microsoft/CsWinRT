@@ -1891,6 +1891,67 @@ namespace AuthoringTest
         public string HelloWorld() => "Hello World!";
     }
 
+    // Test that user-specified [OverloadAttribute] names are emitted in the winmd.
+    // The interface has 3 overloads of Lookup where the non-default ones carry custom ABI names
+    public interface ICustomOverloadNames
+    {
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        string Lookup(string key);
+
+        [Windows.Foundation.Metadata.Overload("LookupByIndex")]
+        int Lookup(int index);
+
+        [Windows.Foundation.Metadata.Overload("LookupByFlag")]
+        bool Lookup(bool flag);
+    }
+
+    // Test a mix of user-specified and auto-generated OverloadAttribute names
+    public sealed class CustomOverloadNamesClass : ICustomOverloadNames
+    {
+        public string Lookup(string key) => "found:" + key;
+        public int Lookup(int index) => index * 10;
+        public bool Lookup(bool flag) => !flag;
+
+        // Class-level overloads: first gets a custom name, second is auto-generated
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string Transform(string input) => input.ToUpper();
+
+        [Windows.Foundation.Metadata.Overload("TransformNumber")]
+        public int Transform(int value) => value * 2;
+
+        public double Transform(double value) => value + 0.5;
+    }
+
+    // Auto-generated overload names must skip any name the author already claimed: here the author
+    // names one overload "M2" (the auto-generated pattern), so the remaining overload becomes "M3"
+    public sealed class OverloadCollisionClass
+    {
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string M(string s) => s;
+
+        [Windows.Foundation.Metadata.Overload("M2")]
+        public int M(int i) => i * 2;
+
+        public bool M(bool b) => !b;
+    }
+
+    // [DefaultOverload] is on a non-first overload: it must keep the original name while the
+    // author-specified name on the first-declared overload is still honored
+    public interface IDefaultOverloadNotFirst
+    {
+        [Windows.Foundation.Metadata.Overload("GetByIndex")]
+        int Get(int index);
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        string Get(string key);
+    }
+
+    public sealed class DefaultOverloadNotFirstClass : IDefaultOverloadNotFirst
+    {
+        public int Get(int index) => index + 100;
+        public string Get(string key) => "key:" + key;
+    }
+
     public sealed class NonActivatableType
     {
         private readonly string _text;

@@ -599,19 +599,21 @@ namespace UnitTest
 
         class TestIDICInspectable : WindowsRuntimeObject
         {
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
             public unsafe TestIDICInspectable(void* ptr)
                 : base(WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ptr, WellKnownInterfaceIIDs.IID_IInspectable, out _))
-#pragma warning restore CSWINRT3001 // Type or member is obsolete
             {
             }
 
+            // These intentionally override private-implementation-detail base members that are marked
+            // obsolete (CSWINRT3001), to test 'IDynamicInterfaceCastable' behavior, so suppress CS0672.
+#pragma warning disable CS0672 // Member overrides obsolete member
             protected override bool HasUnwrappableNativeObjectReference => true;
 
             protected override bool IsOverridableInterface(in Guid iid)
             {
                 return false;
             }
+#pragma warning restore CS0672 // Member overrides obsolete member
         }
 
         // Workaround for .NET bug (https://github.com/dotnet/runtime/issues/125577) until it is resolved.

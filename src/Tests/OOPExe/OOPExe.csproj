@@ -6,6 +6,20 @@
     <Platforms>x64;x86</Platforms>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
+
+    <!--
+      The CsWin32 source generator emits a 'winmdroot' namespace/type that trips 'CS8981' ("the type name
+      only contains lower-cased ascii characters"). This is generated code we don't control, so suppress it.
+    -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
+
+    <!--
+      OOPExe is a Windows-only out-of-process COM/WinRT test harness (it calls 'CoCreateInstance' and uses
+      'Windows.Foundation' async APIs), but it targets plain 'net10.0' (no Windows platform), so the platform
+      compatibility analyzer flags these Windows-only call sites with 'CA1416'. Switching to a Windows TFM would
+      pull in the CsWinRT 2.x SDK projection and clash with the 3.0 'Test' projection it references, so suppress it.
+    -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -18,7 +17,6 @@ namespace WindowsRuntime.InteropServices;
 /// A <see cref="TaskCompletionSource"/> implementation backed by an <see cref="IAsyncInfo"/> object.
 /// </summary>
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
-[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionSource
 {
     /// <summary>

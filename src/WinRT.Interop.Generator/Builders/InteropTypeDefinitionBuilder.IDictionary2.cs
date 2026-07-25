@@ -26,6 +26,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -33,6 +34,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Interface(
             GenericInstanceTypeSignature dictionaryType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -41,7 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Interface"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopDefinitions, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -105,7 +107,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 vftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Vftbl"),
+                    name: InteropUtf8NameFactory.TypeName(dictionaryType, interopDefinitions, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences);
@@ -121,6 +123,7 @@ internal partial class InteropTypeDefinitionBuilder
                 TypeSignature valueType,
                 TypeSignature displayKeyType,
                 TypeSignature displayValueType,
+                InteropDefinitions interopDefinitions,
                 InteropReferences interopReferences,
                 InteropGeneratorEmitState emitState,
                 ModuleDefinition module,
@@ -140,7 +143,7 @@ internal partial class InteropTypeDefinitionBuilder
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
                     ns: InteropUtf8NameFactory.TypeNamespace(sharedDictionaryType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, interopReferences.RuntimeContext, "Vftbl"),
+                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, interopDefinitions, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences);
@@ -163,6 +166,7 @@ internal partial class InteropTypeDefinitionBuilder
                     valueType: valueType,
                     displayKeyType: interopReferences.Object,
                     displayValueType: valueType,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -175,6 +179,7 @@ internal partial class InteropTypeDefinitionBuilder
                     valueType: interopReferences.Void.MakePointerType(),
                     displayKeyType: keyType,
                     displayValueType: interopReferences.Object,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -187,6 +192,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="vftblType">The type returned by <see cref="Vftbl"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -194,6 +200,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void IMapMethods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition vftblType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -205,7 +212,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal abstract class' type
             mapMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "IMapMethods"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopDefinitions, "IMapMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -271,6 +278,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapMethodsType">The type returned by <see cref="IMapMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -278,6 +286,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void Methods(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -289,7 +298,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal static class' type
             dictionaryMethodsType = new TypeDefinition(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Methods"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopDefinitions, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -639,6 +648,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="mapMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IMapMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
@@ -646,6 +656,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void NativeObject(
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition mapMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -667,6 +678,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: dictionaryType,
                 nativeObjectBaseType: windowsRuntimeDictionary5Type,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out nativeObjectType);
@@ -678,6 +690,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="dictionaryType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -686,6 +699,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature dictionaryType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -696,6 +710,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: dictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out callbackType);
@@ -707,6 +722,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="dictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> type.</param>
         /// <param name="nativeObjectType">The type returned by <see cref="NativeObject"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for <paramref name="dictionaryType"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -714,6 +730,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature dictionaryType,
             TypeDefinition nativeObjectType,
             MethodDefinition get_IidMethod,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -722,6 +739,7 @@ internal partial class InteropTypeDefinitionBuilder
                 typeSignature: dictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module,
                 out marshallerType);
@@ -755,7 +773,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "InterfaceImpl"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopDefinitions, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -1039,7 +1057,7 @@ internal partial class InteropTypeDefinitionBuilder
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Impl"),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopDefinitions, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

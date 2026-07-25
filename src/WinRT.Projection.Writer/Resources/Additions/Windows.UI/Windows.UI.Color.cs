@@ -31,6 +31,9 @@ namespace Windows.UI
 
         private readonly string ConvertToString(string format, IFormatProvider provider)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             if (format == null)
             {
                 DefaultInterpolatedStringHandler handler = new(1, 4, provider, stackalloc char[32]);
@@ -60,6 +63,7 @@ namespace Windows.UI
                 handler.AppendFormatted(B, format);
                 return handler.ToStringAndClear();
             }
+#endif
         }
     }
 }

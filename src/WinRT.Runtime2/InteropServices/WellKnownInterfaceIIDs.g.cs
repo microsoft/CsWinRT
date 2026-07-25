@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
+
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -10,10 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// IIDs for well known projected WinRT interfaces.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static class WellKnownInterfaceIIDs
 {
     /// <summary>The IID for <c>IUnknown</c>.</summary>

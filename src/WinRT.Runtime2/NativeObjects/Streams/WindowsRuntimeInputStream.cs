@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Windows.Foundation;
@@ -54,10 +53,7 @@ internal sealed class WindowsRuntimeInputStream : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -85,10 +81,7 @@ internal sealed class WindowsRuntimeInputStream : WindowsRuntimeObject,
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
+    [WindowsRuntimeImplementationOnlyMember]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 
@@ -14,7 +15,12 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// <param name="settings">The active projection settings.</param>
 /// <param name="cache">The metadata cache for the current generation.</param>
 /// <param name="currentNamespace">The namespace currently being emitted (or <see cref="string.Empty"/> when not in a per-namespace pass).</param>
-internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cache, string currentNamespace)
+/// <param name="windowsRuntimeMetadataTypeEntries">The (projected-type-name -> source <c>.winmd</c> stem) map to record into while emitting per-type markers, or <see langword="null"/> outside the per-namespace type-emission pass.</param>
+internal sealed class ProjectionEmitContext(
+    Settings settings,
+    MetadataCache cache,
+    string currentNamespace,
+    ConcurrentDictionary<string, string>? windowsRuntimeMetadataTypeEntries = null)
 {
     /// <summary>
     /// Gets the active projection settings.
@@ -30,6 +36,13 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     /// Gets the namespace currently being emitted, or <see cref="string.Empty"/> when not in a per-namespace pass.
     /// </summary>
     public string CurrentNamespace { get; } = currentNamespace;
+
+    /// <summary>
+    /// Gets the (projected-type-name -> source <c>.winmd</c> stem) map that per-type marker emission records into,
+    /// or <see langword="null"/> when not in the per-namespace type-emission pass. Emitted at the end of generation
+    /// as the centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// </summary>
+    public ConcurrentDictionary<string, string>? WindowsRuntimeMetadataTypeEntries { get; } = windowsRuntimeMetadataTypeEntries;
 
     /// <summary>
     /// Gets a value indicating whether the writer is currently emitting inside an

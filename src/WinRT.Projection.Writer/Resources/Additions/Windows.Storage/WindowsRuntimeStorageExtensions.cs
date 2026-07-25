@@ -29,6 +29,9 @@ namespace Windows.Storage
         [SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             // Helper with the actual read logic
@@ -53,6 +56,7 @@ namespace Windows.Storage
             }
 
             return OpenStreamForReadCoreAsync(windowsRuntimeFile);
+#endif
         }
 
         /// <summary>
@@ -82,6 +86,9 @@ namespace Windows.Storage
         [SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
 
@@ -110,6 +117,7 @@ namespace Windows.Storage
             }
 
             return OpenStreamForReadCoreAsync(rootDirectory, relativePath);
+#endif
         }
 
         /// <summary>
@@ -128,6 +136,9 @@ namespace Windows.Storage
             string relativePath,
             CreationCollisionOption creationCollisionOption)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
 
@@ -187,6 +198,7 @@ namespace Windows.Storage
             }
 
             return OpenStreamForWriteCoreAsync(rootDirectory, relativePath, creationCollisionOption);
+#endif
         }
 
         /// <summary>
@@ -204,6 +216,9 @@ namespace Windows.Storage
             FileShare share = FileShare.Read,
             FileOptions options = FileOptions.None)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             return global::WindowsRuntime.InteropServices.IStorageItemHandleAccessMethods.Create(
@@ -211,6 +226,7 @@ namespace Windows.Storage
                 access,
                 share,
                 options);
+#endif
         }
 
         /// <summary>
@@ -247,6 +263,9 @@ namespace Windows.Storage
             FileShare share = FileShare.Read,
             FileOptions options = FileOptions.None)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentNullException.ThrowIfNull(relativePath);
 
@@ -257,6 +276,7 @@ namespace Windows.Storage
                 access,
                 share,
                 options);
+#endif
         }
 
         /// <inheritdoc cref="OpenStreamForWriteAsync(IStorageFile)"/>
@@ -264,6 +284,9 @@ namespace Windows.Storage
         [SupportedOSPlatform("windows10.0.10240.0")]
         private static async Task<Stream> OpenStreamForWriteWithOffsetAsync(IStorageFile windowsRuntimeFile, long offset)
         {
+#if CSWINRT_REFERENCE_PROJECTION
+            throw null;
+#else
             Debug.Assert(windowsRuntimeFile is not null);
             Debug.Assert(offset >= 0);
 
@@ -287,6 +310,7 @@ namespace Windows.Storage
 
                 return null;
             }
+#endif
         }
     }
 #nullable restore

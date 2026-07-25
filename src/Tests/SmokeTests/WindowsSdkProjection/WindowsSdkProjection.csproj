@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end smoke test: generate the *base* Windows SDK reference projection, exactly as the
+    'Microsoft.Windows.SDK.NET.Ref' projection NuGet package is produced. Building it runs the reference
+    projection generator ('cswinrtprojectionrefgen') over the full Windows SDK metadata and compiles the
+    result against the packaged 'WinRT.Runtime' *reference* assembly, then runs the forwarder generator
+    ('cswinrtimplgen'). This catches reference-projection codegen regressions (e.g. generated code that
+    references an implementation-only runtime type) here, before they break the Windows SDK projection
+    build downstream.
+
+    The namespace include/exclude filters below mirror the base Windows SDK filter set the projection
+    generator applies for 'WinRT.Sdk.Projection' (see 'WriteWindowsSdkFilters' in
+    'src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Generate.cs'): everything under
+    'Windows' except the 'Windows.UI.Xaml' surface and the few 'Windows.UI'/'Windows.ApplicationModel'
+    helper types that belong to the sibling 'Windows.UI.Xaml' projection. The remaining shared
+    configuration (NuGet sources, the CsWinRT package reference) comes from the parent
+    'Directory.Build.props', and the Windows SDK '.winmd' inputs from the shared
+    'WindowsSdkContracts.targets'.
+  -->
+  <PropertyGroup>
+
+    <!--
+      Build as plain 'net10.0', overriding the '-windows' target framework the shared
+      'Directory.Build.props' sets for the other smoke tests. Generating the full Windows SDK projection
+      means this project must NOT reference the prebuilt Windows SDK projection
+      ('Microsoft.Windows.SDK.NET.dll'), which a '-windows' target framework adds implicitly and which
+      would collide with every type generated here. This mirrors how the real Windows SDK projection is
+      built (see 'src/WinRT.Sdk.Projection/WinRT.Sdk.Projection.csproj'). The '-windows'-specific
+      properties the shared props also set ('TargetPlatformMinVersion', 'WindowsSdkPackageVersion') are
+      inert without a target platform.
+    -->
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Produce a reference projection (and its forwarder), the artifacts a projection author ships -->
+    <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+
+    <CsWinRTIncludes>
+      Windows;
+      Windows.UI.Xaml.Interop;
+      Windows.UI.Xaml.Data.BindableAttribute;
+      Windows.UI.Xaml.Markup.ContentPropertyAttribute
+    </CsWinRTIncludes>
+    <CsWinRTExcludes>
+      Windows.UI.Colors;
+      Windows.UI.ColorHelper;
+      Windows.UI.IColorHelper;
+      Windows.UI.IColors;
+      Windows.UI.Text.FontWeights;
+      Windows.UI.Text.IFontWeights;
+      Windows.UI.Xaml;
+      Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper;
+      Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper
+    </CsWinRTExcludes>
+  </PropertyGroup>
+
+  <!-- Download 'Microsoft.Windows.SDK.Contracts' and stage its '.winmd' files into '@(CsWinRTInputs)' -->
+  <Import Project="..\WindowsSdkContracts.targets" />
+</Project>

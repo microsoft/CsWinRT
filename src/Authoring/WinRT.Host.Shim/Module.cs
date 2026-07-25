@@ -1,4 +1,7 @@
-// TODO: consider embedding this as a resource into WinRT.Host.dll, 
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+// TODO: consider embedding this as a resource into WinRT.Host.dll,
 // to simplify deployment
 
 using System;
@@ -11,29 +14,36 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 
-#pragma warning disable CSWINRT3001 // Type or member is obsolete
-
 namespace WinRT.Host;
 
+/// <summary>
+/// Provides the activation factory entry point used by the native <c>WinRT.Host</c> shim to host managed Windows Runtime components.
+/// </summary>
 public static class Shim
 {
     private const int S_OK = 0;
     private const int E_NOINTERFACE = unchecked((int)0x80004002);
     private const int REGDB_E_READREGDB = unchecked((int)0x80040150);
-    private const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)(0x80040111));
+    private const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)0x80040111);
 
+    /// <summary>
+    /// Delegate matching the native signature used to retrieve an activation factory from a hosted component.
+    /// </summary>
     public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
 
     private unsafe delegate void* ManagedExportsGetActivationFactoryDelegate(ReadOnlySpan<char> activatableClassId);
 
     private static HashSet<string> _InitializedResolvers;
 
+    /// <summary>
+    /// Retrieves the activation factory for a runtime class from the specified target assembly, loading it into the default load context.
+    /// </summary>
     public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
     {
         *activationFactory = IntPtr.Zero;
 
-        var targetAssembly = HStringMarshaller.ConvertToManaged((void*)hstrTargetAssembly);
-        var runtimeClassId = HStringMarshaller.ConvertToManaged((void*)hstrRuntimeClassId);
+        string targetAssembly = HStringMarshaller.ConvertToManaged((void*)hstrTargetAssembly);
+        string runtimeClassId = HStringMarshaller.ConvertToManaged((void*)hstrRuntimeClassId);
 
         try
         {
@@ -41,19 +51,19 @@ public static class Shim
 
             // ABI.<ModuleName>.ManagedExports.GetActivationFactory(ReadOnlySpan<char>) -> void*
             string moduleName = Path.GetFileNameWithoutExtension(targetAssembly);
-            var managedExportsType = assembly.GetType($"ABI.{moduleName}.ManagedExports");
+            Type managedExportsType = assembly.GetType($"ABI.{moduleName}.ManagedExports");
             if (managedExportsType == null)
             {
                 return REGDB_E_READREGDB;
             }
-            var GetActivationFactory = managedExportsType.GetMethod("GetActivationFactory", new Type[] { typeof(ReadOnlySpan<char>) });
+            MethodInfo GetActivationFactory = managedExportsType.GetMethod("GetActivationFactory", [typeof(ReadOnlySpan<char>)]);
             if (GetActivationFactory == null)
             {
                 return REGDB_E_READREGDB;
             }
             // ReadOnlySpan<char> is a ref struct and can't be used with MethodInfo.Invoke.
             // Use a delegate to call the method directly.
-            var del = GetActivationFactory.CreateDelegate<ManagedExportsGetActivationFactoryDelegate>();
+            ManagedExportsGetActivationFactoryDelegate del = GetActivationFactory.CreateDelegate<ManagedExportsGetActivationFactoryDelegate>();
             void* factory = del(runtimeClassId.AsSpan());
             if (factory == null)
             {
@@ -72,25 +82,21 @@ public static class Shim
     {
         if (_InitializedResolvers == null)
         {
-            Interlocked.CompareExchange(ref _InitializedResolvers, new HashSet<string>(StringComparer.OrdinalIgnoreCase), null);
+            _ = Interlocked.CompareExchange(ref _InitializedResolvers, new HashSet<string>(StringComparer.OrdinalIgnoreCase), null);
         }
 
         lock (_InitializedResolvers)
         {
             if (!_InitializedResolvers.Contains(targetAssembly))
             {
-                var resolver = new AssemblyDependencyResolver(targetAssembly);
-                AssemblyLoadContext.Default.Resolving += (AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName) =>
+                AssemblyDependencyResolver resolver = new(targetAssembly);
+                AssemblyLoadContext.Default.Resolving += (assemblyLoadContext, assemblyName) =>
                 {
                     string assemblyPath = resolver.ResolveAssemblyToPath(assemblyName);
-                    if (assemblyPath != null)
-                    {
-                        return assemblyLoadContext.LoadFromAssemblyPath(assemblyPath);
-                    }
-                    return null;
+                    return assemblyPath != null ? assemblyLoadContext.LoadFromAssemblyPath(assemblyPath) : null;
                 };
 
-                _InitializedResolvers.Add(targetAssembly);
+                _ = _InitializedResolvers.Add(targetAssembly);
             }
         }
 

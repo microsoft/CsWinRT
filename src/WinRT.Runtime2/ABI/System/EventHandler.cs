@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -31,7 +30,7 @@ namespace ABI.System;
 //     All native objects reporting their runtime class name as 'Windows.Foundation.IReference`1<Windows.Foundation.EventHandler<Object>>'
 //     will be marshalled as 'EventHandler<Object>'. We only special case marshalling to managed from an exact pointer to a native
 //     delegate instance. This is mostly just needed to allow implementing 'ICommand.CanExecuteChanged' over native objects.
-//   - We also don't use '[WindowsRuntimeMappedMetadata]', so when marshalling 'typeof(EventHandler)', it will be a custom type.
+//   - We also don't apply '[WindowsRuntimeType]', so when marshalling 'typeof(EventHandler)', it will be a custom type.
 //
 // This is also why some ABI methods for 'EventHandler' are either missing or not implemented.
 
@@ -46,10 +45,7 @@ file static class EventHandler;
 /// <summary>
 /// Marshaller for <see cref="global::System.EventHandler"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class EventHandlerMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged"/>

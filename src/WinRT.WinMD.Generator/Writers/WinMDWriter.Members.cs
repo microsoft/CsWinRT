@@ -59,6 +59,9 @@ internal sealed partial class WinMDWriter
 
         // Copy custom attributes from the input method
         CopyCustomAttributes(inputMethod, outputMethod);
+
+        // Record any author-specified '[Overload]' name so finalization can honor it
+        RecordUserSpecifiedOverloadName(inputMethod, outputMethod);
     }
 
     /// <summary>

@@ -52,7 +52,7 @@ namespace UnitTest
 
     public interface ITestCSharp<T>
     {
-        void TestMethod<T>();
+        void TestMethod<TMethod>();
     }
 
     [TestClass]
@@ -64,7 +64,7 @@ namespace UnitTest
 
         public struct Estruct
         {
-            E value;
+            public E value;
         }
 
         [TestMethod]
@@ -777,7 +777,6 @@ namespace UnitTest
             var winRTBuffer = new Windows.Storage.Streams.Buffer(capacity: 0);
 
             await winRTStream.WriteAsync(winRTBuffer);
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
@@ -806,7 +805,7 @@ namespace UnitTest
             stream.Seek(0, SeekOrigin.Begin);
 
             byte[] read = new byte[256];
-            await stream.ReadAsync(read, 0, read.Length);
+            await stream.ReadExactlyAsync(read, 0, read.Length);
             CollectionAssert.AreEqual(data, read);
             CollectionAssert.AreEqual(read, data);
         }
@@ -827,7 +826,11 @@ namespace UnitTest
         [TestMethod]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
         {
+            // This test intentionally casts to a '[ComImport]' interface to verify it throws 'InvalidCastException',
+            // which is exactly the unsupported scenario that 'CSWINRT2009' flags, so suppress it just for this test.
+#pragma warning disable CSWINRT2009
             Assert.ThrowsExactly<System.InvalidCastException>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
+#pragma warning restore CSWINRT2009
         }
 
         [TestMethod]
@@ -896,7 +899,7 @@ namespace UnitTest
             stream.Seek(0, SeekOrigin.Begin);
 
             byte[] read = new byte[256];
-            stream.Read(read, 0, read.Length);
+            stream.ReadExactly(read, 0, read.Length);
             CollectionAssert.AreEqual(data, read);
         }
 
@@ -981,7 +984,7 @@ namespace UnitTest
                 stream.Seek(0, SeekOrigin.Begin);
 
                 byte[] read = new byte[256];
-                await stream.ReadAsync(read, 0, read.Length);
+                await stream.ReadExactlyAsync(read, 0, read.Length);
                 CollectionAssert.AreEqual(data, read);
             }
 
@@ -1185,7 +1188,7 @@ namespace UnitTest
                 stream.Seek(0, SeekOrigin.Begin);
 
                 byte[] read = new byte[256];
-                await stream.ReadAsync(read, 0, read.Length);
+                await stream.ReadExactlyAsync(read, 0, read.Length);
                 CollectionAssert.AreEqual(data, read);
             }
 
@@ -2475,7 +2478,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        void TestInterfaceGeneric()
+        public void TestInterfaceGeneric()
         {
             var objs = TestObject.GetInterfaceVector();
             Assert.AreEqual(3, objs.Count);
@@ -2921,7 +2924,7 @@ namespace UnitTest
                 try
                 {
                     action();
-                    Assert.IsTrue(false);
+                    Assert.Fail();
                 }
                 catch (T ex)
                 {
@@ -2929,7 +2932,7 @@ namespace UnitTest
                 }
                 catch (Exception)
                 {
-                    Assert.IsTrue(false);
+                    Assert.Fail();
                 }
             }
         }
@@ -4002,7 +4005,7 @@ namespace UnitTest
             unsafe static (WeakReference<Class> winrt, WeakReference net, WindowsRuntimeObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
-                Assert.IsTrue(WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objRef));
+                Assert.IsTrue(WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference objRef));
                 return (new WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
@@ -4480,6 +4483,10 @@ namespace UnitTest
         //    }
         //}
 
+        // 'TestPnpPropertiesInLoop' is a manual stress helper kept 'private' so MSTest doesn't auto-run it
+        // (PnP enumeration is environment-dependent). The '[TestMethod]' is retained for easy ad-hoc runs, so
+        // suppress MSTEST0003 ("test method signature is invalid") for this intentionally-private method.
+#pragma warning disable MSTEST0003
         [TestMethod]
         private async Task TestPnpPropertiesInLoop()
         {
@@ -4488,6 +4495,7 @@ namespace UnitTest
                 await TestPnpPropertiesAsync();
             }
         }
+#pragma warning restore MSTEST0003
 
         private async Task TestPnpPropertiesAsync()
         {
@@ -4671,8 +4679,12 @@ namespace UnitTest
         // Manually verify warning for experimental.
         private void TestExperimentAttribute()
         {
+            // This method intentionally uses an '[Experimental]' API to manually verify the warning, so suppress
+            // 'CS8305' here to keep the intentional usage from breaking the build (warnings are treated as errors).
+#pragma warning disable CS8305
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
+#pragma warning restore CS8305
         }
 
         void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)

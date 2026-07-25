@@ -1,0 +1,68 @@
+<Project>
+
+  <!--
+    Shared Windows SDK metadata input for the two Windows SDK reference-projection smoke tests
+    ('WindowsSdkProjection' and 'WindowsSdkXamlProjection'). Both generate a reference projection for
+    the same Windows SDK '.winmd' metadata, exactly as the Windows SDK projection NuGet packages are
+    produced; only their namespace include/exclude filters differ (the base SDK vs the 'Windows.UI.Xaml'
+    split). This file is imported by both projects so the metadata staging lives in one place.
+
+    It mirrors how 'src/WinRT.Sdk.Projection/WinRT.Sdk.Projection.csproj' obtains the SDK metadata: it
+    downloads 'Microsoft.Windows.SDK.Contracts' and feeds its '.winmd' files into '@(CsWinRTInputs)',
+    the input the reference projection generator ('cswinrtprojectionrefgen') reads.
+  -->
+  <PropertyGroup>
+    <_SdkContractsPackageName>Microsoft.Windows.SDK.Contracts</_SdkContractsPackageName>
+
+    <!--
+      The 'Microsoft.Windows.SDK.Contracts' version for the 26100 Windows SDK. It is restored from the
+      CsWinRTDependencies feed (see this folder's 'Directory.Build.props' 'RestoreSources'), so the smoke
+      tests stay isolated from any machine-wide NuGet configuration.
+    -->
+    <_SdkContractsPackageVersion>10.0.26100.7705</_SdkContractsPackageVersion>
+  </PropertyGroup>
+
+  <!-- Download (but don't reference) the SDK metadata package; we only need its '.winmd' files. -->
+  <ItemGroup>
+    <PackageDownload Include="$(_SdkContractsPackageName)" Version="[$(_SdkContractsPackageVersion)]" />
+  </ItemGroup>
+
+  <!--
+    Stage the SDK '.winmd' files as projection inputs. The metadata lives in the downloaded package's
+    'ref/netstandard2.0' folder. We exclude the union 'Windows.winmd' (it would duplicate every contract)
+    and the handful of contracts that the desktop 'Microsoft.Windows.SDK.NET.Ref' package omits
+    (phone/embedded/etc.), matching the official Windows SDK projection build in 'WinRT.Sdk.Projection.csproj'.
+
+    These inputs are added statically (at evaluation time), exactly like the in-repo projection projects
+    feed '@(CsWinRTInputs)' (e.g. 'src/Projections/*/*.csproj' and the sibling 'Projection/Projection.csproj').
+    Doing it statically instead of from a target keeps the inputs in place regardless of how the CsWinRT
+    projection targets are factored: the 'Windows Metadata not provided or detected' check now runs in a
+    private '_CsWinRTComputeProjectionRefGenInputs' target (a dependency of 'CsWinRTGenerateProjection'), so
+    a 'BeforeTargets="CsWinRTGenerateProjection"' hook would add these inputs *after* that check has already
+    run and failed. 'NuGetPackageRoot' and the restored '.winmd' files are both available at evaluation time
+    (the smoke tests always run a full 'dotnet build', which restores first).
+  -->
+  <PropertyGroup>
+    <_SdkContractsWinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkContractsPackageName)', '$(_SdkContractsPackageVersion)', 'ref', 'netstandard2.0'))</_SdkContractsWinMDFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <CsWinRTInputs Include="$(_SdkContractsWinMDFolder)*.winmd"
+                   Exclude="$(_SdkContractsWinMDFolder)Windows.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Embedded.DeviceLockdown.DeviceLockdownContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Networking.NetworkOperators.NetworkOperatorsFdnContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Phone.PhoneContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.Phone.StartScreen.DualSimTileContract.winmd;
+                            $(_SdkContractsWinMDFolder)Windows.UI.WebUI.Core.WebUICommandBarContract.winmd" />
+  </ItemGroup>
+
+  <!--
+    Fail fast with a targeted message if the SDK metadata didn't restore, before the projection generator
+    reports the generic 'Windows Metadata not provided or detected' error. Anchored to the standard
+    'PrepareForBuild' target (not a CsWinRT-internal one) so it stays independent of target ordering.
+  -->
+  <Target Name="_ValidateWindowsSdkContractsInputs" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(_SdkContractsWinMDFolder)')"
+           Text="Windows SDK metadata folder not found at '$(_SdkContractsWinMDFolder)'. Check that the PackageDownload for $(_SdkContractsPackageName) $(_SdkContractsPackageVersion) succeeded." />
+  </Target>
+</Project>

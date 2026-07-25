@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end consumption smoke test: a .NET app that consumes the real
+    'Microsoft.Windows.CsWinRT' NuGet package exactly as a customer would. Building and running
+    it exercises the Windows SDK projection generator, the interop generator, and the
+    'WinRT.Runtime' ref/impl assemblies. Shared configuration (target framework, NuGet sources,
+    and the CsWinRT package reference) lives in the parent 'Directory.Build.props'.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+</Project>

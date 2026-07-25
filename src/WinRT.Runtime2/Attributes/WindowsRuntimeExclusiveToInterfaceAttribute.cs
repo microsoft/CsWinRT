@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
+
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime;
 
@@ -12,10 +13,7 @@ namespace WindowsRuntime;
 /// placed on the interface type itself. This allows the interface type reference to be trimmed away when not needed.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public sealed class WindowsRuntimeExclusiveToInterfaceAttribute : Attribute
 {
     /// <summary>

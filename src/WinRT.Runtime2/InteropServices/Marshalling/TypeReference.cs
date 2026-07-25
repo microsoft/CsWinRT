@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.Xaml.Interop;
 
@@ -11,10 +10,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <summary>
 /// Represents a reference to a <see cref="Type"/> value, for fast marshalling to native.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public unsafe ref struct TypeReference
 {
     /// <inheritdoc cref="ABI.System.Type.Name"/>

@@ -182,7 +182,6 @@ namespace ObjectLifetimeTests
                 });
 
             _asyncQueue.Run();
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
