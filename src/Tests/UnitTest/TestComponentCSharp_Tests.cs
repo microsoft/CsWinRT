@@ -3741,6 +3741,19 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestReferenceArrayBoxing()
+        {
+            // object[] boxes as an inspectable array; a projected-class array boxes as its own IReferenceArray<T> (OtherTypeArray).
+            object[] objectArray = new object[] { new Class() };
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(objectArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(objectArray));
+
+            Class[] classArray = new Class[] { new Class() };
+            Assert.AreEqual((int)PropertyType.OtherTypeArray, Class.GetPropertyType(classArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", Class.GetName(classArray));
+        }
+
+        [TestMethod]
         public unsafe void TestGeneratedRuntimeClassName_Primitive()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
@@ -3805,6 +3818,14 @@ namespace UnitTest
 
             string[] s = new[] { "Hello World!", "WinRT", "C#", "Boxing" };
             CollectionAssert.AreEqual(s, Class.UnboxStringArray(s));
+
+            // Enumerate the elements of a boxed reference-type array (object[] -> IReferenceArray<Object>).
+            var o0 = new Class() { IntProperty = 42 };
+            var o1 = new Class() { IntProperty = 123 };
+            object[] roundTripped = Class.UnboxObjectArray(new object[] { o0, o1 });
+            Assert.AreEqual(2, roundTripped.Length);
+            Assert.AreSame(o0, roundTripped[0]);
+            Assert.AreSame(o1, roundTripped[1]);
         }
 
         [TestMethod]
@@ -3848,6 +3869,14 @@ namespace UnitTest
 
             Point[] pArr = new[] { new Point(1, 3), new Point(2, 4) };
             CollectionAssert.AreEqual(Class.UnboxPointArrayUsingPropertyValue(pArr), pArr);
+
+            // Enumerate the elements of a boxed reference-type array via IPropertyValue.GetInspectableArray.
+            var o0 = new Class() { IntProperty = 42 };
+            var o1 = new Class() { IntProperty = 123 };
+            object[] oArr = Class.UnboxObjectArrayUsingPropertyValue(new object[] { o0, o1 });
+            Assert.AreEqual(2, oArr.Length);
+            Assert.AreSame(o0, oArr[0]);
+            Assert.AreSame(o1, oArr[1]);
         }
 
         [TestMethod]

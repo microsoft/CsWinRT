@@ -492,6 +492,7 @@ namespace TestComponentCSharp
         static Int32[] UnboxInt32Array(Object obj);
         static Boolean[] UnboxBooleanArray(Object obj);
         static String[] UnboxStringArray(Object obj);
+        static Object[] UnboxObjectArray(Object obj);
         static Object BoxedDelegate{ get; };
         static Object BoxedEnum{ get; };
         static Object BoxedEventHandler{ get; };
@@ -507,6 +508,7 @@ namespace TestComponentCSharp
         static Int32[] UnboxInt32ArrayUsingPropertyValue(Object obj);
         static Boolean[] UnboxBooleanArrayUsingPropertyValue(Object obj);
         static Windows.Foundation.Point[] UnboxPointArrayUsingPropertyValue(Object obj);
+        static Object[] UnboxObjectArrayUsingPropertyValue(Object obj);
 
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);

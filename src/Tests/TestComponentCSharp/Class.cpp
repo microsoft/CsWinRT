@@ -1793,6 +1793,11 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<IReferenceArray<hstring>>().Value();
     }
 
+    com_array<WF::IInspectable> Class::UnboxObjectArray(WF::IInspectable const& obj)
+    {
+        return obj.as<IReferenceArray<WF::IInspectable>>().Value();
+    }
+
     int32_t Class::UnboxInt32UsingPropertyValue(IInspectable const& obj)
     {
         if (auto ipv = obj.try_as<IPropertyValue>())
@@ -1850,6 +1855,17 @@ namespace winrt::TestComponentCSharp::implementation
         if (auto ipv = obj.try_as<IPropertyValue>())
         {
             ipv.GetPointArray(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<WF::IInspectable> Class::UnboxObjectArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<WF::IInspectable> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetInspectableArray(arr);
         }
 
         return arr;
