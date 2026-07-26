@@ -266,16 +266,29 @@ internal static partial class ImplGenerator
             bool isSdkModule = inputModule.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8);
             bool isXamlModule = inputModule.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8);
 
+            // An authoring projection also needs its non-public types forwarded. Its abstract base classes
+            // implement the Windows Runtime interfaces of the types being authored, and those interfaces are
+            // 'internal' so they stay out of the supported surface. The marshalling code that CsWinRT
+            // generates for an application still references them, so they must resolve at runtime.
+            bool isAuthoringModule = IsAuthoringProjectionModule(inputModule);
+
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
             {
-                // We only need to forward public types
-                if (!exportedType.IsPublic)
+                // We only need to forward public types (plus the internal ones of an authoring projection)
+                if (!exportedType.IsPublic && !(isAuthoringModule && exportedType.IsNotPublic))
                 {
                     continue;
                 }
 
                 // Also make sure the type has a valid namespace, otherwise we can't handle it
                 if (exportedType.Namespace is null)
+                {
+                    continue;
+                }
+
+                // Never forward compiler generated types (e.g. the backing types for 'file' scoped
+                // declarations), as their names are not stable across compilations
+                if (exportedType.Name is Utf8String typeName && typeName.AsSpan().IndexOf((byte)'<') >= 0)
                 {
                     continue;
                 }
@@ -302,6 +315,32 @@ internal static partial class ImplGenerator
         {
             throw WellKnownImplExceptions.EmitTypeForwards(e);
         }
+    }
+
+    /// <summary>
+    /// Checks whether a module is an authoring projection, i.e. one produced with
+    /// <c>CsWinRTImplementWinMDTypes</c>, which exposes abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> base
+    /// classes so Windows Runtime types defined in an existing <c>.winmd</c> can be implemented in C#.
+    /// </summary>
+    /// <param name="inputModule">The input module.</param>
+    /// <returns>Whether the module is an authoring projection.</returns>
+    /// <remarks>
+    /// This matches the detection in <c>cswinrtprojectiongen</c>, which uses the same shape to decide which
+    /// types it must supply an implementation for. A regular projection never has public abstract classes in
+    /// an <c>ABI</c> namespace, as its ABI types are all marshallers or <c>file</c> scoped helpers.
+    /// </remarks>
+    private static bool IsAuthoringProjectionModule(ModuleDefinition inputModule)
+    {
+        foreach (TypeDefinition type in inputModule.TopLevelTypes)
+        {
+            if (type is { IsPublic: true, IsAbstract: true, IsClass: true, Namespace: { } ns } &&
+                (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
