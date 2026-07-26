@@ -49,10 +49,15 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--public-exclusive-to")]
     public bool PublicExclusiveTo { get; init; }
 
+    /// <summary>Gets whether to emit only the authoring surface (the exclusive-to and factory interfaces
+    /// plus the abstract base classes a component extends), so the projection being produced lets Windows
+    /// Runtime types defined in the input metadata be implemented in C#.</summary>
+    [CommandLineArgumentName("--implement-winmd-types")]
+    public bool ImplementWinMDTypes { get; init; }
+
     /// <summary>Gets whether exclusive-to interfaces should support <c>IDynamicInterfaceCastable</c>.</summary>
     [CommandLineArgumentName("--idic-exclusive-to")]
     public bool IdicExclusiveTo { get; init; }
-
     /// <summary>Gets whether to generate a projection to be used as a reference assembly.</summary>
     [CommandLineArgumentName("--reference-projection")]
     public bool ReferenceProjection { get; init; }

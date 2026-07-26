@@ -234,6 +234,14 @@ internal sealed partial class ProjectionGenerator
 
                 TypeKind kind = TypeKindResolver.Resolve(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
+
+                // Regenerate the authoring surface behind any referenced authoring reference assembly, so
+                // the abstract base classes the components extend get their real implementation here.
+                if (kind == TypeKind.Class && _settings.ImplementableTypes.Contains(type.FullName))
+                {
+                    AbiImplementableClassFactory.WriteImplementableClass(writer, context, type);
+                    AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type);
+                }
             }
             writer.WriteEndAbiNamespace(context);
         }

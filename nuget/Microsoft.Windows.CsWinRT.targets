@@ -351,6 +351,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTComponent)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTImplementWinMDTypes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExeTFM)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
@@ -412,6 +413,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
+        ImplementWinMDTypes="$(CsWinRTImplementWinMDTypes)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
         DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
@@ -436,9 +438,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
-    Note: the 'CsWinRTImplementWinMD' item (implementing Windows Runtime types defined in an existing
-    .winmd) is handled by '_RunCsWinRTAuthoringProjectionGenerator' in
-    'Microsoft.Windows.CsWinRT.CsWinRTGen.targets', which builds the authoring projection assembly.
+    Note: 'CsWinRTImplementWinMDTypes' turns a projection project into an *authoring* projection. Instead of
+    projecting the Windows Runtime types in its inputs, it emits the abstract 'ABI.<Ns>.<Class>' base classes
+    (and their exclusive-to interfaces) that let those types be implemented in C#. Use it together with
+    'CsWinRTGenerateReferenceProjection', so the result is a reference assembly carrying no implementation;
+    that implementation is regenerated into 'WinRT.Projection.dll' when an application is built.
   -->
 
   <!--

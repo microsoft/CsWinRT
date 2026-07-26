@@ -26,7 +26,12 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     public static bool ShouldEmit(ProjectionEmitContext context, TypeDefinition type)
     {
-        if (!context.Settings.ImplementWinMDTypes || type.IsAttributeType)
+        if (type.IsAttributeType)
+        {
+            return false;
+        }
+
+        if (!context.Settings.ImplementWinMDTypes && !context.Settings.ImplementableTypes.Contains(type.FullName))
         {
             return false;
         }
@@ -97,23 +102,37 @@ internal static class AbiImplementableClassFactory
 
             EmitMergedProperties(writer, properties);
 
-            // The conversion creates a CCW for the authored object and then resolves the projected RCW
-            // for it (which goes through the usual 'ComWrappers' callback). This assembly is compiled by
-            // CsWinRT against the runtime implementation assembly, so it can marshal directly.
+            // The conversion creates a CCW for the authored object and then resolves the projected RCW for
+            // it (which goes through the usual 'ComWrappers' callback). A reference assembly carries no
+            // implementation, so it only declares the operator; the real body is regenerated at publish
+            // time, when this is compiled against the runtime implementation assembly.
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                public static unsafe implicit operator {{projectedType}}?({{nameStripped}}? value)
-                {
-                    if (value is null)
+
+            if (context.Settings.ReferenceProjection)
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    public static implicit operator {{projectedType}}?({{nameStripped}}? value)
                     {
-                        return null;
+                        throw null;
                     }
+                    """);
+            }
+            else
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    public static unsafe implicit operator {{projectedType}}?({{nameStripped}}? value)
+                    {
+                        if (value is null)
+                        {
+                            return null;
+                        }
 
-                    using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
+                        using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
 
-                    return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManaged(objectReferenceValue.GetThisPtrUnsafe())!;
-                }
-                """);
+                        return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManaged(objectReferenceValue.GetThisPtrUnsafe())!;
+                    }
+                    """);
+            }
         }
     }
 

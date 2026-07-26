@@ -49,6 +49,7 @@ public static class ProjectionWriter
                 Component = options.Component,
                 PublicExclusiveTo = options.PublicExclusiveTo,
                 ImplementWinMDTypes = options.ImplementWinMDTypes,
+                ImplementableTypes = System.Collections.Frozen.FrozenSet.ToFrozenSet(options.ImplementableTypes, System.StringComparer.Ordinal),
                 IdicExclusiveTo = options.IdicExclusiveTo,
                 ReferenceProjection = options.ReferenceProjection,
                 OutputFolder = Path.GetFullPath(options.OutputFolder),

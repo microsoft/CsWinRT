@@ -75,6 +75,13 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool PublicExclusiveTo { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to emit only the authoring surface (the exclusive-to and factory interfaces plus
+    /// the abstract base classes a component extends), so the projection being produced lets Windows Runtime
+    /// types defined in the input metadata be implemented in C#.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; set; }
+
+    /// <summary>
     /// Gets or sets whether exclusive-to interfaces should support IDynamicInterfaceCastable.
     /// </summary>
     public bool IdicExclusiveTo { get; set; }
@@ -248,6 +255,11 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         if (PublicExclusiveTo)
         {
             AppendResponseFileCommand(args, "--public-exclusive-to", "true");
+        }
+
+        if (ImplementWinMDTypes)
+        {
+            AppendResponseFileCommand(args, "--implement-winmd-types", "true");
         }
 
         if (IdicExclusiveTo)

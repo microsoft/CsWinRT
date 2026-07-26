@@ -20,6 +20,11 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 internal partial class ProjectionGenerator
 {
     /// <summary>
+    /// The namespace prefix used for the generated ABI types (and for the abstract base classes an
+    /// authoring reference assembly exposes).
+    /// </summary>
+    private const string AbiNamespacePrefix = "ABI.";
+    /// <summary>
     /// Creates a temporary folder for CsWinRT generation output.
     /// </summary>
     /// <returns>The path to the created temporary folder.</returns>
@@ -107,6 +112,7 @@ internal partial class ProjectionGenerator
 
         List<string> includes = [];
         List<string> excludes = [];
+        List<string> implementableTypes = [];
         List<string> winmdInputs = [];
 
         // Paths to the managed implementation assemblies of the component(s) being projected, scanned
@@ -187,35 +193,10 @@ internal partial class ProjectionGenerator
             }
         }
 
-        // Include every runtime class from the .winmd files whose types are implemented in C#, and add
-        // those files to the metadata inputs. The set is derived from the metadata alone, never from the
-        // caller: an authoring projection must be a pure function of its .winmd (and the CsWinRT version)
-        // so that every project implementing types from it produces a byte-identical assembly with the
-        // same identity. Otherwise two components implementing different types from one .winmd would each
-        // define the same Windows Runtime interfaces, which then collide on IID in the interop type map.
-        foreach (string winmdPath in args.AuthoringWinMDPaths)
-        {
-            winmdInputs.Add(winmdPath);
-
-            ModuleDefinition winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
-
-            foreach (TypeDefinition type in winmdModule.TopLevelTypes)
-            {
-                if (type.Name?.Value is "<Module>")
-                {
-                    continue;
-                }
-
-                includes.Add(type.FullName);
-
-                hasTypesToProject = true;
-            }
-        }
-
         // In non-component mode, scan reference assemblies to determine type includes. Component mode
         // handles this above via .winmd scanning, and the authoring mode is scoped exclusively to the
         // explicitly requested types (everything else already lives in the real projection).
-        if (!isComponentMode && !args.ImplementWinMDTypes)
+        if (!isComponentMode)
         {
             foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
             {
@@ -272,6 +253,16 @@ internal partial class ProjectionGenerator
                 {
                     includes.Add(exportedType.FullName);
                     hasTypesToProject = true;
+
+                    // An authoring reference assembly carries abstract 'ABI.<Ns>.<Class>' base classes with
+                    // no implementation. Record the runtime class each one stands for, so the projection
+                    // being generated here supplies their real implementation. This is the same contract as
+                    // any other reference projection: metadata at compile time, implementation at publish.
+                    if (exportedType is { IsAbstract: true, IsClass: true, Namespace: { } ns } &&
+                        ns.Value.StartsWith(AbiNamespacePrefix, StringComparison.Ordinal))
+                    {
+                        implementableTypes.Add($"{ns.Value[AbiNamespacePrefix.Length..]}.{exportedType.Name}");
+                    }
                 }
             }
         }
@@ -314,7 +305,7 @@ internal partial class ProjectionGenerator
             Exclude = excludes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
-            ImplementWinMDTypes = args.ImplementWinMDTypes,
+            ImplementableTypes = implementableTypes,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };

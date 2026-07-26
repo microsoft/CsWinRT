@@ -82,19 +82,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public bool WindowsUIXamlProjection { get; set; }
 
     /// <summary>
-    /// Gets or sets the .winmd files whose runtime classes are implemented (authored) in C#. Their types
-    /// are added to both the metadata inputs and the include filter.
-    /// </summary>
-    public ITaskItem[]? AuthoringWinMDPaths { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether to emit only the authoring surface for <see cref="AuthoringWinMDPaths"/>: their
-    /// exclusive-to and factory interfaces plus the abstract base classes a component extends to implement
-    /// Windows Runtime types defined in an existing .winmd.
-    /// </summary>
-    public bool ImplementWinMDTypes { get; set; }
-
-    /// <summary>
     /// Gets or sets the maximum number of parallel tasks the projection writer is allowed to dispatch.
     /// </summary>
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
@@ -238,16 +225,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (WindowsUIXamlProjection)
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
-        }
-
-        if (AuthoringWinMDPaths is { Length: > 0 })
-        {
-            AppendResponseFileCommand(args, "--authoring-winmd-paths", string.Join(",", AuthoringWinMDPaths.Select(static i => i.ItemSpec)));
-        }
-
-        if (ImplementWinMDTypes)
-        {
-            AppendResponseFileCommand(args, "--implement-winmd-types", "true");
         }
 
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());

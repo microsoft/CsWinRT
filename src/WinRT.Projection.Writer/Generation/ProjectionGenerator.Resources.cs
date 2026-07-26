@@ -40,6 +40,14 @@ internal sealed partial class ProjectionGenerator
                 continue;
             }
 
+            // An authoring projection carries no projection infrastructure of its own, only the abstract
+            // base classes. It still needs the assembly attributes, which is what identifies it to the
+            // tooling that regenerates its implementation.
+            if (_settings.ImplementWinMDTypes && fileName != "AssemblyAttributes.cs")
+            {
+                continue;
+            }
+
             using Stream stream = asm.GetManifestResourceStream(resName)!;
             using StreamReader reader = new(stream);
             string content = reader.ReadToEnd();

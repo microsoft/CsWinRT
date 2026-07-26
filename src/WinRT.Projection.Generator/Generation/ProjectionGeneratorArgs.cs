@@ -53,32 +53,6 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
-    /// <summary>
-    /// Gets whether to emit only the authoring surface for the runtime classes in
-    /// <see cref="AuthoringWinMDPaths"/>: their exclusive-to and factory interfaces, plus the abstract
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes a
-    /// component extends to implement Windows Runtime types defined in an existing <c>.winmd</c>.
-    /// </summary>
-    /// <remarks>
-    /// The output is deliberately a pure function of the input metadata, so that every project implementing
-    /// types from a given <c>.winmd</c> produces the same assembly and they can safely share one identity.
-    /// </remarks>
-    [CommandLineArgumentName("--implement-winmd-types")]
-    public bool ImplementWinMDTypes { get; init; }
-
-    /// <summary>
-    /// Gets the <c>.winmd</c> files whose runtime classes are implemented (authored) in C# (see the
-    /// <c>CsWinRTImplementWinMD</c> build item). Their types are added to both the metadata inputs and the
-    /// include filter, on top of whatever is discovered from the input references.
-    /// </summary>
-    /// <remarks>
-    /// This is passed both when producing an authoring projection (together with
-    /// <see cref="ImplementWinMDTypes"/>) and when producing <c>WinRT.Component.dll</c>, so that the
-    /// marshalling code backing the generated abstract base classes is generated for the application.
-    /// </remarks>
-    [CommandLineArgumentName("--authoring-winmd-paths")]
-    public string[] AuthoringWinMDPaths { get; init; } = [];
-
     /// <summary>Gets the maximum number of parallel tasks to use for execution.</summary>
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
     public required int MaxDegreesOfParallelism { get; init; }

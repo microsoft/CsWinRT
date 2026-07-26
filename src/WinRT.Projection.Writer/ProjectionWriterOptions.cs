@@ -80,6 +80,14 @@ public sealed class ProjectionWriterOptions
     public bool ImplementWinMDTypes { get; init; }
 
     /// <summary>
+    /// The full names of the runtime classes whose authoring surface must additionally be emitted into an
+    /// otherwise normal projection. This is how the implementation behind an authoring reference assembly
+    /// is regenerated at application build time: the abstract base classes and their exclusive-to interfaces
+    /// are emitted alongside the regular projection, with real bodies.
+    /// </summary>
+    public IReadOnlyList<string> ImplementableTypes { get; init; } = [];
+
+    /// <summary>
     /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -122,6 +123,12 @@ internal sealed class Settings
     /// into a standalone authoring projection assembly while leaving all projections unchanged.
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
+    /// Gets the full names of the runtime classes whose authoring surface must additionally be emitted into
+    /// an otherwise normal projection (see the option of the same name on <see cref="ProjectionWriterOptions"/>).
+    /// </summary>
+    public FrozenSet<string> ImplementableTypes { get; init; } = [];
 
     /// <summary>
     /// Gets or sets a value indicating whether the IDIC pattern is applied to <c>[ExclusiveTo]</c> interfaces.

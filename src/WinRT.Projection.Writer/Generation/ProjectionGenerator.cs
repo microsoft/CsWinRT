@@ -135,7 +135,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
                 MetadataAttributeFactory.WriteExclusiveToInterfacesClass(_settings, sorted);
             }
 
-            if (state.ProjectionFileWritten && !_settings.ImplementWinMDTypes)
+            if (state.ProjectionFileWritten)
             {
                 WriteBaseStrings();
             }
