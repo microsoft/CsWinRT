@@ -117,10 +117,9 @@ internal sealed class Settings
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether only the authoring surface is emitted (the exclusive-to
-    /// and factory interfaces plus the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> bases), scoped to the selected types, for compilation
-    /// into a standalone authoring projection assembly while leaving all projections unchanged.
+    /// Gets or sets a value indicating whether the projection additionally emits the abstract
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes (and the
+    /// exclusive-to interfaces they implement) that let its runtime classes be implemented (authored) in C#.
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
 

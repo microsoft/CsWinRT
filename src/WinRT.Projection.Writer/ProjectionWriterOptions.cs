@@ -65,25 +65,24 @@ public sealed class ProjectionWriterOptions
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Emit only the authoring surface for the runtime classes selected by <see cref="Include"/>: their
-    /// exclusive-to and factory interfaces, plus the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes an author extends to implement Windows Runtime
-    /// types that are already defined in an existing <c>.winmd</c>. Every member the type requires is
-    /// declared <c>abstract</c>, so the compiler enforces a complete implementation.
+    /// Additionally emit, for every runtime class the projection covers, the abstract
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes that
+    /// let it be implemented (authored) in C#, along with the exclusive-to interfaces they implement. Every
+    /// member the Windows Runtime type requires is declared <c>abstract</c>, so the compiler enforces a
+    /// complete implementation.
     /// <para>
     /// This is the 3.0 replacement for <see cref="PublicExclusiveTo"/>: instead of exposing every
     /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author extends a
-    /// single generated abstract base. The result is compiled into a standalone authoring projection
-    /// assembly, so all projections are left completely unchanged.
+    /// single generated abstract base. In a reference projection the bases carry no implementation; it is
+    /// supplied when an application is built, exactly like the rest of the projection.
     /// </para>
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
 
     /// <summary>
-    /// The full names of the runtime classes whose authoring surface must additionally be emitted into an
-    /// otherwise normal projection. This is how the implementation behind an authoring reference assembly
-    /// is regenerated at application build time: the abstract base classes and their exclusive-to interfaces
-    /// are emitted alongside the regular projection, with real bodies.
+    /// The full names of the runtime classes whose authoring surface must be emitted even when
+    /// <see cref="ImplementWinMDTypes"/> is not set. This is how an application supplies the implementation
+    /// behind the abstract base classes declared by the reference projections it consumes.
     /// </summary>
     public IReadOnlyList<string> ImplementableTypes { get; init; } = [];
 

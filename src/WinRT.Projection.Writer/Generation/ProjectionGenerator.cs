@@ -121,7 +121,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
                 MetadataAttributeFactory.WriteDefaultInterfacesClass(_settings, sorted);
             }
 
-            if (state.WindowsRuntimeMetadataTypeEntries.Count > 0 && !_settings.ReferenceProjection && !_settings.ImplementWinMDTypes)
+            if (state.WindowsRuntimeMetadataTypeEntries.Count > 0 && !_settings.ReferenceProjection)
             {
                 List<KeyValuePair<string, string>> sorted = [.. state.WindowsRuntimeMetadataTypeEntries];
                 sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
@@ -169,7 +169,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     /// <returns>The lazy work-item sequence.</returns>
     private IEnumerable<IProjectionWorkItem> EnumerateWorkItems(ProjectionGeneratorRunState state)
     {
-        if (!_settings.ReferenceProjection && !_settings.ImplementWinMDTypes)
+        if (!_settings.ReferenceProjection)
         {
             yield return new IidsWorkItem(this);
         }

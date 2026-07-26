@@ -23,11 +23,6 @@ internal sealed partial class ProjectionGenerator
     /// </summary>
     internal bool ProcessNamespace(string ns, NamespaceMembers members, ProjectionGeneratorRunState state)
     {
-        if (_settings.ImplementWinMDTypes)
-        {
-            return ProcessNamespaceImplementWinMDTypes(ns, members, state);
-        }
-
         ConcurrentDictionary<string, string> defaultInterfaceEntries = state.DefaultInterfaceEntries;
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = state.ExclusiveToInterfaceEntries;
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
@@ -235,15 +230,49 @@ internal sealed partial class ProjectionGenerator
                 TypeKind kind = TypeKindResolver.Resolve(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
 
-                // Regenerate the authoring surface behind any referenced authoring reference assembly, so
-                // the abstract base classes the components extend get their real implementation here.
-                if (kind == TypeKind.Class && _settings.ImplementableTypes.Contains(type.FullName))
+                // Also emit the abstract base classes that let this runtime class be implemented in C#, if
+                // the projection being generated supports that (either because it was asked to, or because a
+                // referenced authoring projection declares the type and needs its implementation supplied).
+                if (kind == TypeKind.Class && AbiImplementableClassFactory.ShouldEmit(context, type))
                 {
                     AbiImplementableClassFactory.WriteImplementableClass(writer, context, type);
                     AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type);
                 }
             }
             writer.WriteEndAbiNamespace(context);
+        }
+        else if (_settings.ImplementWinMDTypes)
+        {
+            // A reference projection has no ABI implementation types, but it still declares the abstract
+            // base classes that let its runtime classes be implemented in C#. Their bodies are supplied
+            // when an application is built, exactly like the rest of the projection.
+            bool wroteAbiNamespace = false;
+
+            foreach (TypeDefinition type in members.Types)
+            {
+                if (type.IsGeneric ||
+                    !_settings.Filter.Includes(type.FullName) ||
+                    TypeKindResolver.Resolve(type) != TypeKind.Class ||
+                    !AbiImplementableClassFactory.ShouldEmit(context, type))
+                {
+                    continue;
+                }
+
+                if (!wroteAbiNamespace)
+                {
+                    writer.WriteBeginAbiNamespace(context);
+
+                    wroteAbiNamespace = true;
+                }
+
+                AbiImplementableClassFactory.WriteImplementableClass(writer, context, type);
+                AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type);
+            }
+
+            if (wroteAbiNamespace)
+            {
+                writer.WriteEndAbiNamespace(context);
+            }
         }
 
         // Phase 4: Custom additions to namespaces
@@ -269,87 +298,6 @@ internal sealed partial class ProjectionGenerator
         string filename = ns + ".cs";
         string fullPath = Path.Combine(_settings.OutputFolder, filename);
         writer.FlushToFile(fullPath);
-        return true;
-    }
-
-    /// <summary>
-    /// Emits only the authoring surface for a namespace: the implemented types' exclusive-to and factory
-    /// interfaces (declarations only) and the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> /
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> bases. Nothing else is emitted, so all projections stay
-    /// unchanged and this can be compiled into a component's own assembly.
-    /// </summary>
-    private bool ProcessNamespaceImplementWinMDTypes(string ns, NamespaceMembers members, ProjectionGeneratorRunState state)
-    {
-        ProjectionEmitContext context = new(_settings, _cache, ns, state.WindowsRuntimeMetadataTypeEntries);
-        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-        IndentedTextWriter writer = writerOwner.Writer;
-
-        // The runtime classes in this namespace that the user asked to implement.
-        List<TypeDefinition> implementedTypes = [];
-
-        foreach (TypeDefinition type in members.Types)
-        {
-            _token.ThrowIfCancellationRequested();
-
-            if (!type.IsGeneric &&
-                _settings.Filter.Includes(type.FullName) &&
-                TypeKindResolver.Resolve(type) == TypeKind.Class &&
-                AbiImplementableClassFactory.ShouldEmit(context, type))
-            {
-                implementedTypes.Add(type);
-            }
-        }
-
-        if (implementedTypes.Count == 0)
-        {
-            return false;
-        }
-
-        writer.WriteFileHeader(context);
-
-        // Projected namespace: emit the exclusive-to interface declarations for the implemented types.
-        // These are skipped by a normal projection, so the component is their sole definer. They are
-        // resolved from their '[ExclusiveTo]' class rather than from the filter, so a type-scoped
-        // filter (e.g. a single class) still emits every interface its abstract base needs.
-        HashSet<TypeDefinition> implementedTypeSet = [.. implementedTypes];
-
-        writer.WriteBeginProjectedNamespace(context);
-
-        foreach (TypeDefinition type in members.Types)
-        {
-            _token.ThrowIfCancellationRequested();
-
-            if (type.IsGeneric || !type.IsExclusiveTo || TypeKindResolver.Resolve(type) != TypeKind.Interface)
-            {
-                continue;
-            }
-
-            if (AbiTypeHelpers.GetExclusiveToType(_cache, type) is { } exclusiveToType && implementedTypeSet.Contains(exclusiveToType))
-            {
-                InterfaceFactory.WriteInterface(writer, context, type);
-            }
-        }
-
-        writer.WriteEndProjectedNamespace(context);
-
-        // ABI namespace: emit the abstract bases the author extends to implement each type.
-        writer.WriteBeginAbiNamespace(context);
-
-        foreach (TypeDefinition type in implementedTypes)
-        {
-            _token.ThrowIfCancellationRequested();
-
-            AbiImplementableClassFactory.WriteImplementableClass(writer, context, type);
-            AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type);
-        }
-
-        writer.WriteEndAbiNamespace(context);
-
-        string fullPath = Path.Combine(_settings.OutputFolder, ns + ".cs");
-
-        writer.FlushToFile(fullPath);
-        state.MarkProjectionFileWritten();
-
         return true;
     }
 }

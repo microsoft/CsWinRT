@@ -154,7 +154,7 @@ By running the interop generator at the very end of the build process (after all
 | `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
-| `CsWinRTImplementWinMDTypes` | `false` | In a projection project, emit the abstract base classes that let the Windows Runtime types in its inputs be implemented (authored) in C#, instead of projecting them |
+| `CsWinRTImplementWinMDTypes` | `false` | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C# |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | `CsWinRTMergeReferencedActivationFactories` | `false` | Merge activation factories from referenced components |
 

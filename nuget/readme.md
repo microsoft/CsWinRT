@@ -33,7 +33,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
-| CsWinRTImplementWinMDTypes | true \| *false | In a projection project, emit the abstract base classes that let the Windows Runtime types in the inputs be implemented (authored) in C#, instead of projecting them. See "Implementing Windows Runtime types defined in an existing .winmd" below |
+| CsWinRTImplementWinMDTypes | true \| *false | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C#. See "Implementing Windows Runtime types defined in an existing .winmd" below |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
 | CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to always analyze for marshalling code, regardless of `CsWinRTMarshallingMode`. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
 | CsWinRTUseWindowsUIXamlProjections | true \| *false | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
@@ -58,37 +58,29 @@ Normally, authoring a Windows Runtime component in C# means writing the C# type 
 produce a `.winmd` for it. CsWinRT can also do the reverse: implement, in C#, a Windows Runtime type whose
 shape is *already* defined in an existing `.winmd`.
 
-### Producing the authoring projection
+### Enabling it on a projection
 
-This works through an **authoring projection**: an ordinary projection project that sets
-`CsWinRTImplementWinMDTypes`, alongside the usual `CsWinRTInputs` / `CsWinRTIncludes` / `CsWinRTFilters`
-properties that select the metadata and types it covers:
+Set `CsWinRTImplementWinMDTypes` on the projection project for that metadata:
 
 ```xml
 <PropertyGroup>
   <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
   <CsWinRTImplementWinMDTypes>true</CsWinRTImplementWinMDTypes>
-  <CsWinRTIncludes>Contoso.Widgets</CsWinRTIncludes>
 </PropertyGroup>
-
-<ItemGroup>
-  <CsWinRTInputs Include="metadata\Contoso.Widgets.winmd" />
-</ItemGroup>
 ```
 
-Instead of projecting those Windows Runtime types (their real projection already ships in the publisher's
-package, and is left untouched), the project emits an abstract `ABI.<Namespace>.<Class>` base class per
-runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory methods and activation.
-Every member the Windows Runtime type requires is declared `abstract`, so the compiler guarantees none is
-missed.
+The projection then carries, in addition to its usual projected types, an abstract `ABI.<Namespace>.<Class>`
+base class per runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory methods
+and activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler
+guarantees none is missed. The Windows Runtime interfaces behind them stay `internal`, so none of the
+marshalling infrastructure is exposed.
 
-Like any reference projection, the result is a **reference assembly**: it carries the API shape and no
-implementation. Ship it in a NuGet package. There can be as many authoring projections as you like, each
-covering whatever metadata and types it chooses.
+This is purely additive: consumers that only *use* the projection are unaffected, and there is no second
+package to produce or reference.
 
 ### Implementing the types
 
-Reference the authoring projection and extend the generated base:
+Reference the projection and extend the generated base:
 
 ```csharp
 public sealed class MyWidget : ABI.Contoso.Widgets.Widget
@@ -105,22 +97,18 @@ public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetFactory, IWidget
 
 The generated base is separate from the projected class (which is often `sealed`) and provides an implicit
 conversion to it, so an instance can be passed anywhere the projected type is expected. Any additional
-(non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well. The
-Windows Runtime interfaces backing the type stay `internal` to the authoring projection, so none of the
-marshalling infrastructure is exposed to your code.
+(non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
 
 ### At application build time
 
-The implementation behind the authoring projection is generated into `WinRT.Projection.dll` when the
-application is built, exactly like any other reference projection: CsWinRT finds the abstract base classes in
-the referenced authoring projections and supplies their bodies, and the marshalling code for the implemented
-types. Two consequences follow:
+In a reference projection the abstract bases carry no implementation, exactly like the rest of it. CsWinRT
+supplies their bodies, and the marshalling code for the implemented types, into `WinRT.Projection.dll` when
+the application is built. Two consequences follow:
 
-- Authoring projections are independent of the CsWinRT version an application uses, so they do not need to be
-  rebuilt when CsWinRT updates.
-- Several components can implement types from the same metadata. They all share one authoring projection, so
+- The projection is independent of the CsWinRT version an application uses, so it does not need to be rebuilt
+  when CsWinRT updates.
+- Several components can implement types from the same projection. They share one set of definitions, so
   there is a single definition of each Windows Runtime interface and no duplicate IIDs in the interop type map.
-
 
 ## Runtime feature switches
 
