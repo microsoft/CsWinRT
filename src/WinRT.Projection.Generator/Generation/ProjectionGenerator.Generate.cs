@@ -187,13 +187,29 @@ internal partial class ProjectionGenerator
             }
         }
 
-        // Project any additional types the caller asked for (the Windows Runtime types a component
-        // implements but does not define), so their ABI and vtable code is generated as well.
-        foreach (string additionalInclude in args.AdditionalIncludes)
+        // Include every runtime class from the .winmd files whose types are implemented in C#, and add
+        // those files to the metadata inputs. The set is derived from the metadata alone, never from the
+        // caller: an authoring projection must be a pure function of its .winmd (and the CsWinRT version)
+        // so that every project implementing types from it produces a byte-identical assembly with the
+        // same identity. Otherwise two components implementing different types from one .winmd would each
+        // define the same Windows Runtime interfaces, which then collide on IID in the interop type map.
+        foreach (string winmdPath in args.AuthoringWinMDPaths)
         {
-            includes.Add(additionalInclude);
+            winmdInputs.Add(winmdPath);
 
-            hasTypesToProject = true;
+            ModuleDefinition winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
+
+            foreach (TypeDefinition type in winmdModule.TopLevelTypes)
+            {
+                if (type.Name?.Value is "<Module>")
+                {
+                    continue;
+                }
+
+                includes.Add(type.FullName);
+
+                hasTypesToProject = true;
+            }
         }
 
         // In non-component mode, scan reference assemblies to determine type includes. Component mode
@@ -271,9 +287,8 @@ internal partial class ProjectionGenerator
 
         // If we're not in Windows SDK mode, we exclude the Windows namespace to avoid
         // the merged projection from generating all namespaces when there are no projection references
-        // and thereby no includes / excludes passed to the writer. The authoring mode is already scoped
-        // to an explicit set of types, so the extra exclude would only ever remove requested types.
-        if (!isWindowsSdkMode && !args.ImplementWinMDTypes)
+        // and thereby no includes / excludes passed to the writer.
+        if (!isWindowsSdkMode)
         {
             excludes.Add("Windows");
         }

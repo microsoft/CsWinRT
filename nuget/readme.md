@@ -33,7 +33,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
-| CsWinRTImplementWinMDType | *(item)* | An item listing Windows Runtime namespaces or types, already defined in an existing `.winmd`, that this project implements (authors) in C#. `Include` is the namespace/type filter and the `WinMD` metadata is the path to the metadata file defining it. See "Implementing Windows Runtime types defined in an existing .winmd" below |
+| CsWinRTImplementWinMD | *(item)* | An item listing `.winmd` files whose Windows Runtime types this project implements (authors) in C#. See "Implementing Windows Runtime types defined in an existing .winmd" below |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
 | CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to always analyze for marshalling code, regardless of `CsWinRTMarshallingMode`. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
 | CsWinRTUseWindowsUIXamlProjections | true \| *false | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
@@ -56,21 +56,20 @@ C#/WinRT behavior can be customized with these project properties:
 
 Normally, authoring a Windows Runtime component in C# means writing the C# type first and letting CsWinRT
 produce a `.winmd` for it. CsWinRT can also do the reverse: implement, in C#, a Windows Runtime type whose
-shape is *already* defined in an existing `.winmd`. Opt in with the `CsWinRTImplementWinMDType` item:
+shape is *already* defined in an existing `.winmd`. Opt in with the `CsWinRTImplementWinMD` item:
 
 ```xml
 <ItemGroup>
-  <CsWinRTImplementWinMDType Include="Contoso.Widgets" WinMD="$(MSBuildThisFileDirectory)metadata\Contoso.Widgets.winmd" />
+  <CsWinRTImplementWinMD Include="$(MSBuildThisFileDirectory)metadata\Contoso.Widgets.winmd" />
 </ItemGroup>
 ```
 
-`Include` is a namespace or fully qualified type name, and `WinMD` is the metadata file defining it.
-
-CsWinRT then generates a small **authoring projection assembly** (`WinRT.Authoring.Projection.dll`) into this
-project's intermediate output and references it automatically. It contains an abstract `ABI.<Namespace>.<Class>`
-base class per matched runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory
-methods and activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler
-guarantees none is missed. Implement the type by extending the base:
+For each listed `.winmd`, CsWinRT generates a small **authoring projection assembly**
+(`WinRT.Authoring.Contoso.Widgets.dll`) into the project's intermediate output and references it
+automatically. It contains an abstract `ABI.<Namespace>.<Class>` base class per runtime class in that
+metadata, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory methods and activation.
+Every member the Windows Runtime type requires is declared `abstract`, so the compiler guarantees none is
+missed. Implement the type by extending the base:
 
 ```csharp
 public sealed class MyWidget : ABI.Contoso.Widgets.Widget
@@ -93,6 +92,26 @@ The Windows Runtime interfaces backing the type stay `internal` to the generated
 remains a CsWinRT implementation detail: the authoring assembly is built by CsWinRT itself, so nothing from the
 marshalling infrastructure is exposed to your code. No projection assembly is modified by this mode either, so
 reference projections shipped in NuGet packages stay completely unchanged.
+
+### Multiple components implementing the same metadata
+
+The authoring assembly is scoped to a `.winmd`, not to the types a particular project implements, and its
+name is derived from that `.winmd`. Two components implementing different types from the same metadata
+therefore produce the *same* assembly, so an application referencing both ends up with a single definition of
+each Windows Runtime interface (and so no duplicate IIDs in the interop type map). Different `.winmd` files
+produce differently named assemblies and never collide.
+
+When packaging such a component for others to consume, flow the metadata to consumers from the package's
+`.targets` so the application can generate the marshalling code for it once:
+
+```xml
+<!-- build/Contoso.Widgets.Impl.targets, packaged inside the NuGet -->
+<Project>
+  <ItemGroup>
+    <CsWinRTImplementWinMD Include="$(MSBuildThisFileDirectory)..\metadata\Contoso.Widgets.winmd" />
+  </ItemGroup>
+</Project>
+```
 
 ## Runtime feature switches
 

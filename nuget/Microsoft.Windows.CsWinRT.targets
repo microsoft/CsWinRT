@@ -436,7 +436,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
-    Note: the 'CsWinRTImplementWinMDType' item (implementing Windows Runtime types defined in an existing
+    Note: the 'CsWinRTImplementWinMD' item (implementing Windows Runtime types defined in an existing
     .winmd) is handled by '_RunCsWinRTAuthoringProjectionGenerator' in
     'Microsoft.Windows.CsWinRT.CsWinRTGen.targets', which builds the authoring projection assembly.
   -->

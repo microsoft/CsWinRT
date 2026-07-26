@@ -31,16 +31,26 @@ internal partial class ProjectionGenerator
         // Create the Roslyn compilation from the generated projection sources
         try
         {
-            // Parse the source files into syntax trees
+            // Parse the source files into syntax trees. The paths are normalized to a stable synthetic
+            // root and the files are sorted, so the emitted assembly does not depend on the (random)
+            // temporary folder the sources were generated into. Combined with 'deterministic: true', this
+            // makes the output a pure function of the inputs, which is what lets several projects that
+            // generate the same authoring projection safely share one assembly identity.
             List<SyntaxTree> syntaxTrees = [];
 
-            foreach (string file in Directory.GetFiles(processingState.SourcesFolder, "*.cs"))
+            string[] sourceFiles = Directory.GetFiles(processingState.SourcesFolder, "*.cs");
+
+            Array.Sort(sourceFiles, StringComparer.Ordinal);
+
+            foreach (string file in sourceFiles)
             {
                 args.Token.ThrowIfCancellationRequested();
 
                 using Stream stream = File.OpenRead(file);
 
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256), path: file));
+                syntaxTrees.Add(CSharpSyntaxTree.ParseText(
+                    SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256),
+                    path: "/_/" + Path.GetFileName(file)));
             }
 
             // Build the references list

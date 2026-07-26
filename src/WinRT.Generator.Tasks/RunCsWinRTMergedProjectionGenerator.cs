@@ -82,14 +82,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public bool WindowsUIXamlProjection { get; set; }
 
     /// <summary>
-    /// Gets or sets additional namespace/type includes to project, on top of the ones discovered from the
-    /// input references. Used in component mode for the Windows Runtime types the component implements but
-    /// does not define.
+    /// Gets or sets the .winmd files whose runtime classes are implemented (authored) in C#. Their types
+    /// are added to both the metadata inputs and the include filter.
     /// </summary>
-    public ITaskItem[]? AdditionalIncludes { get; set; }
+    public ITaskItem[]? AuthoringWinMDPaths { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to emit only the authoring surface for <see cref="AdditionalIncludes"/>: their
+    /// Gets or sets whether to emit only the authoring surface for <see cref="AuthoringWinMDPaths"/>: their
     /// exclusive-to and factory interfaces plus the abstract base classes a component extends to implement
     /// Windows Runtime types defined in an existing .winmd.
     /// </summary>
@@ -241,9 +240,9 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
         }
 
-        if (AdditionalIncludes is { Length: > 0 })
+        if (AuthoringWinMDPaths is { Length: > 0 })
         {
-            AppendResponseFileCommand(args, "--additional-includes", string.Join(",", AdditionalIncludes.Select(static i => i.ItemSpec)));
+            AppendResponseFileCommand(args, "--authoring-winmd-paths", string.Join(",", AuthoringWinMDPaths.Select(static i => i.ItemSpec)));
         }
 
         if (ImplementWinMDTypes)

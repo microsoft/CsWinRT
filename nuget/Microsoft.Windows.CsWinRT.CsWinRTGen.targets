@@ -87,7 +87,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->      
     <_CsWinRTGeneratorMergedProjectionAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Projection.dll'))</_CsWinRTGeneratorMergedProjectionAssemblyPath>
     <_CsWinRTGeneratorComponentAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Component.dll'))</_CsWinRTGeneratorComponentAssemblyPath>
-    <_CsWinRTGeneratorAuthoringProjectionAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Authoring.Projection.dll'))</_CsWinRTGeneratorAuthoringProjectionAssemblyPath>
+    <_CsWinRTGeneratorAuthoringProjectionDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)'))</_CsWinRTGeneratorAuthoringProjectionDirectory>
 
     <!--
       Default property values for the Windows SDK projection (`WinRT.Sdk.Projection.dll`).
@@ -175,8 +175,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorTreatWarningsAsErrors)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorMaxDegreesOfParallelism)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTImplementWinMDType)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTImplementWinMDType->'%(WinMD)')" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTImplementWinMD)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTGeneratorAdditionalArgument)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorStandardOutputImportance)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorStandardErrorImportance)" />
@@ -486,12 +485,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                             Condition="'$(CsWinRTComponent)' == 'true'" />
 
       <!--
-        Also add the .winmd-s of any Windows Runtime types this project implements but does not define
-        (see the 'CsWinRTImplementWinMDType' item), along with their type filters, so that the ABI and
-        vtable code backing the abstract bases the author extends ends up in 'WinRT.Component.dll'.
+        Also gather the .winmd-s of any Windows Runtime types implemented in C# by this project or by any
+        component it references, so the ABI and vtable code backing the abstract bases the authors extend
+        ends up in 'WinRT.Component.dll'. Doing this once, in the publishing application, is what keeps the
+        marshalling code deduplicated no matter how many components implement types from the same .winmd.
+        References carry it as 'CsWinRTImplementWinMD' metadata, mirroring how projection packages flow
+        their metadata to consumers via 'CsWinRTInputs'.
       -->
-      <_ComponentWinMDPaths Include="@(CsWinRTImplementWinMDType->'%(WinMD)'->Distinct())" />
-      <_ComponentAdditionalIncludes Include="@(CsWinRTImplementWinMDType)" />
+      <_ReferencePathsWithAuthoringWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTImplementWinMD)' != ''" />
+      <_ComponentAuthoringWinMDPaths Include="@(CsWinRTImplementWinMD->'%(FullPath)')" />
+      <_ComponentAuthoringWinMDPaths Include="$([MSBuild]::ValueOrDefault('%(_ReferencePathsWithAuthoringWinMDs.CsWinRTImplementWinMD)', '').Split(';'))"
+                                     Condition="'%(_ReferencePathsWithAuthoringWinMDs.CsWinRTImplementWinMD)' != ''" />
     </ItemGroup>
 
     <!-- Invoke 'cswinrtprojectiongen' with assembly name 'WinRT.Component' (triggers component mode) -->
@@ -499,7 +503,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       ReferenceAssemblyPaths="@(_ComponentProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_ComponentWinMDPaths)"
-      AdditionalIncludes="@(_ComponentAdditionalIncludes)"
+      AuthoringWinMDPaths="@(_ComponentAuthoringWinMDPaths->Distinct())"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
       WindowsUIXamlProjection="$(CsWinRTUseWindowsUIXamlProjections)"
@@ -536,12 +540,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
                  _RunCsWinRTAuthoringProjectionGenerator
 
-    Produces 'WinRT.Authoring.Projection.dll' for projects that
-    implement Windows Runtime types defined in an existing .winmd
-    (the 'CsWinRTImplementWinMDType' item).
+    Produces one 'WinRT.Authoring.<WinMD>.dll' per .winmd listed in
+    'CsWinRTImplementWinMD', for projects that implement Windows
+    Runtime types defined in that existing metadata.
 
-    The assembly contains only the authoring surface: the implemented
-    types' exclusive-to and factory interfaces (internal), plus the
+    Each assembly contains only the authoring surface: the runtime
+    classes' exclusive-to and factory interfaces (internal), plus the
     abstract 'ABI.<Ns>.<Class>' and 'ABI.<Ns>.<Class>Factory' base
     classes the author extends, with every required member declared
     'abstract' so the compiler enforces a complete implementation.
@@ -549,15 +553,22 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     It is built by CsWinRT (against the 'WinRT.Runtime' implementation
     assembly) and only referenced by the project, so all marshalling
     stays an implementation detail and no projection is modified.
+
+    The content and identity are a pure function of the .winmd (and the
+    CsWinRT version), never of which types this project implements. That
+    is what lets several components implement types from the same .winmd
+    in one application: they all produce the same assembly, so there is
+    exactly one definition of each Windows Runtime interface and no IID
+    conflicts in the interop type map.
     ============================================================
   -->
   <Target
     Name="_RunCsWinRTAuthoringProjectionGenerator"
     DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory"
     BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute;CoreCompile"
-    Inputs="@(CsWinRTImplementWinMDType->'%(WinMD)');@(ReferencePathWithRefAssemblies)"
-    Outputs="$(_CsWinRTGeneratorAuthoringProjectionAssemblyPath)"
-    Condition="'$(CsWinRTEnabled)' == 'true' and '@(CsWinRTImplementWinMDType)' != ''">
+    Inputs="@(CsWinRTImplementWinMD);@(ReferencePathWithRefAssemblies)"
+    Outputs="@(CsWinRTImplementWinMD->'$(_CsWinRTGeneratorAuthoringProjectionDirectory)WinRT.Authoring.%(Filename).dll')"
+    Condition="'$(CsWinRTEnabled)' == 'true' and '@(CsWinRTImplementWinMD)' != ''">
 
     <ItemGroup>
       <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
@@ -565,16 +576,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_AuthoringProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
     </ItemGroup>
 
+    <!-- One invocation per .winmd, so each produces its own independently shareable assembly -->
     <RunCsWinRTMergedProjectionGenerator
       ReferenceAssemblyPaths="@(_AuthoringProjectionReferenceAssemblyPaths)"
-      GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
-      WinMDPaths="@(CsWinRTImplementWinMDType->'%(WinMD)'->Distinct())"
-      AdditionalIncludes="@(CsWinRTImplementWinMDType)"
+      GeneratedAssemblyDirectory="$(_CsWinRTGeneratorAuthoringProjectionDirectory)"
+      WinMDPaths="%(CsWinRTImplementWinMD.FullPath)"
+      AuthoringWinMDPaths="%(CsWinRTImplementWinMD.FullPath)"
       ImplementWinMDTypes="true"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
       WindowsUIXamlProjection="$(CsWinRTUseWindowsUIXamlProjections)"
-      AssemblyName="WinRT.Authoring.Projection"
+      AssemblyName="WinRT.Authoring.%(CsWinRTImplementWinMD.Filename)"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
@@ -588,20 +600,25 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
              _CsWinRTReferenceAuthoringProjection
 
-    Adds 'WinRT.Authoring.Projection.dll' to the compilation
-    references and to the output, so the project can extend the
-    generated abstract base classes.
+    Adds the generated 'WinRT.Authoring.<WinMD>.dll' assemblies to the
+    compilation references and to the output, so the project can extend
+    the generated abstract base classes.
+
+    Each carries its source .winmd as 'CsWinRTInputs' metadata, which is
+    the same mechanism Windows Runtime projection packages use to flow
+    their metadata to consumers. That lets the publishing application
+    generate the marshalling code for the implemented types once, no
+    matter how many components reference the same authoring assembly.
     ============================================================
   -->
   <Target
     Name="_CsWinRTReferenceAuthoringProjection"
     DependsOnTargets="_RunCsWinRTAuthoringProjectionGenerator"
     BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute;CoreCompile"
-    Condition="'$(CsWinRTEnabled)' == 'true' and '@(CsWinRTImplementWinMDType)' != '' and Exists('$(_CsWinRTGeneratorAuthoringProjectionAssemblyPath)')">
+    Condition="'$(CsWinRTEnabled)' == 'true' and '@(CsWinRTImplementWinMD)' != ''">
 
     <ItemGroup>
-      <CsWinRTGeneratorAuthoringProjectionPath Include="$(_CsWinRTGeneratorAuthoringProjectionAssemblyPath)">
-        <AssemblyName>WinRT.Authoring.Projection</AssemblyName>
+      <CsWinRTGeneratorAuthoringProjectionPath Include="@(CsWinRTImplementWinMD->'$(_CsWinRTGeneratorAuthoringProjectionDirectory)WinRT.Authoring.%(Filename).dll')">
         <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
         <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
         <Private>true</Private>
@@ -609,11 +626,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <Platforms>AnyCPU</Platforms>
       </CsWinRTGeneratorAuthoringProjectionPath>
 
-      <ReferencePath Include="@(CsWinRTGeneratorAuthoringProjectionPath)" />
-      <ReferencePathWithRefAssemblies Include="@(CsWinRTGeneratorAuthoringProjectionPath)" />
-      <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorAuthoringProjectionPath)" />
+      <!-- Flow the source metadata to consumers, so they can generate the marshalling code for it -->
+      <CsWinRTGeneratorAuthoringProjectionPath CsWinRTImplementWinMD="%(CsWinRTImplementWinMD.FullPath)" />
 
-      <!-- Append to 'FileWrites' so the authoring .dll will be removed on clean -->
+      <ReferencePath Include="@(CsWinRTGeneratorAuthoringProjectionPath)" Condition="Exists('%(Identity)')" />
+      <ReferencePathWithRefAssemblies Include="@(CsWinRTGeneratorAuthoringProjectionPath)" Condition="Exists('%(Identity)')" />
+      <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorAuthoringProjectionPath)" Condition="Exists('%(Identity)')" />
+
+      <!-- Append to 'FileWrites' so the authoring .dll-s will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorAuthoringProjectionPath)" />
     </ItemGroup>
   </Target>
