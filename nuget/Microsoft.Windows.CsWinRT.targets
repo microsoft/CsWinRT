@@ -438,6 +438,40 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
+    Implement WinMD types: generates ONLY the authoring surface (the authored types' exclusive-to / factory
+    interfaces, the abstract 'ABI.<Ns>.<Class>' / '<Class>Factory' bases, and the exclusive-to lookup)
+    into the component's OWN assembly, leaving all projections completely unchanged. Opt in by listing the
+    WinMD types you implement, each with the WinMD it is defined in:
+      <CsWinRTImplementWinMDType Include="Contoso.Widgets" WinMD="path\to\Types.winmd" />
+    (Include is a namespace/type filter; WinMD is the metadata file the type is defined in.)
+  -->
+  <PropertyGroup>
+    <_CsWinRTImplementWinMDTypesDir>$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)', 'cswinrt', 'authoring'))</_CsWinRTImplementWinMDTypesDir>
+  </PropertyGroup>
+
+  <Target Name="CsWinRTGenerateImplementWinMDTypes"
+          BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute"
+          Condition="$(CsWinRTEnabled) and '@(CsWinRTImplementWinMDType)' != ''">
+    <MakeDir Directories="$(_CsWinRTImplementWinMDTypesDir)" />
+
+    <RunCsWinRTProjectionRefGenerator
+        InputWinMDPaths="@(CsWinRTImplementWinMDType->'%(WinMD)'->Distinct())"
+        OutputDirectory="$(_CsWinRTImplementWinMDTypesDir.TrimEnd('\'))"
+        TargetFramework="$(CsWinRTExeTFM)"
+        IncludeNamespaces="@(CsWinRTImplementWinMDType)"
+        Verbose="$(CsWinRTMessageImportance.Equals('high'))"
+        ImplementWinMDTypes="true"
+        DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
+        CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
+        CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+        ContinueOnError="$(CsWinRTContinueOnError)" />
+
+    <ItemGroup>
+      <Compile Include="$(_CsWinRTImplementWinMDTypesDir)*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
     ============================================================
                         _CsWinRTGenerateStubExe
 

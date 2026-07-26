@@ -75,6 +75,15 @@ public sealed class ProjectionWriterOptions
     public bool AuthorExclusiveToInterfaces { get; init; }
 
     /// <summary>
+    /// Emit only the authoring surface (the authored types' exclusive-to/factory interfaces,
+    /// the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> / <c>&lt;Class&gt;Factory</c> bases, and the
+    /// <c>WindowsRuntimeExclusiveToInterfaces</c> lookup) so it can be compiled into a component's own
+    /// assembly. The projection itself is left completely unchanged. Intended to be used together with
+    /// <see cref="Include"/> to scope generation to the specific authored types.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
     /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }

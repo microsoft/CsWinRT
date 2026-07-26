@@ -124,6 +124,13 @@ internal sealed class Settings
     public bool AuthorExclusiveToInterfaces { get; init; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether only the authoring surface is emitted (interfaces
+    /// + abstract bases + lookup, scoped to the authored types), for compilation into a component's own
+    /// assembly while leaving the projection unchanged.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the IDIC pattern is applied to <c>[ExclusiveTo]</c> interfaces.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }

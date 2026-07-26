@@ -28,7 +28,7 @@ internal static class AbiImplementableClassFactory
     {
         // The abstract base is separate from the (possibly sealed) projected class and bridges to it via an
         // implicit operator, so it applies to both sealed and unsealed runtime classes.
-        return context.Settings.AuthorExclusiveToInterfaces
+        return (context.Settings.AuthorExclusiveToInterfaces || context.Settings.ImplementWinMDTypes)
             && !type.IsStatic
             && !type.IsAttributeType;
     }

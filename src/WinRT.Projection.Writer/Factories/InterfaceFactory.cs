@@ -401,6 +401,7 @@ internal static class InterfaceFactory
         if (!context.Settings.ReferenceProjection &&
             !context.Settings.Component &&
             !context.Settings.AuthorExclusiveToInterfaces &&
+            !context.Settings.ImplementWinMDTypes &&
             type.IsExclusiveTo &&
             !context.Settings.PublicExclusiveTo &&
             !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))

@@ -23,6 +23,11 @@ internal sealed partial class ProjectionGenerator
     /// </summary>
     internal bool ProcessNamespace(string ns, NamespaceMembers members, ProjectionGeneratorRunState state)
     {
+        if (_settings.ImplementWinMDTypes)
+        {
+            return ProcessNamespaceImplementWinMDTypes(ns, members, state);
+        }
+
         ConcurrentDictionary<string, string> defaultInterfaceEntries = state.DefaultInterfaceEntries;
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = state.ExclusiveToInterfaceEntries;
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
@@ -262,6 +267,76 @@ internal sealed partial class ProjectionGenerator
         string filename = ns + ".cs";
         string fullPath = Path.Combine(_settings.OutputFolder, filename);
         writer.FlushToFile(fullPath);
+        return true;
+    }
+
+    /// <summary>
+    /// Emits only the authoring surface for a namespace: the authored types' exclusive-to /
+    /// factory interfaces (declarations only), the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> /
+    /// <c>&lt;Class&gt;Factory</c> bases, and the exclusive-to lookup. Nothing else is emitted, so the
+    /// projection stays unchanged and this can be compiled into a component's own assembly.
+    /// </summary>
+    private bool ProcessNamespaceImplementWinMDTypes(string ns, NamespaceMembers members, ProjectionGeneratorRunState state)
+    {
+        ProjectionEmitContext context = new(_settings, _cache, ns, state.WindowsRuntimeMetadataTypeEntries);
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+        IndentedTextWriter writer = writerOwner.Writer;
+
+        writer.WriteFileHeader(context);
+
+        bool written = false;
+
+        // Projected namespace: emit only the authored types' exclusive-to interfaces (declarations).
+        // These are skipped by a normal projection, so the component is their sole definer.
+        writer.WriteBeginProjectedNamespace(context);
+        foreach (TypeDefinition type in members.Types)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            if (!_settings.Filter.Includes(type.FullName) || type.IsGeneric)
+            {
+                continue;
+            }
+
+            if (TypeKindResolver.Resolve(type) == TypeKind.Interface && type.IsExclusiveTo)
+            {
+                InterfaceFactory.WriteInterface(writer, context, type);
+                written = true;
+            }
+        }
+
+        writer.WriteEndProjectedNamespace(context);
+
+        // ABI namespace: emit the abstract bases + factory bases and collect the lookup entries.
+        writer.WriteBeginAbiNamespace(context);
+        foreach (TypeDefinition type in members.Types)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            if (!_settings.Filter.Includes(type.FullName) || type.IsGeneric)
+            {
+                continue;
+            }
+
+            if (TypeKindResolver.Resolve(type) == TypeKind.Class && AbiImplementableClassFactory.ShouldEmit(context, type))
+            {
+                AbiImplementableClassFactory.WriteImplementableClass(writer, context, type);
+                AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type);
+                MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, state.ExclusiveToInterfaceEntries);
+                written = true;
+            }
+        }
+
+        writer.WriteEndAbiNamespace(context);
+
+        if (!written)
+        {
+            return false;
+        }
+
+        string fullPath = Path.Combine(_settings.OutputFolder, ns + ".cs");
+        writer.FlushToFile(fullPath);
+        state.MarkProjectionFileWritten();
         return true;
     }
 }

@@ -121,21 +121,21 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
                 MetadataAttributeFactory.WriteDefaultInterfacesClass(_settings, sorted);
             }
 
-            if (state.WindowsRuntimeMetadataTypeEntries.Count > 0 && !_settings.ReferenceProjection)
+            if (state.WindowsRuntimeMetadataTypeEntries.Count > 0 && !_settings.ReferenceProjection && !_settings.ImplementWinMDTypes)
             {
                 List<KeyValuePair<string, string>> sorted = [.. state.WindowsRuntimeMetadataTypeEntries];
                 sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
                 MetadataAttributeFactory.WriteWindowsRuntimeMetadataTypesClass(_settings, sorted);
             }
 
-            if (!state.ExclusiveToInterfaceEntries.IsEmpty && (_settings.Component || _settings.AuthorExclusiveToInterfaces) && !_settings.ReferenceProjection)
+            if (!state.ExclusiveToInterfaceEntries.IsEmpty && (_settings.Component || _settings.AuthorExclusiveToInterfaces || _settings.ImplementWinMDTypes) && !_settings.ReferenceProjection)
             {
                 List<KeyValuePair<string, string>> sorted = [.. state.ExclusiveToInterfaceEntries];
                 sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
                 MetadataAttributeFactory.WriteExclusiveToInterfacesClass(_settings, sorted);
             }
 
-            if (state.ProjectionFileWritten)
+            if (state.ProjectionFileWritten && !_settings.ImplementWinMDTypes)
             {
                 WriteBaseStrings();
             }
@@ -169,7 +169,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     /// <returns>The lazy work-item sequence.</returns>
     private IEnumerable<IProjectionWorkItem> EnumerateWorkItems(ProjectionGeneratorRunState state)
     {
-        if (!_settings.ReferenceProjection)
+        if (!_settings.ReferenceProjection && !_settings.ImplementWinMDTypes)
         {
             yield return new IidsWorkItem(this);
         }
