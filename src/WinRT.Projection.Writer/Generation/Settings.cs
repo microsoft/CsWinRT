@@ -116,17 +116,10 @@ internal sealed class Settings
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether abstract base classes and marshallers are generated so
-    /// runtime classes defined in the input metadata can be authored in C# by extending them. This is
-    /// the 3.0 replacement for <see cref="PublicExclusiveTo"/> (see the option of the same name on
-    /// <see cref="ProjectionWriterOptions"/>).
-    /// </summary>
-    public bool AuthorExclusiveToInterfaces { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether only the authoring surface is emitted (interfaces
-    /// + abstract bases + lookup, scoped to the authored types), for compilation into a component's own
-    /// assembly while leaving the projection unchanged.
+    /// Gets or sets a value indicating whether only the authoring surface is emitted (the exclusive-to
+    /// and factory interfaces plus the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> bases), scoped to the authored types, for compilation
+    /// into a component's own assembly while leaving all projections unchanged.
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
 

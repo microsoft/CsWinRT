@@ -500,12 +500,7 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void AddExclusiveToInterfaceEntries(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
-        if (!context.Settings.Component && !context.Settings.AuthorExclusiveToInterfaces && !context.Settings.ImplementWinMDTypes)
-        {
-            return;
-        }
-
-        if (context.Settings.ReferenceProjection)
+        if (!context.Settings.Component || context.Settings.ReferenceProjection)
         {
             return;
         }

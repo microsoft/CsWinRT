@@ -33,6 +33,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
+| CsWinRTImplementWinMDType | *(item)* | An item listing Windows Runtime namespaces or types, already defined in an existing `.winmd`, that this project implements (authors) in C#. `Include` is the namespace/type filter and the `WinMD` metadata is the path to the metadata file defining it. See "Implementing Windows Runtime types defined in an existing .winmd" below |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
 | CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to always analyze for marshalling code, regardless of `CsWinRTMarshallingMode`. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
 | CsWinRTUseWindowsUIXamlProjections | true \| *false | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
@@ -50,6 +51,46 @@ C#/WinRT behavior can be customized with these project properties:
 **If CsWinRTFilters is not defined, the following effective value is used:
 * -exclude $(CsWinRTExcludes)
 * -include $(CsWinRTIncludes)
+
+## Implementing Windows Runtime types defined in an existing .winmd
+
+Normally, authoring a Windows Runtime component in C# means writing the C# type first and letting CsWinRT
+produce a `.winmd` for it. CsWinRT can also do the reverse: implement, in C#, a Windows Runtime type whose
+shape is *already* defined in an existing `.winmd`. Opt in with the `CsWinRTImplementWinMDType` item:
+
+```xml
+<ItemGroup>
+  <CsWinRTImplementWinMDType Include="Contoso.Widgets" WinMD="$(MSBuildThisFileDirectory)metadata\Contoso.Widgets.winmd" />
+</ItemGroup>
+```
+
+`Include` is a namespace or fully qualified type name, and `WinMD` is the metadata file defining it.
+
+CsWinRT then generates, **into this project only**, an abstract `ABI.<Namespace>.<Class>` base class per
+matched runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory methods and
+activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler guarantees
+none is missed. Implement the type by extending the base:
+
+```csharp
+public sealed class MyWidget : ABI.Contoso.Widgets.Widget
+{
+    public override void DoStuff() { }
+}
+
+[WindowsRuntimeActivationFactory(typeof(MyWidget))]
+public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetFactory, IWidgetInterop
+{
+    public override object ActivateInstance() => new MyWidget();
+}
+```
+
+The generated base is separate from the projected class (which is often `sealed`) and provides an implicit
+conversion to it, so an instance can be passed anywhere the projected type is expected. Any additional
+(non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
+
+No projection assembly is modified by this mode: reference projections shipped in NuGet packages stay
+completely unchanged, and everything needed is generated into the implementing project and its
+publish-time `WinRT.Component.dll`.
 
 ## Runtime feature switches
 

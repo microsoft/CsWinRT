@@ -53,6 +53,15 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
+    /// <summary>
+    /// Gets additional namespace/type includes to project, on top of the ones discovered from the input
+    /// references. This is used in component mode to project the Windows Runtime types the component
+    /// implements but does not define (see the <c>CsWinRTImplementWinMDType</c> build item), so that
+    /// their ABI and vtable code ends up in <c>WinRT.Component.dll</c>.
+    /// </summary>
+    [CommandLineArgumentName("--additional-includes")]
+    public string[] AdditionalIncludes { get; init; } = [];
+
     /// <summary>Gets the maximum number of parallel tasks to use for execution.</summary>
     [CommandLineArgumentName("--max-degrees-of-parallelism")]
     public required int MaxDegreesOfParallelism { get; init; }

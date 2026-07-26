@@ -17,25 +17,27 @@ internal record AuthoringExportTypesOptions(
     /// <summary>
     /// Gets whether the managed exports should be emitted.
     /// </summary>
+    /// <param name="hasActivationFactories">Whether the compilation declares any <c>[WindowsRuntimeActivationFactory]</c> types.</param>
     /// <returns>Whether the managed exports should be emitted.</returns>
-    public bool ShouldEmitManagedExports()
+    public bool ShouldEmitManagedExports(bool hasActivationFactories = false)
     {
-        return IsComponent || MergeReferencedActivationFactories;
+        return IsComponent || MergeReferencedActivationFactories || hasActivationFactories;
     }
 
     /// <summary>
     /// Gets whether the native exports should be emitted.
     /// </summary>
+    /// <param name="hasActivationFactories">Whether the compilation declares any <c>[WindowsRuntimeActivationFactory]</c> types.</param>
     /// <returns>Whether the native exports should be emitted.</returns>
-    public bool ShouldEmitNativeExports()
+    public bool ShouldEmitNativeExports(bool hasActivationFactories = false)
     {
         if (!PublishAot)
         {
             return false;
         }
 
-        // We need these either in normal publishing scenarios where AOT is enabled, or also
-        // if the project is not a component, but we're merging referenced activation factories.
-        return IsComponent || MergeReferencedActivationFactories;
+        // We need these either in normal publishing scenarios where AOT is enabled, or also if the project is not a
+        // component, but we're merging referenced activation factories or authoring types defined in an existing .winmd.
+        return IsComponent || MergeReferencedActivationFactories || hasActivationFactories;
     }
 }

@@ -26,11 +26,16 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     public static bool ShouldEmit(ProjectionEmitContext context, TypeDefinition type)
     {
-        // The abstract base is separate from the (possibly sealed) projected class and bridges to it via an
-        // implicit operator, so it applies to both sealed and unsealed runtime classes.
-        return (context.Settings.AuthorExclusiveToInterfaces || context.Settings.ImplementWinMDTypes)
-            && !type.IsStatic
-            && !type.IsAttributeType;
+        if (!context.Settings.ImplementWinMDTypes || type.IsAttributeType)
+        {
+            return false;
+        }
+
+        // Static runtime classes have no instances, so they only get a factory base (and only if
+        // they actually declare any statics). All other runtime classes always get an instance base:
+        // it is separate from the (possibly sealed) projected class and bridges to it via an implicit
+        // operator, so it applies to both sealed and unsealed runtime classes.
+        return !type.IsStatic || HasFactoryInterfaces(context, type);
     }
 
     /// <summary>
@@ -39,6 +44,12 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     public static void WriteImplementableClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        // Static runtime classes have no instances, so there is nothing to implement beyond their factory.
+        if (type.IsStatic)
+        {
+            return;
+        }
+
         string nameStripped = type.GetStrippedName();
         string typeNs = type.GetRawNamespace();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, nameStripped);
@@ -86,52 +97,45 @@ internal static class AbiImplementableClassFactory
 
             EmitMergedProperties(writer, properties);
 
-            // The implicit conversion reuses the projection's own marshaller (its
-            // 'ConvertToManaged(void*)' resolves the correct RCW via the ComWrappers callback).
+            // The conversion creates a CCW for the authored object and then resolves the projected RCW
+            // for it. It goes through a reference-assembly-visible helper, since this code is compiled
+            // into the component's own assembly (which never sees the runtime implementation assembly).
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
                 public static implicit operator {{projectedType}}?({{nameStripped}}? value)
                 {
-                    if (value is null)
-                    {
-                        return null;
-                    }
-
-                    using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
-
-                    return global::ABI.{{typeNs}}.{{nameStripped}}Marshaller.ConvertToManaged(objectReferenceValue.GetThisPtrUnsafe());
+                    return WindowsRuntimeAuthoredObjectMarshaller.ConvertToProjectedType<{{projectedType}}>(value);
                 }
                 """);
         }
     }
 
     /// <summary>
-    /// Emits <c>public abstract class &lt;Name&gt;Factory</c> implementing the class's <c>[Activatable]</c>/<c>[Static]</c>
-    /// factory interfaces, so the factory (statics and factory methods) can be authored in C# by extending it.
+    /// Emits <c>public abstract class &lt;Name&gt;Factory</c> implementing the class's <c>[Activatable]</c>,
+    /// <c>[Static]</c> and <c>[Composable]</c> factory interfaces, so the factory (statics, factory methods and
+    /// default activation) can be authored in C# by extending it.
     /// </summary>
     public static void WriteImplementableFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Gather the '[Activatable]'/'[Static]' factory interfaces for this runtime class.
-        List<TypeDefinition> factoryInterfaces = [];
+        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out bool hasDefaultActivation);
 
-        foreach (KeyValuePair<string, AttributedType> entry in AttributedTypes.Get(type, context.Cache))
-        {
-            if ((entry.Value.Activatable || entry.Value.Statics) && entry.Value.Type is not null)
-            {
-                factoryInterfaces.Add(entry.Value.Type);
-            }
-        }
-
-        if (factoryInterfaces.Count == 0)
+        if (factoryInterfaces.Count == 0 && !hasDefaultActivation)
         {
             return;
         }
 
         string nameStripped = type.GetStrippedName();
 
-        // Inheritance list: the factory/statics interfaces (and any of their base interfaces).
+        // Inheritance list: the factory/statics interfaces (and any of their base interfaces). A class with a
+        // default (parameterless) activation is activated through 'IActivationFactory' instead, which carries no
+        // dedicated factory interface in metadata, so it is added explicitly.
         List<string> bases = [];
         HashSet<TypeDefinition> declared = [];
+
+        if (hasDefaultActivation)
+        {
+            bases.Add("global::WindowsRuntime.InteropServices.IActivationFactory");
+        }
 
         foreach (TypeDefinition iface in factoryInterfaces)
         {
@@ -144,12 +148,19 @@ internal static class AbiImplementableClassFactory
 
         writer.WriteLine();
         writer.WriteLine($"public abstract class {nameStripped}Factory : {string.Join(", ", bases)}");
+
         using (writer.WriteBlock())
         {
             HashSet<string> writtenMethods = [];
             HashSet<string> writtenEvents = [];
             HashSet<TypeDefinition> writtenInterfaces = [];
             Dictionary<string, PropertyInfo> properties = [];
+
+            if (hasDefaultActivation)
+            {
+                writer.WriteLine();
+                writer.WriteLine("public abstract object ActivateInstance();");
+            }
 
             foreach (TypeDefinition iface in factoryInterfaces)
             {
@@ -160,6 +171,53 @@ internal static class AbiImplementableClassFactory
             }
 
             EmitMergedProperties(writer, properties);
+        }
+    }
+
+    /// <summary>
+    /// Returns whether <paramref name="type"/> declares any factory (activation, statics or composition) surface.
+    /// </summary>
+    private static bool HasFactoryInterfaces(ProjectionEmitContext context, TypeDefinition type)
+    {
+        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out bool hasDefaultActivation);
+
+        return factoryInterfaces.Count > 0 || hasDefaultActivation;
+    }
+
+    /// <summary>
+    /// Collects the <c>[Activatable]</c>, <c>[Static]</c> and <c>[Composable]</c> factory interfaces of a runtime class.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class to inspect.</param>
+    /// <param name="factoryInterfaces">The collected factory interfaces.</param>
+    /// <param name="hasDefaultActivation">Whether the class supports default (parameterless) activation.</param>
+    private static void CollectFactoryInterfaces(
+        ProjectionEmitContext context,
+        TypeDefinition type,
+        out List<TypeDefinition> factoryInterfaces,
+        out bool hasDefaultActivation)
+    {
+        factoryInterfaces = [];
+        hasDefaultActivation = false;
+
+        foreach (KeyValuePair<string, AttributedType> entry in AttributedTypes.Get(type, context.Cache))
+        {
+            AttributedType attributedType = entry.Value;
+
+            if (!attributedType.Activatable && !attributedType.Statics && !attributedType.Composable)
+            {
+                continue;
+            }
+
+            // An '[Activatable]' attribute with no factory interface means default (parameterless) activation
+            if (attributedType.Type is null)
+            {
+                hasDefaultActivation |= attributedType.Activatable;
+            }
+            else
+            {
+                factoryInterfaces.Add(attributedType.Type);
+            }
         }
     }
 
@@ -220,14 +278,7 @@ internal static class AbiImplementableClassFactory
 
             if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
             {
-                if (currentInstance is not null && gi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature subGi)
-                {
-                    nextInstance = subGi;
-                }
-                else
-                {
-                    nextInstance = gi;
-                }
+                nextInstance = currentInstance is not null && gi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature subGi ? subGi : gi;
             }
 
             EmitInterfaceMembers(writer, context, ifaceType, nextInstance, writtenMethods, properties, writtenEvents, writtenInterfaces);
@@ -248,60 +299,60 @@ internal static class AbiImplementableClassFactory
         HashSet<string> writtenEvents,
         HashSet<TypeDefinition> writtenInterfaces)
     {
-            GenericContext? memberContext = nextInstance is not null ? new GenericContext(nextInstance, null) : null;
+        GenericContext? memberContext = nextInstance is not null ? new GenericContext(nextInstance, null) : null;
 
-            // Methods
-            foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        // Methods
+        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        {
+            string name = method.GetRawName();
+            MethodSignatureInfo sig = new(method, memberContext);
+
+            if (!writtenMethods.Add(sig.GetDedupeKey(name)))
             {
-                string name = method.GetRawName();
-                MethodSignatureInfo sig = new(method, memberContext);
-
-                if (!writtenMethods.Add(sig.GetDedupeKey(name)))
-                {
-                    continue;
-                }
-
-                IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-                IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
-
-                writer.WriteLine();
-                writer.WriteLine($"public abstract {ret} {name}({parms});");
+                continue;
             }
 
-            // Properties (merged after the walk)
-            foreach (PropertyDefinition prop in ifaceType.Properties)
+            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
+            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+
+            writer.WriteLine();
+            writer.WriteLine($"public abstract {ret} {name}({parms});");
+        }
+
+        // Properties (merged after the walk)
+        foreach (PropertyDefinition prop in ifaceType.Properties)
+        {
+            string name = prop.GetRawName();
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
+            if (!properties.TryGetValue(name, out PropertyInfo? info))
             {
-                string name = prop.GetRawName();
-                (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
-
-                if (!properties.TryGetValue(name, out PropertyInfo? info))
-                {
-                    info = new PropertyInfo { TypeText = InterfaceFactory.WritePropType(context, prop, memberContext) };
-                    properties[name] = info;
-                }
-
-                info.HasGetter |= getter is not null;
-                info.HasSetter |= setter is not null;
+                info = new PropertyInfo { TypeText = InterfaceFactory.WritePropType(context, prop, memberContext) };
+                properties[name] = info;
             }
 
-            // Events
-            foreach (EventDefinition evt in ifaceType.Events)
+            info.HasGetter |= getter is not null;
+            info.HasSetter |= setter is not null;
+        }
+
+        // Events
+        foreach (EventDefinition evt in ifaceType.Events)
+        {
+            string name = evt.GetRawName();
+
+            if (!writtenEvents.Add(name))
             {
-                string name = evt.GetRawName();
-
-                if (!writtenEvents.Add(name))
-                {
-                    continue;
-                }
-
-                IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt, nextInstance);
-
-                writer.WriteLine();
-                writer.WriteLine($"public abstract event {eventType} {name};");
+                continue;
             }
 
-            // Recurse into base interfaces.
-            WriteInterfaceMembersRecursive(writer, context, ifaceType, nextInstance, writtenMethods, properties, writtenEvents, writtenInterfaces);
+            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt, nextInstance);
+
+            writer.WriteLine();
+            writer.WriteLine($"public abstract event {eventType} {name};");
+        }
+
+        // Recurse into base interfaces.
+        WriteInterfaceMembersRecursive(writer, context, ifaceType, nextInstance, writtenMethods, properties, writtenEvents, writtenInterfaces);
     }
 
     /// <summary>

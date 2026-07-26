@@ -187,9 +187,17 @@ internal partial class ProjectionGenerator
             }
         }
 
+        // Project any additional types the caller asked for (the Windows Runtime types a component
+        // implements but does not define), so their ABI and vtable code is generated as well.
+        foreach (string additionalInclude in args.AdditionalIncludes)
+        {
+            includes.Add(additionalInclude);
+
+            hasTypesToProject = true;
+        }
+
         // In non-component mode, scan reference assemblies to determine type includes.
-        // Component mode handles this above via .winmd scanning.
-        if (!isComponentMode)
+        // Component mode handles this above via .winmd scanning.        if (!isComponentMode)
         {
             foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
             {

@@ -65,21 +65,17 @@ public sealed class ProjectionWriterOptions
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Generate abstract base classes and marshallers so that runtime classes defined in the input
-    /// metadata can be implemented (authored) in C# by extending the generated abstract base class.
+    /// Emit only the authoring surface for runtime classes defined in the input metadata: their
+    /// exclusive-to / factory interfaces and the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes an author extends to implement them in C#.
     /// This is the 3.0 replacement for <see cref="PublicExclusiveTo"/>: instead of exposing every
-    /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author
-    /// extends a single generated <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> abstract base that declares all
-    /// required members as <c>abstract</c>.
-    /// </summary>
-    public bool AuthorExclusiveToInterfaces { get; init; }
-
-    /// <summary>
-    /// Emit only the authoring surface (the authored types' exclusive-to/factory interfaces,
-    /// the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> / <c>&lt;Class&gt;Factory</c> bases, and the
-    /// <c>WindowsRuntimeExclusiveToInterfaces</c> lookup) so it can be compiled into a component's own
-    /// assembly. The projection itself is left completely unchanged. Intended to be used together with
-    /// <see cref="Include"/> to scope generation to the specific authored types.
+    /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author extends
+    /// a single generated abstract base that declares all required members as <c>abstract</c>.
+    /// <para>
+    /// The output is scoped by <see cref="Include"/> and is meant to be compiled into the component's own
+    /// assembly, so all projections are left completely unchanged. Because that compilation only sees the
+    /// <c>WinRT.Runtime</c> reference assembly, the emitted code is restricted to reference-assembly APIs.
+    /// </para>
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
 

@@ -351,7 +351,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTComponent)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
-      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTAuthorExclusiveToInterfaces)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExeTFM)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
@@ -413,7 +412,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
-        AuthorExclusiveToInterfaces="$(CsWinRTAuthorExclusiveToInterfaces)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
         DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
@@ -438,18 +436,24 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
-    Implement WinMD types: generates ONLY the authoring surface (the authored types' exclusive-to / factory
-    interfaces, the abstract 'ABI.<Ns>.<Class>' / '<Class>Factory' bases, and the exclusive-to lookup)
-    into the component's OWN assembly, leaving all projections completely unchanged. Opt in by listing the
-    WinMD types you implement, each with the WinMD it is defined in:
+    Implement WinMD types: generates ONLY the authoring surface (the implemented types' exclusive-to and
+    factory interfaces, plus the abstract 'ABI.<Ns>.<Class>' / 'ABI.<Ns>.<Class>Factory' base classes) into
+    the component's OWN assembly, leaving all projections completely unchanged. The author then implements
+    the type by extending the generated abstract base, which declares every required member as 'abstract'.
+    Opt in by listing the WinMD types you implement, each with the WinMD it is defined in:
       <CsWinRTImplementWinMDType Include="Contoso.Widgets" WinMD="path\to\Types.winmd" />
     (Include is a namespace/type filter; WinMD is the metadata file the type is defined in.)
+
+    Because this output is compiled into the user's project, it only uses APIs available on the
+    'WinRT.Runtime' reference assembly. The matching ABI/vtable code is produced at publish time by
+    '_RunCsWinRTComponentProjectionGenerator', which receives the same includes and .winmd inputs.
   -->
   <PropertyGroup>
     <_CsWinRTImplementWinMDTypesDir>$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)', 'cswinrt', 'authoring'))</_CsWinRTImplementWinMDTypesDir>
   </PropertyGroup>
 
   <Target Name="CsWinRTGenerateImplementWinMDTypes"
+          DependsOnTargets="_ResolveCsWinRToolsDirectory"
           BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute"
           Condition="$(CsWinRTEnabled) and '@(CsWinRTImplementWinMDType)' != ''">
     <MakeDir Directories="$(_CsWinRTImplementWinMDTypesDir)" />

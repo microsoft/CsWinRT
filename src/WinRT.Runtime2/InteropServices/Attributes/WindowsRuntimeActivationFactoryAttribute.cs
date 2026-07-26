@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
-
 using System;
 
 namespace WindowsRuntime.InteropServices;
@@ -10,8 +8,12 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Indicates the authored Windows Runtime class type that a given activation factory is for.
 /// </summary>
+/// <remarks>
+/// Apply this to a class implementing the activation factory for a Windows Runtime type being authored in C#. CsWinRT
+/// registers the annotated type as the activation factory for the runtime class name of <see cref="RuntimeClassType"/>,
+/// so that activation requests for that class are served by it.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-[WindowsRuntimeImplementationOnlyMember]
 public sealed class WindowsRuntimeActivationFactoryAttribute : Attribute
 {
     /// <summary>

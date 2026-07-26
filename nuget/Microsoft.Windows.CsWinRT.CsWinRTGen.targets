@@ -174,6 +174,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorTreatWarningsAsErrors)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorMaxDegreesOfParallelism)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTImplementWinMDType)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTImplementWinMDType->'%(WinMD)')" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTGeneratorAdditionalArgument)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorStandardOutputImportance)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorStandardErrorImportance)" />
@@ -481,6 +483,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
       <_ComponentWinMDPaths Include="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(AssemblyName).winmd'))"
                             Condition="'$(CsWinRTComponent)' == 'true'" />
+
+      <!--
+        Also add the .winmd-s of any Windows Runtime types this project implements but does not define
+        (see the 'CsWinRTImplementWinMDType' item), along with their type filters, so that the ABI and
+        vtable code backing the abstract bases the author extends ends up in 'WinRT.Component.dll'.
+      -->
+      <_ComponentWinMDPaths Include="@(CsWinRTImplementWinMDType->'%(WinMD)'->Distinct())" />
+      <_ComponentAdditionalIncludes Include="@(CsWinRTImplementWinMDType)" />
     </ItemGroup>
 
     <!-- Invoke 'cswinrtprojectiongen' with assembly name 'WinRT.Component' (triggers component mode) -->
@@ -488,6 +498,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       ReferenceAssemblyPaths="@(_ComponentProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_ComponentWinMDPaths)"
+      AdditionalIncludes="@(_ComponentAdditionalIncludes)"
       TargetFramework="$(CsWinRTExeTFM)"
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
       WindowsUIXamlProjection="$(CsWinRTUseWindowsUIXamlProjections)"

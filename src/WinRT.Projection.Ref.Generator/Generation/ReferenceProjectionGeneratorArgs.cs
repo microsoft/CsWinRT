@@ -49,13 +49,8 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--public-exclusive-to")]
     public bool PublicExclusiveTo { get; init; }
 
-    /// <summary>Gets whether to generate abstract base classes so runtime classes in the input
-    /// metadata can be authored (implemented) in C#.</summary>
-    [CommandLineArgumentName("--author-exclusive-to")]
-    public bool AuthorExclusiveToInterfaces { get; init; }
-
-    /// <summary>Gets whether to emit only the authoring surface (interfaces + abstract bases +
-    /// lookup, scoped to the authored types) for compilation into a component's own assembly.</summary>
+    /// <summary>Gets whether to emit only the authoring surface (the exclusive-to and factory interfaces
+    /// plus the abstract bases, scoped to the authored types) for compilation into a component's own assembly.</summary>
     [CommandLineArgumentName("--implement-winmd-types")]
     public bool ImplementWinMDTypes { get; init; }
 

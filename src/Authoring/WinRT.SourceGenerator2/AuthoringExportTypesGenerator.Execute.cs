@@ -45,6 +45,7 @@ public partial class AuthoringExportTypesGenerator
 
             return new(
                 AssemblyName: data.compilation.AssemblyName ?? "",
+                HasActivationFactories: !Helpers.GetActivationFactories(data.compilation, token).IsEmpty,
                 Options: data.Options);
         }
 
@@ -129,7 +130,7 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="info">The input info.</param>
         public static void EmitManagedExports(SourceProductionContext context, AuthoringManagedExportsInfo info)
         {
-            if (!info.Options.ShouldEmitManagedExports())
+            if (!info.Options.ShouldEmitManagedExports(!info.ActivationFactories.IsEmpty))
             {
                 return;
             }
@@ -306,7 +307,7 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="info">The input info.</param>
         public static void EmitNativeExports(SourceProductionContext context, AuthoringNativeExportsInfo info)
         {
-            if (!info.Options.ShouldEmitNativeExports())
+            if (!info.Options.ShouldEmitNativeExports(info.HasActivationFactories))
             {
                 return;
             }

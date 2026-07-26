@@ -48,7 +48,6 @@ public static class ProjectionWriter
                 MaxDegreesOfParallelism = options.MaxDegreesOfParallelism,
                 Component = options.Component,
                 PublicExclusiveTo = options.PublicExclusiveTo,
-                AuthorExclusiveToInterfaces = options.AuthorExclusiveToInterfaces,
                 ImplementWinMDTypes = options.ImplementWinMDTypes,
                 IdicExclusiveTo = options.IdicExclusiveTo,
                 ReferenceProjection = options.ReferenceProjection,

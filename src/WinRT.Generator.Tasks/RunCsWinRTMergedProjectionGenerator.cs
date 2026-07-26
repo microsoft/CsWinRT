@@ -82,6 +82,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public bool WindowsUIXamlProjection { get; set; }
 
     /// <summary>
+    /// Gets or sets additional namespace/type includes to project, on top of the ones discovered from the
+    /// input references. Used in component mode for the Windows Runtime types the component implements but
+    /// does not define.
+    /// </summary>
+    public ITaskItem[]? AdditionalIncludes { get; set; }
+
+    /// <summary>
     /// Gets or sets the maximum number of parallel tasks the projection writer is allowed to dispatch.
     /// </summary>
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
@@ -225,6 +232,11 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (WindowsUIXamlProjection)
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
+        }
+
+        if (AdditionalIncludes is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, "--additional-includes", string.Join(",", AdditionalIncludes.Select(static i => i.ItemSpec)));
         }
 
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
