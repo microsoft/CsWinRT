@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Frozen;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -266,22 +267,25 @@ internal static partial class ImplGenerator
             bool isSdkModule = inputModule.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8);
             bool isXamlModule = inputModule.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8);
 
-            // An authoring projection also needs its non-public types forwarded. Its abstract base classes
-            // implement the Windows Runtime interfaces of the types being authored, and those interfaces are
-            // 'internal' so they stay out of the supported surface. The marshalling code that CsWinRT
-            // generates for an application still references them, so they must resolve at runtime.
-            bool isAuthoringModule = IsAuthoringProjectionModule(inputModule);
+            // Collect the exact set of non-public types that must also be forwarded: the Windows Runtime
+            // interfaces implemented by the abstract 'ABI.<Ns>.<Class>' base classes of an authoring
+            // projection. Those are 'internal' so they stay out of the supported surface, but the
+            // marshalling code CsWinRT generates for an application references them, so they must resolve at
+            // runtime. Nothing else non-public is ever forwarded, and for a projection with no such base
+            // classes the set is empty and only public types are forwarded, as before.
+            HashSet<string> authoringInterfaces = GetAuthoringInterfaceNames(inputModule);
 
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
             {
-                // We only need to forward public types (plus the internal ones of an authoring projection)
-                if (!exportedType.IsPublic && !(isAuthoringModule && exportedType.IsNotPublic))
+                // Also make sure the type has a valid namespace, otherwise we can't handle it
+                if (exportedType.Namespace is null)
                 {
                     continue;
                 }
 
-                // Also make sure the type has a valid namespace, otherwise we can't handle it
-                if (exportedType.Namespace is null)
+                // We only need to forward public types, plus the Windows Runtime interfaces
+                // behind the abstract base classes an authoring projection exposes.
+                if (!exportedType.IsPublic && !authoringInterfaces.Contains(exportedType.FullName))
                 {
                     continue;
                 }
@@ -318,29 +322,76 @@ internal static partial class ImplGenerator
     }
 
     /// <summary>
-    /// Checks whether a module is an authoring projection, i.e. one produced with
-    /// <c>CsWinRTImplementWinMDTypes</c>, which exposes abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> base
-    /// classes so Windows Runtime types defined in an existing <c>.winmd</c> can be implemented in C#.
+    /// Collects the full names of the non-public interfaces implemented by the abstract
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> base classes of an authoring projection, i.e. one produced with
+    /// <c>CsWinRTImplementWinMDTypes</c>, which exposes those bases so Windows Runtime types defined in an
+    /// existing <c>.winmd</c> can be implemented in C#.
     /// </summary>
     /// <param name="inputModule">The input module.</param>
-    /// <returns>Whether the module is an authoring projection.</returns>
+    /// <returns>The full names of the non-public interfaces to forward. Empty for a regular projection.</returns>
     /// <remarks>
-    /// This matches the detection in <c>cswinrtprojectiongen</c>, which uses the same shape to decide which
-    /// types it must supply an implementation for. A regular projection never has public abstract classes in
-    /// an <c>ABI</c> namespace, as its ABI types are all marshallers or <c>file</c> scoped helpers.
+    /// These are the only non-public types that are ever forwarded. A regular projection has no public
+    /// abstract classes in an <c>ABI</c> namespace (its ABI types are all marshallers or <c>file</c> scoped
+    /// helpers), so the result is empty and its forwarder carries public types only.
     /// </remarks>
-    private static bool IsAuthoringProjectionModule(ModuleDefinition inputModule)
+    private static HashSet<string> GetAuthoringInterfaceNames(ModuleDefinition inputModule)
     {
+        HashSet<string> names = [];
+
+        // Seed the set with the interfaces implemented by the abstract base classes
         foreach (TypeDefinition type in inputModule.TopLevelTypes)
         {
             if (type is { IsPublic: true, IsAbstract: true, IsClass: true, Namespace: { } ns } &&
                 (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)))
             {
-                return true;
+                _ = AddInterfaceNames(type, names);
             }
         }
 
-        return false;
+        if (names.Count == 0)
+        {
+            return names;
+        }
+
+        // Close over interface inheritance: an interface in the set may itself require others. This is a
+        // fixed point over the module, as the interfaces are all defined in it and their count is small.
+        for (bool changed = true; changed;)
+        {
+            changed = false;
+
+            foreach (TypeDefinition type in inputModule.TopLevelTypes)
+            {
+                if (type is { IsInterface: true } && names.Contains(type.FullName))
+                {
+                    changed |= AddInterfaceNames(type, names);
+                }
+            }
+        }
+
+        return names;
+    }
+
+    /// <summary>
+    /// Adds the full names of the non-public interfaces directly implemented by a type.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="names">The set being populated.</param>
+    /// <returns>Whether any new name was added.</returns>
+    private static bool AddInterfaceNames(TypeDefinition type, HashSet<string> names)
+    {
+        bool added = false;
+
+        foreach (InterfaceImplementation interfaceImplementation in type.Interfaces)
+        {
+            // Only interfaces defined in this module can be forwarded from it, and only non-public
+            // ones need to be: the public ones are already covered by the normal forwarding logic.
+            if (interfaceImplementation.Interface is TypeDefinition { IsNotPublic: true } interfaceType)
+            {
+                added |= names.Add(interfaceType.FullName);
+            }
+        }
+
+        return added;
     }
 
     /// <summary>
