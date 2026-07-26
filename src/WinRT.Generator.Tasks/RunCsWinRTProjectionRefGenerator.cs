@@ -75,6 +75,12 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool PublicExclusiveTo { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to generate abstract base classes so runtime classes in the input
+    /// metadata can be authored (implemented) in C#.
+    /// </summary>
+    public bool AuthorExclusiveToInterfaces { get; set; }
+
+    /// <summary>
     /// Gets or sets whether exclusive-to interfaces should support IDynamicInterfaceCastable.
     /// </summary>
     public bool IdicExclusiveTo { get; set; }
@@ -248,6 +254,11 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         if (PublicExclusiveTo)
         {
             AppendResponseFileCommand(args, "--public-exclusive-to", "true");
+        }
+
+        if (AuthorExclusiveToInterfaces)
+        {
+            AppendResponseFileCommand(args, "--author-exclusive-to", "true");
         }
 
         if (IdicExclusiveTo)

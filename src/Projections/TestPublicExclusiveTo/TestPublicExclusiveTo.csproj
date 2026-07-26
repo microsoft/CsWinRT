@@ -18,6 +18,7 @@
   <PropertyGroup>
     <CsWinRTIncludes>TestComponentCSharp.TestPublicExclusiveTo;</CsWinRTIncludes>
     <CsWinRTPublicExclusiveToInterfaces>true</CsWinRTPublicExclusiveToInterfaces>
+    <CsWinRTAuthorExclusiveToInterfaces>true</CsWinRTAuthorExclusiveToInterfaces>
     <!--PkgMicrosoft_WindowsAppSDK* is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WindowsAppSDK_Foundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.foundation', '$(MicrosoftWinAppSDKFoundationVersion)'))</PkgMicrosoft_WindowsAppSDK_Foundation>
     <PkgMicrosoft_WindowsAppSDK_Ixp>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.interactiveexperiences', '$(MicrosoftWinAppSDKIxpVersion)'))</PkgMicrosoft_WindowsAppSDK_Ixp>

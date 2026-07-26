@@ -229,6 +229,12 @@ internal sealed partial class ProjectionGenerator
 
                 TypeKind kind = TypeKindResolver.Resolve(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
+
+                if (kind == TypeKind.Class && AbiImplementableClassFactory.ShouldEmit(context, type))
+                {
+                    AbiImplementableClassFactory.WriteImplementableClass(writer, context, type);
+                    AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type);
+                }
             }
             writer.WriteEndAbiNamespace(context);
         }

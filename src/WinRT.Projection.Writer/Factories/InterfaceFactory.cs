@@ -395,9 +395,12 @@ internal static class InterfaceFactory
     public static void WriteInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // [Default] and overridable interfaces aren't used in the projection. Skip them unless
-        // public_exclusiveto is set (or in reference projection or component mode).
+        // public_exclusiveto is set (or in reference projection or component mode). In author mode
+        // they're emitted as 'internal' so the exclusive-to lookup and interop can reference them
+        // without changing the projection's public surface.
         if (!context.Settings.ReferenceProjection &&
             !context.Settings.Component &&
+            !context.Settings.AuthorExclusiveToInterfaces &&
             type.IsExclusiveTo &&
             !context.Settings.PublicExclusiveTo &&
             !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))

@@ -49,6 +49,11 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--public-exclusive-to")]
     public bool PublicExclusiveTo { get; init; }
 
+    /// <summary>Gets whether to generate abstract base classes so runtime classes in the input
+    /// metadata can be authored (implemented) in C#.</summary>
+    [CommandLineArgumentName("--author-exclusive-to")]
+    public bool AuthorExclusiveToInterfaces { get; init; }
+
     /// <summary>Gets whether exclusive-to interfaces should support <c>IDynamicInterfaceCastable</c>.</summary>
     [CommandLineArgumentName("--idic-exclusive-to")]
     public bool IdicExclusiveTo { get; init; }

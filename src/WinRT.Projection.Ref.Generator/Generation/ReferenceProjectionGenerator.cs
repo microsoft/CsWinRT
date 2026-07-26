@@ -96,6 +96,7 @@ internal static partial class ReferenceProjectionGenerator
             Verbose = args.Verbose,
             Component = args.Component,
             PublicExclusiveTo = args.PublicExclusiveTo,
+            AuthorExclusiveToInterfaces = args.AuthorExclusiveToInterfaces,
             IdicExclusiveTo = args.IdicExclusiveTo,
             ReferenceProjection = args.ReferenceProjection,
             CancellationToken = args.Token,

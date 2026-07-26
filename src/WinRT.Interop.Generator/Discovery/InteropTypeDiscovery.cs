@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
@@ -200,6 +201,18 @@ internal static partial class InteropTypeDiscovery
             interfaces: interfaces,
             args: args,
             interopDefinitions: interopDefinitions))
+        {
+            goto FinalizeUserDefinedType;
+        }
+
+        // Also gather the '[exclusiveto]' interfaces for types authored by deriving from a generated
+        // 'ABI.<Ns>.<Class>' implementable base class (the 3.0 way to implement a WinMD-defined type).
+        // Skip abstract types (e.g. the generated base classes themselves), which never get a CCW.
+        if (!typeDefinition.IsAbstract && !TryAddImplementableBaseExclusiveToInterfaceTypes(
+            typeSignature: typeSignature,
+            interfaces: interfaces,
+            args: args,
+            interopReferences: interopReferences))
         {
             goto FinalizeUserDefinedType;
         }
@@ -533,6 +546,62 @@ internal static partial class InteropTypeDiscovery
                 args: args))
             {
                 return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Tries to add the '[exclusiveto]' interfaces of any generated <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> implementable
+    /// base class that the current type derives from, so authored types get the right CCW interface entries.
+    /// </summary>
+    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the type to analyze.</param>
+    /// <param name="interfaces">The set of interfaces being populated.</param>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>Whether the new interfaces could be added.</returns>
+    private static bool TryAddImplementableBaseExclusiveToInterfaceTypes(
+        TypeSignature typeSignature,
+        TypeSignatureEquatableSet.Builder interfaces,
+        InteropGeneratorArgs args,
+        InteropReferences interopReferences)
+    {
+        foreach (TypeSignature baseSignature in typeSignature.EnumerateBaseTypes(interopReferences))
+        {
+            if (!baseSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? baseDefinition))
+            {
+                continue;
+            }
+
+            // Implementable base classes are the generated abstract 'ABI.<Ns>.<Class>' (and '<Class>Factory') types.
+            if (baseDefinition.Namespace is not Utf8String ns || !ns.AsSpan().StartsWith("ABI."u8))
+            {
+                continue;
+            }
+
+            // Expose every Windows Runtime interface the base implements (including '[exclusiveto]' ones,
+            // which the normal covariant walk filters out) so the author's overrides back the CCW.
+            foreach (InterfaceImplementation impl in baseDefinition.Interfaces)
+            {
+                if (impl.Interface?.ToReferenceTypeSignature() is not TypeSignature interfaceType)
+                {
+                    continue;
+                }
+
+                if (!interfaceType.IsWindowsRuntimeType(interopReferences))
+                {
+                    continue;
+                }
+
+                if (!TryAddExposedInterfaceType(
+                    typeSignature: typeSignature,
+                    interfaceType: interfaceType,
+                    interfaces: interfaces,
+                    args: args))
+                {
+                    return false;
+                }
             }
         }
 

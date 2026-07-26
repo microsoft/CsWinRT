@@ -351,6 +351,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTComponent)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTAuthorExclusiveToInterfaces)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExeTFM)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
@@ -412,6 +413,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
+        AuthorExclusiveToInterfaces="$(CsWinRTAuthorExclusiveToInterfaces)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
         DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"

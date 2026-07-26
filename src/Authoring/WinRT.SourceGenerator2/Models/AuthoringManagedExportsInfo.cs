@@ -8,8 +8,10 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// </summary>
 /// <param name="AssemblyName">The assembly name for the current assembly.</param>
 /// <param name="MergedManagedExportsTypeNames">The names of the merged managed exports types.</param>
+/// <param name="ActivationFactories">The user-authored activation factories discovered in this compilation.</param>
 /// <param name="Options">The options for the generator.</param>
 internal record AuthoringManagedExportsInfo(
     string AssemblyName,
     EquatableArray<string> MergedManagedExportsTypeNames,
+    EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories,
     AuthoringExportTypesOptions Options);

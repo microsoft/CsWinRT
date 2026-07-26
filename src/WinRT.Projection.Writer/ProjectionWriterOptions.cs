@@ -65,6 +65,16 @@ public sealed class ProjectionWriterOptions
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
+    /// Generate abstract base classes and marshallers so that runtime classes defined in the input
+    /// metadata can be implemented (authored) in C# by extending the generated abstract base class.
+    /// This is the 3.0 replacement for <see cref="PublicExclusiveTo"/>: instead of exposing every
+    /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author
+    /// extends a single generated <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> abstract base that declares all
+    /// required members as <c>abstract</c>.
+    /// </summary>
+    public bool AuthorExclusiveToInterfaces { get; init; }
+
+    /// <summary>
     /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }

@@ -116,6 +116,14 @@ internal sealed class Settings
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether abstract base classes and marshallers are generated so
+    /// runtime classes defined in the input metadata can be authored in C# by extending them. This is
+    /// the 3.0 replacement for <see cref="PublicExclusiveTo"/> (see the option of the same name on
+    /// <see cref="ProjectionWriterOptions"/>).
+    /// </summary>
+    public bool AuthorExclusiveToInterfaces { get; init; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the IDIC pattern is applied to <c>[ExclusiveTo]</c> interfaces.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }

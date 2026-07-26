@@ -58,12 +58,16 @@ public partial class AuthoringExportTypesGenerator
         {
             token.ThrowIfCancellationRequested();
 
+            // Discover any user-authored '[WindowsRuntimeActivationFactory]' factories in this compilation
+            EquatableArray<AuthoringActivationFactoryInfo> activationFactories = Helpers.GetActivationFactories(data.Compilation, token);
+
             // Skip going through references if merging is not enabled
             if (!data.Options.MergeReferencedActivationFactories)
             {
                 return new(
                     AssemblyName: data.Compilation.AssemblyName ?? "",
                     MergedManagedExportsTypeNames: [],
+                    ActivationFactories: activationFactories,
                     Options: data.Options);
             }
 
@@ -97,7 +101,25 @@ public partial class AuthoringExportTypesGenerator
             return new(
                 AssemblyName: data.Compilation.AssemblyName ?? "",
                 MergedManagedExportsTypeNames: builder.ToImmutable(),
+                ActivationFactories: activationFactories,
                 Options: data.Options);
+        }
+
+        /// <summary>
+        /// Gets the singleton field name used for a discovered activation factory.
+        /// </summary>
+        /// <param name="factory">The activation factory info.</param>
+        /// <returns>A stable, valid C# identifier for the factory's backing field.</returns>
+        private static string GetActivationFactoryFieldName(AuthoringActivationFactoryInfo factory)
+        {
+            System.Text.StringBuilder builder = new("_activationFactory_");
+
+            foreach (char c in factory.RuntimeClassName)
+            {
+                _ = builder.Append(char.IsLetterOrDigit(c) ? c : '_');
+            }
+
+            return builder.ToString();
         }
 
         /// <summary>
@@ -147,6 +169,17 @@ public partial class AuthoringExportTypesGenerator
             // Indent via a block, as we'll also need to emit custom logic for the activation factory
             using (writer.WriteBlock())
             {
+                // Emit a lazily-created singleton field for each user-authored activation factory
+                foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
+                {
+                    writer.WriteLine($"private static readonly global::{factory.FactoryTypeName} {GetActivationFactoryFieldName(factory)} = new();");
+                }
+
+                if (!info.ActivationFactories.IsEmpty)
+                {
+                    writer.WriteLine();
+                }
+
                 // The 'GetActivationFactory' method is the one that actually contains all the high-level logic for
                 // activation scenarios. If we have any native exports (see below), those would call this method too.
                 writer.WriteLine($$"""
@@ -160,6 +193,19 @@ public partial class AuthoringExportTypesGenerator
 
                 using (writer.WriteBlock())
                 {
+                    // Emit a check for each user-authored activation factory, returning its CCW pointer.
+                    foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
+                    {
+                        writer.WriteLine($$"""
+                            if (activatableClassId.SequenceEqual("{{factory.RuntimeClassName}}".AsSpan()))
+                            {
+                                return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged({{GetActivationFactoryFieldName(factory)}}).DetachThisPtrUnsafe();
+                            }
+                            """, isMultiline: true);
+
+                        writer.WriteLine();
+                    }
+
                     // Emit the unsafe accessor pointing to 'WinRT.Component.dll', where the actual activation code is located
                     if (info.Options.IsComponent)
                     {
