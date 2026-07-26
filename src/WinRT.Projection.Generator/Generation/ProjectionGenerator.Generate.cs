@@ -196,8 +196,10 @@ internal partial class ProjectionGenerator
             hasTypesToProject = true;
         }
 
-        // In non-component mode, scan reference assemblies to determine type includes.
-        // Component mode handles this above via .winmd scanning.        if (!isComponentMode)
+        // In non-component mode, scan reference assemblies to determine type includes. Component mode
+        // handles this above via .winmd scanning, and the authoring mode is scoped exclusively to the
+        // explicitly requested types (everything else already lives in the real projection).
+        if (!isComponentMode && !args.ImplementWinMDTypes)
         {
             foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
             {
@@ -269,8 +271,9 @@ internal partial class ProjectionGenerator
 
         // If we're not in Windows SDK mode, we exclude the Windows namespace to avoid
         // the merged projection from generating all namespaces when there are no projection references
-        // and thereby no includes / excludes passed to the writer.
-        if (!isWindowsSdkMode)
+        // and thereby no includes / excludes passed to the writer. The authoring mode is already scoped
+        // to an explicit set of types, so the extra exclude would only ever remove requested types.
+        if (!isWindowsSdkMode && !args.ImplementWinMDTypes)
         {
             excludes.Add("Windows");
         }
@@ -296,6 +299,7 @@ internal partial class ProjectionGenerator
             Exclude = excludes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
+            ImplementWinMDTypes = args.ImplementWinMDTypes,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };

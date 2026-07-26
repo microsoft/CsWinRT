@@ -436,44 +436,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
-    Implement WinMD types: generates ONLY the authoring surface (the implemented types' exclusive-to and
-    factory interfaces, plus the abstract 'ABI.<Ns>.<Class>' / 'ABI.<Ns>.<Class>Factory' base classes) into
-    the component's OWN assembly, leaving all projections completely unchanged. The author then implements
-    the type by extending the generated abstract base, which declares every required member as 'abstract'.
-    Opt in by listing the WinMD types you implement, each with the WinMD it is defined in:
-      <CsWinRTImplementWinMDType Include="Contoso.Widgets" WinMD="path\to\Types.winmd" />
-    (Include is a namespace/type filter; WinMD is the metadata file the type is defined in.)
-
-    Because this output is compiled into the user's project, it only uses APIs available on the
-    'WinRT.Runtime' reference assembly. The matching ABI/vtable code is produced at publish time by
-    '_RunCsWinRTComponentProjectionGenerator', which receives the same includes and .winmd inputs.
+    Note: the 'CsWinRTImplementWinMDType' item (implementing Windows Runtime types defined in an existing
+    .winmd) is handled by '_RunCsWinRTAuthoringProjectionGenerator' in
+    'Microsoft.Windows.CsWinRT.CsWinRTGen.targets', which builds the authoring projection assembly.
   -->
-  <PropertyGroup>
-    <_CsWinRTImplementWinMDTypesDir>$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)', 'cswinrt', 'authoring'))</_CsWinRTImplementWinMDTypesDir>
-  </PropertyGroup>
-
-  <Target Name="CsWinRTGenerateImplementWinMDTypes"
-          DependsOnTargets="_ResolveCsWinRToolsDirectory"
-          BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute"
-          Condition="$(CsWinRTEnabled) and '@(CsWinRTImplementWinMDType)' != ''">
-    <MakeDir Directories="$(_CsWinRTImplementWinMDTypesDir)" />
-
-    <RunCsWinRTProjectionRefGenerator
-        InputWinMDPaths="@(CsWinRTImplementWinMDType->'%(WinMD)'->Distinct())"
-        OutputDirectory="$(_CsWinRTImplementWinMDTypesDir.TrimEnd('\'))"
-        TargetFramework="$(CsWinRTExeTFM)"
-        IncludeNamespaces="@(CsWinRTImplementWinMDType)"
-        Verbose="$(CsWinRTMessageImportance.Equals('high'))"
-        ImplementWinMDTypes="true"
-        DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
-        CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
-        CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
-        ContinueOnError="$(CsWinRTContinueOnError)" />
-
-    <ItemGroup>
-      <Compile Include="$(_CsWinRTImplementWinMDTypesDir)*.cs" Exclude="@(Compile)" />
-    </ItemGroup>
-  </Target>
 
   <!--
     ============================================================

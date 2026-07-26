@@ -54,10 +54,19 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     public bool WindowsUIXamlProjection { get; init; }
 
     /// <summary>
+    /// Gets whether to emit only the authoring surface for the types listed in <see cref="AdditionalIncludes"/>:
+    /// their exclusive-to and factory interfaces, plus the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes a component extends to implement Windows Runtime
+    /// types defined in an existing <c>.winmd</c> (see the <c>CsWinRTImplementWinMDType</c> build item).
+    /// </summary>
+    [CommandLineArgumentName("--implement-winmd-types")]
+    public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
     /// Gets additional namespace/type includes to project, on top of the ones discovered from the input
-    /// references. This is used in component mode to project the Windows Runtime types the component
-    /// implements but does not define (see the <c>CsWinRTImplementWinMDType</c> build item), so that
-    /// their ABI and vtable code ends up in <c>WinRT.Component.dll</c>.
+    /// references. This carries the Windows Runtime types a component implements but does not define, both
+    /// for <see cref="ImplementWinMDTypes"/> and (in component mode) so that their ABI and vtable code ends
+    /// up in <c>WinRT.Component.dll</c>.
     /// </summary>
     [CommandLineArgumentName("--additional-includes")]
     public string[] AdditionalIncludes { get; init; } = [];

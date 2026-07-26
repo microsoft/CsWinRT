@@ -65,16 +65,16 @@ public sealed class ProjectionWriterOptions
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Emit only the authoring surface for runtime classes defined in the input metadata: their
-    /// exclusive-to / factory interfaces and the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes an author extends to implement them in C#.
-    /// This is the 3.0 replacement for <see cref="PublicExclusiveTo"/>: instead of exposing every
-    /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author extends
-    /// a single generated abstract base that declares all required members as <c>abstract</c>.
+    /// Emit only the authoring surface for the runtime classes selected by <see cref="Include"/>: their
+    /// exclusive-to and factory interfaces, plus the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes an author extends to implement Windows Runtime
+    /// types that are already defined in an existing <c>.winmd</c>. Every member the type requires is
+    /// declared <c>abstract</c>, so the compiler enforces a complete implementation.
     /// <para>
-    /// The output is scoped by <see cref="Include"/> and is meant to be compiled into the component's own
-    /// assembly, so all projections are left completely unchanged. Because that compilation only sees the
-    /// <c>WinRT.Runtime</c> reference assembly, the emitted code is restricted to reference-assembly APIs.
+    /// This is the 3.0 replacement for <see cref="PublicExclusiveTo"/>: instead of exposing every
+    /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author extends a
+    /// single generated abstract base. The result is compiled into a standalone authoring projection
+    /// assembly, so all projections are left completely unchanged.
     /// </para>
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }

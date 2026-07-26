@@ -180,6 +180,7 @@ internal static partial class ProjectionGenerator
             WindowsSdkOnly = args.WindowsSdkOnly,
             WindowsUIXamlProjection = args.WindowsUIXamlProjection,
             AdditionalIncludes = args.AdditionalIncludes,
+            ImplementWinMDTypes = args.ImplementWinMDTypes,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = null,
             Token = CancellationToken.None
@@ -272,6 +273,7 @@ internal static partial class ProjectionGenerator
             WindowsSdkOnly = args.WindowsSdkOnly,
             WindowsUIXamlProjection = args.WindowsUIXamlProjection,
             AdditionalIncludes = args.AdditionalIncludes,
+            ImplementWinMDTypes = args.ImplementWinMDTypes,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None

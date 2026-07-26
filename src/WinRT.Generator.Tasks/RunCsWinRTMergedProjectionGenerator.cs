@@ -89,6 +89,13 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public ITaskItem[]? AdditionalIncludes { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to emit only the authoring surface for <see cref="AdditionalIncludes"/>: their
+    /// exclusive-to and factory interfaces plus the abstract base classes a component extends to implement
+    /// Windows Runtime types defined in an existing .winmd.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; set; }
+
+    /// <summary>
     /// Gets or sets the maximum number of parallel tasks the projection writer is allowed to dispatch.
     /// </summary>
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
@@ -237,6 +244,11 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (AdditionalIncludes is { Length: > 0 })
         {
             AppendResponseFileCommand(args, "--additional-includes", string.Join(",", AdditionalIncludes.Select(static i => i.ItemSpec)));
+        }
+
+        if (ImplementWinMDTypes)
+        {
+            AppendResponseFileCommand(args, "--implement-winmd-types", "true");
         }
 
         AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());

@@ -66,10 +66,11 @@ shape is *already* defined in an existing `.winmd`. Opt in with the `CsWinRTImpl
 
 `Include` is a namespace or fully qualified type name, and `WinMD` is the metadata file defining it.
 
-CsWinRT then generates, **into this project only**, an abstract `ABI.<Namespace>.<Class>` base class per
-matched runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory methods and
-activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler guarantees
-none is missed. Implement the type by extending the base:
+CsWinRT then generates a small **authoring projection assembly** (`WinRT.Authoring.Projection.dll`) into this
+project's intermediate output and references it automatically. It contains an abstract `ABI.<Namespace>.<Class>`
+base class per matched runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory
+methods and activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler
+guarantees none is missed. Implement the type by extending the base:
 
 ```csharp
 public sealed class MyWidget : ABI.Contoso.Widgets.Widget
@@ -88,9 +89,10 @@ The generated base is separate from the projected class (which is often `sealed`
 conversion to it, so an instance can be passed anywhere the projected type is expected. Any additional
 (non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
 
-No projection assembly is modified by this mode: reference projections shipped in NuGet packages stay
-completely unchanged, and everything needed is generated into the implementing project and its
-publish-time `WinRT.Component.dll`.
+The Windows Runtime interfaces backing the type stay `internal` to the generated assembly, and all marshalling
+remains a CsWinRT implementation detail: the authoring assembly is built by CsWinRT itself, so nothing from the
+marshalling infrastructure is exposed to your code. No projection assembly is modified by this mode either, so
+reference projections shipped in NuGet packages stay completely unchanged.
 
 ## Runtime feature switches
 

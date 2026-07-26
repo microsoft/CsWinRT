@@ -118,8 +118,8 @@ internal sealed class Settings
     /// <summary>
     /// Gets or sets a value indicating whether only the authoring surface is emitted (the exclusive-to
     /// and factory interfaces plus the abstract <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> bases), scoped to the authored types, for compilation
-    /// into a component's own assembly while leaving all projections unchanged.
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> bases), scoped to the selected types, for compilation
+    /// into a standalone authoring projection assembly while leaving all projections unchanged.
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
 

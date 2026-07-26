@@ -98,13 +98,20 @@ internal static class AbiImplementableClassFactory
             EmitMergedProperties(writer, properties);
 
             // The conversion creates a CCW for the authored object and then resolves the projected RCW
-            // for it. It goes through a reference-assembly-visible helper, since this code is compiled
-            // into the component's own assembly (which never sees the runtime implementation assembly).
+            // for it (which goes through the usual 'ComWrappers' callback). This assembly is compiled by
+            // CsWinRT against the runtime implementation assembly, so it can marshal directly.
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                public static implicit operator {{projectedType}}?({{nameStripped}}? value)
+                public static unsafe implicit operator {{projectedType}}?({{nameStripped}}? value)
                 {
-                    return WindowsRuntimeAuthoredObjectMarshaller.ConvertToProjectedType<{{projectedType}}>(value);
+                    if (value is null)
+                    {
+                        return null;
+                    }
+
+                    using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
+
+                    return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManaged(objectReferenceValue.GetThisPtrUnsafe())!;
                 }
                 """);
         }
