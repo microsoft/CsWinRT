@@ -636,23 +636,11 @@ internal static class ClassFactory
             //
             // Sealed classes can never be a base, so they only need case 1; unsealed classes need a
             // parameterless ctor whenever they don't already emit one (which also covers case 1).
+            // Both checks live in 'ConstructorFactory' so they stay in sync with what it actually emits
+            // (in particular, they must agree on which factories and overloads are skipped as removed).
             if (type.IsSealed)
             {
-                bool hasRefModeCtors = false;
-                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
-                {
-                    AttributedType factory = kv.Value;
-
-                    // Activatable always emits at least one ctor; a composable factory only emits ctors
-                    // when it has methods (a composable factory with no methods emits none).
-                    if (factory.Activatable || (factory.Composable && factory.Type is not null && factory.Type.Methods.Count > 0))
-                    {
-                        hasRefModeCtors = true;
-                        break;
-                    }
-                }
-
-                if (!hasRefModeCtors)
+                if (!ConstructorFactory.EmitsAnyConstructor(type, context.Cache))
                 {
                     RefModeStubFactory.EmitSyntheticPrivateCtor(writer, typeName, isSealed: true);
                 }
