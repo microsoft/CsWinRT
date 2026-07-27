@@ -798,6 +798,56 @@ And this is another one"
         Int32 Value{ get; set; };
     }
 
+    // A constructor has no metadata row of its own: it is projected as a method on the activation
+    // (or composable) factory interface, and that method is where '[deprecated]' lives. These three
+    // classes cover the constructor cases the projection has to handle.
+
+    // A deprecated constructor is projected with '[Obsolete]'; a removed one is dropped from the
+    // projection while its factory vtable slot is preserved, so the constructor declared after it
+    // must still dispatch through the correct slot.
+    [default_interface]
+    runtimeclass DeprecatedConstructorClass
+    {
+        [deprecated("Use the three-argument constructor instead", deprecate, 1)]
+        DeprecatedConstructorClass(Int32 first);
+
+        [deprecated("The two-argument constructor is gone", remove, 1)]
+        DeprecatedConstructorClass(Int32 first, Int32 second);
+
+        DeprecatedConstructorClass(Int32 first, Int32 second, Int32 third);
+
+        Int32 Value{ get; };
+    }
+
+    // Every constructor is removed, so the (sealed, activatable) class cannot be constructed from the
+    // projection at all and instances come from the static factory method instead.
+    //
+    // Note: the constructor parameter cannot be named 'value'. MIDL projects a constructor as
+    // 'CreateInstance' on the activation factory interface and names its '[out, retval]' parameter
+    // 'value', so a user parameter of that name collides with it (MIDL5161).
+    [default_interface]
+    runtimeclass RemovedActivationClass
+    {
+        [deprecated("Use RemovedActivationClass.Create instead", remove, 1)]
+        RemovedActivationClass(Int32 initialValue);
+
+        static RemovedActivationClass Create(Int32 initialValue);
+
+        Int32 Value{ get; };
+    }
+
+    // As above, but unsealed, so its factory is composable rather than activatable.
+    [default_interface]
+    unsealed runtimeclass RemovedComposableClass
+    {
+        [deprecated("Use RemovedComposableClass.Create instead", remove, 1)]
+        RemovedComposableClass();
+
+        static RemovedComposableClass Create(Int32 initialValue);
+
+        Int32 Value{ get; };
+    }
+
     // Compile time test for sub windows namespace
     namespace Windows
     {
