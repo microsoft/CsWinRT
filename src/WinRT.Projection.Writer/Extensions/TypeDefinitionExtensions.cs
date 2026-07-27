@@ -218,6 +218,30 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Returns whether the type (an activation or composable factory interface) declares at least one
+        /// method that still projects to a constructor, i.e. one that is neither special nor marked as
+        /// removed (<c>[Deprecated(DeprecationType.Remove)]</c>).
+        /// </summary>
+        /// <remarks>
+        /// A factory interface with no such methods contributes no constructors to the projected class, so
+        /// (in reference-projection mode) the class needs a synthetic non-public parameterless constructor
+        /// to suppress the C# compiler's implicit public default constructor.
+        /// </remarks>
+        /// <returns><see langword="true"/> if the factory interface has a non-removed factory method; otherwise <see langword="false"/>.</returns>
+        public bool HasActivatableFactoryMethod()
+        {
+            foreach (MethodDefinition m in type.GetNonSpecialMethods())
+            {
+                if (!m.IsRemoved)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Returns whether the type has a base type that is not <see cref="object"/>
         /// (i.e. the type derives from a real WinRT/.NET class).
         /// </summary>
