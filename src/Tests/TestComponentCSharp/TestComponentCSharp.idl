@@ -656,6 +656,24 @@ And this is another one"
         void f();
     }
 
+    [attributeusage(target_runtimeclass, target_interface, target_struct, target_enum, target_delegate, target_field, target_property, target_method, target_event)]
+    [attributename("attr_repeatable")]
+    [allowmultiple]
+    attribute MyRepeatableAttribute
+    {
+        String Name;
+        String Group;
+    }
+
+    [attr_repeatable("Normal", "CommonStates")]
+    [attr_repeatable("PointerOver", "CommonStates")]
+    [attr_repeatable("Pressed", "CommonStates")]
+    [attr_repeatable("Horizontal", "OrientationStates")]
+    runtimeclass RepeatedAttributeTest
+    {
+        void f();
+    }
+
     [default_interface]
     runtimeclass CustomEquals
     {

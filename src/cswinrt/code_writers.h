@@ -1816,9 +1816,25 @@ remove => %;
         return w.write_temp("%", bind<write_platform_attribute>(type.CustomAttribute()));
     }
 
+    // Determines whether the metadata definition of the given attribute allows the attribute to be
+    // applied more than once to the same target. Repeated attribute instances are only projected
+    // when this is the case, as projecting them otherwise would not compile.
+    bool is_allow_multiple_attribute(CustomAttribute const& attribute)
+    {
+        auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
+        auto attribute_type = attribute.get_cache().find(attribute_namespace, attribute_name);
+        if (!attribute_type)
+        {
+            return false;
+        }
+        return has_attribute(attribute_type, "Windows.Foundation.Metadata"sv, "AllowMultipleAttribute"sv);
+    }
+
     void write_custom_attributes(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes, bool enable_platform_attrib)
     {
-        std::map<std::string, std::vector<std::string>> attributes;
+        // Each attribute maps to the list of its projected instances (an attribute can be applied
+        // multiple times to the same target when its definition is marked as 'AllowMultiple').
+        std::map<std::string, std::vector<std::vector<std::string>>> attributes;
         bool allow_multiple = false;
         for (auto&& attribute : custom_attributes)
         {
@@ -1834,10 +1850,14 @@ remove => %;
             // ContractVersion attribute ==> SupportedOSPlatform attribute
             if (enable_platform_attrib && attribute_name == "ContractVersion" && signature.FixedArgs().size() == 2)
             {
-                auto platform = get_platform(w, signature, params);
-                if (!platform.empty())
+                auto& platform_attributes = attributes["System.Runtime.Versioning.SupportedOSPlatform"];
+                if (platform_attributes.empty())
                 {
-                    attributes["System.Runtime.Versioning.SupportedOSPlatform"].push_back(platform);
+                    auto platform = get_platform(w, signature, params);
+                    if (!platform.empty())
+                    {
+                        platform_attributes.push_back({ platform });
+                    }
                 }
             }
             // Skip metadata attributes without a projection
@@ -1854,22 +1874,33 @@ remove => %;
                     continue;
                 }
             }
-            attributes[attribute_full] = std::move(params);
+            auto& attribute_instances = attributes[attribute_full];
+            if (!attribute_instances.empty() && !is_allow_multiple_attribute(attribute))
+            {
+                continue;
+            }
+            attribute_instances.push_back(std::move(params));
         }
         if (auto&& usage = attributes.find("System.AttributeUsage"); usage != attributes.end())
         {
-            usage->second.push_back(w.write_temp("AllowMultiple = %", allow_multiple ? "true" : "false"));
+            for (auto&& usage_params : usage->second)
+            {
+                usage_params.push_back(w.write_temp("AllowMultiple = %", allow_multiple ? "true" : "false"));
+            }
         }
 
         for (auto&& attribute : attributes)
         {
-            w.write("[global::");
-            w.write(attribute.first);
-            if (!attribute.second.empty())
+            for (auto&& attribute_params : attribute.second)
             {
-                w.write("(%)", bind_list(", ", attribute.second));
+                w.write("[global::");
+                w.write(attribute.first);
+                if (!attribute_params.empty())
+                {
+                    w.write("(%)", bind_list(", ", attribute_params));
+                }
+                w.write("]\n");
             }
-            w.write("]\n");
         }
     }
 

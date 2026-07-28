@@ -3700,6 +3700,22 @@ namespace UnitTest
             custom.f();
         }
 
+        [Fact]
+        public void TestRepeatedAttributesAreProjected()
+        {
+            var attributes = typeof(RepeatedAttributeTest)
+                .GetCustomAttributes(typeof(MyRepeatableAttribute), false)
+                .Cast<MyRepeatableAttribute>()
+                .Select(attribute => (attribute.Name, attribute.Group))
+                .ToArray();
+
+            Assert.Equal(4, attributes.Length);
+            Assert.Contains(("Normal", "CommonStates"), attributes);
+            Assert.Contains(("PointerOver", "CommonStates"), attributes);
+            Assert.Contains(("Pressed", "CommonStates"), attributes);
+            Assert.Contains(("Horizontal", "OrientationStates"), attributes);
+        }
+
         void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)
         {
         }
