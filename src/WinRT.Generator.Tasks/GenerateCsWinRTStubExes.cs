@@ -442,20 +442,20 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         }
 
         // Prepare paths for the intermediate working directory for this stub
-        string stubIntermediateDir = Path.Combine(IntermediateOutputDirectory!, stubName);
+        string stubIntermediateDir = Path.Combine(IntermediateOutputDirectory, stubName);
         string sourceFileName = stubName + ".c";
         string sourceFilePath = Path.Combine(stubIntermediateDir, sourceFileName);
         string binaryFileName = stubName + ".exe";
         string binaryOutputFilePath = Path.Combine(stubIntermediateDir, binaryFileName);
-        string binaryDestinationFilePath = Path.Combine(DestinationDirectory!, binaryFileName);
+        string binaryDestinationFilePath = Path.Combine(DestinationDirectory, binaryFileName);
 
         Log.LogMessage(MessageImportance.Normal, "Generating stub .exe '{0}'", stubName);
 
         try
         {
             // Ensure the intermediate and destination directories exist
-            Directory.CreateDirectory(stubIntermediateDir);
-            Directory.CreateDirectory(DestinationDirectory!);
+            _ = Directory.CreateDirectory(stubIntermediateDir);
+            _ = Directory.CreateDirectory(DestinationDirectory);
 
             // Write the source for this stub (priority: SourceText > SourceFile > DefaultSourceFilePath)
             if (!string.IsNullOrEmpty(sourceText))
@@ -468,7 +468,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             }
             else
             {
-                File.Copy(DefaultSourceFilePath!, sourceFilePath, overwrite: true);
+                File.Copy(DefaultSourceFilePath, sourceFilePath, overwrite: true);
             }
 
             // Delete any previously-generated broken .exe in the destination (see https://github.com/dotnet/runtime/issues/111313)
@@ -541,7 +541,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         StringBuilder args = new();
 
         // Hide the copyright banner (https://learn.microsoft.com/cpp/build/reference/nologo-suppress-startup-banner-c-cpp)
-        args.Append("/nologo ");
+        _ = args.Append("/nologo ");
 
         // If not using environmental tools, pass the paths to the required include folders
         if (!UseEnvironmentalTools)
@@ -556,10 +556,10 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         //   - Dynamically link UCRT (the OS-provided C runtime), matching Native AOT behavior.
         //   We start with /MT[d] for static linking, then override the UCRT portion below.
         // See: https://learn.microsoft.com/cpp/build/reference/md-mt-ld-use-run-time-library
-        args.Append(IsDebugConfiguration ? "/MTd " : "/MT ");
+        _ = args.Append(IsDebugConfiguration ? "/MTd " : "/MT ");
 
         // Optimize for speed (https://learn.microsoft.com/cpp/build/reference/o1-o2-minimize-size-maximize-speed)
-        args.Append("/O2 ");
+        _ = args.Append("/O2 ");
 
         // Source file and native library
         AppendQuotedPath(args, sourceFilePath);
@@ -574,60 +574,50 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         }
 
         // Start linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax)
-        args.Append("/link ");
+        _ = args.Append("/link ");
 
         // Hide the copyright banner for the linker
-        args.Append("/NOLOGO ");
+        _ = args.Append("/NOLOGO ");
 
         // Embed a manifest if specified, otherwise suppress manifest generation.
         // See: https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest
-        if (!string.IsNullOrEmpty(win32Manifest))
-        {
-            args.Append("/MANIFEST:EMBED /MANIFESTINPUT:\"").Append(win32Manifest).Append("\" ");
-        }
-        else
-        {
-            args.Append("/MANIFEST:NO ");
-        }
+        _ = args.Append(string.IsNullOrEmpty(win32Manifest)
+            ? "/MANIFEST:NO "
+            : $"/MANIFEST:EMBED /MANIFESTINPUT:\"{win32Manifest}\" ");
 
         // Switch UCRT from static to dynamic linking to reduce binary size (~98 KB → ~20 KB).
         // See: https://learn.microsoft.com/cpp/build/reference/defaultlib-specify-default-library
         // See: https://learn.microsoft.com/cpp/build/reference/nodefaultlib-ignore-libraries
-        if (IsDebugConfiguration)
-        {
-            args.Append("/NODEFAULTLIB:libucrtd.lib /DEFAULTLIB:ucrtd.lib ");
-        }
-        else
-        {
-            args.Append("/NODEFAULTLIB:libucrt.lib /DEFAULTLIB:ucrt.lib ");
-        }
+        _ = args.Append(IsDebugConfiguration
+            ? "/NODEFAULTLIB:libucrtd.lib /DEFAULTLIB:ucrtd.lib "
+            : "/NODEFAULTLIB:libucrt.lib /DEFAULTLIB:ucrt.lib ");
 
         // Skip incremental linking (https://learn.microsoft.com/cpp/build/reference/incremental-link-incrementally)
-        args.Append("/INCREMENTAL:NO ");
+        _ = args.Append("/INCREMENTAL:NO ");
 
         // Enable COMDAT folding and unreferenced code removal (https://learn.microsoft.com/cpp/build/reference/opt-optimizations)
-        args.Append("/OPT:ICF /OPT:REF ");
+        _ = args.Append("/OPT:ICF /OPT:REF ");
 
         // Set the AppContainer bit for UWP apps (https://learn.microsoft.com/cpp/build/reference/appcontainer-windows-store-app)
         if (appContainer)
         {
-            args.Append("/APPCONTAINER ");
+            _ = args.Append("/APPCONTAINER ");
         }
 
         // Set the subsystem type (https://learn.microsoft.com/cpp/build/reference/subsystem-specify-subsystem)
-        args.Append(string.Equals(outputType, "WinExe", StringComparison.OrdinalIgnoreCase)
+        _ = args.Append(string.Equals(outputType, "WinExe", StringComparison.OrdinalIgnoreCase)
             ? "/SUBSYSTEM:WINDOWS "
             : "/SUBSYSTEM:CONSOLE ");
 
         // Always use 'wmainCRTStartup' as the entry point, matching Native AOT behavior.
         // This allows using 'wmain' for all application types, including WinExe.
         // See: https://learn.microsoft.com/cpp/build/reference/entry-entry-point-symbol
-        args.Append("/ENTRY:wmainCRTStartup ");
+        _ = args.Append("/ENTRY:wmainCRTStartup ");
 
         // Enable CFG if requested (https://learn.microsoft.com/cpp/build/reference/guard-enable-control-flow-guard)
         if (ControlFlowGuard)
         {
-            args.Append("/guard:cf ");
+            _ = args.Append("/guard:cf ");
         }
 
         // Configure CET shadow stack compatibility (https://learn.microsoft.com/cpp/build/reference/cetcompat)
@@ -636,14 +626,14 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
 
         if (isX64)
         {
-            args.Append(cetEnabled ? "/CETCOMPAT " : "/CETCOMPAT:NO ");
+            _ = args.Append(cetEnabled ? "/CETCOMPAT " : "/CETCOMPAT:NO ");
         }
 
         // Enable EH continuation metadata if CET is enabled and CFG is active, matching Native AOT.
         // See: https://learn.microsoft.com/cpp/build/reference/guard-enable-eh-continuation-metadata
         if (cetEnabled && isX64 && ControlFlowGuard)
         {
-            args.Append("/guard:ehcont ");
+            _ = args.Append("/guard:ehcont ");
         }
 
         return args.ToString().TrimEnd();
@@ -660,7 +650,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     {
         ProcessStartInfo startInfo = new()
         {
-            FileName = ClExePath!,
+            FileName = ClExePath,
             Arguments = arguments,
             WorkingDirectory = workingDirectory,
             UseShellExecute = false,
@@ -673,7 +663,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         if (!string.IsNullOrEmpty(AdditionalPath))
         {
             string currentPath = startInfo.EnvironmentVariables.ContainsKey("PATH")
-                ? startInfo.EnvironmentVariables["PATH"]!
+                ? startInfo.EnvironmentVariables["PATH"]
                 : "";
 
             startInfo.EnvironmentVariables["PATH"] = currentPath + ";" + AdditionalPath;
@@ -700,7 +690,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             {
                 if (e.Data is not null)
                 {
-                    stdoutBuilder.AppendLine(e.Data);
+                    _ = stdoutBuilder.AppendLine(e.Data);
                 }
             };
 
@@ -709,7 +699,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             {
                 if (e.Data is not null)
                 {
-                    stderrBuilder.AppendLine(e.Data);
+                    _ = stderrBuilder.AppendLine(e.Data);
                 }
             };
 
@@ -774,12 +764,9 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     {
         string value = item.GetMetadata(metadataName);
 
-        if (string.IsNullOrEmpty(value))
-        {
-            return defaultValue;
-        }
-
-        return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+        return string.IsNullOrEmpty(value)
+            ? defaultValue
+            : string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -789,7 +776,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <param name="path">The path to quote.</param>
     private static void AppendQuotedPath(StringBuilder args, string path)
     {
-        args.Append('"').Append(path).Append("\" ");
+        _ = args.Append('"').Append(path).Append("\" ");
     }
 
     /// <summary>
@@ -800,7 +787,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <param name="path">The path to quote.</param>
     private static void AppendQuoted(StringBuilder args, string flag, string path)
     {
-        args.Append(flag).Append(" \"").Append(path).Append("\" ");
+        _ = args.Append(flag).Append(" \"").Append(path).Append("\" ");
     }
 
     /// <summary>
@@ -810,6 +797,6 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <param name="libDir">The library directory path.</param>
     private static void AppendQuotedWildcard(StringBuilder args, string libDir)
     {
-        args.Append('"').Append(Path.Combine(libDir, "*.lib")).Append("\" ");
+        _ = args.Append('"').Append(Path.Combine(libDir, "*.lib")).Append("\" ");
     }
 }
