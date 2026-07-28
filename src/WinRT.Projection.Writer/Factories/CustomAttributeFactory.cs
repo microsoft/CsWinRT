@@ -353,15 +353,20 @@ internal static class CustomAttributeFactory
     }
 
     /// <summary>
-    /// Writes any custom attributes (e.g. <c>[Obsolete]</c>, <c>[Deprecated]</c>,
-    /// <c>[SupportedOSPlatform]</c>) carried over from <paramref name="member"/> to the projection.
+    /// Writes the Windows Runtime metadata custom attributes carried over from <paramref name="member"/>
+    /// to the projection (e.g. <c>[AttributeUsage]</c>, and — in reference projections only —
+    /// <c>[Overload]</c>, <c>[Experimental]</c>, <c>[ContractVersion]</c>, plus the synthesized
+    /// <c>[SupportedOSPlatform]</c>).
     /// </summary>
     /// <remarks>
     /// Attributes are emitted in metadata order, one line per application. Windows Runtime attributes
     /// marked <c>[allowmultiple]</c> can be applied several times to the same member, so every
     /// application is carried over. The <c>[AllowMultiple]</c> metadata attribute itself is not
     /// projected: it is folded into the <c>AllowMultiple</c> named argument of the projected
-    /// <c>[AttributeUsage]</c>, matching how .NET models repeatability.
+    /// <c>[AttributeUsage]</c>, matching how .NET models repeatability. Which applications survive is
+    /// decided by <see cref="ShouldCarryOverAttribute"/>: implementation projections keep only
+    /// <c>[AttributeUsage]</c>, since every other metadata attribute is dead, untrimmable weight in an
+    /// assembly that is only ever loaded at runtime (see that method for the full rationale).
     /// </remarks>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -404,11 +409,12 @@ internal static class CustomAttributeFactory
                 continue;
             }
 
-            string fullAttrName = strippedName == "AttributeUsage"
-                ? AttributeUsageName
-                : ns + "." + strippedName;
-
-            List<string> args = WriteCustomAttributeArgs(attr);
+            // '[AllowMultiple]' is never carried over itself: it is observed here (in both projection
+            // modes) and folded into the projected '[AttributeUsage]' after all attributes are seen.
+            if (ns == WindowsFoundationMetadata && strippedName == "AllowMultiple")
+            {
+                allowMultiple = true;
+            }
 
             // '[SupportedOSPlatform]' takes a single platform, so only the first resolved one is emitted
             // (matching the member-level behavior in 'WritePlatformAttributeBody'). A member can carry
@@ -425,31 +431,21 @@ internal static class CustomAttributeFactory
                 }
             }
 
-            // Skip metadata attributes without a projection
-            if (ns == WindowsFoundationMetadata)
-            {
-                if (strippedName == "AllowMultiple")
-                {
-                    allowMultiple = true;
-                }
+            bool isAttributeUsage = strippedName == "AttributeUsage";
 
-                // ContractVersion and ApiContract are only emitted for reference assemblies
-                if (strippedName is "ContractVersion" or "ApiContract")
-                {
-                    if (!context.Settings.ReferenceProjection)
-                    {
-                        continue;
-                    }
-                }
-                else if (strippedName is not ("DefaultOverload" or "Overload" or "AttributeUsage" or "Experimental"))
-                {
-                    continue;
-                }
+            if (!ShouldCarryOverAttribute(context, ns, strippedName, isAttributeUsage))
+            {
+                continue;
             }
+
+            // Only format the arguments of attributes that are actually carried over. Implementation
+            // projections drop almost everything, and they are the hot publish-time path.
+            List<string> args = WriteCustomAttributeArgs(attr);
+            string fullAttrName = isAttributeUsage ? AttributeUsageName : ns + "." + strippedName;
 
             attributes.Add((fullAttrName, args));
 
-            if (fullAttrName == AttributeUsageName)
+            if (isAttributeUsage)
             {
                 attributeUsageArgs = args;
             }
@@ -486,6 +482,53 @@ internal static class CustomAttributeFactory
 
             writer.WriteLine("]");
         }
+    }
+
+    /// <summary>
+    /// Returns whether a Windows Runtime metadata attribute application should be carried over to the projection.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="ns">The namespace of the attribute type.</param>
+    /// <param name="strippedName">The name of the attribute type, with any <c>Attribute</c> suffix removed.</param>
+    /// <param name="isAttributeUsage">Whether the application is an <c>[AttributeUsage]</c> attribute.</param>
+    /// <returns>Whether the attribute application should be emitted.</returns>
+    /// <remarks>
+    /// <para>
+    /// <c>[AttributeUsage]</c> is carried over in both projection modes. It is not Windows Runtime
+    /// metadata being preserved for tooling, but the .NET modeling of the attribute type's own usage
+    /// contract: its <c>AllowMultiple</c> and <c>Inherited</c> arguments drive
+    /// <c>Attribute.GetCustomAttributes(inherit: true)</c> semantics at runtime for user code applying a
+    /// projected attribute. It is also negligible in size (34 applications across the entire Windows SDK).
+    /// </para>
+    /// <para>
+    /// Every other metadata attribute is carried over into reference projections only. Implementation
+    /// projections are only ever loaded at runtime, never compiled against (user code compiles against
+    /// the reference projection instead), so attributes whose only consumers are compilers, analyzers
+    /// and metadata tooling are pure dead weight there. Attribute blobs cannot be trimmed by ILLink or
+    /// ILC either, so anything carried over is permanent, unremovable metadata in the shipped app.
+    /// </para>
+    /// </remarks>
+    private static bool ShouldCarryOverAttribute(ProjectionEmitContext context, string ns, string strippedName, bool isAttributeUsage)
+    {
+        if (isAttributeUsage)
+        {
+            return true;
+        }
+
+        if (!context.Settings.ReferenceProjection)
+        {
+            return false;
+        }
+
+        // Metadata attributes without a projected form are always dropped
+        if (ns == WindowsFoundationMetadata)
+        {
+            return strippedName is "ContractVersion" or "ApiContract" or "DefaultOverload" or "Overload" or "Experimental";
+        }
+
+        // Attributes from any other namespace (e.g. '[Microsoft.UI.Xaml.TemplatePart]') are themselves
+        // projected types, so their applications are carried over as-is
+        return true;
     }
 
     /// <summary>
