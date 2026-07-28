@@ -72,8 +72,8 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     public virtual void* GetOrCreateComInterfaceForObject(object value)
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static NotSupportedException GetNotSupportedException()
-            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation does not support '{nameof(GetOrCreateComInterfaceForObject)}'.");
+        NotSupportedException GetNotSupportedException()
+            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation ('{GetType()}') does not support '{nameof(GetOrCreateComInterfaceForObject)}'.");
 
         throw GetNotSupportedException();
     }
@@ -106,11 +106,12 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     /// <seealso cref="ComWrappers.ComputeVtables"/>
     public virtual ComWrappers.ComInterfaceEntry* ComputeVtables(out int count)
     {
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static NotSupportedException GetNotSupportedException()
-            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation does not support '{nameof(ComputeVtables)}'.");
+        // This method does not throw an exception like the others in this type. In case of failure,
+        // the code in 'WindowsRuntimeMarshallingInfo' will detect the returned 'null' value and
+        // throw an exception from there, so additional debugging info can be included as well.
+        count = 0;
 
-        throw GetNotSupportedException();
+        return null;
     }
 
     /// <summary>
@@ -132,8 +133,8 @@ public abstract unsafe class WindowsRuntimeComWrappersMarshallerAttribute : Attr
     public virtual object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static NotSupportedException GetNotSupportedException()
-            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation does not support '{nameof(CreateObject)}'.");
+        NotSupportedException GetNotSupportedException()
+            => new($"The current '{nameof(WindowsRuntimeComWrappersMarshallerAttribute)}' implementation ('{GetType()}') does not support '{nameof(CreateObject)}'.");
 
         throw GetNotSupportedException();
     }

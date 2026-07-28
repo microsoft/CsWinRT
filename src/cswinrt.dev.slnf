@@ -47,6 +47,7 @@
       "Tests\\FunctionalTests\\DynamicInterfaceCasting\\DynamicInterfaceCasting.csproj",
       "Tests\\FunctionalTests\\Events\\Events.csproj",
       "Tests\\FunctionalTests\\JsonValueFunctionCalls\\JsonValueFunctionCalls.csproj",
+      "Tests\\FunctionalTests\\NativeExposedType\\NativeExposedType.csproj",
       "Tests\\FunctionalTests\\NonWinRT\\NonWinRT.csproj",
       "Tests\\FunctionalTests\\OptInMode\\OptInMode.csproj",
       "Tests\\FunctionalTests\\Structs\\Structs.csproj",

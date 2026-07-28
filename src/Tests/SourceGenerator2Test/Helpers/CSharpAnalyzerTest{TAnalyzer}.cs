@@ -22,6 +22,11 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     where TAnalyzer : DiagnosticAnalyzer, new()
 {
     /// <summary>
+    /// The name of the additional project standing in for a Windows Runtime reference projection assembly.
+    /// </summary>
+    private const string ReferenceProjectionName = "ReferenceProjection";
+
+    /// <summary>
     /// Whether to enable unsafe blocks.
     /// </summary>
     private readonly bool _allowUnsafeBlocks;
@@ -60,12 +65,21 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     /// <param name="allowUnsafeBlocks">Whether to enable unsafe blocks.</param>
     /// <param name="languageVersion">The language version to use to run the test.</param>
     /// <param name="isCsWinRTComponent">Whether to set the <c>"CsWinRTComponent"</c> MSBuild property to <see langword="true"/>.</param>
+    /// <param name="generatedSource">An additional source file to add to the compilation as generated code, or <see langword="null"/> to not add one.</param>
+    /// <param name="referenceProjectionSource">
+    /// An additional source file to compile into a separate project that is marked as a Windows Runtime reference projection
+    /// (via <c>[assembly: WindowsRuntimeReferenceAssembly]</c>) and referenced by the test project, or <see langword="null"/>
+    /// to not add one. This is used to validate scenarios involving projected Windows Runtime types, which are always
+    /// consumed from reference projections.
+    /// </param>
     public static Task VerifyAnalyzerAsync(
         string source,
         ReadOnlySpan<DiagnosticResult> expectedDiagnostics = default,
         bool allowUnsafeBlocks = true,
         LanguageVersion languageVersion = LanguageVersion.CSharp14,
-        bool isCsWinRTComponent = false)
+        bool isCsWinRTComponent = false,
+        string generatedSource = null,
+        string referenceProjectionSource = null)
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(allowUnsafeBlocks, languageVersion) { TestCode = source };
 
@@ -74,6 +88,32 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(CoreApplication).Assembly.Location));
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Button).Assembly.Location));
         test.TestState.ExpectedDiagnostics.AddRange([.. expectedDiagnostics]);
+
+        // Add an additional source file that is treated as generated code (the '.g.cs' suffix is recognized by the
+        // analysis framework). This is used to validate that diagnostics are suppressed for applications of the
+        // attribute that appear in generated code, when the analyzer opts out of generated code analysis.
+        if (generatedSource is not null)
+        {
+            test.TestState.Sources.Add(("NativeExposedTypes.g.cs", generatedSource));
+        }
+
+        // Add a separate project standing in for a Windows Runtime reference projection assembly, which is how all
+        // projected types are actually consumed. Such assemblies are marked with '[assembly: WindowsRuntimeReferenceAssembly]',
+        // and they do not carry any of the per-type markers (those are implementation details that are stripped from them).
+        if (referenceProjectionSource is not null)
+        {
+            ProjectState projectState = test.TestState.AdditionalProjects[ReferenceProjectionName];
+
+            projectState.ReferenceAssemblies = ReferenceAssemblies.Net.Net100;
+            projectState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location));
+            projectState.Sources.Add(($"{ReferenceProjectionName}.cs", $"""
+                [assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
+
+                {referenceProjectionSource}
+                """));
+
+            test.TestState.AdditionalProjectReferences.Add(ReferenceProjectionName);
+        }
 
         // Configure the desired MSBuild properties via a global analyzer config file
         if (isCsWinRTComponent)
