@@ -5091,39 +5091,53 @@ namespace UnitTest
             }
         }
 
-        // Every application of an '[allowmultiple]' Windows Runtime attribute has to be carried over to
-        // the projection, not just the last one. See https://github.com/microsoft/CsWinRT/issues/2491.
+        // Windows Runtime metadata attributes are deliberately not carried over into implementation
+        // projections: nothing consumes them there (user code, compilers, analyzers and metadata tooling
+        // all see the reference projection instead), and attribute blobs cannot be trimmed by ILLink or
+        // ILC, so they would be permanent metadata in every shipped app. At runtime the projected types
+        // resolve through the forwarder assembly into the implementation projection, so that is what
+        // reflection observes here. The reference projection still carries every application over (see
+        // https://github.com/microsoft/CsWinRT/issues/2491); that side is covered by 'ProjectionWriterTest',
+        // which can assert on both projection modes.
         [TestMethod]
-        public void TestRepeatedAttributesAreProjected()
+        public void TestWindowsRuntimeAttributesAreNotProjectedInImplementationProjection()
         {
-            // The '.winmd' does not preserve the declaration order from the '.idl', so the applications
-            // are sorted by name to make the comparison deterministic. The two identical entries are
-            // intentional: MIDL allows them, and both have to survive the projection.
-            (string Name, string GroupName)[] applications = typeof(RepeatedAttributeTest)
-                .GetCustomAttributes<MyRepeatableAttribute>()
-                .Select(static attribute => (attribute.Name, attribute.GroupName))
-                .OrderBy(static application => application.Name, StringComparer.Ordinal)
-                .ToArray();
+            // 'RepeatedAttributeTest' is decorated in the '.idl' with four '[attr_repeatable]' applications
+            // and one '[attr_string]' application. None of them survive into the implementation projection.
+            Assert.AreEqual(0, typeof(RepeatedAttributeTest).GetCustomAttributes<MyRepeatableAttribute>().Count());
+            Assert.AreEqual(0, typeof(RepeatedAttributeTest).GetCustomAttributes<MyStringAttribute>().Count());
 
-            CollectionAssert.AreEqual(
-                new[]
+            // Matching on the namespace rather than on those two types also acts as a blanket guard, so any
+            // future metadata attribute that starts leaking in fails here too. The marshalling attributes
+            // CsWinRT needs at runtime live in the 'ABI.*' namespaces, so they are deliberately not matched.
+            List<string> projectedAttributes = [];
+            bool hasWindowsRuntimeType = false;
+
+            foreach (CustomAttributeData data in typeof(RepeatedAttributeTest).GetCustomAttributesData())
+            {
+                string attributeName = data.AttributeType.FullName ?? string.Empty;
+
+                if (attributeName.StartsWith("TestComponentCSharp.", StringComparison.Ordinal))
                 {
-                    ("Horizontal", "OrientationStates"),
-                    ("Horizontal", "OrientationStates"),
-                    ("Normal", "CommonStates"),
-                    ("PointerOver", "CommonStates")
-                },
-                applications);
+                    projectedAttributes.Add(attributeName);
+                }
+                else if (attributeName == "WindowsRuntime.WindowsRuntimeTypeAttribute")
+                {
+                    hasWindowsRuntimeType = true;
+                }
+            }
 
-            // An attribute that is not repeatable is still projected exactly once
-            MyStringAttribute[] singleApplication = typeof(RepeatedAttributeTest).GetCustomAttributes<MyStringAttribute>().ToArray();
+            Assert.AreEqual(0, projectedAttributes.Count, $"Unexpected projected attributes: {string.Join(", ", projectedAttributes)}");
 
-            Assert.AreEqual(1, singleApplication.Length);
-            Assert.AreEqual("some other attribute in between", singleApplication[0].Content);
+            // The CsWinRT marker driving marshalling must still be applied (guards against over-stripping)
+            Assert.IsTrue(hasWindowsRuntimeType, "'[WindowsRuntimeType]' should still be applied in the implementation projection.");
         }
 
         // The Windows Runtime '[allowmultiple]' attribute has no .NET counterpart: it maps to the
-        // 'AllowMultiple' named argument of '[AttributeUsage]' on the projected attribute type.
+        // 'AllowMultiple' named argument of '[AttributeUsage]' on the projected attribute type. Unlike the
+        // carried-over metadata attributes above, '[AttributeUsage]' is kept in both projection modes: it
+        // models the projected attribute type's own usage contract, which drives
+        // 'Attribute.GetCustomAttributes(inherit: true)' semantics at runtime.
         [TestMethod]
         public void TestAllowMultipleIsProjectedOnAttributeUsage()
         {
