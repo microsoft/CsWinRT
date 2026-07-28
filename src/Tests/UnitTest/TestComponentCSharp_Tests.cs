@@ -5090,5 +5090,51 @@ namespace UnitTest
                 _ = Marshal.Release((nint)ccw);
             }
         }
+
+        // Every application of an '[allowmultiple]' Windows Runtime attribute has to be carried over to
+        // the projection, not just the last one. See https://github.com/microsoft/CsWinRT/issues/2491.
+        [TestMethod]
+        public void TestRepeatedAttributesAreProjected()
+        {
+            // The '.winmd' does not preserve the declaration order from the '.idl', so the applications
+            // are sorted by name to make the comparison deterministic. The two identical entries are
+            // intentional: MIDL allows them, and both have to survive the projection.
+            (string Name, string GroupName)[] applications = typeof(RepeatedAttributeTest)
+                .GetCustomAttributes<MyRepeatableAttribute>()
+                .Select(static attribute => (attribute.Name, attribute.GroupName))
+                .OrderBy(static application => application.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    ("Horizontal", "OrientationStates"),
+                    ("Horizontal", "OrientationStates"),
+                    ("Normal", "CommonStates"),
+                    ("PointerOver", "CommonStates")
+                },
+                applications);
+
+            // An attribute that is not repeatable is still projected exactly once
+            MyStringAttribute[] singleApplication = typeof(RepeatedAttributeTest).GetCustomAttributes<MyStringAttribute>().ToArray();
+
+            Assert.AreEqual(1, singleApplication.Length);
+            Assert.AreEqual("some other attribute in between", singleApplication[0].Content);
+        }
+
+        // The Windows Runtime '[allowmultiple]' attribute has no .NET counterpart: it maps to the
+        // 'AllowMultiple' named argument of '[AttributeUsage]' on the projected attribute type.
+        [TestMethod]
+        public void TestAllowMultipleIsProjectedOnAttributeUsage()
+        {
+            AttributeUsageAttribute repeatableUsage = typeof(MyRepeatableAttribute).GetCustomAttribute<AttributeUsageAttribute>();
+            AttributeUsageAttribute singleUsage = typeof(MyStringAttribute).GetCustomAttribute<AttributeUsageAttribute>();
+
+            Assert.IsNotNull(repeatableUsage);
+            Assert.IsNotNull(singleUsage);
+
+            Assert.IsTrue(repeatableUsage.AllowMultiple);
+            Assert.IsFalse(singleUsage.AllowMultiple);
+        }
     }
 }

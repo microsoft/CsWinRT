@@ -713,6 +713,29 @@ And this is another one"
         void f();
     }
 
+    // Repeated applications of an '[allowmultiple]' attribute must all be carried over to the
+    // projection. See https://github.com/microsoft/CsWinRT/issues/2491.
+    [attributeusage(target_runtimeclass, target_interface, target_struct, target_enum, target_delegate, target_field, target_property, target_method, target_event)]
+    [attributename("attr_repeatable")]
+    [allowmultiple]
+    attribute MyRepeatableAttribute
+    {
+        String Name;
+        String GroupName;
+    }
+
+    [attr_repeatable("Normal", "CommonStates")]
+    [attr_repeatable("PointerOver", "CommonStates")]
+    [attr_string("some other attribute in between")]
+    [attr_repeatable("Horizontal", "OrientationStates")]
+    // MIDL allows an '[allowmultiple]' attribute to be applied twice with the same arguments, and
+    // reflection reports both, so the projection has to carry both over as well.
+    [attr_repeatable("Horizontal", "OrientationStates")]
+    runtimeclass RepeatedAttributeTest
+    {
+        void f();
+    }
+
     static runtimeclass StaticDelegateClassTest
     {
         static void Run(EventHandler0 e);

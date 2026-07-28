@@ -356,14 +356,32 @@ internal static class CustomAttributeFactory
     /// Writes any custom attributes (e.g. <c>[Obsolete]</c>, <c>[Deprecated]</c>,
     /// <c>[SupportedOSPlatform]</c>) carried over from <paramref name="member"/> to the projection.
     /// </summary>
+    /// <remarks>
+    /// Attributes are emitted in metadata order, one line per application. Windows Runtime attributes
+    /// marked <c>[allowmultiple]</c> can be applied several times to the same member, so every
+    /// application is carried over. The <c>[AllowMultiple]</c> metadata attribute itself is not
+    /// projected: it is folded into the <c>AllowMultiple</c> named argument of the projected
+    /// <c>[AttributeUsage]</c>, matching how .NET models repeatability.
+    /// </remarks>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="member">The metadata member whose custom attributes to emit.</param>
     /// <param name="enablePlatformAttrib">Whether to also emit a <c>[SupportedOSPlatform]</c> attribute synthesized from any <c>[ContractVersion]</c>.</param>
     public static void WriteCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member, bool enablePlatformAttrib)
     {
-        Dictionary<string, List<string>> attributes = [];
+        const string attributeUsageName = "System.AttributeUsage";
+        const string supportedOSPlatformName = "System.Runtime.Versioning.SupportedOSPlatform";
+
+        // Applications are collected in metadata order, with one entry per application. A Windows Runtime
+        // attribute marked '[allowmultiple]' (e.g. '[TemplateVisualState]') can legitimately be applied
+        // several times to the same member, and every application has to be carried over.
+        List<(string Name, List<string> Args)> attributes = [];
+
+        // The arguments of the recorded '[AttributeUsage]' application, if any, so that a separate
+        // '[AllowMultiple]' application can be folded into it once all attributes have been seen
+        List<string>? attributeUsageArgs = null;
         bool allowMultiple = false;
+        bool hasPlatform = false;
 
         for (int i = 0; i < member.CustomAttributes.Count; i++)
         {
@@ -387,24 +405,23 @@ internal static class CustomAttributeFactory
             }
 
             string fullAttrName = strippedName == "AttributeUsage"
-                ? "System.AttributeUsage"
+                ? attributeUsageName
                 : ns + "." + strippedName;
 
             List<string> args = WriteCustomAttributeArgs(attr);
 
-            if (context.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
+            // '[SupportedOSPlatform]' takes a single platform, so only the first resolved one is emitted
+            // (matching the member-level behavior in 'WritePlatformAttributeBody'). A member can carry
+            // several '[ContractVersion]' attributes, but only one of them can define the minimum platform.
+            if (!hasPlatform && context.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
                 string platform = GetPlatform(context, attr);
 
                 if (!string.IsNullOrEmpty(platform))
                 {
-                    if (!attributes.TryGetValue("System.Runtime.Versioning.SupportedOSPlatform", out List<string>? list))
-                    {
-                        list = [];
-                        attributes["System.Runtime.Versioning.SupportedOSPlatform"] = list;
-                    }
+                    attributes.Add((supportedOSPlatformName, [platform]));
 
-                    list.Add(platform);
+                    hasPlatform = true;
                 }
             }
 
@@ -430,27 +447,39 @@ internal static class CustomAttributeFactory
                 }
             }
 
-            attributes[fullAttrName] = args;
+            attributes.Add((fullAttrName, args));
+
+            if (fullAttrName == attributeUsageName)
+            {
+                attributeUsageArgs = args;
+            }
         }
 
-        // Add AllowMultiple to AttributeUsage if needed
-        if (attributes.TryGetValue("System.AttributeUsage", out List<string>? usage))
+        // Windows Runtime models attribute repeatability with a separate '[AllowMultiple]' metadata
+        // attribute, whereas .NET models it as a named argument on '[AttributeUsage]'. Fold the former
+        // into the latter, synthesizing an '[AttributeUsage]' if the metadata doesn't declare one (in
+        // which case the .NET default of 'AllowMultiple = false' would make the projection unusable).
+        if (attributeUsageArgs is not null)
         {
-            usage.Add("AllowMultiple = " + (allowMultiple ? "true" : "false"));
+            attributeUsageArgs.Add("AllowMultiple = " + (allowMultiple ? "true" : "false"));
+        }
+        else if (allowMultiple)
+        {
+            attributes.Add((attributeUsageName, ["global::System.AttributeTargets.All", "AllowMultiple = true"]));
         }
 
-        foreach (KeyValuePair<string, List<string>> kv in attributes)
+        foreach ((string attributeName, List<string> attributeArgs) in attributes)
         {
-            writer.Write($"[global::{kv.Key}");
+            writer.Write($"[global::{attributeName}");
 
-            if (kv.Value.Count > 0)
+            if (attributeArgs.Count > 0)
             {
                 writer.Write("(");
-                for (int i = 0; i < kv.Value.Count; i++)
+                for (int i = 0; i < attributeArgs.Count; i++)
                 {
                     writer.WriteIf(i > 0, ", ");
 
-                    writer.Write(kv.Value[i]);
+                    writer.Write(attributeArgs[i]);
                 }
                 writer.Write(")");
             }
