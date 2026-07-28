@@ -369,8 +369,8 @@ internal static class CustomAttributeFactory
     /// <param name="enablePlatformAttrib">Whether to also emit a <c>[SupportedOSPlatform]</c> attribute synthesized from any <c>[ContractVersion]</c>.</param>
     public static void WriteCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member, bool enablePlatformAttrib)
     {
-        const string attributeUsageName = "System.AttributeUsage";
-        const string supportedOSPlatformName = "System.Runtime.Versioning.SupportedOSPlatform";
+        const string AttributeUsageName = "System.AttributeUsage";
+        const string SupportedOSPlatformName = "System.Runtime.Versioning.SupportedOSPlatform";
 
         // Applications are collected in metadata order, with one entry per application. A Windows Runtime
         // attribute marked '[allowmultiple]' (e.g. '[TemplateVisualState]') can legitimately be applied
@@ -405,7 +405,7 @@ internal static class CustomAttributeFactory
             }
 
             string fullAttrName = strippedName == "AttributeUsage"
-                ? attributeUsageName
+                ? AttributeUsageName
                 : ns + "." + strippedName;
 
             List<string> args = WriteCustomAttributeArgs(attr);
@@ -419,7 +419,7 @@ internal static class CustomAttributeFactory
 
                 if (!string.IsNullOrEmpty(platform))
                 {
-                    attributes.Add((supportedOSPlatformName, [platform]));
+                    attributes.Add((SupportedOSPlatformName, [platform]));
 
                     hasPlatform = true;
                 }
@@ -449,7 +449,7 @@ internal static class CustomAttributeFactory
 
             attributes.Add((fullAttrName, args));
 
-            if (fullAttrName == attributeUsageName)
+            if (fullAttrName == AttributeUsageName)
             {
                 attributeUsageArgs = args;
             }
@@ -465,7 +465,7 @@ internal static class CustomAttributeFactory
         }
         else if (allowMultiple)
         {
-            attributes.Add((attributeUsageName, ["global::System.AttributeTargets.All", "AllowMultiple = true"]));
+            attributes.Add((AttributeUsageName, ["global::System.AttributeTargets.All", "AllowMultiple = true"]));
         }
 
         foreach ((string attributeName, List<string> attributeArgs) in attributes)
