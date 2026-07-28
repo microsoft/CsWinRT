@@ -91,7 +91,7 @@ Launch an explore agent to verify:
 Launch an explore agent to analyze the WinMD generator test project. Verify:
 
 - **Project settings** are current: test framework, TFM, platforms, output type, `CsWinRTEnabled` setting
-- **Tool wiring** is accurate: the `WinRT.WinMD.Generator` `ProjectReference` is built but not referenced (`ReferenceOutputAssembly="false"` + `GlobalPropertiesToRemove="RuntimeIdentifier"`), and the `AssemblyMetadata` item (`WinMDGeneratorAssemblyPath`) passes the built tool's path to the tests
+- **Tool wiring** is accurate: the `WinRT.WinMD.Generator` `ProjectReference` is built but not referenced (`ReferenceOutputAssembly="false"` + `UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained"`), and the `AssemblyMetadata` item (`WinMDGeneratorAssemblyPath`) passes the built tool's path to the tests
 - **Key dependencies** are current (MSTest packages, `Basic.Reference.Assemblies.Net100`, `Microsoft.CodeAnalysis.CSharp`)
 - **Test class table** is complete and accurate — check all `Test_*.cs` files, verify no classes have been added, removed, or renamed, and verify each class's description matches its actual content
 - **Test helper** (`WinMDGeneratorRunner` in `Helpers/`) is accurately described, including its public entry points (`AssertSuccess`, `AssertFailure`, `AssertFailureForMissingResponseFile`, `CompileComponent`)

@@ -39,7 +39,7 @@ internal static class WinMDGeneratorRunner
     /// Asserts that the generator fails for the given component source, reporting the expected error.
     /// </summary>
     /// <param name="source">The C# source defining the authored component types.</param>
-    /// <param name="error">The expected error id (e.g. <c>"CSWINRTWINMDGEN0011"</c>) the output must contain.</param>
+    /// <param name="error">The expected error id (e.g. <c>"CSWINRTWINMDGEN0013"</c>) the output must contain.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use the UWP (<c>Windows.UI.Xaml</c>) projections.</param>
     public static void AssertFailure(string source, string error, bool useWindowsUIXamlProjections = false)
     {

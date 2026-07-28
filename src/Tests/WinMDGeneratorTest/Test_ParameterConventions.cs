@@ -37,7 +37,7 @@ public class Test_ParameterConventions
             {
                 void Method(ref int[] values);
             }
-            """, error: "CSWINRTWINMDGEN0011");
+            """, error: "CSWINRTWINMDGEN0013");
     }
 
     [TestMethod]
@@ -50,7 +50,7 @@ public class Test_ParameterConventions
             {
                 void Method(in int[] values);
             }
-            """, error: "CSWINRTWINMDGEN0011");
+            """, error: "CSWINRTWINMDGEN0013");
     }
 
     [TestMethod]
@@ -62,7 +62,7 @@ public class Test_ParameterConventions
             {
                 void Method(out Span<int> values);
             }
-            """, error: "CSWINRTWINMDGEN0012");
+            """, error: "CSWINRTWINMDGEN0014");
     }
 
     [TestMethod]
@@ -74,6 +74,6 @@ public class Test_ParameterConventions
             {
                 void Method(out ReadOnlySpan<int> values);
             }
-            """, error: "CSWINRTWINMDGEN0012");
+            """, error: "CSWINRTWINMDGEN0014");
     }
 }

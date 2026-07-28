@@ -255,12 +255,12 @@ public async Task InvalidType_Warns()
 - **TFM:** `net10.0`, multi-platform (x64/x86)
 - **Output type:** Exe, `CsWinRTEnabled=false`
 - **Key dependencies:** MSTest packages, `Basic.Reference.Assemblies.Net100` and `Microsoft.CodeAnalysis.CSharp` (used to compile the C# inputs)
-- **References:** `WinRT.WinMD.Generator` via `ProjectReference` with `ReferenceOutputAssembly="false"` and `GlobalPropertiesToRemove="RuntimeIdentifier"` — the tool is **built but not referenced**, and tests invoke it as a separate process. Its path is passed to the tests via an `AssemblyMetadata` item (`WinMDGeneratorAssemblyPath`).
+- **References:** `WinRT.WinMD.Generator` via `ProjectReference` with `ReferenceOutputAssembly="false"` and `UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained"` — the tool is **built but not referenced**, and tests invoke it as a separate process. Its path is passed to the tests via an `AssemblyMetadata` item (`WinMDGeneratorAssemblyPath`).
 
 **Test classes:**
 | Test class | What it tests |
 |------------|---------------|
-| `Test_ParameterConventions` | Unsupported array/span parameter shapes (`ref`/`in` arrays, `out` spans) → `CSWINRTWINMDGEN0011`/`0012`, plus a valid smoke test |
+| `Test_ParameterConventions` | Unsupported array/span parameter shapes (`ref`/`in` arrays, `out` spans) → `CSWINRTWINMDGEN0013`/`0014`, plus a valid smoke test |
 | `Test_InvalidInputs` | Invalid invocations: malformed/missing response files, bad arguments, missing/corrupt input assemblies, an unwritable output path, a missing debug-repro directory |
 
 **Test helper (in `Helpers/`):**
@@ -276,7 +276,7 @@ public void RefArrayParameter_IsRejected()
         {
             void Method(ref int[] values);
         }
-        """, error: "CSWINRTWINMDGEN0011");
+        """, error: "CSWINRTWINMDGEN0013");
 }
 ```
 

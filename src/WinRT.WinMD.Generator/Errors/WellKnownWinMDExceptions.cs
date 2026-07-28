@@ -108,7 +108,7 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     /// </summary>
     public static Exception ByReferenceArrayParameterNotSupported(string declaringTypeName, string methodName, string parameterName)
     {
-        return Exception(11,
+        return Exception(13,
             $"Method '{declaringTypeName}.{methodName}' has by-reference array parameter '{parameterName}' passed by 'ref' or 'in'. " +
             $"Windows Runtime arrays use one of three conventions: 'ReadOnlySpan<T>' for a read-only input array (PassArray), " +
             $"'Span<T>' for a caller-allocated array (FillArray), or 'out T[]' for a callee-allocated array (ReceiveArray).");
@@ -119,7 +119,7 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     /// </summary>
     public static Exception ByReferenceSpanParameterNotSupported(string declaringTypeName, string methodName, string parameterName)
     {
-        return Exception(12,
+        return Exception(14,
             $"Method '{declaringTypeName}.{methodName}' has by-reference span parameter '{parameterName}'." +
             $"Windows Runtime spans are passed by value: use 'ReadOnlySpan<T>' (PassArray) or 'Span<T>' " +
             $"(FillArray) by value, or 'out T[]' for a callee-allocated array (ReceiveArray).");
