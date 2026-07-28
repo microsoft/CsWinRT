@@ -48,8 +48,9 @@ namespace Microsoft.NET.Build.Tasks;
 ///   <item>
 ///     <term><c>AppContainer</c></term>
 ///     <description>
-///       Whether to set the <c>/APPCONTAINER</c> linker flag, for UWP apps.
-///       Defaults to <see cref="DefaultAppContainer"/>.
+///       Whether to set the <c>/APPCONTAINER</c> linker flag, for apps running in an app container.
+///       This is a per-stub setting, so stubs with different values are compiled separately.
+///       Defaults to <see langword="false"/>.
 ///     </description>
 ///   </item>
 ///   <item>
@@ -215,11 +216,6 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// Gets or sets the default Win32 manifest path for stubs that don't specify one.
     /// </summary>
     public string? DefaultWin32Manifest { get; set; }
-
-    /// <summary>
-    /// Gets or sets the default <c>AppContainer</c> value for stubs that don't specify one.
-    /// </summary>
-    public bool DefaultAppContainer { get; set; }
 
     /// <summary>
     /// Gets or sets the target platform for all stubs.
@@ -414,6 +410,17 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             return false;
         }
 
+        // Validate the 'AppContainer' metadata, which controls a per-stub linker flag
+        if (!TryGetBooleanMetadata(stubExe, "AppContainer", out _))
+        {
+            Log.LogError(
+                "Invalid 'AppContainer' metadata value '{0}' for stub '{1}'. The value must be either 'true' or 'false'.",
+                stubExe.GetMetadata("AppContainer"),
+                stubName);
+
+            return false;
+        }
+
         return true;
     }
 
@@ -427,13 +434,15 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     {
         string stubName = stubExe.ItemSpec;
 
-        // Resolve per-stub metadata, falling back to defaults
+        // Resolve per-stub metadata, falling back to defaults (the metadata has already
+        // been validated at this point, so parsing the boolean values cannot fail here)
         string outputType = GetMetadataOrDefault(stubExe, "OutputType", DefaultOutputType ?? "Exe");
         string win32Manifest = GetMetadataOrDefault(stubExe, "Win32Manifest", DefaultWin32Manifest ?? "");
-        bool appContainer = GetBooleanMetadataOrDefault(stubExe, "AppContainer", DefaultAppContainer);
         string platform = DefaultPlatform ?? "";
         string sourceText = stubExe.GetMetadata("SourceText");
         string sourceFile = stubExe.GetMetadata("SourceFile");
+
+        _ = TryGetBooleanMetadata(stubExe, "AppContainer", out bool appContainer);
 
         // Resolve manifest path to full path so it works regardless of working directory
         if (!string.IsNullOrEmpty(win32Manifest))
@@ -754,19 +763,27 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     }
 
     /// <summary>
-    /// Gets a boolean metadata value from an item, falling back to a default if the metadata is empty.
+    /// Tries to get a boolean metadata value from an item.
     /// </summary>
     /// <param name="item">The task item.</param>
     /// <param name="metadataName">The metadata name.</param>
-    /// <param name="defaultValue">The default value if metadata is empty.</param>
-    /// <returns>The effective boolean value.</returns>
-    private static bool GetBooleanMetadataOrDefault(ITaskItem item, string metadataName, bool defaultValue)
+    /// <param name="value">The resulting value, which is <see langword="false"/> if the metadata is not set.</param>
+    /// <returns>
+    /// <see langword="true"/> if the metadata is either not set or set to a valid boolean value;
+    /// <see langword="false"/> if it is set to a value that could not be parsed.
+    /// </returns>
+    private static bool TryGetBooleanMetadata(ITaskItem item, string metadataName, out bool value)
     {
-        string value = item.GetMetadata(metadataName);
+        string metadataValue = item.GetMetadata(metadataName);
 
-        return string.IsNullOrEmpty(value)
-            ? defaultValue
-            : string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(metadataValue))
+        {
+            value = false;
+
+            return true;
+        }
+
+        return bool.TryParse(metadataValue, out value);
     }
 
     /// <summary>

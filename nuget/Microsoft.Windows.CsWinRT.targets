@@ -460,8 +460,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                        Defaults to the project's $(OutputType).
       Win32Manifest  - Path to a Win32 manifest file to embed. If empty, manifest
                        generation is suppressed. Defaults to the project's $(Win32Manifest).
-      AppContainer   - 'true' to set /APPCONTAINER for UWP apps.
-                       Defaults to $(UseUwpTools).
+      AppContainer   - 'true' to set /APPCONTAINER, for apps running in an app container.
+                       This is a per-stub setting, so stubs with different values are
+                       compiled separately. Defaults to 'false'.
       SourceText     - Inline C source code for the stub. When set, this text is
                        written to a .c file and compiled. Takes precedence over
                        SourceFile and the default source template.
@@ -517,8 +518,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_StubExeControlFlowGuard Condition="'$(ControlFlowGuard)' == 'Guard'">true</_StubExeControlFlowGuard>
       <_StubExeCETCompat>true</_StubExeCETCompat>
       <_StubExeCETCompat Condition="'$(CETCompat)' == 'false'">false</_StubExeCETCompat>
-      <_StubExeAppContainer>false</_StubExeAppContainer>
-      <_StubExeAppContainer Condition="'$(UseUwpTools)' == 'true'">true</_StubExeAppContainer>
+
+      <!-- Resolve the 'AppContainer' setting for the default stub (see the item group below) -->
+      <_StubExeDefaultAppContainer>false</_StubExeDefaultAppContainer>
+      <_StubExeDefaultAppContainer Condition="'$(UseUwpTools)' == 'true'">true</_StubExeDefaultAppContainer>
     </PropertyGroup>
 
     <!--
@@ -526,7 +529,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       matching the original single-stub behavior (named after the assembly).
     -->
     <ItemGroup Condition="'@(CsWinRTStubExe)' == ''">
-      <CsWinRTStubExe Include="$(AssemblyName)" />
+      <CsWinRTStubExe Include="$(AssemblyName)" AppContainer="$(_StubExeDefaultAppContainer)" />
     </ItemGroup>
 
     <!--
@@ -586,7 +589,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CETCompat="$(_StubExeCETCompat)"
       DefaultOutputType="$(OutputType)"
       DefaultWin32Manifest="$(_StubExeWin32ManifestPath)"
-      DefaultAppContainer="$(_StubExeAppContainer)"
       DefaultPlatform="$(_StubExePlatform)"
       CopyBuildOutputToPublishDirectory="$(CopyBuildOutputToPublishDirectory)">
       <Output TaskParameter="GeneratedStubExes" ItemName="_GeneratedStubExes" />
