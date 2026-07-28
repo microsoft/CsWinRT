@@ -506,6 +506,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Resolve the Win32 manifest path for the default stub, if specified -->
       <_StubExeWin32ManifestPath Condition="'$(Win32Manifest)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(Win32Manifest)))</_StubExeWin32ManifestPath>
+
+      <!--
+        Normalize the MSVC toggles into 'true'/'false' values that can be passed to the boolean task parameters.
+        These have to be computed as separate properties, as MSBuild only supports comparisons in conditions.
+      -->
+      <_StubExeIsDebugConfiguration>false</_StubExeIsDebugConfiguration>
+      <_StubExeIsDebugConfiguration Condition="'$(Configuration)' == 'Debug'">true</_StubExeIsDebugConfiguration>
+      <_StubExeControlFlowGuard>false</_StubExeControlFlowGuard>
+      <_StubExeControlFlowGuard Condition="'$(ControlFlowGuard)' == 'Guard'">true</_StubExeControlFlowGuard>
+      <_StubExeCETCompat>true</_StubExeCETCompat>
+      <_StubExeCETCompat Condition="'$(CETCompat)' == 'false'">false</_StubExeCETCompat>
+      <_StubExeAppContainer>false</_StubExeAppContainer>
+      <_StubExeAppContainer Condition="'$(UseUwpTools)' == 'true'">true</_StubExeAppContainer>
     </PropertyGroup>
 
     <!--
@@ -568,12 +581,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WindowsSdkUcrtLibPath="$(_WindowsSdk-ucrt-LibPath)"
       WindowsSdkUmLibPath="$(_WindowsSdk-um-LibPath)"
       AdditionalPath="$(_StubExeAdditionalPath)"
-      IsDebugConfiguration="$([MSBuild]::ValueOrDefault('$(Configuration)', '') == 'Debug')"
-      ControlFlowGuard="$([MSBuild]::ValueOrDefault('$(ControlFlowGuard)', '') == 'Guard')"
-      CETCompat="$([MSBuild]::ValueOrDefault('$(CETCompat)', '') != 'false')"
+      IsDebugConfiguration="$(_StubExeIsDebugConfiguration)"
+      ControlFlowGuard="$(_StubExeControlFlowGuard)"
+      CETCompat="$(_StubExeCETCompat)"
       DefaultOutputType="$(OutputType)"
       DefaultWin32Manifest="$(_StubExeWin32ManifestPath)"
-      DefaultAppContainer="$(UseUwpTools)"
+      DefaultAppContainer="$(_StubExeAppContainer)"
       DefaultPlatform="$(_StubExePlatform)"
       CopyBuildOutputToPublishDirectory="$(CopyBuildOutputToPublishDirectory)">
       <Output TaskParameter="GeneratedStubExes" ItemName="_GeneratedStubExes" />
