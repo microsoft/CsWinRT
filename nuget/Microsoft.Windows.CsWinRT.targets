@@ -476,6 +476,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <CsWinRTStubExe Include="MyApp.Windowed" OutputType="WinExe" />
         <CsWinRTStubExe Include="MyApp.Custom" SourceFile="src\CustomStub.c" />
       </ItemGroup>
+
+    When no items are defined, a single default stub named after the assembly is
+    added, with 'AppContainer' set based on whether the app runs in an app container
+    (i.e. whether $(UseUwpTools) or $(WindowsAppContainer) is 'true').
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="GenerateCsWinRTStubExes" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
@@ -519,9 +523,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_StubExeCETCompat>true</_StubExeCETCompat>
       <_StubExeCETCompat Condition="'$(CETCompat)' == 'false'">false</_StubExeCETCompat>
 
-      <!-- Resolve the 'AppContainer' setting for the default stub (see the item group below) -->
+      <!--
+        Resolve the 'AppContainer' setting for the default stub (see the item group below). This is
+        enabled for UWP apps ('UseUwpTools'), as well as for any other app that opts into running in
+        an app container ('WindowsAppContainer'), which is what MSIX packaging (.wapproj) projects set
+        for packaged Win32 apps. Both cases require the '/APPCONTAINER' bit to be set on the stub .exe.
+      -->
       <_StubExeDefaultAppContainer>false</_StubExeDefaultAppContainer>
-      <_StubExeDefaultAppContainer Condition="'$(UseUwpTools)' == 'true'">true</_StubExeDefaultAppContainer>
+      <_StubExeDefaultAppContainer Condition="'$(UseUwpTools)' == 'true' OR '$(WindowsAppContainer)' == 'true'">true</_StubExeDefaultAppContainer>
     </PropertyGroup>
 
     <!--
