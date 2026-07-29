@@ -4987,5 +4987,108 @@ namespace UnitTest
             // Non projected class changes the behavior of the Value property to double it.
             Assert.AreEqual(6, customEquals.Value);
         }
+
+        // Windows Runtime attribute types are metadata-only: they are never activated, never cross the ABI
+        // boundary, and have no Windows Runtime type signature, so the projection deliberately emits no
+        // marshalling infrastructure for them at all. They are therefore not Windows Runtime types as far as
+        // marshalling is concerned, and behave like plain managed types: a 'List<SomeAttribute>' is handled
+        // exactly like a 'List<SomeManagedClass>', and the attribute instances themselves marshal as opaque
+        // 'IInspectable' objects.
+        //
+        // Treating them as Windows Runtime types instead failed twice over: the interop generator tried to
+        // generate marshalling code for 'IIterable<SomeAttribute>' and failed the build with
+        // 'CSWINRTINTEROPGEN0055' (there is no type signature to compute), and the runtime resolved the
+        // attribute type as its own metadata provider and then threw from 'GetComWrappersMarshaller'.
+        //
+        // This test building at all covers the first failure, as the interop generator runs over this
+        // assembly and sees the instantiations created below. The assertions cover the second one.
+        [TestMethod]
+        public void TestGenericsOverWindowsRuntimeAttributeTypes()
+        {
+            // 'GetCustomAttributes<T>' over a projected Windows Runtime attribute type creates
+            // 'IEnumerable<MyStringAttribute>' and 'IEnumerator<MyStringAttribute>' instantiations
+            MyStringAttribute[] attributes = typeof(MultiLineStringAttributeTest).GetCustomAttributes<MyStringAttribute>().ToArray();
+
+            Assert.AreEqual(1, attributes.Length);
+
+            List<MyStringAttribute> list = [attributes[0]];
+
+            // Assigning to an 'IIterable<Object>' property actually marshals the collection across the ABI,
+            // which queries the CCW for 'IIterable<IInspectable>'. That interface is in the vtables because
+            // the covariance expansion adds it for 'List<T>'; there is deliberately no
+            // 'IIterable<MyStringAttribute>' entry, as no marshalling code can exist for it. Enumerating the
+            // collection then marshals the attribute instances themselves, as opaque objects. Round-tripping
+            // the property back (unlike a plain 'object' property, which just hands the same CCW back
+            // regardless of its vtables) is what makes this an actual test of the marshalling code.
+            TestObject.ObjectIterableProperty = list;
+
+            Assert.IsTrue(TestObject.ObjectIterableProperty.SequenceEqual(list));
+        }
+
+        // A 'List<SomeAttribute>' must end up with exactly one 'IIterable<IInspectable>' interface entry. Its
+        // own 'IEnumerable<SomeAttribute>' contributes none, as attribute types are not Windows Runtime types,
+        // so the single entry comes from the 'IEnumerable<object>' produced by the covariance expansion. Were
+        // the attribute type to be treated as a Windows Runtime type again, the generated interface entries
+        // would carry the same IID (and vtable) twice, for no reason other than wasted binary size.
+        //
+        // 'IInspectable::GetIids' reports exactly the generated 'ComInterfaceEntries' for the object, so it
+        // can be used to count them. Note that a duplicate entry would be invisible to 'QueryInterface'
+        // (which just returns the first match), so this is the only way to actually observe it.
+        [TestMethod]
+        public unsafe void TestWindowsRuntimeAttributeTypeInterfaceEntriesAreNotDuplicated()
+        {
+            // The IID of 'IIterable<IInspectable>', which the covariance expansion adds for the list
+            Guid iidIIterableInspectable = new("092B849B-60B1-52BE-A44A-6FE8E933CBE4");
+
+            List<MyStringAttribute> list = [typeof(MultiLineStringAttributeTest).GetCustomAttributes<MyStringAttribute>().First()];
+
+            void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(list);
+
+            try
+            {
+                // 'ConvertToUnmanaged' hands back an 'IUnknown' pointer, so it has to be queried for
+                // 'IInspectable' first: 'GetIids' is not in the 'IUnknown' vtable
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectable));
+
+                try
+                {
+                    uint iidCount = 0;
+                    Guid* iids = null;
+
+                    // 'IInspectable::GetIids' is the fourth vtable entry, right after the 'IUnknown' methods
+                    Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>)(*(void***)inspectable)[3])(
+                        (void*)inspectable,
+                        &iidCount,
+                        &iids));
+
+                    try
+                    {
+                        int matches = 0;
+
+                        for (uint i = 0; i < iidCount; i++)
+                        {
+                            if (iids[i] == iidIIterableInspectable)
+                            {
+                                matches++;
+                            }
+                        }
+
+                        Assert.AreEqual(1, matches, "'IIterable<IInspectable>' should have exactly one entry in the CCW interface entries.");
+                    }
+                    finally
+                    {
+                        Marshal.FreeCoTaskMem((nint)iids);
+                    }
+                }
+                finally
+                {
+                    _ = Marshal.Release(inspectable);
+                }
+            }
+            finally
+            {
+                _ = Marshal.Release((nint)ccw);
+            }
+        }
     }
 }
