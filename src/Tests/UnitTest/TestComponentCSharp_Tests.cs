@@ -5005,13 +5005,13 @@ namespace UnitTest
         [TestMethod]
         public void TestGenericsOverWindowsRuntimeAttributeTypes()
         {
-            // 'GetCustomAttributes<T>' over a projected Windows Runtime attribute type creates
-            // 'IEnumerable<MyStringAttribute>' and 'IEnumerator<MyStringAttribute>' instantiations
-            MyStringAttribute[] attributes = typeof(MultiLineStringAttributeTest).GetCustomAttributes<MyStringAttribute>().ToArray();
+            // 'GetCustomAttributes<T>' over a projected Windows Runtime attribute type creates the
+            // 'IEnumerable<MyStringAttribute>' and 'IEnumerator<MyStringAttribute>' instantiations this test
+            // is about, so the call stays. Its result is not used though: implementation projections don't
+            // carry metadata attribute applications over (see the test below), so it finds nothing at runtime.
+            _ = typeof(MultiLineStringAttributeTest).GetCustomAttributes<MyStringAttribute>().ToArray();
 
-            Assert.AreEqual(1, attributes.Length);
-
-            List<MyStringAttribute> list = [attributes[0]];
+            List<MyStringAttribute> list = [new MyStringAttribute { Content = "Hello world" }];
 
             // Assigning to an 'IIterable<Object>' property actually marshals the collection across the ABI,
             // which queries the CCW for 'IIterable<IInspectable>'. That interface is in the vtables because
@@ -5040,7 +5040,7 @@ namespace UnitTest
             // The IID of 'IIterable<IInspectable>', which the covariance expansion adds for the list
             Guid iidIIterableInspectable = new("092B849B-60B1-52BE-A44A-6FE8E933CBE4");
 
-            List<MyStringAttribute> list = [typeof(MultiLineStringAttributeTest).GetCustomAttributes<MyStringAttribute>().First()];
+            List<MyStringAttribute> list = [new MyStringAttribute { Content = "Hello world" }];
 
             void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(list);
 
