@@ -75,6 +75,47 @@ internal static class WinMDGeneratorRunner
     }
 
     /// <summary>
+    /// Asserts that the generator saves a debug repro for a caller-provided response file, and that
+    /// replaying that debug repro also succeeds.
+    /// </summary>
+    /// <remarks>
+    /// The <paramref name="responseFileFactory"/> receives a fresh temporary working directory and the
+    /// directory to point <c>--debug-repro-directory</c> at, and returns the full response file content.
+    /// </remarks>
+    /// <param name="responseFileFactory">Builds the full response file content for the given directories.</param>
+    public static void AssertDebugReproRoundTrips(Func<string, string, string> responseFileFactory)
+    {
+        string toolPath = GetGeneratorPath();
+        string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
+
+        try
+        {
+            string debugReproDirectory = Directory.CreateDirectory(Path.Combine(temporaryDirectory, "repro")).FullName;
+            string responseFilePath = Path.Combine(temporaryDirectory, "args.rsp");
+
+            File.WriteAllText(responseFilePath, responseFileFactory(temporaryDirectory, debugReproDirectory));
+
+            (int exitCode, string output) = RunTool(toolPath, responseFilePath);
+
+            Assert.AreEqual(0, exitCode, output);
+
+            string debugReproPath = Path.Combine(debugReproDirectory, "winmd-debug-repro.zip");
+
+            Assert.IsTrue(File.Exists(debugReproPath), $"The debug repro was not saved to '{debugReproPath}'.");
+
+            // Replaying the saved archive validates that the packed inputs and the path maps inside
+            // it are consistent, and not just that saving the archive happened to not throw
+            (exitCode, output) = RunTool(toolPath, debugReproPath);
+
+            Assert.AreEqual(0, exitCode, output);
+        }
+        finally
+        {
+            TryDeleteDirectory(temporaryDirectory);
+        }
+    }
+
+    /// <summary>
     /// Compiles the given C# <paramref name="source"/> into <c>TestInput.dll</c> in <paramref name="directory"/>.
     /// </summary>
     /// <remarks>
@@ -218,7 +259,7 @@ internal static class WinMDGeneratorRunner
         {
             Directory.Delete(directory, recursive: true);
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             // Best effort cleanup; a leftover temp directory must not fail the test
         }

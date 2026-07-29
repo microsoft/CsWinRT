@@ -42,6 +42,12 @@ internal static class DebugReproPacker
     /// <summary>
     /// Copies all specified files to a target folder using hashed file names, and returns the list of updated names.
     /// </summary>
+    /// <remarks>
+    /// The same path can legitimately appear more than once in <paramref name="filePaths"/>, as MSBuild item lists
+    /// are not deduplicated and several targets can contribute to the same reference set. Repeated entries are
+    /// still reported in the returned list (so the rebuilt response file matches the original invocation), but
+    /// they are only staged and recorded once.
+    /// </remarks>
     /// <param name="filePaths">The input file paths.</param>
     /// <param name="destinationDirectory">The target directory to copy the files to.</param>
     /// <param name="originalPaths">A dictionary to store the original paths of the copied files (keyed by hashed file name).</param>
@@ -59,13 +65,7 @@ internal static class DebugReproPacker
         {
             token.ThrowIfCancellationRequested();
 
-            string hashedName = GetHashedFileName(filePath);
-            string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-            File.Copy(filePath, destinationPath, overwrite: true);
-
-            updatedFileNames.Add(hashedName);
-            originalPaths.Add(hashedName, filePath);
+            updatedFileNames.Add(CopyHashedFile(filePath, destinationDirectory, originalPaths));
         }
 
         return updatedFileNames;
@@ -76,8 +76,8 @@ internal static class DebugReproPacker
     /// </summary>
     /// <remarks>
     /// This is the simple variant used by the impl, projection, projection-ref, and WinMD generators.
-    /// The interop generator keeps its own variant locally (which adds reserved-DLL dedupe and throws
-    /// on path mismatches against the shared reference set).
+    /// The interop generator keeps its own variant locally (which additionally validates that a reserved
+    /// .dll was passed with the same path in the shared reference set).
     /// </remarks>
     /// <param name="filePath">The input file path, or <see langword="null"/> to skip.</param>
     /// <param name="destinationDirectory">The target directory to copy the file to.</param>
@@ -96,14 +96,41 @@ internal static class DebugReproPacker
             return null;
         }
 
+        token.ThrowIfCancellationRequested();
+
+        return CopyHashedFile(filePath, destinationDirectory, originalPaths);
+    }
+
+    /// <summary>
+    /// Stages a single input file into a target folder using its hashed file name, and records its original path.
+    /// </summary>
+    /// <param name="filePath">The input file path.</param>
+    /// <param name="destinationDirectory">The target directory to copy the file to.</param>
+    /// <param name="originalPaths">A dictionary to store the original path of the copied file (keyed by hashed file name).</param>
+    /// <returns>The hashed filename of the staged file.</returns>
+    private static string CopyHashedFile(
+        string filePath,
+        string destinationDirectory,
+        Dictionary<string, string> originalPaths)
+    {
         string hashedName = GetHashedFileName(filePath);
         string destinationPath = Path.Combine(destinationDirectory, hashedName);
 
-        File.Copy(filePath, destinationPath, overwrite: true);
+        // Hashed names are derived from the full original path, so a file already staged at this exact
+        // destination was necessarily copied from this exact source, and staging it again is a no-op.
+        // The check is per destination folder, as the same file can legitimately also be staged under
+        // another folder of the same repro (e.g. as both the input assembly and a reference assembly).
+        if (!File.Exists(destinationPath))
+        {
+            File.Copy(filePath, destinationPath);
 
-        token.ThrowIfCancellationRequested();
+            // Clear the read-only attribute, which 'File.Copy' propagates from the source file. Inputs can
+            // be read-only (e.g. in enlistment-style builds), and leaving the staged copies read-only would
+            // make it impossible to delete the staging directory once the archive has been created.
+            File.SetAttributes(destinationPath, File.GetAttributes(destinationPath) & ~FileAttributes.ReadOnly);
+        }
 
-        originalPaths.Add(hashedName, filePath);
+        _ = originalPaths.TryAdd(hashedName, filePath);
 
         return hashedName;
     }

@@ -152,12 +152,10 @@ internal static partial class WinMDGenerator
             // Extract the file to the new destination path
             assemblyEntry.ExtractToFile(destinationPath, overwrite: true);
 
-            // Track the extracted paths per category
-            if (assemblyEntry.Name == args.InputAssemblyPath)
-            {
-                inputAssemblyPath = destinationPath;
-            }
-            else if (isReferenceAssembly)
+            // Track the extracted paths per category. The input assembly is the only entry at the top
+            // level, so entries in a category subfolder always belong to that category, even when the
+            // same file was also passed as the input assembly.
+            if (isReferenceAssembly)
             {
                 referencePaths.Add(destinationPath);
             }
@@ -167,8 +165,13 @@ internal static partial class WinMDGenerator
             }
             else if (!isWindowsMetadataAssembly)
             {
-                // We should never hit this case, so throw to validate that the debug repro is valid.
-                throw WellKnownWinMDExceptions.DebugReproUnrecognizedFileEntry(assemblyEntry.FullName);
+                // Any other top-level entry means the debug repro is not valid, so throw to validate it
+                if (assemblyEntry.Name != args.InputAssemblyPath)
+                {
+                    throw WellKnownWinMDExceptions.DebugReproUnrecognizedFileEntry(assemblyEntry.FullName);
+                }
+
+                inputAssemblyPath = destinationPath;
             }
         }
 
