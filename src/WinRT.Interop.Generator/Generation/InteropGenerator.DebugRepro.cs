@@ -299,13 +299,18 @@ internal partial class InteropGenerator
         Dictionary<string, string> originalPaths,
         CancellationToken token)
     {
+        if (filePath is null)
+        {
+            return null;
+        }
+
+        string hashedName = DebugReproPacker.GetHashedFileName(filePath);
+
         // A private implementation detail assembly (e.g. 'WinRT.Projection.dll') is expected to already be in
         // the original paths at this point, as it is also passed via the reference set. A hashed name that maps
         // to a different original path would instead mean it was passed with two different paths, which should
         // never happen (it's invalid), so validate that before staging the file.
-        if (filePath is not null &&
-            originalPaths.TryGetValue(DebugReproPacker.GetHashedFileName(filePath), out string? originalPath) &&
-            originalPath != filePath)
+        if (originalPaths.TryGetValue(hashedName, out string? originalPath) && originalPath != filePath)
         {
             string fileName = Path.GetFileName(Path.Normalize(filePath));
 
