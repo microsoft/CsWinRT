@@ -64,24 +64,29 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!--
     For Project Reference consumers, copy the necessary WinRT DLLs to output directory.
     Only include these if we are not generating native exports for NativeAOT.
+    These are build/runtime assets, so they're marked as not visible to avoid
+    showing them as project items in Solution Explorer.
   --> 
   <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'"> 
 
     <None Condition="Exists('$(CsWinRTPath)hosting\net10.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)hosting\net10.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
     </None>
 
     <None Condition="Exists('$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll')" 
           Include="$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
       <TargetPath>WinRT.Host.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
     </None>
 
     <None Condition="Exists('$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\en-US\WinRT.Host.dll.mui')"
           Include="$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\en-US\WinRT.Host.dll.mui">
       <TargetPath>WinRT.Host.dll.mui</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
     </None>
 
  </ItemGroup>
