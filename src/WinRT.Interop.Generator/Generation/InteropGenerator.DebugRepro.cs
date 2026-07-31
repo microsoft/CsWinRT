@@ -116,20 +116,22 @@ internal partial class InteropGenerator
             // Extract the .dll to the new destination path
             dllEntry.ExtractToFile(destinationPath, overwrite: true);
 
-            // Track all extracted reference paths, as well as the output assembly path.
+            // Track all extracted reference paths, as well as the output assembly path. The output
+            // assembly is the only entry at the top level, so entries in a category subfolder always
+            // belong to that category, even when the same file was also passed as the output assembly.
             // Note that the debug repro only uses filenames, not full paths, for .dll-s.
             // We also split reference paths and implementation paths in different folders.
-            if (dllEntry.Name == args.OutputAssemblyPath)
-            {
-                outputAssemblyPath = destinationPath;
-            }
-            else if (isReferenceDll)
+            if (isReferenceDll)
             {
                 referencePaths.Add(destinationPath);
             }
             else if (isImplementationDll)
             {
                 implementationPaths.Add(destinationPath);
+            }
+            else if (dllEntry.Name == args.OutputAssemblyPath)
+            {
+                outputAssemblyPath = destinationPath;
             }
             else
             {
@@ -274,15 +276,15 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Copies a single specified file to a target folder, with reserved-DLL dedupe.
+    /// Copies a single specified file to a target folder, validating reserved .dll-s.
     /// </summary>
     /// <remarks>
-    /// The interop generator keeps a local variant (instead of using the shared
+    /// The interop generator keeps a local variant (wrapping the shared
     /// <see cref="DebugReproPacker.CopyHashedFileToDirectory(string?, string, Dictionary{string, string}, CancellationToken)"/>)
     /// to handle the private implementation-detail assemblies (<c>WinRT.Sdk.Projection.dll</c>, <c>WinRT.Sdk.Xaml.Projection.dll</c>,
     /// <c>WinRT.Projection.dll</c>, <c>WinRT.Component.dll</c>) that are passed both via the reference set and
-    /// explicitly via dedicated properties. When the same path is already in the map (under the same hashed name),
-    /// the copy is skipped; if the hashed name collides but the original paths differ, that's a real bug and we
+    /// explicitly via dedicated properties. Staging those just once is handled by the shared helper; if the hashed
+    /// name collides but the original paths differ, that's a real bug and we
     /// throw <see cref="WellKnownInteropExceptions.ReservedDllOriginalPathMismatchFromDebugRepro(string)"/>.
     /// </remarks>
     /// <param name="filePath">The input file path, or <see langword="null"/> to skip.</param>
@@ -304,34 +306,17 @@ internal partial class InteropGenerator
 
         string hashedName = DebugReproPacker.GetHashedFileName(filePath);
 
-        // Special case for private implementation detail assemblies (e.g. 'WinRT.Projection.dll') that are
-        // both passed via the reference set, but also explicitly as separate properties. In that case, we
-        // expect that those should already be in the original paths at this point. So we validate that
-        // the path actually matches, and simply do nothing if that's the case, as this is intended.
-        if (originalPaths.TryGetValue(hashedName, out string? originalPath) && originalPath == filePath)
-        {
-            return hashedName;
-        }
-
-        // If we get to this point, it means that either a private implementation assembly was passed with a
-        // different path than the one provided to the reference set, which should never happen (it's invalid).
-        if (originalPaths.ContainsKey(hashedName))
+        // A private implementation detail assembly (e.g. 'WinRT.Projection.dll') is expected to already be in
+        // the original paths at this point, as it is also passed via the reference set. A hashed name that maps
+        // to a different original path would instead mean it was passed with two different paths, which should
+        // never happen (it's invalid), so validate that before staging the file.
+        if (originalPaths.TryGetValue(hashedName, out string? originalPath) && originalPath != filePath)
         {
             string fileName = Path.GetFileName(Path.Normalize(filePath));
 
             throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatchFromDebugRepro(fileName);
         }
 
-        string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-        // After validating that the file is unique and should be copied, we can safely do that. We move
-        // this operation to ensure we don't accidentally end up with duplicated .dll-s in the debug repro.
-        File.Copy(filePath, destinationPath, overwrite: true);
-
-        token.ThrowIfCancellationRequested();
-
-        originalPaths.Add(hashedName, filePath);
-
-        return hashedName;
+        return DebugReproPacker.CopyHashedFileToDirectory(filePath, destinationDirectory, originalPaths, token);
     }
 }

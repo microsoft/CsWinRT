@@ -38,6 +38,20 @@ steps:
         --no-build
       testRunTitle: Source Generator 2 Tests
 
+# Run WinMD Generator Tests. Gated to x64 only for the same reason as the source generator tests: these
+# run the 'cswinrtwinmdgen' tool end-to-end as a separate process (which is always built for the build
+# host), so the target platform makes no difference to what they cover.
+  - task: DotNetCoreCLI@2
+    displayName: Run WinMD Generator Tests
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/WinMDGeneratorTest/WinMDGeneratorTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: WinMD Generator Tests
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests
