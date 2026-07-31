@@ -36,11 +36,41 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
+        // A custom-mapped interface (e.g. 'IMap<K, V>') is projected as its .NET counterpart, whose members
+        // are not described by the input metadata. An abstract base declaring one would have to re-declare
+        // those members as abstract, so until that is supported such types are skipped rather than emitted in
+        // a shape that cannot compile.
+        if (ImplementsCustomMappedInterface(context, type))
+        {
+            return false;
+        }
+
         // Static runtime classes have no instances, so they only get a factory base (and only if
         // they actually declare any statics). All other runtime classes always get an instance base:
         // it is separate from the (possibly sealed) projected class and bridges to it via an implicit
         // operator, so it applies to both sealed and unsealed runtime classes.
         return !type.IsStatic || HasFactoryInterfaces(context, type);
+    }
+
+    /// <summary>
+    /// Returns whether a type implements, directly or transitively, any interface that is custom-mapped to a
+    /// .NET interface with its own member shape.
+    /// </summary>
+    private static bool ImplementsCustomMappedInterface(ProjectionEmitContext context, TypeDefinition type)
+    {
+        HashSet<TypeDefinition> closure = [];
+
+        CollectInterfaceClosure(context, type, closure);
+
+        foreach (TypeDefinition interfaceType in closure)
+        {
+            if (IsCustomMappedInterface(interfaceType))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -333,6 +363,14 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
+            // A custom-mapped interface is declared in its .NET form, whose members the author implements
+            // directly (the compiler enforces that through the interface itself), so no abstract members are
+            // declared for it here. Its Windows Runtime members are serviced by the runtime's adapters.
+            if (IsCustomMappedInterface(ifaceType))
+            {
+                continue;
+            }
+
             GenericInstanceTypeSignature? nextInstance = null;
 
             if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
@@ -440,20 +478,56 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
+            // Declare the interface, constructed with its type arguments when it is generic. Custom-mapped
+            // interfaces are declared in their .NET form (e.g. 'IMap<K, V>' as 'IDictionary<K, V>'), which is
+            // what an author implements; the runtime's collection adapters service the Windows Runtime side.
             GenericInstanceTypeSignature? nextInstance = null;
 
             if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
             {
                 nextInstance = currentInstance is not null && gi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature subGi ? subGi : gi;
             }
-            else
+
+            // Format the substituted signature, so an inherited generic interface is declared with the
+            // enclosing type's arguments (e.g. 'IMap<K, V>' reached through 'IObservableMap<string, object>').
+            collected.Add(FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? impl.Interface));
+
+            // A custom-mapped interface's .NET form already implies its base interfaces (e.g.
+            // 'IDictionary<K, V>' implies 'IEnumerable<KeyValuePair<K, V>>'), and the Windows Runtime bases
+            // are not what the author implements, so the walk stops here.
+            if (IsCustomMappedInterface(ifaceType))
             {
-                // Only non-generic interfaces are declared on the base (their signatures need no type args).
-                collected.Add(TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format());
+                continue;
             }
 
             CollectImplementedInterfaces(context, ifaceType, nextInstance, visited, collected);
         }
+    }
+
+    /// <summary>
+    /// Formats an implemented interface for an inheritance list, including type arguments when generic.
+    /// </summary>
+    private static string FormatInterfaceName(ProjectionEmitContext context, ITypeDefOrRef interfaceType)
+    {
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+
+        IndentedTextWriter writer = writerOwner.Writer;
+
+        InterfaceFactory.WriteInterfaceTypeName(writer, context, interfaceType, forceWriteNamespace: true);
+
+        return writer.ToString();
+    }
+
+    /// <summary>
+    /// Returns whether an interface is custom-mapped to a .NET interface with its own member shape (e.g.
+    /// <c>IMap&lt;K, V&gt;</c> to <c>IDictionary&lt;K, V&gt;</c>), so its Windows Runtime members must not be
+    /// declared on the abstract base.
+    /// </summary>
+    private static bool IsCustomMappedInterface(TypeDefinition interfaceType)
+    {
+        (string ns, string name) = interfaceType.Names();
+
+        return MappedTypes.Get(ns, name) is { HasCustomMembersOutput: true };
     }
 
     /// <summary>

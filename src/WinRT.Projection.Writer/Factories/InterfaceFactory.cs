@@ -140,11 +140,11 @@ internal static class InterfaceFactory
     /// generic instance), applying mapped-type remapping (e.g.,
     /// <c>Windows.Foundation.Collections.IMap&lt;K,V&gt;</c> -> <c>System.Collections.Generic.IDictionary&lt;K,V&gt;</c>).
     /// </summary>
-    public static void WriteInterfaceTypeName(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    public static void WriteInterfaceTypeName(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType, bool forceWriteNamespace = false)
     {
         if (ifaceType is TypeDefinition td)
         {
-            TypedefNameWriter.WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
+            TypedefNameWriter.WriteTypedefName(writer, context, td, TypedefNameType.CCW, forceWriteNamespace);
             TypedefNameWriter.WriteTypeParams(writer, td);
         }
         else if (ifaceType is TypeReference tr)
@@ -154,7 +154,7 @@ internal static class InterfaceFactory
 
             // Only emit the global:: prefix when the namespace doesn't match the current emit
             // namespace (mirrors WriteTypedefName behavior -- same-namespace stays unqualified).
-            if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
+            if (!string.IsNullOrEmpty(ns) && (forceWriteNamespace || ns != context.CurrentNamespace))
             {
                 writer.Write($"global::{ns}.");
             }
@@ -167,7 +167,7 @@ internal static class InterfaceFactory
             (string ns, string name) = gt.Names();
             _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
-            if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
+            if (!string.IsNullOrEmpty(ns) && (forceWriteNamespace || ns != context.CurrentNamespace))
             {
                 writer.Write($"global::{ns}.");
             }
@@ -178,7 +178,7 @@ internal static class InterfaceFactory
                 writer.WriteIf(i > 0, ", ");
 
                 // Pass forceWriteNamespace=false so type args also respect the current namespace.
-                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
+                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, forceWriteNamespace);
             }
             writer.Write(">");
         }
