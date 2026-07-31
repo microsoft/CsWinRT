@@ -216,6 +216,25 @@ internal partial class InteropTypeDefinitionBuilder
                     module: module,
                     out proxyType);
             }
+            else if (userDefinedTypeDefinition.TryGetImplementedRuntimeClassType(interopReferences, out TypeSignature? implementedRuntimeClassType))
+            {
+                // The type implements a Windows Runtime class declared in existing metadata (it derives from one of
+                // the abstract base classes CsWinRT generates for that purpose). Its runtime class name must be that
+                // of the implemented class, not of the deriving type: native callers must not be able to tell an
+                // authored implementation apart from the real thing, and the class name carries that identity.
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
+                    mappedMetadata: null,
+                    runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(implementedRuntimeClassType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
+                    metadataTypeName: null,
+                    mappedType: null,
+                    referenceType: null,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
             else if (userDefinedTypeDefinition.IsPublic &&
                      userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
             {

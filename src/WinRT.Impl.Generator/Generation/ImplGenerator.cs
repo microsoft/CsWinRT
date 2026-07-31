@@ -322,17 +322,15 @@ internal static partial class ImplGenerator
     }
 
     /// <summary>
-    /// Collects the full names of the non-public interfaces implemented by the abstract
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> base classes of an authoring projection, i.e. one produced with
-    /// <c>CsWinRTImplementWinMDTypes</c>, which exposes those bases so Windows Runtime types defined in an
-    /// existing <c>.winmd</c> can be implemented in C#.
+    /// Collects the full names of the non-public interfaces implemented by the abstract base classes that CsWinRT
+    /// generates for authoring Windows Runtime types declared in existing metadata (a projection built with
+    /// <c>CsWinRTImplementWinMDTypes</c>). Those bases carry <c>[WindowsRuntimeImplementableClass]</c>.
     /// </summary>
     /// <param name="inputModule">The input module.</param>
     /// <returns>The full names of the non-public interfaces to forward. Empty for a regular projection.</returns>
     /// <remarks>
-    /// These are the only non-public types that are ever forwarded. A regular projection has no public
-    /// abstract classes in an <c>ABI</c> namespace (its ABI types are all marshallers or <c>file</c> scoped
-    /// helpers), so the result is empty and its forwarder carries public types only.
+    /// These are the only non-public types that are ever forwarded. A regular projection has no such base classes,
+    /// so the result is empty and its forwarder carries public types only.
     /// </remarks>
     private static HashSet<string> GetAuthoringInterfaceNames(ModuleDefinition inputModule)
     {
@@ -341,8 +339,7 @@ internal static partial class ImplGenerator
         // Seed the set with the interfaces implemented by the abstract base classes
         foreach (TypeDefinition type in inputModule.TopLevelTypes)
         {
-            if (type is { IsPublic: true, IsAbstract: true, IsClass: true, Namespace: { } ns } &&
-                (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)))
+            if (IsImplementableBaseClass(type))
             {
                 _ = AddInterfaceNames(type, names);
             }
@@ -369,6 +366,18 @@ internal static partial class ImplGenerator
         }
 
         return names;
+    }
+
+    /// <summary>
+    /// Checks whether a type is one of the abstract base classes CsWinRT generates for authoring Windows Runtime
+    /// types declared in existing metadata, i.e. one marked <c>[WindowsRuntimeImplementableClass]</c>.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns>Whether the type is a generated implementable base class.</returns>
+    private static bool IsImplementableBaseClass(TypeDefinition type)
+    {
+        return type is { IsPublic: true, IsAbstract: true, IsClass: true }
+            && type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeImplementableClassAttribute"u8);
     }
 
     /// <summary>

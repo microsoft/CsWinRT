@@ -746,6 +746,68 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Tries to get the projected Windows Runtime class that a generated implementable base class stands for.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="runtimeClassType">The projected Windows Runtime class type, if the type is an implementable base.</param>
+        /// <returns>Whether the type is a generated implementable base class.</returns>
+        /// <remarks>
+        /// These are the abstract base classes CsWinRT generates when a projection is built with
+        /// <c>CsWinRTImplementWinMDTypes</c>, so that Windows Runtime types declared in existing metadata can be
+        /// implemented (authored) in C#. They carry <c>[WindowsRuntimeImplementableClass(typeof(&lt;class&gt;))]</c>.
+        /// </remarks>
+        public bool TryGetImplementableRuntimeClassType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
+        {
+            foreach (CustomAttribute attribute in type.CustomAttributes)
+            {
+                // Match '[WindowsRuntimeImplementableClass(typeof(<CLASS_TYPE>))]'
+                if (!SignatureComparer.IgnoreVersion.Equals(attribute.Constructor?.DeclaringType, interopReferences.WindowsRuntimeImplementableClassAttribute))
+                {
+                    continue;
+                }
+
+                if (attribute.Signature is { FixedArguments: [{ Element: TypeSignature classType }] })
+                {
+                    runtimeClassType = classType;
+
+                    return true;
+                }
+            }
+
+            runtimeClassType = null;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the projected Windows Runtime class that a type implements by deriving from one of the
+        /// abstract base classes CsWinRT generates for authoring Windows Runtime types declared in existing metadata.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="runtimeClassType">The projected Windows Runtime class type being implemented, if any.</param>
+        /// <returns>Whether the type implements a Windows Runtime class declared in existing metadata.</returns>
+        /// <remarks>
+        /// The nearest base carrying the marker wins, so a type deriving from a generated base for a derived runtime
+        /// class reports that derived class rather than one of its ancestors.
+        /// </remarks>
+        public bool TryGetImplementedRuntimeClassType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
+        {
+            for (TypeDefinition? current = type; current is not null;)
+            {
+                if (current.TryGetImplementableRuntimeClassType(interopReferences, out runtimeClassType))
+                {
+                    return true;
+                }
+
+                current = current.BaseType?.Resolve(interopReferences.RuntimeContext);
+            }
+
+            runtimeClassType = null;
+
+            return false;
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a type that can be constructed (i.e. instantiated).
         /// </summary>
         public bool IsConstructibleType => type is { IsInterface: false, IsAbstract: false };

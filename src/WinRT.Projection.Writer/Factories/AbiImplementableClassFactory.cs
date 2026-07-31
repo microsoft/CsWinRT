@@ -87,6 +87,10 @@ internal static class AbiImplementableClassFactory
 
         string inheritance = bases.Count > 0 ? " : " + string.Join(", ", bases) : string.Empty;
 
+        // Identify the Windows Runtime class this base stands for. The CCW of a type deriving from it
+        // reports that class name (not the deriving type's own name), and the CsWinRT build tools use
+        // this marker to recognize the generated bases.
+        writer.WriteLine($"[WindowsRuntimeImplementableClass(typeof({projectedType}))]");
         writer.WriteLine($"public abstract class {nameStripped}{inheritance}");
 
         using (writer.WriteBlock())
@@ -151,6 +155,7 @@ internal static class AbiImplementableClassFactory
         }
 
         string nameStripped = type.GetStrippedName();
+        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(type.GetRawNamespace(), nameStripped);
 
         // Inheritance list: the factory/statics interfaces (and any of their base interfaces). A class with a
         // default (parameterless) activation is activated through 'IActivationFactory' instead, which carries no
@@ -173,6 +178,7 @@ internal static class AbiImplementableClassFactory
         }
 
         writer.WriteLine();
+        writer.WriteLine($"[WindowsRuntimeImplementableClass(typeof({projectedType}))]");
         writer.WriteLine($"public abstract class {nameStripped}Factory : {string.Join(", ", bases)}");
 
         using (writer.WriteBlock())

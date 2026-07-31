@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
@@ -205,8 +204,8 @@ internal static partial class InteropTypeDiscovery
             goto FinalizeUserDefinedType;
         }
 
-        // Also gather the '[exclusiveto]' interfaces for types authored by deriving from a generated
-        // 'ABI.<Ns>.<Class>' implementable base class (the 3.0 way to implement a WinMD-defined type).
+        // Also gather the '[exclusiveto]' interfaces for types that implement a Windows Runtime class declared in
+        // existing metadata (the 3.0 way to author such a type, by deriving from a generated abstract base).
         // Skip abstract types (e.g. the generated base classes themselves), which never get a CCW.
         if (!typeDefinition.IsAbstract && !TryAddImplementableBaseExclusiveToInterfaceTypes(
             typeSignature: typeSignature,
@@ -553,8 +552,9 @@ internal static partial class InteropTypeDiscovery
     }
 
     /// <summary>
-    /// Tries to add the '[exclusiveto]' interfaces of any generated <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> implementable
-    /// base class that the current type derives from, so authored types get the right CCW interface entries.
+    /// Tries to add the '[exclusiveto]' interfaces of any generated implementable base class that the current type
+    /// derives from, so types authoring a Windows Runtime class declared in existing metadata get the right CCW
+    /// interface entries.
     /// </summary>
     /// <param name="typeSignature">The <see cref="TypeSignature"/> for the type to analyze.</param>
     /// <param name="interfaces">The set of interfaces being populated.</param>
@@ -574,8 +574,8 @@ internal static partial class InteropTypeDiscovery
                 continue;
             }
 
-            // Implementable base classes are the generated abstract 'ABI.<Ns>.<Class>' (and '<Class>Factory') types.
-            if (baseDefinition.Namespace is not Utf8String ns || !ns.AsSpan().StartsWith("ABI."u8))
+            // Implementable base classes are the generated abstract types marked '[WindowsRuntimeImplementableClass]'
+            if (!baseDefinition.TryGetImplementableRuntimeClassType(interopReferences, out _))
             {
                 continue;
             }

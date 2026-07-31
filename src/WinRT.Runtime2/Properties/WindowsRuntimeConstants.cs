@@ -68,6 +68,21 @@ internal static class WindowsRuntimeConstants
     public const string WindowsRuntimeReferenceAssemblyObsoleteDiagnosticId = "CSWINRT3004";
 
     /// <summary>
+    /// A message for the <c>WindowsRuntimeImplementableClassAttribute</c> type.
+    /// </summary>
+    public const string WindowsRuntimeImplementableClassObsoleteMessage =
+        "This attribute is a private implementation detail, and it must never be used directly. It is only meant to be applied to " +
+        "the abstract base classes CsWinRT generates for Windows Runtime types that can be implemented (authored) in C# (produced " +
+        "by 'cswinrtprojectiongen.exe' and 'cswinrtprojectionrefgen.exe'), to identify the Windows Runtime class each one stands " +
+        "for. It is not considered part of the versioned API surface, and it may be modified or removed across any version change " +
+        "for 'WinRT.Runtime.dll'. Using it in user code is undefined behavior and not supported.";
+
+    /// <summary>
+    /// The diagnostic id for the <c>WindowsRuntimeImplementableClassAttribute</c> type.
+    /// </summary>
+    public const string WindowsRuntimeImplementableClassObsoleteDiagnosticId = "CSWINRT3005";
+
+    /// <summary>
     /// The URL format for all custom diagnostics for CsWinRT.
     /// </summary>
     /// <remarks>

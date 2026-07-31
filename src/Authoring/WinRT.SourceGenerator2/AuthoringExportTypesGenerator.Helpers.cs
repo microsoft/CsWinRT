@@ -79,8 +79,9 @@ public partial class AuthoringExportTypesGenerator
         public static EquatableArray<AuthoringActivationFactoryInfo> GetActivationFactories(Compilation compilation, CancellationToken token)
         {
             INamedTypeSymbol? attributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAttribute");
+            INamedTypeSymbol? implementableAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeImplementableClassAttribute");
 
-            if (attributeSymbol is null)
+            if (attributeSymbol is null || implementableAttributeSymbol is null)
             {
                 return ImmutableArray<AuthoringActivationFactoryInfo>.Empty;
             }
@@ -100,55 +101,38 @@ public partial class AuthoringExportTypesGenerator
                     continue;
                 }
 
-                // Prefer the factory's own generated 'ABI.<Ns>.<Class>Factory' base, so statics-only runtime
-                // classes (which have no instance type to point the attribute at) still resolve correctly.
-                string? runtimeClassName =
-                    GetRuntimeClassNameFromFactoryBase(type) ??
-                    GetRuntimeClassNameFromAbiBase(runtimeClassType);
+                // Prefer the factory's own generated base, so statics-only runtime classes (which have no
+                // instance type for the attribute to point at) still resolve correctly.
+                INamedTypeSymbol? implementedClass =
+                    GetImplementedRuntimeClass(type, implementableAttributeSymbol) ??
+                    GetImplementedRuntimeClass(runtimeClassType, implementableAttributeSymbol);
 
-                if (runtimeClassName is null)
+                if (implementedClass is null)
                 {
                     continue;
                 }
 
-                builder.Add(new AuthoringActivationFactoryInfo(runtimeClassName, type.ToDisplayString()));
+                builder.Add(new AuthoringActivationFactoryInfo(implementedClass.ToDisplayString(), type.ToDisplayString()));
             }
 
             return builder.ToImmutable();
         }
 
         /// <summary>
-        /// Resolves the Windows Runtime class name from a factory type's generated
-        /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base class.
+        /// Resolves the Windows Runtime class that a type implements, by locating the generated abstract base
+        /// class it derives from and reading its <c>[WindowsRuntimeImplementableClass]</c> marker.
         /// </summary>
-        /// <param name="factoryType">The authored activation factory type.</param>
-        /// <returns>The Windows Runtime class name, or <see langword="null"/> if it can't be determined.</returns>
-        private static string? GetRuntimeClassNameFromFactoryBase(INamedTypeSymbol factoryType)
+        /// <param name="type">The type whose base classes to inspect.</param>
+        /// <param name="implementableAttributeSymbol">The <c>WindowsRuntimeImplementableClassAttribute</c> symbol.</param>
+        /// <returns>The projected Windows Runtime class type, or <see langword="null"/> if there is none.</returns>
+        private static INamedTypeSymbol? GetImplementedRuntimeClass(INamedTypeSymbol type, INamedTypeSymbol implementableAttributeSymbol)
         {
-            const string factorySuffix = "Factory";
-
-            return GetRuntimeClassNameFromAbiBase(factoryType) is string name && name.EndsWith(factorySuffix, System.StringComparison.Ordinal)
-                ? name[..^factorySuffix.Length]
-                : null;
-        }
-
-        /// <summary>
-        /// Resolves the Windows Runtime type name for a type by locating its generated <c>ABI.*</c> base
-        /// class and stripping the leading <c>ABI.</c>.
-        /// </summary>
-        /// <param name="type">The type whose generated base class to inspect.</param>
-        /// <returns>The Windows Runtime type name, or <see langword="null"/> if it can't be determined.</returns>
-        private static string? GetRuntimeClassNameFromAbiBase(INamedTypeSymbol type)
-        {
-            const string abiPrefix = "ABI.";
-
-            for (INamedTypeSymbol? current = type.BaseType; current is not null; current = current.BaseType)
+            for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
             {
-                string fullName = current.ToDisplayString();
-
-                if (fullName.StartsWith(abiPrefix, System.StringComparison.Ordinal))
+                if (current.TryGetAttributeWithType(implementableAttributeSymbol, out AttributeData? attributeData) &&
+                    attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol runtimeClassType }])
                 {
-                    return fullName[abiPrefix.Length..];
+                    return runtimeClassType;
                 }
             }
 

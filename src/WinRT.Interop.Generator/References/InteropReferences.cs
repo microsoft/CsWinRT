@@ -706,6 +706,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeClassNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeClassNameAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeImplementableClassAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeImplementableClassAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeImplementableClassAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataTypeNameAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeMetadataTypeNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataTypeNameAttribute"u8);
