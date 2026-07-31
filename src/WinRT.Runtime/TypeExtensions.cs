@@ -294,6 +294,20 @@ namespace WinRT
                 ((type.IsValueType || type.IsDelegate()) && Projections.IsTypeWindowsRuntimeType(type));
         }
 
+        // Whether an array with this element type should be boxed as 'IReferenceArray<Object>'.
+        // Reference type elements have no dedicated 'IReferenceArray<T>' and marshal individually
+        // as 'IInspectable', so they box as 'IReferenceArray<Object>' (an inspectable array).
+        // Only valid when the element type isn't already handled by 'ShouldProvideIReference'.
+        internal static bool ShouldProvideIReferenceArrayOfObject(this Type type)
+        {
+            if (!FeatureSwitches.EnableIReferenceSupport)
+            {
+                return false;
+            }
+
+            return !type.IsValueType;
+        }
+
         internal static bool IsTypeOfType(this Type type)
         {
             return typeof(Type).IsAssignableFrom(type);
