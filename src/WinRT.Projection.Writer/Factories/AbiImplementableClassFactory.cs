@@ -203,6 +203,33 @@ internal static class AbiImplementableClassFactory
             }
 
             EmitMergedProperties(writer, properties);
+
+            // The activation entry point generated into the component's own assembly needs to hand out a CCW
+            // for the factory, but it is compiled against the runtime reference assembly, where the
+            // marshalling APIs are stripped. So the conversion lives here instead, alongside the rest of the
+            // projection: declared in the reference projection and implemented when the application is built.
+            writer.WriteLine();
+
+            if (context.Settings.ReferenceProjection)
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    [EditorBrowsable(EditorBrowsableState.Never)]
+                    public static nint GetActivationFactoryUnsafe({{nameStripped}}Factory value)
+                    {
+                        throw null;
+                    }
+                    """);
+            }
+            else
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    [EditorBrowsable(EditorBrowsableState.Never)]
+                    public static unsafe nint GetActivationFactoryUnsafe({{nameStripped}}Factory value)
+                    {
+                        return (nint)WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value).DetachThisPtrUnsafe();
+                    }
+                    """);
+            }
         }
     }
 

@@ -8,6 +8,8 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// </summary>
 /// <param name="RuntimeClassName">The Windows Runtime class name the factory activates (e.g. <c>Ns.Foo</c>).</param>
 /// <param name="FactoryTypeName">The fully qualified name of the authored factory type.</param>
+/// <param name="FactoryBaseTypeName">The fully qualified name of the generated factory base class it extends.</param>
 internal record AuthoringActivationFactoryInfo(
     string RuntimeClassName,
-    string FactoryTypeName);
+    string FactoryTypeName,
+    string FactoryBaseTypeName);

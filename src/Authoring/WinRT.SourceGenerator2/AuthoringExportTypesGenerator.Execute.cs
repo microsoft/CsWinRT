@@ -194,13 +194,15 @@ public partial class AuthoringExportTypesGenerator
 
                 using (writer.WriteBlock())
                 {
-                    // Emit a check for each user-authored activation factory, returning its CCW pointer.
+                    // Emit a check for each user-authored activation factory, returning its CCW pointer. The
+                    // conversion lives on the generated factory base, since this compilation only sees the
+                    // runtime reference assembly and so cannot marshal on its own.
                     foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
                     {
                         writer.WriteLine($$"""
                             if (activatableClassId.SequenceEqual("{{factory.RuntimeClassName}}".AsSpan()))
                             {
-                                return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeObjectMarshaller.ConvertToUnmanaged({{GetActivationFactoryFieldName(factory)}}).DetachThisPtrUnsafe();
+                                return (void*)global::{{factory.FactoryBaseTypeName}}.GetActivationFactoryUnsafe({{GetActivationFactoryFieldName(factory)}});
                             }
                             """, isMultiline: true);
 
@@ -234,6 +236,11 @@ public partial class AuthoringExportTypesGenerator
                     else if (info.Options.MergeReferencedActivationFactories)
                     {
                         writer.WriteLine("return ReferencedManagedExports.GetActivationFactory(activatableClassId);");
+                    }
+                    else
+                    {
+                        // Only the checks emitted above can match, so nothing else is activatable from here
+                        writer.WriteLine("return null;");
                     }
                 }
 

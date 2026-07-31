@@ -104,40 +104,60 @@ public partial class AuthoringExportTypesGenerator
 
                 // Prefer the factory's own generated base, so statics-only runtime classes (which have no
                 // instance type for the attribute to point at) still resolve correctly.
-                INamedTypeSymbol? implementedClass =
-                    GetImplementedRuntimeClass(type, implementableFactoryAttributeSymbol) ??
-                    GetImplementedRuntimeClass(runtimeClassType, implementableAttributeSymbol);
+                INamedTypeSymbol? factoryBase = GetImplementableBase(type, implementableFactoryAttributeSymbol);
 
-                if (implementedClass is null)
+                INamedTypeSymbol? implementedClass =
+                    GetImplementedRuntimeClass(factoryBase, implementableFactoryAttributeSymbol) ??
+                    GetImplementedRuntimeClass(GetImplementableBase(runtimeClassType, implementableAttributeSymbol), implementableAttributeSymbol);
+
+                // The factory must extend a generated factory base: that is what supplies the conversion to a
+                // COM Callable Wrapper, which cannot be done from this compilation.
+                if (implementedClass is null || factoryBase is null)
                 {
                     continue;
                 }
 
-                builder.Add(new AuthoringActivationFactoryInfo(implementedClass.ToDisplayString(), type.ToDisplayString()));
+                builder.Add(new AuthoringActivationFactoryInfo(
+                    RuntimeClassName: implementedClass.ToDisplayString(),
+                    FactoryTypeName: type.ToDisplayString(),
+                    FactoryBaseTypeName: factoryBase.ToDisplayString()));
             }
 
             return builder.ToImmutable();
         }
 
         /// <summary>
-        /// Resolves the Windows Runtime class that a type implements, by locating the generated abstract base
-        /// class it derives from and reading its <c>[WindowsRuntimeImplementableClass]</c> marker.
+        /// Finds the generated abstract base class that a type derives from, identified by a marker attribute.
         /// </summary>
         /// <param name="type">The type whose base classes to inspect.</param>
-        /// <param name="implementableAttributeSymbol">The <c>WindowsRuntimeImplementableClassAttribute</c> symbol.</param>
-        /// <returns>The projected Windows Runtime class type, or <see langword="null"/> if there is none.</returns>
-        private static INamedTypeSymbol? GetImplementedRuntimeClass(INamedTypeSymbol type, INamedTypeSymbol implementableAttributeSymbol)
+        /// <param name="markerAttributeSymbol">The marker attribute identifying the generated base.</param>
+        /// <returns>The generated base class, or <see langword="null"/> if there is none.</returns>
+        private static INamedTypeSymbol? GetImplementableBase(INamedTypeSymbol? type, INamedTypeSymbol markerAttributeSymbol)
         {
             for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
             {
-                if (current.TryGetAttributeWithType(implementableAttributeSymbol, out AttributeData? attributeData) &&
-                    attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol runtimeClassType }])
+                if (current.TryGetAttributeWithType(markerAttributeSymbol, out _))
                 {
-                    return runtimeClassType;
+                    return current;
                 }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Reads the Windows Runtime class recorded on a generated abstract base class.
+        /// </summary>
+        /// <param name="implementableBase">The generated base class, if any.</param>
+        /// <param name="markerAttributeSymbol">The marker attribute carrying the class.</param>
+        /// <returns>The projected Windows Runtime class type, or <see langword="null"/> if there is none.</returns>
+        private static INamedTypeSymbol? GetImplementedRuntimeClass(INamedTypeSymbol? implementableBase, INamedTypeSymbol markerAttributeSymbol)
+        {
+            return implementableBase is not null &&
+                   implementableBase.TryGetAttributeWithType(markerAttributeSymbol, out AttributeData? attributeData) &&
+                   attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol runtimeClassType }]
+                ? runtimeClassType
+                : null;
         }
 
         /// <summary>
