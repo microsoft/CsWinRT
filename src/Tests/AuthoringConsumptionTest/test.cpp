@@ -734,6 +734,51 @@ TEST(AuthoringTest, CustomInterfaceGuid)
     EXPECT_EQ(customInterface.HelloWorld(), L"Hello World!");
 }
 
+TEST(AuthoringTest, CustomOverloadNames)
+{
+    // Test interface-level overloads with user-specified OverloadAttribute names.
+    CustomOverloadNamesClass obj;
+    EXPECT_EQ(obj.Lookup(hstring(L"test")), hstring(L"found:test"));
+    EXPECT_EQ(obj.Lookup(42), 420);
+
+    // Through the interface
+    ICustomOverloadNames iface = obj;
+    EXPECT_EQ(iface.Lookup(hstring(L"hello")), hstring(L"found:hello"));
+    EXPECT_EQ(iface.Lookup(7), 70);
+
+    // Test class-level overloads with mixed user-specified and auto-generated names.
+    EXPECT_EQ(obj.Transform(hstring(L"abc")), hstring(L"ABC"));
+    EXPECT_EQ(obj.Transform(5), 10);
+    EXPECT_EQ(obj.Transform(1.0), 1.5);
+
+    // Verify the user-specified ABI names actually appear in the generated projection.
+    // The abi<ICustomOverloadNames>::type vtable has virtual methods named exactly
+    // after the [Overload("...")] values. If the winmd had auto-generated names
+    // (e.g. "Lookup2") instead of "LookupByIndex", these calls would fail to compile.
+    using abi_type = winrt::impl::abi_t<ICustomOverloadNames>;
+    auto raw = static_cast<abi_type*>(winrt::get_abi(iface));
+    {
+        int32_t result = 0;
+        EXPECT_EQ(raw->LookupByIndex(7, &result), S_OK);
+        EXPECT_EQ(result, 70);
+    }
+    {
+        bool result = false;
+        EXPECT_EQ(raw->LookupByFlag(false, &result), S_OK);
+        EXPECT_TRUE(result);
+    }
+
+    // Same check for the class-level synthesized interface.
+    using class_abi_type = winrt::impl::abi_t<ICustomOverloadNamesClassClass>;
+    ICustomOverloadNamesClassClass classIface = obj.as<ICustomOverloadNamesClassClass>();
+    auto rawClass = static_cast<class_abi_type*>(winrt::get_abi(classIface));
+    {
+        int32_t result = 0;
+        EXPECT_EQ(rawClass->TransformNumber(5, &result), S_OK);
+        EXPECT_EQ(result, 10);
+    }
+}
+
 TEST(AuthoringTest, NonActivatableFactory)
 {
     EXPECT_EQ(NonActivatableFactory::Create().GetText(), L"Test123");
