@@ -377,7 +377,8 @@ internal static partial class ImplGenerator
     private static bool IsImplementableBaseClass(TypeDefinition type)
     {
         return type is { IsPublic: true, IsAbstract: true, IsClass: true }
-            && type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeImplementableClassAttribute"u8);
+            && (type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeImplementableClassAttribute"u8)
+                || type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeImplementableClassFactoryAttribute"u8));
     }
 
     /// <summary>

@@ -80,8 +80,9 @@ public partial class AuthoringExportTypesGenerator
         {
             INamedTypeSymbol? attributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAttribute");
             INamedTypeSymbol? implementableAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeImplementableClassAttribute");
+            INamedTypeSymbol? implementableFactoryAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeImplementableClassFactoryAttribute");
 
-            if (attributeSymbol is null || implementableAttributeSymbol is null)
+            if (attributeSymbol is null || implementableAttributeSymbol is null || implementableFactoryAttributeSymbol is null)
             {
                 return ImmutableArray<AuthoringActivationFactoryInfo>.Empty;
             }
@@ -104,7 +105,7 @@ public partial class AuthoringExportTypesGenerator
                 // Prefer the factory's own generated base, so statics-only runtime classes (which have no
                 // instance type for the attribute to point at) still resolve correctly.
                 INamedTypeSymbol? implementedClass =
-                    GetImplementedRuntimeClass(type, implementableAttributeSymbol) ??
+                    GetImplementedRuntimeClass(type, implementableFactoryAttributeSymbol) ??
                     GetImplementedRuntimeClass(runtimeClassType, implementableAttributeSymbol);
 
                 if (implementedClass is null)

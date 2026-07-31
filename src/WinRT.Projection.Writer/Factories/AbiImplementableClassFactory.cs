@@ -178,7 +178,7 @@ internal static class AbiImplementableClassFactory
         }
 
         writer.WriteLine();
-        writer.WriteLine($"[WindowsRuntimeImplementableClass(typeof({projectedType}))]");
+        writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}))]");
         writer.WriteLine($"public abstract class {nameStripped}Factory : {string.Join(", ", bases)}");
 
         using (writer.WriteBlock())

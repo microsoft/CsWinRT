@@ -204,18 +204,6 @@ internal static partial class InteropTypeDiscovery
             goto FinalizeUserDefinedType;
         }
 
-        // Also gather the '[exclusiveto]' interfaces for types that implement a Windows Runtime class declared in
-        // existing metadata (the 3.0 way to author such a type, by deriving from a generated abstract base).
-        // Skip abstract types (e.g. the generated base classes themselves), which never get a CCW.
-        if (!typeDefinition.IsAbstract && !TryAddImplementableBaseExclusiveToInterfaceTypes(
-            typeSignature: typeSignature,
-            interfaces: interfaces,
-            args: args,
-            interopReferences: interopReferences))
-        {
-            goto FinalizeUserDefinedType;
-        }
-
         // Up until this point we could have only gathered '[exclusiveto]' interfaces, which are by definition Windows Runtime
         // interfaces. So we can just check if we have any interfaces in our set to determine if the type should be exposed.
         hasAnyProjectedWindowsRuntimeInterfaces = interfaces.Count > 0;
@@ -545,63 +533,6 @@ internal static partial class InteropTypeDiscovery
                 args: args))
             {
                 return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Tries to add the '[exclusiveto]' interfaces of any generated implementable base class that the current type
-    /// derives from, so types authoring a Windows Runtime class declared in existing metadata get the right CCW
-    /// interface entries.
-    /// </summary>
-    /// <param name="typeSignature">The <see cref="TypeSignature"/> for the type to analyze.</param>
-    /// <param name="interfaces">The set of interfaces being populated.</param>
-    /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <returns>Whether the new interfaces could be added.</returns>
-    private static bool TryAddImplementableBaseExclusiveToInterfaceTypes(
-        TypeSignature typeSignature,
-        TypeSignatureEquatableSet.Builder interfaces,
-        InteropGeneratorArgs args,
-        InteropReferences interopReferences)
-    {
-        foreach (TypeSignature baseSignature in typeSignature.EnumerateBaseTypes(interopReferences))
-        {
-            if (!baseSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? baseDefinition))
-            {
-                continue;
-            }
-
-            // Implementable base classes are the generated abstract types marked '[WindowsRuntimeImplementableClass]'
-            if (!baseDefinition.TryGetImplementableRuntimeClassType(interopReferences, out _))
-            {
-                continue;
-            }
-
-            // Expose every Windows Runtime interface the base implements (including '[exclusiveto]' ones,
-            // which the normal covariant walk filters out) so the author's overrides back the CCW.
-            foreach (InterfaceImplementation impl in baseDefinition.Interfaces)
-            {
-                if (impl.Interface?.ToReferenceTypeSignature() is not TypeSignature interfaceType)
-                {
-                    continue;
-                }
-
-                if (!interfaceType.IsWindowsRuntimeType(interopReferences))
-                {
-                    continue;
-                }
-
-                if (!TryAddExposedInterfaceType(
-                    typeSignature: typeSignature,
-                    interfaceType: interfaceType,
-                    interfaces: interfaces,
-                    args: args))
-                {
-                    return false;
-                }
             }
         }
 

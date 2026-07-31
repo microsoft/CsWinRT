@@ -750,18 +750,31 @@ internal static class WindowsRuntimeExtensions
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="runtimeClassType">The projected Windows Runtime class type, if the type is an implementable base.</param>
-        /// <returns>Whether the type is a generated implementable base class.</returns>
+        /// <returns>Whether the type is a generated implementable base class for a runtime class.</returns>
         /// <remarks>
         /// These are the abstract base classes CsWinRT generates when a projection is built with
         /// <c>CsWinRTImplementWinMDTypes</c>, so that Windows Runtime types declared in existing metadata can be
         /// implemented (authored) in C#. They carry <c>[WindowsRuntimeImplementableClass(typeof(&lt;class&gt;))]</c>.
+        /// Factory bases are deliberately excluded: an activation factory is not an instance of the class it
+        /// activates, so it must not take on that class's identity.
         /// </remarks>
         public bool TryGetImplementableRuntimeClassType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
         {
+            return type.TryGetImplementableRuntimeClassType(interopReferences.WindowsRuntimeImplementableClassAttribute, out runtimeClassType);
+        }
+
+        /// <summary>
+        /// Tries to read the projected Windows Runtime class type from a given marker attribute on a type.
+        /// </summary>
+        /// <param name="attributeType">The marker attribute type to look for.</param>
+        /// <param name="runtimeClassType">The projected Windows Runtime class type, if the marker is present.</param>
+        /// <returns>Whether the marker was present.</returns>
+        private bool TryGetImplementableRuntimeClassType(TypeReference attributeType, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
+        {
             foreach (CustomAttribute attribute in type.CustomAttributes)
             {
-                // Match '[WindowsRuntimeImplementableClass(typeof(<CLASS_TYPE>))]'
-                if (!SignatureComparer.IgnoreVersion.Equals(attribute.Constructor?.DeclaringType, interopReferences.WindowsRuntimeImplementableClassAttribute))
+                // Match '[<attribute>(typeof(<CLASS_TYPE>))]'
+                if (!SignatureComparer.IgnoreVersion.Equals(attribute.Constructor?.DeclaringType, attributeType))
                 {
                     continue;
                 }
