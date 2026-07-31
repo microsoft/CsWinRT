@@ -1250,12 +1250,21 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::check_hresult(_asyncResult);
     }
 
-    void Class::SetFailingCompletedHandler(IAsyncAction const& action)
+    void Class::SetFailingCompletedHandler(IAsyncAction const& action, int32_t hr)
     {
-        action.Completed([](IAsyncAction const&, AsyncStatus)
+        action.Completed([strong = get_strong(), hr](IAsyncAction const&, AsyncStatus)
         {
-            throw winrt::hresult_error(E_FAIL, L"Intentional failure in completion handler");
+            // Signal that the handler ran before failing, so that tests can wait for this
+            // deterministically (the handler itself can never report anything back, as it throws).
+            strong->_failingCompletedHandlerInvoked.store(true, std::memory_order_release);
+
+            throw winrt::hresult_error(winrt::hresult{ hr }, L"Intentional failure in completion handler");
         });
+    }
+
+    bool Class::FailingCompletedHandlerInvoked()
+    {
+        return _failingCompletedHandlerInvoked.load(std::memory_order_acquire);
     }
 
     IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()

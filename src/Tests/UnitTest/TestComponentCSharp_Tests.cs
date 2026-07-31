@@ -5138,22 +5138,32 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public async Task TestFailingCompletionHandlerCrashesProcess()
+        [DataRow(unchecked((int)0x80010108))] // RPC_E_DISCONNECTED
+        [DataRow(unchecked((int)0x800706BA))] // RPC_S_SERVER_UNAVAILABLE
+        [DataRow(unchecked((int)0x89020001))] // JSCRIPT_E_CANTEXECUTE
+        public void TestFailingCompletionHandlerWithDisconnectedPeerIsIgnored(int hresult)
         {
-            // Create an IAsyncAction from a C# task that completes after 2 seconds.
-            var asyncAction = AsyncInfo.Run(_ => Task.Delay(TimeSpan.FromSeconds(2)));
+            // Create an 'IAsyncAction' from a C# task we can complete on demand.
+            TaskCompletionSource taskCompletionSource = new();
+            IAsyncAction asyncAction = AsyncInfo.Run(_ => taskCompletionSource.Task);
 
-            // Pass it to native code which sets a Completed handler that throws.
-            var instance = new Class();
-            instance.SetFailingCompletedHandler(asyncAction);
+            // Pass it to native code, which sets a 'Completed' handler that always throws one
+            // of the well known 'HRESULT'-s indicating that the peer process is gone.
+            Class instance = new();
+            instance.SetFailingCompletedHandler(asyncAction, hresult);
 
-            // Wait long enough for the async action to complete and the native
-            // completion handler to fire. If the throwing handler crashes the
-            // process, we will never reach the assertion below.
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            taskCompletionSource.SetResult();
 
-            // If we get here, the process survived the throwing completion handler.
-            Assert.IsTrue(true, "Process survived the throwing native completion handler.");
+            // The native handler runs on whichever thread completes the task (the continuation is
+            // registered with 'ExecuteSynchronously'), but poll anyway so the test is not racy.
+            Assert.IsTrue(
+                SpinWait.SpinUntil(() => instance.FailingCompletedHandlerInvoked, TimeSpan.FromSeconds(10)),
+                "The native 'Completed' handler was never invoked.");
+
+            // Reaching this point means the failure from the completion handler was swallowed (had it
+            // been rethrown on the thread pool, as is done for any other 'HRESULT', the process would
+            // have been torn down instead). The async action itself is unaffected by the failure.
+            Assert.AreEqual(AsyncStatus.Completed, asyncAction.Status);
         }
     }
 }

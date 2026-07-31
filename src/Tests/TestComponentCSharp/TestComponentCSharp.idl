@@ -444,7 +444,11 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncOperation<Int32> AddAsync(Int32 lhs, Int32 rhs);
         Windows.Foundation.IAsyncOperationWithProgress<Int32, Int32> AddAsyncWithProgress(Int32 lhs, Int32 rhs);
 
-        void SetFailingCompletedHandler(Windows.Foundation.IAsyncAction action);
+        // Registers a 'Completed' handler on the supplied async action that always fails with the
+        // specified HRESULT, and a flag that is set right before the handler throws (so that tests
+        // can deterministically wait for the handler to have been invoked).
+        void SetFailingCompletedHandler(Windows.Foundation.IAsyncAction action, Int32 hr);
+        Boolean FailingCompletedHandlerInvoked{ get; };
 
         // Type mappings
         // "Simple" structs (blittable with changes to add properties/functions/constructors/etc.)
