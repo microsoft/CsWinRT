@@ -70,8 +70,8 @@ Set `CsWinRTImplementWinMDTypes` on the projection project for that metadata:
 ```
 
 The projection then carries, in addition to its usual projected types, an abstract `ABI.<Namespace>.<Class>`
-base class per runtime class, plus an `ABI.<Namespace>.<Class>Factory` base for its statics, factory methods
-and activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler
+base class per runtime class, plus an `ABI.<Namespace>.<Class>ActivationFactory` base for its statics, factory
+methods and activation. Every member the Windows Runtime type requires is declared `abstract`, so the compiler
 guarantees none is missed. The Windows Runtime interfaces behind them stay `internal`, so none of the
 marshalling infrastructure is exposed.
 
@@ -89,7 +89,7 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 }
 
 [WindowsRuntimeActivationFactory(typeof(MyWidget))]
-public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetFactory, IWidgetInterop
+public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetActivationFactory, IWidgetInterop
 {
     public override object ActivateInstance() => new MyWidget();
 }
