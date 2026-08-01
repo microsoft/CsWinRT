@@ -25,9 +25,10 @@ internal static class AbiStructFactory
     public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Emit the underlying ABI struct only when not blittable AND not a mapped struct
-        // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that
-        // replace the public struct's field layout, so a per-field ABI struct can't be
-        // built directly from the projected type).
+        // (mapped structs like Duration/KeyTime/RepeatBehavior are defined in full by an
+        // addition file rather than generated from metadata, so the writer can't build a
+        // per-field ABI struct from the projected type; those types instead guarantee a
+        // layout-compatible shape themselves and are passed through by value).
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
         (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
