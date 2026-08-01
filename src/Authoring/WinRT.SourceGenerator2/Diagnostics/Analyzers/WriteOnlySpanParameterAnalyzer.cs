@@ -19,6 +19,11 @@ namespace WindowsRuntime.SourceGenerator.Diagnostics;
 /// implementation is given a buffer allocated by the caller that it is expected to fill, and reading from it is not supported.
 /// This analyzer detects the most common ways a method might read from such a parameter, while avoiding false positives on
 /// write-only usages.
+/// <para>
+/// Reading back a value the method itself has just written is valid, as the element being read is no longer uninitialized.
+/// To account for that, a read is not reported when a write covering the same location is guaranteed to run before it,
+/// such as a preceding <c>span.Clear()</c> or <c>span.Fill(value)</c> call, or a preceding assignment to that same element.
+/// </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
@@ -67,18 +72,22 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
                 foreach (IOperation operationBlock in context.OperationBlocks)
                 {
+                    // A 'goto' can jump over a write that would otherwise always run before a given read, so
+                    // no read is ever suppressed in a body containing one (this is extremely rare in practice)
+                    bool allowsSuppression = !ContainsGotoBranch(operationBlock);
+
                     foreach (IOperation operation in operationBlock.DescendantsAndSelf())
                     {
                         switch (operation)
                         {
                             case IPropertyReferenceOperation propertyReference:
-                                AnalyzeElementRead(context, propertyReference, method, spanType);
+                                AnalyzeElementRead(context, propertyReference, method, spanType, allowsSuppression);
                                 break;
                             case IConversionOperation conversion:
-                                AnalyzeSpanConversion(context, conversion, method, spanType, readOnlySpanType);
+                                AnalyzeSpanConversion(context, conversion, method, spanType, readOnlySpanType, allowsSuppression);
                                 break;
                             case IForEachLoopOperation forEachLoop:
-                                AnalyzeForEachLoop(context, forEachLoop, method, spanType);
+                                AnalyzeForEachLoop(context, forEachLoop, method, spanType, allowsSuppression);
                                 break;
                             default:
                                 break;
@@ -96,6 +105,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <param name="operation">The property reference to analyze.</param>
     /// <param name="method">The method being analyzed.</param>
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     /// <remarks>
     /// This handles reading the value (or a readonly reference) of an element, such as:
     /// <code>
@@ -111,7 +121,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         OperationBlockAnalysisContext context,
         IPropertyReferenceOperation operation,
         IMethodSymbol method,
-        INamedTypeSymbol spanType)
+        INamedTypeSymbol spanType,
+        bool allowsSuppression)
     {
         // We only care about the 'Span<T>' indexer (i.e. 'span[i]'), not other properties (e.g. 'Length')
         if (!operation.Property.IsIndexer)
@@ -132,6 +143,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // Skip reads of an element that the method is guaranteed to have already written to
+        if (allowsSuppression &&
+            operation.Arguments is [{ Value: { } index }] &&
+            IsPrecededByCoveringWrite(operation, ReadTarget.ForElement(parameter, spanType, index)))
+        {
+            return;
+        }
+
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.WriteOnlySpanParameterRead,
             operation.Syntax.GetLocation(),
@@ -147,6 +166,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <param name="method">The method being analyzed.</param>
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
     /// <param name="readOnlySpanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.ReadOnlySpan{T}"/>.</param>
+    /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     /// <remarks>
     /// This handles converting the span to <see cref="System.ReadOnlySpan{T}"/>, such as:
     /// <code>
@@ -159,7 +179,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         IConversionOperation operation,
         IMethodSymbol method,
         INamedTypeSymbol spanType,
-        INamedTypeSymbol readOnlySpanType)
+        INamedTypeSymbol readOnlySpanType,
+        bool allowsSuppression)
     {
         // The conversion must target 'ReadOnlySpan<T>' (a read-only view over the span elements)
         if (!SymbolEqualityComparer.Default.Equals(operation.Type?.OriginalDefinition, readOnlySpanType))
@@ -170,6 +191,12 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // The operand must be a write-only 'Span<T>' parameter
         if (operation.Operand is not IParameterReferenceOperation { Parameter: { } parameter } ||
             !IsFillArrayParameter(parameter, method, spanType))
+        {
+            return;
+        }
+
+        // Skip conversions of a span that the method is guaranteed to have already filled entirely
+        if (allowsSuppression && IsPrecededByCoveringWrite(operation, ReadTarget.ForSpan(parameter, spanType)))
         {
             return;
         }
@@ -187,6 +214,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <param name="operation">The <c>foreach</c> loop to analyze.</param>
     /// <param name="method">The method being analyzed.</param>
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     /// <remarks>
     /// This handles iterating over the span, which reads each element, such as:
     /// <code>
@@ -206,7 +234,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         OperationBlockAnalysisContext context,
         IForEachLoopOperation operation,
         IMethodSymbol method,
-        INamedTypeSymbol spanType)
+        INamedTypeSymbol spanType,
+        bool allowsSuppression)
     {
         // The iterated collection is the span parameter, possibly wrapped in an identity conversion
         IOperation collection = operation.Collection is IConversionOperation { Operand: { } operand }
@@ -226,8 +255,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // only ever read the elements, so for those the loop itself is reported instead.
         if (operation.LoopControlVariable is IVariableDeclaratorOperation { Symbol: { RefKind: RefKind.Ref } loopVariable })
         {
-            AnalyzeLoopVariableReads(context, operation.Body, parameter, loopVariable);
+            AnalyzeLoopVariableReads(context, operation.Body, ReadTarget.ForAlias(parameter, spanType, loopVariable), allowsSuppression);
 
+            return;
+        }
+
+        // Skip iterations over a span that the method is guaranteed to have already filled entirely
+        if (allowsSuppression && IsPrecededByCoveringWrite(operation.Collection, ReadTarget.ForSpan(parameter, spanType)))
+        {
             return;
         }
 
@@ -242,14 +277,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// with a writable <c>ref</c> loop variable, to detect reads of the current element through that variable.
     /// </summary>
     /// <param name="context">The context to report diagnostics to.</param>
-    /// <param name="loopBody">The body of the <c>foreach</c> loop declaring <paramref name="loopVariable"/>.</param>
-    /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being iterated over.</param>
-    /// <param name="loopVariable">The writable <c>ref</c> loop variable, aliasing the current element.</param>
+    /// <param name="loopBody">The body of the <c>foreach</c> loop declaring the loop variable.</param>
+    /// <param name="target">The element aliased by the writable <c>ref</c> loop variable of the loop.</param>
+    /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     private static void AnalyzeLoopVariableReads(
         OperationBlockAnalysisContext context,
         IOperation loopBody,
-        IParameterSymbol parameter,
-        ILocalSymbol loopVariable)
+        ReadTarget target,
+        bool allowsSuppression)
     {
         foreach (IOperation operation in loopBody.DescendantsAndSelf())
         {
@@ -257,7 +292,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // The loop variable can't be captured by a lambda or ref reassigned, so all aliasing usages
             // of the current element are guaranteed to appear directly in the body of the loop.
             if (operation is not ILocalReferenceOperation { Local: { } local } ||
-                !SymbolEqualityComparer.Default.Equals(local, loopVariable))
+                !SymbolEqualityComparer.Default.Equals(local, target.Alias))
             {
                 continue;
             }
@@ -268,10 +303,16 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
+            // Skip reads of an element that the method is guaranteed to have already written to
+            if (allowsSuppression && IsPrecededByCoveringWrite(operation, target))
+            {
+                continue;
+            }
+
             context.ReportDiagnostic(Diagnostic.Create(
                 DiagnosticDescriptors.WriteOnlySpanParameterRead,
                 operation.Syntax.GetLocation(),
-                parameter.Name));
+                target.Parameter.Name));
         }
     }
 
@@ -387,5 +428,393 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // compound assignment, or an increment/decrement), which is not valid for a write-only fill array.
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Checks whether a given read from a write-only <see cref="System.Span{T}"/> parameter is preceded by a write
+    /// that is guaranteed to run before it, and that covers the same location. Such a read only ever observes values
+    /// that the method itself has just written, so it is valid even though the parameter is a fill array.
+    /// </summary>
+    /// <param name="read">The operation performing the read.</param>
+    /// <param name="target">The location that <paramref name="read"/> accesses.</param>
+    /// <returns>Whether <paramref name="read"/> is preceded by a write covering <paramref name="target"/>.</returns>
+    /// <remarks>
+    /// Only writes appearing in a statement that precedes (an ancestor of) <paramref name="read"/> in some enclosing
+    /// block are considered, and only when they are unconditionally reached within that statement. This is meant to
+    /// be conservative: it is fine to miss a write that does happen, but a write must never be reported as guaranteed
+    /// unless it necessarily runs first, as that would silently hide an actual read of an uninitialized element.
+    /// </remarks>
+    private static bool IsPrecededByCoveringWrite(IOperation read, ReadTarget target)
+    {
+        IOperation current = read;
+        IOperation? parent = read.Parent;
+
+        while (parent is not null)
+        {
+            // Never look at the enclosing method when the read is inside a lambda or a local function, as those
+            // can be invoked at any point. This can't normally be reached, given that a span is a 'ref struct'
+            // type, and as such it cannot be captured by either of them, but it is cheap to guard against.
+            if (parent is IAnonymousFunctionOperation or ILocalFunctionOperation)
+            {
+                return false;
+            }
+
+            // Only the statements within a block are ordered with respect to one another. Any other kind of parent
+            // is just skipped, meaning the search resumes from the closest enclosing statement in the parent block.
+            if (parent is IBlockOperation block)
+            {
+                int index = block.Operations.IndexOf(current);
+
+                for (int i = index - 1; i >= 0; i--)
+                {
+                    if (IsGuaranteedCoveringWrite(block.Operations[i], target))
+                    {
+                        // A preceding write only covers the read if the operands it depends on can't have changed in
+                        // between. If they can, no earlier write can be relied upon either, as it would span an even
+                        // wider range of statements, so there is no point in continuing the search past this one.
+                        return AreOperandsStable(block.Operations, i, index, target);
+                    }
+                }
+            }
+
+            current = parent;
+            parent = parent.Parent;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a given operation contains a write covering a target location that is guaranteed to be reached.
+    /// </summary>
+    /// <param name="operation">The operation to inspect.</param>
+    /// <param name="target">The location that the write should cover.</param>
+    /// <returns>Whether <paramref name="operation"/> necessarily performs a write covering <paramref name="target"/>.</returns>
+    private static bool IsGuaranteedCoveringWrite(IOperation operation, ReadTarget target)
+    {
+        // Constructs that might not run at all can never guarantee that a write nested in them will happen
+        if (IsConditionallyExecuted(operation))
+        {
+            return false;
+        }
+
+        if (IsCoveringWrite(operation, target))
+        {
+            return true;
+        }
+
+        foreach (IOperation child in operation.ChildOperations)
+        {
+            if (IsGuaranteedCoveringWrite(child, target))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a given operation is a write covering a target location.
+    /// </summary>
+    /// <param name="operation">The operation to inspect.</param>
+    /// <param name="target">The location that the write should cover.</param>
+    /// <returns>Whether <paramref name="operation"/> writes to all of <paramref name="target"/>.</returns>
+    private static bool IsCoveringWrite(IOperation operation, ReadTarget target)
+    {
+        // 'span.Clear()' and 'span.Fill(value)' initialize every element of the span, so
+        // they cover any subsequent read from it, no matter which elements it looks at.
+        if (operation is IInvocationOperation { TargetMethod: { Name: "Clear", Parameters: [] } or { Name: "Fill", Parameters: [_] } } invocation &&
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType.OriginalDefinition, target.SpanType) &&
+            invocation.Instance is { } instance &&
+            IsReferenceTo(instance, target.Parameter))
+        {
+            return true;
+        }
+
+        // 'span[i] = value' and 'Foo(out span[i])' initialize a single element, so they only
+        // cover reads of that same element (i.e. reads through an equivalent index expression).
+        if (target.Index is { } index &&
+            operation is IPropertyReferenceOperation { Property.IsIndexer: true, Instance: { } spanInstance, Arguments: [{ Value: { } writeIndex }] } &&
+            IsReferenceTo(spanInstance, target.Parameter) &&
+            IsDefiniteWrite(operation) &&
+            AreIndexesEquivalent(writeIndex, index))
+        {
+            return true;
+        }
+
+        // 'x = value' and 'Foo(out x)' through a writable 'ref' 'foreach' loop variable initialize
+        // the element it aliases, so they cover reads of that element through the same variable.
+        return
+            target.Alias is { } alias &&
+            IsReferenceTo(operation, alias) &&
+            IsDefiniteWrite(operation);
+    }
+
+    /// <summary>
+    /// Checks whether a given operation might not be reached during the execution of its parent operation.
+    /// </summary>
+    /// <param name="operation">The operation to check.</param>
+    /// <returns>Whether <paramref name="operation"/> might be skipped, or run at some later point.</returns>
+    private static bool IsConditionallyExecuted(IOperation operation)
+    {
+        return operation is
+            IConditionalOperation or            // 'if' statements and '?:' expressions
+            IConditionalAccessOperation or      // '?.' and '?[]' accesses
+            ICoalesceOperation or               // '??' expressions
+            ICoalesceAssignmentOperation or     // '??=' expressions
+            ISwitchOperation or                 // 'switch' statements
+            ISwitchExpressionOperation or       // 'switch' expressions
+            ILoopOperation or                   // all loops, as the body might never run
+            ITryOperation or                    // 'try' blocks, as an exception might skip the rest of the body
+            IAnonymousFunctionOperation or      // lambdas and anonymous methods
+            ILocalFunctionOperation or          // local functions
+            IBinaryOperation { OperatorKind: BinaryOperatorKind.ConditionalAnd or BinaryOperatorKind.ConditionalOr };
+    }
+
+    /// <summary>
+    /// Checks whether the operands a covering write depends on (i.e. the span parameter itself, and the index
+    /// variable, if the target is a single element) can't have been modified between that write and a later read.
+    /// </summary>
+    /// <param name="statements">The statements of the block containing both the write and the read.</param>
+    /// <param name="writeIndex">The index of the statement containing the write.</param>
+    /// <param name="readIndex">The index of the statement containing the read.</param>
+    /// <param name="target">The location that the write covers.</param>
+    /// <returns>Whether the write still applies to <paramref name="target"/> when the read is reached.</returns>
+    private static bool AreOperandsStable(ImmutableArray<IOperation> statements, int writeIndex, int readIndex, ReadTarget target)
+    {
+        ISymbol? indexSymbol = target.IndexSymbol;
+
+        for (int i = writeIndex; i <= readIndex; i++)
+        {
+            foreach (IOperation operation in statements[i].DescendantsAndSelf())
+            {
+                // Reassigning the span parameter would make the write apply to an entirely different buffer
+                if (IsPotentialWrite(operation, target.Parameter))
+                {
+                    return false;
+                }
+
+                // Likewise, modifying the index variable would make the two accesses target different elements
+                if (indexSymbol is not null && IsPotentialWrite(operation, indexSymbol))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks whether a given operation is a reference to a local or parameter that might modify its value.
+    /// </summary>
+    /// <param name="operation">The operation to check.</param>
+    /// <param name="symbol">The local or parameter to look for.</param>
+    /// <returns>Whether <paramref name="operation"/> might modify the value of <paramref name="symbol"/>.</returns>
+    private static bool IsPotentialWrite(IOperation operation, ISymbol symbol)
+    {
+        return IsReferenceTo(operation, symbol) && operation.Parent switch
+        {
+            // 'x = value', 'x += value' and 'x ??= value'
+            IAssignmentOperation assignment => ReferenceEquals(assignment.Target, operation),
+
+            // 'x++' and 'x--'
+            IIncrementOrDecrementOperation incrementOrDecrement => ReferenceEquals(incrementOrDecrement.Target, operation),
+
+            // 'Foo(out x)' and 'Foo(ref x)'
+            IArgumentOperation { Parameter.RefKind: RefKind.Out or RefKind.Ref } => true,
+
+            // 'ref var alias = ref x', which can then be used to write to it
+            IVariableInitializerOperation { Parent: IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref } } => true,
+
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Checks whether a given reference to an element of a write-only <see cref="System.Span{T}"/> parameter is
+    /// guaranteed to initialize that element, as opposed to just possibly writing to it.
+    /// </summary>
+    /// <param name="operation">The operation referencing the element (either an indexer access, or a <c>ref</c> alias).</param>
+    /// <returns>Whether <paramref name="operation"/> necessarily writes to the element.</returns>
+    private static bool IsDefiniteWrite(IOperation operation)
+    {
+        return operation.Parent switch
+        {
+            // 'span[i] = value' or 'x = value': the element is definitely assigned
+            ISimpleAssignmentOperation simpleAssignment => ReferenceEquals(simpleAssignment.Target, operation),
+
+            // 'Foo(out span[i])' or 'Foo(out x)': the callee has to assign the element before returning
+            IArgumentOperation { Parameter.RefKind: RefKind.Out } => true,
+
+            // Note that 'ref' arguments and writable 'ref' aliases are not definite writes: the callee (or the
+            // code using the alias) might never actually write to the element, so they can't be relied upon.
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Checks whether a given operation is a reference to a specific local or parameter.
+    /// </summary>
+    /// <param name="operation">The operation to check.</param>
+    /// <param name="symbol">The local or parameter to look for.</param>
+    /// <returns>Whether <paramref name="operation"/> is a reference to <paramref name="symbol"/>.</returns>
+    private static bool IsReferenceTo(IOperation operation, ISymbol symbol)
+    {
+        return operation switch
+        {
+            ILocalReferenceOperation localReference => SymbolEqualityComparer.Default.Equals(localReference.Local, symbol),
+            IParameterReferenceOperation parameterReference => SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, symbol),
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Checks whether two index expressions are guaranteed to produce the same value.
+    /// </summary>
+    /// <param name="left">The first index expression to compare.</param>
+    /// <param name="right">The second index expression to compare.</param>
+    /// <returns>Whether <paramref name="left"/> and <paramref name="right"/> necessarily refer to the same element.</returns>
+    /// <remarks>
+    /// Two index expressions referring to the same variable are only equivalent as long as that variable is not
+    /// modified in between. It is up to callers to validate that (see <see cref="AreOperandsStable"/>).
+    /// </remarks>
+    private static bool AreIndexesEquivalent(IOperation left, IOperation right)
+    {
+        // Constant indices are equivalent when they have the same value (e.g. 'span[0]' and 'span[0]')
+        if (left.ConstantValue is { HasValue: true, Value: { } leftValue } &&
+            right.ConstantValue is { HasValue: true, Value: { } rightValue })
+        {
+            return leftValue.Equals(rightValue);
+        }
+
+        // Otherwise, only a reference to the same local or parameter is recognized (e.g. 'span[i]' in a loop)
+        return (UnwrapImplicitConversions(left), UnwrapImplicitConversions(right)) switch
+        {
+            (ILocalReferenceOperation leftLocal, ILocalReferenceOperation rightLocal) => SymbolEqualityComparer.Default.Equals(leftLocal.Local, rightLocal.Local),
+            (IParameterReferenceOperation leftParameter, IParameterReferenceOperation rightParameter) => SymbolEqualityComparer.Default.Equals(leftParameter.Parameter, rightParameter.Parameter),
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Unwraps all compiler inserted conversions from a given operation (e.g. the widening conversion in <c>span[byteIndex]</c>).
+    /// </summary>
+    /// <param name="operation">The operation to unwrap.</param>
+    /// <returns>The innermost operand of <paramref name="operation"/> that is not an implicit conversion.</returns>
+    private static IOperation? UnwrapImplicitConversions(IOperation? operation)
+    {
+        while (operation is IConversionOperation { IsImplicit: true } conversion)
+        {
+            operation = conversion.Operand;
+        }
+
+        return operation;
+    }
+
+    /// <summary>
+    /// Checks whether a given operation block contains a <c>goto</c> branch.
+    /// </summary>
+    /// <param name="operationBlock">The operation block to inspect.</param>
+    /// <returns>Whether <paramref name="operationBlock"/> contains a <c>goto</c> branch.</returns>
+    private static bool ContainsGotoBranch(IOperation operationBlock)
+    {
+        foreach (IOperation operation in operationBlock.DescendantsAndSelf())
+        {
+            if (operation is IBranchOperation { BranchKind: BranchKind.GoTo })
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Describes the location that a read from a write-only <see cref="System.Span{T}"/> parameter accesses, so
+    /// that writes which are guaranteed to have already initialized that same location can be recognized.
+    /// </summary>
+    private readonly struct ReadTarget
+    {
+        /// <summary>
+        /// Creates a new <see cref="ReadTarget"/> instance with the specified parameters.
+        /// </summary>
+        /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
+        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="index">The index of the element being read, if the read goes through the span indexer.</param>
+        /// <param name="alias">The writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read, if any.</param>
+        private ReadTarget(IParameterSymbol parameter, INamedTypeSymbol spanType, IOperation? index, ILocalSymbol? alias)
+        {
+            Parameter = parameter;
+            SpanType = spanType;
+            Index = index;
+            Alias = alias;
+        }
+
+        /// <summary>
+        /// Gets the write-only <see cref="System.Span{T}"/> parameter being read from.
+        /// </summary>
+        public IParameterSymbol Parameter { get; }
+
+        /// <summary>
+        /// Gets the <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.
+        /// </summary>
+        public INamedTypeSymbol SpanType { get; }
+
+        /// <summary>
+        /// Gets the index of the element being read, if the read goes through the span indexer.
+        /// </summary>
+        public IOperation? Index { get; }
+
+        /// <summary>
+        /// Gets the writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read, if any.
+        /// </summary>
+        public ILocalSymbol? Alias { get; }
+
+        /// <summary>
+        /// Gets the local or parameter that <see cref="Index"/> refers to, if it is a plain variable reference.
+        /// </summary>
+        public ISymbol? IndexSymbol => UnwrapImplicitConversions(Index) switch
+        {
+            ILocalReferenceOperation localReference => localReference.Local,
+            IParameterReferenceOperation parameterReference => parameterReference.Parameter,
+            _ => null
+        };
+
+        /// <summary>
+        /// Creates a <see cref="ReadTarget"/> for a read of all the elements of a span (e.g. a <c>foreach</c> loop).
+        /// </summary>
+        /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
+        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <returns>The resulting <see cref="ReadTarget"/> value.</returns>
+        public static ReadTarget ForSpan(IParameterSymbol parameter, INamedTypeSymbol spanType)
+        {
+            return new(parameter, spanType, index: null, alias: null);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ReadTarget"/> for a read of a single element through the span indexer.
+        /// </summary>
+        /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
+        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="index">The index of the element being read.</param>
+        /// <returns>The resulting <see cref="ReadTarget"/> value.</returns>
+        public static ReadTarget ForElement(IParameterSymbol parameter, INamedTypeSymbol spanType, IOperation index)
+        {
+            return new(parameter, spanType, index, alias: null);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ReadTarget"/> for a read of the element aliased by a writable <c>ref</c> loop variable.
+        /// </summary>
+        /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
+        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="alias">The writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read.</param>
+        /// <returns>The resulting <see cref="ReadTarget"/> value.</returns>
+        public static ReadTarget ForAlias(IParameterSymbol parameter, INamedTypeSymbol spanType, ILocalSymbol alias)
+        {
+            return new(parameter, spanType, index: null, alias);
+        }
     }
 }
