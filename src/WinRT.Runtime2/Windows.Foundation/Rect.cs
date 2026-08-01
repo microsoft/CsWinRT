@@ -33,6 +33,26 @@ namespace Windows.Foundation;
 public struct Rect : IEquatable<Rect>, IFormattable
 {
     /// <summary>
+    /// The x-coordinate of the upper-left corner of the rectangle.
+    /// </summary>
+    public float X;
+
+    /// <summary>
+    /// The y-coordinate of the upper-left corner of the rectangle.
+    /// </summary>
+    public float Y;
+
+    /// <summary>
+    /// The width of the rectangle, in pixels.
+    /// </summary>
+    public float Width;
+
+    /// <summary>
+    /// The height of the rectangle, in pixels.
+    /// </summary>
+    public float Height;
+
+    /// <summary>
     /// Creates a new <see cref="Rect"/> value with the specified parameters.
     /// </summary>
     /// <param name="point1">The first point that the new rectangle must contain.</param>
@@ -76,50 +96,13 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="width"/> or <paramref name="height"/> are less than zero.</exception>
     public Rect(float x, float y, float width, float height)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(width);
+        ArgumentOutOfRangeException.ThrowIfNegative(height);
+
         X = x;
         Y = y;
         Width = width;
         Height = height;
-    }
-
-    /// <summary>
-    /// Gets or sets the x-coordinate of the upper-left corner of the rectangle.
-    /// </summary>
-    public float X { readonly get; set; }
-
-    /// <summary>
-    /// Gets or sets the y-coordinate of the upper-left corner of the rectangle.
-    /// </summary>
-    public float Y { readonly get; set; }
-
-    /// <summary>
-    /// Gets or sets the width of the rectangle, in pixels.
-    /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the value is less than zero.</exception>
-    public float Width
-    {
-        readonly get;
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfNegative(value);
-
-            field = value;
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the height of the rectangle, in pixels.
-    /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the value is less than zero.</exception>
-    public float Height
-    {
-        readonly get;
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfNegative(value);
-
-            field = value;
-        }
     }
 
     /// <summary>
