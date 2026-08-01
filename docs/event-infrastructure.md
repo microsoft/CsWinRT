@@ -57,7 +57,7 @@ A simple value type wrapping a 64-bit integer. This is the Windows Runtime's con
 ```csharp
 public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
 {
-    public long Value { get; set; }
+    public long Value;
 }
 ```
 
