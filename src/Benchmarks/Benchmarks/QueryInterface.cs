@@ -11,7 +11,6 @@ namespace Benchmarks
 
         public int IntProperty { get => intProperty; set => intProperty = value; }
         public bool BoolProperty { get => boolProperty; set => boolProperty = value; }
-        public int GetInt() => intProperty;
     }
 
     class ManagedComposableObjectWithInterfaces : Composable, IIntProperties
@@ -19,7 +18,6 @@ namespace Benchmarks
         private int intProperty;
 
         public int IntProperty { get => intProperty; set => intProperty = value; }
-        public int GetInt() => intProperty;
     }
 
     [MemoryDiagnoser]
@@ -107,30 +105,6 @@ namespace Benchmarks
         public ClassWithFastAbiDerived ConstructDerivedFastAbiProjectedClass()
         {
             return new ClassWithFastAbiDerived();
-        }
-
-        [Benchmark]
-        public int CallDefaultInterfaceMethod()
-        {
-            return instance.GetDefaultInt();
-        }
-
-        [Benchmark]
-        public int CallNonDefaultInterfaceMethod()
-        {
-            return instance.GetInt();
-        }
-
-        [Benchmark]
-        public int CallFastAbiDefaultInterfaceMethod()
-        {
-            return fastAbiInstance.GetDefaultInt();
-        }
-
-        [Benchmark]
-        public int CallFastAbiNonDefaultInterfaceMethod()
-        {
-            return fastAbiInstance.GetInt();
         }
 
         [Benchmark]
