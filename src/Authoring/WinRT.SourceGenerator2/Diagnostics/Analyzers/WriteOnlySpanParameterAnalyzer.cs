@@ -52,143 +52,283 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            // This handles reading the value (or a readonly reference) of an element, such as:
-            //
-            // _ = span[i];
-            // Foo(span[i]);
-            // ref readonly var x = ref span[i];
-            // Foo(in span[i]);
-            // span[i]++;
-            // span[i] += 1;
-            context.RegisterOperationAction(context =>
+            // The whole body of a method is analyzed at once, rather than each operation in isolation, so that
+            // each candidate read can also be inspected in the context of the code that necessarily runs before it
+            context.RegisterOperationBlockAction(context =>
             {
-                IPropertyReferenceOperation operation = (IPropertyReferenceOperation)context.Operation;
-
-                // We only care about the 'Span<T>' indexer (i.e. 'span[i]'), not other properties (e.g. 'Length')
-                if (!operation.Property.IsIndexer)
+                // Only look at methods that are part of the Windows Runtime ABI surface and that actually have
+                // at least one fill array parameter, which is the only thing this analyzer is concerned with
+                if (context.OwningSymbol is not IMethodSymbol method ||
+                    !HasFillArrayParameter(method, spanType) ||
+                    !IsWindowsRuntimeMethod(method))
                 {
                     return;
                 }
 
-                // The indexer must be invoked directly on a write-only 'Span<T>' parameter
-                if (operation.Instance is not IParameterReferenceOperation { Parameter: { } parameter } ||
-                    !IsWindowsRuntimeFillArrayParameter(parameter, spanType))
+                foreach (IOperation operationBlock in context.OperationBlocks)
                 {
-                    return;
+                    foreach (IOperation operation in operationBlock.DescendantsAndSelf())
+                    {
+                        switch (operation)
+                        {
+                            case IPropertyReferenceOperation propertyReference:
+                                AnalyzeElementRead(context, propertyReference, method, spanType);
+                                break;
+                            case IConversionOperation conversion:
+                                AnalyzeSpanConversion(context, conversion, method, spanType, readOnlySpanType);
+                                break;
+                            case IForEachLoopOperation forEachLoop:
+                                AnalyzeForEachLoop(context, forEachLoop, method, spanType);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
-
-                // Skip usages that only write to the element, which are valid for a fill array
-                if (IsWriteOnlyElementUsage(operation))
-                {
-                    return;
-                }
-
-                context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.WriteOnlySpanParameterRead,
-                    operation.Syntax.GetLocation(),
-                    parameter.Name));
-            }, OperationKind.PropertyReference);
-
-            // This handles converting the span to 'ReadOnlySpan<T>', which would allow reads, such as:
-            //
-            // ReadOnlySpan<int> readOnlySpan = span;
-            // Foo((ReadOnlySpan<int>)span);
-            context.RegisterOperationAction(context =>
-            {
-                IConversionOperation operation = (IConversionOperation)context.Operation;
-
-                // The conversion must target 'ReadOnlySpan<T>' (a read-only view over the span elements)
-                if (!SymbolEqualityComparer.Default.Equals(operation.Type?.OriginalDefinition, readOnlySpanType))
-                {
-                    return;
-                }
-
-                // The operand must be a write-only 'Span<T>' parameter
-                if (operation.Operand is not IParameterReferenceOperation { Parameter: { } parameter } ||
-                    !IsWindowsRuntimeFillArrayParameter(parameter, spanType))
-                {
-                    return;
-                }
-
-                context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.WriteOnlySpanParameterRead,
-                    operation.Syntax.GetLocation(),
-                    parameter.Name));
-            }, OperationKind.Conversion);
-
-            // This handles iterating over the span, which reads each element, such as:
-            //
-            // foreach (int x in span)
-            // {
-            // }
-            //
-            // It also handles reading the current element through a writable 'ref' loop variable, such as:
-            //
-            // foreach (ref int x in span)
-            // {
-            //     int y = x;
-            // }
-            context.RegisterOperationAction(context =>
-            {
-                if (context.Operation is not IForEachLoopOperation operation)
-                {
-                    return;
-                }
-
-                // The iterated collection is the span parameter, possibly wrapped in an identity conversion
-                IOperation collection = operation.Collection is IConversionOperation { Operand: { } operand }
-                    ? operand
-                    : operation.Collection;
-
-                // The iterated collection must be a write-only 'Span<T>' parameter
-                if (collection is not IParameterReferenceOperation { Parameter: { } parameter } ||
-                    !IsWindowsRuntimeFillArrayParameter(parameter, spanType))
-                {
-                    return;
-                }
-
-                // Iterating with a writable 'ref' loop variable may be used to fill the span, so the loop
-                // itself is valid. In that case, only the individual reads through the loop variable (which
-                // aliases the current element) are reported. By-value and 'ref readonly' loop variables can
-                // only ever read the elements, so for those the loop itself is reported instead.
-                if (operation.LoopControlVariable is IVariableDeclaratorOperation { Symbol: { RefKind: RefKind.Ref } loopVariable })
-                {
-                    ReportElementReadsThroughLoopVariable(context, operation.Body, loopVariable, parameter);
-
-                    return;
-                }
-
-                context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.WriteOnlySpanParameterRead,
-                    operation.Collection.Syntax.GetLocation(),
-                    parameter.Name));
-            }, OperationKind.Loop);
+            });
         });
     }
 
     /// <summary>
-    /// Checks whether a given parameter is a write-only <see cref="System.Span{T}"/> parameter on a Windows
-    /// Runtime method (i.e. a parameter that is projected as a fill array in the ABI).
+    /// Analyzes a property reference, to detect reads of an element of a write-only <see cref="System.Span{T}"/> parameter.
+    /// </summary>
+    /// <param name="context">The context to report diagnostics to.</param>
+    /// <param name="operation">The property reference to analyze.</param>
+    /// <param name="method">The method being analyzed.</param>
+    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <remarks>
+    /// This handles reading the value (or a readonly reference) of an element, such as:
+    /// <code>
+    /// _ = span[i];
+    /// Foo(span[i]);
+    /// ref readonly var x = ref span[i];
+    /// Foo(in span[i]);
+    /// span[i]++;
+    /// span[i] += 1;
+    /// </code>
+    /// </remarks>
+    private static void AnalyzeElementRead(
+        OperationBlockAnalysisContext context,
+        IPropertyReferenceOperation operation,
+        IMethodSymbol method,
+        INamedTypeSymbol spanType)
+    {
+        // We only care about the 'Span<T>' indexer (i.e. 'span[i]'), not other properties (e.g. 'Length')
+        if (!operation.Property.IsIndexer)
+        {
+            return;
+        }
+
+        // The indexer must be invoked directly on a write-only 'Span<T>' parameter
+        if (operation.Instance is not IParameterReferenceOperation { Parameter: { } parameter } ||
+            !IsFillArrayParameter(parameter, method, spanType))
+        {
+            return;
+        }
+
+        // Skip usages that only write to the element, which are valid for a fill array
+        if (IsWriteOnlyElementUsage(operation))
+        {
+            return;
+        }
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            DiagnosticDescriptors.WriteOnlySpanParameterRead,
+            operation.Syntax.GetLocation(),
+            parameter.Name));
+    }
+
+    /// <summary>
+    /// Analyzes a conversion, to detect a write-only <see cref="System.Span{T}"/> parameter being converted to
+    /// <see cref="System.ReadOnlySpan{T}"/>, which would allow reading all of its elements.
+    /// </summary>
+    /// <param name="context">The context to report diagnostics to.</param>
+    /// <param name="operation">The conversion to analyze.</param>
+    /// <param name="method">The method being analyzed.</param>
+    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <param name="readOnlySpanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.ReadOnlySpan{T}"/>.</param>
+    /// <remarks>
+    /// This handles converting the span to <see cref="System.ReadOnlySpan{T}"/>, such as:
+    /// <code>
+    /// ReadOnlySpan&lt;int&gt; readOnlySpan = span;
+    /// Foo((ReadOnlySpan&lt;int&gt;)span);
+    /// </code>
+    /// </remarks>
+    private static void AnalyzeSpanConversion(
+        OperationBlockAnalysisContext context,
+        IConversionOperation operation,
+        IMethodSymbol method,
+        INamedTypeSymbol spanType,
+        INamedTypeSymbol readOnlySpanType)
+    {
+        // The conversion must target 'ReadOnlySpan<T>' (a read-only view over the span elements)
+        if (!SymbolEqualityComparer.Default.Equals(operation.Type?.OriginalDefinition, readOnlySpanType))
+        {
+            return;
+        }
+
+        // The operand must be a write-only 'Span<T>' parameter
+        if (operation.Operand is not IParameterReferenceOperation { Parameter: { } parameter } ||
+            !IsFillArrayParameter(parameter, method, spanType))
+        {
+            return;
+        }
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            DiagnosticDescriptors.WriteOnlySpanParameterRead,
+            operation.Syntax.GetLocation(),
+            parameter.Name));
+    }
+
+    /// <summary>
+    /// Analyzes a <c>foreach</c> loop, to detect iteration over a write-only <see cref="System.Span{T}"/> parameter.
+    /// </summary>
+    /// <param name="context">The context to report diagnostics to.</param>
+    /// <param name="operation">The <c>foreach</c> loop to analyze.</param>
+    /// <param name="method">The method being analyzed.</param>
+    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <remarks>
+    /// This handles iterating over the span, which reads each element, such as:
+    /// <code>
+    /// foreach (int x in span)
+    /// {
+    /// }
+    /// </code>
+    /// It also handles reading the current element through a writable <c>ref</c> loop variable, such as:
+    /// <code>
+    /// foreach (ref int x in span)
+    /// {
+    ///     int y = x;
+    /// }
+    /// </code>
+    /// </remarks>
+    private static void AnalyzeForEachLoop(
+        OperationBlockAnalysisContext context,
+        IForEachLoopOperation operation,
+        IMethodSymbol method,
+        INamedTypeSymbol spanType)
+    {
+        // The iterated collection is the span parameter, possibly wrapped in an identity conversion
+        IOperation collection = operation.Collection is IConversionOperation { Operand: { } operand }
+            ? operand
+            : operation.Collection;
+
+        // The iterated collection must be a write-only 'Span<T>' parameter
+        if (collection is not IParameterReferenceOperation { Parameter: { } parameter } ||
+            !IsFillArrayParameter(parameter, method, spanType))
+        {
+            return;
+        }
+
+        // Iterating with a writable 'ref' loop variable may be used to fill the span, so the loop
+        // itself is valid. In that case, only the individual reads through the loop variable (which
+        // aliases the current element) are reported. By-value and 'ref readonly' loop variables can
+        // only ever read the elements, so for those the loop itself is reported instead.
+        if (operation.LoopControlVariable is IVariableDeclaratorOperation { Symbol: { RefKind: RefKind.Ref } loopVariable })
+        {
+            AnalyzeLoopVariableReads(context, operation.Body, parameter, loopVariable);
+
+            return;
+        }
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            DiagnosticDescriptors.WriteOnlySpanParameterRead,
+            operation.Collection.Syntax.GetLocation(),
+            parameter.Name));
+    }
+
+    /// <summary>
+    /// Analyzes the body of a <c>foreach</c> loop iterating over a write-only <see cref="System.Span{T}"/> parameter
+    /// with a writable <c>ref</c> loop variable, to detect reads of the current element through that variable.
+    /// </summary>
+    /// <param name="context">The context to report diagnostics to.</param>
+    /// <param name="loopBody">The body of the <c>foreach</c> loop declaring <paramref name="loopVariable"/>.</param>
+    /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being iterated over.</param>
+    /// <param name="loopVariable">The writable <c>ref</c> loop variable, aliasing the current element.</param>
+    private static void AnalyzeLoopVariableReads(
+        OperationBlockAnalysisContext context,
+        IOperation loopBody,
+        IParameterSymbol parameter,
+        ILocalSymbol loopVariable)
+    {
+        foreach (IOperation operation in loopBody.DescendantsAndSelf())
+        {
+            // We only care about references to the loop variable, as those alias an element of the span.
+            // The loop variable can't be captured by a lambda or ref reassigned, so all aliasing usages
+            // of the current element are guaranteed to appear directly in the body of the loop.
+            if (operation is not ILocalReferenceOperation { Local: { } local } ||
+                !SymbolEqualityComparer.Default.Equals(local, loopVariable))
+            {
+                continue;
+            }
+
+            // Skip usages that only write to the element, which are valid for a fill array
+            if (IsWriteOnlyElementUsage(operation))
+            {
+                continue;
+            }
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.WriteOnlySpanParameterRead,
+                operation.Syntax.GetLocation(),
+                parameter.Name));
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a given method has at least one write-only <see cref="System.Span{T}"/> parameter.
+    /// </summary>
+    /// <param name="method">The method to check.</param>
+    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <returns>Whether <paramref name="method"/> has at least one write-only fill array parameter.</returns>
+    private static bool HasFillArrayParameter(IMethodSymbol method, INamedTypeSymbol spanType)
+    {
+        foreach (IParameterSymbol parameter in method.Parameters)
+        {
+            if (IsFillArrayParameter(parameter, method, spanType))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a given parameter is a write-only <see cref="System.Span{T}"/> parameter of a given method
+    /// (i.e. a parameter that is projected as a fill array in the Windows Runtime ABI).
     /// </summary>
     /// <param name="parameter">The parameter to check.</param>
+    /// <param name="method">The method being analyzed.</param>
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
-    /// <returns>Whether <paramref name="parameter"/> is a write-only fill array parameter.</returns>
-    private static bool IsWindowsRuntimeFillArrayParameter(IParameterSymbol parameter, INamedTypeSymbol spanType)
+    /// <returns>Whether <paramref name="parameter"/> is a write-only fill array parameter of <paramref name="method"/>.</returns>
+    private static bool IsFillArrayParameter(IParameterSymbol parameter, IMethodSymbol method, INamedTypeSymbol spanType)
     {
-        // The parameter must be a by-value 'System.Span<T>': only this is projected as a fill array (a 'ref',
-        // 'in' or 'out' variant is not a valid Windows Runtime parameter, and 'ReadOnlySpan<T>' is a pass array).
-        if (parameter.RefKind is not RefKind.None ||
-            !SymbolEqualityComparer.Default.Equals(parameter.Type.OriginalDefinition, spanType))
+        // The parameter must belong to the method being analyzed, and not to a nested lambda or local function,
+        // which are never projected (and could not reference the parameters of the method anyway, as a span
+        // is a 'ref struct' type, and as such it cannot be captured by any of them).
+        if (!SymbolEqualityComparer.Default.Equals(parameter.ContainingSymbol, method))
         {
             return false;
         }
 
-        // The parameter must belong to an ordinary method, a constructor, or an explicit interface
+        // The parameter must be a by-value 'System.Span<T>': only this is projected as a fill array (a 'ref',
+        // 'in' or 'out' variant is not a valid Windows Runtime parameter, and 'ReadOnlySpan<T>' is a pass array).
+        return
+            parameter.RefKind is RefKind.None &&
+            SymbolEqualityComparer.Default.Equals(parameter.Type.OriginalDefinition, spanType);
+    }
+
+    /// <summary>
+    /// Checks whether a given method is part of the Windows Runtime ABI surface of an authored component.
+    /// </summary>
+    /// <param name="method">The method to check.</param>
+    /// <returns>Whether <paramref name="method"/> is projected to the Windows Runtime.</returns>
+    private static bool IsWindowsRuntimeMethod(IMethodSymbol method)
+    {
+        // The method must be an ordinary method, a constructor, or an explicit interface
         // implementation (and not e.g. a local function, a lambda, an operator or a property accessor).
-        if (parameter.ContainingSymbol is not IMethodSymbol
-            {
-                MethodKind: MethodKind.Ordinary or MethodKind.Constructor or MethodKind.ExplicitInterfaceImplementation
-            } method)
+        if (method.MethodKind is not (MethodKind.Ordinary or MethodKind.Constructor or MethodKind.ExplicitInterfaceImplementation))
         {
             return false;
         }
@@ -217,44 +357,6 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Reports all reads of the current element of a write-only <see cref="System.Span{T}"/> parameter that are
-    /// performed through the writable <c>ref</c> loop variable of a <c>foreach</c> loop iterating over it.
-    /// </summary>
-    /// <param name="context">The context to report diagnostics to.</param>
-    /// <param name="loopBody">The body of the <c>foreach</c> loop declaring <paramref name="loopVariable"/>.</param>
-    /// <param name="loopVariable">The writable <c>ref</c> loop variable, aliasing the current element.</param>
-    /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being iterated over.</param>
-    private static void ReportElementReadsThroughLoopVariable(
-        OperationAnalysisContext context,
-        IOperation loopBody,
-        ILocalSymbol loopVariable,
-        IParameterSymbol parameter)
-    {
-        foreach (IOperation operation in loopBody.Descendants())
-        {
-            // We only care about references to the loop variable, as those alias an element of the span.
-            // The loop variable can't be captured by a lambda or ref reassigned, so all aliasing usages
-            // of the current element are guaranteed to appear directly in the body of the loop.
-            if (operation is not ILocalReferenceOperation { Local: { } local } ||
-                !SymbolEqualityComparer.Default.Equals(local, loopVariable))
-            {
-                continue;
-            }
-
-            // Skip usages that only write to the element, which are valid for a fill array
-            if (IsWriteOnlyElementUsage(operation))
-            {
-                continue;
-            }
-
-            context.ReportDiagnostic(Diagnostic.Create(
-                DiagnosticDescriptors.WriteOnlySpanParameterRead,
-                operation.Syntax.GetLocation(),
-                parameter.Name));
-        }
     }
 
     /// <summary>
