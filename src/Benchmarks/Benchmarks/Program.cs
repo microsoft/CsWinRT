@@ -1,7 +1,11 @@
+using BenchmarkDotNet.Characteristics;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Exporters.Json;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Toolchains;
+using BenchmarkDotNet.Toolchains.CsProj;
+using BenchmarkDotNet.Toolchains.DotNetCli;
 using System;
 
 [assembly: System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
@@ -11,9 +15,9 @@ namespace Benchmarks
     public class Program
     {
         // Default CsWinRT versions — keep in sync with Directory.Build.props.
-        private const string DefaultCsWinRT3Version = "3.0.0-prerelease-ci.260302.3";
+        private const string DefaultCsWinRT3Version = "3.0.0-prerelease-ci.260627.1";
         private const string DefaultCsWinRT2Version = "2.3.0-prerelease.251115.2";
-        private const string DefaultWindowsSdkVersion = "10.0.26100.7706-preview.ge-release-svc-prod3";
+        private const string DefaultWindowsSdkVersion = "10.0.26100.85-preview";
 
         static void Main(string[] args)
         {
@@ -47,21 +51,20 @@ namespace Benchmarks
             return ManualConfig.Create(DefaultConfig.Instance)
                 .WithBuildTimeout(TimeSpan.FromMinutes(10))
                 .AddJob(Job.Default
-                    .WithNuGet("Microsoft.Windows.CsWinRT", cswinrt3)
+                    .WithToolchain(new CsWinRTBenchmarkToolchain("net10.0-windows10.0.26100.1"))
+                    .WithEnvironmentVariable("DOTNET_ADDITIONAL_DEPS", "Benchmarks.deps.json")
                     .WithArguments(new Argument[]
                     {
                         new MsBuildArgument($"/p:BenchmarkCsWinRT3Version={cswinrt3}"),
-                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}"),
-                        new MsBuildArgument("/p:TargetFramework=net10.0-windows10.0.26100.1")
+                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}")
                     })
                     .WithId("CsWinRT_3x"))
                 .AddJob(Job.Default
-                    .WithNuGet("Microsoft.Windows.CsWinRT", cswinrt2)
+                    .WithToolchain(new CsWinRTBenchmarkToolchain("net10.0-windows10.0.26100.0"))
                     .WithArguments(new Argument[]
                     {
                         new MsBuildArgument($"/p:BenchmarkCsWinRT2Version={cswinrt2}"),
-                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}"),
-                        new MsBuildArgument("/p:TargetFramework=net10.0-windows10.0.26100.0")
+                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}")
                     })
                     .WithBaseline(true)
                     .WithId("CsWinRT_2x"))
@@ -81,21 +84,21 @@ namespace Benchmarks
             return ManualConfig.Create(DefaultConfig.Instance)
                 .WithBuildTimeout(TimeSpan.FromMinutes(10))
                 .AddJob(Job.Default
-                    .WithNuGet("Microsoft.Windows.CsWinRT", currentVersion)
+                    .WithToolchain(new CsWinRTBenchmarkToolchain("net10.0-windows10.0.26100.1"))
+                    .WithEnvironmentVariable("DOTNET_ADDITIONAL_DEPS", "Benchmarks.deps.json")
                     .WithArguments(new Argument[]
                     {
                         new MsBuildArgument($"/p:BenchmarkCsWinRT3Version={currentVersion}"),
-                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}"),
-                        new MsBuildArgument("/p:TargetFramework=net10.0-windows10.0.26100.1")
+                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}")
                     })
                     .WithId("CsWinRT_Current"))
                 .AddJob(Job.Default
-                    .WithNuGet("Microsoft.Windows.CsWinRT", baselineVersion)
+                    .WithToolchain(new CsWinRTBenchmarkToolchain("net10.0-windows10.0.26100.1"))
+                    .WithEnvironmentVariable("DOTNET_ADDITIONAL_DEPS", "Benchmarks.deps.json")
                     .WithArguments(new Argument[]
                     {
-                        new MsBuildArgument($"/p:BenchmarkCsWinRT2Version={baselineVersion}"),
-                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}"),
-                        new MsBuildArgument("/p:TargetFramework=net10.0-windows10.0.26100.0")
+                        new MsBuildArgument($"/p:BenchmarkCsWinRT3Version={baselineVersion}"),
+                        new MsBuildArgument($"/p:WindowsSdkPackageVersion={sdk}")
                     })
                     .WithBaseline(true)
                     .WithId("CsWinRT_Baseline"))
@@ -128,6 +131,34 @@ namespace Benchmarks
                 result.Add(args[i]);
             }
             return result.ToArray();
+        }
+
+        private sealed class CsWinRTBenchmarkToolchain : Toolchain
+        {
+            public CsWinRTBenchmarkToolchain(string targetFramework)
+                : base(
+                    targetFramework,
+                    new CsWinRTBenchmarkGenerator(targetFramework),
+                    new DotNetCliBuilder(targetFramework),
+                    new DotNetCliExecutor(null))
+            {
+            }
+        }
+
+        private sealed class CsWinRTBenchmarkGenerator(string targetFramework)
+            : CsProjGenerator(targetFramework, null, null, null)
+        {
+            protected override string GetRuntimeSettings(GcMode gcMode, IResolver resolver)
+            {
+                const string hostProperties = """
+                      <CsWinRTEnabled>false</CsWinRTEnabled>
+                      <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
+                      <CsWinRTGenerateInteropAssembly2>false</CsWinRTGenerateInteropAssembly2>
+                    """;
+
+                return base.GetRuntimeSettings(gcMode, resolver)
+                    .Replace("</PropertyGroup>", $"{hostProperties}</PropertyGroup>");
+            }
         }
     }
 }

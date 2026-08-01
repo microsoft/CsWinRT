@@ -27,7 +27,7 @@ variables:
 # Known-good CsWinRT 3.x version used as baseline for regression benchmarks.
 # Override at queue time by setting BenchmarkBaselineCsWinRT3Version.
 - name: _BenchmarkBaselineCsWinRT3Version
-  value: $[coalesce(variables.BenchmarkBaselineCsWinRT3Version, '3.0.0-prerelease-ci.260302.3')]
+  value: $[coalesce(variables.BenchmarkBaselineCsWinRT3Version, '3.0.0-prerelease-ci.260627.1')]
 # CsWinRT 2.x version used as baseline for compare-versions benchmarks.
 - name: _BenchmarkCsWinRT2Version
   value: $[coalesce(variables.BenchmarkCsWinRT2Version, '2.3.0-prerelease.251115.2')]
@@ -46,7 +46,7 @@ variables:
 # Windows SDK package version for benchmarks.
 # Override at queue time by setting BenchmarkWindowsSdkPackageVersion.
 - name: _BenchmarkWindowsSdkPackageVersion
-  value: $[coalesce(variables.BenchmarkWindowsSdkPackageVersion, '10.0.26100.7706-preview.ge-release-svc-prod3')]
+  value: $[coalesce(variables.BenchmarkWindowsSdkPackageVersion, '10.0.26100.85-preview')]
 
 - name: _PublishCsWinMD
   value: $[coalesce(variables.PublishCsWinMD, 'false')]

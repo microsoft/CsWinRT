@@ -7,9 +7,9 @@
   <PropertyGroup>
     <!-- Benchmark package versions (override at queue time or via environment variables).
          Keep defaults in sync with Program.cs and CsWinRT-Variables.yml. -->
-    <BenchmarkCsWinRT3Version Condition="'$(BenchmarkCsWinRT3Version)' == ''">3.0.0-prerelease-ci.260302.3</BenchmarkCsWinRT3Version>
+    <BenchmarkCsWinRT3Version Condition="'$(BenchmarkCsWinRT3Version)' == ''">3.0.0-prerelease-ci.260627.1</BenchmarkCsWinRT3Version>
     <BenchmarkCsWinRT2Version Condition="'$(BenchmarkCsWinRT2Version)' == ''">2.3.0-prerelease.251115.2</BenchmarkCsWinRT2Version>
-    <BenchmarkWindowsSdkPackageVersion Condition="'$(BenchmarkWindowsSdkPackageVersion)' == ''">10.0.26100.7706-preview.ge-release-svc-prod3</BenchmarkWindowsSdkPackageVersion>
+    <BenchmarkWindowsSdkPackageVersion Condition="'$(BenchmarkWindowsSdkPackageVersion)' == ''">10.0.26100.85-preview</BenchmarkWindowsSdkPackageVersion>
     <BenchmarkDotNetVersion Condition="'$(BenchmarkDotNetVersion)' == ''">0.15.8</BenchmarkDotNetVersion>
   </PropertyGroup>
 
