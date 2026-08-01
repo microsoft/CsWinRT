@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -151,6 +154,149 @@ internal static class WinMDGeneratorRunner
         Assert.IsTrue(result.Success, $"Input compilation failed:\n{string.Join("\n", result.Diagnostics)}");
 
         return outputPath;
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and returns the custom attributes applied in
+    /// the produced <c>.winmd</c>, keyed by the metadata row they are applied to.
+    /// </summary>
+    /// <remarks>
+    /// Keys are formatted as <c>Namespace.Type</c> for types and <c>Namespace.Type.Member</c> for methods,
+    /// properties and events. That distinction matters: Windows Runtime metadata places some member
+    /// attributes on the accessor method (e.g. <c>get_Value</c>) rather than on the property or event row.
+    /// </remarks>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <returns>A lookup from metadata row to the fully qualified names of the attributes applied to it.</returns>
+    public static ILookup<string, string> GetGeneratedAttributes(string source)
+    {
+        string toolPath = GetGeneratorPath();
+        string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
+
+        try
+        {
+            string inputAssemblyPath = CompileComponent(source, temporaryDirectory);
+            string outputWinMDPath = Path.Combine(temporaryDirectory, "TestInput.winmd");
+            string responseFilePath = Path.Combine(temporaryDirectory, "args.rsp");
+
+            File.WriteAllText(responseFilePath, $"""
+                --input-assembly-path {inputAssemblyPath}
+                --reference-assembly-paths {inputAssemblyPath}
+                --output-winmd-path {outputWinMDPath}
+                --assembly-version 1.0.0.0
+                --use-windows-ui-xaml-projections false
+                """);
+
+            (int exitCode, string output) = RunTool(toolPath, responseFilePath);
+
+            Assert.AreEqual(0, exitCode, output);
+
+            return ReadAttributes(outputWinMDPath);
+        }
+        finally
+        {
+            TryDeleteDirectory(temporaryDirectory);
+        }
+    }
+
+    /// <summary>
+    /// Reads every custom attribute application in a <c>.winmd</c>, keyed by the metadata row it is applied to.
+    /// </summary>
+    /// <param name="winmdPath">The path of the <c>.winmd</c> to read.</param>
+    /// <returns>A lookup from metadata row to the fully qualified names of the attributes applied to it.</returns>
+    private static ILookup<string, string> ReadAttributes(string winmdPath)
+    {
+        using FileStream stream = File.OpenRead(winmdPath);
+        using PEReader peReader = new(stream);
+
+        // Windows Runtime projections are deliberately not applied: the tests assert the raw Windows
+        // Runtime metadata the generator emits, not the CLR view of it that the reader can synthesize
+        MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+
+        List<KeyValuePair<string, string>> attributes = [];
+
+        void AddAttributes(string owner, CustomAttributeHandleCollection handles)
+        {
+            foreach (CustomAttributeHandle handle in handles)
+            {
+                attributes.Add(new KeyValuePair<string, string>(owner, GetAttributeTypeName(reader, reader.GetCustomAttribute(handle))));
+            }
+        }
+
+        foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions)
+        {
+            TypeDefinition type = reader.GetTypeDefinition(typeHandle);
+            string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+            AddAttributes(owner, type.GetCustomAttributes());
+
+            foreach (MethodDefinitionHandle methodHandle in type.GetMethods())
+            {
+                MethodDefinition method = reader.GetMethodDefinition(methodHandle);
+
+                AddAttributes($"{owner}.{reader.GetString(method.Name)}", method.GetCustomAttributes());
+            }
+
+            foreach (PropertyDefinitionHandle propertyHandle in type.GetProperties())
+            {
+                PropertyDefinition property = reader.GetPropertyDefinition(propertyHandle);
+
+                AddAttributes($"{owner}.{reader.GetString(property.Name)}", property.GetCustomAttributes());
+            }
+
+            foreach (EventDefinitionHandle eventHandle in type.GetEvents())
+            {
+                EventDefinition @event = reader.GetEventDefinition(eventHandle);
+
+                AddAttributes($"{owner}.{reader.GetString(@event.Name)}", @event.GetCustomAttributes());
+            }
+        }
+
+        return attributes.ToLookup(static pair => pair.Key, static pair => pair.Value);
+    }
+
+    /// <summary>
+    /// Resolves the fully qualified type name of the attribute a custom attribute application refers to.
+    /// </summary>
+    /// <param name="reader">The metadata reader for the <c>.winmd</c>.</param>
+    /// <param name="attribute">The custom attribute application to resolve.</param>
+    /// <returns>The fully qualified name of the attribute type.</returns>
+    private static string GetAttributeTypeName(MetadataReader reader, CustomAttribute attribute)
+    {
+        // The constructor is a 'MemberReference' for attributes defined outside the '.winmd' (which is
+        // every attribute the generator emits) and a 'MethodDefinition' for any defined inside it
+        EntityHandle declaringType = attribute.Constructor.Kind switch
+        {
+            HandleKind.MemberReference => reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor).Parent,
+            HandleKind.MethodDefinition => reader.GetMethodDefinition((MethodDefinitionHandle)attribute.Constructor).GetDeclaringType(),
+            _ => default
+        };
+
+        if (declaringType.Kind == HandleKind.TypeReference)
+        {
+            TypeReference typeReference = reader.GetTypeReference((TypeReferenceHandle)declaringType);
+
+            return Format(reader.GetString(typeReference.Namespace), reader.GetString(typeReference.Name));
+        }
+
+        if (declaringType.Kind == HandleKind.TypeDefinition)
+        {
+            TypeDefinition typeDefinition = reader.GetTypeDefinition((TypeDefinitionHandle)declaringType);
+
+            return Format(reader.GetString(typeDefinition.Namespace), reader.GetString(typeDefinition.Name));
+        }
+
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Formats a namespace and type name as a fully qualified type name.
+    /// </summary>
+    /// <param name="typeNamespace">The namespace of the type (possibly empty).</param>
+    /// <param name="typeName">The name of the type.</param>
+    /// <returns>The fully qualified type name.</returns>
+    private static string Format(string typeNamespace, string typeName)
+    {
+        return typeNamespace.Length == 0 ? typeName : $"{typeNamespace}.{typeName}";
     }
 
     /// <summary>
