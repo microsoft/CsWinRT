@@ -16,8 +16,10 @@ git fetch -f
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 git reset -q --hard 1fb99297094edd131935cba6e8bc0704852162bb
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
+if /i "%~1" == "-skiprestore" goto :done
 echo Restoring Nuget
 msbuild -t:restore -p:RestorePackagesConfig=true Test.sln
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
+:done
 popd
 exit /b 0

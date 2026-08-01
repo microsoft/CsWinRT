@@ -12,7 +12,7 @@ steps:
 - task: CmdLine@2
   displayName: Clone TestWinRT
   inputs: 
-    script: get_testwinrt.cmd
+    script: get_testwinrt.cmd -skiprestore
     workingDirectory: $(Build.SourcesDirectory)\src
 
 - task: UseDotNet@2
