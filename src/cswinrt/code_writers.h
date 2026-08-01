@@ -14,6 +14,9 @@ namespace cswinrt
 {
     using namespace winmd::reader;
 
+    template <typename T>
+    void write_obsolete_attribute(writer& w, T const& row);
+
     static const struct
     {
         char const* csharp;
@@ -1206,6 +1209,11 @@ namespace cswinrt
             return;
         }
 
+        if (is_removed(method))
+        {
+            return;
+        }
+
         auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
@@ -1261,6 +1269,7 @@ namespace cswinrt
         auto static_method_params = call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt;
         if (!is_private)
         {
+            write_obsolete_attribute(w, method);
             write_method(w, signature, method.Name(), return_type, 
                 static_method_params.has_value() ? w.write_temp("%", bind<write_objref_type_name>(static_method_params.value().first)) : interface_member, 
                 access_spec, method_spec, platform_attribute, static_method_params);
@@ -1536,6 +1545,13 @@ remove => %;
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv, std::optional<type_semantics> call_static_method = {})
     {
+        auto [add, remove] = get_event_methods(event);
+        // MIDL places DeprecatedAttribute on the add method, not the Event row
+        if (is_removed(add))
+        {
+            return;
+        }
+
         auto visibility = "public ";
 
         if (is_protected)
@@ -1548,10 +1564,10 @@ remove => %;
             visibility = "protected virtual ";
         }
 
-        auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
         if (!is_private)
         {
+            write_obsolete_attribute(w, add);
             write_event(w, event.Name(), event,
                 call_static_method.has_value() ? w.write_temp("%", bind<write_objref_type_name>(call_static_method.value())) : interface_member, 
                 visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
@@ -1816,6 +1832,29 @@ remove => %;
         return w.write_temp("%", bind<write_platform_attribute>(type.CustomAttribute()));
     }
 
+    template <typename T>
+    void write_obsolete_attribute(writer& w, T const& row)
+    {
+        if (is_deprecated_not_removed(row))
+        {
+            auto msg = get_deprecated_message(row);
+            if (!msg.empty())
+            {
+                w.write("[global::System.Obsolete(\"%\")]\n", msg);
+            }
+            else
+            {
+                w.write("[global::System.Obsolete]\n");
+            }
+        }
+    }
+
+    template <typename T>
+    std::string write_obsolete_attribute_temp(writer& w, T const& row)
+    {
+        return w.write_temp("%", bind<write_obsolete_attribute>(row));
+    }
+
     void write_custom_attributes(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes, bool enable_platform_attrib)
     {
         std::map<std::string, std::vector<std::string>> attributes;
@@ -1876,6 +1915,7 @@ remove => %;
     void write_type_custom_attributes(writer& w, TypeDef const& type, bool enable_platform_attrib)
     {
         write_custom_attributes(w, type.CustomAttribute(), enable_platform_attrib);
+        write_obsolete_attribute(w, type);
     }
 
     struct attributed_type
@@ -2104,6 +2144,10 @@ private static class _%
             auto platform_attribute = write_platform_attribute_temp(w, factory_type);
             for (auto&& method : factory_type.MethodList())
             {
+                if (is_removed(method))
+                {
+                    continue;
+                }
                 method_signature signature{ method };
                 if (settings.netstandard_compat)
                 {
@@ -2451,6 +2495,10 @@ Marshal.Release(inner);
         {
             return;
         }
+        if (is_removed(method))
+        {
+            return;
+        }
         method_signature signature{ method };
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
@@ -2498,6 +2546,11 @@ Marshal.Release(inner);
                 for (auto&& prop : factory.type.PropertyList())
                 {
                     auto [getter, setter] = get_property_methods(prop);
+                    // MIDL places DeprecatedAttribute on getter method, not Property row
+                    if (getter && is_removed(getter))
+                    {
+                        continue;
+                    }
                     auto prop_type = write_prop_type(w, prop);
 
                     auto [prop_targets, inserted] = properties.try_emplace(std::string(prop.Name()),
@@ -3278,6 +3331,7 @@ visibility, self, objref_name);
     {
         std::set<TypeDef> writtenInterfaces;
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
+        std::map<std::string, MethodDef> property_deprecation;
         auto fast_abi_class_val = get_fast_abi_class_for_class(type);
 
         auto write_class_interface = [&](TypeDef const& interface_type, bool is_default_interface, bool is_overridable_interface, bool is_protected_interface, type_semantics semantics)
@@ -3334,6 +3388,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             {
                 MethodDef getter, setter;
                 std::tie(getter, setter) = get_property_methods(prop);
+                // MIDL places DeprecatedAttribute on the getter method, not the Property row
+                if (getter && is_removed(getter))
+                {
+                    continue;
+                }
                 auto prop_type = write_prop_type(w, prop);
                 auto is_private = getter && is_implemented_as_private_method(w, type, getter);  // for explicitly implemented interfaces, assume there is always a get.
                 auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
@@ -3349,6 +3408,15 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                     call_static_method && getter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt,
                     call_static_method && setter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt
                 );
+                if (inserted)
+                {
+                    // Store the getter MethodDef for deprecation checking
+                    // (MIDL places DeprecatedAttribute on getter, not Property row)
+                    if (getter)
+                    {
+                        property_deprecation.try_emplace(property_name, getter);
+                    }
+                }
                 if (!inserted)
                 {
                     auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, _, getter_prop, setter_prop] = prop_targets->second;
@@ -3478,6 +3546,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         {
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
+            if (auto it = property_deprecation.find(prop_name); it != property_deprecation.end())
+            {
+                write_obsolete_attribute(w, it->second);
+            }
             std::string_view access_spec = is_public ? "public "sv : "protected "sv;
             std::string_view method_spec = is_overridable ? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
@@ -3662,6 +3734,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
     void write_winrt_exposed_type_class(writer& w, TypeDef const& type, bool isFactory)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (should_write_winrt_exposed_type_attribute(type, isFactory))
         {
             if (get_category(type) == category::class_type && isFactory)
@@ -3923,7 +4000,16 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
             {
                 continue;
             }
+            if (is_removed(method))
+            {
+                continue;
+            }
 
+            if (is_deprecated_not_removed(method))
+            {
+                w.write("\n");
+                write_obsolete_attribute(w, method);
+            }
             method_signature signature{ method };
             w.write(R"(
 %% %(%);)",
@@ -3937,8 +4023,18 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
         for (auto&& prop : type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
+            // MIDL places DeprecatedAttribute on the getter method, not the Property row
+            if (getter && is_removed(getter))
+            {
+                continue;
+            }
             // "new" required if overriding a getter in a base interface
             auto new_keyword = (!getter && setter && find_property_interface(w, type, prop.Name()).second) ? "new " : "";
+            if (getter && is_deprecated_not_removed(getter))
+            {
+                w.write("\n");
+                write_obsolete_attribute(w, getter);
+            }
             w.write(R"(
 %% % {%% })",
                 new_keyword,
@@ -3951,6 +4047,17 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
 
         for (auto&& evt : type.EventList())
         {
+            auto [add, remove] = get_event_methods(evt);
+            // MIDL places DeprecatedAttribute on the add method, not the Event row
+            if (is_removed(add))
+            {
+                continue;
+            }
+            if (is_deprecated_not_removed(add))
+            {
+                w.write("\n");
+                write_obsolete_attribute(w, add);
+            }
             w.write(R"(
 event % %;)",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
@@ -5036,6 +5143,11 @@ remove => %.Unsubscribe(value);
             {
                 continue;
             }
+            if (is_removed(method))
+            {
+                continue;
+            }
+            write_obsolete_attribute(w, method);
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_invoke_info(w, method);
             w.write(R"(
@@ -5064,6 +5176,11 @@ remove => %.Unsubscribe(value);
 
         for (auto&& prop : type.PropertyList())
         {
+            if (is_removed(prop))
+            {
+                continue;
+            }
+            write_obsolete_attribute(w, prop);
             auto [getter, setter] = get_property_methods(prop);
             w.write(R"(
 %unsafe % %%
@@ -5124,7 +5241,12 @@ return %;
         int index = 0;
         for (auto&& evt : type.EventList())
         {
-            auto semantics = get_type_semantics(evt.EventType());
+            if (is_removed(evt))
+            {
+                index++;
+                continue;
+            }
+            write_obsolete_attribute(w, evt);
             auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%2()", evt.Name());
             w.write(R"(
 %event % %%
@@ -6554,6 +6676,23 @@ return 0;)",
         bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
             [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
 
+        // For removed methods, generate a stub that returns E_NOTIMPL.
+        // The vtable slot must exist for ABI compatibility, but the method
+        // is no longer on the projected interface so we can't call it.
+        if (is_removed(method))
+        {
+            w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                vmethod_name,
+                bind<write_abi_signature>(method));
+            return;
+        }
+
         w.write(R"(
 %
 private static unsafe int Do_Abi_%%
@@ -6600,6 +6739,40 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
     void write_property_abi_invoke(writer& w, Property const& prop)
     {
         auto [getter, setter] = get_property_methods(prop);
+        // MIDL places DeprecatedAttribute on getter, not Property row
+        if (getter && is_removed(getter))
+        {
+            // Property is removed from the projected interface, but the vtable slot
+            // must still exist for ABI compatibility. Generate E_NOTIMPL stubs.
+            auto generic_type = distance(prop.Parent().GenericParam()) > 0;
+            if (setter)
+            {
+                auto vmethod_name = get_vmethod_name(w, setter.Parent(), setter);
+                w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                    !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                    vmethod_name,
+                    bind<write_abi_signature>(setter));
+            }
+            if (getter)
+            {
+                auto vmethod_name = get_vmethod_name(w, getter.Parent(), getter);
+                w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                    !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                    vmethod_name,
+                    bind<write_abi_signature>(getter));
+            }
+            return;
+        }
         auto type_name = write_type_name_temp(w, prop.Parent());
         auto generic_type = distance(prop.Parent().GenericParam()) > 0;
         if (setter)
@@ -6711,10 +6884,37 @@ prop.Name());
 
     void write_event_abi_invoke(writer& w, Event const& evt)
     {
+        auto [add_method, remove_method] = get_event_methods(evt);
+        // MIDL places DeprecatedAttribute on add method, not Event row
+        if (is_removed(add_method))
+        {
+            // Event is removed from the projected interface, but the vtable slots
+            // must still exist for ABI compatibility. Generate E_NOTIMPL stubs.
+            auto generic_type = distance(evt.Parent().GenericParam()) > 0;
+            auto add_vmethod_name = get_vmethod_name(w, add_method.Parent(), add_method);
+            auto remove_vmethod_name = get_vmethod_name(w, remove_method.Parent(), remove_method);
+            w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+}
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                add_vmethod_name,
+                bind<write_abi_signature>(add_method),
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                remove_vmethod_name,
+                bind<write_abi_signature>(remove_method));
+            return;
+        }
         auto type_name = write_type_name_temp(w, evt.Parent());
         auto generic_type = distance(evt.Parent().GenericParam()) > 0;
         auto semantics = get_type_semantics(evt.EventType());
-        auto [add_method, remove_method] = get_event_methods(evt);
         auto add_signature = method_signature{ add_method };
 
         auto handler_parameter_name = add_signature.params().back().first.Name();
@@ -7386,6 +7586,11 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_interface(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
@@ -7408,6 +7613,11 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     bool write_abi_interface_netstandard(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return false;
+        }
+
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
@@ -7624,6 +7834,11 @@ private IObjectReference % => __% ?? Make__%();
 
     void write_static_abi_classes(writer& w, TypeDef const& iface)
     {
+        if (is_removed(iface))
+        {
+            return;
+        }
+
         auto fast_abi_class_val = get_fast_abi_class_for_interface(iface);
         if (fast_abi_class_val.has_value())
         {
@@ -8098,6 +8313,11 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return false;
+        }
+
         bool is_generic = distance(type.GenericParam()) > 0;
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
@@ -8656,6 +8876,11 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
     
     void write_class(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         writer::write_platform_guard guard{ w };
 
         if (settings.component)
@@ -8912,6 +9137,11 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
             return;
         }
 
+        if (is_removed(type))
+        {
+            return;
+        }
+
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTypeRcwFactoryAttribute
 {
@@ -8925,6 +9155,11 @@ internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTy
     void write_abi_class(writer& w, TypeDef const& type)
     {
         if (is_static(type))
+        {
+            return;
+        }
+
+        if (is_removed(type))
         {
             return;
         }
@@ -9018,6 +9253,11 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
 
     void write_delegate(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (settings.component)
         {
             write_authoring_metadata_type(w, type);
@@ -9039,6 +9279,11 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
 
     void write_abi_delegate(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         auto method = get_delegate_invoke(type);
         method_signature signature{ method };
         auto type_name = write_type_name_temp(w, type);
@@ -9701,6 +9946,11 @@ return true;
 
     void write_enum(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (settings.component)
         {
             write_authoring_metadata_type(w, type);
@@ -9727,6 +9977,11 @@ return true;
             {
                 if (auto constant = field.Constant())
                 {
+                    if (is_removed(field))
+                    {
+                        continue;
+                    }
+                    write_obsolete_attribute(w, field);
                     w.write("%% = unchecked((%)%),\n", 
                         bind<write_platform_attribute>(field.CustomAttribute()),
                         field.Name(), enum_underlying_type, bind<write_constant>(constant));
@@ -9738,6 +9993,11 @@ return true;
 
     void write_struct(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (settings.component)
         {
             write_authoring_metadata_type(w, type);
@@ -9831,6 +10091,11 @@ public override int GetHashCode() => %;
     void write_abi_struct(writer& w, TypeDef const& type)
     {
         if (is_type_blittable(type))
+        {
+            return;
+        }
+
+        if (is_removed(type))
         {
             return;
         }
@@ -10153,6 +10418,10 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
     void write_factory_class(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
         auto is_activatable = !is_static(type) && has_default_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
