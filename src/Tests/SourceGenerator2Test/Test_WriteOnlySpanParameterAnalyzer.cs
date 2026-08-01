@@ -928,6 +928,136 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
     }
 
     [TestMethod]
+    public async Task PrimaryConstructorInitializers_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample(Span<int> span)
+            {
+                private int _field = {|CSWINRT2023:span[0]|};
+
+                private int Property { get; } = {|CSWINRT2023:span[1]|};
+
+                private int _converted = Read({|CSWINRT2023:span|});
+
+                private static int Read(ReadOnlySpan<int> span) => span.Length;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterDeconstructedIndex_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int i = 0;
+
+                    span[i] = 1;
+                    (i, _) = (5, 0);                        // A deconstruction also modifies the index
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsWithAliasedIndexOrSpan_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void FillWithAliasedIndex(Span<int> span)
+                {
+                    int i = 0;
+                    ref int alias = ref i;                  // The alias can modify the index from anywhere
+
+                    span[i] = 1;
+                    alias = 5;
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+
+                public void FillWithAliasedSpan(Span<int> span, Span<int> other)
+                {
+                    ref Span<int> alias = ref span;         // The alias can redirect the span from anywhere
+
+                    span.Clear();
+                    alias = other;
+
+                    int value = {|CSWINRT2023:span[0]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsWithCapturedIndex_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int i = 0;
+
+                    void Advance() => i++;                  // The capture can modify the index when invoked
+
+                    span[i] = 1;
+                    Advance();
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterConditionalMethodWrite_Warn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    // The whole call, arguments included, is removed when 'DEBUG' is not defined
+                    Log(span[0] = 1);
+
+                    int value = {|CSWINRT2023:span[0]|};
+                }
+
+                [Conditional("DEBUG")]
+                private static void Log(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
     public async Task ForEachWithWriteInBody_Warns()
     {
         const string source = """
