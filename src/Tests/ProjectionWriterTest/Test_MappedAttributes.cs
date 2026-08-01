@@ -10,53 +10,26 @@ namespace ProjectionWriterTest;
 /// counterpart, rather than carrying over as-is.
 /// </summary>
 /// <remarks>
+/// <para>
 /// See <c>docs/attribute-projections.md</c> for the full mapping table. These tests pin down the
-/// <c>[Experimental]</c> mapping, which is the one the Windows SDK exercises.
+/// <c>[Experimental]</c> mapping, which is the only one that removes a metadata attribute type from
+/// the projection outright.
+/// </para>
+/// <para>
+/// They assert the shape of the projection, never the contents of the Windows SDK: the input metadata
+/// is whichever SDK is installed on the machine, so which APIs happen to be experimental is not stable
+/// across agents. The emitted <c>[Experimental]</c> attribute itself is covered where it is
+/// deterministic instead — <c>TestComponentCSharp</c> declares an <c>[experimental]</c> runtime class,
+/// and the <c>#pragma warning disable CSWINRT3005</c> around its use in <c>UnitTest</c> only compiles
+/// while the writer emits exactly that diagnostic id.
+/// </para>
 /// </remarks>
 [TestClass]
 public class Test_MappedAttributes
 {
     /// <summary>
-    /// The <c>[Experimental]</c> attribute the projection writer emits, in full.
-    /// </summary>
-    /// <remarks>
-    /// The Windows Runtime attribute carries no arguments, so all of these are synthesized. Asserting
-    /// the exact text keeps the diagnostic id, url and message in sync with <c>docs/diagnostics/cswinrt3005.md</c>:
-    /// user code suppresses the id, so changing it silently would be a breaking change.
-    /// </remarks>
-    private const string ExperimentalAttributeText =
-        """[global::System.Diagnostics.CodeAnalysis.Experimental("CSWINRT3005", UrlFormat = "https://aka.ms/cswinrt/errors/{0}", Message = "This Windows Runtime API is marked as experimental in its Windows Runtime metadata")]""";
-
-    /// <summary>
-    /// The Windows Runtime <c>[Experimental]</c> attribute is projected as the .NET one.
-    /// </summary>
-    [TestMethod]
-    public void Experimental_IsProjectedAsTheDotNetAttribute()
-    {
-        int referenceCount = ProjectionWriterRunner.CountAttributeText(referenceProjection: true, ExperimentalAttributeText);
-
-        Assert.AreNotEqual(0, referenceCount, "The Windows Runtime '[Experimental]' attribute should be projected as the .NET one.");
-    }
-
-    /// <summary>
-    /// The projected <c>[Experimental]</c> attribute is reference-projection-only, like every other
-    /// carried-over metadata attribute.
-    /// </summary>
-    /// <remarks>
-    /// It is only consumed by compilers and analyzers, which always see the reference projection, and
-    /// attribute blobs cannot be trimmed by ILLink or ILC (see <see cref="Test_CarriedOverAttributes"/>).
-    /// </remarks>
-    [TestMethod]
-    public void Experimental_IsReferenceProjectionOnly()
-    {
-        int implementationCount = ProjectionWriterRunner.CountGlobalAttribute(referenceProjection: false, "System.Diagnostics.CodeAnalysis.Experimental");
-
-        Assert.AreEqual(0, implementationCount, "'[Experimental]' should not be emitted into the implementation projection.");
-    }
-
-    /// <summary>
-    /// The Windows Runtime <c>[Experimental]</c> attribute type is custom-mapped, so it is not projected
-    /// itself, and no application of it survives under its Windows Runtime name.
+    /// The Windows Runtime <c>[Experimental]</c> attribute type is custom-mapped to the .NET one, so it
+    /// is not projected itself, and no application of it survives under its Windows Runtime name.
     /// </summary>
     [TestMethod]
     [DataRow(true)]
@@ -68,5 +41,26 @@ public class Test_MappedAttributes
 
         Assert.AreEqual(0, typeCount, "The Windows Runtime 'ExperimentalAttribute' type should not be projected.");
         Assert.AreEqual(0, applicationCount, "No application of the Windows Runtime '[Experimental]' attribute should survive.");
+    }
+
+    /// <summary>
+    /// The metadata attribute types that are <em>not</em> custom-mapped are still projected.
+    /// </summary>
+    /// <remarks>
+    /// This is what keeps <see cref="WindowsRuntimeExperimentalAttribute_IsNotProjected"/> honest: both
+    /// types live in <c>Windows.Foundation.Metadata</c> and are emitted by the same code path, so if
+    /// that namespace ever stopped being projected at all, the assertion there would pass for the wrong
+    /// reason. <c>[Deprecated]</c> in particular has to stay projected, as component authors apply it
+    /// directly (see <c>docs/attribute-projections.md</c>).
+    /// </remarks>
+    [TestMethod]
+    [DataRow("class DeprecatedAttribute")]
+    [DataRow("class OverloadAttribute")]
+    [DataRow("class VersionAttribute")]
+    public void UnmappedMetadataAttribute_IsStillProjected(string typeDeclaration)
+    {
+        int typeCount = ProjectionWriterRunner.CountAttributeText(referenceProjection: true, typeDeclaration);
+
+        Assert.AreNotEqual(0, typeCount, $"'{typeDeclaration}' should still be projected.");
     }
 }

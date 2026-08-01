@@ -23,16 +23,22 @@ namespace ProjectionWriterTest.Helpers;
 internal static class ProjectionWriterRunner
 {
     /// <summary>
-    /// The namespaces the projections are restricted to.
+    /// The namespace the projections are restricted to.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// <c>Windows.Foundation</c> (which also covers <c>Windows.Foundation.Collections</c> and
     /// <c>Windows.Foundation.Metadata</c>) is small enough to generate in well under a second, while
-    /// still covering every projected type kind and almost every carried-over attribute of interest.
-    /// <c>Windows.Graphics.Capture</c> is added for the one it does not have: it is the smallest
-    /// Windows SDK namespace that declares <c>[Experimental]</c> APIs.
+    /// still covering every projected type kind and every carried-over attribute of interest.
+    /// </para>
+    /// <para>
+    /// Tests must only assert on things this namespace is guaranteed to contain in every Windows SDK:
+    /// the input metadata is whichever SDK is installed on the machine, so an assertion that some API
+    /// carries a given attribute is really an assertion about that SDK, and breaks when an agent has a
+    /// different one (an experimental API becoming stable, or not existing yet, is enough).
+    /// </para>
     /// </remarks>
-    private const string IncludeNamespaces = "Windows.Foundation,Windows.Graphics.Capture";
+    private const string IncludeNamespace = "Windows.Foundation";
 
     /// <summary>
     /// The lazily generated reference projection sources.
@@ -111,13 +117,13 @@ internal static class ProjectionWriterRunner
                 "--input-paths sdk",
                 $"--output-directory {outputDirectory}",
                 "--target-framework net10.0",
-                $"--include-namespaces {IncludeNamespaces}",
+                $"--include-namespaces {IncludeNamespace}",
                 $"--reference-projection {(referenceProjection ? "true" : "false")}"
             ]);
 
             (int exitCode, string output) = Run(toolPath, $"@{responseFile}");
 
-            Assert.AreEqual(0, exitCode, $"The projection writer failed for '{IncludeNamespaces}':{Environment.NewLine}{output}");
+            Assert.AreEqual(0, exitCode, $"The projection writer failed for '{IncludeNamespace}':{Environment.NewLine}{output}");
 
             string[] sourceFiles = Directory.GetFiles(outputDirectory, "*.cs", SearchOption.AllDirectories);
 
