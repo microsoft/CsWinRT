@@ -286,4 +286,17 @@ internal static partial class DiagnosticDescriptors
         description: "A given type should only be used as the target of a single '[WindowsRuntimeNativeExposedType]' attribute in an assembly. CCW marshalling code is only generated once per type, so additional applications of the attribute for the same type have no effect.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT",
         customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an authored API with an <c>[Obsolete]</c> attribute, but no <c>[Deprecated]</c> attribute.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ObsoleteWithoutDeprecated = new(
+        id: "CSWINRT2021",
+        title: "'[Obsolete]' on an authored API without '[Deprecated]'",
+        messageFormat: """The API '{0}' is publicly exposed from a Windows Runtime component and has an '[Obsolete]' attribute applied, but no '[Windows.Foundation.Metadata.Deprecated]' attribute. '[Obsolete]' has no Windows Runtime counterpart, so it is not translated when the '.winmd' is generated, and the deprecation is invisible to every consumer of the component. Apply '[Windows.Foundation.Metadata.Deprecated]' to also deprecate '{0}' in the Windows Runtime metadata.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Deprecating a publicly exposed API of a Windows Runtime component requires '[Windows.Foundation.Metadata.Deprecated]', which is the only deprecation the '.winmd' can carry. '[Obsolete]' is a .NET concept with no Windows Runtime counterpart: it is not translated by the WinMD generator, so on its own it deprecates the API for nobody but the C# code inside the component itself.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
