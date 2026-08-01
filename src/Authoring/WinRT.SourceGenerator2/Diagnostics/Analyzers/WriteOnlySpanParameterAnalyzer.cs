@@ -83,7 +83,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
                 foreach (IOperation operationBlock in context.OperationBlocks)
                 {
-                    bool allowsSuppression = AllowsSuppression(operationBlock, symbols);
+                    bool allowsSuppression = AllowsSuppression(operationBlock);
 
                     foreach (IOperation operation in operationBlock.DescendantsAndSelf())
                     {
@@ -568,11 +568,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <returns>Whether <paramref name="operation"/> might be skipped, or run at some later point.</returns>
     private static bool IsConditionallyExecuted(IOperation operation, WellKnownSymbols symbols)
     {
-        // A call to a method annotated with '[Conditional]' is removed entirely by the compiler, arguments
-        // included, when the associated preprocessor symbol is not defined for the current compilation
-        return (operation is IInvocationOperation { TargetMethod: { } targetMethod } &&
-                symbols.ConditionalAttributeType is { } conditionalAttributeType &&
-                IsConditionalMethod(targetMethod, conditionalAttributeType)) ||
+        return (operation is IInvocationOperation { TargetMethod: { } targetMethod } && IsErasableCall(targetMethod, symbols)) ||
             operation is
                 IConditionalOperation or            // 'if' statements and '?:' expressions
                 IConditionalAccessOperation or      // '?.' and '?[]' accesses
@@ -588,15 +584,27 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks whether calls to a given method are conditionally compiled.
+    /// Checks whether calls to a given method might be removed entirely by the compiler, arguments included.
     /// </summary>
     /// <param name="method">The method to check.</param>
-    /// <param name="conditionalAttributeType">The <see cref="INamedTypeSymbol"/> for <c>[Conditional]</c>.</param>
-    /// <returns>Whether calls to <paramref name="method"/> might be removed by the compiler.</returns>
-    private static bool IsConditionalMethod(IMethodSymbol method, INamedTypeSymbol conditionalAttributeType)
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
+    /// <returns>Whether calls to <paramref name="method"/> might not survive compilation.</returns>
+    private static bool IsErasableCall(IMethodSymbol method, WellKnownSymbols symbols)
     {
-        // An override cannot carry '[Conditional]' itself, but it does inherit the conditional
-        // symbols of the method it overrides, so the whole chain has to be inspected here
+        // A 'partial void' method that has no implementing declaration has all of its call sites removed
+        if (method is { IsPartialDefinition: true, PartialImplementationPart: null })
+        {
+            return true;
+        }
+
+        if (symbols.ConditionalAttributeType is not { } conditionalAttributeType)
+        {
+            return false;
+        }
+
+        // A call to a method annotated with '[Conditional]' is removed when the associated preprocessor symbol
+        // is not defined. An override cannot carry the attribute itself, but it does inherit the conditional
+        // symbols of the method it overrides, so the whole chain of overridden methods is inspected here.
         for (IMethodSymbol? currentMethod = method; currentMethod is not null; currentMethod = currentMethod.OverriddenMethod)
         {
             if (currentMethod.HasAttributeWithType(conditionalAttributeType))
@@ -628,6 +636,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
+        // A reference to an operand handed out anywhere in the method (e.g. 'Foo(ref i)') can outlive the call
+        // that receives it, so it might be used to modify that operand from a place the scan below can't see
+        if (AreOperandsEscaping(GetOperationBlock(statements[readIndex]), target, indexSymbol))
+        {
+            return false;
+        }
+
         for (int i = writeIndex; i <= readIndex; i++)
         {
             foreach (IOperation operation in statements[i].DescendantsAndSelf())
@@ -647,6 +662,51 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Checks whether a reference to the operands a covering write depends on is handed out anywhere in an
+    /// operation block (e.g. as a <c>ref</c> argument), which could be used to modify them at any point.
+    /// </summary>
+    /// <param name="operationBlock">The operation block to inspect.</param>
+    /// <param name="target">The location the write covers.</param>
+    /// <param name="indexSymbol">The local or parameter used as the index, if there is one.</param>
+    /// <returns>Whether a reference to one of the operands might have escaped.</returns>
+    private static bool AreOperandsEscaping(IOperation operationBlock, ReadTarget target, ISymbol? indexSymbol)
+    {
+        foreach (IOperation operation in operationBlock.DescendantsAndSelf())
+        {
+            // A reference passed to another method can outlive the call that receives it (e.g. by being stored
+            // in a 'ref' field, or by being wrapped in a span), so it is not enough to only look at the calls
+            // between the write and the read: one made before the write can still be used to modify an operand.
+            if (operation is not IArgumentOperation { Parameter.RefKind: not RefKind.None, Value: { } value })
+            {
+                continue;
+            }
+
+            if (IsReferenceTo(value, target.Parameter) ||
+                (indexSymbol is not null && IsReferenceTo(value, indexSymbol)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gets the operation block containing a given operation.
+    /// </summary>
+    /// <param name="operation">The operation to get the operation block for.</param>
+    /// <returns>The root operation containing <paramref name="operation"/>.</returns>
+    private static IOperation GetOperationBlock(IOperation operation)
+    {
+        while (operation.Parent is { } parent)
+        {
+            operation = parent;
+        }
+
+        return operation;
     }
 
     /// <summary>
@@ -781,14 +841,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// Checks whether reads in a given operation block can be skipped when they are preceded by a covering write.
     /// </summary>
     /// <param name="operationBlock">The operation block to inspect.</param>
-    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <returns>Whether preceding writes can be relied upon for reads in <paramref name="operationBlock"/>.</returns>
     /// <remarks>
     /// Recognizing a preceding write relies on being able to see every write to the span parameter and to the
     /// index variables in source order. That is not possible when the body can jump around, or when it creates
     /// an indirection that could be used to modify a variable from a place the ordered scan can't account for.
     /// </remarks>
-    private static bool AllowsSuppression(IOperation operationBlock, WellKnownSymbols symbols)
+    private static bool AllowsSuppression(IOperation operationBlock)
     {
         foreach (IOperation operation in operationBlock.DescendantsAndSelf())
         {
@@ -803,18 +862,12 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
                 // A pointer can be used to modify a variable without any visible write to it
                 case { Type: IPointerTypeSymbol }:
-                    return false;
 
-                // A writable 'ref' alias can be used to modify whatever it points at from anywhere it is in
-                // scope. An alias to an element of a span is the one exception: it can only ever be used to
-                // write to that element, never to redirect the span itself or to change an index variable.
-                case IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref, Initializer.Value: { } aliasedValue }
-                    when !IsSpanElementReference(aliasedValue, symbols):
-                    return false;
-
-                // The same applies to a 'ref' reassignment of an existing alias
-                case ISimpleAssignmentOperation { IsRef: true, Value: { } reassignedValue }
-                    when !IsSpanElementReference(reassignedValue, symbols):
+                // A writable 'ref' alias, whether declared or reassigned, can be used to modify whatever
+                // it points at from anywhere it is in scope. Note that the loop variable of a 'foreach'
+                // loop is not a concern here, as its declarator does not have an initializer.
+                case IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref, Initializer: not null }:
+                case ISimpleAssignmentOperation { IsRef: true }:
                     return false;
                 default:
                     break;
@@ -822,19 +875,6 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Checks whether a given operation references an element of a <see cref="System.Span{T}"/> value.
-    /// </summary>
-    /// <param name="operation">The operation to check.</param>
-    /// <param name="symbols">The well known symbols used by the analyzer.</param>
-    /// <returns>Whether <paramref name="operation"/> is an access to an element of a <see cref="System.Span{T}"/>.</returns>
-    private static bool IsSpanElementReference(IOperation operation, WellKnownSymbols symbols)
-    {
-        return
-            operation is IPropertyReferenceOperation { Property.IsIndexer: true, Instance.Type: { } instanceType } &&
-            SymbolEqualityComparer.Default.Equals(instanceType.OriginalDefinition, symbols.SpanType);
     }
 
     /// <summary>

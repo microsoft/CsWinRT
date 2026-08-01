@@ -1189,6 +1189,78 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
     }
 
     [TestMethod]
+    public async Task ReadsWithEscapingIndex_Warn()
+    {
+        const string source = """
+            using System;
+            using System.Runtime.InteropServices;
+
+            public ref struct Cursor
+            {
+                private ref int _index;
+
+                public Cursor(ref int index)
+                {
+                    _index = ref index;
+                }
+
+                public void Advance() => _index++;
+            }
+
+            public class Sample
+            {
+                public void FillWithStoredIndexReference(Span<int> span)
+                {
+                    int i = 0;
+                    Cursor cursor = new(ref i);                     // The reference outlives the call
+
+                    span[i] = 1;
+                    cursor.Advance();
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+
+                public void FillWithSpanOverIndex(Span<int> span)
+                {
+                    int i = 0;
+                    Span<int> window = MemoryMarshal.CreateSpan(ref i, 1);
+
+                    span[i] = 1;
+                    window[0] = 5;
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterUnimplementedPartialMethodWrite_Warn()
+    {
+        const string source = """
+            using System;
+
+            public partial class Sample
+            {
+                // Calls to a 'partial void' method with no implementing declaration are
+                // removed entirely by the compiler, the evaluation of arguments included
+                partial void Log(int x);
+
+                public void Fill(Span<int> span)
+                {
+                    Log(span[0] = 1);
+
+                    int value = {|CSWINRT2023:span[0]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
     public async Task ForEachWithWriteInBody_Warns()
     {
         const string source = """
