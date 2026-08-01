@@ -63,6 +63,13 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
+        // The factory base's name is reserved (see 'GetFactoryClassName'), so a runtime class cannot get one
+        // if a real Windows Runtime class in the same namespace already has that name.
+        if (IsFactoryClassNameTaken(context, type))
+        {
+            return false;
+        }
+
         // Static runtime classes have no instances, so they only get a factory base (and only if
         // they actually declare any statics). All other runtime classes always get an instance base:
         // it is separate from the (possibly sealed) projected class and bridges to it via an implicit
@@ -71,27 +78,29 @@ internal static class AbiImplementableClassFactory
     }
 
     /// <summary>
+    /// Returns whether the name a type's factory base would take is already used by a real Windows Runtime
+    /// class in the same namespace (which would generate an implementable base of its own under that name).
+    /// </summary>
+    private static bool IsFactoryClassNameTaken(ProjectionEmitContext context, TypeDefinition type)
+    {
+        (string ns, string name) = type.Names();
+
+        return context.Cache.Find(ns, GetFactoryClassName(IdentifierEscaping.StripBackticks(name))) is not null;
+    }
+
+    /// <summary>
     /// Returns the name to give a class's generated factory base.
     /// </summary>
     /// <remarks>
-    /// The conventional <c>&lt;Name&gt;Factory</c> can collide with a real Windows Runtime class that is
-    /// itself named <c>&lt;Name&gt;Factory</c> (e.g. <c>ActionEntity</c> alongside <c>ActionEntityFactory</c>),
-    /// which would produce two types with the same name in the same namespace, so a distinct suffix is used
-    /// in that case.
+    /// The suffix is always <c>ActivationFactory</c>, never the shorter <c>Factory</c>. The latter collides
+    /// with real Windows Runtime classes that are themselves named <c>&lt;Name&gt;Factory</c> (e.g.
+    /// <c>ActionEntity</c> alongside <c>ActionEntityFactory</c>), and picking the name conditionally would
+    /// make it depend on what else happens to exist in the namespace: adding such a class to a <c>.winmd</c>
+    /// later would silently rename an existing base and break everyone implementing it. <c>ActivationFactory</c>
+    /// is also the more accurate name, and no Windows Runtime class in the Windows SDK uses it.
     /// </remarks>
-    private static string GetFactoryClassName(ProjectionEmitContext context, TypeDefinition type, string nameStripped)
+    private static string GetFactoryClassName(string nameStripped)
     {
-        (string ns, _) = type.Names();
-
-        string name = $"{nameStripped}Factory";
-
-        // The generated bases live in 'ABI.<Namespace>', and every Windows Runtime type in that namespace
-        // also gets one, so a name is available only if no such type exists.
-        if (context.Cache.Find(ns, name) is null)
-        {
-            return name;
-        }
-
         return $"{nameStripped}ActivationFactory";
     }
 
@@ -313,7 +322,7 @@ internal static class AbiImplementableClassFactory
         writer.WriteLine();
         writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}))]");
 
-        string factoryName = GetFactoryClassName(context, type, nameStripped);
+        string factoryName = GetFactoryClassName(nameStripped);
 
         writer.WriteLine($"public abstract class {factoryName} : {string.Join(", ", bases)}");
 
