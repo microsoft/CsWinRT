@@ -1058,6 +1058,137 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
     }
 
     [TestMethod]
+    public async Task ReadsAfterConditionalOverrideWrite_Warn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics;
+
+            public class Logger
+            {
+                [Conditional("DEBUG")]
+                public virtual void Log(int x)
+                {
+                }
+            }
+
+            public class Sample : Logger
+            {
+                // An override inherits the conditional symbols of the method it overrides
+                public override void Log(int x)
+                {
+                }
+
+                public void Fill(Span<int> span)
+                {
+                    Log(span[0] = 1);
+
+                    int value = {|CSWINRT2021:span[0]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsWithIndirectlyAliasedIndex_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void FillWithConditionalAlias(Span<int> span, bool condition)
+                {
+                    int i = 0;
+                    int j = 0;
+                    ref int alias = ref (condition ? ref i : ref j);
+
+                    span[i] = 1;
+                    alias = 5;
+
+                    int value = {|CSWINRT2021:span[i]|};
+                }
+
+                public void FillWithReturnedAlias(Span<int> span)
+                {
+                    int i = 0;
+                    ref int alias = ref Identity(ref i);
+
+                    span[i] = 1;
+                    alias = 5;
+
+                    int value = {|CSWINRT2021:span[i]|};
+                }
+
+                public unsafe void FillWithPointer(Span<int> span)
+                {
+                    int i = 0;
+                    int* pointer = &i;
+
+                    span[i] = 1;
+                    *pointer = 5;
+
+                    int value = {|CSWINRT2021:span[i]|};
+                }
+
+                private static ref int Identity(ref int x) => ref x;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsWithRefLocalIndex_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                private int _index;
+
+                public void FillWithFieldIndex(Span<int> span)
+                {
+                    // The index aliases the field, so it changes with no write to 'i' in sight
+                    ref int i = ref _index;
+
+                    span[i] = 1;
+                    _index = 5;
+
+                    int value = {|CSWINRT2021:span[i]|};
+                }
+
+                public void FillWithReadOnlyFieldIndex(Span<int> span)
+                {
+                    ref readonly int i = ref _index;
+
+                    span[i] = 1;
+                    Reset();
+
+                    int value = {|CSWINRT2021:span[i]|};
+                }
+
+                public void FillWithArrayIndex(Span<int> span, int[] indices)
+                {
+                    ref int i = ref indices[0];
+
+                    span[i] = 1;
+                    indices[0] = 5;
+
+                    int value = {|CSWINRT2021:span[i]|};
+                }
+
+                private void Reset() => _index = 5;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
     public async Task ForEachWithWriteInBody_Warns()
     {
         const string source = """

@@ -83,7 +83,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
                 foreach (IOperation operationBlock in context.OperationBlocks)
                 {
-                    bool allowsSuppression = AllowsSuppression(operationBlock);
+                    bool allowsSuppression = AllowsSuppression(operationBlock, symbols);
 
                     foreach (IOperation operation in operationBlock.DescendantsAndSelf())
                     {
@@ -572,7 +572,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // included, when the associated preprocessor symbol is not defined for the current compilation
         return (operation is IInvocationOperation { TargetMethod: { } targetMethod } &&
                 symbols.ConditionalAttributeType is { } conditionalAttributeType &&
-                targetMethod.HasAttributeWithType(conditionalAttributeType)) ||
+                IsConditionalMethod(targetMethod, conditionalAttributeType)) ||
             operation is
                 IConditionalOperation or            // 'if' statements and '?:' expressions
                 IConditionalAccessOperation or      // '?.' and '?[]' accesses
@@ -588,6 +588,27 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
+    /// Checks whether calls to a given method are conditionally compiled.
+    /// </summary>
+    /// <param name="method">The method to check.</param>
+    /// <param name="conditionalAttributeType">The <see cref="INamedTypeSymbol"/> for <c>[Conditional]</c>.</param>
+    /// <returns>Whether calls to <paramref name="method"/> might be removed by the compiler.</returns>
+    private static bool IsConditionalMethod(IMethodSymbol method, INamedTypeSymbol conditionalAttributeType)
+    {
+        // An override cannot carry '[Conditional]' itself, but it does inherit the conditional
+        // symbols of the method it overrides, so the whole chain has to be inspected here
+        for (IMethodSymbol? currentMethod = method; currentMethod is not null; currentMethod = currentMethod.OverriddenMethod)
+        {
+            if (currentMethod.HasAttributeWithType(conditionalAttributeType))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Checks whether the operands a covering write depends on (i.e. the span parameter itself, and the index
     /// variable, if the target is a single element) can't have been modified between that write and a later read.
     /// </summary>
@@ -599,6 +620,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     private static bool AreOperandsStable(ImmutableArray<IOperation> statements, int writeIndex, int readIndex, ReadTarget target)
     {
         ISymbol? indexSymbol = target.IndexSymbol;
+
+        // An index that is itself a 'ref' local or parameter aliases some other storage (e.g. a field, or an
+        // array element), so its value can change without any write to the symbol itself being visible here
+        if (indexSymbol is ILocalSymbol { RefKind: not RefKind.None } or IParameterSymbol { RefKind: not RefKind.None })
+        {
+            return false;
+        }
 
         for (int i = writeIndex; i <= readIndex; i++)
         {
@@ -753,13 +781,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// Checks whether reads in a given operation block can be skipped when they are preceded by a covering write.
     /// </summary>
     /// <param name="operationBlock">The operation block to inspect.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <returns>Whether preceding writes can be relied upon for reads in <paramref name="operationBlock"/>.</returns>
     /// <remarks>
     /// Recognizing a preceding write relies on being able to see every write to the span parameter and to the
     /// index variables in source order. That is not possible when the body can jump around, or when it creates
     /// an indirection that could be used to modify a variable from a place the ordered scan can't account for.
     /// </remarks>
-    private static bool AllowsSuppression(IOperation operationBlock)
+    private static bool AllowsSuppression(IOperation operationBlock, WellKnownSymbols symbols)
     {
         foreach (IOperation operation in operationBlock.DescendantsAndSelf())
         {
@@ -772,18 +801,20 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
                 // can happen at any point (a span itself can never be captured, as it is a 'ref struct')
                 case IAnonymousFunctionOperation or ILocalFunctionOperation:
 
-                // A writable 'ref' alias to a local or parameter (e.g. the span itself, or an index
-                // variable) can be used to modify it from anywhere the alias is in scope. Note that an
-                // alias to an element of the span (e.g. 'ref var slot = ref span[i]') is not a concern
-                // here, as it can only ever be used to write to that element, never to invalidate it.
-                case IVariableDeclaratorOperation
-                {
-                    Symbol.RefKind: RefKind.Ref,
-                    Initializer.Value: ILocalReferenceOperation or IParameterReferenceOperation
-                }:
+                // A pointer can be used to modify a variable without any visible write to it
+                case { Type: IPointerTypeSymbol }:
+                    return false;
+
+                // A writable 'ref' alias can be used to modify whatever it points at from anywhere it is in
+                // scope. An alias to an element of a span is the one exception: it can only ever be used to
+                // write to that element, never to redirect the span itself or to change an index variable.
+                case IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref, Initializer.Value: { } aliasedValue }
+                    when !IsSpanElementReference(aliasedValue, symbols):
+                    return false;
 
                 // The same applies to a 'ref' reassignment of an existing alias
-                case ISimpleAssignmentOperation { IsRef: true, Value: ILocalReferenceOperation or IParameterReferenceOperation }:
+                case ISimpleAssignmentOperation { IsRef: true, Value: { } reassignedValue }
+                    when !IsSpanElementReference(reassignedValue, symbols):
                     return false;
                 default:
                     break;
@@ -791,6 +822,19 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Checks whether a given operation references an element of a <see cref="System.Span{T}"/> value.
+    /// </summary>
+    /// <param name="operation">The operation to check.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
+    /// <returns>Whether <paramref name="operation"/> is an access to an element of a <see cref="System.Span{T}"/>.</returns>
+    private static bool IsSpanElementReference(IOperation operation, WellKnownSymbols symbols)
+    {
+        return
+            operation is IPropertyReferenceOperation { Property.IsIndexer: true, Instance.Type: { } instanceType } &&
+            SymbolEqualityComparer.Default.Equals(instanceType.OriginalDefinition, symbols.SpanType);
     }
 
     /// <summary>
