@@ -45,8 +45,8 @@ steps:
 - task: MSBuild@1
   displayName: Build BenchmarkComponent
   inputs:
-    solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-    msbuildArguments: /t:restore /t:BenchmarkComponent /p:RestorePackagesConfig=true /p:solutiondir=$(Build.SourcesDirectory)\src\
+    solution: $(Build.SourcesDirectory)\src\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj
+    msbuildArguments: /t:Build
     platform: x64
     configuration: Release
 
