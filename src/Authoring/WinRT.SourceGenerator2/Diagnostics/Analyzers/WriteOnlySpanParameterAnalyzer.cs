@@ -580,7 +580,11 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
                 ITryOperation or                    // 'try' blocks, as an exception might skip the rest of the body
                 IAnonymousFunctionOperation or      // lambdas and anonymous methods
                 ILocalFunctionOperation or          // local functions
-                IBinaryOperation { OperatorKind: BinaryOperatorKind.ConditionalAnd or BinaryOperatorKind.ConditionalOr };
+                IBinaryOperation { OperatorKind: BinaryOperatorKind.ConditionalAnd or BinaryOperatorKind.ConditionalOr } or
+
+                // Interpolated strings using a handler that can report failure, as the holes are not evaluated then
+                IInterpolatedStringHandlerCreationOperation { HandlerCreationHasSuccessParameter: true } or
+                IInterpolatedStringHandlerCreationOperation { HandlerAppendCallsReturnBool: true };
     }
 
     /// <summary>
