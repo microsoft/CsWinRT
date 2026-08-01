@@ -1261,6 +1261,27 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
     }
 
     [TestMethod]
+    public async Task ReadsAfterInterpolatedStringHandlerWrite_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<char> destination, Span<int> span)
+                {
+                    // The handler can report failure, in which case the holes are never evaluated
+                    destination.TryWrite($"{span[0] = 1}", out int written);
+
+                    int value = {|CSWINRT2021:span[0]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
     public async Task ForEachWithWriteInBody_Warns()
     {
         const string source = """
