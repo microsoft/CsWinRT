@@ -36,11 +36,29 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
+        // A custom-mapped type is projected as its .NET counterpart (e.g. 'Windows.Foundation.Uri' is
+        // 'System.Uri'), so there is no projected Windows Runtime type for an author to implement, and in
+        // some cases no projected type at all (an empty mapped name means the type is dropped entirely and
+        // replaced by hand-written members from the namespace additions).
+        if (IsCustomMappedType(type))
+        {
+            return false;
+        }
+
         // A custom-mapped interface (e.g. 'IMap<K, V>') is projected as its .NET counterpart, whose members
-        // are not described by the input metadata. An abstract base declaring one would have to re-declare
-        // those members as abstract, so until that is supported such types are skipped rather than emitted in
-        // a shape that cannot compile.
-        if (ImplementsCustomMappedInterface(context, type))
+        // are not described by the input metadata. Those are declared from a known .NET shape instead, so a
+        // type is only skipped when it implements a mapped interface no such shape exists for (declaring it
+        // without being able to declare its members would not compile).
+        if (ImplementsUnsupportedMappedInterface(context, type))
+        {
+            return false;
+        }
+
+        // A property whose name is already declared 'abstract' by a base implementable class cannot be
+        // redeclared here, and hiding it would leave the inherited abstract member impossible to implement.
+        // C# has no way to express both (e.g. 'MapControl.Style' of type 'MapStyle' alongside the inherited
+        // 'FrameworkElement.Style' of type 'Style'), so such a type gets no implementable base.
+        if (HasConflictingBaseProperty(context, type))
         {
             return false;
         }
@@ -53,10 +71,95 @@ internal static class AbiImplementableClassFactory
     }
 
     /// <summary>
-    /// Returns whether a type implements, directly or transitively, any interface that is custom-mapped to a
-    /// .NET interface with its own member shape.
+    /// Returns the name to give a class's generated factory base.
     /// </summary>
-    private static bool ImplementsCustomMappedInterface(ProjectionEmitContext context, TypeDefinition type)
+    /// <remarks>
+    /// The conventional <c>&lt;Name&gt;Factory</c> can collide with a real Windows Runtime class that is
+    /// itself named <c>&lt;Name&gt;Factory</c> (e.g. <c>ActionEntity</c> alongside <c>ActionEntityFactory</c>),
+    /// which would produce two types with the same name in the same namespace, so a distinct suffix is used
+    /// in that case.
+    /// </remarks>
+    private static string GetFactoryClassName(ProjectionEmitContext context, TypeDefinition type, string nameStripped)
+    {
+        (string ns, _) = type.Names();
+
+        string name = $"{nameStripped}Factory";
+
+        // The generated bases live in 'ABI.<Namespace>', and every Windows Runtime type in that namespace
+        // also gets one, so a name is available only if no such type exists.
+        if (context.Cache.Find(ns, name) is null)
+        {
+            return name;
+        }
+
+        return $"{nameStripped}ActivationFactory";
+    }
+
+    /// <summary>
+    /// Returns whether a type declares a property whose name is also declared by an interface a base
+    /// implementable class already covers, which C# cannot express (see the caller for details).
+    /// </summary>
+    private static bool HasConflictingBaseProperty(ProjectionEmitContext context, TypeDefinition type)
+    {
+        if (GetImplementableBaseType(context, type) is not TypeDefinition baseType)
+        {
+            return false;
+        }
+
+        HashSet<TypeDefinition> baseClosure = [];
+
+        CollectInterfaceClosure(context, baseType, baseClosure);
+
+        HashSet<string> baseProperties = [];
+
+        foreach (TypeDefinition baseInterface in baseClosure)
+        {
+            foreach (PropertyDefinition baseProperty in baseInterface.Properties)
+            {
+                _ = baseProperties.Add(baseProperty.GetRawName());
+            }
+        }
+
+        HashSet<TypeDefinition> closure = [];
+
+        CollectInterfaceClosure(context, type, closure);
+
+        foreach (TypeDefinition interfaceType in closure)
+        {
+            // Interfaces the base already covers contribute the base's own declarations, not new ones.
+            if (baseClosure.Contains(interfaceType))
+            {
+                continue;
+            }
+
+            foreach (PropertyDefinition property in interfaceType.Properties)
+            {
+                if (baseProperties.Contains(property.GetRawName()))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns whether a type is custom-mapped to a .NET type, and so is not projected as a Windows Runtime
+    /// type that an author could implement.
+    /// </summary>
+    private static bool IsCustomMappedType(TypeDefinition type)
+    {
+        (string ns, string name) = type.Names();
+
+        return MappedTypes.Get(ns, name) is not null;
+    }
+
+    /// <summary>
+    /// Returns whether a type implements, directly or transitively, any interface that is custom-mapped to a
+    /// .NET interface that no known abstract member shape exists for.
+    /// </summary>
+    private static bool ImplementsUnsupportedMappedInterface(ProjectionEmitContext context, TypeDefinition type)
     {
         HashSet<TypeDefinition> closure = [];
 
@@ -64,7 +167,7 @@ internal static class AbiImplementableClassFactory
 
         foreach (TypeDefinition interfaceType in closure)
         {
-            if (IsCustomMappedInterface(interfaceType))
+            if (IsCustomMappedInterface(interfaceType) && !MappedInterfaceAbstractMemberFactory.IsSupported(interfaceType.Name ?? ""))
             {
                 return true;
             }
@@ -134,7 +237,7 @@ internal static class AbiImplementableClassFactory
 
             WriteInterfaceMembersRecursive(writer, context, type, null, writtenMethods, properties, writtenEvents, writtenInterfaces);
 
-            EmitMergedProperties(writer, properties);
+            EmitMergedProperties(writer, properties, writtenMethods);
 
             // The conversion creates a CCW for the authored object and then resolves the projected RCW for
             // it (which goes through the usual 'ComWrappers' callback). A reference assembly carries no
@@ -209,7 +312,10 @@ internal static class AbiImplementableClassFactory
 
         writer.WriteLine();
         writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}))]");
-        writer.WriteLine($"public abstract class {nameStripped}Factory : {string.Join(", ", bases)}");
+
+        string factoryName = GetFactoryClassName(context, type, nameStripped);
+
+        writer.WriteLine($"public abstract class {factoryName} : {string.Join(", ", bases)}");
 
         using (writer.WriteBlock())
         {
@@ -232,7 +338,7 @@ internal static class AbiImplementableClassFactory
                 }
             }
 
-            EmitMergedProperties(writer, properties);
+            EmitMergedProperties(writer, properties, writtenMethods);
 
             // The activation entry point generated into the component's own assembly needs to hand out a CCW
             // for the factory, but it is compiled against the runtime reference assembly, where the
@@ -244,7 +350,7 @@ internal static class AbiImplementableClassFactory
             {
                 writer.WriteLine(isMultiline: true, $$"""
                     [EditorBrowsable(EditorBrowsableState.Never)]
-                    public static nint GetActivationFactoryUnsafe({{nameStripped}}Factory value)
+                    public static nint GetActivationFactoryUnsafe({{factoryName}} value)
                     {
                         throw null;
                     }
@@ -254,7 +360,7 @@ internal static class AbiImplementableClassFactory
             {
                 writer.WriteLine(isMultiline: true, $$"""
                     [EditorBrowsable(EditorBrowsableState.Never)]
-                    public static unsafe nint GetActivationFactoryUnsafe({{nameStripped}}Factory value)
+                    public static unsafe nint GetActivationFactoryUnsafe({{factoryName}} value)
                     {
                         return (nint)WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value).DetachThisPtrUnsafe();
                     }
@@ -313,10 +419,21 @@ internal static class AbiImplementableClassFactory
     /// <summary>
     /// Emits the merged <c>abstract</c> properties collected during the interface walk.
     /// </summary>
-    private static void EmitMergedProperties(IndentedTextWriter writer, Dictionary<string, PropertyInfo> properties)
+    /// <param name="writer">The writer.</param>
+    /// <param name="properties">The properties collected during the walk.</param>
+    /// <param name="writtenMembers">Signature keys of members already written, so a property is not declared twice when a mapped interface's .NET shape already supplied it.</param>
+    private static void EmitMergedProperties(IndentedTextWriter writer, Dictionary<string, PropertyInfo> properties, HashSet<string> writtenMembers)
     {
         foreach (KeyValuePair<string, PropertyInfo> kvp in properties)
         {
+            // A property of the same name may already have been declared from a mapped interface's .NET
+            // shape (e.g. 'Count', or 'Item' for an indexer), and that declaration is the one that
+            // satisfies the interface.
+            if (writtenMembers.Contains($"P:{kvp.Key}"))
+            {
+                continue;
+            }
+
             PropertyInfo info = kvp.Value;
             string accessors = (info.HasGetter, info.HasSetter) switch
             {
@@ -363,11 +480,20 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
-            // A custom-mapped interface is declared in its .NET form, whose members the author implements
-            // directly (the compiler enforces that through the interface itself), so no abstract members are
-            // declared for it here. Its Windows Runtime members are serviced by the runtime's adapters.
+            // A custom-mapped interface is declared in its .NET form, so its members are declared from that
+            // .NET shape rather than from the Windows Runtime metadata shape (which describes different
+            // members entirely, and would satisfy nothing).
             if (IsCustomMappedInterface(ifaceType))
             {
+                GenericInstanceTypeSignature? mappedInstance = null;
+
+                if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? mappedGi))
+                {
+                    mappedInstance = currentInstance is not null && mappedGi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature mappedSubGi ? mappedSubGi : mappedGi;
+                }
+
+                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, mappedInstance, ifaceType.Name ?? "", writtenMethods);
+
                 continue;
             }
 
