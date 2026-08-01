@@ -57,37 +57,46 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            // Also get the '[Conditional]' symbol, which is used to detect calls that might be removed entirely
+            INamedTypeSymbol? conditionalAttributeType = context.Compilation.GetTypeByMetadataName("System.Diagnostics.ConditionalAttribute");
+
+            WellKnownSymbols symbols = new(spanType, readOnlySpanType, conditionalAttributeType);
+
             // The whole body of a method is analyzed at once, rather than each operation in isolation, so that
             // each candidate read can also be inspected in the context of the code that necessarily runs before it
             context.RegisterOperationBlockAction(context =>
             {
-                // Only look at methods that are part of the Windows Runtime ABI surface and that actually have
-                // at least one fill array parameter, which is the only thing this analyzer is concerned with
-                if (context.OwningSymbol is not IMethodSymbol method ||
-                    !HasFillArrayParameter(method, spanType) ||
-                    !IsWindowsRuntimeMethod(method))
+                // Fill array parameters can only be declared by a method on a public, top-level class (see
+                // 'IsWindowsRuntimeMethod'), which is a cheap way to skip most of the code being compiled
+                if (context.OwningSymbol.ContainingType is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public, ContainingType: null })
+                {
+                    return;
+                }
+
+                // For a method, the parameters are known up front, so bodies that can't possibly read from a fill
+                // array parameter are skipped right away. That is not the case for field and property initializers,
+                // which can also reference the parameters of the primary constructor of their containing type.
+                if (context.OwningSymbol is IMethodSymbol method && !HasSpanParameter(method, spanType))
                 {
                     return;
                 }
 
                 foreach (IOperation operationBlock in context.OperationBlocks)
                 {
-                    // A 'goto' can jump over a write that would otherwise always run before a given read, so
-                    // no read is ever suppressed in a body containing one (this is extremely rare in practice)
-                    bool allowsSuppression = !ContainsGotoBranch(operationBlock);
+                    bool allowsSuppression = AllowsSuppression(operationBlock);
 
                     foreach (IOperation operation in operationBlock.DescendantsAndSelf())
                     {
                         switch (operation)
                         {
                             case IPropertyReferenceOperation propertyReference:
-                                AnalyzeElementRead(context, propertyReference, method, spanType, allowsSuppression);
+                                AnalyzeElementRead(context, propertyReference, symbols, allowsSuppression);
                                 break;
                             case IConversionOperation conversion:
-                                AnalyzeSpanConversion(context, conversion, method, spanType, readOnlySpanType, allowsSuppression);
+                                AnalyzeSpanConversion(context, conversion, symbols, allowsSuppression);
                                 break;
                             case IForEachLoopOperation forEachLoop:
-                                AnalyzeForEachLoop(context, forEachLoop, method, spanType, allowsSuppression);
+                                AnalyzeForEachLoop(context, forEachLoop, symbols, allowsSuppression);
                                 break;
                             default:
                                 break;
@@ -103,8 +112,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// </summary>
     /// <param name="context">The context to report diagnostics to.</param>
     /// <param name="operation">The property reference to analyze.</param>
-    /// <param name="method">The method being analyzed.</param>
-    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     /// <remarks>
     /// This handles reading the value (or a readonly reference) of an element, such as:
@@ -120,8 +128,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeElementRead(
         OperationBlockAnalysisContext context,
         IPropertyReferenceOperation operation,
-        IMethodSymbol method,
-        INamedTypeSymbol spanType,
+        WellKnownSymbols symbols,
         bool allowsSuppression)
     {
         // We only care about the 'Span<T>' indexer (i.e. 'span[i]'), not other properties (e.g. 'Length')
@@ -132,7 +139,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
         // The indexer must be invoked directly on a write-only 'Span<T>' parameter
         if (operation.Instance is not IParameterReferenceOperation { Parameter: { } parameter } ||
-            !IsFillArrayParameter(parameter, method, spanType))
+            !IsFillArrayParameter(parameter, symbols))
         {
             return;
         }
@@ -146,7 +153,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // Skip reads of an element that the method is guaranteed to have already written to
         if (allowsSuppression &&
             operation.Arguments is [{ Value: { } index }] &&
-            IsPrecededByCoveringWrite(operation, ReadTarget.ForElement(parameter, spanType, index)))
+            IsPrecededByCoveringWrite(operation, ReadTarget.ForElement(parameter, symbols, index)))
         {
             return;
         }
@@ -163,9 +170,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// </summary>
     /// <param name="context">The context to report diagnostics to.</param>
     /// <param name="operation">The conversion to analyze.</param>
-    /// <param name="method">The method being analyzed.</param>
-    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
-    /// <param name="readOnlySpanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.ReadOnlySpan{T}"/>.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     /// <remarks>
     /// This handles converting the span to <see cref="System.ReadOnlySpan{T}"/>, such as:
@@ -177,26 +182,24 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSpanConversion(
         OperationBlockAnalysisContext context,
         IConversionOperation operation,
-        IMethodSymbol method,
-        INamedTypeSymbol spanType,
-        INamedTypeSymbol readOnlySpanType,
+        WellKnownSymbols symbols,
         bool allowsSuppression)
     {
         // The conversion must target 'ReadOnlySpan<T>' (a read-only view over the span elements)
-        if (!SymbolEqualityComparer.Default.Equals(operation.Type?.OriginalDefinition, readOnlySpanType))
+        if (!SymbolEqualityComparer.Default.Equals(operation.Type?.OriginalDefinition, symbols.ReadOnlySpanType))
         {
             return;
         }
 
         // The operand must be a write-only 'Span<T>' parameter
         if (operation.Operand is not IParameterReferenceOperation { Parameter: { } parameter } ||
-            !IsFillArrayParameter(parameter, method, spanType))
+            !IsFillArrayParameter(parameter, symbols))
         {
             return;
         }
 
         // Skip conversions of a span that the method is guaranteed to have already filled entirely
-        if (allowsSuppression && IsPrecededByCoveringWrite(operation, ReadTarget.ForSpan(parameter, spanType)))
+        if (allowsSuppression && IsPrecededByCoveringWrite(operation, ReadTarget.ForSpan(parameter, symbols)))
         {
             return;
         }
@@ -212,8 +215,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// </summary>
     /// <param name="context">The context to report diagnostics to.</param>
     /// <param name="operation">The <c>foreach</c> loop to analyze.</param>
-    /// <param name="method">The method being analyzed.</param>
-    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <param name="allowsSuppression">Whether reads preceded by a covering write can be suppressed.</param>
     /// <remarks>
     /// This handles iterating over the span, which reads each element, such as:
@@ -233,8 +235,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeForEachLoop(
         OperationBlockAnalysisContext context,
         IForEachLoopOperation operation,
-        IMethodSymbol method,
-        INamedTypeSymbol spanType,
+        WellKnownSymbols symbols,
         bool allowsSuppression)
     {
         // The iterated collection is the span parameter, possibly wrapped in an identity conversion
@@ -244,7 +245,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
         // The iterated collection must be a write-only 'Span<T>' parameter
         if (collection is not IParameterReferenceOperation { Parameter: { } parameter } ||
-            !IsFillArrayParameter(parameter, method, spanType))
+            !IsFillArrayParameter(parameter, symbols))
         {
             return;
         }
@@ -255,13 +256,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // only ever read the elements, so for those the loop itself is reported instead.
         if (operation.LoopControlVariable is IVariableDeclaratorOperation { Symbol: { RefKind: RefKind.Ref } loopVariable })
         {
-            AnalyzeLoopVariableReads(context, operation.Body, ReadTarget.ForAlias(parameter, spanType, loopVariable), allowsSuppression);
+            AnalyzeLoopVariableReads(context, operation.Body, ReadTarget.ForAlias(parameter, symbols, loopVariable), allowsSuppression);
 
             return;
         }
 
         // Skip iterations over a span that the method is guaranteed to have already filled entirely
-        if (allowsSuppression && IsPrecededByCoveringWrite(operation.Collection, ReadTarget.ForSpan(parameter, spanType)))
+        if (allowsSuppression && IsPrecededByCoveringWrite(operation.Collection, ReadTarget.ForSpan(parameter, symbols)))
         {
             return;
         }
@@ -317,16 +318,16 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks whether a given method has at least one write-only <see cref="System.Span{T}"/> parameter.
+    /// Checks whether a given method has at least one by-value <see cref="System.Span{T}"/> parameter.
     /// </summary>
     /// <param name="method">The method to check.</param>
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
-    /// <returns>Whether <paramref name="method"/> has at least one write-only fill array parameter.</returns>
-    private static bool HasFillArrayParameter(IMethodSymbol method, INamedTypeSymbol spanType)
+    /// <returns>Whether <paramref name="method"/> has at least one by-value <see cref="System.Span{T}"/> parameter.</returns>
+    private static bool HasSpanParameter(IMethodSymbol method, INamedTypeSymbol spanType)
     {
         foreach (IParameterSymbol parameter in method.Parameters)
         {
-            if (IsFillArrayParameter(parameter, method, spanType))
+            if (IsSpanParameter(parameter, spanType))
             {
                 return true;
             }
@@ -336,28 +337,36 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks whether a given parameter is a write-only <see cref="System.Span{T}"/> parameter of a given method
-    /// (i.e. a parameter that is projected as a fill array in the Windows Runtime ABI).
+    /// Checks whether a given parameter is a by-value <see cref="System.Span{T}"/> parameter.
     /// </summary>
     /// <param name="parameter">The parameter to check.</param>
-    /// <param name="method">The method being analyzed.</param>
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
-    /// <returns>Whether <paramref name="parameter"/> is a write-only fill array parameter of <paramref name="method"/>.</returns>
-    private static bool IsFillArrayParameter(IParameterSymbol parameter, IMethodSymbol method, INamedTypeSymbol spanType)
+    /// <returns>Whether <paramref name="parameter"/> is a by-value <see cref="System.Span{T}"/> parameter.</returns>
+    private static bool IsSpanParameter(IParameterSymbol parameter, INamedTypeSymbol spanType)
     {
-        // The parameter must belong to the method being analyzed, and not to a nested lambda or local function,
-        // which are never projected (and could not reference the parameters of the method anyway, as a span
-        // is a 'ref struct' type, and as such it cannot be captured by any of them).
-        if (!SymbolEqualityComparer.Default.Equals(parameter.ContainingSymbol, method))
-        {
-            return false;
-        }
-
-        // The parameter must be a by-value 'System.Span<T>': only this is projected as a fill array (a 'ref',
-        // 'in' or 'out' variant is not a valid Windows Runtime parameter, and 'ReadOnlySpan<T>' is a pass array).
+        // Only a by-value 'System.Span<T>' is projected as a fill array (a 'ref', 'in' or 'out'
+        // variant is not a valid Windows Runtime parameter, and 'ReadOnlySpan<T>' is a pass array).
         return
             parameter.RefKind is RefKind.None &&
             SymbolEqualityComparer.Default.Equals(parameter.Type.OriginalDefinition, spanType);
+    }
+
+    /// <summary>
+    /// Checks whether a given parameter is a write-only <see cref="System.Span{T}"/> parameter (i.e. a parameter
+    /// that is projected as a fill array in the Windows Runtime ABI).
+    /// </summary>
+    /// <param name="parameter">The parameter to check.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
+    /// <returns>Whether <paramref name="parameter"/> is a write-only fill array parameter.</returns>
+    private static bool IsFillArrayParameter(IParameterSymbol parameter, WellKnownSymbols symbols)
+    {
+        // The parameter must belong to a method that is projected to the Windows Runtime. This also filters
+        // out the parameters of nested lambdas and local functions, which are never projected (and could not
+        // reference the parameters of the enclosing method anyway, as a span cannot be captured by them).
+        return
+            IsSpanParameter(parameter, symbols.SpanType) &&
+            parameter.ContainingSymbol is IMethodSymbol method &&
+            IsWindowsRuntimeMethod(method);
     }
 
     /// <summary>
@@ -493,7 +502,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     private static bool IsGuaranteedCoveringWrite(IOperation operation, ReadTarget target)
     {
         // Constructs that might not run at all can never guarantee that a write nested in them will happen
-        if (IsConditionallyExecuted(operation))
+        if (IsConditionallyExecuted(operation, target.Symbols))
         {
             return false;
         }
@@ -525,7 +534,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // 'span.Clear()' and 'span.Fill(value)' initialize every element of the span, so
         // they cover any subsequent read from it, no matter which elements it looks at.
         if (operation is IInvocationOperation { TargetMethod: { Name: "Clear", Parameters: [] } or { Name: "Fill", Parameters: [_] } } invocation &&
-            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType.OriginalDefinition, target.SpanType) &&
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType.OriginalDefinition, target.Symbols.SpanType) &&
             invocation.Instance is { } instance &&
             IsReferenceTo(instance, target.Parameter))
         {
@@ -555,21 +564,27 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// Checks whether a given operation might not be reached during the execution of its parent operation.
     /// </summary>
     /// <param name="operation">The operation to check.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <returns>Whether <paramref name="operation"/> might be skipped, or run at some later point.</returns>
-    private static bool IsConditionallyExecuted(IOperation operation)
+    private static bool IsConditionallyExecuted(IOperation operation, WellKnownSymbols symbols)
     {
-        return operation is
-            IConditionalOperation or            // 'if' statements and '?:' expressions
-            IConditionalAccessOperation or      // '?.' and '?[]' accesses
-            ICoalesceOperation or               // '??' expressions
-            ICoalesceAssignmentOperation or     // '??=' expressions
-            ISwitchOperation or                 // 'switch' statements
-            ISwitchExpressionOperation or       // 'switch' expressions
-            ILoopOperation or                   // all loops, as the body might never run
-            ITryOperation or                    // 'try' blocks, as an exception might skip the rest of the body
-            IAnonymousFunctionOperation or      // lambdas and anonymous methods
-            ILocalFunctionOperation or          // local functions
-            IBinaryOperation { OperatorKind: BinaryOperatorKind.ConditionalAnd or BinaryOperatorKind.ConditionalOr };
+        // A call to a method annotated with '[Conditional]' is removed entirely by the compiler, arguments
+        // included, when the associated preprocessor symbol is not defined for the current compilation
+        return (operation is IInvocationOperation { TargetMethod: { } targetMethod } &&
+                symbols.ConditionalAttributeType is { } conditionalAttributeType &&
+                targetMethod.HasAttributeWithType(conditionalAttributeType)) ||
+            operation is
+                IConditionalOperation or            // 'if' statements and '?:' expressions
+                IConditionalAccessOperation or      // '?.' and '?[]' accesses
+                ICoalesceOperation or               // '??' expressions
+                ICoalesceAssignmentOperation or     // '??=' expressions
+                ISwitchOperation or                 // 'switch' statements
+                ISwitchExpressionOperation or       // 'switch' expressions
+                ILoopOperation or                   // all loops, as the body might never run
+                ITryOperation or                    // 'try' blocks, as an exception might skip the rest of the body
+                IAnonymousFunctionOperation or      // lambdas and anonymous methods
+                ILocalFunctionOperation or          // local functions
+                IBinaryOperation { OperatorKind: BinaryOperatorKind.ConditionalAnd or BinaryOperatorKind.ConditionalOr };
     }
 
     /// <summary>
@@ -628,8 +643,29 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // 'ref var alias = ref x', which can then be used to write to it
             IVariableInitializerOperation { Parent: IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref } } => true,
 
+            // '(x, y) = value' (a deconstruction assignment), where the reference is nested in the target tuple
+            ITupleOperation tuple => IsDeconstructionTarget(tuple),
+
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Checks whether a given tuple is (nested in) the target of a deconstruction assignment.
+    /// </summary>
+    /// <param name="tuple">The tuple to check.</param>
+    /// <returns>Whether <paramref name="tuple"/> is being assigned to by a deconstruction.</returns>
+    private static bool IsDeconstructionTarget(ITupleOperation tuple)
+    {
+        IOperation current = tuple;
+
+        // Deconstructions can be nested (e.g. '((x, y), z) = value'), so walk up all the enclosing tuples
+        while (current.Parent is ITupleOperation parent)
+        {
+            current = parent;
+        }
+
+        return current.Parent is IDeconstructionAssignmentOperation deconstruction && ReferenceEquals(deconstruction.Target, current);
     }
 
     /// <summary>
@@ -714,21 +750,74 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks whether a given operation block contains a <c>goto</c> branch.
+    /// Checks whether reads in a given operation block can be skipped when they are preceded by a covering write.
     /// </summary>
     /// <param name="operationBlock">The operation block to inspect.</param>
-    /// <returns>Whether <paramref name="operationBlock"/> contains a <c>goto</c> branch.</returns>
-    private static bool ContainsGotoBranch(IOperation operationBlock)
+    /// <returns>Whether preceding writes can be relied upon for reads in <paramref name="operationBlock"/>.</returns>
+    /// <remarks>
+    /// Recognizing a preceding write relies on being able to see every write to the span parameter and to the
+    /// index variables in source order. That is not possible when the body can jump around, or when it creates
+    /// an indirection that could be used to modify a variable from a place the ordered scan can't account for.
+    /// </remarks>
+    private static bool AllowsSuppression(IOperation operationBlock)
     {
         foreach (IOperation operation in operationBlock.DescendantsAndSelf())
         {
-            if (operation is IBranchOperation { BranchKind: BranchKind.GoTo })
+            switch (operation)
             {
-                return true;
+                // A 'goto' can jump over a write that would otherwise always run before a given read
+                case IBranchOperation { BranchKind: BranchKind.GoTo }:
+
+                // A lambda or a local function can capture a variable and modify it when invoked, which
+                // can happen at any point (a span itself can never be captured, as it is a 'ref struct')
+                case IAnonymousFunctionOperation or ILocalFunctionOperation:
+
+                // A writable 'ref' alias to a local or parameter (e.g. the span itself, or an index
+                // variable) can be used to modify it from anywhere the alias is in scope. Note that an
+                // alias to an element of the span (e.g. 'ref var slot = ref span[i]') is not a concern
+                // here, as it can only ever be used to write to that element, never to invalidate it.
+                case IVariableDeclaratorOperation
+                {
+                    Symbol.RefKind: RefKind.Ref,
+                    Initializer.Value: ILocalReferenceOperation or IParameterReferenceOperation
+                }:
+
+                // The same applies to a 'ref' reassignment of an existing alias
+                case ISimpleAssignmentOperation { IsRef: true, Value: ILocalReferenceOperation or IParameterReferenceOperation }:
+                    return false;
+                default:
+                    break;
             }
         }
 
-        return false;
+        return true;
+    }
+
+    /// <summary>
+    /// The well known symbols used by the analyzer.
+    /// </summary>
+    /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+    /// <param name="readOnlySpanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.ReadOnlySpan{T}"/>.</param>
+    /// <param name="conditionalAttributeType">The <see cref="INamedTypeSymbol"/> for <c>[Conditional]</c>, if available.</param>
+    private readonly struct WellKnownSymbols(
+        INamedTypeSymbol spanType,
+        INamedTypeSymbol readOnlySpanType,
+        INamedTypeSymbol? conditionalAttributeType)
+    {
+        /// <summary>
+        /// Gets the <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.
+        /// </summary>
+        public INamedTypeSymbol SpanType => spanType;
+
+        /// <summary>
+        /// Gets the <see cref="INamedTypeSymbol"/> for <see cref="System.ReadOnlySpan{T}"/>.
+        /// </summary>
+        public INamedTypeSymbol ReadOnlySpanType => readOnlySpanType;
+
+        /// <summary>
+        /// Gets the <see cref="INamedTypeSymbol"/> for <c>[Conditional]</c>, if available.
+        /// </summary>
+        public INamedTypeSymbol? ConditionalAttributeType => conditionalAttributeType;
     }
 
     /// <summary>
@@ -741,13 +830,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         /// Creates a new <see cref="ReadTarget"/> instance with the specified parameters.
         /// </summary>
         /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
-        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="symbols">The well known symbols used by the analyzer.</param>
         /// <param name="index">The index of the element being read, if the read goes through the span indexer.</param>
         /// <param name="alias">The writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read, if any.</param>
-        private ReadTarget(IParameterSymbol parameter, INamedTypeSymbol spanType, IOperation? index, ILocalSymbol? alias)
+        private ReadTarget(IParameterSymbol parameter, WellKnownSymbols symbols, IOperation? index, ILocalSymbol? alias)
         {
             Parameter = parameter;
-            SpanType = spanType;
+            Symbols = symbols;
             Index = index;
             Alias = alias;
         }
@@ -758,9 +847,9 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         public IParameterSymbol Parameter { get; }
 
         /// <summary>
-        /// Gets the <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.
+        /// Gets the well known symbols used by the analyzer.
         /// </summary>
-        public INamedTypeSymbol SpanType { get; }
+        public WellKnownSymbols Symbols { get; }
 
         /// <summary>
         /// Gets the index of the element being read, if the read goes through the span indexer.
@@ -786,35 +875,35 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         /// Creates a <see cref="ReadTarget"/> for a read of all the elements of a span (e.g. a <c>foreach</c> loop).
         /// </summary>
         /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
-        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="symbols">The well known symbols used by the analyzer.</param>
         /// <returns>The resulting <see cref="ReadTarget"/> value.</returns>
-        public static ReadTarget ForSpan(IParameterSymbol parameter, INamedTypeSymbol spanType)
+        public static ReadTarget ForSpan(IParameterSymbol parameter, WellKnownSymbols symbols)
         {
-            return new(parameter, spanType, index: null, alias: null);
+            return new(parameter, symbols, index: null, alias: null);
         }
 
         /// <summary>
         /// Creates a <see cref="ReadTarget"/> for a read of a single element through the span indexer.
         /// </summary>
         /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
-        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="symbols">The well known symbols used by the analyzer.</param>
         /// <param name="index">The index of the element being read.</param>
         /// <returns>The resulting <see cref="ReadTarget"/> value.</returns>
-        public static ReadTarget ForElement(IParameterSymbol parameter, INamedTypeSymbol spanType, IOperation index)
+        public static ReadTarget ForElement(IParameterSymbol parameter, WellKnownSymbols symbols, IOperation index)
         {
-            return new(parameter, spanType, index, alias: null);
+            return new(parameter, symbols, index, alias: null);
         }
 
         /// <summary>
         /// Creates a <see cref="ReadTarget"/> for a read of the element aliased by a writable <c>ref</c> loop variable.
         /// </summary>
         /// <param name="parameter">The write-only <see cref="System.Span{T}"/> parameter being read from.</param>
-        /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
+        /// <param name="symbols">The well known symbols used by the analyzer.</param>
         /// <param name="alias">The writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read.</param>
         /// <returns>The resulting <see cref="ReadTarget"/> value.</returns>
-        public static ReadTarget ForAlias(IParameterSymbol parameter, INamedTypeSymbol spanType, ILocalSymbol alias)
+        public static ReadTarget ForAlias(IParameterSymbol parameter, WellKnownSymbols symbols, ILocalSymbol alias)
         {
-            return new(parameter, spanType, index: null, alias);
+            return new(parameter, symbols, index: null, alias);
         }
     }
 }
