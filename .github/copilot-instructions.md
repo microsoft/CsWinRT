@@ -739,6 +739,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0014`, `9999` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` (deriving from `WindowsRuntimeObject`), `CSWINRT3002` (type map group types), `CSWINRT3003` (component authoring attributes), `CSWINRT3004` (`WindowsRuntimeReferenceAssemblyAttribute`) |
+| Projections (user-facing markers) | `CSWINRT3xxx` | `CSWINRT3005` (using an experimental Windows Runtime API; emitted by the projection writer as `[Experimental]`, see `docs/attribute-projections.md`) |
 
 ---
 
