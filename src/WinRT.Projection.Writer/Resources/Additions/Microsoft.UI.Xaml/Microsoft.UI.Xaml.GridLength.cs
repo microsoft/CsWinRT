@@ -8,10 +8,10 @@ namespace Microsoft.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.GridLength>")]
     [ABI.Microsoft.UI.Xaml.GridLengthComWrappersMarshaller]
 #endif
-    public readonly struct GridLength : IEquatable<GridLength>
+    public struct GridLength : IEquatable<GridLength>
     {
-        private readonly double _unitValue;
-        private readonly GridUnitType _unitType;
+        public double Value;
+        public GridUnitType GridUnitType;
 
         private const double Default = 1.0;
         private static readonly GridLength s_auto = new(Default, GridUnitType.Auto);
@@ -38,18 +38,13 @@ namespace Microsoft.UI.Xaml
                 throw new ArgumentException(SR.DirectUI_InvalidArgument, nameof(type));
             }
 
-            _unitValue = (type == GridUnitType.Auto) ? Default : value;
-            _unitType = type;
+            Value = (type == GridUnitType.Auto) ? Default : value;
+            GridUnitType = type;
         }
 
-
-        public readonly double Value { get { return (_unitType == GridUnitType.Auto) ? s_auto._unitValue : _unitValue; } }
-        public readonly GridUnitType GridUnitType { get { return _unitType; } }
-
-
-        public readonly bool IsAbsolute { get { return _unitType == GridUnitType.Pixel; } }
-        public readonly bool IsAuto { get { return _unitType == GridUnitType.Auto; } }
-        public readonly bool IsStar { get { return _unitType == GridUnitType.Star; } }
+        public readonly bool IsAbsolute { get { return GridUnitType == GridUnitType.Pixel; } }
+        public readonly bool IsAuto { get { return GridUnitType == GridUnitType.Auto; } }
+        public readonly bool IsStar { get { return GridUnitType == GridUnitType.Star; } }
 
         public static GridLength Auto
         {
@@ -85,19 +80,19 @@ namespace Microsoft.UI.Xaml
 
         public readonly override int GetHashCode()
         {
-            return (int)_unitValue + (int)_unitType;
+            return (int)Value + (int)GridUnitType;
         }
 
         public readonly override string ToString()
         {
-            if (_unitType == GridUnitType.Auto)
+            if (GridUnitType == GridUnitType.Auto)
             {
                 return "Auto";
             }
 
-            bool isStar = (_unitType == GridUnitType.Star);
+            bool isStar = (GridUnitType == GridUnitType.Star);
             DefaultInterpolatedStringHandler handler = new(isStar ? 1 : 0, 1, global::System.Globalization.CultureInfo.InvariantCulture, stackalloc char[32]);
-            handler.AppendFormatted(_unitValue);
+            handler.AppendFormatted(Value);
             if (isStar)
             {
                 handler.AppendLiteral("*");
