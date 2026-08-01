@@ -10,25 +10,25 @@ namespace Microsoft.UI.Xaml
 #endif
     public struct CornerRadius : IEquatable<CornerRadius>
     {
-        private double _TopLeft;
-        private double _TopRight;
-        private double _BottomRight;
-        private double _BottomLeft;
+        public double TopLeft;
+        public double TopRight;
+        public double BottomRight;
+        public double BottomLeft;
 
         public CornerRadius(double uniformRadius)
         {
             Validate(uniformRadius, uniformRadius, uniformRadius, uniformRadius);
-            _TopLeft = _TopRight = _BottomRight = _BottomLeft = uniformRadius;
+            TopLeft = TopRight = BottomRight = BottomLeft = uniformRadius;
         }
 
         public CornerRadius(double topLeft, double topRight, double bottomRight, double bottomLeft)
         {
             Validate(topLeft, topRight, bottomRight, bottomLeft);
 
-            _TopLeft = topLeft;
-            _TopRight = topRight;
-            _BottomRight = bottomRight;
-            _BottomLeft = bottomLeft;
+            TopLeft = topLeft;
+            TopRight = topRight;
+            BottomRight = bottomRight;
+            BottomLeft = bottomLeft;
         }
 
         private static void Validate(double topLeft, double topRight, double bottomRight, double bottomLeft)
@@ -62,13 +62,13 @@ namespace Microsoft.UI.Xaml
             // 48 = 4x double (twelve digits is generous for the range of values likely)
             //  3 = 3x separator characters
             DefaultInterpolatedStringHandler handler = new(0, 7, cultureInfo, stackalloc char[64]);
-            InternalAddToHandler(_TopLeft, ref handler);
+            InternalAddToHandler(TopLeft, ref handler);
             handler.AppendFormatted(listSeparator);
-            InternalAddToHandler(_TopRight, ref handler);
+            InternalAddToHandler(TopRight, ref handler);
             handler.AppendFormatted(listSeparator);
-            InternalAddToHandler(_BottomRight, ref handler);
+            InternalAddToHandler(BottomRight, ref handler);
             handler.AppendFormatted(listSeparator);
-            InternalAddToHandler(_BottomLeft, ref handler);
+            InternalAddToHandler(BottomLeft, ref handler);
             return handler.ToStringAndClear();
 #endif
         }
@@ -101,57 +101,17 @@ namespace Microsoft.UI.Xaml
 
         public readonly override int GetHashCode()
         {
-            return _TopLeft.GetHashCode() ^ _TopRight.GetHashCode() ^ _BottomLeft.GetHashCode() ^ _BottomRight.GetHashCode();
+            return TopLeft.GetHashCode() ^ TopRight.GetHashCode() ^ BottomLeft.GetHashCode() ^ BottomRight.GetHashCode();
         }
 
         public static bool operator ==(CornerRadius cr1, CornerRadius cr2)
         {
-            return cr1._TopLeft == cr2._TopLeft && cr1._TopRight == cr2._TopRight && cr1._BottomRight == cr2._BottomRight && cr1._BottomLeft == cr2._BottomLeft;
+            return cr1.TopLeft == cr2.TopLeft && cr1.TopRight == cr2.TopRight && cr1.BottomRight == cr2.BottomRight && cr1.BottomLeft == cr2.BottomLeft;
         }
 
         public static bool operator !=(CornerRadius cr1, CornerRadius cr2)
         {
             return !(cr1 == cr2);
-        }
-
-        public double TopLeft
-        {
-            readonly get { return _TopLeft; }
-            set
-            {
-                Validate(value, 0, 0, 0);
-                _TopLeft = value;
-            }
-        }
-
-        public double TopRight
-        {
-            readonly get { return _TopRight; }
-            set
-            {
-                Validate(0, value, 0, 0);
-                _TopRight = value;
-            }
-        }
-
-        public double BottomRight
-        {
-            readonly get { return _BottomRight; }
-            set
-            {
-                Validate(0, 0, value, 0);
-                _BottomRight = value;
-            }
-        }
-
-        public double BottomLeft
-        {
-            readonly get { return _BottomLeft; }
-            set
-            {
-                Validate(0, 0, 0, value);
-                _BottomLeft = value;
-            }
         }
     }
 }
