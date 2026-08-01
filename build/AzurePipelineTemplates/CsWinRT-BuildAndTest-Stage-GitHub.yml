@@ -3,6 +3,7 @@ stages:
   displayName: Build/Test Stage
   jobs: 
   - job: BuildAndTest
+    condition: ne(variables['_BenchmarksOnly'],'true')
     timeoutInMinutes: 270
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
@@ -58,7 +59,7 @@ stages:
 
   - job: Benchmarks
     displayName: Run Benchmarks
-    condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
+    condition: or(eq(variables['_BenchmarksOnly'],'true'), eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
     timeoutInMinutes: 360
     variables:
@@ -81,7 +82,7 @@ stages:
   # that can't run in the other environment.
   - job: Tests
     displayName: Run Tests
-    condition: succeeded()
+    condition: and(succeeded(), ne(variables['_BenchmarksOnly'],'true'))
     dependsOn: []
     timeoutInMinutes: 120
     strategy:

@@ -20,6 +20,9 @@ variables:
   value: $[coalesce(variables.IsRelease, '')]
 - name: _RunBenchmarks
   value: $[coalesce(variables.RunBenchmarks, 'false')]
+# Run only the benchmark job and skip build, test, and publishing jobs.
+- name: _BenchmarksOnly
+  value: $[coalesce(variables.BenchmarksOnly, 'false')]
 - name: _RunGCStress
   value: $[coalesce(variables.RunGCStress, 'false')]
 

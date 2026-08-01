@@ -72,5 +72,6 @@ extends:
 
       - stage: Nuget
         dependsOn: BuildAndTest
+        condition: and(succeeded(), ne(variables['_BenchmarksOnly'], 'true'))
         jobs:
         - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Stage-OneBranch.yml@self
