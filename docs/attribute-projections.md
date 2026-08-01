@@ -52,7 +52,7 @@ What the WinMD generator emits into an authored component's `.winmd` for an attr
 | `[WindowsRuntime.Xaml.GeneratedCustomPropertyProvider]`, `[System.Reflection.DefaultMember]`, and anything under `System.Runtime.CompilerServices` | *nothing* | Either handled by CsWinRT itself or meaningless in Windows Runtime metadata. |
 | Any other public attribute type | itself | Non-public attribute types, and attributes whose signature cannot be read, are skipped. |
 
-> **Note**: `[System.Obsolete]` is **not** translated into `[Windows.Foundation.Metadata.Deprecated]`. It is copied as-is, so it is invisible to every other language projection. Use `[Windows.Foundation.Metadata.Deprecated]` to deprecate an API of an authored component. `[Experimental]` is the exception to that rule only because the Windows Runtime attribute has no projected form to apply.
+> **Note**: `[System.Obsolete]` is **not** translated into `[Windows.Foundation.Metadata.Deprecated]`. It is copied as-is, so it is invisible to every other language projection. Use `[Windows.Foundation.Metadata.Deprecated]` to deprecate an API of an authored component; applying `[Obsolete]` without it is reported as `CSWINRT2021`. `[Experimental]` is the exception to that rule only because the Windows Runtime attribute has no projected form to apply.
 
 ## Related documentation
 
