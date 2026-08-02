@@ -75,7 +75,7 @@ internal static partial class AbiMethodBodyFactory
             if (prop.GetMethod is { } getter)
             {
                 writer.Write(isMultiline: true, $$"""
-                        [MethodImpl(MethodImplOptions.NoInlining)]
+                        [MethodImpl(MethodImplOptions.AggressiveInlining)]
                         public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
                     """);
 
@@ -85,7 +85,7 @@ internal static partial class AbiMethodBodyFactory
             if (prop.SetMethod is { } setter)
             {
                 writer.Write(isMultiline: true, $$"""
-                        [MethodImpl(MethodImplOptions.NoInlining)]
+                        [MethodImpl(MethodImplOptions.AggressiveInlining)]
                         public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
                     """);
 
