@@ -11,6 +11,8 @@ namespace Benchmarks
 
         public int IntProperty { get => intProperty; set => intProperty = value; }
         public bool BoolProperty { get => boolProperty; set => boolProperty = value; }
+        public void VoidMethod() { }
+        public int IntMethod(int value) => value;
     }
 
     class ManagedComposableObjectWithInterfaces : Composable, IIntProperties
@@ -18,6 +20,8 @@ namespace Benchmarks
         private int intProperty;
 
         public int IntProperty { get => intProperty; set => intProperty = value; }
+        public void VoidMethod() { }
+        public int IntMethod(int value) => value;
     }
 
     [MemoryDiagnoser]

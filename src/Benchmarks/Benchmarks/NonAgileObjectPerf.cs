@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using BenchmarkComponent;
 using System.Threading;
 
 namespace Benchmarks
@@ -11,6 +12,8 @@ namespace Benchmarks
         AutoResetEvent objectCreated;
         Thread staThread;
         private volatile Windows.UI.Popups.PopupMenu nonAgileObject;
+        private volatile NonAgileClassWithMultipleInterfaces nonAgileBenchmarkObject;
+        private volatile bool createBenchmarkObject;
 
         [GlobalSetup]
         public void Setup()
@@ -35,8 +38,15 @@ namespace Benchmarks
             while (createObject.WaitOne() && !exitThread.WaitOne(1))
             {
                 createObject.Reset();
-                nonAgileObject = new Windows.UI.Popups.PopupMenu();
-                CallObject();
+                if (createBenchmarkObject)
+                {
+                    nonAgileBenchmarkObject = new NonAgileClassWithMultipleInterfaces();
+                }
+                else
+                {
+                    nonAgileObject = new Windows.UI.Popups.PopupMenu();
+                    CallObject();
+                }
                 objectCreated.Set();
             }
         }
@@ -49,6 +59,7 @@ namespace Benchmarks
         [Benchmark]
         public void ConstructAndQueryNonAgileObject()
         {
+            createBenchmarkObject = false;
             createObject.Set();
             objectCreated.WaitOne();
             CallObject();
@@ -58,6 +69,33 @@ namespace Benchmarks
         [Benchmark]
         public void ConstructNonAgileObject()
         {
+            createBenchmarkObject = false;
+            createObject.Set();
+            objectCreated.WaitOne();
+            objectCreated.Reset();
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryMultipleNonAgileInterfaces()
+        {
+            createBenchmarkObject = true;
+            createObject.Set();
+            objectCreated.WaitOne();
+
+            int result = nonAgileBenchmarkObject.DefaultIntProperty;
+            result += nonAgileBenchmarkObject.IntProperty;
+            result += nonAgileBenchmarkObject.BoolProperty ? 1 : 0;
+            result += (int)nonAgileBenchmarkObject.DoubleProperty;
+
+            objectCreated.Reset();
+
+            return result;
+        }
+
+        [Benchmark]
+        public void ConstructNonAgileBenchmarkObject()
+        {
+            createBenchmarkObject = true;
             createObject.Set();
             objectCreated.WaitOne();
             objectCreated.Reset();
