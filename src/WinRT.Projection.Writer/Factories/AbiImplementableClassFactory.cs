@@ -22,6 +22,39 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static class AbiImplementableClassFactory
 {
     /// <summary>
+    /// Returns whether an <c>[exclusiveto]</c> interface belongs to a runtime class that can be implemented
+    /// (authored) in C#, and so needs its projection emitted even though it stays <c>internal</c>.
+    /// </summary>
+    /// <remarks>
+    /// Such an interface needs its COM Callable Wrapper vtable, since that is what a native call dispatches
+    /// through to reach the author's overrides, and its declaration, so the abstract base can implement it.
+    /// </remarks>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The interface to inspect.</param>
+    public static bool IsImplementableExclusiveToInterface(ProjectionEmitContext context, TypeDefinition type)
+    {
+        if (!type.IsExclusiveTo)
+        {
+            return false;
+        }
+
+        // The whole projection was asked to support authoring, so every runtime class in it can be implemented
+        if (context.Settings.ImplementWinMDTypes)
+        {
+            return true;
+        }
+
+        // Otherwise only the classes an application actually implements need this (see 'ImplementableTypes')
+        if (context.Settings.ImplementableTypes.Count == 0)
+        {
+            return false;
+        }
+
+        return AbiTypeHelpers.GetExclusiveToType(context.Cache, type) is { } exclusiveToType
+            && context.Settings.ImplementableTypes.Contains(exclusiveToType.FullName);
+    }
+
+    /// <summary>
     /// Returns whether an abstract implementable base class should be generated for <paramref name="type"/>.
     /// </summary>
     public static bool ShouldEmit(ProjectionEmitContext context, TypeDefinition type)

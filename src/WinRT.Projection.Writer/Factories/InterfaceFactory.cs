@@ -390,21 +390,6 @@ internal static class InterfaceFactory
     }
 
     /// <summary>
-    /// Returns whether an <c>[ExclusiveTo]</c> interface belongs to a runtime class that is being
-    /// implemented (authored) in C#, and so must be emitted for its abstract base class to implement.
-    /// </summary>
-    private static bool IsImplementableExclusiveToInterface(ProjectionEmitContext context, TypeDefinition type)
-    {
-        if (context.Settings.ImplementableTypes.Count == 0 || !type.IsExclusiveTo)
-        {
-            return false;
-        }
-
-        return AbiTypeHelpers.GetExclusiveToType(context.Cache, type) is { } exclusiveToType
-            && context.Settings.ImplementableTypes.Contains(exclusiveToType.FullName);
-    }
-
-    /// <summary>
     /// Writes a projected interface declaration.
     /// </summary>
     public static void WriteInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -414,8 +399,7 @@ internal static class InterfaceFactory
         // bases and interop can reference them without changing the projection's public surface.
         if (!context.Settings.ReferenceProjection &&
             !context.Settings.Component &&
-            !context.Settings.ImplementWinMDTypes &&
-            !IsImplementableExclusiveToInterface(context, type) &&
+            !AbiImplementableClassFactory.IsImplementableExclusiveToInterface(context, type) &&
             type.IsExclusiveTo &&
             !context.Settings.PublicExclusiveTo &&
             !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))
