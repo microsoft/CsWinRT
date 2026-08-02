@@ -24,12 +24,10 @@ set this_dir=%~dp0
 set MODE=%1
 if "%MODE%"=="" set MODE=compare-versions
 
-:: Build BenchmarkComponent if not already built
-if not exist "%this_dir%_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" (
-    echo Building BenchmarkComponent...
-    nuget restore TestWinRT\Test.sln
-    msbuild -t:restore -t:BenchmarkComponent /p:RestorePackagesConfig=true /p:platform=x64 /p:configuration=release /p:solutiondir=%this_dir% %this_dir%cswinrt.slnx
-)
+:: Always build BenchmarkComponent so its metadata matches the pinned TestWinRT commit.
+echo Building BenchmarkComponent...
+nuget restore TestWinRT\Test.sln
+msbuild "%this_dir%TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" /t:Build /p:RestorePackagesConfig=true /p:platform=x64 /p:configuration=release /p:solutiondir=%this_dir%
 
 :: Copy BenchmarkComponent artifacts to BenchmarkProjection
 echo Copying BenchmarkComponent artifacts...

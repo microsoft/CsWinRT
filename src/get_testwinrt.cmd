@@ -14,7 +14,7 @@ git checkout -f master
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 git fetch -f
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
-git reset -q --hard 1fb99297094edd131935cba6e8bc0704852162bb
+git reset -q --hard db02a33fb1ef0c2569295fd6c19c516a703839c4
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 if /i "%~1" == "-skiprestore" goto :done
 echo Restoring Nuget
