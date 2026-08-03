@@ -14,19 +14,18 @@ namespace WindowsRuntime;
 /// </summary>
 /// <remarks>
 /// <para>
-/// CsWinRT emits this attribute on the abstract factory base classes it generates when a projection is built
-/// with <c>CsWinRTImplementWinMDTypes</c>. It identifies the class a derived factory activates, which is the
-/// name activation requests are keyed by.
+/// CsWinRT emits this on the abstract factory base classes it generates when a projection is built with
+/// <c>CsWinRTImplementWinMDTypes</c>. The named class is what activation requests are keyed by.
 /// </para>
 /// <para>
-/// Unlike <see cref="WindowsRuntimeImplementableClassAttribute"/>, this attribute does not affect the runtime
-/// class name reported by the COM Callable Wrapper: an activation factory is not an instance of the class it
-/// activates, so it keeps reporting its own most derived Windows Runtime interface.
+/// Unlike <see cref="WindowsRuntimeImplementableClassAttribute"/>, it does not affect the runtime class name
+/// the COM Callable Wrapper reports: an activation factory is not an instance of the class it activates, so
+/// it keeps reporting its own most derived Windows Runtime interface.
 /// </para>
 /// <para>
-/// This attribute is emitted by the CsWinRT generator, and it is not meant to be used directly. Unlike most
-/// other CsWinRT implementation details, it is not stripped from the <c>WinRT.Runtime.dll</c> reference
-/// assembly, because the reference projections that carry these base classes are compiled against it.
+/// It is not meant to be used directly. Unlike most other CsWinRT implementation details, it is not stripped
+/// from the <c>WinRT.Runtime.dll</c> reference assembly, because the reference projections carrying these
+/// base classes are compiled against it.
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]

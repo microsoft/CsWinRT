@@ -10,10 +10,8 @@ namespace WindowsRuntime.SourceGenerator.Tests;
 /// mode, where the Windows Runtime type being implemented is declared in an existing <c>.winmd</c>.
 /// </summary>
 /// <remarks>
-/// The sources below declare the abstract bases that the projection writer would have generated into the
-/// referenced projection (see <c>AbiImplementableClassFactory</c>), because that is exactly what the user's
-/// compilation sees. The runtime class name the exports dispatch on comes from those bases, not from the
-/// C# type the user wrote, which is the behavior these tests lock down.
+/// The sources below declare the abstract bases inline, because that is what the user's compilation sees:
+/// the projection writer emits them into the referenced projection (see <c>AbiImplementableClassFactory</c>).
 /// </remarks>
 [TestClass]
 public class Test_AuthoringExportTypesGenerator

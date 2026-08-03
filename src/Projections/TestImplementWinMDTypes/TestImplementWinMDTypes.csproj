@@ -1,26 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    An *authoring* projection for the 'TestComponent' metadata: the same types the 'Test' projection
-    exposes for consumption, but generated with 'CsWinRTImplementWinMDTypes' so they can also be
-    implemented in C#. This is the 3.0 counterpart of the 'TestPublicExclusiveTo' projection, which
-    covers the equivalent 2.x 'CsWinRTPublicExclusiveToInterfaces' behavior.
+    An authoring projection for the 'TestComponent' metadata: the same types the 'Test' projection
+    exposes for consumption, but also carrying the abstract 'ABI.TestComponent.*' bases that let them
+    be implemented in C#. Consumed by the 'ImplementWinMDTypes' functional test.
 
-    On top of the usual projected types, the projection carries an abstract 'ABI.TestComponent.<Class>'
-    base per runtime class (plus an 'ABI.TestComponent.<Class>ActivationFactory' for its activation,
-    statics and factory methods), which the 'ImplementWinMDTypes' functional test derives from.
-
-    'TestComponent' deliberately covers the interesting shapes in one place:
-      * 'Class'      - default activation, plus a required (non-exclusive) interface
-      * 'Composable' - composable factory methods, i.e. the generated aggregation plumbing
-      * 'Derived'    - a composable class deriving from another one (chained abstract bases)
-      * 'TestRunner' - statics only, so it has a factory base but no instance base
+    'TestComponent' covers the shapes that matter in one place: default activation ('Class'), a
+    composable class ('Composable'), a composable class deriving from another ('Derived'), and a
+    statics-only class ('TestRunner', which gets a factory base but no instance base).
   -->
   <PropertyGroup>
     <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-
-    <!-- Emit the abstract bases that let these runtime classes be implemented in C# -->
     <CsWinRTImplementWinMDTypes>true</CsWinRTImplementWinMDTypes>
   </PropertyGroup>
 

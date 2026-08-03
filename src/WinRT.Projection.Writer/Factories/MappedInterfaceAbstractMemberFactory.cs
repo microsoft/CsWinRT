@@ -17,16 +17,14 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This is the counterpart of <see cref="MappedInterfaceStubFactory"/>: that one emits <em>delegating</em>
-/// members for the projected class (which wraps a native object), whereas an implementable abstract base
-/// has no implementation to delegate to and instead declares the members <c>abstract</c>, so the C# compiler
-/// forces the author to supply all of them.
+/// The counterpart of <see cref="MappedInterfaceStubFactory"/>: that emits <em>delegating</em> members for a
+/// projected class wrapping a native object, whereas an implementable base has nothing to delegate to and
+/// declares them <c>abstract</c> instead.
 /// </para>
 /// <para>
-/// The members are declared in their .NET shape, not their Windows Runtime one, because the .NET shape is
-/// what the mapped interface actually requires. The interop generator recognises a type implementing e.g.
-/// <c>IDictionary&lt;K, V&gt;</c> and emits the corresponding <c>IMap&lt;K, V&gt;</c> COM interface entry, so
-/// the resulting vtable is the Windows Runtime one either way.
+/// Members are declared in their .NET shape, since that is what the mapped interface requires. The interop
+/// generator maps a type implementing e.g. <c>IDictionary&lt;K, V&gt;</c> back to an <c>IMap&lt;K, V&gt;</c>
+/// interface entry, so the resulting vtable is still the Windows Runtime one.
 /// </para>
 /// </remarks>
 internal static class MappedInterfaceAbstractMemberFactory

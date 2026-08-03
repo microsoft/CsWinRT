@@ -180,10 +180,8 @@ internal static class AbiTypeWriter
                 // void* (it's a runtime class/interface/delegate).
                 if (r.IsValueType)
                 {
-                    // A custom-mapped type is projected as its .NET counterpart (e.g. 'EventRegistrationToken'
-                    // is 'WindowsRuntime.InteropServices.EventRegistrationToken'). That mapping is known
-                    // statically, so it must still be applied here: the Windows Runtime name would not resolve,
-                    // since no such type exists in the projection.
+                    // A custom-mapped type is projected as its .NET counterpart, so the mapping has to be
+                    // applied here too: the Windows Runtime name does not exist in the projection.
                     string unresolvedNs = rns;
                     string unresolvedName = rname;
 

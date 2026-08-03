@@ -1,13 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    End-to-end test for the 'CsWinRTImplementWinMDTypes' authoring mode: implementing, in C#, Windows
-    Runtime types that are declared in an existing '.winmd'. This is the 3.0 replacement for the 2.x
-    'TestImplementExclusiveTo' test, which covered the equivalent 'CsWinRTPublicExclusiveToInterfaces'
-    behavior by implementing the (then public) exclusive-to interfaces directly.
-
-    The projection is referenced instead of the usual 'Test' projection: both project the 'TestComponent'
-    metadata, so referencing both would define every type twice.
+    Implements, in C#, Windows Runtime types declared in an existing '.winmd'. References the authoring
+    projection instead of the usual 'Test' one: both project the 'TestComponent' metadata, so referencing
+    both would define every type twice.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>

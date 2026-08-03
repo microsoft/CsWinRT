@@ -16,8 +16,7 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// <summary>
 /// Emits the <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> abstract base class that lets a runtime class defined in the
 /// input metadata be authored in C#: the author extends it and overrides the generated <c>abstract</c>
-/// members, so no required member can be missed. This is the 3.0 replacement for the 2.x
-/// <c>CsWinRTPublicExclusiveToInterfaces</c> behavior.
+/// members, so no required member can be missed.
 /// </summary>
 internal static class AbiImplementableClassFactory
 {
@@ -70,27 +69,22 @@ internal static class AbiImplementableClassFactory
         }
 
         // A custom-mapped type is projected as its .NET counterpart (e.g. 'Windows.Foundation.Uri' is
-        // 'System.Uri'), so there is no projected Windows Runtime type for an author to implement, and in
-        // some cases no projected type at all (an empty mapped name means the type is dropped entirely and
-        // replaced by hand-written members from the namespace additions).
+        // 'System.Uri'), so there is no Windows Runtime type left for an author to implement.
         if (IsCustomMappedType(type))
         {
             return false;
         }
 
-        // A custom-mapped interface (e.g. 'IMap<K, V>') is projected as its .NET counterpart, whose members
-        // are not described by the input metadata. Those are declared from a known .NET shape instead, so a
-        // type is only skipped when it implements a mapped interface no such shape exists for (declaring it
-        // without being able to declare its members would not compile).
+        // A custom-mapped interface is projected as its .NET counterpart, whose members the input metadata
+        // does not describe. Those are declared from a known .NET shape, so only interfaces without one skip.
         if (ImplementsUnsupportedMappedInterface(context, type))
         {
             return false;
         }
 
-        // A property whose name is already declared 'abstract' by a base implementable class cannot be
-        // redeclared here, and hiding it would leave the inherited abstract member impossible to implement.
-        // C# has no way to express both (e.g. 'MapControl.Style' of type 'MapStyle' alongside the inherited
-        // 'FrameworkElement.Style' of type 'Style'), so such a type gets no implementable base.
+        // Redeclaring a property already declared 'abstract' by a base would hide it, leaving the inherited
+        // member impossible to implement. C# cannot express both (e.g. 'MapControl.Style' of type 'MapStyle'
+        // alongside the inherited 'FrameworkElement.Style' of type 'Style').
         if (HasConflictingBaseProperty(context, type))
         {
             return false;
@@ -125,12 +119,10 @@ internal static class AbiImplementableClassFactory
     /// Returns the name to give a class's generated factory base.
     /// </summary>
     /// <remarks>
-    /// The suffix is always <c>ActivationFactory</c>, never the shorter <c>Factory</c>. The latter collides
-    /// with real Windows Runtime classes that are themselves named <c>&lt;Name&gt;Factory</c> (e.g.
-    /// <c>ActionEntity</c> alongside <c>ActionEntityFactory</c>), and picking the name conditionally would
-    /// make it depend on what else happens to exist in the namespace: adding such a class to a <c>.winmd</c>
-    /// later would silently rename an existing base and break everyone implementing it. <c>ActivationFactory</c>
-    /// is also the more accurate name, and no Windows Runtime class in the Windows SDK uses it.
+    /// The suffix is always <c>ActivationFactory</c>, never the shorter <c>Factory</c>: that collides with
+    /// real Windows Runtime classes named <c>&lt;Name&gt;Factory</c> (e.g. <c>ActionEntityFactory</c> next to
+    /// <c>ActionEntity</c>). Choosing conditionally would make the name depend on what else the namespace
+    /// happens to contain, so adding such a class later would silently rename an existing base.
     /// </remarks>
     private static string GetFactoryClassName(string nameStripped)
     {
@@ -482,17 +474,17 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A composable factory method has the shape
+    /// A composable factory method is declared as
     /// <c>T CreateInstance(&lt;args&gt;, object baseInterface, out object innerInterface)</c>, where
     /// <c>baseInterface</c> is the controlling outer and <c>innerInterface</c> the non-delegating inner. That
-    /// is COM aggregation plumbing rather than anything an author should have to write, so the method is
-    /// implemented here and forwards to a <c>protected abstract</c> hook that only takes the real arguments.
+    /// COM aggregation plumbing is generated here, forwarding to a <c>protected abstract</c> hook that takes
+    /// only the real arguments.
     /// </para>
     /// <para>
-    /// Composition (a non-<see langword="null"/> outer) is rejected: it needs a managed object to act as an
-    /// aggregated inner, and <c>ComWrappers</c> only supports aggregation in the consuming direction (a managed
-    /// outer over a native inner). Standalone activation passes a <see langword="null"/> outer, and the caller
-    /// then ignores the inner, so returning the instance for both is correct and matches C++/WinRT.
+    /// A non-<see langword="null"/> outer is rejected: it needs a managed object to act as an aggregated
+    /// inner, and <c>ComWrappers</c> only supports aggregation in the consuming direction. Standalone
+    /// activation passes a <see langword="null"/> outer and the caller ignores the inner, so returning the
+    /// instance for both is correct, and matches C++/WinRT.
     /// </para>
     /// </remarks>
     private static void EmitComposableFactoryMembers(

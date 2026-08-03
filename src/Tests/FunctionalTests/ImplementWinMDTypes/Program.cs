@@ -4,11 +4,10 @@
 using System;
 using ImplementWinMDTypes;
 
-// Exit code convention for functional tests: 100 means success, anything else identifies the check
-// that failed. Every check below exercises a Windows Runtime type that is declared in 'TestComponent'
-// metadata but implemented here in C#, via the abstract bases the projection generates for it.
+// Implements Windows Runtime types declared in 'TestComponent' metadata by deriving from the abstract
+// bases the projection generates for them. Exit code 100 means success; anything else identifies the
+// check that failed.
 
-// A type deriving from the generated base is a normal managed object, so its members dispatch directly
 MyClass myClass = new();
 
 if (myClass.One() != 1)
@@ -16,9 +15,8 @@ if (myClass.One() != 1)
     return 101;
 }
 
-// The generated base is separate from the projected class (which is sealed), and bridges to it with an
-// implicit conversion. That conversion creates a COM Callable Wrapper for the authored object and then
-// resolves the projected type for it, so the result must be a usable 'TestComponent.Class'.
+// The base is separate from the projected class (which is sealed) and bridges to it with an implicit
+// conversion, creating a COM Callable Wrapper and resolving the projected type for it.
 global::TestComponent.Class? projectedClass = myClass;
 
 if (projectedClass is null)
@@ -26,7 +24,6 @@ if (projectedClass is null)
     return 102;
 }
 
-// The activation factory is authored the same way, by deriving from the generated factory base
 MyClassFactory classFactory = new();
 
 if (classFactory.ActivateInstance() is not MyClass)
@@ -69,7 +66,7 @@ if (composableFactory.Create(7) is not MyComposable { Value: 7 })
 }
 
 // A runtime class deriving from another composable one chains to its base's generated base, so the
-// authored type has to satisfy both. 'MyDerived' does, which is what this check confirms.
+// authored type has to satisfy both.
 MyDerived myDerived = new() { Value = 5 };
 
 if (myDerived.Value != 5 || myDerived.One() != 1)
@@ -89,8 +86,7 @@ return 100;
 namespace ImplementWinMDTypes
 {
     /// <summary>
-    /// Implements 'TestComponent.Class', a runtime class with default activation. Every member the
-    /// Windows Runtime type declares is abstract on the base, so the compiler guarantees none is missed.
+    /// Implements 'TestComponent.Class', a runtime class with default activation.
     /// </summary>
     public sealed class MyClass : global::ABI.TestComponent.Class
     {
@@ -98,8 +94,8 @@ namespace ImplementWinMDTypes
     }
 
     /// <summary>
-    /// The activation factory for <see cref="MyClass"/>. 'ActivateInstance' comes from
-    /// 'IActivationFactory', which the base implements for a class with default activation.
+    /// The activation factory for <see cref="MyClass"/>. <c>ActivateInstance</c> comes from
+    /// <c>IActivationFactory</c>, which the base implements for a class with default activation.
     /// </summary>
     [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyClass))]
     public sealed class MyClassFactory : global::ABI.TestComponent.ClassActivationFactory
@@ -127,18 +123,16 @@ namespace ImplementWinMDTypes
     /// The activation factory for <see cref="MyComposable"/>.
     /// </summary>
     /// <remarks>
-    /// The Windows Runtime factory methods are declared as
-    /// <c>CreateInstance(&lt;args&gt;, object baseInterface, out object innerInterface)</c>, i.e. raw COM
-    /// aggregation. That is generated onto the base, so all that is implemented here are the creation
-    /// hooks, which is the same shape as the sealed <see cref="MyClassFactory"/> above.
+    /// The Windows Runtime factory methods take an outer and an inner (raw COM aggregation). That is
+    /// generated onto the base, leaving only the creation hooks to implement here.
     /// </remarks>
     [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyComposable))]
     public sealed class MyComposableFactory : global::ABI.TestComponent.ComposableActivationFactory
     {
-        /// <summary>Test hook exposing the generated parameterless creation path.</summary>
+        /// <summary>Exposes the protected creation hooks so the checks above can call them.</summary>
         public global::ABI.TestComponent.Composable Create() => CreateInstance();
 
-        /// <summary>Test hook exposing the generated parameterized creation path.</summary>
+        /// <inheritdoc cref="Create()"/>
         public global::ABI.TestComponent.Composable Create(int init) => CreateWithValue(init);
 
         protected override global::ABI.TestComponent.Composable CreateInstance() => new MyComposable();
@@ -157,9 +151,8 @@ namespace ImplementWinMDTypes
     }
 
     /// <summary>
-    /// Implements 'TestComponent.Derived', a composable runtime class deriving from another one. Its
-    /// generated base chains to <c>ABI.TestComponent.Composable</c>, so the base class's members are
-    /// abstract here too and have to be supplied as well.
+    /// Implements 'TestComponent.Derived', a composable runtime class deriving from another one. Its base
+    /// chains to <c>ABI.TestComponent.Composable</c>, so that class's members have to be supplied too.
     /// </summary>
     public sealed class MyDerived : global::ABI.TestComponent.Derived
     {

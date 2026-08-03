@@ -20,9 +20,9 @@ namespace WindowsRuntime;
 /// deriving type. CsWinRT tooling also uses this attribute to recognize the generated bases.
 /// </para>
 /// <para>
-/// This attribute is emitted by the CsWinRT generator, and it is not meant to be used directly. Unlike most
-/// other CsWinRT implementation details, it is not stripped from the <c>WinRT.Runtime.dll</c> reference
-/// assembly, because the reference projections that carry these base classes are compiled against it.
+/// This attribute is not meant to be used directly. Unlike most other CsWinRT implementation details, it is
+/// not stripped from the <c>WinRT.Runtime.dll</c> reference assembly, because the reference projections that
+/// carry these base classes are compiled against it.
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
