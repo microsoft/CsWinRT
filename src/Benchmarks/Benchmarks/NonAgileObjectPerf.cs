@@ -7,6 +7,8 @@ namespace Benchmarks
     [MemoryDiagnoser]
     public class NonAgileObjectPerf
     {
+        private const int OperationsPerBatch = 128;
+
         AutoResetEvent createObject;
         AutoResetEvent exitThread;
         AutoResetEvent objectCreated;
@@ -14,6 +16,8 @@ namespace Benchmarks
         private volatile Windows.UI.Popups.PopupMenu nonAgileObject;
         private volatile NonAgileClassWithMultipleInterfaces nonAgileBenchmarkObject;
         private volatile bool createBenchmarkObject;
+        private volatile bool queryBenchmarkObjectOnWorker;
+        private volatile int workerQueryResult;
 
         [GlobalSetup]
         public void Setup()
@@ -40,7 +44,22 @@ namespace Benchmarks
                 createObject.Reset();
                 if (createBenchmarkObject)
                 {
-                    nonAgileBenchmarkObject = new NonAgileClassWithMultipleInterfaces();
+                    if (queryBenchmarkObjectOnWorker)
+                    {
+                        int result = 0;
+
+                        for (int i = 0; i < OperationsPerBatch; i++)
+                        {
+                            nonAgileBenchmarkObject = new NonAgileClassWithMultipleInterfaces();
+                            result += QueryMultipleInterfaces();
+                        }
+
+                        workerQueryResult = result;
+                    }
+                    else
+                    {
+                        nonAgileBenchmarkObject = new NonAgileClassWithMultipleInterfaces();
+                    }
                 }
                 else
                 {
@@ -54,6 +73,16 @@ namespace Benchmarks
         private int CallObject()
         {
             return nonAgileObject.Commands.Count;
+        }
+
+        private int QueryMultipleInterfaces()
+        {
+            int result = nonAgileBenchmarkObject.DefaultIntProperty;
+            result += nonAgileBenchmarkObject.IntProperty;
+            result += nonAgileBenchmarkObject.BoolProperty ? 1 : 0;
+            result += (int)nonAgileBenchmarkObject.DoubleProperty;
+
+            return result;
         }
 
         [Benchmark]
@@ -79,13 +108,11 @@ namespace Benchmarks
         public int ConstructAndQueryMultipleNonAgileInterfaces()
         {
             createBenchmarkObject = true;
+            queryBenchmarkObjectOnWorker = false;
             createObject.Set();
             objectCreated.WaitOne();
 
-            int result = nonAgileBenchmarkObject.DefaultIntProperty;
-            result += nonAgileBenchmarkObject.IntProperty;
-            result += nonAgileBenchmarkObject.BoolProperty ? 1 : 0;
-            result += (int)nonAgileBenchmarkObject.DoubleProperty;
+            int result = QueryMultipleInterfaces();
 
             objectCreated.Reset();
 
@@ -96,9 +123,22 @@ namespace Benchmarks
         public void ConstructNonAgileBenchmarkObject()
         {
             createBenchmarkObject = true;
+            queryBenchmarkObjectOnWorker = false;
             createObject.Set();
             objectCreated.WaitOne();
             objectCreated.Reset();
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerBatch)]
+        public int ConstructAndQueryMultipleNonAgileInterfacesInOwningApartment()
+        {
+            createBenchmarkObject = true;
+            queryBenchmarkObjectOnWorker = true;
+            createObject.Set();
+            objectCreated.WaitOne();
+            objectCreated.Reset();
+
+            return workerQueryResult;
         }
     }
 }
