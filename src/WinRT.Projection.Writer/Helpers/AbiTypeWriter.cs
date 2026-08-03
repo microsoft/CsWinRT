@@ -180,14 +180,27 @@ internal static class AbiTypeWriter
                 // void* (it's a runtime class/interface/delegate).
                 if (r.IsValueType)
                 {
-                    writer.Write(GlobalPrefix);
+                    // A custom-mapped type is projected as its .NET counterpart (e.g. 'EventRegistrationToken'
+                    // is 'WindowsRuntime.InteropServices.EventRegistrationToken'). That mapping is known
+                    // statically, so it must still be applied here: the Windows Runtime name would not resolve,
+                    // since no such type exists in the projection.
+                    string unresolvedNs = rns;
+                    string unresolvedName = rname;
 
-                    if (!string.IsNullOrEmpty(rns))
+                    if (MappedTypes.Get(rns, rname) is { MappedName.Length: > 0 } unresolvedMapped)
                     {
-                        writer.Write($"{rns}.");
+                        unresolvedNs = unresolvedMapped.MappedNamespace;
+                        unresolvedName = unresolvedMapped.MappedName;
                     }
 
-                    writer.Write(IdentifierEscaping.StripBackticks(rname));
+                    writer.Write(GlobalPrefix);
+
+                    if (!string.IsNullOrEmpty(unresolvedNs))
+                    {
+                        writer.Write($"{unresolvedNs}.");
+                    }
+
+                    writer.Write(IdentifierEscaping.StripBackticks(unresolvedName));
                     break;
                 }
 
