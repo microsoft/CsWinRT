@@ -105,6 +105,13 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Project="false" />
     </Project>
+    <Project Path="Projections/TestImplementWinMDTypes/TestImplementWinMDTypes.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Projections/TestPublicExclusiveTo/TestPublicExclusiveTo.csproj">
       <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM64" Project="ARM64" />
@@ -353,6 +360,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/FunctionalTests/ImplementWinMDTypes/ImplementWinMDTypes.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/FunctionalTests/JsonValueFunctionCalls/JsonValueFunctionCalls.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -378,12 +391,6 @@
       <Build Project="false" />
     </Project>
     <Project Path="Tests/FunctionalTests/Structs/Structs.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Build Solution="*|ARM64" Project="false" />
-    </Project>
-    <Project Path="Tests/FunctionalTests/TestImplementExclusiveTo/TestImplementExclusiveTo.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
