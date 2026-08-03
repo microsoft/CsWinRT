@@ -43,6 +43,24 @@ internal static class CSharpGeneratorTest<TGenerator>
     }
 
     /// <summary>
+    /// Verifies that a source generator did not produce a given file.
+    /// </summary>
+    /// <param name="source">The input source to process.</param>
+    /// <param name="filename">The name of the file that should not have been generated.</param>
+    /// <param name="languageVersion">The language version to use to run the test.</param>
+    public static void VerifyNoSource(string source, string filename, LanguageVersion languageVersion = LanguageVersion.CSharp14)
+    {
+        RunGenerator(source, languageVersion, out Compilation compilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        // Ensure that no diagnostics were generated
+        CollectionAssert.AreEquivalent((Diagnostic[])[], diagnostics);
+
+        Assert.IsFalse(
+            compilation.SyntaxTrees.Any(tree => Path.GetFileName(tree.FilePath) == filename),
+            $"The generator produced '{filename}', but it was not expected to.");
+    }
+
+    /// <summary>
     /// Creates a compilation from a given source.
     /// </summary>
     /// <param name="source">The input source to process.</param>
