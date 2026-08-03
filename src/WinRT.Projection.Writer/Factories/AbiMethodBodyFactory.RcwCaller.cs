@@ -206,7 +206,7 @@ internal static partial class AbiMethodBodyFactory
         writer.IncreaseIndent();
         writer.WriteLine(isMultiline: true, """
             {
-                using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+                using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValueForCall();
                 void* ThisPtr = thisValue.GetThisPtrUnsafe();
             """);
         writer.IncreaseIndent();

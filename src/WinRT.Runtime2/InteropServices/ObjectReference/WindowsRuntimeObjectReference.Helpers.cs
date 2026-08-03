@@ -22,6 +22,16 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <summary>
+    /// Gets a value for a projected call, avoiding managed lease atomics for free-threaded references.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [WindowsRuntimeImplementationOnlyMember]
+    public WindowsRuntimeObjectReferenceValue AsValueForCall()
+    {
+        return new(this, acquireLease: !IsFreeThreaded || GetReferenceTrackerPtrUnsafe() is not null);
+    }
+
+    /// <summary>
     /// Performs a <c>QueryInterface</c> call on the underlying COM object to retrieve the requested interface pointer.
     /// </summary>
     /// <param name="iid">The IID of the interface to query for.</param>
