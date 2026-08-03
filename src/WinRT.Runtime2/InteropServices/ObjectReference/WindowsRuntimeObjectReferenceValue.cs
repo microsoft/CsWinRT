@@ -23,6 +23,11 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     private readonly void* _thisPtr;
 
     /// <summary>
+    /// Whether this value owns a managed lease on <see cref="_objectReference"/>.
+    /// </summary>
+    private readonly bool _hasManagedLease;
+
+    /// <summary>
     /// Creates a new <see cref="WindowsRuntimeObjectReferenceValue"/> instance with the specified parameters.
     /// </summary>
     /// <param name="objectReference">The <see cref="WindowsRuntimeObjectReference"/> instance to wrap.</param>
@@ -30,8 +35,24 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     {
         _objectReference = objectReference;
         _thisPtr = null;
+        _hasManagedLease = true;
 
         objectReference.AddRefUnsafe();
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="WindowsRuntimeObjectReferenceValue"/> instance for a projected call.
+    /// </summary>
+    internal WindowsRuntimeObjectReferenceValue(WindowsRuntimeObjectReference objectReference, bool acquireLease)
+    {
+        _objectReference = objectReference;
+        _thisPtr = null;
+        _hasManagedLease = acquireLease;
+
+        if (acquireLease)
+        {
+            objectReference.AddRefUnsafe();
+        }
     }
 
     /// <summary>
@@ -42,6 +63,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     {
         _objectReference = null;
         _thisPtr = thisPtr;
+        _hasManagedLease = false;
     }
 
     /// <summary>
@@ -119,7 +141,14 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
 
             _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
 
-            _objectReference.ReleaseUnsafe();
+            if (_hasManagedLease)
+            {
+                _objectReference.ReleaseUnsafe();
+            }
+            else
+            {
+                GC.KeepAlive(_objectReference);
+            }
 
             return thisPtr;
         }
@@ -146,7 +175,14 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     {
         if (_objectReference is not null)
         {
-            _objectReference.ReleaseUnsafe();
+            if (_hasManagedLease)
+            {
+                _objectReference.ReleaseUnsafe();
+            }
+            else
+            {
+                GC.KeepAlive(_objectReference);
+            }
         }
         else if (_thisPtr is not null)
         {
