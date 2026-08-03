@@ -99,6 +99,10 @@ The generated base is separate from the projected class (which is often `sealed`
 conversion to it, so an instance can be passed anywhere the projected type is expected. Any additional
 (non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
 
+Because every member is `abstract`, updating to a projection built from newer metadata will fail to compile if
+the Windows Runtime type gained members in the meantime. That is intentional: an implementation of the type
+has to supply them, and surfacing it as a compile error is what keeps the implementation complete.
+
 ### At application build time
 
 In a reference projection the abstract bases carry no implementation, exactly like the rest of it. CsWinRT
