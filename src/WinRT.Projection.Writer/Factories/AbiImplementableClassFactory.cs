@@ -376,7 +376,7 @@ internal static class AbiImplementableClassFactory
             {
                 if (writtenInterfaces.Add(iface))
                 {
-                    EmitInterfaceMembers(writer, context, iface, null, writtenMethods, properties, writtenEvents, writtenInterfaces);
+                    EmitInterfaceMembers(writer, context, iface, null, isProtectedSurface: false, writtenMethods, properties, writtenEvents, writtenInterfaces);
                 }
             }
 
@@ -485,7 +485,29 @@ internal static class AbiImplementableClassFactory
             };
 
             writer.WriteLine();
-            writer.WriteLine($"public abstract {info.TypeText} {kvp.Key} {accessors}");
+
+            if (!info.IsProtectedSurface)
+            {
+                writer.WriteLine($"public abstract {info.TypeText} {kvp.Key} {accessors}");
+
+                continue;
+            }
+
+            string forwarders = (info.HasGetter, info.HasSetter) switch
+            {
+                (true, true) => $"get => {kvp.Key}; set => {kvp.Key} = value;",
+                (true, false) => $"get => {kvp.Key};",
+                _ => $"set => {kvp.Key} = value;"
+            };
+
+            writer.WriteLine($"protected abstract {info.TypeText} {kvp.Key} {accessors}");
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                {{info.TypeText}} {{info.InterfaceName}}.{{kvp.Key}}
+                {
+                    {{forwarders}}
+                }
+                """);
         }
     }
 
@@ -546,7 +568,12 @@ internal static class AbiImplementableClassFactory
                 nextInstance = currentInstance is not null && gi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature subGi ? subGi : gi;
             }
 
-            EmitInterfaceMembers(writer, context, ifaceType, nextInstance, writtenMethods, properties, writtenEvents, writtenInterfaces);
+            // An '[Overridable]' or '[Protected]' interface is part of a runtime class's derivation contract
+            // rather than its public surface, so the projected class declares its members 'protected'. The
+            // implementable base has to match, or an authored type would expose them publicly.
+            bool isProtectedSurface = impl.IsOverridable() || impl.HasWindowsFoundationMetadataAttribute(References.WellKnownAttributeNames.ProtectedAttribute);
+
+            EmitInterfaceMembers(writer, context, ifaceType, nextInstance, isProtectedSurface, writtenMethods, properties, writtenEvents, writtenInterfaces);
         }
     }
 
@@ -554,17 +581,27 @@ internal static class AbiImplementableClassFactory
     /// Emits the <c>abstract</c> members declared directly on <paramref name="ifaceType"/> and recurses into its
     /// base interfaces. Methods and events are emitted inline; properties are merged into <paramref name="properties"/>.
     /// </summary>
+    /// <remarks>
+    /// When <c>isProtectedSurface</c> is set, the interface is <c>[Overridable]</c> or <c>[Protected]</c>, i.e.
+    /// part of the runtime class's derivation contract rather than its public surface. Its members are then
+    /// declared <c>protected abstract</c> and paired with an explicit interface implementation, matching the
+    /// shape of the projected class.
+    /// </remarks>
     private static void EmitInterfaceMembers(
         IndentedTextWriter writer,
         ProjectionEmitContext context,
         TypeDefinition ifaceType,
         GenericInstanceTypeSignature? nextInstance,
+        bool isProtectedSurface,
         HashSet<string> writtenMethods,
         IDictionary<string, PropertyInfo> properties,
         HashSet<string> writtenEvents,
         HashSet<TypeDefinition> writtenInterfaces)
     {
         GenericContext? memberContext = nextInstance is not null ? new GenericContext(nextInstance, null) : null;
+
+        // The explicit interface implementations below need the interface named as it is declared on the base
+        string interfaceName = isProtectedSurface ? FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? ifaceType) : string.Empty;
 
         // Methods
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
@@ -581,7 +618,19 @@ internal static class AbiImplementableClassFactory
             IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
 
             writer.WriteLine();
-            writer.WriteLine($"public abstract {ret} {name}({parms});");
+
+            if (!isProtectedSurface)
+            {
+                writer.WriteLine($"public abstract {ret} {name}({parms});");
+
+                continue;
+            }
+
+            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+
+            writer.WriteLine($"protected abstract {ret} {name}({parms});");
+            writer.WriteLine();
+            writer.WriteLine($"{ret} {interfaceName}.{name}({parms}) => {name}({args});");
         }
 
         // Properties (merged after the walk)
@@ -592,7 +641,12 @@ internal static class AbiImplementableClassFactory
 
             if (!properties.TryGetValue(name, out PropertyInfo? info))
             {
-                info = new PropertyInfo { TypeText = InterfaceFactory.WritePropType(context, prop, memberContext) };
+                info = new PropertyInfo
+                {
+                    TypeText = InterfaceFactory.WritePropType(context, prop, memberContext),
+                    IsProtectedSurface = isProtectedSurface,
+                    InterfaceName = interfaceName
+                };
                 properties[name] = info;
             }
 
@@ -613,7 +667,23 @@ internal static class AbiImplementableClassFactory
             IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt, nextInstance);
 
             writer.WriteLine();
-            writer.WriteLine($"public abstract event {eventType} {name};");
+
+            if (!isProtectedSurface)
+            {
+                writer.WriteLine($"public abstract event {eventType} {name};");
+
+                continue;
+            }
+
+            writer.WriteLine($"protected abstract event {eventType} {name};");
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                event {{eventType}} {{interfaceName}}.{{name}}
+                {
+                    add => {{name}} += value;
+                    remove => {{name}} -= value;
+                }
+                """);
         }
 
         // Recurse into base interfaces.
@@ -753,6 +823,17 @@ internal static class AbiImplementableClassFactory
     private sealed class PropertyInfo
     {
         public required string TypeText { get; init; }
+
+        /// <summary>
+        /// Whether the declaring interface is <c>[Overridable]</c> or <c>[Protected]</c>, so the property is
+        /// declared <c>protected abstract</c> with an explicit interface implementation.
+        /// </summary>
+        public bool IsProtectedSurface { get; init; }
+
+        /// <summary>
+        /// The declaring interface, for the explicit interface implementation (only when <see cref="IsProtectedSurface"/>).
+        /// </summary>
+        public string InterfaceName { get; init; } = string.Empty;
 
         public bool HasGetter { get; set; }
 
