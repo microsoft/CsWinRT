@@ -322,7 +322,7 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     public static void WriteImplementableFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out bool hasDefaultActivation);
+        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out HashSet<TypeDefinition> composableInterfaces, out bool hasDefaultActivation);
 
         if (factoryInterfaces.Count == 0 && !hasDefaultActivation)
         {
@@ -374,7 +374,18 @@ internal static class AbiImplementableClassFactory
 
             foreach (TypeDefinition iface in factoryInterfaces)
             {
-                if (writtenInterfaces.Add(iface))
+                if (!writtenInterfaces.Add(iface))
+                {
+                    continue;
+                }
+
+                // A composable factory method carries the raw COM aggregation contract. That is infrastructure,
+                // not something an author should implement, so it is generated here and forwards to a hook.
+                if (composableInterfaces.Contains(iface))
+                {
+                    EmitComposableFactoryMembers(writer, context, iface, nameStripped, projectedType, writtenMethods);
+                }
+                else
                 {
                     EmitInterfaceMembers(writer, context, iface, null, isProtectedSurface: false, writtenMethods, properties, writtenEvents, writtenInterfaces);
                 }
@@ -416,7 +427,7 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     private static bool HasFactoryInterfaces(ProjectionEmitContext context, TypeDefinition type)
     {
-        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out bool hasDefaultActivation);
+        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out _, out bool hasDefaultActivation);
 
         return factoryInterfaces.Count > 0 || hasDefaultActivation;
     }
@@ -427,14 +438,17 @@ internal static class AbiImplementableClassFactory
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The runtime class to inspect.</param>
     /// <param name="factoryInterfaces">The collected factory interfaces.</param>
+    /// <param name="composableInterfaces">The subset of <paramref name="factoryInterfaces"/> that are <c>[Composable]</c>.</param>
     /// <param name="hasDefaultActivation">Whether the class supports default (parameterless) activation.</param>
     private static void CollectFactoryInterfaces(
         ProjectionEmitContext context,
         TypeDefinition type,
         out List<TypeDefinition> factoryInterfaces,
+        out HashSet<TypeDefinition> composableInterfaces,
         out bool hasDefaultActivation)
     {
         factoryInterfaces = [];
+        composableInterfaces = [];
         hasDefaultActivation = false;
 
         foreach (KeyValuePair<string, AttributedType> entry in AttributedTypes.Get(type, context.Cache))
@@ -454,7 +468,98 @@ internal static class AbiImplementableClassFactory
             else
             {
                 factoryInterfaces.Add(attributedType.Type);
+
+                if (attributedType.Composable)
+                {
+                    _ = composableInterfaces.Add(attributedType.Type);
+                }
             }
+        }
+    }
+
+    /// <summary>
+    /// Emits the members of a <c>[Composable]</c> factory interface.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A composable factory method has the shape
+    /// <c>T CreateInstance(&lt;args&gt;, object baseInterface, out object innerInterface)</c>, where
+    /// <c>baseInterface</c> is the controlling outer and <c>innerInterface</c> the non-delegating inner. That
+    /// is COM aggregation plumbing rather than anything an author should have to write, so the method is
+    /// implemented here and forwards to a <c>protected abstract</c> hook that only takes the real arguments.
+    /// </para>
+    /// <para>
+    /// Composition (a non-<see langword="null"/> outer) is rejected: it needs a managed object to act as an
+    /// aggregated inner, and <c>ComWrappers</c> only supports aggregation in the consuming direction (a managed
+    /// outer over a native inner). Standalone activation passes a <see langword="null"/> outer, and the caller
+    /// then ignores the inner, so returning the instance for both is correct and matches C++/WinRT.
+    /// </para>
+    /// </remarks>
+    private static void EmitComposableFactoryMembers(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        TypeDefinition ifaceType,
+        string nameStripped,
+        string projectedType,
+        HashSet<string> writtenMethods)
+    {
+        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        {
+            string name = method.GetRawName();
+            MethodSignatureInfo sig = new(method);
+
+            if (!writtenMethods.Add(sig.GetDedupeKey(name)))
+            {
+                continue;
+            }
+
+            // The trailing two parameters are always the outer and the inner (see the remarks above)
+            int userParameterCount = sig.Parameters.Count >= 2 ? sig.Parameters.Count - 2 : sig.Parameters.Count;
+
+            void WriteUserParameters(IndentedTextWriter writer)
+            {
+                for (int i = 0; i < userParameterCount; i++)
+                {
+                    IndentedTextWriterCallback parameter = MethodFactory.WriteProjectionParameter(context, sig.Parameters[i]);
+
+                    writer.Write($"{(i > 0 ? ", " : "")}{parameter}");
+                }
+            }
+
+            void WriteUserArguments(IndentedTextWriter writer)
+            {
+                for (int i = 0; i < userParameterCount; i++)
+                {
+                    IndentedTextWriterCallback argument = IdentifierEscaping.WriteEscapedIdentifier(sig.Parameters[i].GetRawName());
+
+                    writer.Write($"{(i > 0 ? ", " : "")}{argument}");
+                }
+            }
+
+            IndentedTextWriterCallback parameters = MethodFactory.WriteParameterList(context, sig);
+            string displayName = projectedType.Replace("global::", "");
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                {{projectedType}} {{TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format()}}.{{name}}({{parameters}})
+                {
+                    if (baseInterface is not null)
+                    {
+                        throw new global::System.NotSupportedException(
+                            "Composing a Windows Runtime type implemented in C# is not supported. " +
+                            "Only activating '{{displayName}}' directly is.");
+                    }
+
+                    {{nameStripped}} instance = {{name}}({{WriteUserArguments}});
+
+                    innerInterface = instance;
+
+                    return instance;
+                }
+                """);
+
+            writer.WriteLine();
+            writer.WriteLine($"protected abstract {nameStripped} {name}({WriteUserParameters});");
         }
     }
 
