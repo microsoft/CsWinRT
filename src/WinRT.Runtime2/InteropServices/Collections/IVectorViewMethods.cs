@@ -20,7 +20,7 @@ public static unsafe class IVectorViewMethods
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static uint Size(WindowsRuntimeObjectReference thisReference)
     {
-        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValueForCall();
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
         uint result;

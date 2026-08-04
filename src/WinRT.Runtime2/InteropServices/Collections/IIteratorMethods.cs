@@ -19,7 +19,7 @@ public static unsafe class IIteratorMethods
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool HasCurrent(WindowsRuntimeObjectReference thisReference)
     {
-        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValueForCall();
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
         bool result;
@@ -40,7 +40,7 @@ public static unsafe class IIteratorMethods
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool MoveNext(WindowsRuntimeObjectReference thisReference)
     {
-        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValueForCall();
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
         bool result;
