@@ -25,6 +25,20 @@ internal record AuthoringExportTypesOptions(
     }
 
     /// <summary>
+    /// Gets whether the <c>[WindowsRuntimeComponentAssembly]</c> assembly attribute should be emitted.
+    /// </summary>
+    /// <returns>Whether the <c>[WindowsRuntimeComponentAssembly]</c> assembly attribute should be emitted.</returns>
+    /// <remarks>
+    /// The attribute marks an assembly whose Windows Runtime types are projected into the generated
+    /// <c>WinRT.Component.dll</c>. A project that only implements types declared in existing metadata does not
+    /// produce one: its types are projected by the referenced projection instead, so it must not be marked.
+    /// </remarks>
+    public bool ShouldEmitComponentAssemblyAttribute()
+    {
+        return IsComponent || MergeReferencedActivationFactories;
+    }
+
+    /// <summary>
     /// Gets whether the native exports should be emitted.
     /// </summary>
     /// <param name="hasActivationFactories">Whether the compilation declares any <c>[WindowsRuntimeActivationFactory]</c> types.</param>
