@@ -62,6 +62,14 @@ internal sealed class AssemblyAnalyzer
                 continue;
             }
 
+            // Skip types implementing a Windows Runtime class declared in existing metadata. They provide the
+            // implementation for a type that is already declared elsewhere, so declaring them here would emit a
+            // second, conflicting definition of it.
+            if (ImplementsExistingRuntimeClass(type))
+            {
+                continue;
+            }
+
             // We include classes, interfaces, structs, enums, and delegates
             if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || type.IsDelegate)
             {
@@ -70,5 +78,33 @@ internal sealed class AssemblyAnalyzer
         }
 
         return publicTypes;
+    }
+
+    /// <summary>
+    /// Checks whether a type implements a Windows Runtime class declared in existing metadata, which it does by
+    /// deriving from one of the abstract base classes CsWinRT generates for that purpose.
+    /// </summary>
+    /// <param name="type">The <see cref="TypeDefinition"/> to inspect.</param>
+    /// <returns>Whether <paramref name="type"/> implements a class declared in existing metadata.</returns>
+    private bool ImplementsExistingRuntimeClass(TypeDefinition type)
+    {
+        RuntimeContext? runtimeContext = _inputModule.RuntimeContext;
+
+        for (TypeDefinition? current = type.BaseType?.Resolve(runtimeContext); current is not null;)
+        {
+            foreach (CustomAttribute attribute in current.CustomAttributes)
+            {
+                if (attribute.Constructor?.DeclaringType?.FullName is
+                    "WindowsRuntime.WindowsRuntimeImplementableClassAttribute" or
+                    "WindowsRuntime.WindowsRuntimeImplementableClassFactoryAttribute")
+                {
+                    return true;
+                }
+            }
+
+            current = current.BaseType?.Resolve(runtimeContext);
+        }
+
+        return false;
     }
 }
