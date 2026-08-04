@@ -13,6 +13,10 @@ namespace Benchmarks
         ManagedObjectWithInterfaces managedObject;
         IList<string> instanceList;
         ProvideInt existingIntDelegate;
+        string[] listCopyDestination;
+
+        [Params(4, 32, 128)]
+        public int CopyCount { get; set; }
 
         [GlobalSetup]
         public void Setup()
@@ -23,6 +27,12 @@ namespace Benchmarks
             instanceList = instance.NewList();
             instanceList.Add("Hello");
             existingIntDelegate = instance.ExistingIntDelegate;
+            listCopyDestination = new string[CopyCount];
+
+            for (int i = 1; i < CopyCount; i++)
+            {
+                instanceList.Add("Hello");
+            }
         }
 
         [Benchmark]
@@ -153,6 +163,13 @@ namespace Benchmarks
         public int InvokeExistingIntDelegate()
         {
             return existingIntDelegate();
+        }
+
+        [Benchmark]
+        public string CopyExistingList()
+        {
+            instanceList.CopyTo(listCopyDestination, 0);
+            return listCopyDestination[^1];
         }
 
         [Benchmark]
