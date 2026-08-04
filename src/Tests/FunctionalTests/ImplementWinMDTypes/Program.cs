@@ -16,7 +16,7 @@ if (myClass.One() != 1)
 
 // The base is separate from the projected class (which is sealed) and bridges to it with an implicit
 // conversion, creating a COM Callable Wrapper and resolving the projected type for it.
-global::TestComponent.Class? projectedClass = myClass;
+global::TestComponent.Class projectedClass = myClass;
 
 if (projectedClass is null)
 {
@@ -44,7 +44,7 @@ if (myComposable.One() != 1 || myComposable.Two() != 2 || myComposable.Three() !
     return 105;
 }
 
-global::TestComponent.Composable? projectedComposable = myComposable;
+global::TestComponent.Composable projectedComposable = myComposable;
 
 if (projectedComposable is null)
 {
@@ -73,7 +73,7 @@ if (myDerived.Value != 5 || myDerived.One() != 1)
     return 109;
 }
 
-global::TestComponent.Derived? projectedDerived = myDerived;
+global::TestComponent.Derived projectedDerived = myDerived;
 
 if (projectedDerived is null)
 {
