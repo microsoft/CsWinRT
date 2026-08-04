@@ -74,7 +74,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceAsValueForCall },
                     { Stloc_0 },
 
                     // '.try' code

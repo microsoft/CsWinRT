@@ -120,7 +120,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceAsValueForCall },
                     { Stloc_0 },
                     { nop_try_this },
 
@@ -235,7 +235,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceAsValueForCall },
                     { Stloc_0 },
                     { nop_try_this },
 
@@ -359,7 +359,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceAsValueForCall },
                     { Stloc_0 },
                     { nop_try_this },
 

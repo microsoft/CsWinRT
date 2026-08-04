@@ -2079,6 +2079,12 @@ internal sealed class InteropReferences
         .CreateMemberReference("AsValue"u8, MethodSignature.CreateInstance(WindowsRuntimeObjectReferenceValue.ToValueTypeSignature()));
 
     /// <summary>
+    /// Gets the member reference for <c>WindowsRuntimeObjectReference.AsValueForCall()</c>.
+    /// </summary>
+    public MemberReference WindowsRuntimeObjectReferenceAsValueForCall => field ??= WindowsRuntimeObjectReference
+        .CreateMemberReference("AsValueForCall"u8, MethodSignature.CreateInstance(WindowsRuntimeObjectReferenceValue.ToValueTypeSignature()));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IAsyncActionWithProgress.GetResults()</c>.
     /// </summary>
     public MemberReference IAsyncActionWithProgressGetResults => field ??= IAsyncActionWithProgressMethods
