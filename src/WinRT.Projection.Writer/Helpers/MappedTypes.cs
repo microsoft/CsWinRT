@@ -164,6 +164,7 @@ internal static class MappedTypes
             ["AttributeTargets"] = new("AttributeTargets", "System", "AttributeTargets"),
             ["AttributeUsageAttribute"] = new("AttributeUsageAttribute", "System", "AttributeUsageAttribute"),
             [ContractVersionAttribute] = new(ContractVersionAttribute, WindowsFoundationMetadata, ContractVersionAttribute),
+            [ExperimentalAttribute] = new(ExperimentalAttribute, SystemDiagnosticsCodeAnalysis, ExperimentalAttribute),
         }.ToFrozenDictionary(),
         ["Windows.Foundation.Numerics"] = new Dictionary<string, MappedType>
         {

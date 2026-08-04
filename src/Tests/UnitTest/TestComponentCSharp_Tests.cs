@@ -4744,15 +4744,30 @@ namespace UnitTest
             Assert.IsFalse(seventh.Equals(eighth));
         }
 
-        // Manually verify warning for experimental.
+        // Windows Runtime APIs marked '[experimental]' in metadata are projected with the .NET
+        // '[Experimental]' attribute, which reports 'CSWINRT3005' at every use site (see
+        // 'docs/diagnostics/cswinrt3005.md'). This method is what verifies that at compile time: it only
+        // builds because the diagnostic is explicitly suppressed here, exactly as user code would have to.
         private void TestExperimentAttribute()
         {
-            // This method intentionally uses an '[Experimental]' API to manually verify the warning, so suppress
-            // 'CS8305' here to keep the intentional usage from breaking the build (warnings are treated as errors).
-#pragma warning disable CS8305
+#pragma warning disable CSWINRT3005
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
-#pragma warning restore CS8305
+#pragma warning restore CSWINRT3005
+        }
+
+        // Like the carried-over metadata attributes it replaces, the projected '[Experimental]' attribute
+        // is reference-projection-only: it is only ever consumed by compilers and analyzers, which see the
+        // reference projection, so it must not survive into the implementation projection loaded at runtime.
+        [TestMethod]
+        public void TestExperimentalIsNotProjectedInImplementationProjection()
+        {
+            // Naming the type at all is a use site, so the diagnostic has to be suppressed here too
+#pragma warning disable CSWINRT3005
+            Type experimentalType = typeof(CustomExperimentClass);
+#pragma warning restore CSWINRT3005
+
+            Assert.IsNull(experimentalType.GetCustomAttribute<ExperimentalAttribute>());
         }
 
         void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)
