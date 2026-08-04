@@ -1,6 +1,6 @@
 # CsWinRT warning CSWINRT3003
 
-The Windows Runtime component assembly attributes (`WindowsRuntimeComponentAssemblyAttribute`, `WindowsRuntimeComponentAssemblyExportsTypeAttribute` and `WindowsRuntimeActivationFactoryAssemblyAttribute`, all in the `WindowsRuntime.InteropServices` namespace) are a private implementation detail of `WinRT.Runtime.dll`. They are only meant to be applied by CsWinRT, to mark assemblies taking part in Windows Runtime activation and to identify the generated type that contains their activation factory entry point. They are exposed in the reference assembly for `WinRT.Runtime.dll` solely so that this generated code can reference them, and they are not intended for direct use in user code.
+The Windows Runtime component assembly attributes (`WindowsRuntimeComponentAssemblyAttribute` and `WindowsRuntimeComponentAssemblyExportsTypeAttribute`, both in the `WindowsRuntime.InteropServices` namespace) are a private implementation detail of `WinRT.Runtime.dll`. They are only meant to be applied by CsWinRT, to mark assemblies taking part in Windows Runtime activation and to identify the generated type that contains their activation factory entry point. They are exposed in the reference assembly for `WinRT.Runtime.dll` solely so that this generated code can reference them, and they are not intended for direct use in user code.
 
 For instance, the following sample generates CSWINRT3003:
 
