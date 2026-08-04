@@ -416,13 +416,13 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
-    /// Checks if the specified module definition represents an assembly contributing activation factories to the
-    /// merged activation chain (i.e. an assembly annotated with <c>[WindowsRuntimeActivationFactoryAssembly]</c>).
+    /// Checks if the specified module definition represents an assembly exposing a managed activation entry point
+    /// (i.e. an assembly annotated with <c>[WindowsRuntimeComponentAssemblyExportsType]</c>).
     /// </summary>
     /// <param name="moduleDefinition">The module definition to check.</param>
-    /// <returns><c>true</c> if the module contributes activation factories; otherwise, <c>false</c>.</returns>
+    /// <returns><c>true</c> if the module exposes an activation entry point; otherwise, <c>false</c>.</returns>
     private static bool IsActivationFactoryAssembly(ModuleDefinition moduleDefinition)
     {
-        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeActivationFactoryAssemblyAttribute"u8);
+        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComponentAssemblyExportsTypeAttribute"u8);
     }
 }
