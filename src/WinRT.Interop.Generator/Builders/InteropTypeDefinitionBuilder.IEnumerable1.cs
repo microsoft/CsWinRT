@@ -153,7 +153,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceAsValueForCall },
                     { Stloc_0 },
 
                     // '.try' code
