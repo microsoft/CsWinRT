@@ -21,7 +21,7 @@ internal static unsafe class IEnumerableMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerator GetEnumerator(WindowsRuntimeObjectReference thisReference)
     {
-        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValueForCall();
 
         void* thisPtr = thisValue.GetThisPtrUnsafe();
         void* result;
