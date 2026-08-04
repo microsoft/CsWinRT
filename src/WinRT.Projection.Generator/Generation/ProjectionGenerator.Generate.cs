@@ -143,6 +143,11 @@ internal partial class ProjectionGenerator
             // Collect the names of all component assemblies from the references
             HashSet<string> componentAssemblyNameSet = [];
 
+            // Assemblies that only contribute an activation entry point to the merged activation chain. These are
+            // tracked separately from the component ones: they have no '.winmd' of their own, so they must not
+            // drive the type scanning below (a same-named '.winmd' would otherwise be projected a second time).
+            HashSet<string> activationFactoryAssemblyNameSet = [];
+
             foreach (string refPath in args.ReferenceAssemblyPaths)
             {
                 if (refPath.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))
@@ -162,10 +167,14 @@ internal partial class ProjectionGenerator
                         _ = componentAssemblyNameSet.Add(name.Value);
                     }
                 }
+                else if (IsActivationFactoryAssembly(refModule) && refModule.Assembly?.Name is Utf8String activationName)
+                {
+                    _ = activationFactoryAssemblyNameSet.Add(activationName.Value);
+                }
             }
 
             // Sort for stable codegen output
-            componentAssemblyNames = [.. componentAssemblyNameSet];
+            componentAssemblyNames = [.. componentAssemblyNameSet.Union(activationFactoryAssemblyNameSet)];
             componentAssemblyNames.Sort(StringComparer.Ordinal);
 
             // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd')
@@ -404,5 +413,16 @@ internal partial class ProjectionGenerator
     private static bool IsComponentAssembly(ModuleDefinition moduleDefinition)
     {
         return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComponentAssemblyAttribute"u8);
+    }
+
+    /// <summary>
+    /// Checks if the specified module definition represents an assembly contributing activation factories to the
+    /// merged activation chain (i.e. an assembly annotated with <c>[WindowsRuntimeActivationFactoryAssembly]</c>).
+    /// </summary>
+    /// <param name="moduleDefinition">The module definition to check.</param>
+    /// <returns><c>true</c> if the module contributes activation factories; otherwise, <c>false</c>.</returns>
+    private static bool IsActivationFactoryAssembly(ModuleDefinition moduleDefinition)
+    {
+        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeActivationFactoryAssemblyAttribute"u8);
     }
 }

@@ -475,7 +475,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
       <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd')) and ('%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true')" />
       <_ComponentProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
-      <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
+      <!-- The project's own assembly: it may carry the merged-activation marker even when it is not a component -->
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" />
 
       <!-- Add the current project's .winmd so the projection generator can process it -->
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />

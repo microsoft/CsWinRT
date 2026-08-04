@@ -45,18 +45,22 @@ internal static partial class ProjectionGenerator
             },
             body: ProcessReferences);
 
-        // If no types were found to project (e.g., component mode with no component references),
-        // skip the source generation and emit phases entirely (no .dll will be produced at all).
-        if (!processingState.HasTypesToProject)
+        // Nothing to project and nothing to merge: skip the remaining phases entirely (no .dll will be
+        // produced at all). An assembly implementing classes declared in existing metadata contributes no
+        // types to project, but its activation entry point still has to be merged, so it is not "nothing".
+        if (!processingState.HasTypesToProject && processingState.ComponentAssemblyNames.Count == 0)
         {
             return;
         }
 
         // Invoke the projection writer (in-process) to generate the projection sources
-        runner.RunPhase(
-            phaseName: "source-generation",
-            logMessage: "Generating projection code",
-            body: _ => GenerateSources(processingState));
+        if (processingState.HasTypesToProject)
+        {
+            runner.RunPhase(
+                phaseName: "source-generation",
+                logMessage: "Generating projection code",
+                body: _ => GenerateSources(processingState));
+        }
 
         // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting source files
         // alongside the projection writer's output so the merged '.dll' plays the entry-assembly and

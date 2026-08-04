@@ -147,6 +147,9 @@ public partial class AuthoringExportTypesGenerator
 
             writer.WriteLineIf(info.Options.ShouldEmitComponentAssemblyAttribute(), "[assembly: global::WindowsRuntime.InteropServices.WindowsRuntimeComponentAssembly]");
 
+            // Mark the assembly so the merged activation in 'WinRT.Component.dll' picks up its exports
+            writer.WriteLineIf(!info.ActivationFactories.IsEmpty, "[assembly: global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAssembly]");
+
             writer.WriteLine($$"""
                 [assembly: global::WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyExportsType(typeof(global::ABI.{{info.AssemblyName.EscapeIdentifierName()}}.ManagedExports))]
                 
