@@ -124,23 +124,11 @@ public static unsafe class RestrictedErrorInfo
                 // available, we need to concatinate them to produce the final exception message.
                 if (errorCode == restrictedError)
                 {
-                    // Append the description first
-                    if (!string.IsNullOrEmpty(description))
-                    {
-                        errorMessage += description;
-
-                        if (!string.IsNullOrEmpty(restrictedDescription))
-                        {
-                            errorMessage += " ";
-                        }
-                    }
-
-                    // Next append the restricted description. If we have both, we insert a space to separate
-                    // the two. We're not using a newline, as exception messages should always be a single line.
-                    if (!string.IsNullOrEmpty(restrictedDescription))
-                    {
-                        errorMessage += restrictedDescription;
-                    }
+                    errorMessage = string.IsNullOrEmpty(description)
+                        ? restrictedDescription
+                        : string.IsNullOrEmpty(restrictedDescription)
+                            ? description
+                            : string.Concat(description, " ", restrictedDescription);
                 }
             }
             catch (Exception e)
