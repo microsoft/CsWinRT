@@ -3884,6 +3884,70 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void ReferenceTypeNameProjectsAsType()
+        {
+            // 'IReference<WUX.Interop.TypeName>' projects to 'System.Type', not the invalid 'Nullable<Type>'
+            // ('TypeName' is a Windows Runtime value type, but it projects to the reference type 'System.Type'). The boxed
+            // value round-trips through the native boundary as a 'Type', including the null case.
+            Assert.AreEqual(typeof(Class), Class.BoxedTypeName);
+
+            Assert.AreEqual(typeof(int), Class.RoundtripTypeName(typeof(int)));
+            Assert.AreEqual(typeof(Class), Class.RoundtripTypeName(typeof(Class)));
+            Assert.IsNull(Class.RoundtripTypeName(null));
+        }
+
+        [TestMethod]
+        public void ReferenceHResultProjectsAsException()
+        {
+            // 'IReference<HResult>' projects to 'System.Exception', not the invalid 'Nullable<Exception>'
+            // ('HResult' is a Windows Runtime value type, but it projects to the reference type 'System.Exception'). The
+            // boxed value round-trips through the native boundary as an 'Exception', including the null case.
+            Exception boxed = Class.BoxedHResult;
+
+            Assert.IsNotNull(boxed);
+            Assert.AreEqual(unchecked((int)0x80070057), boxed.HResult); // 'E_INVALIDARG'
+
+            Assert.IsInstanceOfType<ArgumentOutOfRangeException>(Class.RoundtripHResult(new ArgumentOutOfRangeException()));
+            Assert.IsNull(Class.RoundtripHResult(null));
+        }
+
+        [TestMethod]
+        public void ReferenceTypeNameListReturnThrowsNotSupported()
+        {
+            // 'IVector<IReference<TypeName>>' projects its public surface as 'IList<Type>', but it cannot be
+            // marshalled: 'System.Type' is a reference type, so there is no valid 'Nullable<Type>' collection
+            // marshaller for the interop generator to produce. The projected member throws 'NotSupportedException'
+            // instead of referencing a marshaller that does not exist (return-only direction, created in C++)
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.GetReferenceTypeNameList());
+        }
+
+        [TestMethod]
+        public void ReferenceTypeNameListParameterThrowsNotSupported()
+        {
+            // Same limitation as the return direction: passing a managed 'IList<Type>' to a native
+            // 'IVector<IReference<TypeName>>' parameter throws 'NotSupportedException'
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.CountReferenceTypeNameList(new List<Type> { typeof(Class), typeof(int) }));
+        }
+
+        [TestMethod]
+        public void ReferenceHResultListReturnThrowsNotSupported()
+        {
+            // 'IVector<IReference<HResult>>' projects its public surface as 'IList<Exception>', but it cannot be
+            // marshalled: 'System.Exception' is a reference type, so there is no valid 'Nullable<Exception>' collection
+            // marshaller for the interop generator to produce. The projected member throws 'NotSupportedException'
+            // instead of referencing a marshaller that does not exist (return-only direction, created in C++)
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.GetReferenceHResultList());
+        }
+
+        [TestMethod]
+        public void ReferenceHResultListParameterThrowsNotSupported()
+        {
+            // Same limitation as the return direction: passing a managed 'IList<Exception>' to a native
+            // 'IVector<IReference<HResult>>' parameter throws 'NotSupportedException'
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.CountReferenceHResultList(new List<Exception> { new ArgumentException(), new InvalidOperationException() }));
+        }
+
+        [TestMethod]
         public void TypeInfoGenerics()
         {
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));

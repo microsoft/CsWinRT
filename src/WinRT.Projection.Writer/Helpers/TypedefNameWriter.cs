@@ -9,6 +9,7 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -227,6 +228,21 @@ internal static class TypedefNameWriter
             case TypeSemantics.GenericInstanceRef gir:
                 {
                     (string ns, string name) = gir.GenericType.Names();
+
+                    // 'IReference<T>' normally projects to 'System.Nullable<T>', but a couple of Windows Runtime
+                    // value types project to .NET reference types ('Windows.UI.Xaml.Interop.TypeName' -> 'System.Type'
+                    // and 'Windows.Foundation.HResult' -> 'System.Exception'). For those, 'Nullable<Type>' /
+                    // 'Nullable<Exception>' would be invalid C#, so drop the nullability and project the inner type
+                    // directly (a reference type is already nullable).
+                    if (ns == WindowsFoundation &&
+                        name == IReferenceGeneric &&
+                        gir.GenericArgs is [{ } innerArg] &&
+                        ProjectsToReferenceType(innerArg))
+                    {
+                        WriteTypeName(writer, context, innerArg, nameType, forceWriteNamespace);
+                        break;
+                    }
+
                     _ = MappedTypes.ApplyMapping(ref ns, ref name);
 
                     if (nameType == TypedefNameType.EventSource && ns == "System")
@@ -311,6 +327,37 @@ internal static class TypedefNameWriter
     public static void WriteProjectionType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
         WriteTypeName(writer, context, semantics, TypedefNameType.Projected, false);
+    }
+
+    /// <summary>
+    /// Returns whether the projected form of the supplied <paramref name="semantics"/> is a .NET reference type.
+    /// Most Windows Runtime value types project to .NET value types (so <c>IReference&lt;T&gt;</c> projects to
+    /// <see cref="System.Nullable{T}"/>), but two Windows Runtime value types project to .NET <em>reference</em> types:
+    /// <c>Windows.UI.Xaml.Interop.TypeName</c> -&gt; <see cref="System.Type"/> and <c>Windows.Foundation.HResult</c>
+    /// -&gt; <see cref="System.Exception"/>. For those, the <see cref="System.Nullable{T}"/> wrapper is invalid C#,
+    /// so <c>IReference&lt;T&gt;</c> must project the inner type directly (a reference type is already nullable).
+    /// </summary>
+    /// <param name="semantics">The semantic representation of the type argument.</param>
+    /// <returns><see langword="true"/> if the projected type is a .NET reference type; otherwise <see langword="false"/>.</returns>
+    private static bool ProjectsToReferenceType(TypeSemantics semantics)
+    {
+        // A literal 'System.Type' reference (e.g. from attribute-blob-encoded 'Type' arguments)
+        if (semantics is TypeSemantics.SystemType)
+        {
+            return true;
+        }
+
+        if (semantics is TypeSemantics.Reference reference)
+        {
+            (string ns, string name) = reference.Type.Names();
+
+            _ = MappedTypes.ApplyMapping(ref ns, ref name);
+
+            // The only Windows Runtime value types that map to a .NET reference type: 'TypeName' -> 'Type', 'HResult' -> 'Exception'
+            return ns == "System" && name is "Type" or "Exception";
+        }
+
+        return false;
     }
 
     /// <inheritdoc cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>
