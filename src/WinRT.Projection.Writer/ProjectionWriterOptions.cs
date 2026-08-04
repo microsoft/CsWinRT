@@ -66,15 +66,13 @@ public sealed class ProjectionWriterOptions
 
     /// <summary>
     /// Additionally emit, for every runtime class the projection covers, the abstract
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes that
-    /// let it be implemented (authored) in C#, along with the exclusive-to interfaces they implement. Every
-    /// member the Windows Runtime type requires is declared <c>abstract</c>, so the compiler enforces a
-    /// complete implementation.
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;ActivationFactory</c> base
+    /// classes that let it be implemented (authored) in C#, along with the exclusive-to interfaces they
+    /// implement. Every member the Windows Runtime type requires is declared <c>abstract</c>, so the compiler
+    /// enforces a complete implementation.
     /// <para>
-    /// This is the 3.0 replacement for <see cref="PublicExclusiveTo"/>: instead of exposing every
-    /// exclusive-to interface as <c>public</c> for the author to implement one by one, the author extends a
-    /// single generated abstract base. In a reference projection the bases carry no implementation; it is
-    /// supplied when an application is built, exactly like the rest of the projection.
+    /// In a reference projection the bases carry no implementation; it is supplied when an application is
+    /// built, exactly like the rest of the projection.
     /// </para>
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }

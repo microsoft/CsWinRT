@@ -119,10 +119,8 @@ internal static class AbiImplementableClassFactory
     /// Returns the name to give a class's generated factory base.
     /// </summary>
     /// <remarks>
-    /// The suffix is always <c>ActivationFactory</c>, never the shorter <c>Factory</c>: that collides with
-    /// real Windows Runtime classes named <c>&lt;Name&gt;Factory</c> (e.g. <c>ActionEntityFactory</c> next to
-    /// <c>ActionEntity</c>). Choosing conditionally would make the name depend on what else the namespace
-    /// happens to contain, so adding such a class later would silently rename an existing base.
+    /// The suffix is <c>ActivationFactory</c> rather than <c>Factory</c>, which would collide with real
+    /// Windows Runtime classes named <c>&lt;Name&gt;Factory</c> (e.g. <c>ActionEntityFactory</c>).
     /// </remarks>
     private static string GetFactoryClassName(string nameStripped)
     {

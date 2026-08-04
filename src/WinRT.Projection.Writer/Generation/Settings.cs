@@ -118,8 +118,8 @@ internal sealed class Settings
 
     /// <summary>
     /// Gets or sets a value indicating whether the projection additionally emits the abstract
-    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;Factory</c> base classes (and the
-    /// exclusive-to interfaces they implement) that let its runtime classes be implemented (authored) in C#.
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;ActivationFactory</c> base classes
+    /// (and the exclusive-to interfaces they implement) that let its runtime classes be implemented in C#.
     /// </summary>
     public bool ImplementWinMDTypes { get; init; }
 

@@ -5,8 +5,7 @@ using System;
 using ImplementWinMDTypes;
 
 // Implements Windows Runtime types declared in 'TestComponent' metadata by deriving from the abstract
-// bases the projection generates for them. Exit code 100 means success; anything else identifies the
-// check that failed.
+// bases the projection generates for them.
 
 MyClass myClass = new();
 
