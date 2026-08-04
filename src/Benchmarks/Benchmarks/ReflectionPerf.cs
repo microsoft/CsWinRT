@@ -11,6 +11,8 @@ namespace Benchmarks
         ClassWithMarshalingRoutines instance;
         IDictionary<String, WrappedClass> instanceDictionary;
         ManagedObjectWithInterfaces managedObject;
+        IList<string> instanceList;
+        ProvideInt existingIntDelegate;
 
         [GlobalSetup]
         public void Setup()
@@ -18,6 +20,9 @@ namespace Benchmarks
             instance = new ClassWithMarshalingRoutines();
             instanceDictionary = instance.ExistingDictionary;
             managedObject = new ManagedObjectWithInterfaces();
+            instanceList = instance.NewList();
+            instanceList.Add("Hello");
+            existingIntDelegate = instance.ExistingIntDelegate;
         }
 
         [Benchmark]
@@ -130,6 +135,24 @@ namespace Benchmarks
         {
             var dict = instance.ExistingDictionary;
             return dict["a"];
+        }
+
+        [Benchmark]
+        public int ExistingListCount()
+        {
+            return instanceList.Count;
+        }
+
+        [Benchmark]
+        public string ExistingListIndexer()
+        {
+            return instanceList[0];
+        }
+
+        [Benchmark]
+        public int InvokeExistingIntDelegate()
+        {
+            return existingIntDelegate();
         }
 
         [Benchmark]
