@@ -8,20 +8,20 @@ namespace Windows.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Duration>")]
     [ABI.Windows.UI.Xaml.DurationComWrappersMarshaller]
 #endif
-    public readonly struct Duration : IEquatable<Duration>
+    public struct Duration : IEquatable<Duration>
     {
-        private readonly TimeSpan _timeSpan;
-        private readonly DurationType _durationType;
+        public TimeSpan TimeSpan;
+        public DurationType Type;
 
         public Duration(TimeSpan timeSpan)
         {
-            _durationType = DurationType.TimeSpan;
-            _timeSpan = timeSpan;
+            Type = DurationType.TimeSpan;
+            TimeSpan = timeSpan;
         }
 
         private Duration(DurationType durationType)
         {
-            _durationType = durationType;
+            Type = durationType;
         }
 
         public static implicit operator Duration(TimeSpan timeSpan)
@@ -33,9 +33,9 @@ namespace Windows.UI.Xaml
         {
             if (t1.HasTimeSpan && t2.HasTimeSpan)
             {
-                return new Duration(t1._timeSpan + t2._timeSpan);
+                return new Duration(t1.TimeSpan + t2.TimeSpan);
             }
-            else if (t1._durationType != DurationType.Automatic && t2._durationType != DurationType.Automatic)
+            else if (t1.Type != DurationType.Automatic && t2.Type != DurationType.Automatic)
             {
                 return Duration.Forever;
             }
@@ -50,9 +50,9 @@ namespace Windows.UI.Xaml
         {
             if (t1.HasTimeSpan && t2.HasTimeSpan)
             {
-                return new Duration(t1._timeSpan - t2._timeSpan);
+                return new Duration(t1.TimeSpan - t2.TimeSpan);
             }
-            else if (t1._durationType == DurationType.Forever && t2.HasTimeSpan)
+            else if (t1.Type == DurationType.Forever && t2.HasTimeSpan)
             {
                 return Duration.Forever;
             }
@@ -76,13 +76,13 @@ namespace Windows.UI.Xaml
         {
             if (t1.HasTimeSpan && t2.HasTimeSpan)
             {
-                return t1._timeSpan > t2._timeSpan;
+                return t1.TimeSpan > t2.TimeSpan;
             }
-            else if (t1.HasTimeSpan && t2._durationType == DurationType.Forever)
+            else if (t1.HasTimeSpan && t2.Type == DurationType.Forever)
             {
                 return false;
             }
-            else if (t1._durationType == DurationType.Forever && t2.HasTimeSpan)
+            else if (t1.Type == DurationType.Forever && t2.HasTimeSpan)
             {
                 return true;
             }
@@ -94,11 +94,11 @@ namespace Windows.UI.Xaml
 
         public static bool operator >=(Duration t1, Duration t2)
         {
-            if (t1._durationType == DurationType.Automatic && t2._durationType == DurationType.Automatic)
+            if (t1.Type == DurationType.Automatic && t2.Type == DurationType.Automatic)
             {
                 return true;
             }
-            else if (t1._durationType == DurationType.Automatic || t2._durationType == DurationType.Automatic)
+            else if (t1.Type == DurationType.Automatic || t2.Type == DurationType.Automatic)
             {
                 return false;
             }
@@ -112,13 +112,13 @@ namespace Windows.UI.Xaml
         {
             if (t1.HasTimeSpan && t2.HasTimeSpan)
             {
-                return t1._timeSpan < t2._timeSpan;
+                return t1.TimeSpan < t2.TimeSpan;
             }
-            else if (t1.HasTimeSpan && t2._durationType == DurationType.Forever)
+            else if (t1.HasTimeSpan && t2.Type == DurationType.Forever)
             {
                 return true;
             }
-            else if (t1._durationType == DurationType.Forever && t2.HasTimeSpan)
+            else if (t1.Type == DurationType.Forever && t2.HasTimeSpan)
             {
                 return false;
             }
@@ -130,11 +130,11 @@ namespace Windows.UI.Xaml
 
         public static bool operator <=(Duration t1, Duration t2)
         {
-            if (t1._durationType == DurationType.Automatic && t2._durationType == DurationType.Automatic)
+            if (t1.Type == DurationType.Automatic && t2.Type == DurationType.Automatic)
             {
                 return true;
             }
-            else if (t1._durationType == DurationType.Automatic || t2._durationType == DurationType.Automatic)
+            else if (t1.Type == DurationType.Automatic || t2.Type == DurationType.Automatic)
             {
                 return false;
             }
@@ -146,9 +146,9 @@ namespace Windows.UI.Xaml
 
         public static int Compare(Duration t1, Duration t2)
         {
-            if (t1._durationType == DurationType.Automatic)
+            if (t1.Type == DurationType.Automatic)
             {
-                if (t2._durationType == DurationType.Automatic)
+                if (t2.Type == DurationType.Automatic)
                 {
                     return 0;
                 }
@@ -157,7 +157,7 @@ namespace Windows.UI.Xaml
                     return -1;
                 }
             }
-            else if (t2._durationType == DurationType.Automatic)
+            else if (t2.Type == DurationType.Automatic)
             {
                 return 1;
             }
@@ -187,7 +187,7 @@ namespace Windows.UI.Xaml
         {
             get
             {
-                return _durationType == DurationType.TimeSpan;
+                return Type == DurationType.TimeSpan;
             }
         }
 
@@ -207,21 +207,6 @@ namespace Windows.UI.Xaml
             }
         }
 
-        public readonly TimeSpan TimeSpan
-        {
-            get
-            {
-                if (HasTimeSpan)
-                {
-                    return _timeSpan;
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            }
-        }
-
         public readonly Duration Add(Duration duration)
         {
             return this + duration;
@@ -238,7 +223,7 @@ namespace Windows.UI.Xaml
             {
                 if (duration.HasTimeSpan)
                 {
-                    return _timeSpan == duration._timeSpan;
+                    return TimeSpan == duration.TimeSpan;
                 }
                 else
                 {
@@ -247,7 +232,7 @@ namespace Windows.UI.Xaml
             }
             else
             {
-                return _durationType == duration._durationType;
+                return Type == duration.Type;
             }
         }
 
@@ -260,11 +245,11 @@ namespace Windows.UI.Xaml
         {
             if (HasTimeSpan)
             {
-                return _timeSpan.GetHashCode();
+                return TimeSpan.GetHashCode();
             }
             else
             {
-                return _durationType.GetHashCode() + 17;
+                return Type.GetHashCode() + 17;
             }
         }
 
@@ -277,9 +262,9 @@ namespace Windows.UI.Xaml
         {
             if (HasTimeSpan)
             {
-                return _timeSpan.ToString(); // "00"; //TypeDescriptor.GetConverter(_timeSpan).ConvertToString(_timeSpan);
+                return TimeSpan.ToString();
             }
-            else if (_durationType == DurationType.Forever)
+            else if (Type == DurationType.Forever)
             {
                 return "Forever";
             }
