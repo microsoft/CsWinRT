@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
+using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable CS1573
 
@@ -92,10 +94,78 @@ public static class IListMethods<T>
             ArgumentException.ThrowInsufficientSpaceToCopyCollection();
         }
 
+        if (typeof(T) == typeof(string) && count > 0)
+        {
+            CopyStrings<TMethods>(thisReference, (string[])(object)array, arrayIndex, count);
+            return;
+        }
+
         // Copy all items into the target array, at the specified starting offset
         for (int i = 0; i < count; i++)
         {
             array[i + arrayIndex] = Item<TMethods>(thisReference, i);
+        }
+    }
+
+    private static unsafe void CopyStrings<TMethods>(WindowsRuntimeObjectReference thisReference, string[] array, int arrayIndex, int count)
+        where TMethods : IVectorMethodsImpl<T>
+    {
+        nint[]? rented = null;
+        Span<nint> handles = count <= 32
+            ? stackalloc nint[count]
+            : (rented = ArrayPool<nint>.Shared.Rent(count)).AsSpan(0, count);
+
+        uint copied = 0;
+
+        try
+        {
+            using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValueForCall();
+            void* thisPtr = thisValue.GetThisPtrUnsafe();
+
+            fixed (nint* handlesPtr = handles)
+            {
+                while (copied < count)
+                {
+                    uint currentCopied;
+                    HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, uint, uint, void**, uint*, HRESULT>)(*(void***)thisPtr)[16])(
+                        thisPtr,
+                        copied,
+                        (uint)count - copied,
+                        (void**)(handlesPtr + copied),
+                        &currentCopied);
+
+                    RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+
+                    if (currentCopied == 0)
+                    {
+                        break;
+                    }
+
+                    copied += currentCopied;
+                }
+            }
+
+            for (int i = 0; i < copied; i++)
+            {
+                array[arrayIndex + i] = HStringMarshaller.ConvertToManaged((void*)handles[i]);
+            }
+
+            for (int i = (int)copied; i < count; i++)
+            {
+                array[arrayIndex + i] = (string)(object)Item<TMethods>(thisReference, i)!;
+            }
+        }
+        finally
+        {
+            for (int i = 0; i < copied; i++)
+            {
+                HStringMarshaller.Free((void*)handles[i]);
+            }
+
+            if (rented is not null)
+            {
+                ArrayPool<nint>.Shared.Return(rented);
+            }
         }
     }
 
