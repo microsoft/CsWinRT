@@ -605,6 +605,7 @@ internal static class MetadataAttributeFactory
             using WindowsRuntime;
 
             #pragma warning disable CSWINRT3001
+            #pragma warning disable CS0612, CS0618
 
             namespace ABI;
 
@@ -653,6 +654,7 @@ internal static class MetadataAttributeFactory
             using WindowsRuntime;
 
             #pragma warning disable CSWINRT3001
+            #pragma warning disable CS0612, CS0618
 
             namespace ABI;
 

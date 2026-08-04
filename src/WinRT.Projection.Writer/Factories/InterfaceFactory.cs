@@ -218,11 +218,19 @@ internal static class InterfaceFactory
     {
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
+            // Skip members removed via '[Deprecated(..., DeprecationType.Remove, ...)]': their ABI
+            // vtable slot is preserved separately, but they are omitted from the projected interface.
+            if (method.IsRemoved)
+            {
+                continue;
+            }
+
             MethodSignatureInfo sig = new(method);
 
             // Carried-over metadata attributes ([Overload], [DefaultOverload], [Experimental]) are
             // reference-projection-only.
             WriteMethodCustomAttributes(writer, context, method);
+            CustomAttributeFactory.WriteObsoleteAttribute(writer, method);
             IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
             IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
             writer.WriteLine($"{ret} {method.GetRawName()}({parms});");
@@ -232,6 +240,15 @@ internal static class InterfaceFactory
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
 
+            // MIDL places '[Deprecated]' on the property accessor (the getter for read/write
+            // properties), not on the Property row, so deprecation is checked on the accessor.
+            MethodDefinition? accessor = getter ?? setter;
+
+            if (accessor is { IsRemoved: true })
+            {
+                continue;
+            }
+
             // Add 'new' when this interface has a setter-only property AND a property of the same
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
@@ -239,6 +256,12 @@ internal static class InterfaceFactory
                 && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.GetRawName(), out _))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
+
+            if (accessor is not null)
+            {
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, accessor);
+            }
+
             writer.Write($"{newKeyword}{propType} {prop.GetRawName()} {{");
 
             writer.WriteIf(getter is not null || setter is not null, " get;");
@@ -250,6 +273,19 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
+            // MIDL places '[Deprecated]' on the event 'add' accessor, not on the Event row.
+            MethodDefinition? addMethod = evt.AddMethod;
+
+            if (addMethod is { IsRemoved: true })
+            {
+                continue;
+            }
+
+            if (addMethod is not null)
+            {
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, addMethod);
+            }
+
             IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine($"event {eventType} {evt.Name?.Value};");
         }

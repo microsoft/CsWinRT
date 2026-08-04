@@ -274,6 +274,9 @@ internal sealed partial class WinMDWriter
             attributes: PropertyAttributes.None,
             signature: isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
+        MethodDefinition? getter = null;
+        MethodDefinition? setter = null;
+
         // Add getter
         if (inputProperty.GetMethod is not null)
         {
@@ -295,7 +298,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(propertyType)
                 : MethodSignature.CreateInstance(propertyType);
 
-            MethodDefinition getter = new("get_" + inputProperty.Name.Value, attributes, getSignature);
+            getter = new("get_" + inputProperty.Name.Value, attributes, getSignature);
             if (!isInterfaceParent)
             {
                 getter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -325,7 +328,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [propertyType])
                 : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]);
 
-            MethodDefinition setter = new("put_" + inputProperty.Name.Value, attributes, setSignature);
+            setter = new("put_" + inputProperty.Name.Value, attributes, setSignature);
             if (!isInterfaceParent)
             {
                 setter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -340,8 +343,11 @@ internal sealed partial class WinMDWriter
 
         outputType.Properties.Add(outputProperty);
 
-        // Copy custom attributes from the input property
-        CopyCustomAttributes(inputProperty, outputProperty);
+        // Copy custom attributes from the input property. The '[Deprecated]' attribute is emitted on the
+        // accessor (the getter, or the setter for write-only properties) rather than the property row,
+        // matching the placement used by MIDL so that property deprecation resolves consistently
+        CopyCustomAttributes(inputProperty, outputProperty, skipDeprecated: true);
+        CopyDeprecatedAttributeToAccessor(inputProperty, getter ?? setter ?? (IHasCustomAttribute)outputProperty);
     }
 
     /// <summary>
@@ -369,7 +375,10 @@ internal sealed partial class WinMDWriter
 
         outputType.Properties.Add(outputProperty);
 
-        CopyCustomAttributes(inputProperty, outputProperty);
+        // Copy custom attributes from the input property. The '[Deprecated]' attribute is emitted on the
+        // setter accessor rather than the property row, matching the placement used by MIDL
+        CopyCustomAttributes(inputProperty, outputProperty, skipDeprecated: true);
+        CopyDeprecatedAttributeToAccessor(inputProperty, setter);
     }
 
     /// <summary>
@@ -403,6 +412,8 @@ internal sealed partial class WinMDWriter
         // For interface parents (synthesized interfaces), always use instance signatures
         bool isStatic = !isInterfaceParent && inputEvent.AddMethod?.IsStatic == true;
 
+        MethodDefinition adder;
+
         // Add method
         {
             MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
@@ -426,7 +437,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(tokenSignature, [handlerSignature])
                 : MethodSignature.CreateInstance(tokenSignature, [handlerSignature]);
 
-            MethodDefinition adder = new("add_" + inputEvent.Name.Value, attributes, addSignature);
+            adder = new("add_" + inputEvent.Name.Value, attributes, addSignature);
             if (!isInterfaceParent)
             {
                 adder.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -472,7 +483,9 @@ internal sealed partial class WinMDWriter
 
         outputType.Events.Add(outputEvent);
 
-        // Copy custom attributes from the input event
-        CopyCustomAttributes(inputEvent, outputEvent);
+        // Copy custom attributes from the input event. The '[Deprecated]' attribute is emitted on the
+        // 'add' accessor rather than the event row, matching the placement used by MIDL
+        CopyCustomAttributes(inputEvent, outputEvent, skipDeprecated: true);
+        CopyDeprecatedAttributeToAccessor(inputEvent, adder);
     }
 }
