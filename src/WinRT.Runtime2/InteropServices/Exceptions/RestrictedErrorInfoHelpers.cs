@@ -16,6 +16,9 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 internal static unsafe class RestrictedErrorInfoHelpers
 {
+    private static readonly object BoxedTrue = true;
+    private static readonly object BoxedFalse = false;
+
     /// <summary>
     /// Retrieves the current restricted error info object and sets it for propagation if available.
     /// </summary>
@@ -53,7 +56,7 @@ internal static unsafe class RestrictedErrorInfoHelpers
         {
             // Keep the error object alive so that users could retrieve error information later from the exception data
             exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
-            exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
+            exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject ? BoxedTrue : BoxedFalse;
         }
     }
 
@@ -104,7 +107,7 @@ internal static unsafe class RestrictedErrorInfoHelpers
 
             // Propagate the 'IRestrictedErrorInfo' object reference, so we can restore it later to forward the exception info
             exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] = restrictedErrorObject;
-            exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject;
+            exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] = hasRestrictedLanguageErrorObject ? BoxedTrue : BoxedFalse;
 
             if (internalGetGlobalErrorStateException is not null)
             {
@@ -129,13 +132,8 @@ internal static unsafe class RestrictedErrorInfoHelpers
 
         if (exceptionData is not null)
         {
-            restrictedErrorObject = exceptionData.Contains(WellKnownExceptionDataKeys.RestrictedErrorObjectReference)
-                ? (WindowsRuntimeObjectReference?)exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference]
-                : null;
-
-            isLanguageException =
-                exceptionData.Contains(WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject) &&
-                (bool)exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject]!;
+            restrictedErrorObject = exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] as WindowsRuntimeObjectReference;
+            isLanguageException = exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] is true;
 
             return restrictedErrorObject is not null;
         }
