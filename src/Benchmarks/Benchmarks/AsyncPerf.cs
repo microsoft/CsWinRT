@@ -10,11 +10,13 @@ namespace Benchmarks
     public class AsyncPerf
     {
         ClassWithAsync instance;
+        IAsyncAction completedAction;
 
         [GlobalSetup]
         public void Setup()
         {
             instance = new ClassWithAsync();
+            completedAction = instance.Complete();
         }
 
         [Benchmark]
@@ -39,6 +41,12 @@ namespace Benchmarks
         public async Task<int> YieldReturn()
         {
             return await instance.YieldReturn(5);
+        }
+
+        [Benchmark]
+        public AsyncStatus GetCompletedStatus()
+        {
+            return completedAction.Status;
         }
     }
 }
