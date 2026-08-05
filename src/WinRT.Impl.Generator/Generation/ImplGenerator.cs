@@ -271,8 +271,7 @@ internal static partial class ImplGenerator
             // interfaces implemented by the abstract 'ABI.<Ns>.<Class>' base classes of an authoring
             // projection. Those are 'internal' so they stay out of the supported surface, but the
             // marshalling code CsWinRT generates for an application references them, so they must resolve at
-            // runtime. Nothing else non-public is ever forwarded, and for a projection with no such base
-            // classes the set is empty and only public types are forwarded, as before.
+            // runtime.
             HashSet<string> authoringInterfaces = GetAuthoringInterfaceNames(inputModule);
 
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)

@@ -264,7 +264,6 @@ internal static class AbiImplementableClassFactory
             HashSet<string> writtenEvents = [];
             HashSet<TypeDefinition> writtenInterfaces = [.. baseClosure];
 
-            // Merge property accessors across all implemented interfaces.
             Dictionary<string, PropertyInfo> properties = [];
 
             WriteInterfaceMembersRecursive(writer, context, type, null, writtenMethods, properties, writtenEvents, writtenInterfaces);
@@ -698,7 +697,6 @@ internal static class AbiImplementableClassFactory
         // The explicit interface implementations below need the interface named as it is declared on the base
         string interfaceName = isProtectedSurface ? FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? ifaceType) : string.Empty;
 
-        // Methods
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
             string name = method.GetRawName();
@@ -749,7 +747,6 @@ internal static class AbiImplementableClassFactory
             info.HasSetter |= setter is not null;
         }
 
-        // Events
         foreach (EventDefinition evt in ifaceType.Events)
         {
             string name = evt.GetRawName();
@@ -781,7 +778,6 @@ internal static class AbiImplementableClassFactory
                 """);
         }
 
-        // Recurse into base interfaces.
         WriteInterfaceMembersRecursive(writer, context, ifaceType, nextInstance, writtenMethods, properties, writtenEvents, writtenInterfaces);
     }
 
