@@ -277,6 +277,16 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         WindowsRuntimeObjectComWrappersCallback? objectComWrappersCallback,
         WindowsRuntimeUnsealedObjectComWrappersCallback? unsealedObjectComWrappersCallback)
     {
+        // Save the current state before overwriting it, so that it can be restored below. For a top-level
+        // marshalling operation this is all 'null', but it will not be when re-entering this method from a
+        // marshalling operation that is already in flight on this thread. That happens whenever a marshaller
+        // also needs to marshal nested objects (eg. the one for 'NotifyCollectionChangedEventArgs', which
+        // marshals its 'NewItems'/'OldItems' collections). Restoring, rather than unconditionally clearing,
+        // keeps the state of the outer marshalling operation intact for when control returns to it.
+        WindowsRuntimeObjectComWrappersCallback? previousObjectComWrappersCallback = ObjectComWrappersCallback;
+        WindowsRuntimeUnsealedObjectComWrappersCallback? previousUnsealedObjectComWrappersCallback = UnsealedObjectComWrappersCallback;
+        void* previousCreateObjectTargetInterfacePointer = CreateObjectTargetInterfacePointer;
+
         ObjectComWrappersCallback = objectComWrappersCallback;
         UnsealedObjectComWrappersCallback = unsealedObjectComWrappersCallback;
         CreateObjectTargetInterfacePointer = (void*)externalComObject;
@@ -290,14 +300,15 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         }
         finally
         {
-            // Always reset the shared state after the call, regardless of whether the call succeeded. We want to
-            // make sure that those fields are always 'null' before any following calls. This is necessary because
-            // we cannot guarantee callers will always go through this overload to set them correctly. In particular,
-            // the 'WeakReference<T>' callback might use this 'ComWrappers' instance externally, and if any of these
-            // fields were set it would cause issues. See additional notes below for this in 'CreateObject'.
-            ObjectComWrappersCallback = null;
-            UnsealedObjectComWrappersCallback = null;
-            CreateObjectTargetInterfacePointer = null;
+            // Always restore the shared state after the call, regardless of whether the call succeeded. For a
+            // top-level marshalling operation the saved values are all 'null', so this preserves the invariant
+            // that these fields are 'null' before any following calls. That invariant is necessary because we
+            // cannot guarantee callers will always go through this overload to set them correctly. In particular,
+            // the 'WeakReference<T>' callback might use this 'ComWrappers' instance externally, and if any of
+            // these fields were set it would cause issues. See additional notes below for this in 'CreateObject'.
+            ObjectComWrappersCallback = previousObjectComWrappersCallback;
+            UnsealedObjectComWrappersCallback = previousUnsealedObjectComWrappersCallback;
+            CreateObjectTargetInterfacePointer = previousCreateObjectTargetInterfacePointer;
         }
     }
 
