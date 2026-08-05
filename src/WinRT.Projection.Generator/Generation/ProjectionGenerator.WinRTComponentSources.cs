@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AsmResolver.DotNet;
+using Microsoft.CodeAnalysis.CSharp;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
@@ -44,7 +45,7 @@ internal partial class ProjectionGenerator
         // Nothing to merge if there are no input components. In this case, the
         // projection generator invocation in component mode would not have produced
         // any 'ABI.{ComponentName}.ManagedExports' types either.
-        if (processingState.ComponentAssemblyNames.Count == 0)
+        if (!processingState.HasMergedActivation)
         {
             return;
         }
@@ -142,6 +143,7 @@ internal partial class ProjectionGenerator
 
         // Per-component targets
         targetAssemblyNames.AddRange(processingState.ComponentAssemblyNames);
+        targetAssemblyNames.AddRange(processingState.ActivationFactoryAssemblyNames);
 
         StringBuilder builder = new();
 
@@ -164,6 +166,46 @@ internal partial class ProjectionGenerator
         string destinationPath = Path.Combine(processingState.SourcesFolder, "TypeMapAssemblyTargets.g.cs");
 
         File.WriteAllText(destinationPath, builder.ToString());
+    }
+
+    /// <summary>
+    /// Escapes an assembly name into a valid C# identifier, matching what the CsWinRT source generator does when it
+    /// emits the <c>ABI.&lt;AssemblyName&gt;</c> namespace holding an assembly's <c>ManagedExports</c> type.
+    /// </summary>
+    /// <param name="value">The assembly name to escape.</param>
+    /// <returns>The escaped identifier name.</returns>
+    private static string EscapeIdentifierName(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return "_";
+        }
+
+        string escapedValue;
+
+        if (SyntaxFacts.IsValidIdentifier(value))
+        {
+            escapedValue = value;
+        }
+        else
+        {
+            StringBuilder builder = new(value.Length + 1);
+
+            if (!SyntaxFacts.IsIdentifierStartCharacter(value[0]))
+            {
+                _ = builder.Append('_');
+            }
+
+            foreach (char c in value)
+            {
+                _ = builder.Append(SyntaxFacts.IsIdentifierPartCharacter(c) ? c : '_');
+            }
+
+            escapedValue = builder.ToString();
+        }
+
+        // Keywords (e.g. 'class') are not usable as-is
+        return SyntaxFacts.GetKeywordKind(escapedValue) is not SyntaxKind.None ? $"_{escapedValue}" : escapedValue;
     }
 
     /// <summary>
@@ -242,7 +284,12 @@ internal partial class ProjectionGenerator
         // Writes the invocations to all available components for the current type being activated
         void WriteActivationFactoryInvocations(IndentedTextWriter writer)
         {
-            foreach (string componentAssemblyName in processingState.ComponentAssemblyNames)
+            // Component assemblies resolve to the 'ABI.{ComponentName}.ManagedExports' types generated into this
+            // same assembly, which use the raw module name. Assemblies that only contribute an activation entry
+            // point have no such type here, so they resolve to the one the source generator emitted into them,
+            // whose namespace it escaped into a valid identifier.
+            foreach (string componentAssemblyName in processingState.ComponentAssemblyNames.Concat(
+                processingState.ActivationFactoryAssemblyNames.Select(EscapeIdentifierName)))
             {
                 writer.WriteLine($$"""
                 factory = global::ABI.{{componentAssemblyName}}.ManagedExports.GetActivationFactory(activatableClassId);

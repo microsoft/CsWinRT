@@ -57,7 +57,8 @@ internal partial class ProjectionGenerator
             out HashSet<string> projectionReferenceAssemblies,
             out bool hasTypesToProject,
             out ProjectionWriterOptions writerOptions,
-            out List<string> componentAssemblyNames);
+            out List<string> componentAssemblyNames,
+            out List<string> activationFactoryAssemblyNames);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
@@ -66,7 +67,8 @@ internal partial class ProjectionGenerator
             referencesWithoutProjections,
             writerOptions,
             hasTypesToProject,
-            componentAssemblyNames);
+            componentAssemblyNames,
+            activationFactoryAssemblyNames);
     }
 
     /// <summary>
@@ -95,13 +97,15 @@ internal partial class ProjectionGenerator
     /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
     /// <param name="writerOptions">The resulting writer options.</param>
     /// <param name="componentAssemblyNames">Sorted simple names of input <c>[WindowsRuntimeComponentAssembly]</c> references (populated only in component mode).</param>
+    /// <param name="activationFactoryAssemblyNames">Sorted simple names of input references that only contribute an activation entry point (populated only in component mode).</param>
     private static void BuildWriterOptions(
         ProjectionGeneratorArgs args,
         out string outputFolder,
         out HashSet<string> projectionReferenceAssemblies,
         out bool hasTypesToProject,
         out ProjectionWriterOptions writerOptions,
-        out List<string> componentAssemblyNames)
+        out List<string> componentAssemblyNames,
+        out List<string> activationFactoryAssemblyNames)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -109,6 +113,7 @@ internal partial class ProjectionGenerator
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
         componentAssemblyNames = [];
+        activationFactoryAssemblyNames = [];
 
         List<string> includes = [];
         List<string> excludes = [];
@@ -174,8 +179,11 @@ internal partial class ProjectionGenerator
             }
 
             // Sort for stable codegen output
-            componentAssemblyNames = [.. componentAssemblyNameSet.Union(activationFactoryAssemblyNameSet)];
+            componentAssemblyNames = [.. componentAssemblyNameSet];
             componentAssemblyNames.Sort(StringComparer.Ordinal);
+
+            activationFactoryAssemblyNames = [.. activationFactoryAssemblyNameSet];
+            activationFactoryAssemblyNames.Sort(StringComparer.Ordinal);
 
             // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd')
             foreach (string winmdPath in args.WinMDPaths)

@@ -48,7 +48,7 @@ internal static partial class ProjectionGenerator
         // Nothing to project and nothing to merge: skip the remaining phases entirely (no .dll will be
         // produced at all). An assembly implementing classes declared in existing metadata contributes no
         // types to project, but its activation entry point still has to be merged, so it is not "nothing".
-        if (!processingState.HasTypesToProject && processingState.ComponentAssemblyNames.Count == 0)
+        if (!processingState.HasTypesToProject && !processingState.HasMergedActivation)
         {
             return;
         }
