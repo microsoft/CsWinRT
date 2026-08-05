@@ -37,5 +37,11 @@ namespace Benchmarks
         {
             return instance.GetExistingUnsealedObject();
         }
+
+        [Benchmark]
+        public ClassWithFastAbi NewDerivedAsBase()
+        {
+            return instance.GetNewDerivedAsBase();
+        }
     }
 }
