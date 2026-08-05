@@ -287,15 +287,18 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         bucketSize = 0;
 
+        using SpanOwner<int> bucketStorage = SpanOwner<int>.Allocate(2333, AllocationMode.Clear);
+
         // Search up to some maximum size for the best bucket size we can use for the application
         for (int i = startingBucketSize; i < 2333; i++)
         {
-            using SpanOwner<int> buckets = SpanOwner<int>.Allocate(i, AllocationMode.Clear);
+            Span<int> buckets = bucketStorage.Span[..i];
+            buckets.Clear();
 
             // Increment the number of hits for each key
             foreach ((_, int hash) in typeHierarchyKeyHashes)
             {
-                int currentNumberOfKeysPerChain = ++buckets.Span[(int)((uint)hash % (uint)i)];
+                int currentNumberOfKeysPerChain = ++buckets[(int)((uint)hash % (uint)i)];
 
                 // If for sure this bucket can't be better than the current best, stop right away
                 if (currentNumberOfKeysPerChain >= numberOfKeysPerChain)
@@ -305,7 +308,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             }
 
             // Find the maximum number of keys that would go in a single chain
-            int maxNumberOfKeysPerChain = TensorPrimitives.Max(buckets.Span);
+            int maxNumberOfKeysPerChain = TensorPrimitives.Max(buckets);
 
             // If we found a new best bucket size, track it
             if (maxNumberOfKeysPerChain < numberOfKeysPerChain)
