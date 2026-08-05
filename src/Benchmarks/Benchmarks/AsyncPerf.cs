@@ -48,5 +48,17 @@ namespace Benchmarks
         {
             return completedAction.Status;
         }
+
+        [Benchmark]
+        public IAsyncAction CompletedTaskAsAsyncAction()
+        {
+            return Task.CompletedTask.AsAsyncAction();
+        }
+
+        [Benchmark]
+        public IAsyncOperation<int> CompletedTaskAsAsyncOperation()
+        {
+            return Task.FromResult(42).AsAsyncOperation();
+        }
     }
 }
