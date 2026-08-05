@@ -37,7 +37,8 @@ internal static class WindowsRuntimeTypeHierarchy
         int hashCode = ComputeReadOnlySpanHash(runtimeClassName);
 
         // Get the bucket index, which represents the chain of all colliding potential matches
-        int bucketIndex = WindowsRuntimeTypeHierarchyData.get_Buckets(null)[(int)((uint)hashCode % (uint)WindowsRuntimeTypeHierarchyData.get_Buckets(null).Length)];
+        ReadOnlySpan<int> buckets = WindowsRuntimeTypeHierarchyData.get_Buckets(null);
+        int bucketIndex = buckets[(int)((uint)hashCode % (uint)buckets.Length)];
 
         // Bucket indices of '-1' indicate no possible matches
         if (bucketIndex < 0)
