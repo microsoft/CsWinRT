@@ -343,6 +343,14 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // We always need this, and all callers are expected to be providing one.
         void* interfacePointer = CreateObjectTargetInterfacePointer;
 
+        // Whether we acquired 'interfacePointer' ourselves, and are therefore responsible for releasing it below.
+        // This must be tracked in a local: it cannot be inferred in the 'finally' block by checking whether
+        // 'CreateObjectTargetInterfacePointer' is 'null', because re-entrant marshalling on the same thread (ie.
+        // a marshaller which also marshals nested objects, such as the one for 'NotifyCollectionChangedEventArgs'
+        // marshalling its 'NewItems'/'OldItems' collections) resets that field before we get to observe it. Doing
+        // so would make us release an interface pointer that was supplied by the caller, and that we do not own.
+        bool isInterfacePointerOwned = false;
+
         // There is a rare case where we might not have an input interface pointer, and that is if this
         // call was directly to 'ComWrappers' through the rehydration path in 'WeakReference<T>'. That
         // is, if we had a 'WeakReference<T>' instance pointing to an RCW object which got collected,
@@ -361,6 +369,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
             // Manually 'QueryInterface' to retrieve the 'IInspectable' object we need
             IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IInspectable, out interfacePointer).Assert();
+
+            isInterfacePointerOwned = true;
         }
 
         try
@@ -454,7 +464,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         {
             // If we hit the special case mentioned above where we had to manually 'QueryInterface' for 'IInspectable', as the caller
             // hadn't provided a valid interface pointer, we need to also make sure to release that acquired interface pointer here.
-            if (CreateObjectTargetInterfacePointer is null)
+            if (isInterfacePointerOwned)
             {
                 _ = IUnknownVftbl.ReleaseUnsafe(interfacePointer);
             }
