@@ -85,13 +85,7 @@ internal abstract partial class UniversalTaskAdapter<
         _dataContainer = task;
         _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;
 
-        // Set the completion routine and let the task run
-        _ = task.ContinueWith(
-            continuationAction: static (_, @this) => Unsafe.As<UniversalTaskAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
-            state: this,
-            cancellationToken: CancellationToken.None,
-            continuationOptions: TaskContinuationOptions.ExecuteSynchronously,
-            scheduler: TaskScheduler.Default);
+        InitializeCompletion(task);
     }
 
     /// <summary>
@@ -117,7 +111,17 @@ internal abstract partial class UniversalTaskAdapter<
 
         _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;
 
-        // Set the completion routine and let the task run
+        InitializeCompletion(task);
+    }
+
+    private void InitializeCompletion(Task task)
+    {
+        if (task.IsCompleted)
+        {
+            TaskCompleted();
+            return;
+        }
+
         _ = task.ContinueWith(
             continuationAction: static (_, @this) => Unsafe.As<UniversalTaskAdapter<TResult, TProgress, TCompletedHandler, TProgressHandler>>(@this!).TaskCompleted(),
             state: this,
