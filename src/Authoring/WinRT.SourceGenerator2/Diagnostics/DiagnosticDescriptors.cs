@@ -286,4 +286,17 @@ internal static partial class DiagnosticDescriptors
         description: "A given type should only be used as the target of a single '[WindowsRuntimeNativeExposedType]' attribute in an assembly. CCW marshalling code is only generated once per type, so additional applications of the attribute for the same type have no effect.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT",
         customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for reading from a write-only <see cref="System.Span{T}"/> parameter on a Windows Runtime method.
+    /// </summary>
+    public static readonly DiagnosticDescriptor WriteOnlySpanParameterRead = new(
+        id: "CSWINRT2021",
+        title: "Reading from a write-only 'Span<T>' parameter",
+        messageFormat: """The 'Span<T>' parameter '{0}' is projected as a fill array in the Windows Runtime ABI, which is write-only, so the method implementation should only write to it and not read from it""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A 'Span<T>' parameter on a Windows Runtime method is projected as a fill array in the ABI, meaning the implementation is only allowed to write to it, not read from it. Reading from such a parameter (e.g. by indexing it for a value or a readonly reference, converting it to 'ReadOnlySpan<T>', or iterating over it) is not supported. Use 'ReadOnlySpan<T>' for a parameter that should be read from instead.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
