@@ -162,7 +162,7 @@ internal static class WinMDGeneratorRunner
     /// </summary>
     /// <remarks>
     /// Keys are formatted as <c>Namespace.Type</c> for types and <c>Namespace.Type.Member</c> for methods,
-    /// properties and events. That distinction matters: Windows Runtime metadata places some member
+    /// properties, events and fields. That distinction matters: Windows Runtime metadata places some member
     /// attributes on the accessor method (e.g. <c>get_Value</c>) rather than on the property or event row.
     /// </remarks>
     /// <param name="source">The C# source defining the authored component types.</param>
@@ -248,6 +248,13 @@ internal static class WinMDGeneratorRunner
                 EventDefinition @event = reader.GetEventDefinition(eventHandle);
 
                 AddAttributes($"{owner}.{reader.GetString(@event.Name)}", @event.GetCustomAttributes());
+            }
+
+            foreach (FieldDefinitionHandle fieldHandle in type.GetFields())
+            {
+                FieldDefinition field = reader.GetFieldDefinition(fieldHandle);
+
+                AddAttributes($"{owner}.{reader.GetString(field.Name)}", field.GetCustomAttributes());
             }
         }
 

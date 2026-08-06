@@ -96,6 +96,39 @@ public class Test_ExperimentalAttribute
     }
 
     /// <summary>
+    /// Windows Runtime metadata supports member markers on individual enum members and struct fields,
+    /// which is how the Windows SDK marks a single new enum member of an existing enum experimental.
+    /// </summary>
+    [TestMethod]
+    public void ExperimentalOnFields_IsTranslated()
+    {
+        ILookup<string, string> attributes = WinMDGeneratorRunner.GetGeneratedAttributes("""
+            using System.Diagnostics.CodeAnalysis;
+
+            public enum MyEnum
+            {
+                Stable,
+                [Experimental("TEST0001")]
+                Experimental
+            }
+
+            public struct MyStruct
+            {
+                public int StableField;
+
+                [Experimental("TEST0002")]
+                public int ExperimentalField;
+            }
+            """);
+
+        AssertIsExperimental(attributes, "MyEnum.Experimental");
+        AssertIsExperimental(attributes, "MyStruct.ExperimentalField");
+
+        AssertIsNotExperimental(attributes, "MyEnum.Stable");
+        AssertIsNotExperimental(attributes, "MyStruct.StableField");
+    }
+
+    /// <summary>
     /// Asserts that exactly one Windows Runtime <c>[Experimental]</c> attribute is applied to a row.
     /// </summary>
     /// <param name="attributes">The attributes read back from the generated <c>.winmd</c>.</param>
