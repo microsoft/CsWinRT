@@ -27,3 +27,4 @@ CSWINRT2017 | WindowsRuntime.SourceGenerator | Warning | Public authored type mi
 CSWINRT2018 | WindowsRuntime.SourceGenerator | Warning | '[WindowsRuntimeNativeExposedType]' target type cannot be instantiated
 CSWINRT2019 | WindowsRuntime.SourceGenerator | Warning | '[WindowsRuntimeNativeExposedType]' target type is not a projected class
 CSWINRT2020 | WindowsRuntime.SourceGenerator | Warning | Duplicate '[WindowsRuntimeNativeExposedType]' target type
+CSWINRT2021 | WindowsRuntime.SourceGenerator | Warning | Unsupported '[Experimental]' target for Windows Runtime metadata
