@@ -42,7 +42,7 @@ What the WinMD generator emits into an authored component's `.winmd` for an attr
 
 | C# attribute | Emitted into the `.winmd` as | Notes |
 | --- | --- | --- |
-| `[System.Diagnostics.CodeAnalysis.Experimental(id, ...)]` | `[Windows.Foundation.Metadata.Experimental]` | The diagnostic id, `UrlFormat` and `Message` are dropped: Windows Runtime metadata has nowhere to carry them, and CsWinRT synthesizes its own when the component is projected back. On a property or event the attribute is emitted on the accessor method, matching MIDL. |
+| `[System.Diagnostics.CodeAnalysis.Experimental(id, ...)]` | `[Windows.Foundation.Metadata.Experimental]` | The diagnostic id, `UrlFormat` and `Message` are dropped: Windows Runtime metadata has nowhere to carry them, and CsWinRT synthesizes its own when the component is projected back. On a property or event the attribute is emitted on the accessor method, matching MIDL. On an assembly, a module or a constructor it is dropped, and reported as [CSWINRT2021](#cswinrt2021-unsupported-experimental-targets). |
 | `[Windows.Foundation.Metadata.Deprecated(...)]` | itself | On a property or event it is emitted on the accessor method, matching MIDL. |
 | `[System.Runtime.InteropServices.Guid("...")]` | `[Windows.Foundation.Metadata.Guid(...)]` | Without one, the IID is derived from the type name (UUID v5, as MIDL does). |
 | `[System.AttributeUsage(targets)]` | `[Windows.Foundation.Metadata.AttributeUsage(targets)]`, with `System.AttributeTargets` mapped to `Windows.Foundation.Metadata.AttributeTargets` | |
@@ -53,6 +53,15 @@ What the WinMD generator emits into an authored component's `.winmd` for an attr
 | Any other public attribute type | itself | Non-public attribute types, and attributes whose signature cannot be read, are skipped. |
 
 > **Note**: `[System.Obsolete]` is **not** translated into `[Windows.Foundation.Metadata.Deprecated]`. It is copied as-is, so it is invisible to every other language projection. Use `[Windows.Foundation.Metadata.Deprecated]` to deprecate an API of an authored component. `[Experimental]` is the exception to that rule only because the Windows Runtime attribute has no projected form to apply.
+
+### CSWINRT2021: unsupported `[Experimental]` targets
+
+The .NET `[Experimental]` attribute supports more targets than the Windows Runtime one it is translated into. Types (runtime classes, interfaces, structs, enums and delegates), methods, properties, events and fields (individual enum members and struct fields) all translate; **assemblies**, **modules** and **constructors** have no Windows Runtime metadata target that can carry the marker:
+
+- An assembly or a module has no counterpart at all: the generator produces a fresh `.winmd` containing only the authored types.
+- A constructor is exposed through an activation factory method (`IFooFactory.CreateFoo`), and the `.ctor` row on the runtime class is not where markers live. MIDL never emits one there, and no `.ctor` row in the Windows SDK carries a `[Deprecated]` or `[Experimental]` attribute.
+
+Rather than emit the marker where nothing would read it, which would silently make the API look stable to every other language projection, those applications are dropped and `CSWINRT2021` reports them at the source. Mark the whole runtime class as experimental to cover its constructors.
 
 ## Related documentation
 
