@@ -123,8 +123,9 @@ internal sealed partial class WinMDWriter
 
         outputType.Methods.Add(outputMethod);
 
-        // Copy custom attributes from the input method
-        CopyCustomAttributes(inputMethod, outputMethod);
+        // Copy custom attributes from the input method. Constructors are exposed to Windows Runtime
+        // through activation factory methods, so their '.ctor' row carries no '[Experimental]' marker.
+        CopyCustomAttributes(inputMethod, outputMethod, skipExperimentalAttribute: isConstructor);
     }
 
     /// <summary>

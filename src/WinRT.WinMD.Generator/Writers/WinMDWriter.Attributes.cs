@@ -363,13 +363,31 @@ internal sealed partial class WinMDWriter
     /// or event row, because those are emitted on the accessor method instead (see
     /// <see cref="CopyAccessorAttributes"/>).
     /// </param>
-    private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target, bool skipAccessorAttributes = false)
+    /// <param name="skipExperimentalAttribute">
+    /// Whether to skip the .NET <c>[Experimental]</c> attribute. This is set when copying to a constructor,
+    /// which has no Windows Runtime target that can carry it (see <see cref="AddExperimentalAttribute"/>).
+    /// </param>
+    private void CopyCustomAttributes(
+        IHasCustomAttribute source,
+        IHasCustomAttribute target,
+        bool skipAccessorAttributes = false,
+        bool skipExperimentalAttribute = false)
     {
         foreach (CustomAttribute attribute in source.CustomAttributes)
         {
             // The accessor attributes on properties and events are emitted on the accessor method
             // (matching MIDL), so they are skipped here when copying to the property or event row
             if (skipAccessorAttributes && IsAccessorAttribute(attribute))
+            {
+                continue;
+            }
+
+            // Windows Runtime has no constructor target for '[Experimental]': constructors are exposed
+            // through activation factory methods, and the '.ctor' row on a runtime class carries no such
+            // marker (MIDL never emits one there, and no Windows SDK '.ctor' row has one). The application
+            // is reported by the 'CSWINRT2021' analyzer instead of being silently emitted where nothing
+            // would ever read it.
+            if (skipExperimentalAttribute && IsDotNetExperimentalAttribute(attribute))
             {
                 continue;
             }

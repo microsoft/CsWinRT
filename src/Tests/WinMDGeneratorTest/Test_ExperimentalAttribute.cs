@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Linq;
 using WinMDGeneratorTest.Helpers;
 
@@ -18,6 +19,11 @@ namespace WinMDGeneratorTest;
 /// <para>
 /// The .NET attribute's diagnostic id, url format and message have no Windows Runtime counterpart and
 /// are dropped, so the tests only assert the presence and placement of the translated attribute.
+/// </para>
+/// <para>
+/// The .NET attribute also supports targets the Windows Runtime one does not (assemblies, modules and
+/// constructors). Those applications are not translated, and are reported by the <c>CSWINRT2021</c>
+/// analyzer instead.
 /// </para>
 /// </remarks>
 [TestClass]
@@ -129,6 +135,45 @@ public class Test_ExperimentalAttribute
     }
 
     /// <summary>
+    /// Windows Runtime exposes constructors through activation factory methods, and the <c>.ctor</c>
+    /// row on a runtime class carries no marker (no Windows SDK <c>.ctor</c> row has one). The
+    /// application is reported by the <c>CSWINRT2021</c> analyzer instead.
+    /// </summary>
+    [TestMethod]
+    public void ExperimentalOnConstructors_IsNotTranslated()
+    {
+        ILookup<string, string> attributes = WinMDGeneratorRunner.GetGeneratedAttributes("""
+            using System.Diagnostics.CodeAnalysis;
+
+            public sealed class MyClass
+            {
+                [Experimental("TEST0001")]
+                public MyClass()
+                {
+                }
+
+                [Experimental("TEST0002")]
+                public MyClass(int value)
+                {
+                }
+
+                [Experimental("TEST0003")]
+                public int ExperimentalMethod() => 42;
+            }
+            """);
+
+        AssertIsNotExperimental(attributes, "MyClass..ctor");
+        AssertIsNotExperimental(attributes, "IMyClassFactory.CreateMyClass");
+
+        // The marker is still translated for every other member of the same type
+        AssertIsExperimental(attributes, "MyClass.ExperimentalMethod");
+
+        // Assert the complete set of rows, so no other row (e.g. the synthesized default or factory
+        // interface a constructor is projected into) silently carries the marker either
+        AssertExperimentalRows(attributes, "IMyClassClass.ExperimentalMethod", "MyClass.ExperimentalMethod");
+    }
+
+    /// <summary>
     /// Asserts that exactly one Windows Runtime <c>[Experimental]</c> attribute is applied to a row.
     /// </summary>
     /// <param name="attributes">The attributes read back from the generated <c>.winmd</c>.</param>
@@ -150,5 +195,22 @@ public class Test_ExperimentalAttribute
         bool isExperimental = attributes[row].Contains(WindowsRuntimeExperimentalAttribute);
 
         Assert.IsFalse(isExperimental, $"'{row}' should have no '[{WindowsRuntimeExperimentalAttribute}]' applied.");
+    }
+
+    /// <summary>
+    /// Asserts the complete set of metadata rows carrying a Windows Runtime <c>[Experimental]</c> attribute.
+    /// </summary>
+    /// <param name="attributes">The attributes read back from the generated <c>.winmd</c>.</param>
+    /// <param name="rows">The metadata rows expected to carry the attribute (see <c>WinMDGeneratorRunner.GetGeneratedAttributes</c>).</param>
+    private static void AssertExperimentalRows(ILookup<string, string> attributes, params string[] rows)
+    {
+        string actualRows = string.Join(", ", attributes
+            .Where(static group => group.Contains(WindowsRuntimeExperimentalAttribute))
+            .Select(static group => group.Key)
+            .Order(StringComparer.Ordinal));
+
+        string expectedRows = string.Join(", ", rows.Order(StringComparer.Ordinal));
+
+        Assert.AreEqual(expectedRows, actualRows, $"Unexpected set of rows carrying '[{WindowsRuntimeExperimentalAttribute}]'.");
     }
 }
