@@ -21,6 +21,7 @@ Generated C# source can be compiled into interop assemblies, similar to how [C++
 - [Customizing C#/WinRT](nuget/readme.md)
 - [NativeAOT and Trimming support](docs/aot-trimming.md)
 - [Authoring C#/WinRT components](docs/authoring.md)
+- [Implementing Windows Runtime types defined in an existing .winmd](docs/implementing-winmd-types.md)
 - [About WinRT.Host.dll](docs/hosting.md)
 - [C#/WinRT version history](docs/version-history.md)
 - [Repository structure](docs/structure.md)
