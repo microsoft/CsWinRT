@@ -101,7 +101,16 @@ internal static class AbiImplementableClassFactory
         // they actually declare any statics). All other runtime classes always get an instance base:
         // it is separate from the (possibly sealed) projected class and bridges to it via an implicit
         // operator, so it applies to both sealed and unsealed runtime classes.
-        return !type.IsStatic || HasFactoryInterfaces(context, type);
+        if (type.IsStatic)
+        {
+            return HasFactoryInterfaces(context, type);
+        }
+
+        // The base is chained to by name, so it has to be emitted as well. It is not when it is excluded
+        // from this projection (e.g. a base class from another '.winmd'), or when it is itself skipped by
+        // one of the checks above. Emitting anyway would reference a class that does not exist.
+        return GetImplementableBaseType(context, type) is not { } baseType ||
+               (context.Settings.Filter.Includes(baseType.FullName) && ShouldEmit(context, baseType));
     }
 
     /// <summary>
@@ -263,6 +272,14 @@ internal static class AbiImplementableClassFactory
             HashSet<string> writtenMethods = [];
             HashSet<string> writtenEvents = [];
             HashSet<TypeDefinition> writtenInterfaces = [.. baseClosure];
+
+            // Seed the member sets with what the base already declares. Skipping its interfaces is not
+            // enough: a new interface can declare a member with the same signature as one the base already
+            // declared 'abstract', and redeclaring it here would hide the inherited member.
+            foreach (TypeDefinition baseInterface in baseClosure)
+            {
+                CollectDeclaredMemberKeys(baseInterface, writtenMethods, writtenEvents);
+            }
 
             Dictionary<string, PropertyInfo> properties = [];
 
@@ -503,7 +520,16 @@ internal static class AbiImplementableClassFactory
             }
 
             // The trailing two parameters are always the outer and the inner (see the remarks above)
-            int userParameterCount = sig.Parameters.Count >= 2 ? sig.Parameters.Count - 2 : sig.Parameters.Count;
+            if (sig.Parameters.Count < 2)
+            {
+                continue;
+            }
+
+            int userParameterCount = sig.Parameters.Count - 2;
+
+            // Name them as the metadata does, rather than assuming the names MIDL happens to produce
+            IndentedTextWriterCallback outerParameter = IdentifierEscaping.WriteEscapedIdentifier(sig.Parameters[^2].GetRawName());
+            IndentedTextWriterCallback innerParameter = IdentifierEscaping.WriteEscapedIdentifier(sig.Parameters[^1].GetRawName());
 
             void WriteUserParameters(IndentedTextWriter writer)
             {
@@ -532,7 +558,7 @@ internal static class AbiImplementableClassFactory
             writer.WriteLine(isMultiline: true, $$"""
                 {{projectedType}} {{TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format()}}.{{name}}({{parameters}})
                 {
-                    if (baseInterface is not null)
+                    if ({{outerParameter}} is not null)
                     {
                         throw new global::System.NotSupportedException(
                             "Composing a Windows Runtime type implemented in C# is not supported. " +
@@ -541,7 +567,7 @@ internal static class AbiImplementableClassFactory
 
                     {{nameStripped}} instance = {{name}}({{WriteUserArguments}});
 
-                    innerInterface = instance;
+                    {{innerParameter}} = instance;
 
                     return instance;
                 }
@@ -857,6 +883,25 @@ internal static class AbiImplementableClassFactory
         (string ns, string name) = interfaceType.Names();
 
         return MappedTypes.Get(ns, name) is { HasCustomMembersOutput: true };
+    }
+
+    /// <summary>
+    /// Records the dedupe keys of the members an interface declares, without emitting them.
+    /// </summary>
+    /// <param name="ifaceType">The interface to inspect.</param>
+    /// <param name="writtenMethods">The set of method dedupe keys to add to.</param>
+    /// <param name="writtenEvents">The set of event names to add to.</param>
+    private static void CollectDeclaredMemberKeys(TypeDefinition ifaceType, HashSet<string> writtenMethods, HashSet<string> writtenEvents)
+    {
+        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        {
+            _ = writtenMethods.Add(new MethodSignatureInfo(method).GetDedupeKey(method.GetRawName()));
+        }
+
+        foreach (EventDefinition evt in ifaceType.Events)
+        {
+            _ = writtenEvents.Add(evt.GetRawName());
+        }
     }
 
     /// <summary>
