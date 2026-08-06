@@ -13,6 +13,7 @@ parameters:
     - DerivedClassAsBaseClass
     - CCW
     - TypeMarshaling
+    - ImplementWinMDTypes
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

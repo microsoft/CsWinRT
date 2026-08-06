@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using ImplementWinMDTypes;
+using WindowsRuntime.InteropServices;
 
 // Implements Windows Runtime types declared in 'TestComponent' metadata by deriving from the abstract
 // bases the projection generates for them.
@@ -80,7 +82,128 @@ if (projectedDerived is null)
     return 110;
 }
 
+// Everything above activates in managed code. Native callers instead go through the generated activation
+// entry point ('DllGetActivationFactory' forwards to it), and then call the returned factory through its
+// COM vtable. The checks below take that same path.
+unsafe
+{
+    // A type implemented in C# is activated by the name of the class it implements, and its factory is the
+    // one written above. The activated instance must be indistinguishable from the real thing to a native
+    // caller, so it has to report the implemented runtime class name rather than the implementing type's.
+    if (!NativeActivate("TestComponent.Class", out void* classInstance))
+    {
+        return 111;
+    }
+
+    try
+    {
+        if (!IsRuntimeClassName(classInstance, "TestComponent.Class"))
+        {
+            return 112;
+        }
+    }
+    finally
+    {
+        Release(classInstance);
+    }
+
+    // A class the application does not implement is not activatable from here
+    if (ABI.ImplementWinMDTypes.ManagedExports.GetActivationFactory("TestComponent.NotImplemented".AsSpan()) is not null)
+    {
+        return 113;
+    }
+}
+
 return 100;
+
+/// <summary>
+/// Activates a runtime class the way a native caller does: through the generated activation entry point,
+/// then <c>IActivationFactory.ActivateInstance</c> on the returned factory's COM vtable.
+/// </summary>
+static unsafe bool NativeActivate(string runtimeClassName, out void* instance)
+{
+    instance = null;
+
+    void* factory = ABI.ImplementWinMDTypes.ManagedExports.GetActivationFactory(runtimeClassName.AsSpan());
+
+    if (factory is null)
+    {
+        return false;
+    }
+
+    try
+    {
+        if (Marshal.QueryInterface((nint)factory, WellKnownInterfaceIIDs.IID_IActivationFactory, out nint activationFactory) != 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            void* activated;
+
+            // 'IActivationFactory.ActivateInstance' follows the 3 'IUnknown' and 3 'IInspectable' slots
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)activationFactory)[6])((void*)activationFactory, &activated);
+
+            if (hr != 0)
+            {
+                return false;
+            }
+
+            instance = activated;
+
+            return instance is not null;
+        }
+        finally
+        {
+            Release((void*)activationFactory);
+        }
+    }
+    finally
+    {
+        Release(factory);
+    }
+}
+
+/// <summary>
+/// Checks the runtime class name a COM object reports through <c>IInspectable.GetRuntimeClassName</c>.
+/// </summary>
+static unsafe bool IsRuntimeClassName(void* instance, string expected)
+{
+    void* name = null;
+
+    try
+    {
+        // 'GetRuntimeClassName' is the second of the three 'IInspectable' slots
+        if (((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)instance)[4])(instance, &name) != 0)
+        {
+            return false;
+        }
+
+        uint length;
+        char* buffer = WindowsGetStringRawBuffer((nint)name, &length);
+
+        return expected == new string(buffer, 0, (int)length);
+    }
+    finally
+    {
+        _ = WindowsDeleteString((nint)name);
+    }
+}
+
+static unsafe void Release(void* ptr)
+{
+    if (ptr is not null)
+    {
+        _ = Marshal.Release((nint)ptr);
+    }
+}
+
+[DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+static extern unsafe char* WindowsGetStringRawBuffer(nint hstring, uint* length);
+
+[DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+static extern int WindowsDeleteString(nint hstring);
 
 namespace ImplementWinMDTypes
 {
