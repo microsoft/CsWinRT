@@ -114,6 +114,34 @@ unsafe
     }
 }
 
+// Converting the same implementation again gives back the same projected instance. The wrapper is cached
+// against the COM pointer for the authored object, which is itself cached, so identity holds for as long
+// as the projected instance is alive.
+if (!ReferenceEquals(projectedClass, (global::TestComponent.Class)myClass))
+{
+    return 114;
+}
+
+// The projected instance wraps the implementation, so it is a distinct object from it
+if (ReferenceEquals(projectedClass, myClass))
+{
+    return 115;
+}
+
+// A separate implementation gets its own projected instance
+MyClass otherClass = new();
+
+if (ReferenceEquals(projectedClass, (global::TestComponent.Class)otherClass))
+{
+    return 116;
+}
+
+// The same holds for a composable class, which resolves through a different wrapper type
+if (!ReferenceEquals(projectedComposable, (global::TestComponent.Composable)myComposable))
+{
+    return 117;
+}
+
 return 100;
 
 /// <summary>
