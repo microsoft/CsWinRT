@@ -63,4 +63,12 @@ internal sealed class CSharpCodeFixTest<TAnalyzer, TCodeFixer> : CSharpCodeFixTe
     {
         return new CSharpParseOptions(this.languageVersion, DocumentationMode.Diagnose);
     }
+
+    /// <inheritdoc/>
+    protected override CompilationOptions CreateCompilationOptions()
+    {
+        // Match 'CSharpAnalyzerTest<TAnalyzer>' and enable unsafe blocks, as some analyzers (eg. the one
+        // producing CsWinRT1030) specifically report diagnostics when unsafe blocks are not available.
+        return new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true);
+    }
 }

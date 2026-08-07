@@ -170,13 +170,21 @@ namespace Generator
             context.RegisterImplementationSourceOutput(bindableCustomPropertyAttributes, GenerateBindableCustomProperties);
         }
 
-        // Restrict to non-projected classes which can be instantiated
+        // Restrict to non-projected types which can be instantiated and boxed,
         // and are partial allowing to add attributes.
         private static bool NeedVtableAttribute(SyntaxNode node)
         {
-            return node is ClassDeclarationSyntax declaration &&
-                !declaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword)) &&
-                GeneratorHelper.IsPartial(declaration) &&
+            // 'ref struct'-s can never be boxed or cast to an interface, so they can never
+            // end up needing a CCW. Note that 'RecordDeclarationSyntax' also covers 'record
+            // struct' declarations, so those are handled here as well.
+            if (node is not TypeDeclarationSyntax declaration ||
+                node is InterfaceDeclarationSyntax ||
+                declaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.StaticKeyword) || m.IsKind(SyntaxKind.AbstractKeyword) || m.IsKind(SyntaxKind.RefKeyword)))
+            {
+                return false;
+            }
+
+            return GeneratorHelper.IsPartial(declaration) &&
                 !GeneratorHelper.IsWinRTType(declaration); // Making sure it isn't an RCW we are projecting.
         }
 
@@ -211,7 +219,7 @@ namespace Generator
             bool isCsWinRTCcwLookupTableGeneratorEnabled)
         {
             return GetVtableAttributeToAdd(
-                context.SemanticModel.GetDeclaredSymbol(context.Node as ClassDeclarationSyntax),
+                context.SemanticModel.GetDeclaredSymbol(context.Node as TypeDeclarationSyntax),
                 typeMapper,
                 context.SemanticModel.Compilation,
                 checkForComponentTypes,
@@ -718,7 +726,9 @@ namespace Generator
                 symbol is IArrayTypeSymbol,
                 isDelegate,
                 symbol.DeclaredAccessibility == Accessibility.Public,
-                GetRuntimeClassName(interfaceToUseForRuntimeClassName, isWinRTType, mapper));
+                GetRuntimeClassName(interfaceToUseForRuntimeClassName, isWinRTType, mapper),
+                symbol.TypeKind,
+                symbol.IsRecord);
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
@@ -995,9 +1005,10 @@ namespace Generator
                             source.AppendLine($$"""[global::WinRT.WinRTRuntimeClassName("{{vtableAttribute.RuntimeClassName}}")]""");
                         }
 
+                        // The keyword has to match the one used by the original declaration (eg. 'struct' or 'record struct')
                         source.AppendLine($$"""
                             [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
-                            partial class {{vtableAttribute.ClassName}}
+                            partial {{TypeInfo.GetTypeKeyword(vtableAttribute.TypeKind, vtableAttribute.IsRecord)}} {{vtableAttribute.ClassName}}
                             {
                             }
                             """);
@@ -1495,19 +1506,28 @@ namespace Generator
                     }
 
                     // This handles the case where the source generator wasn't able to run
-                    // and put the WinRTExposedType attribute on the class. This can be in the
-                    // scenario where the caller defined their own generic class and
-                    // pass it as a parameter.  With generic classes, the interface itself
+                    // and put the WinRTExposedType attribute on the type. This can be in the
+                    // scenario where the caller defined their own generic type and
+                    // pass it as a parameter.  With generic types, the interface itself
                     // might be generic too and due to that we handle it here.
                     // This also handles the case where the type being passed is from a different
                     // library which happened to not run the AOT optimizer.  So as a best effort,
                     // we handle it here.
-                    if (instantiatedTypeSymbol.TypeKind == TypeKind.Class)
+                    // Value types are handled here as well, given they can implement WinRT interfaces
+                    // (eg. 'ImmutableArray<T>' implements 'IReadOnlyList<T>' and 'IList') and get boxed
+                    // or cast, in which case their CCW also needs the vtable entries for those interfaces.
+                    if (instantiatedTypeSymbol.TypeKind is TypeKind.Class or TypeKind.Struct &&
+                        // 'ref struct'-s can never be boxed or cast to an interface, so they never need a CCW.
+                        !instantiatedTypeSymbol.IsRefLikeType &&
+                        // Projected WinRT structs (eg. 'Windows.Foundation.Point'), as well as custom mapped ones
+                        // such as 'KeyValuePair<TKey, TValue>' and 'Nullable<T>', are marshalled by the projection
+                        // itself when they're boxed, so they never go on the lookup table.
+                        !(instantiatedTypeSymbol.IsValueType && isWinRTType(instantiatedTypeSymbol, typeMapper)))
                     {
-                        bool addClassOnLookupTable = false;
+                        bool addTypeOnLookupTable = false;
                         if (instantiatedTypeSymbol.MetadataName.Contains("`"))
                         {
-                            addClassOnLookupTable =
+                            addTypeOnLookupTable =
                                 !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
                                 // If the type is defined in the same assembly as what the source generator is running on,
                                 // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
@@ -1519,7 +1539,7 @@ namespace Generator
                         }
                         else if (!isWinRTType(instantiatedTypeSymbol, typeMapper))
                         {
-                            addClassOnLookupTable =
+                            addTypeOnLookupTable =
                                 !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
                                 // If the type is defined in the same assembly as what the source generator is running on,
                                 // we let the WinRTExposedType attribute generator handle it.
@@ -1528,7 +1548,7 @@ namespace Generator
                                 (!SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol, convertedToTypeSymbol) || isGeneratedBindableCustomPropertyClass);
                         }
 
-                        if (addClassOnLookupTable)
+                        if (addTypeOnLookupTable)
                         {
                             var vtableAtribute = GetVtableAttributeToAdd(instantiatedTypeSymbol, isManagedOnlyType, isWinRTType, typeMapper, context.SemanticModel.Compilation, false);
                             if (vtableAtribute != default)
@@ -2015,7 +2035,9 @@ namespace Generator
         bool IsArray,
         bool IsDelegate,
         bool IsPublic,
-        string RuntimeClassName = default);
+        string RuntimeClassName = default,
+        TypeKind TypeKind = TypeKind.Class,
+        bool IsRecord = false);
 
     sealed record VtableEntry(
         EquatableArray<string> Interfaces,

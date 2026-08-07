@@ -1700,4 +1700,128 @@ public class DiagnosticAnalyzerTests
                 ("cswinrt_aot_warning_suppressed_interfaces", "System.IDisposable, System.Collections.Generic.IList<int>, System.Collections.Generic.IEnumerable<int>, System.Collections.IEnumerable")
             ]);
     }
+
+    // Tests for https://github.com/microsoft/CsWinRT/issues/2507. Value types can implement WinRT interfaces
+    // and be boxed, so they need a vtable generated for them too, which requires them to be partial as well.
+
+    [TestMethod]
+    public async Task Struct_ImplementingWinRTInterfaces_NotPartial_Warns()
+    {
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            struct {|CsWinRT1028:MyCollection|} : IReadOnlyList<int>
+            {
+                public int this[int index] => 0;
+                public int Count => 0;
+                public IEnumerator<int> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("CsWinRTAotWarningLevel", "2")]);
+    }
+
+    [TestMethod]
+    public async Task Record_ImplementingWinRTInterfaces_NotPartial_Warns()
+    {
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            record {|CsWinRT1028:MyCollection|} : IReadOnlyList<int>
+            {
+                public int this[int index] => 0;
+                public int Count => 0;
+                public IEnumerator<int> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("CsWinRTAotWarningLevel", "2")]);
+    }
+
+    [TestMethod]
+    public async Task RecordStruct_ImplementingWinRTInterfaces_NotPartial_Warns()
+    {
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            record struct {|CsWinRT1028:MyCollection|} : IReadOnlyList<int>
+            {
+                public int this[int index] => 0;
+                public int Count => 0;
+                public IEnumerator<int> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("CsWinRTAotWarningLevel", "2")]);
+    }
+
+    [TestMethod]
+    public async Task Struct_ImplementingWinRTInterfaces_Partial_DoesNotWarn()
+    {
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            partial struct MyCollection : IReadOnlyList<int>
+            {
+                public int this[int index] => 0;
+                public int Count => 0;
+                public IEnumerator<int> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("CsWinRTAotWarningLevel", "2")]);
+    }
+
+    [TestMethod]
+    public async Task RefStruct_ImplementingWinRTInterfaces_NotPartial_DoesNotWarn()
+    {
+        // A 'ref struct' can never be boxed or cast to an interface, so it never needs a vtable.
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            ref struct MyCollection : IReadOnlyList<int>
+            {
+                public int this[int index] => 0;
+                public int Count => 0;
+                public IEnumerator<int> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("CsWinRTAotWarningLevel", "2")]);
+    }
+
+    [TestMethod]
+    public async Task Struct_WithNoWinRTInterfaces_NotPartial_DoesNotWarn()
+    {
+        const string source = """
+            struct MyValue
+            {
+                public int Value;
+            }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig: [("CsWinRTAotOptimizerEnabled", "auto"), ("CsWinRTAotWarningLevel", "2")]);
+    }
 }

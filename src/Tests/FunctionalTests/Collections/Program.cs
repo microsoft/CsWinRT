@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -477,6 +478,60 @@ if (objectArr.Length != 2 || objectArr[0] is not Class c || c != instance || obj
     return 105;
 }
 
+// Regression test for https://github.com/microsoft/CsWinRT/issues/2507: value types can implement WinRT
+// interfaces too (eg. 'ImmutableArray<T>' implements 'IReadOnlyList<T>', 'IList<T>' and 'IList'), so when
+// one of them is boxed or cast, the CCW created for it also needs the vtable entries for those interfaces.
+System.Collections.IEnumerable immutableStringArray = ImmutableArray.Create("apples", "oranges", "pears");
+instance.BindableIterableProperty = immutableStringArray;
+if (!ReferenceEquals(immutableStringArray, instance.BindableIterableProperty))
+{
+    return 106;
+}
+
+// Same as above, but with the immutable array created through a collection expression.
+ImmutableArray<string> immutableStringArray2 = ["apples", "oranges", "pears"];
+instance.BindableIterableProperty = immutableStringArray2;
+if (!instance.CheckForBindableObjectInterface(immutableStringArray2))
+{
+    return 107;
+}
+
+// Same as above, but with the immutable array created through a builder and 'ToImmutable()'.
+var immutableStringArrayBuilder = ImmutableArray.CreateBuilder<string>();
+immutableStringArrayBuilder.Add("apples");
+immutableStringArrayBuilder.Add("oranges");
+ImmutableArray<string> immutableStringArray3 = immutableStringArrayBuilder.ToImmutable();
+instance.BindableIterableProperty = immutableStringArray3;
+if (!instance.CheckForBindableObjectInterface(immutableStringArray3))
+{
+    return 108;
+}
+
+// Going through a native caller that queries for 'IIterable<IInspectable>' (ie. what XAML does when
+// binding to a collection) and then enumerates it through the enumerator adapter.
+if (!instance.CheckForBindableObjectInterface(ImmutableArray.Create(new CustomClass(), new CustomClass())))
+{
+    return 109;
+}
+
+// Value types of non covariant element types should not project 'IEnumerable<object>', same as for classes.
+if (instance.CheckForBindableObjectInterface(ImmutableArray.Create(1, 2, 3)))
+{
+    return 110;
+}
+
+// Also validate the scenario for value types declared in this same assembly, which get the
+// '[WinRTExposedType]' attribute generated on them (and so need to be marked partial).
+if (!instance.CheckForBindableObjectInterface(new CustomValueTypeCollection()))
+{
+    return 111;
+}
+
+if (!instance.CheckForBindableObjectInterface(new CustomRecordStructCollection()))
+{
+    return 112;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
@@ -515,4 +570,32 @@ sealed partial class CustomObservableCollection : System.Collections.ObjectModel
 sealed partial class CustomGenericObservableCollection<T> : System.Collections.ObjectModel.ObservableCollection<T>
 {
     public int CustomCount => Items.Count;
+}
+
+// Value types implementing WinRT interfaces and declared in this same assembly, so they get the
+// '[WinRTExposedType]' attribute generated on them (which requires them to be marked partial).
+partial struct CustomValueTypeCollection : IReadOnlyList<CustomClass>
+{
+    private static readonly CustomClass[] Items = [new CustomClass(), new CustomClass()];
+
+    public readonly CustomClass this[int index] => Items[index];
+
+    public readonly int Count => Items.Length;
+
+    public readonly IEnumerator<CustomClass> GetEnumerator() => ((IEnumerable<CustomClass>)Items).GetEnumerator();
+
+    readonly System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => Items.GetEnumerator();
+}
+
+partial record struct CustomRecordStructCollection : IReadOnlyList<CustomClass>
+{
+    private static readonly CustomClass[] Items = [new CustomClass()];
+
+    public readonly CustomClass this[int index] => Items[index];
+
+    public readonly int Count => Items.Length;
+
+    public readonly IEnumerator<CustomClass> GetEnumerator() => ((IEnumerable<CustomClass>)Items).GetEnumerator();
+
+    readonly System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => Items.GetEnumerator();
 }

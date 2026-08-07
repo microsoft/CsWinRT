@@ -2,6 +2,7 @@ Compat issues with assembly WinRT.Runtime:
 TypesMustExist : Type 'WinRT.GeneratedWinRTExposedExternalTypeAttribute' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.GeneratedWinRTExposedTypeAttribute' does not exist in the reference but it does exist in the implementation.
 CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'WinRT.GeneratedBindableCustomPropertyAttribute' changed from '[AttributeUsageAttribute(AttributeTargets.Class | AttributeTargets.Struct, Inherited=false, AllowMultiple=false)]' in the implementation to '[AttributeUsageAttribute(AttributeTargets.Class, Inherited=false, AllowMultiple=false)]' in the reference.
+CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'WinRT.WinRTRuntimeClassNameAttribute' changed from '[AttributeUsageAttribute(AttributeTargets.Class | AttributeTargets.Struct, Inherited=false, AllowMultiple=false)]' in the implementation to '[AttributeUsageAttribute(AttributeTargets.Class, Inherited=false, AllowMultiple=false)]' in the reference.
 TypesMustExist : Type 'WinRT.WinRTManagedOnlyTypeDetails' does not exist in the reference but it does exist in the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableAttribute' exists on 'WinRT.ActivationFactory' in the implementation but not the reference.
 CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.NullableContextAttribute' exists on 'WinRT.ActivationFactory' in the implementation but not the reference.
@@ -15,4 +16,4 @@ MembersMustExist : Member 'protected void ABI.WinRT.Interop.EventSource<TDelegat
 MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource<T>..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Type.CopyManagedArray(System.Type[], System.IntPtr)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 16
+Total Issues: 17
