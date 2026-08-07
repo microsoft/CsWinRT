@@ -287,10 +287,12 @@ internal static class AbiImplementableClassFactory
 
             EmitMergedProperties(writer, properties, writtenMethods);
 
-            // The conversion creates a CCW for the authored object and then resolves the projected RCW for
-            // it (which goes through the usual 'ComWrappers' callback). A reference assembly carries no
-            // implementation, so it only declares the operator; the real body is regenerated at publish
-            // time, when this is compiled against the runtime implementation assembly.
+            // The conversion wraps the authored object: it creates a COM Callable Wrapper for it and then
+            // resolves the projected type for that. It has to wrap rather than unwrap, since the authored
+            // type derives from this base and not from the projected class, so there is no existing instance
+            // of the latter to hand back. A reference assembly carries no implementation, so it only declares
+            // the operator; the real body is regenerated at publish time, when this is compiled against the
+            // runtime implementation assembly.
             writer.WriteLine();
 
             if (context.Settings.ReferenceProjection)
@@ -314,7 +316,7 @@ internal static class AbiImplementableClassFactory
 
                         using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
 
-                        return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManaged(objectReferenceValue.GetThisPtrUnsafe())!;
+                        return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManagedUnsafe(objectReferenceValue.GetThisPtrUnsafe())!;
                     }
                     """);
             }

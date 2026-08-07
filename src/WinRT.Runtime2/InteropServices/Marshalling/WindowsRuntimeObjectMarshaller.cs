@@ -90,6 +90,27 @@ public static unsafe class WindowsRuntimeObjectMarshaller
     }
 
     /// <summary>
+    /// Converts an unmanaged pointer to a Windows Runtime object to a managed object, always producing a
+    /// wrapper for it, even when the pointer is a COM Callable Wrapper for an existing managed object.
+    /// </summary>
+    /// <param name="value">The input object to convert to managed.</param>
+    /// <returns>The resulting managed object.</returns>
+    /// <remarks>
+    /// This is needed to project a Windows Runtime class implemented in C#: the implementation does not derive
+    /// from the projected class, so the projected type can only be obtained by wrapping it. Unwrapping (which is
+    /// what <see cref="ConvertToManaged(void*)"/> does) would hand back the implementation instead.
+    /// </remarks>
+    public static object? ConvertToManagedUnsafe(void* value)
+    {
+        return value is null
+            ? null
+            : WindowsRuntimeComWrappers.Default.GetOrCreateObjectForComInstanceUnsafe(
+                externalComObject: (nint)value,
+                objectComWrappersCallback: null,
+                unsealedObjectComWrappersCallback: null);
+    }
+
+    /// <summary>
     /// Converts an unmanaged pointer to a Windows Runtime object to a managed object.
     /// </summary>
     /// <typeparam name="TCallback">The <see cref="IWindowsRuntimeObjectComWrappersCallback"/> type to use for marshalling.</typeparam>
