@@ -361,7 +361,12 @@ internal static class AbiImplementableClassFactory
         }
 
         writer.WriteLine();
-        writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}))]");
+
+        // Record whether the class can only be activated through the parameterless 'IActivationFactory', which is
+        // the one shape CsWinRT can supply a factory for without the author writing any members.
+        string factoryShape = factoryInterfaces.Count == 0 ? ", HasDefaultActivationOnly = true" : "";
+
+        writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}){factoryShape})]");
 
         string factoryName = GetFactoryClassName(nameStripped);
 

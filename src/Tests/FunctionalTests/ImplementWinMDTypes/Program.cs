@@ -25,7 +25,9 @@ if (projectedClass is null)
     return 102;
 }
 
-MyClassFactory classFactory = new();
+// 'TestComponent.Class' can only be activated through the parameterless 'ActivateInstance', and no factory
+// is declared for 'MyClass' below, so CsWinRT generates one that constructs it.
+ABI.ImplementWinMDTypes.ImplementWinMDTypes_MyClassActivationFactory classFactory = new();
 
 if (classFactory.ActivateInstance() is not MyClass)
 {
@@ -236,21 +238,13 @@ static extern int WindowsDeleteString(nint hstring);
 namespace ImplementWinMDTypes
 {
     /// <summary>
-    /// Implements 'TestComponent.Class', a runtime class with default activation.
+    /// Implements 'TestComponent.Class', a runtime class with default activation. It declares no factory,
+    /// so CsWinRT generates one (see the checks above): the only thing a factory can do for a class with
+    /// default activation is construct the implementation.
     /// </summary>
     public sealed class MyClass : global::ABI.TestComponent.Class
     {
         public override int One() => 1;
-    }
-
-    /// <summary>
-    /// The activation factory for <see cref="MyClass"/>. <c>ActivateInstance</c> comes from
-    /// <c>IActivationFactory</c>, which the base implements for a class with default activation.
-    /// </summary>
-    [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyClass))]
-    public sealed class MyClassFactory : global::ABI.TestComponent.ClassActivationFactory
-    {
-        public override object ActivateInstance() => new MyClass();
     }
 
     /// <summary>

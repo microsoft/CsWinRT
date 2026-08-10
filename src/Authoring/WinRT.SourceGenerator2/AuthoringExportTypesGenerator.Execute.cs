@@ -124,6 +124,17 @@ public partial class AuthoringExportTypesGenerator
         }
 
         /// <summary>
+        /// Gets the simple name of a generated activation factory type, which is declared in the same
+        /// namespace as the <c>ManagedExports</c> type referring to it.
+        /// </summary>
+        /// <param name="factory">The activation factory to get the type name for.</param>
+        /// <returns>The simple type name.</returns>
+        private static string GetGeneratedActivationFactoryTypeName(AuthoringActivationFactoryInfo factory)
+        {
+            return factory.FactoryTypeName[(factory.FactoryTypeName.LastIndexOf('.') + 1)..];
+        }
+
+        /// <summary>
         /// Emits the managed exports for authored components.
         /// </summary>
         /// <param name="context">The <see cref="SourceProductionContext"/> instance to use.</param>
@@ -256,6 +267,37 @@ public partial class AuthoringExportTypesGenerator
                     public static nint GetActivationFactory(string activatableClassId)
                     {
                         return (nint)GetActivationFactory(activatableClassId.AsSpan());
+                    }
+                    """, isMultiline: true);
+            }
+
+            // Emit the activation factories CsWinRT supplies on the author's behalf. These are for implementations
+            // of runtime classes declared in existing metadata whose only activation path is the parameterless
+            // 'ActivateInstance', so implementing the factory amounts to constructing the implementation.
+            foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
+            {
+                if (factory.GeneratedForImplementationTypeName is not string implementationTypeName)
+                {
+                    continue;
+                }
+
+                writer.WriteLine();
+                writer.WriteLine($$"""
+                    /// <summary>
+                    /// The activation factory for <see cref="global::{{implementationTypeName}}"/>, which implements
+                    /// the <c>{{factory.RuntimeClassName}}</c> Windows Runtime class.
+                    /// </summary>
+                    """, isMultiline: true);
+                writer.WriteGeneratedAttributes(nameof(AuthoringExportTypesGenerator), useFullyQualifiedTypeNames: false);
+                writer.WriteLine($$"""
+                    [EditorBrowsable(EditorBrowsableState.Never)]
+                    internal sealed class {{GetGeneratedActivationFactoryTypeName(factory)}} : global::{{factory.FactoryBaseTypeName}}
+                    {
+                        /// <inheritdoc/>
+                        public override object ActivateInstance()
+                        {
+                            return new global::{{implementationTypeName}}();
+                        }
                     }
                     """, isMultiline: true);
             }
