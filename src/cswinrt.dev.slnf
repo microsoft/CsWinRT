@@ -19,6 +19,8 @@
       "Tests\\AuthoringConsumptionTest\\AuthoringConsumptionTest.vcxproj",
       "Tests\\AuthoringConsumptionTest2\\AuthoringConsumptionTest2.vcxproj",
       "Tests\\AuthoringConsumptionTest2.AOT\\AuthoringConsumptionTest2.AOT.csproj",
+      "Tests\\AuthoringImplementWinMDTypesTest\\AuthoringImplementWinMDTypesTest.csproj",
+      "Tests\\AuthoringMixedWinMDTypesTest\\AuthoringMixedWinMDTypesTest.csproj",
       "Tests\\AuthoringTest\\AuthoringTest.csproj",
       "Tests\\AuthoringTest2\\AuthoringTest2.csproj",
       "Tests\\AuthoringTest3\\AuthoringTest3.csproj",

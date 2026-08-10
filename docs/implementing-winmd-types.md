@@ -45,6 +45,24 @@ The generated base is separate from the projected class (which is often `sealed`
 conversion to it, so an instance can be passed anywhere the projected type is expected. Any additional
 (non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
 
+### When the factory can be omitted
+
+Declaring the factory is only necessary when it has something to say. If the class can only be activated
+through the parameterless `IActivationFactory.ActivateInstance` — no factory methods, statics or composable
+interfaces — a factory can do nothing but construct the implementation, so CsWinRT generates one:
+
+```csharp
+// No factory needed: 'Widget' has default activation only
+public sealed class MyWidget : ABI.Contoso.Widgets.Widget
+{
+    public override void DoStuff() { }
+}
+```
+
+This requires an accessible parameterless constructor, and only one implementation of that runtime class in
+the project. Declaring the factory anyway always takes precedence, which is what to do when it needs to carry
+extra interop interfaces on its vtable.
+
 ## At application build time
 
 In a reference projection the abstract bases carry no implementation, exactly like the rest of it. CsWinRT
