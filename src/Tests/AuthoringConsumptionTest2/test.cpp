@@ -59,12 +59,10 @@ TEST(MultiComponent, GenericMapFromComponent2)
     EXPECT_EQ(counts.Lookup(L"gamma"), 3);
 }
 
-// A component can also implement a runtime class declared in existing metadata rather than authoring
-// its own. Such a class is absent from that component's '.winmd', so it reaches the merged host purely
-// through the generated activation entry points. Activation is by the name of the implemented class,
-// and the instance has to be indistinguishable from the real thing: it reports that class name, not
-// the name of the C# type implementing it. Activated through the raw ABI, because the projected type
-// belongs to 'TestComponent' rather than to either authored component.
+// A class implemented from existing metadata is absent from the implementing component's '.winmd', so it
+// reaches the host purely through the generated activation entry points. It is activated by the name of
+// the class it implements, and has to report that name rather than the implementing type's. The raw ABI
+// is used because the projected type belongs to 'TestComponent', not to either component here.
 
 TEST(MultiComponent, ImplementedWinMDTypeActivatesAndReportsImplementedClassName)
 {

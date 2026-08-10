@@ -224,6 +224,16 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
+    /// Gets the name of the accessor bound to a component's own <c>ManagedExports</c>.
+    /// </summary>
+    /// <param name="componentAssemblyName">The component assembly name.</param>
+    /// <returns>The accessor method name.</returns>
+    private static string GetComponentAccessorName(string componentAssemblyName)
+    {
+        return $"GetActivationFactory_{EscapeIdentifierName(componentAssemblyName)}";
+    }
+
+    /// <summary>
     /// Escapes an assembly name into a valid C# identifier, matching what the CsWinRT source generator does when it
     /// emits the <c>ABI.&lt;AssemblyName&gt;</c> namespace holding an assembly's <c>ManagedExports</c> type.
     /// </summary>
@@ -339,26 +349,45 @@ internal partial class ProjectionGenerator
         // Writes the invocations to all available components for the current type being activated
         void WriteActivationFactoryInvocations(IndentedTextWriter writer)
         {
-            // Component assemblies resolve to the 'ABI.{ComponentName}.ManagedExports' types generated into this
-            // same assembly. Assemblies that only contribute an activation entry point have no such type here, so
-            // they resolve to the one the source generator emitted into them. Both namespaces are the assembly
-            // name escaped into a valid identifier, which is also what a component's own entry point forwards to.
-            //
-            // A component that also implements types declared in existing metadata has both: the one here (its
-            // own authored classes) and the one in its own assembly (which additionally handles the implemented
-            // ones). This binds to the former, since a type declared in the compilation wins over an identically
-            // named one from a reference. Activating an implemented class through this path therefore returns
-            // null, and the host falls back to probing for the component assembly, whose entry point handles it.
-            // Routing through that assembly instead would add a hop for every component to serve that one case.
-            foreach (string componentAssemblyName in processingState.ComponentAssemblyNames.Concat(
-                processingState.ActivationFactoryAssemblyNames).Select(EscapeIdentifierName))
+            // A component's own 'ManagedExports' is the only one that handles every class it can activate: the
+            // one generated here covers just the classes declared in its '.winmd', while classes it implements
+            // from existing metadata are handled by inline checks in its own assembly. Dispatch has to go to
+            // that assembly, and an ordinary call would not: an identically named type declared here wins over
+            // one from a reference. Hence the accessors below.
+            foreach (string componentAssemblyName in processingState.ComponentAssemblyNames)
             {
                 writer.WriteLine($$"""
-                factory = global::ABI.{{componentAssemblyName}}.ManagedExports.GetActivationFactory(activatableClassId);
+                factory = {{GetComponentAccessorName(componentAssemblyName)}}(null, activatableClassId);
                 if (factory is not null)
                 {
                     return factory;
                 }
+                """);
+            }
+
+            // These have no '.winmd' of their own, so nothing was generated here for them to collide with
+            foreach (string activationFactoryAssemblyName in processingState.ActivationFactoryAssemblyNames.Select(EscapeIdentifierName))
+            {
+                writer.WriteLine($$"""
+                factory = global::ABI.{{activationFactoryAssemblyName}}.ManagedExports.GetActivationFactory(activatableClassId);
+                if (factory is not null)
+                {
+                    return factory;
+                }
+                """);
+            }
+        }
+
+        // Writes one accessor per component, bound to the 'ManagedExports' in that component's own assembly
+        void WriteComponentAccessors(IndentedTextWriter writer)
+        {
+            foreach (string componentAssemblyName in processingState.ComponentAssemblyNames)
+            {
+                writer.WriteLine($$"""
+                [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.StaticMethod, Name = "GetActivationFactory")]
+                private static extern void* {{GetComponentAccessorName(componentAssemblyName)}}(
+                    [global::System.Runtime.CompilerServices.UnsafeAccessorType("ABI.{{EscapeIdentifierName(componentAssemblyName)}}.ManagedExports, {{componentAssemblyName}}")] object? _,
+                    global::System.ReadOnlySpan<char> activatableClassId);
                 """);
             }
         }
@@ -403,6 +432,8 @@ internal partial class ProjectionGenerator
                 {
                     return (nint)GetActivationFactory(global::System.MemoryExtensions.AsSpan(activatableClassId));
                 }
+            
+                {{WriteComponentAccessors}}
             }
             """);
 

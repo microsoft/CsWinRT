@@ -90,6 +90,9 @@
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
+    <ProjectReference Include="..\AuthoringImplementWinMDTypesTest\AuthoringImplementWinMDTypesTest.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
   <!-- Release|x64 builds the merged AOT host (.AOT.csproj sibling, slnx top-level). Build the
        component csprojs with RuntimeIdentifier propagated so their .winmd files land at the
