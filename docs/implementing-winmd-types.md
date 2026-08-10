@@ -60,8 +60,27 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 ```
 
 This requires an accessible parameterless constructor, and only one implementation of that runtime class in
-the project. Declaring the factory anyway always takes precedence, which is what to do when it needs to carry
-extra interop interfaces on its vtable.
+the project. A generic type is never activatable, so it never gets one. Declaring the factory anyway always
+takes precedence, which is what to do when it needs to carry extra interop interfaces on its vtable.
+
+## Activating from native code
+
+Set `CsWinRTComponent` to make the implementations activatable from native code. The implemented classes are
+declared in metadata that already exists, so they do not go into the component's own `.winmd` — a component
+that implements types and authors none produces an empty one. They are still activatable: activation goes
+through the component's generated entry point, by the name of the class being implemented.
+
+Register them in the application manifest as usual, naming the implemented class:
+
+```xml
+<activatableClass name="Contoso.Widgets.Widget" threadingModel="both"
+    xmlns="urn:schemas-microsoft-com:winrt.v1" />
+```
+
+The one thing that does not work is activation by naming convention, which derives the assembly to load from
+the class name. For `Contoso.Widgets.Widget` that names the component owning the metadata, not the one
+implementing it, so activation has to reach `WinRT.Component.dll` (deployed next to the host, or merged into
+a Native AOT host).
 
 ## At application build time
 
