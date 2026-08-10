@@ -112,6 +112,13 @@ internal sealed class Settings
     public HashSet<string> ComponentImplementationAssemblies { get; } = [];
 
     /// <summary>
+    /// Gets the simple names of the authored Windows Runtime component assemblies being projected. Each one
+    /// gets an activation entry point even when it contributes no activatable classes, because components
+    /// forward to that entry point unconditionally.
+    /// </summary>
+    public HashSet<string> ComponentAssemblyNames { get; } = [];
+
+    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }

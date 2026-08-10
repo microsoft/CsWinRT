@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
+using System.Text;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -51,6 +53,90 @@ internal static class IdentifierEscaping
     public static IndentedTextWriterCallback WriteEscapedIdentifier(string identifier)
     {
         return writer => WriteEscapedIdentifier(writer, identifier);
+    }
+
+    /// <summary>
+    /// Escapes an assembly name into a valid C# identifier, matching what the CsWinRT source generator does
+    /// when it emits the <c>ABI.&lt;AssemblyName&gt;</c> namespace holding an assembly's <c>ManagedExports</c>
+    /// type. The two have to agree: a component's generated activation entry point forwards to
+    /// <c>ABI.&lt;AssemblyName&gt;.ManagedExports</c> in <c>WinRT.Component.dll</c> by name.
+    /// </summary>
+    /// <param name="value">The assembly name to escape.</param>
+    /// <returns>The escaped identifier name.</returns>
+    public static string EscapeAssemblyName(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return "_";
+        }
+
+        string escapedValue;
+
+        if (IsValidIdentifier(value))
+        {
+            escapedValue = value;
+        }
+        else
+        {
+            StringBuilder builder = new(value.Length + 1);
+
+            if (!IsIdentifierStartCharacter(value[0]))
+            {
+                _ = builder.Append('_');
+            }
+
+            foreach (char c in value)
+            {
+                _ = builder.Append(IsIdentifierPartCharacter(c) ? c : '_');
+            }
+
+            escapedValue = builder.ToString();
+        }
+
+        return CSharpKeywords.IsKeyword(escapedValue) ? $"_{escapedValue}" : escapedValue;
+
+        static bool IsValidIdentifier(string value)
+        {
+            if (!IsIdentifierStartCharacter(value[0]))
+            {
+                return false;
+            }
+
+            foreach (char c in value)
+            {
+                if (!IsIdentifierPartCharacter(c))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static bool IsIdentifierStartCharacter(char c) => c == '_' || IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(c));
+
+        static bool IsIdentifierPartCharacter(char c)
+        {
+            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
+
+            return IsLetterChar(category) || category is
+                UnicodeCategory.DecimalDigitNumber or
+                UnicodeCategory.ConnectorPunctuation or
+                UnicodeCategory.NonSpacingMark or
+                UnicodeCategory.SpacingCombiningMark or
+                UnicodeCategory.Format;
+        }
+
+        static bool IsLetterChar(UnicodeCategory category)
+        {
+            return category is
+                UnicodeCategory.UppercaseLetter or
+                UnicodeCategory.LowercaseLetter or
+                UnicodeCategory.TitlecaseLetter or
+                UnicodeCategory.ModifierLetter or
+                UnicodeCategory.OtherLetter or
+                UnicodeCategory.LetterNumber;
+        }
     }
 
     /// <summary>

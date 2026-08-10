@@ -320,6 +320,7 @@ internal partial class ProjectionGenerator
             Exclude = excludes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
+            ComponentAssemblyNames = componentAssemblyNames,
             ImplementableTypes = implementableTypes,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,

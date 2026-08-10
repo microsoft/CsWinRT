@@ -285,9 +285,9 @@ internal partial class ProjectionGenerator
         void WriteActivationFactoryInvocations(IndentedTextWriter writer)
         {
             // Component assemblies resolve to the 'ABI.{ComponentName}.ManagedExports' types generated into this
-            // same assembly, which use the raw module name. Assemblies that only contribute an activation entry
-            // point have no such type here, so they resolve to the one the source generator emitted into them,
-            // whose namespace it escaped into a valid identifier.
+            // same assembly. Assemblies that only contribute an activation entry point have no such type here, so
+            // they resolve to the one the source generator emitted into them. Both namespaces are the assembly
+            // name escaped into a valid identifier, which is also what a component's own entry point forwards to.
             //
             // A component that also implements types declared in existing metadata has both: the one here (its
             // own authored classes) and the one in its own assembly (which additionally handles the implemented
@@ -296,7 +296,7 @@ internal partial class ProjectionGenerator
             // null, and the host falls back to probing for the component assembly, whose entry point handles it.
             // Routing through that assembly instead would add a hop for every component to serve that one case.
             foreach (string componentAssemblyName in processingState.ComponentAssemblyNames.Concat(
-                processingState.ActivationFactoryAssemblyNames.Select(EscapeIdentifierName)))
+                processingState.ActivationFactoryAssemblyNames).Select(EscapeIdentifierName))
             {
                 writer.WriteLine($$"""
                 factory = global::ABI.{{componentAssemblyName}}.ManagedExports.GetActivationFactory(activatableClassId);

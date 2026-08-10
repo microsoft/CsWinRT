@@ -379,9 +379,34 @@ internal static class ComponentFactory
         writer.WriteLine("using System;");
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
+            // The namespace has to match what the component's own generated activation entry point forwards to,
+            // which is 'ABI.<EscapedAssemblyName>.ManagedExports' in this assembly.
+            string moduleNamespace = IdentifierEscaping.EscapeAssemblyName(kv.Key);
+
             writer.WriteLine();
+
+            // A component with no activatable classes still gets an entry point, but a 'switch' needs at
+            // least one case to be valid over a span, so that case returns directly instead.
+            if (kv.Value.Count == 0)
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    namespace ABI.{{moduleNamespace}}
+                    {
+                    public static class ManagedExports
+                    {
+                    public static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)
+                    {
+                    return null;
+                    }
+                    }
+                    }
+                    """);
+
+                continue;
+            }
+
             writer.WriteLine(isMultiline: true, $$"""
-                namespace ABI.{{kv.Key}}
+                namespace ABI.{{moduleNamespace}}
                 {
                 public static class ManagedExports
                 {

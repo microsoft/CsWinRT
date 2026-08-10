@@ -60,6 +60,17 @@ public sealed class ProjectionWriterOptions
     public IReadOnlyList<string> ComponentImplementationAssemblyPaths { get; init; } = [];
 
     /// <summary>
+    /// The simple names of the authored Windows Runtime component assemblies being projected. Only
+    /// meaningful in <see cref="Component"/> mode.
+    /// </summary>
+    /// <remarks>
+    /// Every one of these gets an activation entry point, even when it contributes no activatable
+    /// classes. Components forward to that entry point unconditionally, so it has to exist for the
+    /// forward to resolve and report "not activatable here" rather than failing.
+    /// </remarks>
+    public IReadOnlyList<string> ComponentAssemblyNames { get; init; } = [];
+
+    /// <summary>
     /// Make exclusive-to interfaces public in the projection (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; init; }
