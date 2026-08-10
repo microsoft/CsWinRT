@@ -143,6 +143,13 @@ public partial class AuthoringExportTypesGenerator
 
                 INamedTypeSymbol? implementableBase = GetImplementableBase(type, implementableAttributeSymbol);
 
+                // A generic type cannot be a Windows Runtime class, so there is nothing to activate for it (and
+                // naming a factory after it would not even produce valid code).
+                if (IsGenericOrNestedInGeneric(type))
+                {
+                    continue;
+                }
+
                 if (GetImplementedRuntimeClass(implementableBase, implementableAttributeSymbol) is INamedTypeSymbol implementedRuntimeClass)
                 {
                     implementations.Add((type, implementableBase!, implementedRuntimeClass.ToDisplayString()));
@@ -247,6 +254,24 @@ public partial class AuthoringExportTypesGenerator
                    attributeData.NamedArguments.Any(static argument => argument is { Key: "HasDefaultActivationOnly", Value.Value: true })
                 ? factoryBase
                 : null;
+        }
+
+        /// <summary>
+        /// Returns whether a type is generic, or is nested (at any depth) in a generic type.
+        /// </summary>
+        /// <param name="type">The type to inspect.</param>
+        /// <returns>Whether the type carries any type parameters.</returns>
+        private static bool IsGenericOrNestedInGeneric(INamedTypeSymbol type)
+        {
+            for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+            {
+                if (current.Arity > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

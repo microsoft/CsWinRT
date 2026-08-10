@@ -568,6 +568,49 @@ public class Test_AuthoringExportTypesGenerator
         CSharpGeneratorTest<AuthoringExportTypesGenerator>.VerifyNoSource(source, "ManagedExports.g.cs");
     }
 
+    [TestMethod]
+    public void GenericImplementation_DoesNotGenerateActivationFactory()
+    {
+        // A generic type cannot be a Windows Runtime class, so there is nothing to activate for it
+        const string source = """
+            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
+
+            namespace Contoso.Widgets { public sealed class Widget; }
+
+            namespace ABI.Contoso.Widgets
+            {
+                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
+                public abstract class Widget { public abstract void DoStuff(); }
+
+                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
+                public abstract class WidgetActivationFactory : IActivationFactory
+                {
+                    public abstract object ActivateInstance();
+                    public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
+                }
+            }
+
+            namespace MyApp
+            {
+                public sealed class MyWidget<T> : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+
+                public static class Outer<T>
+                {
+                    public sealed class NestedWidget : global::ABI.Contoso.Widgets.Widget
+                    {
+                        public override void DoStuff() { }
+                    }
+                }
+            }
+            """;
+
+        CSharpGeneratorTest<AuthoringExportTypesGenerator>.VerifyNoSource(source, "ManagedExports.g.cs");
+    }
+
     /// <summary>
     /// Runs the generator and returns the generated managed exports source.
     /// </summary>    /// <param name="source">The input source to process.</param>
@@ -578,3 +621,5 @@ public class Test_AuthoringExportTypesGenerator
         return CSharpGeneratorTest<AuthoringExportTypesGenerator>.GetGeneratedSource(source, "ManagedExports.g.cs", isCsWinRTComponent: isCsWinRTComponent);
     }
 }
+
+
