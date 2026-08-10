@@ -52,6 +52,19 @@ steps:
         --no-build
       testRunTitle: WinMD Generator Tests
 
+# Run Projection Writer Tests. Gated to x64 only: these drive the projection writer through the
+# 'cswinrtprojectionrefgen' tool as a separate process, so the target platform adds no coverage.
+  - task: DotNetCoreCLI@2
+    displayName: Run Projection Writer Tests
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/ProjectionWriterTest/ProjectionWriterTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Projection Writer Tests
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests

@@ -220,9 +220,9 @@ internal static class InterfaceFactory
         {
             MethodSignatureInfo sig = new(method);
 
-            // Only emit Windows.Foundation.Metadata attributes that have a projected form
-            // (Overload, DefaultOverload, AttributeUsage, Experimental).
-            WriteMethodCustomAttributes(writer, method);
+            // Carried-over metadata attributes ([Overload], [DefaultOverload], [Experimental]) are
+            // reference-projection-only.
+            WriteMethodCustomAttributes(writer, context, method);
             IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
             IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
             writer.WriteLine($"{ret} {method.GetRawName()}({parms});");
@@ -322,8 +322,18 @@ internal static class InterfaceFactory
     /// Emits the projected custom attributes for an interface method (filtered for the projected
     /// attributes: Overload, DefaultOverload, Experimental).
     /// </summary>
-    private static void WriteMethodCustomAttributes(IndentedTextWriter writer, MethodDefinition method)
+    /// <remarks>
+    /// These attributes are only consumed by compilers, analyzers and metadata tooling, all of which
+    /// see the reference projection. Implementation projections are only ever loaded at runtime, and
+    /// attribute blobs cannot be trimmed by ILLink or ILC, so nothing is emitted for them.
+    /// </remarks>
+    private static void WriteMethodCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
     {
+        if (!context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         foreach (CustomAttribute attr in method.CustomAttributes)
         {
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
