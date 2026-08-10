@@ -4,9 +4,16 @@
     A Windows Runtime component that both authors its own runtime classes (which go into its generated
     '.winmd') and implements runtime classes declared in existing metadata ('TestComponent', which do
     not). Both kinds have to be activatable from the same component, through the same entry point.
+
+    Its assembly name is deliberately dotted, which is the common shape for a real component. The
+    activation entry point's namespace is the assembly name escaped into a single identifier, and it is
+    emitted by the projection writer but named by the source generator, so the two have to agree on the
+    escaping for the generated forward to resolve.
   -->
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <AssemblyName>Contoso.MixedWinMDTypes</AssemblyName>
+    <RootNamespace>Contoso.MixedWinMDTypes</RootNamespace>
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <IsTrimmable>true</IsTrimmable>

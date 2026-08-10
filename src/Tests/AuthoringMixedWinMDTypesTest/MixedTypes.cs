@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 
-namespace AuthoringMixedWinMDTypesTest;
+namespace Contoso.MixedWinMDTypes;
 
 /// <summary>
 /// A runtime class authored by this component, so it goes into the generated '.winmd' and is activated
