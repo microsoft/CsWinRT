@@ -72,6 +72,17 @@ namespace Benchmarks
             return sum;
         }
 
+        [Benchmark(OperationsPerInvoke = BatchSize)]
+        public int Vector()
+        {
+            int sum = 0;
+            for (int i = 0; i < BatchSize; i++)
+            {
+                sum += vector[i % VectorLen];
+            }
+            return sum;
+        }
+
         [Benchmark(OperationsPerInvoke = BulkCount)]
         public void GetMany()
         {
@@ -102,6 +113,17 @@ namespace Benchmarks
             foreach (KeyValuePair<string, WrappedClass> pair in objectMap)
             {
                 sum += pair.Value.DefaultIntProperty;
+            }
+            return sum;
+        }
+
+        [Benchmark(OperationsPerInvoke = BatchSize)]
+        public int Lookup()
+        {
+            int sum = 0;
+            for (int i = 0; i < BatchSize; i++)
+            {
+                sum += stringMap[(i % MapLen).ToString()];
             }
             return sum;
         }
