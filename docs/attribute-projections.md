@@ -77,7 +77,7 @@ public void OldMethod()
 }
 ```
 
-Only APIs that actually reach the `.winmd` are reported, so that every report has an action available. Constructors are excluded for the same reason as in `CSWINRT2021`: `[Deprecated]` has no `AttributeTargets.Constructor` in its usage, so it cannot be applied to one at all. Deprecate the whole runtime class to cover its constructors.
+Only APIs that actually reach the `.winmd` are reported, so that every report has an action available. That includes individual **enum members** and **struct fields**, which Windows Runtime metadata carries member markers on (the Windows SDK uses this to deprecate a single member of an existing enum). Constructors are excluded for the same reason as in `CSWINRT2021`: `[Deprecated]` has no `AttributeTargets.Constructor` in its usage, so it cannot be applied to one at all. Deprecate the whole runtime class to cover its constructors.
 
 ## Related documentation
 

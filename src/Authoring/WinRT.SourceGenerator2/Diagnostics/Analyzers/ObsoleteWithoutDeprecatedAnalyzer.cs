@@ -70,7 +70,7 @@ public sealed class ObsoleteWithoutDeprecatedAnalyzer : DiagnosticAnalyzer
                     DiagnosticDescriptors.ObsoleteWithoutDeprecated,
                     context.Symbol.Locations.FirstOrDefault(),
                     context.Symbol));
-            }, SymbolKind.NamedType, SymbolKind.Method, SymbolKind.Property, SymbolKind.Event);
+            }, SymbolKind.NamedType, SymbolKind.Method, SymbolKind.Property, SymbolKind.Event, SymbolKind.Field);
         });
     }
 
@@ -82,8 +82,9 @@ public sealed class ObsoleteWithoutDeprecatedAnalyzer : DiagnosticAnalyzer
     /// <returns>Whether <paramref name="symbol"/> is publicly exposed from the component.</returns>
     private static bool IsPubliclyExposedFromComponent(ISymbol symbol)
     {
-        // Skip symbols with no declaration in source (eg. the implicit parameterless constructor of a
-        // class), which cannot carry an attribute of their own and have nowhere to report a diagnostic
+        // Skip symbols with no declaration in source (eg. the implicit parameterless constructor of a class,
+        // or the 'value__' field of an enum), which cannot carry an attribute of their own and have nowhere
+        // to report a diagnostic
         if (symbol.IsImplicitlyDeclared)
         {
             return false;
@@ -98,6 +99,23 @@ public sealed class ObsoleteWithoutDeprecatedAnalyzer : DiagnosticAnalyzer
         if (symbol is INamedTypeSymbol)
         {
             return symbol.ContainingType is null;
+        }
+
+        // Every remaining symbol is a member, and a member is only exported when its declaring type is
+        if (symbol.ContainingType is not { DeclaredAccessibility: Accessibility.Public, ContainingType: null } containingType)
+        {
+            return false;
+        }
+
+        // Fields are exported from the two type kinds that are pure data in Windows Runtime, and metadata
+        // supports member markers on them individually (the Windows SDK uses this to mark a single new
+        // member of an existing enum experimental).
+        if (symbol is IFieldSymbol fieldSymbol)
+        {
+            // Every enum member is exported, while a struct only exports its public instance fields, so its
+            // static and const fields are not reported. No other type kind exports a field at all.
+            return containingType.TypeKind is TypeKind.Enum
+                || (containingType.TypeKind is TypeKind.Struct && !fieldSymbol.IsStatic);
         }
 
         // Property and event accessors are only exported as part of the property or event they belong to,
@@ -116,9 +134,8 @@ public sealed class ObsoleteWithoutDeprecatedAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        // Members are exported with their declaring type, so they are only exported when it is. Only classes
-        // and interfaces export members at all: a Windows Runtime struct is a plain field aggregate, so the
-        // generator drops every member of one other than its public instance fields.
-        return symbol.ContainingType is { DeclaredAccessibility: Accessibility.Public, ContainingType: null, TypeKind: TypeKind.Class or TypeKind.Interface };
+        // Only classes and interfaces export members other than fields: a Windows Runtime struct is a plain
+        // field aggregate, so the generator drops every member of one other than its public instance fields.
+        return containingType.TypeKind is TypeKind.Class or TypeKind.Interface;
     }
 }

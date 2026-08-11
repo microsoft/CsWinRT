@@ -331,4 +331,116 @@ public sealed class Test_ObsoleteWithoutDeprecatedAnalyzer
 
         await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
     }
+
+    [TestMethod]
+    public async Task EnumMember_OnlyObsolete_Warns()
+    {
+        // Windows Runtime metadata carries member markers on individual enum members, and the generator
+        // copies the attributes of every enum member over, so an '[Obsolete]' there is just as ineffective
+        const string source = """
+            using System;
+
+            public enum MyEnum
+            {
+                A,
+
+                [Obsolete("Use A instead")]
+                {|CSWINRT2022:B|}
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task EnumMember_ObsoleteAndDeprecated_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using Windows.Foundation.Metadata;
+
+            public enum MyEnum
+            {
+                A,
+
+                [Obsolete("Use A instead")]
+                [Deprecated("Use A instead", DeprecationType.Deprecate, 1u)]
+                B
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task StructInstanceField_OnlyObsolete_Warns()
+    {
+        // A struct's public instance fields are the one kind of member it does export, and the generator
+        // copies their attributes over
+        const string source = """
+            using System;
+
+            public struct MyStruct
+            {
+                [Obsolete("Use NewValue instead")]
+                public int {|CSWINRT2022:OldValue|};
+
+                public int NewValue;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task StructInstanceField_ObsoleteAndDeprecated_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using Windows.Foundation.Metadata;
+
+            public struct MyStruct
+            {
+                [Obsolete("Use NewValue instead")]
+                [Deprecated("Use NewValue instead", DeprecationType.Deprecate, 1u)]
+                public int OldValue;
+
+                public int NewValue;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task NonExportedFields_OnlyObsolete_DoNotWarn()
+    {
+        // A struct only exports its public instance fields, and a class exports no field at all: a Windows
+        // Runtime class is exposed purely through its interfaces, so none of these reach the '.winmd'
+        const string source = """
+            using System;
+
+            public struct MyStruct
+            {
+                public int Value;
+
+                [Obsolete("Use Value instead")]
+                public static int OldStatic;
+
+                [Obsolete("Use Value instead")]
+                public const int OldConstant = 42;
+
+                [Obsolete("Use Value instead")]
+                internal int OldInternal;
+            }
+
+            public sealed class MyClass
+            {
+                [Obsolete("Use NewProperty instead")]
+                public int OldField;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
 }
