@@ -582,7 +582,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
         // This is the same as 'IVectorView<T>.GetMany', so we can reuse that one here (like the methods above).
         return IReadOnlyList1GetManyImpl(elementType, interopReferences);
     }
