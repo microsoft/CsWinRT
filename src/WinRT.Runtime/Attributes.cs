@@ -252,7 +252,7 @@ namespace WinRT
     /// </summary>
     /// <remarks>This attribute is emitted by the CsWinRT generator for non-authored types implementing WinRT interfaces.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
 #if EMBED
     internal
 #else
@@ -350,7 +350,7 @@ namespace WinRT
     /// is exposed to the WinRT ABI and needs a vtable generated for it.
     /// The type which this attribute is placed on also needs to be marked partial.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
 #if EMBED
     internal
 #else

@@ -178,7 +178,7 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class &apos;{0}&apos; has attribute GeneratedBindableCustomProperty but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial to allow source generation for trimming and AOT compatibility..
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has attribute GeneratedBindableCustomProperty but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial to allow source generation for trimming and AOT compatibility..
         /// </summary>
         internal static string BindableCustomPropertyClassNotMarkedPartial_Text {
             get {
@@ -223,7 +223,7 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class is not marked partial.
+        ///   Looks up a localized string similar to Type is not marked partial.
         /// </summary>
         internal static string ClassNotMarkedPartial_Brief {
             get {
@@ -232,7 +232,7 @@ namespace WinRT.SourceGenerator {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class &apos;{0}&apos; implements WinRT interfaces but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; implements WinRT interfaces but it or a parent type isn&apos;t marked partial.  Type and any parent types should be marked partial for trimming and AOT compatibility if passed across the WinRT ABI..
         /// </summary>
         internal static string ClassNotMarkedPartial_Text {
             get {

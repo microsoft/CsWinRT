@@ -69,13 +69,15 @@ namespace WinRT.SourceGenerator
 
                 context.RegisterSymbolAction(context =>
                 {
-                    // Filter to classes that can be passed as objects.
+                    // Filter to types that can be passed as objects. Value types are included as they can
+                    // implement WinRT interfaces too and get boxed, but 'ref struct'-s can never be boxed.
                     if (context.Symbol is INamedTypeSymbol namedType &&
-                        namedType.TypeKind == TypeKind.Class &&
+                        namedType.TypeKind is TypeKind.Class or TypeKind.Struct &&
+                        !namedType.IsRefLikeType &&
                         !namedType.IsAbstract &&
                         !namedType.IsStatic)
                     {
-                        // Make sure classes with the GeneratedBindableCustomProperty attribute are marked partial.
+                        // Make sure types with the GeneratedBindableCustomProperty attribute are marked partial.
                         if (GeneratorHelper.HasAttributeWithType(namedType, generatedBindableCustomPropertyAttribute) &&
                             !GeneratorHelper.IsPartial(namedType))
                         {
@@ -88,7 +90,7 @@ namespace WinRT.SourceGenerator
                             return;
                         }
 
-                        // Make sure this is a class that we would generate the WinRTExposedType attribute on
+                        // Make sure this is a type that we would generate the WinRTExposedType attribute on
                         // and that it isn't already partial.
                         if (!GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
                             !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType, typeMapper) &&
@@ -493,7 +495,7 @@ namespace WinRT.SourceGenerator
             if (node is null)
                 return;
 
-            var declaration = node.FirstAncestorOrSelf<ClassDeclarationSyntax>();
+            var declaration = node.FirstAncestorOrSelf<TypeDeclarationSyntax>();
             if (declaration is null)
                 return;
 
@@ -505,13 +507,13 @@ namespace WinRT.SourceGenerator
                 context.Diagnostics);
         }
 
-        private static async Task<Document> MakeTypePartial(Document document, ClassDeclarationSyntax @class, CancellationToken token)
+        private static async Task<Document> MakeTypePartial(Document document, TypeDeclarationSyntax type, CancellationToken token)
         {
             var oldRoot = await document.GetSyntaxRootAsync(token).ConfigureAwait(false);
             if (oldRoot is null)
                 return document;
 
-            var newRoot = oldRoot.ReplaceNodes(@class.AncestorsAndSelf().OfType<TypeDeclarationSyntax>(),
+            var newRoot = oldRoot.ReplaceNodes(type.AncestorsAndSelf().OfType<TypeDeclarationSyntax>(),
                 (_, typeDeclaration) =>
                 {
                     if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))

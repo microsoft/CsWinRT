@@ -214,7 +214,10 @@ namespace WinRT
             {
                 hasWinrtExposedClassAttribute = true;
                 entries.AddRange(winrtExposedClassAttribute.GetExposedInterfaces());
-                if (type.IsClass)
+
+                // Both classes and value types (which can implement WinRT interfaces too and get boxed)
+                // can provide their own 'IMarshal' or 'ICustomPropertyProvider' implementations.
+                if (type.IsClass || type.IsValueType)
                 {
                     // Manual helper to save binary size (no LINQ, no lambdas) and get better performance
                     static bool GetHasCustomIMarshalInterface(List<ComInterfaceEntry> entries)
