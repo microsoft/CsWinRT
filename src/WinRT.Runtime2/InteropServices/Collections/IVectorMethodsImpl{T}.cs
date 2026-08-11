@@ -20,6 +20,11 @@ public interface IVectorMethodsImpl<T>
     static abstract T GetAt(WindowsRuntimeObjectReference thisReference, uint index);
 
     /// <summary>
+    /// Copies elements from the vector through its <c>GetMany</c> ABI method.
+    /// </summary>
+    static abstract int GetMany(WindowsRuntimeObjectReference thisReference, T[] array, int arrayIndex, int count);
+
+    /// <summary>
     /// Sets the value at the specified index in the vector.
     /// </summary>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>

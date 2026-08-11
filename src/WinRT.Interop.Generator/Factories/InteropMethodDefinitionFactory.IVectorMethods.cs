@@ -22,6 +22,134 @@ internal partial class InteropMethodDefinitionFactory
     public static class IVectorMethods
     {
         /// <summary>
+        /// Creates a <see cref="MethodDefinition"/> for copying elements through <c>IVector&lt;T&gt;.GetMany</c>.
+        /// </summary>
+        public static MethodDefinition GetMany(
+            GenericInstanceTypeSignature listType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState)
+        {
+            TypeSignature elementType = listType.TypeArguments[0];
+
+            if (elementType.IsBlittable(interopReferences))
+            {
+                return ForwardTo(interopReferences.IVectorMethodsGetManyBlittable(elementType));
+            }
+            else if (elementType.IsTypeOfString())
+            {
+                return ForwardTo(interopReferences.IVectorMethodsGetManyStrings);
+            }
+            else if (elementType.IsTypeOfObject())
+            {
+                return ForwardTo(interopReferences.IVectorMethodsGetManyObjects);
+            }
+            else if (elementType.IsTypeOfType(interopReferences))
+            {
+                return ForwardTo(interopReferences.IVectorMethodsGetManyTypes);
+            }
+            else if (elementType.IsTypeOfException(interopReferences))
+            {
+                return ForwardTo(interopReferences.IVectorMethodsGetManyExceptions);
+            }
+            else if (elementType.IsConstructedKeyValuePairType(interopReferences))
+            {
+                GenericInstanceTypeSignature keyValuePairType = (GenericInstanceTypeSignature)elementType;
+                TypeSignature elementMarshallerType = emitState
+                    .LookupTypeDefinition(elementType, "ElementMarshaller")
+                    .ToTypeSignature();
+
+                return ForwardTo(interopReferences.IVectorMethodsGetManyKeyValuePairs(
+                    keyValuePairType.TypeArguments[0],
+                    keyValuePairType.TypeArguments[1],
+                    elementMarshallerType));
+            }
+            else if (elementType.IsConstructedNullableValueType(interopReferences))
+            {
+                GenericInstanceTypeSignature nullableType = (GenericInstanceTypeSignature)elementType;
+                TypeSignature elementMarshallerType = emitState
+                    .LookupTypeDefinition(elementType, "ElementMarshaller")
+                    .ToTypeSignature();
+
+                return ForwardTo(interopReferences.IVectorMethodsGetManyNullable(
+                    nullableType.TypeArguments[0],
+                    elementMarshallerType));
+            }
+            else if (elementType.IsManagedValueType(interopReferences))
+            {
+                TypeSignature elementMarshallerType = emitState
+                    .LookupTypeDefinition(elementType, "ElementMarshaller")
+                    .ToTypeSignature();
+
+                return ForwardTo(interopReferences.IVectorMethodsGetManyManagedValues(
+                    elementType,
+                    elementType.GetAbiType(interopReferences),
+                    elementMarshallerType));
+            }
+            else if (elementType.IsValueType)
+            {
+                TypeSignature elementMarshallerType = emitState
+                    .LookupTypeDefinition(elementType, "ElementMarshaller")
+                    .ToTypeSignature();
+
+                return ForwardTo(interopReferences.IVectorMethodsGetManyUnmanagedValues(
+                    elementType,
+                    elementType.GetAbiType(interopReferences),
+                    elementMarshallerType));
+            }
+            else if (!elementType.IsValueType &&
+                !elementType.IsTypeOfObject() &&
+                !elementType.IsTypeOfType(interopReferences) &&
+                !elementType.IsTypeOfException(interopReferences))
+            {
+                TypeSignature elementMarshallerType = emitState
+                    .LookupTypeDefinition(elementType, "ElementMarshaller")
+                    .ToTypeSignature();
+
+                return ForwardTo(interopReferences.IVectorMethodsGetManyReferences(elementType, elementMarshallerType));
+            }
+
+            return new MethodDefinition(
+                name: "GetMany"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        elementType.MakeSzArrayType(),
+                        interopReferences.Int32,
+                        interopReferences.Int32]))
+            {
+                CilInstructions =
+                {
+                    { Ldc_I4_0 },
+                    { Ret }
+                }
+            };
+
+            MethodDefinition ForwardTo(IMethodDescriptor targetMethod) => new(
+                name: "GetMany"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        elementType.MakeSzArrayType(),
+                        interopReferences.Int32,
+                        interopReferences.Int32]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Ldarg_2 },
+                    { Ldarg_3 },
+                    { Call, targetMethod },
+                    { Ret }
+                }
+            };
+        }
+
+        /// <summary>
         /// Creates a <see cref="MethodDefinition"/> for the <c>SetAt</c> method for some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>

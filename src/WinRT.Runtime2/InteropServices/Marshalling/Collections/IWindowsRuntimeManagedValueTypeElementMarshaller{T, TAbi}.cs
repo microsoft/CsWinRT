@@ -21,6 +21,11 @@ public interface IWindowsRuntimeManagedValueTypeElementMarshaller<T, TAbi>
     static abstract TAbi ConvertToUnmanaged(T value);
 
     /// <summary>
+    /// Marshals a native Windows Runtime value type to its managed representation.
+    /// </summary>
+    static abstract T ConvertToManaged(TAbi value);
+
+    /// <summary>
     /// Disposes resources associated with an unmanaged value.
     /// </summary>
     /// <param name="value">The unmanaged value to dispose.</param>

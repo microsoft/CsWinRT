@@ -8,7 +8,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// </summary>
 /// <typeparam name="T">The type of elements in the array.</typeparam>
 [WindowsRuntimeImplementationOnlyMember]
-public interface IWindowsRuntimeReferenceTypeElementMarshaller<T>
+public unsafe interface IWindowsRuntimeReferenceTypeElementMarshaller<T>
     where T : class
 {
     /// <summary>
@@ -17,4 +17,14 @@ public interface IWindowsRuntimeReferenceTypeElementMarshaller<T>
     /// <param name="value">The input object to marshal.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> instance for <paramref name="value"/>.</returns>
     static abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(T? value);
+
+    /// <summary>
+    /// Converts an unmanaged pointer to a managed collection element.
+    /// </summary>
+    static abstract T? ConvertToManaged(void* value);
+
+    /// <summary>
+    /// Releases an unmanaged collection element.
+    /// </summary>
+    static abstract void Dispose(void* value);
 }

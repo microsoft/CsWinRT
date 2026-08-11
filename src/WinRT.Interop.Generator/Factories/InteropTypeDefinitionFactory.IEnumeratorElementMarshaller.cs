@@ -46,7 +46,7 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeUnmanagedValueTypeElementMarshaller2
                 .MakeGenericReferenceType([elementType, elementAbiType]);
 
-            return ElementMarshaller(
+            TypeDefinition elementMarshallerType = ElementMarshaller(
                 elementType: elementType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
@@ -54,6 +54,15 @@ internal partial class InteropTypeDefinitionFactory
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
+
+            AddConvertToManaged(
+                elementMarshallerType,
+                elementType,
+                elementAbiType,
+                interopReferences.IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToManaged(elementType, elementAbiType),
+                emitState);
+
+            return elementMarshallerType;
         }
 
         /// <summary>
@@ -87,6 +96,13 @@ internal partial class InteropTypeDefinitionFactory
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
+
+            AddConvertToManaged(
+                elementMarshallerType,
+                elementType,
+                elementAbiType,
+                interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerConvertToManaged(elementType, elementAbiType),
+                emitState);
 
             // Rewriting labels
             CilInstruction nop_dispose = new(Nop);
@@ -147,7 +163,7 @@ internal partial class InteropTypeDefinitionFactory
             // Specialize if both type arguments are value types (same logic as in the array element marshaller)
             bool isValueType = keyType.IsValueType && valueType.IsValueType;
 
-            return ElementMarshaller(
+            TypeDefinition elementMarshallerType = ElementMarshaller(
                 elementType: elementType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToUnmanaged(keyType, valueType),
@@ -155,6 +171,16 @@ internal partial class InteropTypeDefinitionFactory
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
+
+            AddConvertToManagedAndDispose(
+                elementMarshallerType,
+                elementType,
+                interopReferences.IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToManaged(keyType, valueType),
+                interopReferences.IWindowsRuntimeKeyValuePairTypeElementMarshallerDispose(keyType, valueType),
+                interopReferences,
+                emitState);
+
+            return elementMarshallerType;
         }
 
         /// <summary>
@@ -179,7 +205,7 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeNullableTypeElementMarshaller1
                 .MakeGenericReferenceType([underlyingType]);
 
-            return ElementMarshaller(
+            TypeDefinition elementMarshallerType = ElementMarshaller(
                 elementType: elementType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeNullableTypeElementMarshallerConvertToUnmanaged(underlyingType),
@@ -187,6 +213,16 @@ internal partial class InteropTypeDefinitionFactory
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
+
+            AddConvertToManagedAndDispose(
+                elementMarshallerType,
+                elementType,
+                interopReferences.IWindowsRuntimeNullableTypeElementMarshallerConvertToManaged(underlyingType),
+                interopReferences.IWindowsRuntimeNullableTypeElementMarshallerDispose(underlyingType),
+                interopReferences,
+                emitState);
+
+            return elementMarshallerType;
         }
 
         /// <summary>
@@ -210,7 +246,7 @@ internal partial class InteropTypeDefinitionFactory
                 .IWindowsRuntimeReferenceTypeElementMarshaller1
                 .MakeGenericReferenceType([elementType]);
 
-            return ElementMarshaller(
+            TypeDefinition elementMarshallerType = ElementMarshaller(
                 elementType: elementType,
                 interfaceType: interfaceType,
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeElementMarshallerConvertToUnmanaged(elementType),
@@ -218,6 +254,81 @@ internal partial class InteropTypeDefinitionFactory
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState);
+
+            AddConvertToManagedAndDispose(
+                elementMarshallerType,
+                elementType,
+                interopReferences.IWindowsRuntimeReferenceTypeElementMarshallerConvertToManaged(elementType),
+                interopReferences.IWindowsRuntimeReferenceTypeElementMarshallerDispose(elementType),
+                interopReferences,
+                emitState);
+
+            return elementMarshallerType;
+        }
+
+        private static void AddConvertToManaged(
+            TypeDefinition elementMarshallerType,
+            TypeSignature elementType,
+            TypeSignature elementAbiType,
+            MemberReference interfaceMethod,
+            InteropGeneratorEmitState emitState)
+        {
+            CilInstruction nop_convertToManaged = new(Nop);
+
+            MethodDefinition convertToManagedMethod = new(
+                name: "ConvertToManaged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: elementType,
+                    parameterTypes: [elementAbiType]))
+            {
+                CilInstructions =
+                {
+                    { nop_convertToManaged },
+                    { Ret }
+                }
+            };
+
+            elementMarshallerType.AddMethodImplementation(interfaceMethod, convertToManagedMethod);
+
+            emitState.TrackManagedParameterMethodRewrite(
+                parameterType: elementType,
+                method: convertToManagedMethod,
+                marker: nop_convertToManaged,
+                parameterIndex: 0);
+        }
+
+        private static void AddConvertToManagedAndDispose(
+            TypeDefinition elementMarshallerType,
+            TypeSignature elementType,
+            MemberReference convertToManagedInterfaceMethod,
+            MemberReference disposeInterfaceMethod,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState)
+        {
+            AddConvertToManaged(
+                elementMarshallerType,
+                elementType,
+                interopReferences.Void.MakePointerType(),
+                convertToManagedInterfaceMethod,
+                emitState);
+
+            MethodDefinition disposeMethod = new(
+                name: "Dispose"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Call, interopReferences.WindowsRuntimeUnknownMarshallerFree },
+                    { Ret }
+                }
+            };
+
+            elementMarshallerType.AddMethodImplementation(disposeInterfaceMethod, disposeMethod);
         }
 
         /// <summary>

@@ -19,6 +19,8 @@ namespace Benchmarks
         private IList<int> vector;
         private IList<int> bulkVector;
         private int[] bulkBuffer;
+        private IList<string> bulkStringVector;
+        private string[] bulkStringBuffer;
         private IDictionary<string, int> stringMap;
         private IReadOnlyList<int> vectorView;
         private IReadOnlyDictionary<int, int> mapView;
@@ -38,6 +40,12 @@ namespace Benchmarks
             vector = instance.Items(VectorLen);
             bulkVector = instance.Items(BulkCount);
             bulkBuffer = new int[BulkCount];
+            bulkStringVector = instance.NewList();
+            bulkStringBuffer = new string[BulkCount];
+            for (int i = 0; i < BulkCount; i++)
+            {
+                bulkStringVector.Add(i.ToString());
+            }
             stringMap = instance.StringMap(MapLen);
             vectorView = instance.ItemsView(VectorLen);
             mapView = instance.MapView(MapLen);
@@ -87,6 +95,12 @@ namespace Benchmarks
         public void GetMany()
         {
             bulkVector.CopyTo(bulkBuffer, 0);
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public void GetManyStrings()
+        {
+            bulkStringVector.CopyTo(bulkStringBuffer, 0);
         }
 
         [Benchmark(OperationsPerInvoke = BulkCount)]

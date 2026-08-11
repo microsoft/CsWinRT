@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// </summary>
 /// <typeparam name="T">The underlying value type of the nullable type.</typeparam>
 [WindowsRuntimeImplementationOnlyMember]
-public interface IWindowsRuntimeNullableTypeElementMarshaller<T>
+public unsafe interface IWindowsRuntimeNullableTypeElementMarshaller<T>
     where T : struct
 {
     /// <summary>
@@ -19,4 +19,14 @@ public interface IWindowsRuntimeNullableTypeElementMarshaller<T>
     /// <param name="value">The input value to marshal.</param>
     /// <returns>The marshalled native value.</returns>
     static abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(T? value);
+
+    /// <summary>
+    /// Converts an unmanaged nullable value to its managed representation.
+    /// </summary>
+    static abstract T? ConvertToManaged(void* value);
+
+    /// <summary>
+    /// Releases an unmanaged nullable value.
+    /// </summary>
+    static abstract void Dispose(void* value);
 }

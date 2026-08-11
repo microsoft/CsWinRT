@@ -154,6 +154,17 @@ internal partial class InteropTypeDefinitionBuilder
                 declaration: interopReferences.IVectorMethodsImpl1GetAt(elementType),
                 method: getAtMethod);
 
+            // Define the 'GetMany' method
+            MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IVectorMethods.GetMany(
+                listType: listType,
+                interopReferences: interopReferences,
+                emitState: emitState);
+
+            // Add and implement the 'GetMany' method
+            vectorMethodsType.AddMethodImplementation(
+                declaration: interopReferences.IVectorMethodsImpl1GetMany(elementType),
+                method: getManyMethod);
+
             // Define the 'SetAt' method
             MethodDefinition setAtMethod = InteropMethodDefinitionFactory.IVectorMethods.SetAt(
                 listType: listType,

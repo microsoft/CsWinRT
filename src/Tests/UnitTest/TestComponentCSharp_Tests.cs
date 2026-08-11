@@ -3860,6 +3860,72 @@ namespace UnitTest
             Assert.AreEqual(2, types.Count);
             Assert.AreEqual(typeof(Class), types[0]);
             Assert.AreEqual(typeof(int?), types[1]);
+
+            Type[] copied = new Type[3];
+            types.CopyTo(copied, 1);
+            Assert.IsNull(copied[0]);
+            Assert.AreEqual(typeof(Class), copied[1]);
+            Assert.AreEqual(typeof(int?), copied[2]);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_ValueTypes()
+        {
+            IList<int> ints = TestObject.GetIntVector2();
+            int[] copiedInts = new int[ints.Count + 1];
+            ints.CopyTo(copiedInts, 1);
+            CollectionAssert.AreEqual(new[] { 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, copiedInts);
+
+            IList<ComposedBlittableStruct> blittableStructs = TestObject.GetBlittableStructVector2();
+            ComposedBlittableStruct[] copiedBlittableStructs = new ComposedBlittableStruct[blittableStructs.Count];
+            blittableStructs.CopyTo(copiedBlittableStructs, 0);
+            Assert.AreEqual(4, copiedBlittableStructs[4].blittable.i32);
+
+            IList<ComposedNonBlittableStruct> nonBlittableStructs = TestObject.GetNonBlittableStructVector2();
+            ComposedNonBlittableStruct[] copiedNonBlittableStructs = new ComposedNonBlittableStruct[nonBlittableStructs.Count];
+            nonBlittableStructs.CopyTo(copiedNonBlittableStructs, 0);
+            Assert.AreEqual("String1", copiedNonBlittableStructs[1].strings.str);
+            Assert.IsTrue(copiedNonBlittableStructs[2].bools.w);
+
+            IList<DateTimeOffset> dateTimes = TestObject.GetDateTimeVector2();
+            DateTimeOffset[] copiedDateTimes = new DateTimeOffset[dateTimes.Count];
+            dateTimes.CopyTo(copiedDateTimes, 0);
+            Assert.AreEqual(TimeSpan.FromSeconds(1), copiedDateTimes[1] - copiedDateTimes[0]);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_ReferenceTypes()
+        {
+            IList<Class> classes = TestObject.GetClassVector2();
+            Class[] copiedClasses = new Class[classes.Count + 1];
+            classes.CopyTo(copiedClasses, 1);
+            Assert.IsNull(copiedClasses[0]);
+            Assert.IsNotNull(copiedClasses[1]);
+            Assert.IsNotNull(copiedClasses[2]);
+
+            IList<object> objects = TestObject.GetUriVectorAsIInspectableVector();
+            object[] copiedObjects = new object[objects.Count];
+            objects.CopyTo(copiedObjects, 0);
+            Assert.IsTrue(copiedObjects.All(static item => item is Uri));
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_NullableType()
+        {
+            IList<int?> nullableInts = TestObject.GetNullableIntList();
+            int?[] copiedNullableInts = new int?[nullableInts.Count];
+            nullableInts.CopyTo(copiedNullableInts, 0);
+            CollectionAssert.AreEqual(new int?[] { 1, null, 2 }, copiedNullableInts);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_ExceptionType()
+        {
+            IList<Exception> exceptions = TestObject.GetExceptionVector2();
+            Exception[] copiedExceptions = new Exception[exceptions.Count];
+            exceptions.CopyTo(copiedExceptions, 0);
+            Assert.AreEqual(unchecked((int)0x80004005), copiedExceptions[0].HResult);
+            Assert.AreEqual(unchecked((int)0x80070057), copiedExceptions[1].HResult);
         }
 
         [TestMethod]

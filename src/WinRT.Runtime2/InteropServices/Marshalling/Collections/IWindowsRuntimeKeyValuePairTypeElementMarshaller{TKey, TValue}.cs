@@ -11,7 +11,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
 [WindowsRuntimeImplementationOnlyMember]
-public interface IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>
+public unsafe interface IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>
 {
     /// <summary>
     /// Marshals a <see cref="KeyValuePair{TKey, TValue}"/> type to its native Windows Runtime representation.
@@ -19,4 +19,14 @@ public interface IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>
     /// <param name="value">The input value to marshal.</param>
     /// <returns>The marshalled native value.</returns>
     static abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(KeyValuePair<TKey, TValue> value);
+
+    /// <summary>
+    /// Converts an unmanaged key/value pair to its managed representation.
+    /// </summary>
+    static abstract KeyValuePair<TKey, TValue> ConvertToManaged(void* value);
+
+    /// <summary>
+    /// Releases an unmanaged key/value pair.
+    /// </summary>
+    static abstract void Dispose(void* value);
 }

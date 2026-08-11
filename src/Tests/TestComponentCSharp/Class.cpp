@@ -1203,6 +1203,26 @@ namespace winrt::TestComponentCSharp::implementation
             });
     }
 
+    IVector<DateTime> Class::GetDateTimeVector2()
+    {
+        auto now = winrt::clock::now();
+        return winrt::single_threaded_vector(std::vector{ now, now + std::chrono::seconds{ 1 } });
+    }
+
+    IVector<TestComponentCSharp::Class> Class::GetClassVector2()
+    {
+        return winrt::single_threaded_vector(std::vector
+            {
+                winrt::make<implementation::Class>(),
+                winrt::make<implementation::Class>(),
+            });
+    }
+
+    IVector<winrt::hresult> Class::GetExceptionVector2()
+    {
+        return winrt::single_threaded_vector(std::vector{ winrt::hresult{ -2147467259 }, winrt::hresult{ -2147024809 } });
+    }
+
     // Test IIDOptimizer
     IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
     {
@@ -2210,4 +2230,3 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<NonProjectedDerivedCustomEquals>();
     }
 }
-
