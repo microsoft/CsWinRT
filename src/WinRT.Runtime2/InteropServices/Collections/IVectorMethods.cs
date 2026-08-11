@@ -48,6 +48,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, destination + copied, &actual));
 
+                actual = uint.Min(actual, requested);
                 copied += (int)actual;
 
                 if (actual < requested)
@@ -83,6 +84,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, handlesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 try
                 {
                     for (int i = 0; i < actual; i++)
@@ -135,6 +137,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, nativeValuesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 try
                 {
                     for (int i = 0; i < actual; i++)
@@ -186,6 +189,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, nativeValuesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 for (int i = 0; i < actual; i++)
                 {
                     array[arrayIndex + copied + i] = TElementMarshaller.ConvertToManaged(nativeValues[i]);
@@ -229,6 +233,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, nativeValuesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 try
                 {
                     for (int i = 0; i < actual; i++)
@@ -281,6 +286,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, nativeValuesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 try
                 {
                     for (int i = 0; i < actual; i++)
@@ -336,6 +342,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, nativeValuesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 try
                 {
                     for (int i = 0; i < actual; i++)
@@ -386,6 +393,7 @@ public static unsafe class IVectorMethods
                 RestrictedErrorInfo.ThrowExceptionForHR(
                     InvokeGetMany(thisPtr, (uint)copied, requested, nativeValuesPtr, &actual));
 
+                actual = uint.Min(actual, requested);
                 try
                 {
                     for (int i = 0; i < actual; i++)
@@ -429,9 +437,15 @@ public static unsafe class IVectorMethods
             uint requested = (uint)int.Min(GetManyBufferLength, count - copied);
             uint actual;
 
+            for (int i = 0; i < requested; i++)
+            {
+                nativeValues[i] = default;
+            }
+
             RestrictedErrorInfo.ThrowExceptionForHR(
                 InvokeGetMany(thisPtr, (uint)copied, requested, nativeValues, &actual));
 
+            actual = uint.Min(actual, requested);
             try
             {
                 for (int i = 0; i < actual; i++)
@@ -474,9 +488,15 @@ public static unsafe class IVectorMethods
             uint requested = (uint)int.Min(GetManyBufferLength, count - copied);
             uint actual;
 
+            for (int i = 0; i < requested; i++)
+            {
+                nativeValues[i] = default;
+            }
+
             RestrictedErrorInfo.ThrowExceptionForHR(
                 InvokeGetMany(thisPtr, (uint)copied, requested, nativeValues, &actual));
 
+            actual = uint.Min(actual, requested);
             for (int i = 0; i < actual; i++)
             {
                 array[arrayIndex + copied + i] = ABI.System.ExceptionMarshaller.ConvertToManaged(nativeValues[i])!;
@@ -497,12 +517,7 @@ public static unsafe class IVectorMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static HRESULT InvokeGetMany(void* thisPtr, uint startIndex, uint capacity, void* items, uint* actual)
     {
-        return ((delegate* unmanaged[MemberFunction]<void*, uint, uint, void*, uint*, HRESULT>)(*(void***)thisPtr)[16])(
-            thisPtr,
-            startIndex,
-            capacity,
-            items,
-            actual);
+        return ((IVectorVftbl*)*(void***)thisPtr)->GetMany(thisPtr, startIndex, capacity, items, actual);
     }
 
     /// <summary>

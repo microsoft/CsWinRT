@@ -292,6 +292,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVector<int32_t> GetIntVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector2();
+        Windows::Foundation::Collections::IVector<hstring> GetStringVector2();
         Windows::Foundation::Collections::IVector<Windows::Foundation::DateTime> GetDateTimeVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::Class> GetClassVector2();
         Windows::Foundation::Collections::IVector<hresult> GetExceptionVector2();

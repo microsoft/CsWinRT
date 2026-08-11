@@ -3910,6 +3910,19 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void NativeVectorCopyTo_StringTypeAcrossChunks()
+        {
+            IList<string> strings = TestObject.GetStringVector2();
+            string[] copiedStrings = new string[strings.Count + 2];
+            strings.CopyTo(copiedStrings, 1);
+            Assert.IsNull(copiedStrings[0]);
+            Assert.AreEqual("0", copiedStrings[1]);
+            Assert.AreEqual("64", copiedStrings[65]);
+            Assert.AreEqual("129", copiedStrings[130]);
+            Assert.IsNull(copiedStrings[131]);
+        }
+
+        [TestMethod]
         public void NativeVectorCopyTo_NullableType()
         {
             IList<int?> nullableInts = TestObject.GetNullableIntList();

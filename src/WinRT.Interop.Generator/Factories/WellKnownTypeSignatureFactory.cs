@@ -393,7 +393,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IReadOnlyList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -402,6 +402,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.Int32),
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
                 interopReferences.UInt32,
                 elementType.MakePointerType(),
                 interopReferences.UInt32.MakePointerType()]);

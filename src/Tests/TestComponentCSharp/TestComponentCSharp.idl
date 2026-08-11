@@ -383,6 +383,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVector<Int32> GetIntVector2();
         Windows.Foundation.Collections.IVector<ComposedBlittableStruct> GetBlittableStructVector2();
         Windows.Foundation.Collections.IVector<ComposedNonBlittableStruct> GetNonBlittableStructVector2();
+        Windows.Foundation.Collections.IVector<String> GetStringVector2();
         Windows.Foundation.Collections.IVector<Windows.Foundation.DateTime> GetDateTimeVector2();
         Windows.Foundation.Collections.IVector<Class> GetClassVector2();
         Windows.Foundation.Collections.IVector<Windows.Foundation.HResult> GetExceptionVector2();

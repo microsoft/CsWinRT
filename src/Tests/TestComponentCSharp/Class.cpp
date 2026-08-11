@@ -1203,6 +1203,19 @@ namespace winrt::TestComponentCSharp::implementation
             });
     }
 
+    IVector<hstring> Class::GetStringVector2()
+    {
+        std::vector<hstring> values;
+        values.reserve(130);
+
+        for (int32_t i = 0; i < 130; i++)
+        {
+            values.push_back(to_hstring(i));
+        }
+
+        return winrt::single_threaded_vector(std::move(values));
+    }
+
     IVector<DateTime> Class::GetDateTimeVector2()
     {
         auto now = winrt::clock::now();
