@@ -52,7 +52,7 @@ What the WinMD generator emits into an authored component's `.winmd` for an attr
 | `[WindowsRuntime.Xaml.GeneratedCustomPropertyProvider]`, `[System.Reflection.DefaultMember]`, and anything under `System.Runtime.CompilerServices` | *nothing* | Either handled by CsWinRT itself or meaningless in Windows Runtime metadata. |
 | Any other public attribute type | itself | Non-public attribute types, and attributes whose signature cannot be read, are skipped. |
 
-> **Note**: `[System.Obsolete]` is **not** translated into `[Windows.Foundation.Metadata.Deprecated]`. It is copied as-is, so it is invisible to every other language projection. Use `[Windows.Foundation.Metadata.Deprecated]` to deprecate an API of an authored component. `[Experimental]` is the exception to that rule only because the Windows Runtime attribute has no projected form to apply.
+> **Note**: `[System.Obsolete]` is **not** translated into `[Windows.Foundation.Metadata.Deprecated]`. It is copied as-is, so it is invisible to every other language projection. Use `[Windows.Foundation.Metadata.Deprecated]` to deprecate an API of an authored component; applying `[Obsolete]` without it is reported as [CSWINRT2022](#cswinrt2022-obsolete-without-deprecated). `[Experimental]` is the exception to that rule only because the Windows Runtime attribute has no projected form to apply.
 
 ### CSWINRT2021: unsupported `[Experimental]` targets
 
@@ -62,6 +62,22 @@ The .NET `[Experimental]` attribute supports more targets than the Windows Runti
 - A constructor is exposed through an activation factory method (`IFooFactory.CreateFoo`), and the `.ctor` row on the runtime class is not where markers live. MIDL never emits one there, and no `.ctor` row in the Windows SDK carries a `[Deprecated]` or `[Experimental]` attribute.
 
 Rather than emit the marker where nothing would read it, which would silently make the API look stable to every other language projection, those applications are dropped and `CSWINRT2021` reports them at the source. Mark the whole runtime class as experimental to cover its constructors.
+
+### CSWINRT2022: `[Obsolete]` without `[Deprecated]`
+
+`[Obsolete]` is *the* way to deprecate an API in C#, so it is the natural thing to reach for in an authored component. It is not translated into `[Windows.Foundation.Metadata.Deprecated]` though: it is copied verbatim, so the `.winmd` ends up carrying a `System.ObsoleteAttribute` reference that no other language projection understands. The component still builds and works, and the deprecation simply never reaches any consumer.
+
+`CSWINRT2022` reports a publicly exposed API that has `[Obsolete]` but no `[Deprecated]`. Applying both is the supported way to deprecate an API for .NET and Windows Runtime consumers alike, and silences the diagnostic:
+
+```csharp
+[Obsolete("Use NewMethod instead")]
+[Deprecated("Use NewMethod instead", DeprecationType.Deprecate, 1)]
+public void OldMethod()
+{
+}
+```
+
+Only APIs that actually reach the `.winmd` are reported, so that every report has an action available. Constructors are excluded for the same reason as in `CSWINRT2021`: `[Deprecated]` has no `AttributeTargets.Constructor` in its usage, so it cannot be applied to one at all. Deprecate the whole runtime class to cover its constructors.
 
 ## Related documentation
 
