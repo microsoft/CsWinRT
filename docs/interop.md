@@ -77,6 +77,8 @@ To create a managed wrapper (RCW) for a native Windows Runtime object pointer. I
 object? managed = WindowsRuntimeMarshal.ConvertToManaged(nativePtr);
 ```
 
+For an explanation of how CsWinRT decides *which* managed type to create for a given native object, see [RCW marshalling](rcw-marshalling.md).
+
 ### Create CCW
 
 To marshal a managed object to a native COM pointer. If the object already wraps a native object, this unwraps it (with an `AddRef`). Otherwise, a CCW is created:
