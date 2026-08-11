@@ -92,19 +92,9 @@ public static class IListMethods<T>
             ArgumentException.ThrowInsufficientSpaceToCopyCollection();
         }
 
-        int copied = 0;
-
-        if (count > 0)
-        {
-            try
-            {
-                copied = TMethods.GetMany(thisReference, array, arrayIndex, count);
-            }
-            catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_NOTIMPL)
-            {
-                // Preserve compatibility with providers that implement GetAt but not GetMany.
-            }
-        }
+        int copied = count > 0
+            ? TMethods.GetMany(thisReference, array, arrayIndex, count)
+            : 0;
 
         // Some providers may return fewer items than requested. Preserve ICollection<T>.CopyTo
         // semantics by retrieving any remaining items individually.
