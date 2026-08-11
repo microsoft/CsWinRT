@@ -481,40 +481,42 @@ if (objectArr.Length != 2 || objectArr[0] is not Class c || c != instance || obj
 // Regression test for https://github.com/microsoft/CsWinRT/issues/2507: value types can implement WinRT
 // interfaces too (eg. 'ImmutableArray<T>' implements 'IReadOnlyList<T>', 'IList<T>' and 'IList'), so when
 // one of them is boxed or cast, the CCW created for it also needs the vtable entries for those interfaces.
-System.Collections.IEnumerable immutableStringArray = ImmutableArray.Create("apples", "oranges", "pears");
-instance.BindableIterableProperty = immutableStringArray;
-if (!ReferenceEquals(immutableStringArray, instance.BindableIterableProperty))
+// Note: the native setter enumerates the collection and requires the 'int' sequence 0, 1, 2 (see Class.cpp),
+// so this both validates the 'IBindableIterable' entry on the CCW and that native can enumerate through it.
+System.Collections.IEnumerable immutableIntArray = ImmutableArray.Create(0, 1, 2);
+instance.BindableIterableProperty = immutableIntArray;
+if (!ReferenceEquals(immutableIntArray, instance.BindableIterableProperty))
 {
     return 106;
 }
 
-// Same as above, but with the immutable array created through a collection expression.
-ImmutableArray<string> immutableStringArray2 = ["apples", "oranges", "pears"];
-instance.BindableIterableProperty = immutableStringArray2;
-if (!instance.CheckForBindableObjectInterface(immutableStringArray2))
+// Going through a native caller that queries for 'IIterable<IInspectable>' (ie. what XAML does when
+// binding to a collection) and then gets an enumerator adapter for it.
+if (!instance.CheckForBindableObjectInterface(ImmutableArray.Create("apples", "oranges", "pears")))
 {
     return 107;
 }
 
-// Same as above, but with the immutable array created through a builder and 'ToImmutable()'.
-var immutableStringArrayBuilder = ImmutableArray.CreateBuilder<string>();
-immutableStringArrayBuilder.Add("apples");
-immutableStringArrayBuilder.Add("oranges");
-ImmutableArray<string> immutableStringArray3 = immutableStringArrayBuilder.ToImmutable();
-instance.BindableIterableProperty = immutableStringArray3;
-if (!instance.CheckForBindableObjectInterface(immutableStringArray3))
+// Same as above, but with the immutable array created through a collection expression.
+ImmutableArray<CustomClass> immutableArrayFromCollectionExpression = [new CustomClass(), new CustomClass()];
+if (!instance.CheckForBindableObjectInterface(immutableArrayFromCollectionExpression))
 {
     return 108;
 }
 
-// Going through a native caller that queries for 'IIterable<IInspectable>' (ie. what XAML does when
-// binding to a collection) and then enumerates it through the enumerator adapter.
-if (!instance.CheckForBindableObjectInterface(ImmutableArray.Create(new CustomClass(), new CustomClass())))
+// Same as above, but with the immutable array created through a builder and 'ToImmutable()'.
+var immutableArrayBuilder = ImmutableArray.CreateBuilder<object>();
+immutableArrayBuilder.Add(new CustomClass());
+immutableArrayBuilder.Add(new CustomClass());
+ImmutableArray<object> immutableArrayFromBuilder = immutableArrayBuilder.ToImmutable();
+if (!instance.CheckForBindableObjectInterface(immutableArrayFromBuilder))
 {
     return 109;
 }
 
 // Value types of non covariant element types should not project 'IEnumerable<object>', same as for classes.
+// Note this is the same instantiation used above for 'BindableIterableProperty', so it also verifies that
+// 'ImmutableArray<int>' does get 'IBindableIterable' even though it doesn't get 'IIterable<IInspectable>'.
 if (instance.CheckForBindableObjectInterface(ImmutableArray.Create(1, 2, 3)))
 {
     return 110;
