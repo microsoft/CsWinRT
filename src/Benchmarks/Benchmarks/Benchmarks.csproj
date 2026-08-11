@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-windows10.0.26100.0;net10.0-windows10.0.26100.1</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WindowsSdkPackageVersion>$(BenchmarkWindowsSdkPackageVersion)</WindowsSdkPackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BenchmarkProjection\BenchmarkProjection.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="$(BenchmarkDotNetVersion)" />
+    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="$(BenchmarkDotNetVersion)" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(BenchmarkCsWinRT3Version)" Condition="'$(TargetFramework)' == 'net10.0-windows10.0.26100.1'" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(BenchmarkCsWinRT2Version)" Condition="'$(TargetFramework)' == 'net10.0-windows10.0.26100.0'" />
+  </ItemGroup>
+
+</Project>

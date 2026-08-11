@@ -11,6 +11,8 @@ namespace Benchmarks
 
         public int IntProperty { get => intProperty; set => intProperty = value; }
         public bool BoolProperty { get => boolProperty; set => boolProperty = value; }
+        public void VoidMethod() { }
+        public int IntMethod(int value) => value;
     }
 
     class ManagedComposableObjectWithInterfaces : Composable, IIntProperties
@@ -18,6 +20,8 @@ namespace Benchmarks
         private int intProperty;
 
         public int IntProperty { get => intProperty; set => intProperty = value; }
+        public void VoidMethod() { }
+        public int IntMethod(int value) => value;
     }
 
     [MemoryDiagnoser]
@@ -90,6 +94,24 @@ namespace Benchmarks
         }
 
         [Benchmark]
+        public ClassWithMultipleInterfaces ConstructProjectedClass()
+        {
+            return new ClassWithMultipleInterfaces();
+        }
+
+        [Benchmark]
+        public ClassWithFastAbi ConstructFastAbiProjectedClass()
+        {
+            return new ClassWithFastAbi();
+        }
+
+        [Benchmark]
+        public ClassWithFastAbiDerived ConstructDerivedFastAbiProjectedClass()
+        {
+            return new ClassWithFastAbiDerived();
+        }
+
+        [Benchmark]
         public bool QueryNonDefaultInterface2()
         {
             return instance.BoolProperty;
@@ -139,7 +161,7 @@ namespace Benchmarks
             return (ClassWithMarshalingRoutines)instance.NewObject();
         }
 
-        // The following 4 benchmarks try to benchmark the time taken for the first call
+        // The following benchmarks try to benchmark the time taken for the first call
         // rather than the mean time over several calls.  It has the overhead of the object
         // construction, but it can be used to track regressions to performance.
         [Benchmark]

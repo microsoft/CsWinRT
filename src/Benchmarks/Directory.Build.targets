@@ -1,5 +1,6 @@
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+<Project>
 
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+  <!-- Stop the import chain: do NOT import parent Directory.Build.targets.
+       The benchmark projects are decoupled from the main CsWinRT build. -->
 
 </Project>

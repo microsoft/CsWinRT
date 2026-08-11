@@ -1,6 +1,7 @@
 stages:
 - stage: Publish
   displayName: Publish To Artifacts
+  condition: and(succeeded(), ne(variables['_BenchmarksOnly'], 'true'))
   jobs:
   - job: PublishToArtifacts
     variables:

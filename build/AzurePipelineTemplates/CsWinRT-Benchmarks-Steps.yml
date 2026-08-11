@@ -1,3 +1,8 @@
+parameters:
+- name: BenchmarkMode
+  type: string
+  default: 'regression'
+
 steps:
 - checkout: self
   clean: true
@@ -7,14 +12,14 @@ steps:
 - task: CmdLine@2
   displayName: Clone TestWinRT
   inputs: 
-    script: get_testwinrt.cmd
+    script: get_testwinrt.cmd -skiprestore
     workingDirectory: $(Build.SourcesDirectory)\src
 
 - task: UseDotNet@2
   displayName: Use .NET Core SDK 10.0
   inputs:
     packageType: sdk
-    version: 10.x
+    version: $(_DotnetVersion)
     installationPath: $(LocalAppData)\Microsoft\dotnet\
 
 # Verify .NET SDK
@@ -26,19 +31,91 @@ steps:
       where dotnet
       dotnet --info
 
-# Run Benchmarks
+# Restore and build BenchmarkComponent
+- task: NuGetAuthenticate@1
+
+- task: NuGetCommand@2
+  displayName: NuGet restore TestWinRT
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(Build.SourcesDirectory)\src\TestWinRT\Test.sln'
+    feedsToUse: config
+    nugetConfigPath: NuGet.config
+
+- task: MSBuild@1
+  displayName: Build BenchmarkComponent
+  inputs:
+    solution: $(Build.SourcesDirectory)\src\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj
+    msbuildArguments: /t:Build
+    platform: x64
+    configuration: Release
+
+# Copy BenchmarkComponent artifacts
 - task: CmdLine@2
-  displayName: Run Benchmarks for x64 Release
+  displayName: Copy BenchmarkComponent artifacts
   inputs:
     workingDirectory: $(Build.SourcesDirectory)\src
     script: |
-      if "%VSCMD_VER%"=="" (
-        pushd c:
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
-        popd
+      copy /Y "_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" "Benchmarks\BenchmarkProjection\"
+      copy /Y "_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.winmd" "Benchmarks\BenchmarkProjection\"
+
+# Set up additional NuGet sources for benchmark packages
+- task: CmdLine@2
+  displayName: Set up NuGet sources
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src
+    script: |
+      if not "$(_BenchmarkNuGetFeed)"=="" (
+        dotnet nuget add source "$(_BenchmarkNuGetFeed)" --name BenchmarkFeed 2>nul || echo BenchmarkFeed source already registered
+      )
+      if not "$(_SdkNuGetFeed)"=="" (
+        dotnet nuget add source "$(_SdkNuGetFeed)" --name SdkFeed 2>nul || echo SdkFeed source already registered
+      )
+      if exist "$(Build.SourcesDirectory)\packages\local" (
+        dotnet nuget add source "$(Build.SourcesDirectory)\packages\local" --name LocalBuild 2>nul || echo LocalBuild source already registered
       )
 
-      benchmark.cmd
+# Run Benchmarks
+- task: CmdLine@2
+  displayName: Run Benchmarks (${{ parameters.BenchmarkMode }} mode)
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src
+    script: |
+      dotnet run ^
+        --project Benchmarks\Benchmarks\Benchmarks.csproj ^
+        -c Release ^
+        --framework net10.0-windows10.0.26100.1 ^
+        -p:BenchmarkCsWinRT3Version=$(_BenchmarkBaselineCsWinRT3Version) ^
+        -p:BenchmarkCsWinRT2Version=$(_BenchmarkCsWinRT2Version) ^
+        -p:BenchmarkWindowsSdkPackageVersion=$(_BenchmarkWindowsSdkPackageVersion) ^
+        -- --mode ${{ parameters.BenchmarkMode }} --filter *
+  env:
+    BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
+    BENCHMARK_CSWINRT3_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
+    BENCHMARK_CSWINRT_BASELINE_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
+    BENCHMARK_CSWINRT2_VERSION: $(_BenchmarkCsWinRT2Version)
+    BENCHMARK_CSWINRT_CURRENT_VERSION: $(_BenchmarkCurrentCsWinRT3Version)
+    BENCHMARK_WINDOWS_SDK_VERSION: $(_BenchmarkWindowsSdkPackageVersion)
+
+# Build and run ResultsComparer
+- task: MSBuild@1
+  displayName: Build ResultsComparer
+  inputs:
+    solution: $(Build.SourcesDirectory)\src\Perf\ResultsComparer\ResultsComparer.sln
+    msbuildArguments: /t:restore /t:build
+    platform: Any CPU
+    configuration: Release
+
+- task: CmdLine@2
+  displayName: Run ResultsComparer
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src
+    script: >-
+      Perf\ResultsComparer\bin\Release\net8.0\ResultsComparer.exe
+      --base Perf\BenchmarkBaseline
+      --diff BenchmarkDotNet.Artifacts\results\
+      --threshold 5%%
+      --xml BenchmarkDotNet.Artifacts\results\comparison.xml
 
 # Component Detection
 - task: ComponentGovernanceComponentDetection@0
