@@ -416,7 +416,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, HRESULT> GetAt;
         // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
         // public delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, HRESULT> IndexOf;
-        // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany;
+        // public delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany;
         vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
         vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));

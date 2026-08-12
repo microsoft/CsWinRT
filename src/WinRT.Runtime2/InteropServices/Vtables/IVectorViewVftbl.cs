@@ -28,5 +28,5 @@ internal unsafe struct IVectorViewVftbl
     // does not matter, since this vtable slot is never actually used within this assembly. It is only
     // used from 'WinRT.Interop.dll', which will emit specialized vtable types when necessary.
     public delegate* unmanaged[MemberFunction]<void*, void*, uint*, HRESULT> IndexOf;
-    public delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany;
+    public delegate* unmanaged[MemberFunction]<void*, uint, uint, void*, uint*, HRESULT> GetMany;
 }
