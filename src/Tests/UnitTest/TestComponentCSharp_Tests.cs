@@ -3090,6 +3090,42 @@ namespace UnitTest
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
+        [TestMethod]
+        public void CompletedTaskAdapters_PreserveTerminalStateAndHandlers()
+        {
+            IAsyncAction completedAction = Task.CompletedTask.AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Completed, completedAction.Status);
+
+            int actionHandlerCalls = 0;
+            completedAction.Completed = (_, status) =>
+            {
+                Assert.AreEqual(AsyncStatus.Completed, status);
+                actionHandlerCalls++;
+            };
+            Assert.AreEqual(1, actionHandlerCalls);
+
+            IAsyncOperation<int> completedOperation = Task.FromResult(42).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Completed, completedOperation.Status);
+            Assert.AreEqual(42, completedOperation.GetResults());
+
+            IAsyncAction faultedAction = Task.FromException(new InvalidOperationException()).AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Error, faultedAction.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(faultedAction.GetResults);
+
+            IAsyncOperation<int> faultedOperation = Task.FromException<int>(new InvalidOperationException()).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Error, faultedOperation.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(() => faultedOperation.GetResults());
+
+            CancellationToken canceledToken = new(canceled: true);
+            IAsyncAction canceledAction = Task.FromCanceled(canceledToken).AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Canceled, canceledAction.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(canceledAction.GetResults);
+
+            IAsyncOperation<int> canceledOperation = Task.FromCanceled<int>(canceledToken).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Canceled, canceledOperation.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(() => canceledOperation.GetResults());
+        }
+
         async Task InvokeDoitAsyncWithProgress()
         {
             await TestObject.DoitAsyncWithProgress();
