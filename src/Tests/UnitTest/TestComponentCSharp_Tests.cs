@@ -2001,6 +2001,74 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestDeprecatedConstructors()
+        {
+            // A '[deprecated]' constructor is still projected, just with '[Obsolete]' on it
+#pragma warning disable CS0618
+            var deprecated = new DeprecatedConstructorClass(1);
+#pragma warning restore CS0618
+
+            Assert.AreEqual(1, deprecated.Value);
+
+            // The two-argument constructor is '[deprecated(remove)]', so it is not projected at all.
+            // Its factory vtable slot is preserved though, which is exactly what lets the three-argument
+            // constructor declared after it still dispatch through the right slot (it sums its arguments,
+            // so a wrong slot would either fail or produce a different value).
+            Assert.IsNull(typeof(DeprecatedConstructorClass).GetConstructor([typeof(int), typeof(int)]));
+
+            var live = new DeprecatedConstructorClass(1, 2, 3);
+
+            Assert.AreEqual(6, live.Value);
+
+            static bool IsObsolete(params Type[] parameterTypes)
+            {
+                ConstructorInfo constructor = typeof(DeprecatedConstructorClass).GetConstructor(parameterTypes);
+
+                Assert.IsNotNull(constructor);
+
+                return constructor.GetCustomAttribute<ObsoleteAttribute>() is not null;
+            }
+
+            Assert.IsTrue(IsObsolete(typeof(int)));
+            Assert.IsFalse(IsObsolete(typeof(int), typeof(int), typeof(int)));
+        }
+
+        [TestMethod]
+        public void TestRemovedConstructors()
+        {
+            // Every constructor of these two classes is '[deprecated(remove)]', so neither is
+            // constructible from the projection: the activatable (sealed) one and the composable
+            // (unsealed) one both have to drop their only constructor.
+            //
+            // 'HasPublicParameterlessConstructor' resolves the 'new()' constrained overload only when the
+            // type *as compiled against* really exposes a public parameterless constructor, so it asserts
+            // the reference projection's surface. That matters because dropping every constructor without
+            // emitting a non-public one in its place would let the C# compiler synthesize an implicit
+            // public parameterless constructor, which the implementation projection does not have.
+            Assert.IsTrue(HasPublicParameterlessConstructor<Class>());
+            Assert.IsFalse(HasPublicParameterlessConstructor<RemovedActivationClass>());
+            Assert.IsFalse(HasPublicParameterlessConstructor<RemovedComposableClass>());
+
+            // The implementation projection agrees with the reference projection above
+            Assert.AreEqual(0, typeof(RemovedActivationClass).GetConstructors().Length);
+            Assert.AreEqual(0, typeof(RemovedComposableClass).GetConstructors().Length);
+
+            // Both types are still fully usable through their static factory methods
+            Assert.AreEqual(42, RemovedActivationClass.Create(42).Value);
+            Assert.AreEqual(42, RemovedComposableClass.Create(42).Value);
+        }
+
+        /// <summary>
+        /// Compile-time probe for a public parameterless constructor: the <c>new()</c> constrained
+        /// overload is only a candidate when <typeparamref name="T"/> has one, so a call resolves to
+        /// the fallback overload otherwise.
+        /// </summary>
+        private static bool HasPublicParameterlessConstructor<T>() where T : new() => true;
+
+        /// <inheritdoc cref="HasPublicParameterlessConstructor{T}()"/>
+        private static bool HasPublicParameterlessConstructor<T>(int _ = 0) => false;
+
+        [TestMethod]
         public void TestStaticMembers()
         {
             Class.StaticIntProperty = 42;

@@ -120,11 +120,18 @@ internal static class ProjectionFileBuilder
                     continue;
                 }
 
+                // Skip enum fields removed via '[Deprecated(..., DeprecationType.Remove, ...)]'
+                if (field.IsRemoved)
+                {
+                    continue;
+                }
+
                 string fieldName = field.GetRawName();
                 string constantValue = field.Constant.FormatLiteral();
 
                 // Emits per-enum-field '[SupportedOSPlatform]' when the field has a '[ContractVersion]'
                 CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, field);
 
                 writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
             }

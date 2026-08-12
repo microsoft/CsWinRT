@@ -331,24 +331,80 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <param name="source">The source element to copy attributes from.</param>
     /// <param name="target">The target element to copy attributes to.</param>
-    private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target)
+    /// <param name="skipDeprecated">
+    /// Whether to skip the <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute. This is set when
+    /// copying to a property or event row, because the deprecation attribute is emitted on the accessor
+    /// method instead (see <see cref="CopyDeprecatedAttributeToAccessor"/>).
+    /// </param>
+    private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target, bool skipDeprecated = false)
     {
         foreach (CustomAttribute attribute in source.CustomAttributes)
         {
-            if (!ShouldCopyAttribute(attribute, _runtimeContext))
+            // The '[Deprecated]' attribute on properties and events is emitted on the accessor method
+            // (matching MIDL), so it is skipped here when copying attributes to the property or event row
+            if (skipDeprecated && IsDeprecatedAttribute(attribute))
             {
                 continue;
             }
 
-            if (ImportAttributeConstructor(attribute.Constructor) is not MemberReference importedCtor)
-            {
-                continue;
-            }
-
-            CustomAttributeSignature clonedSignature = CloneAttributeSignature(attribute.Signature);
-
-            target.CustomAttributes.Add(new CustomAttribute(importedCtor, clonedSignature));
+            CopyCustomAttribute(attribute, target);
         }
+    }
+
+    /// <summary>
+    /// Copies a single custom attribute from a source element to a target element, applying the same
+    /// filtering and import logic as <see cref="CopyCustomAttributes"/>.
+    /// </summary>
+    /// <param name="attribute">The custom attribute to copy.</param>
+    /// <param name="target">The target element to copy the attribute to.</param>
+    private void CopyCustomAttribute(CustomAttribute attribute, IHasCustomAttribute target)
+    {
+        if (!ShouldCopyAttribute(attribute, _runtimeContext))
+        {
+            return;
+        }
+
+        if (ImportAttributeConstructor(attribute.Constructor) is not MemberReference importedCtor)
+        {
+            return;
+        }
+
+        CustomAttributeSignature clonedSignature = CloneAttributeSignature(attribute.Signature);
+
+        target.CustomAttributes.Add(new CustomAttribute(importedCtor, clonedSignature));
+    }
+
+    /// <summary>
+    /// Copies the <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute (if any) from a property or
+    /// event onto its accessor method (the getter for properties, the <c>add</c> accessor for events).
+    /// </summary>
+    /// <remarks>
+    /// Windows Runtime metadata places the deprecation attribute on the accessor method rather than the
+    /// property or event row (this is the placement MIDL produces). Emitting it on the accessor keeps
+    /// authored components consistent with the Windows SDK, so that both CsWinRT and other consumers
+    /// (e.g. <c>windows-rs</c>) resolve member deprecation the same way.
+    /// </remarks>
+    /// <param name="source">The source property or event to read the attribute from.</param>
+    /// <param name="accessor">The accessor method (or fallback element) to copy the attribute to.</param>
+    private void CopyDeprecatedAttributeToAccessor(IHasCustomAttribute source, IHasCustomAttribute accessor)
+    {
+        foreach (CustomAttribute attribute in source.CustomAttributes)
+        {
+            if (IsDeprecatedAttribute(attribute))
+            {
+                CopyCustomAttribute(attribute, accessor);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns whether the given custom attribute is a <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute.
+    /// </summary>
+    /// <param name="attribute">The custom attribute to evaluate.</param>
+    /// <returns><see langword="true"/> if the attribute is the deprecation attribute; otherwise, <see langword="false"/>.</returns>
+    private static bool IsDeprecatedAttribute(CustomAttribute attribute)
+    {
+        return attribute.Constructor?.DeclaringType?.FullName == "Windows.Foundation.Metadata.DeprecatedAttribute";
     }
 
     /// <summary>

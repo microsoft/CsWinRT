@@ -64,6 +64,13 @@ internal static partial class ConstructorFactory
         {
             AttributedType factory = kv.Value;
 
+            // Skip constructors generated from a removed factory interface: the interface is omitted
+            // from the projection and ABI, so its IID / ABI Methods class would not exist to dispatch to.
+            if (factory.Type is { IsRemoved: true })
+            {
+                continue;
+            }
+
             if (factory.Activatable)
             {
                 WriteFactoryConstructors(writer, context, factory.Type, classType);
@@ -106,12 +113,23 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
+                // Skip removed constructor overloads; the factory vtable slot is preserved (methodIndex
+                // still advances) so the remaining constructors dispatch through the correct slot.
+                if (method.IsRemoved)
+                {
+                    methodIndex++;
+
+                    continue;
+                }
+
                 MethodSignatureInfo sig = new(method);
                 string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Parameters.Count.ToString(CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
                 writer.WriteLine();
+
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, method);
 
                 writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 
@@ -208,6 +226,47 @@ internal static partial class ConstructorFactory
     }
 
     /// <summary>
+    /// Determines whether <see cref="WriteAttributedTypes"/> emits at least one public constructor for
+    /// the given runtime class.
+    /// </summary>
+    /// <remarks>
+    /// Used in reference-projection mode to decide whether a sealed class needs a synthetic non-public
+    /// parameterless constructor to suppress the C# compiler's implicit public default constructor
+    /// (see <see cref="RefModeStubFactory.EmitSyntheticPrivateCtor"/>). Emitting it matters for more than
+    /// tidiness: the implementation projection never emits an implicit public default constructor, so
+    /// leaving one on the reference surface would let consumers compile a <c>new T()</c> call that fails
+    /// at runtime against the implementation projection.
+    /// </remarks>
+    public static bool EmitsAnyConstructor(TypeDefinition classType, MetadataCache cache)
+    {
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, cache))
+        {
+            AttributedType factory = kv.Value;
+
+            // A removed factory interface is skipped entirely by 'WriteAttributedTypes', so it emits nothing
+            if (factory.Type is { IsRemoved: true })
+            {
+                continue;
+            }
+
+            // A default '[Activatable(uint version)]' (no factory interface) always emits 'public TypeName()'
+            if (factory.Activatable && factory.Type is null)
+            {
+                return true;
+            }
+
+            // Both activation and composable factories emit one constructor per factory method, so a factory
+            // whose methods are all special or removed (or which has none at all) emits no constructors.
+            if ((factory.Activatable || factory.Composable) && factory.Type is { } factoryType && factoryType.HasActivatableFactoryMethod())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Determines whether <see cref="WriteAttributedTypes"/> emits at least one parameterless public
     /// constructor for the given runtime class (a default <c>[Activatable]</c> ctor, an activation-factory
     /// method with no parameters, or a composable-factory method with no user parameters).
@@ -222,6 +281,12 @@ internal static partial class ConstructorFactory
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, cache))
         {
             AttributedType factory = kv.Value;
+
+            // A removed factory interface is skipped entirely by 'WriteAttributedTypes', so it emits nothing
+            if (factory.Type is { IsRemoved: true })
+            {
+                continue;
+            }
 
             // A default '[Activatable(uint version)]' (no factory interface) emits 'public TypeName()'.
             if (factory.Activatable && factory.Type is null)
@@ -241,7 +306,8 @@ internal static partial class ConstructorFactory
             {
                 foreach (MethodDefinition method in factory.Type.Methods)
                 {
-                    if (method.IsSpecial)
+                    // Special methods and removed overloads emit no constructor
+                    if (method.IsSpecial || method.IsRemoved)
                     {
                         continue;
                     }
