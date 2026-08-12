@@ -21,18 +21,8 @@ namespace Microsoft.UI.Xaml
         {
         }
 
-        internal static bool IsFinite(double value)
-        {
-            return !(double.IsNaN(value) || double.IsInfinity(value));
-        }
-
         public GridLength(double value, GridUnitType type)
         {
-            if (!IsFinite(value) || value < 0.0)
-            {
-                throw new ArgumentException(SR.DirectUI_InvalidArgument, nameof(value));
-            }
-
             if (type is not (GridUnitType.Auto or GridUnitType.Pixel or GridUnitType.Star))
             {
                 throw new ArgumentException(SR.DirectUI_InvalidArgument, nameof(type));
