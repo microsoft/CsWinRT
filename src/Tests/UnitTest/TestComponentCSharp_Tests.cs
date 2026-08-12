@@ -3942,6 +3942,22 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void ManagedVectorGetMany_BlittableFastPathsAndFallback()
+        {
+            int[] array = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetMany(array, 1, 3));
+
+            List<int> list = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetMany(list, 1, 3));
+
+            Collection<int> collection = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetMany(collection, 1, 3));
+
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetMany(array, (uint)array.Length, 3));
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetMany(array, 0, 0));
+        }
+
+        [TestMethod]
         public void PrimitiveTypeInfo()
         {
             Assert.AreEqual(typeof(int), Class.Int32Type);

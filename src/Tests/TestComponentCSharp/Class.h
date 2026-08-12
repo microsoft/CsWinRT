@@ -431,6 +431,7 @@ namespace winrt::TestComponentCSharp::implementation
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
         int32_t SumNullableIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> const& values);
+        int64_t SumIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<int32_t> const& values, uint32_t startIndex, uint32_t capacity);
         int32_t CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs);
 
         static int GetPropertyType(Windows::Foundation::IInspectable const& obj);
