@@ -229,7 +229,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
     ///   <item>Complex structs (per-field cleanup via the <c>*Marshaller</c>) — see <see cref="IsNonBlittableStruct"/></item>
     ///   <item>Generic instances (need <c>WindowsRuntimeObjectReferenceValue</c> dispose) — see <see cref="TypeSignatureExtensions.IsGenericInstance"/></item>
     /// </list>
-    /// Callers should pass the already-stripped parameter type (via <see cref="TypeSignatureExtensions.StripByRefAndCustomModifiers"/>).
+    /// Callers should pass the already-stripped parameter type (via <see cref="Generator.TypeSignatureExtensions.StripByRefAndCustomModifiers"/>).
     /// </summary>
     /// <param name="signature">The stripped (non-byref) parameter type to classify.</param>
     /// <returns><see langword="true"/> when the type requires finally-block cleanup on receive; otherwise <see langword="false"/>.</returns>
