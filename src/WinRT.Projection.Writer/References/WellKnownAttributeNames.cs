@@ -55,6 +55,11 @@ internal static class WellKnownAttributeNames
     public const string ContractVersionAttribute = "ContractVersionAttribute";
 
     /// <summary>
+    /// The <c>[ExperimentalAttribute]</c> attribute type name (marks an API as evaluation-only).
+    /// </summary>
+    public const string ExperimentalAttribute = "ExperimentalAttribute";
+
+    /// <summary>
     /// The <c>[VersionAttribute]</c> attribute type name.
     /// </summary>
     public const string VersionAttribute = "VersionAttribute";

@@ -388,7 +388,16 @@ internal static class InterfaceFactory
 
             string baseName = nm.EndsWith("Attribute", StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
 
-            if (baseName is not ("Overload" or "DefaultOverload" or "Experimental"))
+            // '[Experimental]' is custom-mapped to the .NET attribute of the same name, which needs a
+            // synthesized diagnostic id, so it goes through the shared writer rather than being copied
+            if (baseName == "Experimental")
+            {
+                CustomAttributeFactory.WriteExperimentalAttribute(writer);
+
+                continue;
+            }
+
+            if (baseName is not ("Overload" or "DefaultOverload"))
             {
                 continue;
             }

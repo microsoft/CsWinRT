@@ -123,8 +123,9 @@ internal sealed partial class WinMDWriter
 
         outputType.Methods.Add(outputMethod);
 
-        // Copy custom attributes from the input method
-        CopyCustomAttributes(inputMethod, outputMethod);
+        // Copy custom attributes from the input method. Constructors are exposed to Windows Runtime
+        // through activation factory methods, so their '.ctor' row carries no '[Experimental]' marker.
+        CopyCustomAttributes(inputMethod, outputMethod, skipExperimentalAttribute: isConstructor);
     }
 
     /// <summary>
@@ -343,11 +344,11 @@ internal sealed partial class WinMDWriter
 
         outputType.Properties.Add(outputProperty);
 
-        // Copy custom attributes from the input property. The '[Deprecated]' attribute is emitted on the
-        // accessor (the getter, or the setter for write-only properties) rather than the property row,
-        // matching the placement used by MIDL so that property deprecation resolves consistently
-        CopyCustomAttributes(inputProperty, outputProperty, skipDeprecated: true);
-        CopyDeprecatedAttributeToAccessor(inputProperty, getter ?? setter ?? (IHasCustomAttribute)outputProperty);
+        // Copy custom attributes from the input property. The accessor attributes (e.g. '[Deprecated]')
+        // are emitted on the accessor (the getter, or the setter for write-only properties) rather than
+        // the property row, matching the placement used by MIDL so that they resolve consistently
+        CopyCustomAttributes(inputProperty, outputProperty, skipAccessorAttributes: true);
+        CopyAccessorAttributes(inputProperty, getter ?? setter ?? (IHasCustomAttribute)outputProperty);
     }
 
     /// <summary>
@@ -375,10 +376,10 @@ internal sealed partial class WinMDWriter
 
         outputType.Properties.Add(outputProperty);
 
-        // Copy custom attributes from the input property. The '[Deprecated]' attribute is emitted on the
-        // setter accessor rather than the property row, matching the placement used by MIDL
-        CopyCustomAttributes(inputProperty, outputProperty, skipDeprecated: true);
-        CopyDeprecatedAttributeToAccessor(inputProperty, setter);
+        // Copy custom attributes from the input property. The accessor attributes (e.g. '[Deprecated]')
+        // are emitted on the setter accessor rather than the property row, matching the placement used by MIDL
+        CopyCustomAttributes(inputProperty, outputProperty, skipAccessorAttributes: true);
+        CopyAccessorAttributes(inputProperty, setter);
     }
 
     /// <summary>
@@ -483,9 +484,9 @@ internal sealed partial class WinMDWriter
 
         outputType.Events.Add(outputEvent);
 
-        // Copy custom attributes from the input event. The '[Deprecated]' attribute is emitted on the
-        // 'add' accessor rather than the event row, matching the placement used by MIDL
-        CopyCustomAttributes(inputEvent, outputEvent, skipDeprecated: true);
-        CopyDeprecatedAttributeToAccessor(inputEvent, adder);
+        // Copy custom attributes from the input event. The accessor attributes (e.g. '[Deprecated]') are
+        // emitted on the 'add' accessor rather than the event row, matching the placement used by MIDL
+        CopyCustomAttributes(inputEvent, outputEvent, skipAccessorAttributes: true);
+        CopyAccessorAttributes(inputEvent, adder);
     }
 }

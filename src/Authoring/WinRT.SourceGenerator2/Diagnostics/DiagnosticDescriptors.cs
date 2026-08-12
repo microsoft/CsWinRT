@@ -286,4 +286,17 @@ internal static partial class DiagnosticDescriptors
         description: "A given type should only be used as the target of a single '[WindowsRuntimeNativeExposedType]' attribute in an assembly. CCW marshalling code is only generated once per type, so additional applications of the attribute for the same type have no effect.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT",
         customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an <c>[Experimental]</c> attribute applied to a target that Windows Runtime metadata cannot represent.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ExperimentalAttributeUnsupportedTarget = new(
+        id: "CSWINRT2021",
+        title: "Unsupported '[Experimental]' target for Windows Runtime metadata",
+        messageFormat: """The '[Experimental]' attribute applied to '{0}' will not be propagated to the generated '.winmd' file, as the Windows Runtime '[Experimental]' attribute cannot be applied to {1}. It can only be applied to types (runtime classes, interfaces, structs, enums and delegates), methods, properties, events and fields.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The .NET '[Experimental]' attribute supports more targets than the Windows Runtime one it is translated into, so applications on targets that Windows Runtime metadata cannot represent are dropped, making the API appear stable to every other language projection.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }

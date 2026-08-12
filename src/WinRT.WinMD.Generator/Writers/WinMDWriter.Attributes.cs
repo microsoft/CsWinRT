@@ -315,6 +315,33 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
+    /// Adds a <c>[Windows.Foundation.Metadata.Experimental]</c> attribute to a metadata element.
+    /// </summary>
+    /// <remarks>
+    /// This is the reverse of the projection-time mapping: the .NET <c>[Experimental]</c> attribute is
+    /// how an authored component marks an API as evaluation-only, since the Windows Runtime attribute
+    /// type is custom-mapped and so has no projected form to apply. The Windows Runtime attribute is
+    /// parameterless, so the diagnostic id, url format and message are dropped: Windows Runtime metadata
+    /// has nowhere to carry them, and CsWinRT synthesizes its own when projecting the component back
+    /// (see <c>docs/attribute-projections.md</c>).
+    /// </remarks>
+    /// <param name="target">The output metadata element to add the attribute to.</param>
+    private void AddExperimentalAttribute(IHasCustomAttribute target)
+    {
+        TypeReference experimentalAttrType = GetOrCreateTypeReference(
+            @namespace: "Windows.Foundation.Metadata",
+            name: "ExperimentalAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
+
+        MemberReference ctor = new(
+            parent: experimentalAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void));
+
+        target.CustomAttributes.Add(new CustomAttribute(ctor, new CustomAttributeSignature()));
+    }
+
+    /// <summary>
     /// Gets the version number for a type from its <c>[Version]</c> attribute, or falls back
     /// to the assembly major version.
     /// </summary>
@@ -331,18 +358,36 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <param name="source">The source element to copy attributes from.</param>
     /// <param name="target">The target element to copy attributes to.</param>
-    /// <param name="skipDeprecated">
-    /// Whether to skip the <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute. This is set when
-    /// copying to a property or event row, because the deprecation attribute is emitted on the accessor
-    /// method instead (see <see cref="CopyDeprecatedAttributeToAccessor"/>).
+    /// <param name="skipAccessorAttributes">
+    /// Whether to skip the attributes that belong on an accessor. This is set when copying to a property
+    /// or event row, because those are emitted on the accessor method instead (see
+    /// <see cref="CopyAccessorAttributes"/>).
     /// </param>
-    private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target, bool skipDeprecated = false)
+    /// <param name="skipExperimentalAttribute">
+    /// Whether to skip the .NET <c>[Experimental]</c> attribute. This is set when copying to a constructor,
+    /// which has no Windows Runtime target that can carry it (see <see cref="AddExperimentalAttribute"/>).
+    /// </param>
+    private void CopyCustomAttributes(
+        IHasCustomAttribute source,
+        IHasCustomAttribute target,
+        bool skipAccessorAttributes = false,
+        bool skipExperimentalAttribute = false)
     {
         foreach (CustomAttribute attribute in source.CustomAttributes)
         {
-            // The '[Deprecated]' attribute on properties and events is emitted on the accessor method
-            // (matching MIDL), so it is skipped here when copying attributes to the property or event row
-            if (skipDeprecated && IsDeprecatedAttribute(attribute))
+            // The accessor attributes on properties and events are emitted on the accessor method
+            // (matching MIDL), so they are skipped here when copying to the property or event row
+            if (skipAccessorAttributes && IsAccessorAttribute(attribute))
+            {
+                continue;
+            }
+
+            // Windows Runtime has no constructor target for '[Experimental]': constructors are exposed
+            // through activation factory methods, and the '.ctor' row on a runtime class carries no such
+            // marker (MIDL never emits one there, and no Windows SDK '.ctor' row has one). The application
+            // is reported by the 'CSWINRT2021' analyzer instead of being silently emitted where nothing
+            // would ever read it.
+            if (skipExperimentalAttribute && IsDotNetExperimentalAttribute(attribute))
             {
                 continue;
             }
@@ -359,6 +404,15 @@ internal sealed partial class WinMDWriter
     /// <param name="target">The target element to copy the attribute to.</param>
     private void CopyCustomAttribute(CustomAttribute attribute, IHasCustomAttribute target)
     {
+        // The .NET '[Experimental]' attribute is translated back to the Windows Runtime one rather than
+        // copied: it is the projected form of it, and its own type has no Windows Runtime counterpart
+        if (IsDotNetExperimentalAttribute(attribute))
+        {
+            AddExperimentalAttribute(target);
+
+            return;
+        }
+
         if (!ShouldCopyAttribute(attribute, _runtimeContext))
         {
             return;
@@ -375,26 +429,37 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Copies the <c>[Windows.Foundation.Metadata.Deprecated]</c> attribute (if any) from a property or
-    /// event onto its accessor method (the getter for properties, the <c>add</c> accessor for events).
+    /// Copies the accessor attributes (if any) from a property or event onto its accessor method (the
+    /// getter for properties, the <c>add</c> accessor for events).
     /// </summary>
     /// <remarks>
-    /// Windows Runtime metadata places the deprecation attribute on the accessor method rather than the
-    /// property or event row (this is the placement MIDL produces). Emitting it on the accessor keeps
-    /// authored components consistent with the Windows SDK, so that both CsWinRT and other consumers
-    /// (e.g. <c>windows-rs</c>) resolve member deprecation the same way.
+    /// Windows Runtime metadata places these attributes on the accessor method rather than the property
+    /// or event row (this is the placement MIDL produces). Emitting them on the accessor keeps authored
+    /// components consistent with the Windows SDK, so that both CsWinRT and other consumers
+    /// (e.g. <c>windows-rs</c>) resolve member deprecation and experimental markers the same way.
     /// </remarks>
-    /// <param name="source">The source property or event to read the attribute from.</param>
-    /// <param name="accessor">The accessor method (or fallback element) to copy the attribute to.</param>
-    private void CopyDeprecatedAttributeToAccessor(IHasCustomAttribute source, IHasCustomAttribute accessor)
+    /// <param name="source">The source property or event to read the attributes from.</param>
+    /// <param name="accessor">The accessor method (or fallback element) to copy the attributes to.</param>
+    private void CopyAccessorAttributes(IHasCustomAttribute source, IHasCustomAttribute accessor)
     {
         foreach (CustomAttribute attribute in source.CustomAttributes)
         {
-            if (IsDeprecatedAttribute(attribute))
+            if (IsAccessorAttribute(attribute))
             {
                 CopyCustomAttribute(attribute, accessor);
             }
         }
+    }
+
+    /// <summary>
+    /// Returns whether the given custom attribute belongs on a property or event accessor in Windows
+    /// Runtime metadata, rather than on the property or event row itself.
+    /// </summary>
+    /// <param name="attribute">The custom attribute to evaluate.</param>
+    /// <returns><see langword="true"/> if the attribute belongs on the accessor; otherwise, <see langword="false"/>.</returns>
+    private static bool IsAccessorAttribute(CustomAttribute attribute)
+    {
+        return IsDeprecatedAttribute(attribute) || IsDotNetExperimentalAttribute(attribute);
     }
 
     /// <summary>
@@ -405,6 +470,16 @@ internal sealed partial class WinMDWriter
     private static bool IsDeprecatedAttribute(CustomAttribute attribute)
     {
         return attribute.Constructor?.DeclaringType?.FullName == "Windows.Foundation.Metadata.DeprecatedAttribute";
+    }
+
+    /// <summary>
+    /// Returns whether the given custom attribute is a <c>[System.Diagnostics.CodeAnalysis.Experimental]</c> attribute.
+    /// </summary>
+    /// <param name="attribute">The custom attribute to evaluate.</param>
+    /// <returns><see langword="true"/> if the attribute is the .NET experimental attribute; otherwise, <see langword="false"/>.</returns>
+    private static bool IsDotNetExperimentalAttribute(CustomAttribute attribute)
+    {
+        return attribute.Constructor?.DeclaringType?.FullName == "System.Diagnostics.CodeAnalysis.ExperimentalAttribute";
     }
 
     /// <summary>
