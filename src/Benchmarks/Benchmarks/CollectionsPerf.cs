@@ -19,6 +19,8 @@ namespace Benchmarks
         private IList<int> vector;
         private IList<int> bulkVector;
         private int[] bulkBuffer;
+        private int[] managedBulkVector;
+        private ClassWithMarshalingRoutines instance;
         private IList<string> bulkStringVector;
         private string[] bulkStringBuffer;
         private IDictionary<string, int> stringMap;
@@ -35,11 +37,18 @@ namespace Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            ClassWithMarshalingRoutines instance = new();
+            instance = new();
 
             vector = instance.Items(VectorLen);
             bulkVector = instance.Items(BulkCount);
             bulkBuffer = new int[BulkCount];
+            managedBulkVector = new int[BulkCount];
+            for (int i = 0; i < BulkCount; i++)
+            {
+                managedBulkVector[i] = i;
+            }
+            // Will be uncommented once the TestWinRT change is done.
+            // _ = instance.GetManyFromManagedList(managedBulkVector);
             bulkStringVector = instance.NewList();
             bulkStringBuffer = new string[BulkCount];
             for (int i = 0; i < BulkCount; i++)
@@ -96,6 +105,13 @@ namespace Benchmarks
         {
             bulkVector.CopyTo(bulkBuffer, 0);
         }
+
+        // Will be uncommented once the TestWinRT change is done.
+        // [Benchmark(OperationsPerInvoke = BulkCount)]
+        // public uint GetManyFromManagedList()
+        // {
+        //     return instance.GetManyFromManagedList(managedBulkVector);
+        // }
 
         [Benchmark(OperationsPerInvoke = BulkCount)]
         public void GetManyStrings()
