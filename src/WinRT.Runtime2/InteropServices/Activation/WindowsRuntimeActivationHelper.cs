@@ -56,15 +56,14 @@ internal static unsafe class WindowsRuntimeActivationHelper
         void* inspectableInterface;
 
         // Get the 'IInspectable' object from the activation factory (same as above)
-        HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
-            thisPtr: activationFactoryObjectReference.GetThisPtrUnsafe(),
-            instance: &inspectableInterface);
+        using (WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue())
+        {
+            HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
+                thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
+                instance: &inspectableInterface);
 
-        // Activation factories are cached by generated projections. Keep the reference rooted through
-        // the native call without acquiring a managed lease on every object construction.
-        GC.KeepAlive(activationFactoryObjectReference);
-
-        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        }
 
         // Query the 'IInspectable' object for the default interface, which is what callers expect.
         // We only need this when using the parameterless constructor, since in this case we must
@@ -133,18 +132,17 @@ internal static unsafe class WindowsRuntimeActivationHelper
         out void* innerInterface,
         out void* defaultInterface)
     {
+        using WindowsRuntimeObjectReferenceValue activationFactoryValue = activationFactoryObjectReference.AsValue();
         using WindowsRuntimeObjectReferenceValue baseInterfaceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
 
         fixed (void** innerInterfacePtr = &innerInterface)
         fixed (void** defaultInterfacePtr = &defaultInterface)
         {
             HRESULT hresult = IActivationFactoryVftbl.ActivateInstanceUnsafe(
-                thisPtr: activationFactoryObjectReference.GetThisPtrUnsafe(),
+                thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
                 baseInterface: baseInterfaceValue.GetThisPtrUnsafe(),
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
-
-            GC.KeepAlive(activationFactoryObjectReference);
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
         }
