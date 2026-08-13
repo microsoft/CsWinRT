@@ -16,7 +16,10 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 internal static unsafe class RestrictedErrorInfoHelpers
 {
+    /// <summary>A cached boxed <see langword="true"/> value, to avoid allocations.</summary>
     private static readonly object BoxedTrue = true;
+
+    /// <summary>A cached boxed <see langword="false"/> value, to avoid allocations.</summary>
     private static readonly object BoxedFalse = false;
 
     /// <summary>
@@ -128,9 +131,7 @@ internal static unsafe class RestrictedErrorInfoHelpers
         [NotNullWhen(true)] out WindowsRuntimeObjectReference? restrictedErrorObject,
         out bool isLanguageException)
     {
-        IDictionary? exceptionData = exception.Data;
-
-        if (exceptionData is not null && exceptionData.Count > 0)
+        if (exception.Data is IDictionary { Count: > 0 } exceptionData)
         {
             restrictedErrorObject = exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] as WindowsRuntimeObjectReference;
 

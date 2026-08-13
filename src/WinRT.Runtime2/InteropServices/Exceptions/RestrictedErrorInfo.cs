@@ -118,12 +118,12 @@ public static unsafe class RestrictedErrorInfo
 
                 restrictedReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
 
-                // For cross language Windows Runtime exceptions, general information will be available in the description,
-                // which is populated from 'IRestrictedErrorInfo.GetErrorDetails', and more specific information will be
-                // available in 'restrictedError', which also comes from 'IRestrictedErrorInfo.GetErrorDetails'. If both are
-                // available, we need to concatinate them to produce the final exception message.
                 if (errorCode == restrictedError)
                 {
+                    // Format the exception message. If we have both a description and a restricted description,
+                    // we insert a space to separate the two. We're not using a newline, as exception messages
+                    // should always be a single line. We're intentionally using this ternary expression with no
+                    // interpolation to avoid allocating intermediate buffers/strings, which would add overhead.
                     errorMessage = string.IsNullOrEmpty(description)
                         ? restrictedDescription
                         : string.IsNullOrEmpty(restrictedDescription)
