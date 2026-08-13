@@ -120,10 +120,10 @@ public static unsafe class RestrictedErrorInfo
 
                 if (errorCode == restrictedError)
                 {
-                    // Format the exception message. If we have both a description and a restricted description,
-                    // we insert a space to separate the two. We're not using a newline, as exception messages
-                    // should always be a single line. We're intentionally using this ternary expression with no
-                    // interpolation to avoid allocating intermediate buffers/strings, which would add overhead.
+                    // For cross-language Windows Runtime exceptions, 'GetErrorDetails' can provide a general
+                    // description and a more specific restricted description. If both are present, insert a
+                    // space between them rather than a newline so the exception message remains a single line.
+                    // Use this ternary without interpolation to avoid intermediate buffers and strings.
                     errorMessage = string.IsNullOrEmpty(description)
                         ? restrictedDescription
                         : string.IsNullOrEmpty(restrictedDescription)
