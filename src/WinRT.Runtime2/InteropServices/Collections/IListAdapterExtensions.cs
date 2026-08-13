@@ -252,6 +252,8 @@ public static class IListAdapterBlittableValueTypeExtensions
 
             Span<T> destination = new(items, itemCount);
 
+            // Blittable items can be copied in bulk when the wrapped list is one of the well known
+            // implementations we can get a span from, which avoids an interface call per element.
             if (list is T[] array)
             {
                 array.AsSpan((int)startIndex, itemCount).CopyTo(destination);
