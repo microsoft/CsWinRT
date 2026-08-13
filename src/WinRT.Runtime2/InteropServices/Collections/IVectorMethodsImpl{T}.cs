@@ -20,8 +20,14 @@ public interface IVectorMethodsImpl<T>
     static abstract T GetAt(WindowsRuntimeObjectReference thisReference, uint index);
 
     /// <summary>
-    /// Copies elements from the vector through its <c>GetMany</c> ABI method.
+    /// Retrieves multiple items from the vector, starting from the first one, and copies them to a target array.
     /// </summary>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
+    /// <param name="array">The target array to copy the retrieved items to.</param>
+    /// <param name="arrayIndex">The zero-based index in <paramref name="array"/> to start copying to.</param>
+    /// <param name="count">The number of items to retrieve from the vector.</param>
+    /// <returns>The number of items that were retrieved. This value can be less than <paramref name="count"/> if the end of the vector is reached.</returns>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.getmany"/>
     static abstract int GetMany(WindowsRuntimeObjectReference thisReference, T[] array, int arrayIndex, int count);
 
     /// <summary>

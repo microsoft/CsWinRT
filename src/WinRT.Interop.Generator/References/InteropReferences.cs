@@ -891,9 +891,39 @@ internal sealed class InteropReferences
     public TypeReference IVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsImpl`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethods</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsExtensions</c>.
     /// </summary>
-    public TypeReference IVectorMethods => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethods"u8);
+    public TypeReference IVectorMethodsExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsBlittableValueTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IVectorMethodsBlittableValueTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsBlittableValueTypeExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsUnmanagedValueTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IVectorMethodsUnmanagedValueTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsUnmanagedValueTypeExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsManagedValueTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IVectorMethodsManagedValueTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsManagedValueTypeExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsKeyValuePairTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IVectorMethodsKeyValuePairTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsKeyValuePairTypeExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsNullableTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IVectorMethodsNullableTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsNullableTypeExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsReferenceTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IVectorMethodsReferenceTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IVectorMethodsReferenceTypeExtensions"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;</c>.
@@ -3158,8 +3188,9 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;.ConvertToManaged</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;.ConvertToManaged</c>.
     /// </summary>
+    /// <param name="elementType">The input element type.</param>
     public MemberReference IWindowsRuntimeReferenceTypeElementMarshallerConvertToManaged(TypeSignature elementType)
     {
         return IWindowsRuntimeReferenceTypeElementMarshaller1
@@ -3171,8 +3202,9 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;.Dispose</c>.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;.Dispose</c>.
     /// </summary>
+    /// <param name="elementType">The input element type.</param>
     public MemberReference IWindowsRuntimeReferenceTypeElementMarshallerDispose(TypeSignature elementType)
     {
         return IWindowsRuntimeReferenceTypeElementMarshaller1
@@ -3198,6 +3230,11 @@ internal sealed class InteropReferences
                 parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeManagedValueTypeElementMarshaller&lt;T, TAbi&gt;.ConvertToManaged</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
     public MemberReference IWindowsRuntimeManagedValueTypeElementMarshallerConvertToManaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeManagedValueTypeElementMarshaller2
@@ -3238,6 +3275,11 @@ internal sealed class InteropReferences
                 parameterTypes: [new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeUnmanagedValueTypeElementMarshaller&lt;T, TAbi&gt;.ConvertToManaged</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
     public MemberReference IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToManaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeUnmanagedValueTypeElementMarshaller2
@@ -3266,6 +3308,11 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeKeyValuePairTypeElementMarshaller&lt;TKey, TValue&gt;.ConvertToManaged</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
     public MemberReference IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToManaged(TypeSignature keyType, TypeSignature valueType)
     {
         return IWindowsRuntimeKeyValuePairTypeElementMarshaller2
@@ -3278,6 +3325,11 @@ internal sealed class InteropReferences
                 parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeKeyValuePairTypeElementMarshaller&lt;TKey, TValue&gt;.Dispose</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
     public MemberReference IWindowsRuntimeKeyValuePairTypeElementMarshallerDispose(TypeSignature keyType, TypeSignature valueType)
     {
         return IWindowsRuntimeKeyValuePairTypeElementMarshaller2
@@ -3302,6 +3354,10 @@ internal sealed class InteropReferences
                 parameterTypes: [Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)])]));
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeElementMarshaller&lt;T&gt;.ConvertToManaged</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
     public MemberReference IWindowsRuntimeNullableTypeElementMarshallerConvertToManaged(TypeSignature underlyingType)
     {
         return IWindowsRuntimeNullableTypeElementMarshaller1
@@ -3312,6 +3368,10 @@ internal sealed class InteropReferences
                 parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeElementMarshaller&lt;T&gt;.Dispose</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
     public MemberReference IWindowsRuntimeNullableTypeElementMarshallerDispose(TypeSignature underlyingType)
     {
         return IWindowsRuntimeNullableTypeElementMarshaller1
@@ -4771,6 +4831,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;.GetMany</c>.
     /// </summary>
+    /// <param name="elementType">The input element type.</param>
     public MemberReference IVectorMethodsImpl1GetMany(TypeSignature elementType)
     {
         return IVectorMethodsImpl1
@@ -4786,11 +4847,60 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the blittable <c>IVectorMethods.GetMany&lt;T&gt;</c> overload.
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsExtensions.GetMany</c>.
     /// </summary>
-    public MethodSpecification IVectorMethodsGetManyBlittable(TypeSignature elementType)
+    public MemberReference IVectorMethodsOfStringGetMany => field ??= IVectorMethodsExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Int32,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                _corLibTypeFactory.String.MakeSzArrayType(),
+                _corLibTypeFactory.Int32,
+                _corLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IVectorMethodsOfObjectGetMany => field ??= IVectorMethodsExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Int32,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                Object.MakeSzArrayType(),
+                _corLibTypeFactory.Int32,
+                _corLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IVectorMethodsOfExceptionGetMany => field ??= IVectorMethodsExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Int32,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                Exception.ToReferenceTypeSignature().MakeSzArrayType(),
+                _corLibTypeFactory.Int32,
+                _corLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsExtensions.GetMany</c>.
+    /// </summary>
+    public MemberReference IVectorMethodsOfTypeGetMany => field ??= IVectorMethodsExtensions
+        .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Int32,
+            parameterTypes: [
+                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                Type.ToReferenceTypeSignature().MakeSzArrayType(),
+                _corLibTypeFactory.Int32,
+                _corLibTypeFactory.Int32]));
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsBlittableValueTypeExtensions.GetMany&lt;T&gt;</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    public MethodSpecification IVectorMethodsBlittableValueTypeGetMany(TypeSignature elementType)
     {
-        return IVectorMethods
+        return IVectorMethodsBlittableValueTypeExtensions
             .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Int32,
                 genericParameterCount: 1,
@@ -4803,38 +4913,35 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <c>IVectorMethods.GetManyStrings</c> method.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsUnmanagedValueTypeExtensions.GetMany&lt;T, TAbi, TElementMarshaller&gt;</c>.
     /// </summary>
-    public MemberReference IVectorMethodsGetManyStrings => field ??= IVectorMethods
-        .CreateMemberReference("GetManyStrings"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Int32,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                _corLibTypeFactory.String.MakeSzArrayType(),
-                _corLibTypeFactory.Int32,
-                _corLibTypeFactory.Int32]));
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IVectorMethodsUnmanagedValueTypeGetMany(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
+    {
+        return IVectorMethodsUnmanagedValueTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Int32,
+                genericParameterCount: 3,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeSzArrayType(),
+                    _corLibTypeFactory.Int32,
+                    _corLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
+    }
 
     /// <summary>
-    /// Gets the projected-reference <c>IVectorMethods.GetManyReferences&lt;T, TElementMarshaller&gt;</c> overload.
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsManagedValueTypeExtensions.GetMany&lt;T, TAbi, TElementMarshaller&gt;</c>.
     /// </summary>
-    public MethodSpecification IVectorMethodsGetManyReferences(TypeSignature elementType, TypeSignature elementMarshallerType)
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="abiType">The ABI type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IVectorMethodsManagedValueTypeGetMany(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
-        return IVectorMethods
-            .CreateMemberReference("GetManyReferences"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Int32,
-                genericParameterCount: 2,
-                parameterTypes: [
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeSzArrayType(),
-                    _corLibTypeFactory.Int32,
-                    _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod([elementType, elementMarshallerType]);
-    }
-
-    public MethodSpecification IVectorMethodsGetManyUnmanagedValues(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
-    {
-        return IVectorMethods
-            .CreateMemberReference("GetManyUnmanagedValues"u8, MethodSignature.CreateStatic(
+        return IVectorMethodsManagedValueTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Int32,
                 genericParameterCount: 3,
                 parameterTypes: [
@@ -4845,41 +4952,16 @@ internal sealed class InteropReferences
             .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
-    public MethodSpecification IVectorMethodsGetManyManagedValues(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsKeyValuePairTypeExtensions.GetMany&lt;TKey, TValue, TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="keyType">The input key type.</param>
+    /// <param name="valueType">The input value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IVectorMethodsKeyValuePairTypeGetMany(TypeSignature keyType, TypeSignature valueType, TypeSignature elementMarshallerType)
     {
-        return IVectorMethods
-            .CreateMemberReference("GetManyManagedValues"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Int32,
-                genericParameterCount: 3,
-                parameterTypes: [
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeSzArrayType(),
-                    _corLibTypeFactory.Int32,
-                    _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
-    }
-
-    public MethodSpecification IVectorMethodsGetManyNullable(TypeSignature underlyingType, TypeSignature elementMarshallerType)
-    {
-        return IVectorMethods
-            .CreateMemberReference("GetManyNullable"u8, MethodSignature.CreateStatic(
-                returnType: _corLibTypeFactory.Int32,
-                genericParameterCount: 2,
-                parameterTypes: [
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Method, 0)]).MakeSzArrayType(),
-                    _corLibTypeFactory.Int32,
-                    _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod([underlyingType, elementMarshallerType]);
-    }
-
-    public MethodSpecification IVectorMethodsGetManyKeyValuePairs(
-        TypeSignature keyType,
-        TypeSignature valueType,
-        TypeSignature elementMarshallerType)
-    {
-        return IVectorMethods
-            .CreateMemberReference("GetManyKeyValuePairs"u8, MethodSignature.CreateStatic(
+        return IVectorMethodsKeyValuePairTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Int32,
                 genericParameterCount: 3,
                 parameterTypes: [
@@ -4892,33 +4974,43 @@ internal sealed class InteropReferences
             .MakeGenericInstanceMethod([keyType, valueType, elementMarshallerType]);
     }
 
-    public MemberReference IVectorMethodsGetManyObjects => field ??= IVectorMethods
-        .CreateMemberReference("GetManyObjects"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Int32,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                Object.MakeSzArrayType(),
-                _corLibTypeFactory.Int32,
-                _corLibTypeFactory.Int32]));
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsNullableTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IVectorMethodsNullableTypeGetMany(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return IVectorMethodsNullableTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Int32,
+                genericParameterCount: 2,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Method, 0)]).MakeSzArrayType(),
+                    _corLibTypeFactory.Int32,
+                    _corLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod([underlyingType, elementMarshallerType]);
+    }
 
-    public MemberReference IVectorMethodsGetManyTypes => field ??= IVectorMethods
-        .CreateMemberReference("GetManyTypes"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Int32,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                Type.ToReferenceTypeSignature().MakeSzArrayType(),
-                _corLibTypeFactory.Int32,
-                _corLibTypeFactory.Int32]));
-
-    public MemberReference IVectorMethodsGetManyExceptions => field ??= IVectorMethods
-        .CreateMemberReference("GetManyExceptions"u8, MethodSignature.CreateStatic(
-            returnType: _corLibTypeFactory.Int32,
-            parameterTypes: [
-                WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                Exception.ToReferenceTypeSignature().MakeSzArrayType(),
-                _corLibTypeFactory.Int32,
-                _corLibTypeFactory.Int32]));
-
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsReferenceTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="elementType">The input element type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IVectorMethodsReferenceTypeGetMany(TypeSignature elementType, TypeSignature elementMarshallerType)
+    {
+        return IVectorMethodsReferenceTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Int32,
+                genericParameterCount: 2,
+                parameterTypes: [
+                    WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    new GenericParameterSignature(GenericParameterType.Method, 0).MakeSzArrayType(),
+                    _corLibTypeFactory.Int32,
+                    _corLibTypeFactory.Int32]))
+            .MakeGenericInstanceMethod([elementType, elementMarshallerType]);
+    }
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IVectorMethodsImpl&lt;T&gt;.SetAt</c>.

@@ -22,8 +22,11 @@ internal partial class InteropMethodDefinitionFactory
     public static class IVectorMethods
     {
         /// <summary>
-        /// Creates a <see cref="MethodDefinition"/> for copying elements through <c>IVector&lt;T&gt;.GetMany</c>.
+        /// Creates a <see cref="MethodDefinition"/> for the <c>GetMany</c> method for some <c>IVector&lt;T&gt;</c> interface.
         /// </summary>
+        /// <param name="listType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
@@ -31,102 +34,38 @@ internal partial class InteropMethodDefinitionFactory
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
-            if (elementType.IsBlittable(interopReferences))
+            // Get the appropriate 'GetMany' method descriptor for 'IVector<T>' types
+            IMethodDescriptor getManyMethod = elementType switch
             {
-                return ForwardTo(interopReferences.IVectorMethodsGetManyBlittable(elementType));
-            }
-            else if (elementType.IsTypeOfString())
-            {
-                return ForwardTo(interopReferences.IVectorMethodsGetManyStrings);
-            }
-            else if (elementType.IsTypeOfObject())
-            {
-                return ForwardTo(interopReferences.IVectorMethodsGetManyObjects);
-            }
-            else if (elementType.IsTypeOfType(interopReferences))
-            {
-                return ForwardTo(interopReferences.IVectorMethodsGetManyTypes);
-            }
-            else if (elementType.IsTypeOfException(interopReferences))
-            {
-                return ForwardTo(interopReferences.IVectorMethodsGetManyExceptions);
-            }
-            else if (elementType.IsConstructedKeyValuePairType(interopReferences))
-            {
-                GenericInstanceTypeSignature keyValuePairType = (GenericInstanceTypeSignature)elementType;
-                TypeSignature elementMarshallerType = emitState
-                    .LookupTypeDefinition(elementType, "ElementMarshaller")
-                    .ToTypeSignature();
-
-                return ForwardTo(interopReferences.IVectorMethodsGetManyKeyValuePairs(
-                    keyValuePairType.TypeArguments[0],
-                    keyValuePairType.TypeArguments[1],
-                    elementMarshallerType));
-            }
-            else if (elementType.IsConstructedNullableValueType(interopReferences))
-            {
-                GenericInstanceTypeSignature nullableType = (GenericInstanceTypeSignature)elementType;
-                TypeSignature elementMarshallerType = emitState
-                    .LookupTypeDefinition(elementType, "ElementMarshaller")
-                    .ToTypeSignature();
-
-                return ForwardTo(interopReferences.IVectorMethodsGetManyNullable(
-                    nullableType.TypeArguments[0],
-                    elementMarshallerType));
-            }
-            else if (elementType.IsManagedValueType(interopReferences))
-            {
-                TypeSignature elementMarshallerType = emitState
-                    .LookupTypeDefinition(elementType, "ElementMarshaller")
-                    .ToTypeSignature();
-
-                return ForwardTo(interopReferences.IVectorMethodsGetManyManagedValues(
-                    elementType,
-                    elementType.GetAbiType(interopReferences),
-                    elementMarshallerType));
-            }
-            else if (elementType.IsValueType)
-            {
-                TypeSignature elementMarshallerType = emitState
-                    .LookupTypeDefinition(elementType, "ElementMarshaller")
-                    .ToTypeSignature();
-
-                return ForwardTo(interopReferences.IVectorMethodsGetManyUnmanagedValues(
-                    elementType,
-                    elementType.GetAbiType(interopReferences),
-                    elementMarshallerType));
-            }
-            else if (!elementType.IsValueType &&
-                !elementType.IsTypeOfObject() &&
-                !elementType.IsTypeOfType(interopReferences) &&
-                !elementType.IsTypeOfException(interopReferences))
-            {
-                TypeSignature elementMarshallerType = emitState
-                    .LookupTypeDefinition(elementType, "ElementMarshaller")
-                    .ToTypeSignature();
-
-                return ForwardTo(interopReferences.IVectorMethodsGetManyReferences(elementType, elementMarshallerType));
-            }
-
-            return new MethodDefinition(
-                name: "GetMany"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-                signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.Int32,
-                    parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        elementType.MakeSzArrayType(),
-                        interopReferences.Int32,
-                        interopReferences.Int32]))
-            {
-                CilInstructions =
-                {
-                    { Ldc_I4_0 },
-                    { Ret }
-                }
+                _ when elementType.IsBlittable(interopReferences) => interopReferences.IVectorMethodsBlittableValueTypeGetMany(elementType),
+                _ when elementType.IsConstructedKeyValuePairType(interopReferences) => interopReferences.IVectorMethodsKeyValuePairTypeGetMany(
+                    keyType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
+                    valueType: ((GenericInstanceTypeSignature)elementType).TypeArguments[1],
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsConstructedNullableValueType(interopReferences) => interopReferences.IVectorMethodsNullableTypeGetMany(
+                    underlyingType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsManagedValueType(interopReferences) => interopReferences.IVectorMethodsManagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsValueType => interopReferences.IVectorMethodsUnmanagedValueTypeGetMany(
+                    elementType: elementType,
+                    abiType: elementType.GetAbiType(interopReferences),
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsTypeOfObject() => interopReferences.IVectorMethodsOfObjectGetMany,
+                _ when elementType.IsTypeOfString() => interopReferences.IVectorMethodsOfStringGetMany,
+                _ when elementType.IsTypeOfType(interopReferences) => interopReferences.IVectorMethodsOfTypeGetMany,
+                _ when elementType.IsTypeOfException(interopReferences) => interopReferences.IVectorMethodsOfExceptionGetMany,
+                _ => interopReferences.IVectorMethodsReferenceTypeGetMany(
+                    elementType: elementType,
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature())
             };
 
-            MethodDefinition ForwardTo(IMethodDescriptor targetMethod) => new(
+            // Define the 'GetMany' method as follows:
+            //
+            // public static int GetMany(WindowsRuntimeObjectReference thisReference, <ELEMENT_TYPE>[] array, int arrayIndex, int count)
+            return new(
                 name: "GetMany"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
@@ -139,11 +78,12 @@ internal partial class InteropMethodDefinitionFactory
             {
                 CilInstructions =
                 {
+                    // return <GET_MANY_METHOD>(thisReference, array, arrayIndex, count);
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Ldarg_3 },
-                    { Call, targetMethod },
+                    { Call, getManyMethod },
                     { Ret }
                 }
             };

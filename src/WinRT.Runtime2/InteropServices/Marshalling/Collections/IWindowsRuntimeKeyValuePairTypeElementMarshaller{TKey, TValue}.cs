@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// An interface for marshalling collection elements to native.
+/// An interface for marshalling collection elements to and from native.
 /// </summary>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -21,12 +21,15 @@ public unsafe interface IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, T
     static abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(KeyValuePair<TKey, TValue> value);
 
     /// <summary>
-    /// Converts an unmanaged key/value pair to its managed representation.
+    /// Marshals a native Windows Runtime <see cref="KeyValuePair{TKey, TValue}"/> type to its managed representation.
     /// </summary>
+    /// <param name="value">The input value to marshal.</param>
+    /// <returns>The marshalled managed value.</returns>
     static abstract KeyValuePair<TKey, TValue> ConvertToManaged(void* value);
 
     /// <summary>
-    /// Releases an unmanaged key/value pair.
+    /// Disposes resources associated with an unmanaged value.
     /// </summary>
+    /// <param name="value">The unmanaged value to dispose.</param>
     static abstract void Dispose(void* value);
 }
