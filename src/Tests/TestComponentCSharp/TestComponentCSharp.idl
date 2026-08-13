@@ -485,6 +485,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > GetNullableIntList();
         Int32 SumNullableIntsWithGetMany(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > values);
         Int64 SumIntsWithGetMany(Windows.Foundation.Collections.IVector<Int32> values, UInt32 startIndex, UInt32 capacity);
+        Int64 SumIntsWithGetManyFromView(Windows.Foundation.Collections.IVectorView<Int32> values, UInt32 startIndex, UInt32 capacity);
         Int32 CountKeyValuePairsWithGetMany(Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IKeyValuePair<String, String> > pairs);
 
         // Boxing

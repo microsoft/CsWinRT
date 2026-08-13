@@ -4062,6 +4062,27 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void ManagedVectorViewGetMany_BlittableFastPathsAndFallback()
+        {
+            int[] array = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetManyFromView(array, 1, 3));
+
+            List<int> list = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetManyFromView(list, 1, 3));
+
+            Collection<int> collection = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetManyFromView(collection, 1, 3));
+
+            // A capacity larger than the number of remaining items is clamped to the latter
+            Assert.AreEqual(120L, TestObject.SumIntsWithGetManyFromView(array, 2, 10));
+            Assert.AreEqual(120L, TestObject.SumIntsWithGetManyFromView(list, 2, 10));
+            Assert.AreEqual(120L, TestObject.SumIntsWithGetManyFromView(collection, 2, 10));
+
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetManyFromView(array, (uint)array.Length, 3));
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetManyFromView(array, 0, 0));
+        }
+
+        [TestMethod]
         public void PrimitiveTypeInfo()
         {
             Assert.AreEqual(typeof(int), Class.Int32Type);

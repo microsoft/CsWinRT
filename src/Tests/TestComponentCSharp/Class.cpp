@@ -2125,6 +2125,20 @@ namespace winrt::TestComponentCSharp::implementation
         return sum;
     }
 
+    int64_t Class::SumIntsWithGetManyFromView(IVectorView<int32_t> const& values, uint32_t startIndex, uint32_t capacity)
+    {
+        std::vector<int32_t> items(capacity);
+        uint32_t retrieved = values.GetMany(startIndex, items);
+        int64_t sum = 0;
+
+        for (uint32_t i = 0; i < retrieved; i++)
+        {
+            sum += items[i];
+        }
+
+        return sum;
+    }
+
     int32_t Class::CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs)
     {
         auto iterator = pairs.First();
