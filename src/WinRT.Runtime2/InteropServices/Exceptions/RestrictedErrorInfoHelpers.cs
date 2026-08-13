@@ -130,12 +130,20 @@ internal static unsafe class RestrictedErrorInfoHelpers
     {
         IDictionary? exceptionData = exception.Data;
 
-        if (exceptionData is not null)
+        if (exceptionData is not null && exceptionData.Count > 0)
         {
             restrictedErrorObject = exceptionData[WellKnownExceptionDataKeys.RestrictedErrorObjectReference] as WindowsRuntimeObjectReference;
+
+            if (restrictedErrorObject is null)
+            {
+                isLanguageException = false;
+
+                return false;
+            }
+
             isLanguageException = exceptionData[WellKnownExceptionDataKeys.HasRestrictedLanguageErrorObject] is true;
 
-            return restrictedErrorObject is not null;
+            return true;
         }
 
         restrictedErrorObject = null;
