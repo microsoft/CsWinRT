@@ -52,6 +52,7 @@ namespace Benchmarks
             }
             // Will be uncommented once the TestWinRT change is done.
             // _ = instance.GetManyFromManagedList(managedBulkVector);
+            // _ = instance.GetManyFromManagedReadOnlyList(managedBulkVector);
             bulkStringVector = instance.NewList();
             bulkStringBuffer = new string[BulkCount];
             for (int i = 0; i < BulkCount; i++)
@@ -116,6 +117,13 @@ namespace Benchmarks
         // public uint GetManyFromManagedList()
         // {
         //     return instance.GetManyFromManagedList(managedBulkVector);
+        // }
+
+        // Will be uncommented once the TestWinRT change is done.
+        // [Benchmark(OperationsPerInvoke = BulkCount)]
+        // public uint GetManyFromManagedReadOnlyList()
+        // {
+        //     return instance.GetManyFromManagedReadOnlyList(managedBulkVector);
         // }
 
         [Benchmark(OperationsPerInvoke = BulkCount)]
