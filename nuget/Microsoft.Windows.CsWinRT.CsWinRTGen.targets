@@ -473,26 +473,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
 
       <!--
-        A Windows Runtime projection is referenced by its reference assembly, which carries the real type
-        definitions. Those same types are generated into the 'WinRT.Projection.dll' referenced below, so
-        compiling against both would make every one of them ambiguous. The forwarder shipped alongside the
-        reference assembly type-forwards them to that projection instead, which is how they bind at runtime,
-        so prefer it. Both layouts are probed ('lib' beside 'ref' for a package, and the parent of 'ref' for
-        a projection built here), and a projection with neither is left as it is.
+        A Windows Runtime projection resolves to its reference assembly here when it comes from a package,
+        and that carries the real type definitions. Those same types are generated into the
+        'WinRT.Projection.dll' referenced below, so compiling against both would make every one of them
+        ambiguous. The forwarder shipped beside it type-forwards them to that projection instead, which is
+        how they bind at runtime, so prefer it. A projection referenced by project already resolves to its
+        forwarder, and one with no forwarder beside it is left exactly as it is.
       -->
       <_CsWinRTComponentProjectionReference Include="@(ReferencePath)" Condition="'%(ReferencePath.CsWinRTInputs)' != ''">
-        <PackageForwarder>$([System.String]::new('%(FullPath)').Replace('\ref\', '\lib\'))</PackageForwarder>
-        <SiblingForwarder>$([System.IO.Path]::Combine($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('%(FullPath)')))), '%(FileName)%(Extension)'))</SiblingForwarder>
+        <ForwarderPath>$([System.String]::new('%(FullPath)').Replace('\ref\', '\lib\'))</ForwarderPath>
       </_CsWinRTComponentProjectionReference>
 
       <_CsWinRTComponentProjectionForwarder Include="@(_CsWinRTComponentProjectionReference)"
-                                            Condition="'%(PackageForwarder)' != '%(FullPath)' and Exists('%(PackageForwarder)')">
-        <ForwarderPath>%(PackageForwarder)</ForwarderPath>
-      </_CsWinRTComponentProjectionForwarder>
-      <_CsWinRTComponentProjectionForwarder Include="@(_CsWinRTComponentProjectionReference)"
-                                            Condition="('%(PackageForwarder)' == '%(FullPath)' or !Exists('%(PackageForwarder)')) and '%(SiblingForwarder)' != '%(FullPath)' and Exists('%(SiblingForwarder)')">
-        <ForwarderPath>%(SiblingForwarder)</ForwarderPath>
-      </_CsWinRTComponentProjectionForwarder>
+                                            Condition="'%(ForwarderPath)' != '%(FullPath)' and Exists('%(ForwarderPath)')" />
 
       <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
       <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Exclude="@(_CsWinRTComponentProjectionForwarder)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd')) and ('%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true')" />
