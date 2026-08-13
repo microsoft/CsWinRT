@@ -2001,6 +2001,74 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestDeprecatedConstructors()
+        {
+            // A '[deprecated]' constructor is still projected, just with '[Obsolete]' on it
+#pragma warning disable CS0618
+            var deprecated = new DeprecatedConstructorClass(1);
+#pragma warning restore CS0618
+
+            Assert.AreEqual(1, deprecated.Value);
+
+            // The two-argument constructor is '[deprecated(remove)]', so it is not projected at all.
+            // Its factory vtable slot is preserved though, which is exactly what lets the three-argument
+            // constructor declared after it still dispatch through the right slot (it sums its arguments,
+            // so a wrong slot would either fail or produce a different value).
+            Assert.IsNull(typeof(DeprecatedConstructorClass).GetConstructor([typeof(int), typeof(int)]));
+
+            var live = new DeprecatedConstructorClass(1, 2, 3);
+
+            Assert.AreEqual(6, live.Value);
+
+            static bool IsObsolete(params Type[] parameterTypes)
+            {
+                ConstructorInfo constructor = typeof(DeprecatedConstructorClass).GetConstructor(parameterTypes);
+
+                Assert.IsNotNull(constructor);
+
+                return constructor.GetCustomAttribute<ObsoleteAttribute>() is not null;
+            }
+
+            Assert.IsTrue(IsObsolete(typeof(int)));
+            Assert.IsFalse(IsObsolete(typeof(int), typeof(int), typeof(int)));
+        }
+
+        [TestMethod]
+        public void TestRemovedConstructors()
+        {
+            // Every constructor of these two classes is '[deprecated(remove)]', so neither is
+            // constructible from the projection: the activatable (sealed) one and the composable
+            // (unsealed) one both have to drop their only constructor.
+            //
+            // 'HasPublicParameterlessConstructor' resolves the 'new()' constrained overload only when the
+            // type *as compiled against* really exposes a public parameterless constructor, so it asserts
+            // the reference projection's surface. That matters because dropping every constructor without
+            // emitting a non-public one in its place would let the C# compiler synthesize an implicit
+            // public parameterless constructor, which the implementation projection does not have.
+            Assert.IsTrue(HasPublicParameterlessConstructor<Class>());
+            Assert.IsFalse(HasPublicParameterlessConstructor<RemovedActivationClass>());
+            Assert.IsFalse(HasPublicParameterlessConstructor<RemovedComposableClass>());
+
+            // The implementation projection agrees with the reference projection above
+            Assert.AreEqual(0, typeof(RemovedActivationClass).GetConstructors().Length);
+            Assert.AreEqual(0, typeof(RemovedComposableClass).GetConstructors().Length);
+
+            // Both types are still fully usable through their static factory methods
+            Assert.AreEqual(42, RemovedActivationClass.Create(42).Value);
+            Assert.AreEqual(42, RemovedComposableClass.Create(42).Value);
+        }
+
+        /// <summary>
+        /// Compile-time probe for a public parameterless constructor: the <c>new()</c> constrained
+        /// overload is only a candidate when <typeparamref name="T"/> has one, so a call resolves to
+        /// the fallback overload otherwise.
+        /// </summary>
+        private static bool HasPublicParameterlessConstructor<T>() where T : new() => true;
+
+        /// <inheritdoc cref="HasPublicParameterlessConstructor{T}()"/>
+        private static bool HasPublicParameterlessConstructor<T>(int _ = 0) => false;
+
+        [TestMethod]
         public void TestStaticMembers()
         {
             Class.StaticIntProperty = 42;
@@ -3088,6 +3156,42 @@ namespace UnitTest
             e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
+        }
+
+        [TestMethod]
+        public void CompletedTaskAdapters_PreserveTerminalStateAndHandlers()
+        {
+            IAsyncAction completedAction = Task.CompletedTask.AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Completed, completedAction.Status);
+
+            int actionHandlerCalls = 0;
+            completedAction.Completed = (_, status) =>
+            {
+                Assert.AreEqual(AsyncStatus.Completed, status);
+                actionHandlerCalls++;
+            };
+            Assert.AreEqual(1, actionHandlerCalls);
+
+            IAsyncOperation<int> completedOperation = Task.FromResult(42).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Completed, completedOperation.Status);
+            Assert.AreEqual(42, completedOperation.GetResults());
+
+            IAsyncAction faultedAction = Task.FromException(new InvalidOperationException()).AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Error, faultedAction.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(faultedAction.GetResults);
+
+            IAsyncOperation<int> faultedOperation = Task.FromException<int>(new InvalidOperationException()).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Error, faultedOperation.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(() => faultedOperation.GetResults());
+
+            CancellationToken canceledToken = new(canceled: true);
+            IAsyncAction canceledAction = Task.FromCanceled(canceledToken).AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Canceled, canceledAction.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(canceledAction.GetResults);
+
+            IAsyncOperation<int> canceledOperation = Task.FromCanceled<int>(canceledToken).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Canceled, canceledOperation.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(() => canceledOperation.GetResults());
         }
 
         async Task InvokeDoitAsyncWithProgress()
@@ -4771,15 +4875,30 @@ namespace UnitTest
             Assert.IsFalse(seventh.Equals(eighth));
         }
 
-        // Manually verify warning for experimental.
+        // Windows Runtime APIs marked '[experimental]' in metadata are projected with the .NET
+        // '[Experimental]' attribute, which reports 'CSWINRT3005' at every use site (see
+        // 'docs/diagnostics/cswinrt3005.md'). This method is what verifies that at compile time: it only
+        // builds because the diagnostic is explicitly suppressed here, exactly as user code would have to.
         private void TestExperimentAttribute()
         {
-            // This method intentionally uses an '[Experimental]' API to manually verify the warning, so suppress
-            // 'CS8305' here to keep the intentional usage from breaking the build (warnings are treated as errors).
-#pragma warning disable CS8305
+#pragma warning disable CSWINRT3005
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
-#pragma warning restore CS8305
+#pragma warning restore CSWINRT3005
+        }
+
+        // Like the carried-over metadata attributes it replaces, the projected '[Experimental]' attribute
+        // is reference-projection-only: it is only ever consumed by compilers and analyzers, which see the
+        // reference projection, so it must not survive into the implementation projection loaded at runtime.
+        [TestMethod]
+        public void TestExperimentalIsNotProjectedInImplementationProjection()
+        {
+            // Naming the type at all is a use site, so the diagnostic has to be suppressed here too
+#pragma warning disable CSWINRT3005
+            Type experimentalType = typeof(CustomExperimentClass);
+#pragma warning restore CSWINRT3005
+
+            Assert.IsNull(experimentalType.GetCustomAttribute<ExperimentalAttribute>());
         }
 
         void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)

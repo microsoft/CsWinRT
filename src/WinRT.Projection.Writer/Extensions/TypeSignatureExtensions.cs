@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
@@ -156,35 +157,6 @@ internal static class TypeSignatureExtensions
                 sig.IsString() ||
                 sig.IsObject() ||
                 resolver.IsRuntimeClassOrInterface(sig);
-        }
-
-        /// <summary>
-        /// Strips trailing <see cref="ByReferenceTypeSignature"/> and <see cref="CustomModifierTypeSignature"/>
-        /// wrappers from the signature, returning the underlying signature.
-        /// </summary>
-        /// <returns>The underlying signature with byref + custom-modifier wrappers stripped.</returns>
-        public TypeSignature StripByRefAndCustomModifiers()
-        {
-            TypeSignature current = sig;
-
-            while (true)
-            {
-                if (current is ByReferenceTypeSignature br)
-                {
-                    current = br.BaseType;
-
-                    continue;
-                }
-
-                if (current is CustomModifierTypeSignature cm)
-                {
-                    current = cm.BaseType;
-
-                    continue;
-                }
-
-                return current;
-            }
         }
 
         /// <summary>

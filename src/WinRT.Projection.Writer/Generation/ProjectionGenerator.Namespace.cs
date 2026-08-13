@@ -48,6 +48,12 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
+                {
+                    continue;
+                }
+
                 if (type.IsGeneric)
                 {
                     continue;
@@ -116,6 +122,12 @@ internal sealed partial class ProjectionGenerator
                 continue;
             }
 
+            // Skip fully removed types (omitted from both the projection and the ABI)
+            if (type.IsRemoved)
+            {
+                continue;
+            }
+
             (string ns2, string nm2) = type.Names();
 
             // Skip generic types and mapped types
@@ -176,6 +188,12 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
+                {
+                    continue;
+                }
+
                 if (TypeKindResolver.Resolve(type) != TypeKind.Class)
                 {
                     continue;
@@ -200,6 +218,12 @@ internal sealed partial class ProjectionGenerator
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
 
                 if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
+                {
+                    continue;
+                }
+
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
                 {
                     continue;
                 }

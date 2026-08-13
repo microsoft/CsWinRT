@@ -86,7 +86,10 @@ internal static class ComponentFactory
         // Writes the body of the 'ActivateInstance' method (it throws for non-activatable types)
         void WriteActivateInstanceBody(IndentedTextWriter writer)
         {
-            bool isActivatable = !type.IsStatic && type.HasDefaultConstructor();
+            // A type whose default constructor is removed ([Deprecated(DeprecationType.Remove)]) is no longer
+            // default-activatable: 'new T()' cannot be emitted (it would call the removed authored member),
+            // so default activation falls through to the 'throw' below, which marshals to E_NOTIMPL.
+            bool isActivatable = !type.IsStatic && type.HasActivatableDefaultConstructor();
 
             if (isActivatable)
             {
@@ -172,7 +175,11 @@ internal static class ComponentFactory
             {
                 foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    if (method.IsConstructor)
+                    // Removed members (DeprecationType.Remove) are omitted from the factory class: the
+                    // projected factory/static interface drops them, their vtable slot is stubbed to
+                    // E_NOTIMPL, and generated code cannot call the authored member anyway (the C#
+                    // compiler treats a call to a '[Deprecated(Remove)]' member as an error).
+                    if (method.IsConstructor || method.IsRemoved)
                     {
                         continue;
                     }
@@ -184,7 +191,7 @@ internal static class ComponentFactory
             {
                 foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    if (method.IsConstructor)
+                    if (method.IsConstructor || method.IsRemoved)
                     {
                         continue;
                     }
@@ -193,10 +200,20 @@ internal static class ComponentFactory
                 }
                 foreach (PropertyDefinition prop in info.Type.Properties)
                 {
+                    if ((prop.GetMethod ?? prop.SetMethod) is { IsRemoved: true })
+                    {
+                        continue;
+                    }
+
                     WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
                 }
                 foreach (EventDefinition evt in info.Type.Events)
                 {
+                    if (evt.AddMethod is { IsRemoved: true })
+                    {
+                        continue;
+                    }
+
                     WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
                 }
             }

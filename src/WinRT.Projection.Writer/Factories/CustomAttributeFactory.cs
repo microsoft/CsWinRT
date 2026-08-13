@@ -10,6 +10,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.References;
 using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
@@ -20,6 +21,30 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class CustomAttributeFactory
 {
+    /// <summary>
+    /// The projected name of the Windows Runtime <c>[Experimental]</c> attribute.
+    /// </summary>
+    /// <remarks>
+    /// The two attributes model the same concept, but the .NET one is richer: it requires a diagnostic
+    /// id, which lets user code opt into an experimental API by suppressing that specific id (the
+    /// Windows Runtime attribute carries no arguments at all). See <see cref="ProjectedExperimentalArgs"/>.
+    /// </remarks>
+    private const string ProjectedExperimentalName = "System.Diagnostics.CodeAnalysis.Experimental";
+
+    /// <summary>
+    /// The pre-formatted arguments emitted for <see cref="ProjectedExperimentalName"/>.
+    /// </summary>
+    /// <remarks>
+    /// They are the same for every experimental Windows Runtime API: the Windows Runtime attribute has
+    /// no arguments to derive a per-API id or message from, so all of them share one CsWinRT id.
+    /// </remarks>
+    private static readonly string[] ProjectedExperimentalArgs =
+    [
+        $"\"{WellKnownDiagnostics.ExperimentalWindowsRuntimeApiId}\"",
+        $"UrlFormat = \"{WellKnownDiagnostics.UrlFormat}\"",
+        $"Message = \"{WellKnownDiagnostics.ExperimentalWindowsRuntimeApiMessage}\""
+    ];
+
     /// <summary>
     /// Returns the formatted argument list for emitting <paramref name="attribute"/> as a C# attribute.
     /// </summary>
@@ -380,7 +405,7 @@ internal static class CustomAttributeFactory
         // Applications are collected in metadata order, with one entry per application. A Windows Runtime
         // attribute marked '[allowmultiple]' (e.g. '[TemplateVisualState]') can legitimately be applied
         // several times to the same member, and every application has to be carried over.
-        List<(string Name, List<string> Args)> attributes = [];
+        List<(string Name, IReadOnlyList<string> Args)> attributes = [];
 
         // The arguments of the recorded '[AttributeUsage]' application, if any, so that a separate
         // '[AllowMultiple]' application can be folded into it once all attributes have been seen
@@ -438,6 +463,16 @@ internal static class CustomAttributeFactory
                 continue;
             }
 
+            // '[Experimental]' is custom-mapped to the .NET attribute of the same name, which requires a
+            // diagnostic id that Windows Runtime metadata has no counterpart for, so a CsWinRT-owned one
+            // is synthesized (see 'ProjectedExperimentalArgs')
+            if (ns == WindowsFoundationMetadata && strippedName == "Experimental")
+            {
+                attributes.Add((ProjectedExperimentalName, ProjectedExperimentalArgs));
+
+                continue;
+            }
+
             // Only format the arguments of attributes that are actually carried over. Implementation
             // projections drop almost everything, and they are the hot publish-time path.
             List<string> args = WriteCustomAttributeArgs(attr);
@@ -464,23 +499,68 @@ internal static class CustomAttributeFactory
             attributes.Add((AttributeUsageName, ["global::System.AttributeTargets.All", "AllowMultiple = true"]));
         }
 
-        foreach ((string attributeName, List<string> attributeArgs) in attributes)
+        foreach ((string attributeName, IReadOnlyList<string> attributeArgs) in attributes)
         {
-            writer.Write($"[global::{attributeName}");
+            WriteAttribute(writer, attributeName, attributeArgs);
+        }
+    }
 
-            if (attributeArgs.Count > 0)
+    /// <summary>
+    /// Writes the projected form of the Windows Runtime <c>[Experimental]</c> attribute, on its own line.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    public static void WriteExperimentalAttribute(IndentedTextWriter writer)
+    {
+        WriteAttribute(writer, ProjectedExperimentalName, ProjectedExperimentalArgs);
+    }
+
+    /// <summary>
+    /// Writes a single attribute application, on its own line.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="attributeName">The fully-qualified attribute name (without the <c>global::</c> prefix).</param>
+    /// <param name="attributeArgs">The pre-formatted positional + named argument strings (in order).</param>
+    private static void WriteAttribute(IndentedTextWriter writer, string attributeName, IReadOnlyList<string> attributeArgs)
+    {
+        writer.Write($"[global::{attributeName}");
+
+        if (attributeArgs.Count > 0)
+        {
+            writer.Write("(");
+            for (int i = 0; i < attributeArgs.Count; i++)
             {
-                writer.Write("(");
-                for (int i = 0; i < attributeArgs.Count; i++)
-                {
-                    writer.WriteIf(i > 0, ", ");
+                writer.WriteIf(i > 0, ", ");
 
-                    writer.Write(attributeArgs[i]);
-                }
-                writer.Write(")");
+                writer.Write(attributeArgs[i]);
             }
+            writer.Write(")");
+        }
 
-            writer.WriteLine("]");
+        writer.WriteLine("]");
+    }
+
+    /// <summary>
+    /// Writes a <c>[System.Obsolete]</c> attribute when <paramref name="member"/> is deprecated but
+    /// not removed. Removed members are omitted from the projection entirely, so they get no attribute.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="member">The member to inspect for <c>[Windows.Foundation.Metadata.Deprecated]</c>.</param>
+    public static void WriteObsoleteAttribute(IndentedTextWriter writer, IHasCustomAttribute member)
+    {
+        if (!member.IsDeprecatedNotRemoved)
+        {
+            return;
+        }
+
+        string? message = member.DeprecatedMessage;
+
+        if (string.IsNullOrEmpty(message))
+        {
+            writer.WriteLine("[global::System.Obsolete]");
+        }
+        else
+        {
+            writer.WriteLine($"[global::System.Obsolete(@\"{EscapeVerbatimString(message)}\")]");
         }
     }
 
@@ -520,7 +600,8 @@ internal static class CustomAttributeFactory
             return false;
         }
 
-        // Metadata attributes without a projected form are always dropped
+        // Metadata attributes without a projected form are always dropped. '[Experimental]' is listed
+        // here as it is custom-mapped rather than carried over (see 'WriteCustomAttributes').
         if (ns == WindowsFoundationMetadata)
         {
             return strippedName is "ContractVersion" or "ApiContract" or "DefaultOverload" or "Overload" or "Experimental";
@@ -542,6 +623,7 @@ internal static class CustomAttributeFactory
     public static void WriteTypeCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
     {
         WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
+        WriteObsoleteAttribute(writer, type);
     }
 
     /// <inheritdoc cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>
@@ -562,6 +644,7 @@ internal static class CustomAttributeFactory
         int before = writer.Length;
 
         WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
+        WriteObsoleteAttribute(writer, type);
 
         // If anything was written, the buffer ends with a trailing newline that came from the
         // last attribute's WriteLine. Trim it so the callback can be inlined into a multiline

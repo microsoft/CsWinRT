@@ -76,8 +76,13 @@ namespace UnitTest
         [TestMethod]
         public void TestPlayToManager()
         {
+            // 'PlayToManager' is deprecated in the Windows SDK, so it is projected with '[Obsolete]'. This
+            // test covers its interop extensions regardless, so suppress 'CS0618' to keep the intentional
+            // usage from breaking the build (warnings are treated as errors).
+#pragma warning disable CS0618
             Assert.ThrowsExactly<COMException>(() => PlayToManager.GetForWindow(new IntPtr(0)));
             PlayToManager.ShowPlayToUIForWindow(new IntPtr(0));
+#pragma warning restore CS0618
         }
 
         [TestMethod]
