@@ -18,6 +18,14 @@
 
     <!-- Generate projections for the types in the 'Authoring' namespace of the input '.winmd' below -->
     <CsWinRTIncludes>Authoring</CsWinRTIncludes>
+
+    <!--
+      Packed by 'run-smoke-tests.ps1' so the sibling 'ComponentUsingProjection' smoke test can consume
+      this projection the way a real consumer does: as a package, which resolves to the reference
+      assembly under 'ref' rather than to the forwarder a project reference would give.
+    -->
+    <IsPackable>true</IsPackable>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackProjectionAssets</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,4 +44,27 @@
     -->
     <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\Authoring\bin\$(Configuration)\$(TargetFramework)\Authoring.winmd" />
   </ItemGroup>
+
+  <!--
+    Lay the package out the way a real Windows Runtime projection package is laid out. None of this is
+    automatic: the build replaces '@(IntermediateAssembly)' with the forwarder, so the SDK packs only that
+    (as 'lib'), and the reference assembly, the metadata and the targets that feed it back to a consumer
+    all have to be placed explicitly.
+
+    Getting this layout right is the point of the 'ComponentUsingProjection' smoke test, which is why
+    'run-smoke-tests.ps1' asserts on it rather than trusting it.
+  -->
+  <Target Name="_PackProjectionAssets" DependsOnTargets="Build" Returns="@(TfmSpecificPackageFile)">
+    <ItemGroup>
+
+      <!-- The reference assembly a consumer compiles against -->
+      <TfmSpecificPackageFile Include="$(TargetDir)ref\$(AssemblyName).dll" PackagePath="ref\$(TargetFramework)\" />
+
+      <!-- The metadata the consumer's projection generator regenerates the implementation from -->
+      <TfmSpecificPackageFile Include="@(CsWinRTInputs)" PackagePath="metadata\" />
+
+      <!-- Contributes that metadata to the consuming project, as a projection package's targets do -->
+      <TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)Projection.targets" PackagePath="buildTransitive\$(TargetFramework)\" />
+    </ItemGroup>
+  </Target>
 </Project>

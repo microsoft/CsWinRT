@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end smoke test for a Windows Runtime component that consumes a *packaged* projection and
+    exposes one of its types.
+
+    This is the shape a project reference cannot reproduce, and so the one the other smoke tests miss.
+    A project reference to a projection resolves to its forwarder, but a package reference resolves to
+    the reference assembly under 'ref', which declares the projected types for real. Those same types
+    are also generated into the 'WinRT.Projection.dll' produced for this project, and the component
+    projection is compiled against both, so every type declared in both is ambiguous unless the build
+    prefers the forwarder that sits beside the reference assembly under 'lib'.
+
+    The component is an 'Exe' so that building it runs the projection and interop generators, which is
+    what a component consuming a projection looks like in practice.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <CsWinRTComponent>true</CsWinRTComponent>
+  </PropertyGroup>
+
+  <!--
+    The projection under test is the sibling 'Projection' smoke test, packed by 'run-smoke-tests.ps1'
+    into its own output folder. Consuming it as a package rather than as a project reference is the
+    entire point of this test, so that folder is added as a restore source.
+  -->
+  <PropertyGroup>
+    <ProjectionPackageVersion Condition="'$(ProjectionPackageVersion)' == ''">1.0.0</ProjectionPackageVersion>
+    <ProjectionPackageSource Condition="'$(ProjectionPackageSource)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'Projection', 'bin', '$(Configuration)'))</ProjectionPackageSource>
+    <RestoreSources>$(RestoreSources);$(ProjectionPackageSource)</RestoreSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Projection" Version="$(ProjectionPackageVersion)" />
+  </ItemGroup>
+
+</Project>

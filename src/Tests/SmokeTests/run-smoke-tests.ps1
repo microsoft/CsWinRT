@@ -31,6 +31,12 @@
         base Windows SDK reference projection (mirroring how the UWP XAML projection package depends on
         the base Windows SDK projection package).
 
+      * ComponentUsingProjection: a Windows Runtime component consumes a *packaged* projection (the one
+        packed from the projection test above) and exposes one of its types. A package reference resolves
+        to the reference assembly, unlike the forwarder a project reference resolves to, so this is the
+        only test that covers a projected type being declared both by that reference assembly and by the
+        projection generated for the component itself.
+
     The smoke tests reference the package via 'RestoreSources' (see the '.csproj' files), so
     no global NuGet configuration changes are required.
 
@@ -42,16 +48,17 @@
 
 .PARAMETER Test
     Which smoke test(s) to run: 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection',
-    'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as its own step (passing a
-    single value), so an individual failure is reported in isolation; local builds use the default 'All'.
+    'WindowsSdkXamlProjection', 'ComponentUsingProjection', or 'All' (the default). The CI runs each test
+    as its own step (passing a single value), so an individual failure is reported in isolation; local
+    builds use the default 'All'.
 
 .PARAMETER Runtime
     Which runtime to target: 'CoreCLR' (the default) builds and runs on the managed runtime;
     'NativeAot' publishes the project with Native AOT ('PublishAot=true', win-x64), exercising the
     full publish pipeline (projection and interop generators, then ILC). The CI runs both as
     separate steps so a failure points at the exact runtime. The 'Projection', 'WindowsSdkProjection',
-    and 'WindowsSdkXamlProjection' tests are build-only and therefore CoreCLR-only; they are skipped for
-    'NativeAot'.
+    'WindowsSdkXamlProjection', and 'ComponentUsingProjection' tests are build-only and therefore
+    CoreCLR-only; they are skipped for 'NativeAot'.
 
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
@@ -71,7 +78,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
+    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -92,6 +99,10 @@ $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
 $windowsSdkXamlProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkXamlProjection', 'WindowsSdkXamlProjection.csproj')
+$componentUsingProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'ComponentUsingProjection', 'ComponentUsingProjection.csproj')
+
+# Version the 'Projection' smoke test is packed with, and that 'ComponentUsingProjection' consumes.
+$projectionPackageVersion = '1.0.0'
 
 # Resolve the package source to an absolute path (NuGet rejects relative '--source' values).
 $resolvedPackageSource = (Resolve-Path -Path $PackageSource).Path
@@ -257,6 +268,79 @@ function Invoke-ReferenceProjectionSmokeTest {
     Write-Host "Verified the $Name projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
 }
 
+# Component consuming a packaged projection: pack the 'Projection' smoke test, then build a Windows
+# Runtime component that consumes it as a package and exposes one of its types. A package reference
+# resolves to the reference assembly under 'ref', which declares the projected types for real, unlike
+# the forwarder a project reference resolves to, so only this shape covers the ambiguity between those
+# declarations and the ones generated into this component's own projection. Building the component is
+# the assertion: the component projection fails to compile if they are ambiguous.
+function Invoke-ComponentUsingProjectionSmokeTest {
+    Write-Host "`n=== Component using a packaged projection smoke test ($Runtime) ===" -ForegroundColor Green
+
+    if ($Runtime -eq 'NativeAot') {
+        Write-Host 'Skipping the ComponentUsingProjection smoke test for Native AOT (it is covered by the CoreCLR build).' -ForegroundColor DarkGray
+        return
+    }
+
+    $projectionDirectory = [IO.Path]::GetDirectoryName($projectionProject)
+    $projectionPackageSource = [IO.Path]::Combine($projectionDirectory, 'bin', $Configuration)
+
+    Invoke-Dotnet (@('pack', $projectionProject, "-p:PackageVersion=$projectionPackageVersion") + $commonBuildArgs)
+
+    $package = [IO.Path]::Combine($projectionPackageSource, "Projection.$projectionPackageVersion.nupkg")
+
+    if (-not (Test-Path -Path $package)) {
+        throw "Packing the projection did not produce '$package'."
+    }
+
+    # The whole point of this test is that the projection is consumed through its reference assembly,
+    # so fail loudly (rather than silently covering nothing) if the package is not laid out that way.
+    Assert-PackageHasReferenceAssemblyLayout -Path $package -AssemblyName 'Projection'
+
+    Invoke-Dotnet (@('build', $componentUsingProjectionProject, "-p:ProjectionPackageVersion=$projectionPackageVersion") + $commonBuildArgs)
+
+    Write-Host 'Verified a component consuming a packaged projection builds its component projection.' -ForegroundColor DarkGray
+}
+
+# Verifies a projection package ships both the reference assembly consumers compile against ('ref')
+# and the forwarder they bind to at runtime ('lib'), plus the metadata the consumer regenerates the
+# implementation from. All three are preconditions for the test above covering anything.
+function Assert-PackageHasReferenceAssemblyLayout {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Path,
+        [Parameter(Mandatory = $true)] [string] $AssemblyName
+    )
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    $archive = [IO.Compression.ZipFile]::OpenRead($Path)
+
+    try {
+        $entries = $archive.Entries | ForEach-Object { $_.FullName }
+    }
+    finally {
+        $archive.Dispose()
+    }
+
+    $referenceAssembly = $entries | Where-Object { $_ -like "ref/*/$AssemblyName.dll" } | Select-Object -First 1
+    $forwarder = $entries | Where-Object { $_ -like "lib/*/$AssemblyName.dll" } | Select-Object -First 1
+    $metadata = $entries | Where-Object { $_ -like 'metadata/*.winmd' } | Select-Object -First 1
+
+    if ($null -eq $referenceAssembly) {
+        throw "The projection package does not contain 'ref/<tfm>/$AssemblyName.dll', so it is not consumed through a reference assembly and this test would cover nothing."
+    }
+
+    if ($null -eq $forwarder) {
+        throw "The projection package does not contain 'lib/<tfm>/$AssemblyName.dll', so there is no forwarder for the build to prefer over the reference assembly."
+    }
+
+    if ($null -eq $metadata) {
+        throw "The projection package does not contain 'metadata/<name>.winmd', so the consumer generates no projection for its types and nothing would collide with the reference assembly."
+    }
+
+    Write-Host "Verified the projection package ships '$referenceAssembly', '$forwarder' and '$metadata'." -ForegroundColor DarkGray
+}
+
 if ($Test -in @('All', 'Consumption')) {
     Invoke-ConsumptionSmokeTest
 }
@@ -275,6 +359,10 @@ if ($Test -in @('All', 'WindowsSdkProjection')) {
 
 if ($Test -in @('All', 'WindowsSdkXamlProjection')) {
     Invoke-WindowsSdkXamlProjectionSmokeTest
+}
+
+if ($Test -in @('All', 'ComponentUsingProjection')) {
+    Invoke-ComponentUsingProjectionSmokeTest
 }
 
 Write-Host "`nSmoke tests passed." -ForegroundColor Green

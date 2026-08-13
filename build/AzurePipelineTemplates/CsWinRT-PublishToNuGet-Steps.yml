@@ -207,6 +207,15 @@ steps:
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test WindowsSdkXamlProjection -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
 
+  - task: PowerShell@2
+    displayName: Run component using a packaged projection smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test ComponentUsingProjection -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
   # Fail the job if any smoke test above failed. Each smoke test uses 'continueOnError', so an
   # individual failure only marks the job as 'SucceededWithIssues'; this turns that into a real
   # failure, while still letting every smoke test run and report first.
