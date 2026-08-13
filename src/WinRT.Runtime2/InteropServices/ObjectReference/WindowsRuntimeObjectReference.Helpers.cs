@@ -24,11 +24,23 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <summary>
     /// Gets a value for a projected call, avoiding managed lease atomics for free-threaded references.
     /// </summary>
+    /// <remarks>
+    /// The returned value must be disposed on every path and must not escape the current call frame.
+    /// Disposing the underlying object reference while the call is in flight is undefined behavior.
+    /// </remarks>
+    /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [WindowsRuntimeImplementationOnlyMember]
     public WindowsRuntimeObjectReferenceValue AsValueForCall()
     {
-        return new(this, acquireLease: !IsFreeThreaded || GetReferenceTrackerPtrUnsafe() is not null);
+        bool acquireLease = RequiresManagedCallLease;
+
+        if (!acquireLease)
+        {
+            ThrowIfDisposedUnsafe();
+        }
+
+        return new(this, acquireLease);
     }
 
     /// <summary>

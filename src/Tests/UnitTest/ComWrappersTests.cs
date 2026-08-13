@@ -80,6 +80,41 @@ public unsafe class ComWrappersTests
             }
         }
     }
+
+    [TestMethod]
+    public void TestLeaseFreeCallThrowsAfterObjectReferenceIsDisposed()
+    {
+        void* target = FakeInspectable.Create(nested: null);
+
+        try
+        {
+            object wrapper = WindowsRuntimeMarshal.ConvertToManaged(target);
+
+            Assert.IsTrue(WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(
+                wrapper,
+                out WindowsRuntimeObjectReference objectReference));
+
+            // These conditions are the inputs to the lease-free predicate. The predicate itself is internal
+            // to WinRT.Runtime, so together they verify this object exercises the lease-free call path.
+            Assert.IsTrue(objectReference.IsFreeThreaded);
+            Assert.AreEqual(IntPtr.Zero, (IntPtr)objectReference.GetReferenceTrackerPtrUnsafe());
+
+            objectReference.Dispose();
+
+            Assert.ThrowsExactly<ObjectDisposedException>(() => GetValueForCall(objectReference));
+
+            GC.KeepAlive(wrapper);
+        }
+        finally
+        {
+            FakeInspectable.Release(target);
+        }
+
+        static void GetValueForCall(WindowsRuntimeObjectReference objectReference)
+        {
+            using WindowsRuntimeObjectReferenceValue _ = objectReference.AsValueForCall();
+        }
+    }
 }
 
 /// <summary>

@@ -53,6 +53,10 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
         {
             objectReference.AddRefUnsafe();
         }
+        else
+        {
+            objectReference.DebugAcquireLeaseFreeCall();
+        }
     }
 
     /// <summary>
@@ -93,6 +97,8 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
             void* thisPtr = _objectReference.GetThisPtrUnsafe();
 
             _ = IUnknownVftbl.AddRefUnsafe(thisPtr);
+
+            GC.KeepAlive(_objectReference);
 
             return thisPtr;
         }
@@ -147,6 +153,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
             }
             else
             {
+                _objectReference.DebugReleaseLeaseFreeCall();
                 GC.KeepAlive(_objectReference);
             }
 
@@ -181,6 +188,7 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
             }
             else
             {
+                _objectReference.DebugReleaseLeaseFreeCall();
                 GC.KeepAlive(_objectReference);
             }
         }

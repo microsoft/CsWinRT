@@ -19,7 +19,11 @@ public unsafe partial class WindowsRuntimeObjectReference
         DisposeUnsafe();
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IDisposable.Dispose" path="/summary/node()"/>
+    /// <remarks>
+    /// Disposing an object reference while any thread may be invoking a member through it is undefined
+    /// behavior and may corrupt or terminate the process.
+    /// </remarks>
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -250,8 +254,8 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// same problem (ie. the underlying pointer being in use becoming invalid right after retrieving it from the object).
     /// </para>
     /// <para>
-    /// This method exists mostly for backwards compatibility for older APIs. New code should always use <see cref="AddRefUnsafe"/>
-    /// and <see cref="ReleaseUnsafe"/>, and then <see cref="GetThisPtrUnsafe"/> to access the native pointer to use for interop.
+    /// This check is used by lease-free projected call paths. It only detects references that were already
+    /// disposed and does not protect against a concurrent <see cref="Dispose"/> after the check succeeds.
     /// </para>
     /// </remarks>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance is disposed.</exception>
@@ -307,6 +311,8 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </remarks>
     private void NativeDisposeUnsafe()
     {
+        DebugAssertNoLeaseFreeCalls();
+
         if (!PreventReleaseOnDispose)
         {
             // Perform the appropriate optimized release, depending on whether we have context

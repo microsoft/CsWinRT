@@ -495,9 +495,11 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // are just skipping them to avoid crashing the app (there were several reports of this causing issues before).
             if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objReference))
             {
-                // Free-threaded non-tracker references can be used by generated call sites without a
-                // managed lease. Tracker objects still need deterministic tracker-runtime cleanup.
-                if (!objReference.IsFreeThreaded || objReference.GetReferenceTrackerPtrUnsafe() is not null)
+                // Free-threaded non-tracker references can be used by generated call sites without a managed
+                // lease, so disposing one here could race an in-flight call. They are not tied to the dying
+                // context, and can safely release from their finalizer instead. Context-aware and tracker
+                // references still require deterministic cleanup while the original context is available.
+                if (objReference.RequiresManagedCallLease)
                 {
                     objReference.Dispose();
                 }

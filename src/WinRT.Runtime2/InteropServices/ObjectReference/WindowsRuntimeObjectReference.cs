@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -50,6 +51,13 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     /// </summary>
     private readonly CreateObjectReferenceFlags _flags;
 
+#if DEBUG
+    /// <summary>
+    /// The number of active lease-free calls using this object reference.
+    /// </summary>
+    private int _leaseFreeCallCount;
+#endif
+
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeObjectReference"/> instance with the specified parameters.
     /// </summary>
@@ -88,6 +96,19 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
         // way. Because all derived types are defined in this assembly, we can just hardcode this instead.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => GetType() == typeof(FreeThreadedObjectReference);
+    }
+
+    /// <summary>
+    /// Gets whether projected calls require a managed lease for this object reference.
+    /// </summary>
+    /// <remarks>
+    /// This predicate must also be used when deciding whether <c>ReleaseObjects</c> can
+    /// deterministically dispose an object reference while calls may still be in flight.
+    /// </remarks>
+    internal bool RequiresManagedCallLease
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => !IsFreeThreaded || _referenceTrackerPtr is not null;
     }
 
     /// <summary>
@@ -141,6 +162,43 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     internal CreateObjectReferenceFlags CopyFlags(CreateObjectReferenceFlags requestedFlags)
     {
         return _flags & requestedFlags;
+    }
+
+    /// <summary>
+    /// Tracks a lease-free call in debug builds.
+    /// </summary>
+    [Conditional("DEBUG")]
+    internal void DebugAcquireLeaseFreeCall()
+    {
+#if DEBUG
+        _ = System.Threading.Interlocked.Increment(ref _leaseFreeCallCount);
+#endif
+    }
+
+    /// <summary>
+    /// Stops tracking a lease-free call in debug builds.
+    /// </summary>
+    [Conditional("DEBUG")]
+    internal void DebugReleaseLeaseFreeCall()
+    {
+#if DEBUG
+        int count = System.Threading.Interlocked.Decrement(ref _leaseFreeCallCount);
+
+        Debug.Assert(count >= 0, "A lease-free call value was disposed more than once.");
+#endif
+    }
+
+    /// <summary>
+    /// Verifies that no lease-free calls are in flight in debug builds.
+    /// </summary>
+    [Conditional("DEBUG")]
+    private void DebugAssertNoLeaseFreeCalls()
+    {
+#if DEBUG
+        Debug.Assert(
+            System.Threading.Volatile.Read(ref _leaseFreeCallCount) == 0,
+            "The object reference was disposed while an AsValueForCall value was active, or that value was not disposed.");
+#endif
     }
 
     /// <summary>
