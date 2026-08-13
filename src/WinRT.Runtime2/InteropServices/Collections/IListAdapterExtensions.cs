@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -248,6 +249,22 @@ public static class IListAdapterBlittableValueTypeExtensions
             ArgumentNullException.ThrowIfNull(items);
 
             int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+
+            Span<T> destination = new(items, itemCount);
+
+            if (list is T[] array)
+            {
+                array.AsSpan((int)startIndex, itemCount).CopyTo(destination);
+
+                return (uint)itemCount;
+            }
+
+            if (list is List<T> concreteList)
+            {
+                CollectionsMarshal.AsSpan(concreteList).Slice((int)startIndex, itemCount).CopyTo(destination);
+
+                return (uint)itemCount;
+            }
 
             for (int i = 0; i < itemCount; i++)
             {

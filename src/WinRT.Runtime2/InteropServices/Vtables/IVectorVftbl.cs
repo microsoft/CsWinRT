@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
@@ -34,4 +35,19 @@ internal unsafe struct IVectorVftbl
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
     public delegate* unmanaged[MemberFunction]<void*, uint, uint, void*, uint*, HRESULT> GetMany;
     public delegate* unmanaged[MemberFunction]<void*, uint, void*, HRESULT> ReplaceAll;
+
+    /// <summary>
+    /// Retrieves multiple items from the vector beginning at the given index.
+    /// </summary>
+    /// <param name="thisPtr">The target COM object.</param>
+    /// <param name="startIndex">The zero-based index of the first item to retrieve.</param>
+    /// <param name="capacity">The number of items that can be written to <paramref name="items"/>.</param>
+    /// <param name="items">The target buffer to write the retrieved items to.</param>
+    /// <param name="actual">The number of items that were retrieved.</param>
+    /// <returns>The <c>HRESULT</c> for the operation.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HRESULT GetManyUnsafe(void* thisPtr, uint startIndex, uint capacity, void* items, uint* actual)
+    {
+        return ((IVectorVftbl*)*(void***)thisPtr)->GetMany(thisPtr, startIndex, capacity, items, actual);
+    }
 }

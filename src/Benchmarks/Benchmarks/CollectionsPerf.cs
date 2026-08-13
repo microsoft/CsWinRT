@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
 
@@ -19,8 +20,13 @@ namespace Benchmarks
         private IList<int> vector;
         private IList<int> bulkVector;
         private int[] bulkBuffer;
+        private int[] managedBulkVector;
+        private ClassWithMarshalingRoutines instance;
+        private IList<string> bulkStringVector;
+        private string[] bulkStringBuffer;
         private IDictionary<string, int> stringMap;
         private IReadOnlyList<int> vectorView;
+        private IReadOnlyList<int> bulkVectorView;
         private IReadOnlyDictionary<int, int> mapView;
 
         private IList<WrappedClass> objectVector;
@@ -28,18 +34,33 @@ namespace Benchmarks
         private WrappedClass[] bulkObjectBuffer;
         private IDictionary<string, WrappedClass> objectMap;
         private IReadOnlyList<WrappedClass> objectVectorView;
+        private IReadOnlyList<WrappedClass> bulkObjectVectorView;
         private IReadOnlyDictionary<string, WrappedClass> objectMapView;
 
         [GlobalSetup]
         public void Setup()
         {
-            ClassWithMarshalingRoutines instance = new();
+            instance = new();
 
             vector = instance.Items(VectorLen);
             bulkVector = instance.Items(BulkCount);
             bulkBuffer = new int[BulkCount];
+            managedBulkVector = new int[BulkCount];
+            for (int i = 0; i < BulkCount; i++)
+            {
+                managedBulkVector[i] = i;
+            }
+            // Will be uncommented once the TestWinRT change is done.
+            // _ = instance.GetManyFromManagedList(managedBulkVector);
+            bulkStringVector = instance.NewList();
+            bulkStringBuffer = new string[BulkCount];
+            for (int i = 0; i < BulkCount; i++)
+            {
+                bulkStringVector.Add(i.ToString());
+            }
             stringMap = instance.StringMap(MapLen);
             vectorView = instance.ItemsView(VectorLen);
+            bulkVectorView = instance.ItemsView(BulkCount);
             mapView = instance.MapView(MapLen);
 
             objectVector = instance.ObjectItems(VectorLen);
@@ -47,6 +68,7 @@ namespace Benchmarks
             bulkObjectBuffer = new WrappedClass[BulkCount];
             objectMap = instance.ObjectMap(MapLen);
             objectVectorView = instance.ObjectItemsView(VectorLen);
+            bulkObjectVectorView = instance.ObjectItemsView(BulkCount);
             objectMapView = instance.ObjectMapView(MapLen);
         }
 
@@ -89,10 +111,53 @@ namespace Benchmarks
             bulkVector.CopyTo(bulkBuffer, 0);
         }
 
+        // Will be uncommented once the TestWinRT change is done.
+        // [Benchmark(OperationsPerInvoke = BulkCount)]
+        // public uint GetManyFromManagedList()
+        // {
+        //     return instance.GetManyFromManagedList(managedBulkVector);
+        // }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public void GetManyStrings()
+        {
+            bulkStringVector.CopyTo(bulkStringBuffer, 0);
+        }
+
         [Benchmark(OperationsPerInvoke = BulkCount)]
         public void GetManyObjects()
         {
             bulkObjectVector.CopyTo(bulkObjectBuffer, 0);
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public int[] ToArray()
+        {
+            return bulkVector.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public string[] ToArrayStrings()
+        {
+            return bulkStringVector.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public WrappedClass[] ToArrayObjects()
+        {
+            return bulkObjectVector.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public int[] ToArrayView()
+        {
+            return bulkVectorView.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public WrappedClass[] ToArrayViewObjects()
+        {
+            return bulkObjectVectorView.ToArray();
         }
 
         [Benchmark(OperationsPerInvoke = MapLen)]

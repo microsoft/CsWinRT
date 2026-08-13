@@ -292,6 +292,10 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVector<int32_t> GetIntVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector2();
+        Windows::Foundation::Collections::IVector<hstring> GetStringVector2();
+        Windows::Foundation::Collections::IVector<Windows::Foundation::DateTime> GetDateTimeVector2();
+        Windows::Foundation::Collections::IVector<TestComponentCSharp::Class> GetClassVector2();
+        Windows::Foundation::Collections::IVector<hresult> GetExceptionVector2();
 
         Windows::Foundation::Collections::IMap<int32_t, int32_t> GetIntToIntDictionary();
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
@@ -427,6 +431,7 @@ namespace winrt::TestComponentCSharp::implementation
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
         int32_t SumNullableIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> const& values);
+        int64_t SumIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<int32_t> const& values, uint32_t startIndex, uint32_t capacity);
         int32_t CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs);
 
         static int GetPropertyType(Windows::Foundation::IInspectable const& obj);

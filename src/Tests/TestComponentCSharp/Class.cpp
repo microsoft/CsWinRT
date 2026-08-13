@@ -1203,6 +1203,39 @@ namespace winrt::TestComponentCSharp::implementation
             });
     }
 
+    IVector<hstring> Class::GetStringVector2()
+    {
+        std::vector<hstring> values;
+        values.reserve(130);
+
+        for (int32_t i = 0; i < 130; i++)
+        {
+            values.push_back(to_hstring(i));
+        }
+
+        return winrt::single_threaded_vector(std::move(values));
+    }
+
+    IVector<DateTime> Class::GetDateTimeVector2()
+    {
+        auto now = winrt::clock::now();
+        return winrt::single_threaded_vector(std::vector{ now, now + std::chrono::seconds{ 1 } });
+    }
+
+    IVector<TestComponentCSharp::Class> Class::GetClassVector2()
+    {
+        return winrt::single_threaded_vector(std::vector
+            {
+                winrt::make<implementation::Class>(),
+                winrt::make<implementation::Class>(),
+            });
+    }
+
+    IVector<winrt::hresult> Class::GetExceptionVector2()
+    {
+        return winrt::single_threaded_vector(std::vector{ winrt::hresult{ -2147467259 }, winrt::hresult{ -2147024809 } });
+    }
+
     // Test IIDOptimizer
     IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
     {
@@ -2078,6 +2111,20 @@ namespace winrt::TestComponentCSharp::implementation
         return sum;
     }
 
+    int64_t Class::SumIntsWithGetMany(IVector<int32_t> const& values, uint32_t startIndex, uint32_t capacity)
+    {
+        std::vector<int32_t> items(capacity);
+        uint32_t retrieved = values.GetMany(startIndex, items);
+        int64_t sum = 0;
+
+        for (uint32_t i = 0; i < retrieved; i++)
+        {
+            sum += items[i];
+        }
+
+        return sum;
+    }
+
     int32_t Class::CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs)
     {
         auto iterator = pairs.First();
@@ -2254,4 +2301,3 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<NonProjectedDerivedCustomEquals>();
     }
 }
-
