@@ -22,12 +22,3 @@ public sealed class GreeterFactory
         return greeter.Greet(name);
     }
 }
-
-file sealed class Program
-{
-    // A component is activated by its consumer, so nothing needs to happen here. The entry point
-    // exists only so that building this project runs the generators an application build runs.
-    private static void Main()
-    {
-    }
-}

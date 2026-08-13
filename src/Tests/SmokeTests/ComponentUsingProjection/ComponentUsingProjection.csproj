@@ -11,12 +11,13 @@
     projection is compiled against both, so every type declared in both is ambiguous unless the build
     prefers the forwarder that sits beside the reference assembly under 'lib'.
 
-    The component is an 'Exe' so that building it runs the projection and interop generators, which is
-    what a component consuming a projection looks like in practice.
+    The component is a library rather than an 'Exe': component projects only need to be executables so
+    that Native AOT picks up the type map, and this test is build-only on CoreCLR. Building for a native
+    consumer is what makes the generators run for a library.
   -->
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <CsWinRTComponent>true</CsWinRTComponent>
+    <CsWinRTBuildForNativeConsumer>true</CsWinRTBuildForNativeConsumer>
   </PropertyGroup>
 
   <!--
