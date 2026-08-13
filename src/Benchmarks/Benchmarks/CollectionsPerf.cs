@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
 
@@ -25,6 +26,7 @@ namespace Benchmarks
         private string[] bulkStringBuffer;
         private IDictionary<string, int> stringMap;
         private IReadOnlyList<int> vectorView;
+        private IReadOnlyList<int> bulkVectorView;
         private IReadOnlyDictionary<int, int> mapView;
 
         private IList<WrappedClass> objectVector;
@@ -32,6 +34,7 @@ namespace Benchmarks
         private WrappedClass[] bulkObjectBuffer;
         private IDictionary<string, WrappedClass> objectMap;
         private IReadOnlyList<WrappedClass> objectVectorView;
+        private IReadOnlyList<WrappedClass> bulkObjectVectorView;
         private IReadOnlyDictionary<string, WrappedClass> objectMapView;
 
         [GlobalSetup]
@@ -57,6 +60,7 @@ namespace Benchmarks
             }
             stringMap = instance.StringMap(MapLen);
             vectorView = instance.ItemsView(VectorLen);
+            bulkVectorView = instance.ItemsView(BulkCount);
             mapView = instance.MapView(MapLen);
 
             objectVector = instance.ObjectItems(VectorLen);
@@ -64,6 +68,7 @@ namespace Benchmarks
             bulkObjectBuffer = new WrappedClass[BulkCount];
             objectMap = instance.ObjectMap(MapLen);
             objectVectorView = instance.ObjectItemsView(VectorLen);
+            bulkObjectVectorView = instance.ObjectItemsView(BulkCount);
             objectMapView = instance.ObjectMapView(MapLen);
         }
 
@@ -123,6 +128,36 @@ namespace Benchmarks
         public void GetManyObjects()
         {
             bulkObjectVector.CopyTo(bulkObjectBuffer, 0);
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public int[] ToArray()
+        {
+            return bulkVector.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public string[] ToArrayStrings()
+        {
+            return bulkStringVector.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public WrappedClass[] ToArrayObjects()
+        {
+            return bulkObjectVector.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public int[] ToArrayView()
+        {
+            return bulkVectorView.ToArray();
+        }
+
+        [Benchmark(OperationsPerInvoke = BulkCount)]
+        public WrappedClass[] ToArrayViewObjects()
+        {
+            return bulkObjectVectorView.ToArray();
         }
 
         [Benchmark(OperationsPerInvoke = MapLen)]
