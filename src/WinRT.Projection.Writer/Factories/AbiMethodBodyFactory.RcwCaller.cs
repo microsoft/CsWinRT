@@ -43,6 +43,23 @@ internal static partial class AbiMethodBodyFactory
         Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
     public static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
+        // Generic instantiations over 'IReference<TypeName>' / 'IReference<HResult>' cannot be marshalled:
+        // 'System.Type' and 'System.Exception' are reference types with no 'Nullable<T>' shape, so the
+        // 'WinRT.Interop' marshaller they would reference does not exist. Emit a throwing body instead
+        if (RequiresUnsupportedNullableTOfReferenceTypeMarshalling(sig))
+        {
+            writer.WriteLine();
+            writer.IncreaseIndent();
+            writer.WriteLine(isMultiline: true, """
+                {
+                    throw new global::System.NotSupportedException();
+                }
+                """);
+            writer.DecreaseIndent();
+
+            return;
+        }
+
         TypeSignature? rt = sig.ReturnType;
 
         MethodSignatureMarshallingFacts facts = MethodSignatureMarshallingFacts.From(sig, context.AbiTypeKindResolver);

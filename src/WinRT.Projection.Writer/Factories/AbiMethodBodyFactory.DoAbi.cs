@@ -50,6 +50,21 @@ internal static partial class AbiMethodBodyFactory
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
         }
 
+        // Generic instantiations over 'IReference<TypeName>' / 'IReference<HResult>' have no valid
+        // 'WinRT.Interop' marshaller (see 'RequiresUnsupportedNullableTOfReferenceTypeMarshalling'), so
+        // the CCW body throws instead of referencing a marshaller the interop generator cannot produce
+        if (RequiresUnsupportedNullableTOfReferenceTypeMarshalling(sig))
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, """
+                {
+                    throw new global::System.NotSupportedException();
+                }
+                """);
+
+            return;
+        }
+
         writer.WriteLine();
         using (writer.WriteBlock())
         {
