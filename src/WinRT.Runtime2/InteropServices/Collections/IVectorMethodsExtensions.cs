@@ -220,7 +220,7 @@ public static unsafe class IVectorMethodsBlittableValueTypeExtensions
             int copied = 0;
 
             // Blittable items don't need any marshalling, so we can retrieve them
-            // directly into the target array, with no intermediate stack buffer
+            // directly into the target array, with no intermediate stack buffer.
             fixed (T* items = array)
             {
                 while (copied < count)

@@ -101,7 +101,7 @@ public static class IListMethods<T>
         int copied = TMethods.GetMany(thisReference, array, arrayIndex, count);
 
         // Some vectors might return fewer items than requested, so preserve the semantics
-        // of 'ICollection<T>.CopyTo' by retrieving any remaining items individually
+        // of 'ICollection<T>.CopyTo' by retrieving any remaining items individually.
         for (int i = copied; i < count; i++)
         {
             array[i + arrayIndex] = Item<TMethods>(thisReference, i);
