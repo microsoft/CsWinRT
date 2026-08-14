@@ -76,6 +76,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <_RunCsWinRTGeneratorPropertyInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_RunCsWinRTGeneratorPropertyInputsCachePath)'))</_RunCsWinRTGeneratorPropertyInputsCachePath>
 
     <!--
+      Set the path of the file with the hash of the Windows Runtime metadata inputs for 'cswinrtprojectiongen'.
+      That tool takes the '.winmd' files as inputs, so which ones it is given has to take part in the up-to-date
+      check. The targets below also list them in Inputs, which covers their contents, but a timestamp check
+      compares the newest input against the output, so it can never observe a removal (or an addition that is
+      older than the last output). Hashing the set turns that into a change it can see.
+    -->
+    <_CsWinRTProjectionGenWinMDInputsCachePath Condition="'$(_CsWinRTProjectionGenWinMDInputsCachePath)' == ''">$(IntermediateOutputPath)$(MSBuildProjectName).cswinrtprojectiongen.winmds.cache</_CsWinRTProjectionGenWinMDInputsCachePath>
+    <_CsWinRTProjectionGenWinMDInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_CsWinRTProjectionGenWinMDInputsCachePath)'))</_CsWinRTProjectionGenWinMDInputsCachePath>
+
+    <!--
       Default property values for `cswinrtimplgen`.
     -->
     <CsWinRTGeneratorForwarderAssemblyDirectory Condition="'$(CsWinRTGeneratorForwarderAssemblyDirectory)' == ''">$(IntermediateOutputPath)\forwarder\</CsWinRTGeneratorForwarderAssemblyDirectory>
@@ -187,6 +197,37 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <WriteLinesToFile
       Lines="$(_RunCsWinRTGeneratorInputsCacheHash)"
       File="$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!--
+    ============================================================
+                  _CsWinRTComputeProjectionGenWinMDInputs
+
+    Writes the hash of the Windows Runtime metadata inputs for
+    'cswinrtprojectiongen', so its targets rerun when that set changes.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTComputeProjectionGenWinMDInputs" DependsOnTargets="ResolveReferences;CsWinRTRemoveWinMDReferences">
+
+    <ItemGroup>
+      <_CsWinRTProjectionGenWinMDInputsToHash Include="@(CsWinRTInputs)" />
+
+      <!-- Metadata a referenced projection contributes, as a ';' separated list that MSBuild splits here -->
+      <_CsWinRTProjectionGenWinMDInputsToHash Include="%(ReferencePathWithRefAssemblies.CsWinRTInputs)"
+                                              Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+
+      <_CsWinRTProjectionGenWinMDInputsToHash Include="$(CsWinRTInteropMetadata)" />
+    </ItemGroup>
+
+    <Hash ItemsToHash="@(_CsWinRTProjectionGenWinMDInputsToHash)">
+      <Output TaskParameter="HashResult" PropertyName="_CsWinRTProjectionGenWinMDInputsHash" />
+    </Hash>
+
+    <WriteLinesToFile
+      Lines="$(_CsWinRTProjectionGenWinMDInputsHash)"
+      File="$(_CsWinRTProjectionGenWinMDInputsCachePath)"
       Overwrite="true"
       WriteOnlyWhenDifferent="true" />
   </Target>
@@ -331,11 +372,37 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </ItemGroup>
   </Target>
 
+  <!--
+    The '.winmd' files a reference projection was generated from have to travel to its consumers, so that
+    their merged projection can regenerate the implementation that the reference assembly only declares.
+
+    '@(CsWinRTInputs)' cannot be read directly for that. One of the ways to supply that metadata is as a
+    '.winmd' '<Reference>', and those are only folded into '@(CsWinRTInputs)' by 'CsWinRTRemoveWinMDReferences',
+    which runs after 'ResolveReferences'. The ProjectReference GetTargetPath protocol never runs
+    'ResolveReferences', so reading the item there yields an empty list, and the consumer then generates a
+    projection containing none of these types. That surfaces much later, and far from its cause, as a failure
+    to generate marshalling code for a type the projection is missing.
+
+    So union the two sources, both of which are available without having to resolve references first.
+  -->
+  <Target Name="_CsWinRTComputeProjectionInputsForConsumers" Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
+    <ItemGroup>
+      <_CsWinRTProjectionInputForConsumers Include="@(CsWinRTInputs)" />
+      <_CsWinRTProjectionInputForConsumers Include="@(Reference)" Condition="'%(Reference.Extension)' == '.winmd'" />
+
+      <!-- A '.winmd' can also be referenced by assembly name, with the path carried on the hint path -->
+      <_CsWinRTProjectionInputForConsumers Include="@(Reference->'%(HintPath)')"
+                                          Condition="'%(Reference.Extension)' != '.winmd' and '%(Reference.HintPath)' != '' and $([System.String]::new('%(Reference.HintPath)').EndsWith('.winmd'))" />
+
+      <_CsWinRTProjectionInputsForConsumers Include="@(_CsWinRTProjectionInputForConsumers->'%(FullPath)'->Distinct())" />
+    </ItemGroup>
+  </Target>
+
   <Target
       Name="CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker"
       Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'"
       BeforeTargets="GetTargetPath"
-      DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
+      DependsOnTargets="GetTargetPathWithTargetPlatformMoniker;_CsWinRTComputeProjectionInputsForConsumers"
       Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
       <!--
@@ -345,7 +412,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       -->
       <TargetPathWithTargetPlatformMoniker Update="$(TargetPath)">
         <ReferenceAssembly>$(_CsWinRTRefAssemblyPath)</ReferenceAssembly>
-        <CsWinRTInputs>@(CsWinRTInputs)</CsWinRTInputs>
+        <CsWinRTInputs>@(_CsWinRTProjectionInputsForConsumers)</CsWinRTInputs>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
   </Target>
@@ -359,7 +426,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target
       Name="GetTargetPathWithTargetPlatformMoniker"
       BeforeTargets="GetTargetPath"
-      DependsOnTargets="$(GetTargetPathWithTargetPlatformMonikerDependsOn)"
+      DependsOnTargets="$(GetTargetPathWithTargetPlatformMonikerDependsOn);_CsWinRTComputeProjectionInputsForConsumers"
       Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(TargetPath)">
@@ -370,7 +437,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <ReferenceAssembly Condition="'$(ProduceReferenceAssembly)' == 'true'">$(TargetRefPath)</ReferenceAssembly>
         <CopyUpToDateMarker>@(CopyUpToDateMarker)</CopyUpToDateMarker>
         <ReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(_CsWinRTRefAssemblyPath)</ReferenceAssembly>
-        <CsWinRTInputs Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">@(CsWinRTInputs)</CsWinRTInputs>
+        <CsWinRTInputs Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">@(_CsWinRTProjectionInputsForConsumers)</CsWinRTInputs>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
   </Target>
@@ -385,9 +452,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
-    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
@@ -465,8 +532,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTComponentProjectionGenerator"
-    DependsOnTargets="CoreCompile;_ResolveCsWinRToolsDirectory;_RunCsWinRTMergedProjectionGenerator"
-    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    DependsOnTargets="CoreCompile;_ResolveCsWinRToolsDirectory;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTMergedProjectionGenerator"
+    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorComponentAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
@@ -559,9 +626,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTSdkProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_CsWinRTComputeProjectionGenWinMDInputs"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
-    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
     Outputs="$(_CsWinRTSdkProjectionAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
@@ -645,9 +712,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTSdkXamlProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_CsWinRTComputeProjectionGenWinMDInputs"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
-    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
     Outputs="$(_CsWinRTSdkXamlAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">
 

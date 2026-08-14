@@ -359,6 +359,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTRefGenEffectiveToolsDirectory)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(_CsWinRTRunProjectionRefGenerator)" />
+
+      <!--
+        The set of metadata inputs. The target's Inputs above already covers their contents, but a timestamp
+        check compares the newest input against the output, so it can never observe a removal (or an addition
+        that is older than the last output). Hashing the set turns that into a change it can see.
+      -->
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="@(CsWinRTInputs)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTInteropMetadata)" />
     </ItemGroup>
 
     <Hash ItemsToHash="@(_CsWinRTProjectionRefGenInputsCacheToHash)">
