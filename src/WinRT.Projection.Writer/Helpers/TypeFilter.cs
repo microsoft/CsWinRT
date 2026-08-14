@@ -125,7 +125,13 @@ internal sealed class TypeFilter
     {
         if (rule.Length <= typeNamespace.Length)
         {
-            return typeNamespace.StartsWith(rule, StringComparison.Ordinal);
+            // A namespace rule only matches on a segment boundary, so that 'Windows' matches 'Windows' and
+            // 'Windows.Foundation', but not an unrelated top level namespace that merely begins with the same
+            // characters, such as 'WindowsRuntime'. Without this, the Windows SDK projection claims types that
+            // belong to another projection entirely.
+            return
+                typeNamespace.StartsWith(rule, StringComparison.Ordinal) &&
+                (rule.Length == typeNamespace.Length || typeNamespace[rule.Length] == '.');
         }
 
         if (!rule.StartsWith(typeNamespace, StringComparison.Ordinal))
