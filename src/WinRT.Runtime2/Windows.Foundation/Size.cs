@@ -30,6 +30,16 @@ namespace Windows.Foundation;
 public struct Size : IEquatable<Size>, IFormattable
 {
     /// <summary>
+    /// The width.
+    /// </summary>
+    public float Width;
+
+    /// <summary>
+    /// The height.
+    /// </summary>
+    public float Height;
+
+    /// <summary>
     /// Creates a new <see cref="Size"/> value with the specified parameters.
     /// </summary>
     /// <param name="width">The width.</param>
@@ -37,38 +47,11 @@ public struct Size : IEquatable<Size>, IFormattable
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="width"/> or <paramref name="height"/> are less than zero.</exception>
     public Size(float width, float height)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(width);
+        ArgumentOutOfRangeException.ThrowIfNegative(height);
+
         Width = width;
         Height = height;
-    }
-
-    /// <summary>
-    /// Gets or sets the width.
-    /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the value is less than zero.</exception>
-    public float Width
-    {
-        readonly get;
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfNegative(value);
-
-            field = value;
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the height.
-    /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the value is less than zero.</exception>
-    public float Height
-    {
-        readonly get;
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfNegative(value);
-
-            field = value;
-        }
     }
 
     /// <summary>

@@ -201,6 +201,16 @@ internal static class ProjectionFileBuilder
 
         using (writer.WriteBlock())
         {
+            // Windows Runtime struct fields are projected as C# fields, matching the ABI
+            // layout exactly. They are emitted first, so that the declaration order (which
+            // determines the sequential layout of the struct) mirrors the metadata order.
+            foreach ((string typeStr, string name, string _, bool _) in fields)
+            {
+                writer.WriteLine($"public {typeStr} {name};");
+            }
+
+            writer.WriteLineIf(fields.Count > 0);
+
             // Emit the constructor declaration
             writer.Write($"public {projectionName}(");
             for (int i = 0; i < fields.Count; i++)
@@ -231,17 +241,6 @@ internal static class ProjectionFileBuilder
                 }
 
                 writer.WriteLine();
-            }
-
-            // Properties (all getters are readonly)
-            foreach ((string typeStr, string name, string _, bool _) in fields)
-            {
-                writer.WriteLine($$"""
-                    public {{typeStr}} {{name}}
-                    {
-                        readonly get; set;
-                    }
-                    """);
             }
 
             // Overridden '==' operator

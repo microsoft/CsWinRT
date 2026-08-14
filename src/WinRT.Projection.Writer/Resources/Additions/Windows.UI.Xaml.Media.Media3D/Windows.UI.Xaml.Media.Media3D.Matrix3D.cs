@@ -10,14 +10,31 @@ namespace Windows.UI.Xaml.Media.Media3D
 #endif
     public struct Matrix3D : IFormattable, IEquatable<Matrix3D>
     {
+        public double M11;
+        public double M12;
+        public double M13;
+        public double M14;
+        public double M21;
+        public double M22;
+        public double M23;
+        public double M24;
+        public double M31;
+        public double M32;
+        public double M33;
+        public double M34;
+        public double OffsetX;
+        public double OffsetY;
+        public double OffsetZ;
+        public double M44;
+
         // Assuming this matrix has fourth column of 0,0,0,1 and isn't identity this function:
         // Returns false if HasInverse is false, otherwise inverts the matrix.
         private bool NormalizedAffineInvert()
         {
-            double z20 = _m12 * _m23 - _m22 * _m13;
-            double z10 = _m32 * _m13 - _m12 * _m33;
-            double z00 = _m22 * _m33 - _m32 * _m23;
-            double det = _m31 * z20 + _m21 * z10 + _m11 * z00;
+            double z20 = M12 * M23 - M22 * M13;
+            double z10 = M32 * M13 - M12 * M33;
+            double z00 = M22 * M33 - M32 * M23;
+            double det = M31 * z20 + M21 * z10 + M11 * z00;
 
             if (IsZero(det))
             {
@@ -25,23 +42,23 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
 
             // Compute 3x3 non-zero cofactors for the 2nd column
-            double z21 = _m21 * _m13 - _m11 * _m23;
-            double z11 = _m11 * _m33 - _m31 * _m13;
-            double z01 = _m31 * _m23 - _m21 * _m33;
+            double z21 = M21 * M13 - M11 * M23;
+            double z11 = M11 * M33 - M31 * M13;
+            double z01 = M31 * M23 - M21 * M33;
 
             // Compute all six 2x2 determinants of 1st two columns
-            double y01 = _m11 * _m22 - _m21 * _m12;
-            double y02 = _m11 * _m32 - _m31 * _m12;
-            double y03 = _m11 * _offsetY - _offsetX * _m12;
-            double y12 = _m21 * _m32 - _m31 * _m22;
-            double y13 = _m21 * _offsetY - _offsetX * _m22;
-            double y23 = _m31 * _offsetY - _offsetX * _m32;
+            double y01 = M11 * M22 - M21 * M12;
+            double y02 = M11 * M32 - M31 * M12;
+            double y03 = M11 * OffsetY - OffsetX * M12;
+            double y12 = M21 * M32 - M31 * M22;
+            double y13 = M21 * OffsetY - OffsetX * M22;
+            double y23 = M31 * OffsetY - OffsetX * M32;
 
             // Compute all non-zero and non-one 3x3 cofactors for 2nd
             // two columns
-            double z23 = _m23 * y03 - _offsetZ * y01 - _m13 * y13;
-            double z13 = _m13 * y23 - _m33 * y03 + _offsetZ * y02;
-            double z03 = _m33 * y13 - _offsetZ * y12 - _m23 * y23;
+            double z23 = M23 * y03 - OffsetZ * y01 - M13 * y13;
+            double z13 = M13 * y23 - M33 * y03 + OffsetZ * y02;
+            double z03 = M33 * y13 - OffsetZ * y12 - M23 * y23;
             double z22 = y01;
             double z12 = -y02;
             double z02 = y12;
@@ -49,21 +66,21 @@ namespace Windows.UI.Xaml.Media.Media3D
             double rcp = 1.0 / det;
 
             // Multiply all 3x3 cofactors by reciprocal & transpose
-            _m11 = (z00 * rcp);
-            _m12 = (z10 * rcp);
-            _m13 = (z20 * rcp);
+            M11 = (z00 * rcp);
+            M12 = (z10 * rcp);
+            M13 = (z20 * rcp);
 
-            _m21 = (z01 * rcp);
-            _m22 = (z11 * rcp);
-            _m23 = (z21 * rcp);
+            M21 = (z01 * rcp);
+            M22 = (z11 * rcp);
+            M23 = (z21 * rcp);
 
-            _m31 = (z02 * rcp);
-            _m32 = (z12 * rcp);
-            _m33 = (z22 * rcp);
+            M31 = (z02 * rcp);
+            M32 = (z12 * rcp);
+            M33 = (z22 * rcp);
 
-            _offsetX = (z03 * rcp);
-            _offsetY = (z13 * rcp);
-            _offsetZ = (z23 * rcp);
+            OffsetX = (z03 * rcp);
+            OffsetY = (z13 * rcp);
+            OffsetZ = (z23 * rcp);
 
             return true;
         }
@@ -77,21 +94,21 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
 
             // compute all six 2x2 determinants of 2nd two columns
-            double y01 = _m13 * _m24 - _m23 * _m14;
-            double y02 = _m13 * _m34 - _m33 * _m14;
-            double y03 = _m13 * _m44 - _offsetZ * _m14;
-            double y12 = _m23 * _m34 - _m33 * _m24;
-            double y13 = _m23 * _m44 - _offsetZ * _m24;
-            double y23 = _m33 * _m44 - _offsetZ * _m34;
+            double y01 = M13 * M24 - M23 * M14;
+            double y02 = M13 * M34 - M33 * M14;
+            double y03 = M13 * M44 - OffsetZ * M14;
+            double y12 = M23 * M34 - M33 * M24;
+            double y13 = M23 * M44 - OffsetZ * M24;
+            double y23 = M33 * M44 - OffsetZ * M34;
 
             // Compute 3x3 cofactors for 1st the column
-            double z30 = _m22 * y02 - _m32 * y01 - _m12 * y12;
-            double z20 = _m12 * y13 - _m22 * y03 + _offsetY * y01;
-            double z10 = _m32 * y03 - _offsetY * y02 - _m12 * y23;
-            double z00 = _m22 * y23 - _m32 * y13 + _offsetY * y12;
+            double z30 = M22 * y02 - M32 * y01 - M12 * y12;
+            double z20 = M12 * y13 - M22 * y03 + OffsetY * y01;
+            double z10 = M32 * y03 - OffsetY * y02 - M12 * y23;
+            double z00 = M22 * y23 - M32 * y13 + OffsetY * y12;
 
             // Compute 4x4 determinant
-            double det = _offsetX * z30 + _m31 * z20 + _m21 * z10 + _m11 * z00;
+            double det = OffsetX * z30 + M31 * z20 + M21 * z10 + M11 * z00;
 
             if (IsZero(det))
             {
@@ -99,51 +116,51 @@ namespace Windows.UI.Xaml.Media.Media3D
             }
 
             // Compute 3x3 cofactors for the 2nd column
-            double z31 = _m11 * y12 - _m21 * y02 + _m31 * y01;
-            double z21 = _m21 * y03 - _offsetX * y01 - _m11 * y13;
-            double z11 = _m11 * y23 - _m31 * y03 + _offsetX * y02;
-            double z01 = _m31 * y13 - _offsetX * y12 - _m21 * y23;
+            double z31 = M11 * y12 - M21 * y02 + M31 * y01;
+            double z21 = M21 * y03 - OffsetX * y01 - M11 * y13;
+            double z11 = M11 * y23 - M31 * y03 + OffsetX * y02;
+            double z01 = M31 * y13 - OffsetX * y12 - M21 * y23;
 
             // Compute all six 2x2 determinants of 1st two columns
-            y01 = _m11 * _m22 - _m21 * _m12;
-            y02 = _m11 * _m32 - _m31 * _m12;
-            y03 = _m11 * _offsetY - _offsetX * _m12;
-            y12 = _m21 * _m32 - _m31 * _m22;
-            y13 = _m21 * _offsetY - _offsetX * _m22;
-            y23 = _m31 * _offsetY - _offsetX * _m32;
+            y01 = M11 * M22 - M21 * M12;
+            y02 = M11 * M32 - M31 * M12;
+            y03 = M11 * OffsetY - OffsetX * M12;
+            y12 = M21 * M32 - M31 * M22;
+            y13 = M21 * OffsetY - OffsetX * M22;
+            y23 = M31 * OffsetY - OffsetX * M32;
 
             // Compute all 3x3 cofactors for 2nd two columns
-            double z33 = _m13 * y12 - _m23 * y02 + _m33 * y01;
-            double z23 = _m23 * y03 - _offsetZ * y01 - _m13 * y13;
-            double z13 = _m13 * y23 - _m33 * y03 + _offsetZ * y02;
-            double z03 = _m33 * y13 - _offsetZ * y12 - _m23 * y23;
-            double z32 = _m24 * y02 - _m34 * y01 - _m14 * y12;
-            double z22 = _m14 * y13 - _m24 * y03 + _m44 * y01;
-            double z12 = _m34 * y03 - _m44 * y02 - _m14 * y23;
-            double z02 = _m24 * y23 - _m34 * y13 + _m44 * y12;
+            double z33 = M13 * y12 - M23 * y02 + M33 * y01;
+            double z23 = M23 * y03 - OffsetZ * y01 - M13 * y13;
+            double z13 = M13 * y23 - M33 * y03 + OffsetZ * y02;
+            double z03 = M33 * y13 - OffsetZ * y12 - M23 * y23;
+            double z32 = M24 * y02 - M34 * y01 - M14 * y12;
+            double z22 = M14 * y13 - M24 * y03 + M44 * y01;
+            double z12 = M34 * y03 - M44 * y02 - M14 * y23;
+            double z02 = M24 * y23 - M34 * y13 + M44 * y12;
 
             double rcp = 1.0 / det;
 
             // Multiply all 3x3 cofactors by reciprocal & transpose
-            _m11 = (z00 * rcp);
-            _m12 = (z10 * rcp);
-            _m13 = (z20 * rcp);
-            _m14 = (z30 * rcp);
+            M11 = (z00 * rcp);
+            M12 = (z10 * rcp);
+            M13 = (z20 * rcp);
+            M14 = (z30 * rcp);
 
-            _m21 = (z01 * rcp);
-            _m22 = (z11 * rcp);
-            _m23 = (z21 * rcp);
-            _m24 = (z31 * rcp);
+            M21 = (z01 * rcp);
+            M22 = (z11 * rcp);
+            M23 = (z21 * rcp);
+            M24 = (z31 * rcp);
 
-            _m31 = (z02 * rcp);
-            _m32 = (z12 * rcp);
-            _m33 = (z22 * rcp);
-            _m34 = (z32 * rcp);
+            M31 = (z02 * rcp);
+            M32 = (z12 * rcp);
+            M33 = (z22 * rcp);
+            M34 = (z32 * rcp);
 
-            _offsetX = (z03 * rcp);
-            _offsetY = (z13 * rcp);
-            _offsetZ = (z23 * rcp);
-            _m44 = (z33 * rcp);
+            OffsetX = (z03 * rcp);
+            OffsetY = (z13 * rcp);
+            OffsetZ = (z23 * rcp);
+            M44 = (z33 * rcp);
 
             return true;
         }
@@ -153,219 +170,27 @@ namespace Windows.UI.Xaml.Media.Media3D
                         double m31, double m32, double m33, double m34,
                         double offsetX, double offsetY, double offsetZ, double m44)
         {
-            _m11 = m11;
-            _m12 = m12;
-            _m13 = m13;
-            _m14 = m14;
-            _m21 = m21;
-            _m22 = m22;
-            _m23 = m23;
-            _m24 = m24;
-            _m31 = m31;
-            _m32 = m32;
-            _m33 = m33;
-            _m34 = m34;
-            _offsetX = offsetX;
-            _offsetY = offsetY;
-            _offsetZ = offsetZ;
-            _m44 = m44;
+            M11 = m11;
+            M12 = m12;
+            M13 = m13;
+            M14 = m14;
+            M21 = m21;
+            M22 = m22;
+            M23 = m23;
+            M24 = m24;
+            M31 = m31;
+            M32 = m32;
+            M33 = m33;
+            M34 = m34;
+            OffsetX = offsetX;
+            OffsetY = offsetY;
+            OffsetZ = offsetZ;
+            M44 = m44;
         }
 
         // the transform is identity by default
         // Actually fill in the fields - some (internal) code uses the fields directly for perf.
         private static Matrix3D s_identity = CreateIdentity();
-
-        public double M11
-        {
-            readonly get
-            {
-                return _m11;
-            }
-            set
-            {
-                _m11 = value;
-            }
-        }
-
-        public double M12
-        {
-            readonly get
-            {
-                return _m12;
-            }
-            set
-            {
-                _m12 = value;
-            }
-        }
-
-        public double M13
-        {
-            readonly get
-            {
-                return _m13;
-            }
-            set
-            {
-                _m13 = value;
-            }
-        }
-
-        public double M14
-        {
-            readonly get
-            {
-                return _m14;
-            }
-            set
-            {
-                _m14 = value;
-            }
-        }
-
-        public double M21
-        {
-            readonly get
-            {
-                return _m21;
-            }
-            set
-            {
-                _m21 = value;
-            }
-        }
-
-        public double M22
-        {
-            readonly get
-            {
-                return _m22;
-            }
-            set
-            {
-                _m22 = value;
-            }
-        }
-
-        public double M23
-        {
-            readonly get
-            {
-                return _m23;
-            }
-            set
-            {
-                _m23 = value;
-            }
-        }
-
-        public double M24
-        {
-            readonly get
-            {
-                return _m24;
-            }
-            set
-            {
-                _m24 = value;
-            }
-        }
-
-        public double M31
-        {
-            readonly get
-            {
-                return _m31;
-            }
-            set
-            {
-                _m31 = value;
-            }
-        }
-
-        public double M32
-        {
-            readonly get
-            {
-                return _m32;
-            }
-            set
-            {
-                _m32 = value;
-            }
-        }
-
-        public double M33
-        {
-            readonly get
-            {
-                return _m33;
-            }
-            set
-            {
-                _m33 = value;
-            }
-        }
-
-        public double M34
-        {
-            readonly get
-            {
-                return _m34;
-            }
-            set
-            {
-                _m34 = value;
-            }
-        }
-
-        public double OffsetX
-        {
-            readonly get
-            {
-                return _offsetX;
-            }
-            set
-            {
-                _offsetX = value;
-            }
-        }
-
-        public double OffsetY
-        {
-            readonly get
-            {
-                return _offsetY;
-            }
-            set
-            {
-                _offsetY = value;
-            }
-        }
-
-        public double OffsetZ
-        {
-            readonly get
-            {
-                return _offsetZ;
-            }
-            set
-            {
-                _offsetZ = value;
-            }
-        }
-
-        public double M44
-        {
-            readonly get
-            {
-                return _m44;
-            }
-            set
-            {
-                _m44 = value;
-            }
-        }
 
         public static Matrix3D Identity
         {
@@ -379,10 +204,10 @@ namespace Windows.UI.Xaml.Media.Media3D
         {
             get
             {
-                return _m11 == 1 && _m12 == 0 && _m13 == 0 && _m14 == 0 &&
-                         _m21 == 0 && _m22 == 1 && _m23 == 0 && _m24 == 0 &&
-                         _m31 == 0 && _m32 == 0 && _m33 == 1 && _m34 == 0 &&
-                         _offsetX == 0 && _offsetY == 0 && _offsetZ == 0 && _m44 == 1;
+                return M11 == 1 && M12 == 0 && M13 == 0 && M14 == 0 &&
+                         M21 == 0 && M22 == 1 && M23 == 0 && M24 == 0 &&
+                         M31 == 0 && M32 == 0 && M33 == 1 && M34 == 0 &&
+                         OffsetX == 0 && OffsetY == 0 && OffsetZ == 0 && M44 == 1;
             }
         }
 
@@ -417,37 +242,37 @@ namespace Windows.UI.Xaml.Media.Media3D
             // Helper to get the numeric list separator for a given culture.
             char separator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(provider);
             DefaultInterpolatedStringHandler handler = new(0, 31, provider, stackalloc char[256]);
-            handler.AppendFormatted(_m11, format);
+            handler.AppendFormatted(M11, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m12, format);
+            handler.AppendFormatted(M12, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m13, format);
+            handler.AppendFormatted(M13, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m14, format);
+            handler.AppendFormatted(M14, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m21, format);
+            handler.AppendFormatted(M21, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m22, format);
+            handler.AppendFormatted(M22, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m23, format);
+            handler.AppendFormatted(M23, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m24, format);
+            handler.AppendFormatted(M24, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m31, format);
+            handler.AppendFormatted(M31, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m32, format);
+            handler.AppendFormatted(M32, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m33, format);
+            handler.AppendFormatted(M33, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m34, format);
+            handler.AppendFormatted(M34, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_offsetX, format);
+            handler.AppendFormatted(OffsetX, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_offsetY, format);
+            handler.AppendFormatted(OffsetY, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_offsetZ, format);
+            handler.AppendFormatted(OffsetZ, format);
             handler.AppendFormatted(separator);
-            handler.AppendFormatted(_m44, format);
+            handler.AppendFormatted(M44, format);
             return handler.ToStringAndClear();
 #endif
         }
@@ -613,22 +438,22 @@ namespace Windows.UI.Xaml.Media.Media3D
                                double m31, double m32, double m33, double m34,
                                double offsetX, double offsetY, double offsetZ, double m44)
         {
-            _m11 = m11;
-            _m12 = m12;
-            _m13 = m13;
-            _m14 = m14;
-            _m21 = m21;
-            _m22 = m22;
-            _m23 = m23;
-            _m24 = m24;
-            _m31 = m31;
-            _m32 = m32;
-            _m33 = m33;
-            _m34 = m34;
-            _offsetX = offsetX;
-            _offsetY = offsetY;
-            _offsetZ = offsetZ;
-            _m44 = m44;
+            M11 = m11;
+            M12 = m12;
+            M13 = m13;
+            M14 = m14;
+            M21 = m21;
+            M22 = m22;
+            M23 = m23;
+            M24 = m24;
+            M31 = m31;
+            M32 = m32;
+            M33 = m33;
+            M34 = m34;
+            OffsetX = offsetX;
+            OffsetY = offsetY;
+            OffsetZ = offsetZ;
+            M44 = m44;
         }
 
         private static bool Equals(Matrix3D matrix1, Matrix3D matrix2)
@@ -653,18 +478,18 @@ namespace Windows.UI.Xaml.Media.Media3D
 
         private readonly double GetNormalizedAffineDeterminant()
         {
-            double z20 = _m12 * _m23 - _m22 * _m13;
-            double z10 = _m32 * _m13 - _m12 * _m33;
-            double z00 = _m22 * _m33 - _m32 * _m23;
+            double z20 = M12 * M23 - M22 * M13;
+            double z10 = M32 * M13 - M12 * M33;
+            double z00 = M22 * M33 - M32 * M23;
 
-            return _m31 * z20 + _m21 * z10 + _m11 * z00;
+            return M31 * z20 + M21 * z10 + M11 * z00;
         }
 
         private readonly bool IsAffine
         {
             get
             {
-                return _m14 == 0.0 && _m24 == 0.0 && _m34 == 0.0 && _m44 == 1.0;
+                return M14 == 0.0 && M24 == 0.0 && M34 == 0.0 && M44 == 1.0;
             }
         }
 
@@ -678,20 +503,20 @@ namespace Windows.UI.Xaml.Media.Media3D
                 }
 
                 // compute all six 2x2 determinants of 2nd two columns
-                double y01 = _m13 * _m24 - _m23 * _m14;
-                double y02 = _m13 * _m34 - _m33 * _m14;
-                double y03 = _m13 * _m44 - _offsetZ * _m14;
-                double y12 = _m23 * _m34 - _m33 * _m24;
-                double y13 = _m23 * _m44 - _offsetZ * _m24;
-                double y23 = _m33 * _m44 - _offsetZ * _m34;
+                double y01 = M13 * M24 - M23 * M14;
+                double y02 = M13 * M34 - M33 * M14;
+                double y03 = M13 * M44 - OffsetZ * M14;
+                double y12 = M23 * M34 - M33 * M24;
+                double y13 = M23 * M44 - OffsetZ * M24;
+                double y23 = M33 * M44 - OffsetZ * M34;
 
                 // Compute 3x3 cofactors for 1st the column
-                double z30 = _m22 * y02 - _m32 * y01 - _m12 * y12;
-                double z20 = _m12 * y13 - _m22 * y03 + _offsetY * y01;
-                double z10 = _m32 * y03 - _offsetY * y02 - _m12 * y23;
-                double z00 = _m22 * y23 - _m32 * y13 + _offsetY * y12;
+                double z30 = M22 * y02 - M32 * y01 - M12 * y12;
+                double z20 = M12 * y13 - M22 * y03 + OffsetY * y01;
+                double z10 = M32 * y03 - OffsetY * y02 - M12 * y23;
+                double z00 = M22 * y23 - M32 * y13 + OffsetY * y12;
 
-                return _offsetX * z30 + _m31 * z20 + _m21 * z10 + _m11 * z00;
+                return OffsetX * z30 + M31 * z20 + M21 * z10 + M11 * z00;
             }
         }
 
@@ -701,22 +526,5 @@ namespace Windows.UI.Xaml.Media.Media3D
         }
 
         private const double DBL_EPSILON_RELATIVE_1 = 1.1102230246251567e-016; /* smallest such that 1.0+DBL_EPSILON != 1.0 */
-
-        private double _m11;
-        private double _m12;
-        private double _m13;
-        private double _m14;
-        private double _m21;
-        private double _m22;
-        private double _m23;
-        private double _m24;
-        private double _m31;
-        private double _m32;
-        private double _m33;
-        private double _m34;
-        private double _offsetX;
-        private double _offsetY;
-        private double _offsetZ;
-        private double _m44;
     }
 }
