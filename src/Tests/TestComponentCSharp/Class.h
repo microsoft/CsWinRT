@@ -73,6 +73,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::handle _syncHandle;
         int32_t _asyncResult;
         int32_t _asyncProgress;
+        std::atomic<bool> _failingCompletedHandlerInvoked{ false };
         Windows::Foundation::Point _point{};
         Windows::Foundation::Rect _rect{};
         Windows::Foundation::Size _size{};
@@ -357,6 +358,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
+
+        void SetFailingCompletedHandler(Windows::Foundation::IAsyncAction const& action, int32_t hr);
+        bool FailingCompletedHandlerInvoked();
 
         Windows::Foundation::Point PointProperty();
         void PointProperty(Windows::Foundation::Point const& value);
