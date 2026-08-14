@@ -113,9 +113,14 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Gets a value indicating whether the type is from a Windows Runtime component assembly.
+        /// Gets a value indicating whether the type comes from an authored Windows Runtime component assembly.
         /// </summary>
-        public bool IsComponentWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeComponentAssembly: true };
+        /// <remarks>
+        /// This says nothing about the type itself. Component assemblies are marked with an assembly level attribute,
+        /// and they also contain plenty of types that are not projected at all, so this is only the first half of the
+        /// question. Use <c>IsComponentWindowsRuntimeType</c> to ask whether the type is a Windows Runtime type.
+        /// </remarks>
+        public bool IsFromComponentAssembly => type.Scope?.GetAssembly() is { IsWindowsRuntimeComponentAssembly: true };
 
         /// <summary>
         /// Gets a value indicating whether the type is from a Windows Runtime reference projection assembly.
@@ -664,7 +669,7 @@ internal static class WindowsRuntimeExtensions
                     ? interopReferences.WinRTSdkProjection
                     : type.IsProjectedWindowsSdkXamlType
                         ? interopReferences.WinRTSdkXamlProjection
-                        : typeDefinition.IsComponentWindowsRuntimeType
+                        : typeDefinition.IsFromComponentAssembly
                             ? interopReferences.WinRTComponent
                             : interopReferences.WinRTProjection;
 
@@ -929,6 +934,18 @@ internal static class WindowsRuntimeExtensions
                 type.BaseType is { } baseType &&
                 SignatureComparer.IgnoreVersion.Equals(baseType, interopReferences.Attribute);
         }
+
+        /// <summary>
+        /// Gets a value indicating whether the type is a Windows Runtime type authored in a component assembly.
+        /// </summary>
+        /// <remarks>
+        /// Only public, non nested types make it into the <c>.winmd</c> a component produces. The rest are ordinary
+        /// managed types (internal helpers, and compiler generated ones such as the nested binding classes the XAML
+        /// compiler emits), and they carry none of the metadata, such as an IID, that marshalling code needs. This
+        /// lives here rather than next to <c>IsFromComponentAssembly</c> because accessibility is only known
+        /// once the type is resolved.
+        /// </remarks>
+        public bool IsComponentWindowsRuntimeType => type.IsFromComponentAssembly && type is { IsPublic: true, DeclaringType: null };
     }
 
     extension(TypeSignature signature)
