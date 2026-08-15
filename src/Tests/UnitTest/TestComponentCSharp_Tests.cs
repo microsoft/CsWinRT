@@ -2745,6 +2745,49 @@ namespace UnitTest
             }
         }
 
+        // Disabled: this currently fails, and is checked in as a repro. The CCW built for
+        // 'SingleItemReadOnlyList' does not expose 'IBindableVector', so marshalling it as 'IList'
+        // throws. Re-enable once that is fixed.
+        //[TestMethod]
+        public unsafe void TestSingleItemReadOnlyListInterfaceMarshalling()
+        {
+            // 'NotifyCollectionChangedEventArgs' stores a single changed item in 'SingleItemReadOnlyList', an
+            // internal BCL type. Any managed collection raising a single item change (e.g. 'ObservableCollection<T>')
+            // therefore ends up marshalling that type across the ABI as 'IList', which builds a CCW for it.
+            // The value has to be sequential from 0, because the native bindable setter below validates that.
+            NotifyCollectionChangedEventArgs args = new(NotifyCollectionChangedAction.Add, 0, 0);
+
+            IList newItems = args.NewItems!;
+
+            Assert.AreEqual("System.Collections.Specialized.SingleItemReadOnlyList", newItems.GetType().FullName);
+
+            // The CCW has to expose 'IBindableVector', which is what 'IList' is projected as
+            Guid iidIBindableVector = new("393DE7DE-6FD0-4C0D-BB71-47244A113E93");
+
+            void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(newItems);
+
+            try
+            {
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in iidIBindableVector, out nint bindableVectorCcw));
+                Assert.AreNotEqual(IntPtr.Zero, bindableVectorCcw);
+
+                _ = Marshal.Release(bindableVectorCcw);
+            }
+            finally
+            {
+                _ = Marshal.Release((nint)ccw);
+            }
+
+            // Same thing through a projected API taking a bindable vector
+            TestObject.BindableVectorProperty = newItems;
+            CollectionAssert.AreEqual(new[] { 0 }, TestObject.BindableVectorProperty.Cast<int>().ToArray());
+
+            // The whole chain: marshalling the event args marshals its 'NewItems' as 'IList'
+            void* argsCcw = WindowsRuntimeMarshal.ConvertToUnmanaged(args);
+
+            _ = Marshal.Release((nint)argsCcw);
+        }
+
         [TestMethod]
         public void TestClassGeneric()
         {
