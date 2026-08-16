@@ -198,10 +198,10 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            // Almost all user-defined types can be resolved. The exception is the non public BCL collection types,
-            // which are registered by name, as they are absent from the reference assemblies the generator sees (see
-            // the discovery of those types). Those carry none of the attributes checked below, so they just take the
-            // same path as any other non-authored type.
+            // Almost all user-defined types can be resolved. The exception is the list types used by
+            // 'NotifyCollectionChangedEventArgs', which are registered by name, as they are absent from the reference
+            // assemblies the generator sees (see the discovery of those types). Those carry none of the attributes
+            // checked below, so they just take the same path as any other non-authored type.
             _ = userDefinedType.TryResolve(module.RuntimeContext, out TypeDefinition? userDefinedTypeDefinition);
 
             // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime

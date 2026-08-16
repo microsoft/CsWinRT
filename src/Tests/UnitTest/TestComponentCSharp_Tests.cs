@@ -2746,14 +2746,14 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public unsafe void TestNonPublicReadOnlyListInterfaceMarshalling()
+        public unsafe void TestCollectionChangedListInterfaceMarshalling()
         {
-            // 'NotifyCollectionChangedEventArgs' stores the changed items in one of two internal BCL list types:
-            // 'SingleItemReadOnlyList' for a single item, and 'ReadOnlyList' for several. Any managed collection
-            // raising a change notification (e.g. an 'ObservableCollection<T>' bound from XAML) therefore ends up
-            // marshalling one of them across the ABI as 'IList', which builds a CCW for it. Neither type is in the
-            // reference assemblies the interop generator sees, so both are registered by name (see the interop
-            // generator's discovery of non public BCL collection types).
+            // 'NotifyCollectionChangedEventArgs' stores the changed items in one of two internal list types,
+            // optimized for that scenario: 'SingleItemReadOnlyList' for a single item, and 'ReadOnlyList' for
+            // several. Any managed collection raising a change notification (e.g. an 'ObservableCollection<T>'
+            // bound from XAML) therefore ends up marshalling one of them across the ABI as 'IList', which builds
+            // a CCW for it. Neither type is in the reference assemblies the interop generator sees, so both are
+            // registered by name (see the interop generator's discovery of the collection changed list types).
             NotifyCollectionChangedEventArgs singleItemArgs = new(NotifyCollectionChangedAction.Add, 0, 0);
             NotifyCollectionChangedEventArgs multipleItemsArgs = new(NotifyCollectionChangedAction.Add, new[] { 0, 1, 2 }, 0);
 
@@ -2775,11 +2775,6 @@ namespace UnitTest
 
             TestObject.BindableVectorProperty = multipleItems;
             CollectionAssert.AreEqual(new[] { 0, 1, 2 }, TestObject.BindableVectorProperty.Cast<int>().ToArray());
-
-            // Note: marshalling the event args themselves (the path the failure was originally reported from)
-            // is not covered here, as that activates the real 'NotifyCollectionChangedEventArgs' runtime class,
-            // which is not registered in this test host. Marshalling its items is what used to fail, and that
-            // is exactly what the checks above cover.
 
             static void AssertCcwExposesBindableInterfaces(IList source)
             {

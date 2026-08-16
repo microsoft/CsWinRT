@@ -58,6 +58,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTMarshallingMode Condition="'$(CsWinRTMarshallingMode)' == ''">minimal</CsWinRTMarshallingMode>
 
+    <!--
+      Controls whether 'cswinrtinteropgen' automatically generates the vtables for the optimized list types that
+      'NotifyCollectionChangedEventArgs' stores its changed items in. These types are internal to the framework,
+      so they are registered by name, and this can be set to 'false' to opt out of them, should one of them ever
+      be renamed or removed in a future .NET version. Note that with the switch off, marshalling those objects
+      (e.g. when an 'ObservableCollection<T>' bound from XAML raises a change) will fail at runtime.
+    -->
+    <CsWinRTGenerateCollectionChangedListVtables Condition="'$(CsWinRTGenerateCollectionChangedListVtables)' == ''">true</CsWinRTGenerateCollectionChangedListVtables>
+
     <!-- Emits a SetEntryAssembly module initializer into WinRT.Component.dll to enable JIT TypeMap discovery.
          Not needed for AOT (handled via a separate exe-project workaround). Will become unnecessary once
          the TypeMappingEntryAssembly MSBuild property is available. -->
@@ -169,6 +178,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
@@ -231,6 +241,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
       MarshallingMode="$(CsWinRTMarshallingMode)"
       MarshallingEnabledAssemblies="@(CsWinRTMarshallingEnabledAssembly)"
+      GenerateCollectionChangedListVtables="$(CsWinRTGenerateCollectionChangedListVtables)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       ValidateWinRTRuntimeDllVersion2References="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)"
       EnableIncrementalGeneration="$(CsWinRTGeneratorEnableIncrementalGeneration)"

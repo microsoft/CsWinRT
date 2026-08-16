@@ -188,8 +188,8 @@ internal static class InteropInterfaceEntriesResolver
         // For public value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
         // These are needed so the struct can be boxed as 'IReference<T>' when used as a generic type argument.
         // We're only looking for value types (classes are already handled just like any other user-defined type),
-        // and types that cannot be resolved are never component types (see the discovery of the non public BCL
-        // collection types, which are registered by name, and so are absent from the generator's inputs).
+        // and types that cannot be resolved are never component types (see the discovery of the collection changed
+        // list types, which are registered by name, and so are absent from the generator's inputs).
         if (!componentType.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? userDefinedTypeDefinition) ||
             userDefinedTypeDefinition is not { IsValueType: true })
         {

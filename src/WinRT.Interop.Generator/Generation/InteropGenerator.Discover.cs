@@ -110,8 +110,8 @@ internal partial class InteropGenerator
         // can create COM callable wrappers for them when they are handed out to native callers.
         DiscoverComponentActivationFactoryTypes(args, discoveryState);
 
-        // Discover the non public collection types the BCL hands out through public APIs
-        DiscoverNonPublicBaseClassLibraryCollectionTypes(args, discoveryState);
+        // Discover the list types that 'NotifyCollectionChangedEventArgs' uses for its changed items
+        DiscoverCollectionChangedListTypes(args, discoveryState);
 
         // We want to ensure the state will never be mutated after this method completes
         discoveryState.MakeReadOnly();
@@ -679,16 +679,16 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Discovers the non public collection types that the .NET base class library (BCL) hands out through public APIs.
+    /// Discovers the list types that <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> uses for its changed items.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <remarks>
     /// <para>
-    /// Some public BCL APIs return internal collection types. The prime example is
-    /// <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>, whose <c>NewItems</c> and
-    /// <c>OldItems</c> are internal list types. Any collection raising a change notification (e.g. an
-    /// <c>ObservableCollection&lt;T&gt;</c> bound from XAML) therefore marshals one of those across the ABI as
+    /// The <c>NewItems</c> and <c>OldItems</c> of a
+    /// <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> are internal list types,
+    /// optimized for that scenario. Any collection raising a change notification (e.g. an
+    /// <c>ObservableCollection&lt;T&gt;</c> bound from XAML) therefore marshals one of them across the ABI as
     /// <see cref="System.Collections.IList"/>, which requires a CCW exposing <c>IBindableVector</c>.
     /// </para>
     /// <para>
@@ -703,10 +703,16 @@ internal partial class InteropGenerator
     /// but it does mean this list has to be revisited when adopting a new .NET version.
     /// </para>
     /// </remarks>
-    private static void DiscoverNonPublicBaseClassLibraryCollectionTypes(
+    private static void DiscoverCollectionChangedListTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState)
     {
+        // Allow opting out of these types, should one of them ever be renamed or removed in a future .NET version
+        if (!args.GenerateCollectionChangedListVtables)
+        {
+            return;
+        }
+
         try
         {
             // Use the Windows SDK projection module as the context to create references from, as
@@ -740,7 +746,7 @@ internal partial class InteropGenerator
         }
         catch (Exception e)
         {
-            WellKnownInteropExceptions.DiscoverNonPublicBaseClassLibraryCollectionTypesError(e).ThrowOrAttach(e);
+            WellKnownInteropExceptions.DiscoverCollectionChangedListTypesError(e).ThrowOrAttach(e);
         }
     }
 

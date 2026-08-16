@@ -1206,8 +1206,8 @@ internal static class WindowsRuntimeExtensions
             };
 
             // A type that cannot be resolved is never a projected Windows Runtime type, so it has no metadata name
-            // (see the discovery of the non public BCL collection types, which are registered by name, and so are
-            // absent from the reference assemblies the generator sees).
+            // (see the discovery of the list types used by 'NotifyCollectionChangedEventArgs', which are registered
+            // by name, and so are absent from the reference assemblies the generator sees).
             return typeDefOrRef.TryResolve(runtimeContext, out TypeDefinition? type)
                 ? type.GetWindowsRuntimeMetadataName(interopDefinitions)
                 : null;

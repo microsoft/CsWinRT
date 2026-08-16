@@ -895,11 +895,11 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
-    /// Failed to discover the non public base class library collection types.
+    /// Failed to discover the list types used by 'NotifyCollectionChangedEventArgs'.
     /// </summary>
-    public static WellKnownInteropException DiscoverNonPublicBaseClassLibraryCollectionTypesError(Exception exception)
+    public static WellKnownInteropException DiscoverCollectionChangedListTypesError(Exception exception)
     {
-        return Exception(103, "Failed to discover the non public collection types from the .NET base class library (e.g. 'SingleItemReadOnlyList').", exception);
+        return Exception(103, "Failed to discover the list types used by 'NotifyCollectionChangedEventArgs' (e.g. 'SingleItemReadOnlyList').", exception);
     }
 
     /// <summary>

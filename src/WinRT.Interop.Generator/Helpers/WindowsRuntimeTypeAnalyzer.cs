@@ -24,7 +24,7 @@ internal static class WindowsRuntimeTypeAnalyzer
     /// <returns>Whether <paramref name="interfaceType"/> was successfully retrieved.</returns>
     /// <remarks>
     /// The interfaces are taken as input, rather than being enumerated off the implementing type, so that this
-    /// also works for types that cannot be resolved (see the discovery of non public BCL collection types).
+    /// also works for types that cannot be resolved (see the discovery of the collection changed list types).
     /// </remarks>
     public static bool TryGetMostDerivedWindowsRuntimeInterfaceType(
         IEnumerable<TypeSignature> interfaceTypes,
