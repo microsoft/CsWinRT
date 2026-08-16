@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -53,7 +54,12 @@ internal static class BindableIListAdapter
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.getview"/>
     public static BindableIReadOnlyListAdapter GetView(IList list)
     {
-        return new(list);
+        // Keep the stateless view adapter alive for as long as the list so repeated native GetView calls
+        // reuse its CCW identity. ConditionalWeakTable ephemeron semantics ensure the adapter's reference
+        // back to the list does not root either object after the list is otherwise unreachable.
+        return BindableIReadOnlyListAdapterTable.Table.GetOrAdd(
+            list,
+            BindableIReadOnlyListAdapterFactory.Callback);
     }
 
     /// <summary>
@@ -181,5 +187,38 @@ internal static class BindableIListAdapter
     public static void Clear(IList list)
     {
         list.Clear();
+    }
+}
+
+/// <summary>
+/// Mapping table for bindable read-only list adapters.
+/// </summary>
+file static class BindableIReadOnlyListAdapterTable
+{
+    /// <summary>
+    /// The adapter cache, keyed by the wrapped list.
+    /// </summary>
+    public static readonly ConditionalWeakTable<IList, BindableIReadOnlyListAdapter> Table = [];
+}
+
+/// <summary>
+/// A factory type for <see cref="BindableIReadOnlyListAdapter"/> instances.
+/// </summary>
+file sealed class BindableIReadOnlyListAdapterFactory
+{
+    /// <summary>
+    /// The singleton <see cref="BindableIReadOnlyListAdapterFactory"/> instance.
+    /// </summary>
+    private static readonly BindableIReadOnlyListAdapterFactory Instance = new();
+
+    /// <summary>
+    /// The singleton <see cref="Func{T, TResult}"/> callback instance for the factory.
+    /// </summary>
+    public static readonly Func<IList, BindableIReadOnlyListAdapter> Callback = new(Instance.Create);
+
+    /// <inheritdoc cref="BindableIReadOnlyListAdapter(IList)"/>
+    private BindableIReadOnlyListAdapter Create(IList list)
+    {
+        return new(list);
     }
 }
