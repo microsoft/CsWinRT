@@ -1197,21 +1197,20 @@ internal static class WindowsRuntimeExtensions
         {
             RuntimeContext? runtimeContext = interopDefinitions.RuntimeContext;
 
-            // A type that cannot be resolved is never a projected Windows Runtime type, so it has no metadata
-            // name (see the discovery of the non public BCL collection types, which are registered by name and
-            // are absent from the reference assemblies the generator sees).
-            return signature switch
+            // Select the type to read the metadata name from (the element type, for constructed generics and arrays)
+            ITypeDefOrRef typeDefOrRef = signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.TryResolve(runtimeContext, out TypeDefinition? genericType)
-                    ? genericType.GetWindowsRuntimeMetadataName(interopDefinitions)
-                    : null,
-                ArrayTypeSignature array => array.BaseType.TryResolve(runtimeContext, out TypeDefinition? elementType)
-                    ? elementType.GetWindowsRuntimeMetadataName(interopDefinitions)
-                    : null,
-                _ => signature.ToTypeDefOrRef().TryResolve(runtimeContext, out TypeDefinition? type)
-                    ? type.GetWindowsRuntimeMetadataName(interopDefinitions)
-                    : null
+                GenericInstanceTypeSignature generic => generic.GenericType,
+                ArrayTypeSignature array => array.BaseType.ToTypeDefOrRef(),
+                _ => signature.ToTypeDefOrRef()
             };
+
+            // A type that cannot be resolved is never a projected Windows Runtime type, so it has no metadata name
+            // (see the discovery of the non public BCL collection types, which are registered by name, and so are
+            // absent from the reference assemblies the generator sees).
+            return typeDefOrRef.TryResolve(runtimeContext, out TypeDefinition? type)
+                ? type.GetWindowsRuntimeMetadataName(interopDefinitions)
+                : null;
         }
     }
 
