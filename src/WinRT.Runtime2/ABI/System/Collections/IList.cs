@@ -217,7 +217,7 @@ public static unsafe class IListImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.getat"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT GetAt(void* thisPtr, uint index, void** result)
+    internal static HRESULT GetAt(void* thisPtr, uint index, void** result)
     {
         if (result is null)
         {
@@ -242,7 +242,7 @@ public static unsafe class IListImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.size"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_Size(void* thisPtr, uint* size)
+    internal static HRESULT get_Size(void* thisPtr, uint* size)
     {
         if (size is null)
         {
@@ -272,25 +272,18 @@ public static unsafe class IListImpl
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        try
-        {
-            var thisObject = ComInterfaceDispatch.GetInstance<IList>((ComInterfaceDispatch*)thisPtr);
-
-            BindableIReadOnlyListAdapter adapter = BindableIListAdapter.GetView(thisObject);
-
-            *view = WindowsRuntime.InteropServices.BindableIReadOnlyListAdapterMarshaller.ConvertToUnmanaged(adapter).DetachThisPtrUnsafe();
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
+        // As with generic IList<T> views, this returns another interface on the same CCW. Native callers
+        // can therefore query the view back to IBindableVector, and its runtime class name remains that
+        // of the vector. This avoids allocating a separate adapter and preserves COM identity.
+        return IUnknownVftbl.QueryInterfaceUnsafe(
+            thisPtr,
+            in WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView,
+            out *view);
     }
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.indexof"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT IndexOf(void* thisPtr, void* value, uint* index, bool* result)
+    internal static HRESULT IndexOf(void* thisPtr, void* value, uint* index, bool* result)
     {
         if (index is null || result is null)
         {
@@ -425,6 +418,43 @@ public static unsafe class IListImpl
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
+    }
+}
+
+/// <summary>
+/// The <c>IBindableVectorView</c> implementation for managed <see cref="IList"/> instances.
+/// </summary>
+[WindowsRuntimeImplementationOnlyMember]
+public static unsafe class IListViewImpl
+{
+    [FixedAddressValueType]
+    private static readonly IBindableVectorViewVftbl Vftbl;
+
+    static IListViewImpl()
+    {
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+
+        Vftbl.GetAt = &IListImpl.GetAt;
+        Vftbl.get_Size = &IListImpl.get_Size;
+        Vftbl.IndexOf = &IListImpl.IndexOf;
+    }
+
+    /// <summary>
+    /// Gets the IID for <c>IBindableVectorView</c>.
+    /// </summary>
+    public static ref readonly Guid IID
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IBindableVectorView;
+    }
+
+    /// <summary>
+    /// Gets a pointer to the managed <see cref="IList"/> view implementation.
+    /// </summary>
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 }
 

@@ -88,6 +88,15 @@ internal static class InteropInterfaceEntriesResolver
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
 
+                if (SignatureComparer.IgnoreVersion.Equals(typeSignature, interopReferences.IList))
+                {
+                    // IListImpl.GetView returns this interface from the same CCW, so every generated
+                    // IList entry set must also expose the matching IBindableVectorView vtable.
+                    yield return new WindowsRuntimeInterfaceEntryInfo(
+                        interopReferences.IListViewImplget_IID,
+                        interopReferences.IListViewImplget_Vtable);
+                }
+
                 continue;
             }
 

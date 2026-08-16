@@ -786,6 +786,11 @@ internal sealed class InteropReferences
     public TypeReference IStringableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IStringableImpl"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>ABI.System.Collections.IListViewImpl</c>.
+    /// </summary>
+    public TypeReference IListViewImpl => field ??= _windowsRuntimeModule.CreateTypeReference("ABI.System.Collections"u8, "IListViewImpl"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl</c>.
     /// </summary>
     public TypeReference IMarshalImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMarshalImpl"u8);
@@ -1219,11 +1224,6 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.ReadOnlyDictionaryValueCollection2&lt;TKey, TValue&gt;.Enumerator</c>.
     /// </summary>
     public TypeReference ReadOnlyDictionaryValueCollection2Enumerator => field ??= ReadOnlyDictionaryValueCollection2.CreateTypeReference("Enumerator"u8);
-
-    /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.BindableIReadOnlyListAdapter</c>.
-    /// </summary>
-    public TypeReference BindableIReadOnlyListAdapter => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "BindableIReadOnlyListAdapter"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeInterface</c>.
@@ -2038,6 +2038,13 @@ internal sealed class InteropReferences
             returnType: WellKnownTypeSignatureFactory.InGuid(this)));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.Collections.IListViewImpl.get_IID()</c>.
+    /// </summary>
+    public MemberReference IListViewImplget_IID => field ??= IListViewImpl
+        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.get_IID_IMarshal()</c>.
     /// </summary>
     public MemberReference WellKnownInterfaceIIDsget_IID_IMarshal => field ??= WellKnownInterfaceIIDs
@@ -2083,6 +2090,13 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
+        .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.IntPtr));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>ABI.System.Collections.IListViewImpl.get_Vtable()</c>.
+    /// </summary>
+    public MemberReference IListViewImplget_Vtable => field ??= IListViewImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
 

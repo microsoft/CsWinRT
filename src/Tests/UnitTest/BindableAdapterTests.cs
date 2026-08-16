@@ -3,126 +3,156 @@
 
 using System;
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using WindowsRuntime.InteropServices;
 
 namespace UnitTest;
 
 [TestClass]
-public class BindableAdapterTests
+public unsafe class BindableAdapterTests
 {
-    private static readonly MethodInfo GetViewMethod = GetBindableIListAdapterType().GetMethod(
-        "GetView",
-        BindingFlags.Public | BindingFlags.Static)!;
+    private static readonly Guid IBindableVector = new("393DE7DE-6FD0-4C0D-BB71-47244A113E93");
+    private static readonly Guid IUnknown = new("00000000-0000-0000-C000-000000000046");
 
     [TestMethod]
-    public void GetViewReusesAdapterForSameList()
+    public void GetViewReturnsSameComIdentity()
     {
-        IList list = new ArrayList();
+        IList list = new TestList { 1 };
 
-        object first = GetView(list);
-        object second = GetView(list);
+        using WindowsRuntimeObjectReferenceValue listValue = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(list);
+        void* vector = QueryInterface(listValue.GetThisPtrUnsafe(), in IBindableVector);
+        void* view = GetView(vector);
 
-        Assert.AreSame(first, second);
-    }
+        try
+        {
+            Assert.AreNotEqual((nint)vector, (nint)view);
 
-    [TestMethod]
-    public void GetViewUsesDifferentAdaptersForDifferentLists()
-    {
-        object first = GetView(new ArrayList());
-        object second = GetView(new ArrayList());
+            void* vectorIdentity = QueryInterface(vector, in IUnknown);
+            void* viewIdentity = QueryInterface(view, in IUnknown);
 
-        Assert.AreNotSame(first, second);
+            try
+            {
+                Assert.AreEqual((nint)vectorIdentity, (nint)viewIdentity);
+            }
+            finally
+            {
+                _ = Marshal.Release((nint)vectorIdentity);
+                _ = Marshal.Release((nint)viewIdentity);
+            }
+        }
+        finally
+        {
+            _ = Marshal.Release((nint)view);
+            _ = Marshal.Release((nint)vector);
+        }
     }
 
     [TestMethod]
     public void GetViewReflectsChangesToUnderlyingList()
     {
-        IList list = new ArrayList { 1 };
-        object view = GetView(list);
+        IList list = new TestList { 1 };
 
-        list.Add(2);
+        using WindowsRuntimeObjectReferenceValue listValue = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(list);
+        void* vector = QueryInterface(listValue.GetThisPtrUnsafe(), in IBindableVector);
+        void* view = GetView(vector);
 
-        CollectionAssert.AreEqual(new object[] { 1, 2 }, ((IEnumerable)view).Cast<object>().ToArray());
-    }
-
-    [TestMethod]
-    public void GetViewConcurrentlyReusesAdapter()
-    {
-        IList list = new ArrayList();
-        object[] views = new object[32];
-
-        Parallel.For(0, views.Length, i => views[i] = GetView(list));
-
-        Assert.IsTrue(views.All(view => ReferenceEquals(views[0], view)));
-    }
-
-    [TestMethod]
-    public void GetViewCacheDoesNotRootListOrAdapter()
-    {
-        (WeakReference list, WeakReference view) = CreateWeakReferences();
-
-        CollectGarbageWhile(() => list.IsAlive || view.IsAlive);
-
-        Assert.IsFalse(list.IsAlive);
-        Assert.IsFalse(view.IsAlive);
-    }
-
-    [TestMethod]
-    public void GetViewCacheRetainsAdapterWhileListIsAlive()
-    {
-        IList list = new ArrayList();
-        WeakReference view = CreateViewWeakReference(list);
-
-        CollectGarbageWhile(() => true);
-
-        Assert.IsTrue(view.IsAlive);
-        Assert.AreSame(view.Target, GetView(list));
-        GC.KeepAlive(list);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static (WeakReference List, WeakReference View) CreateWeakReferences()
-    {
-        IList list = new ArrayList();
-        object view = GetView(list);
-
-        return (new WeakReference(list), new WeakReference(view));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static WeakReference CreateViewWeakReference(IList list)
-    {
-        return new WeakReference(GetView(list));
-    }
-
-    private static void CollectGarbageWhile(Func<bool> condition)
-    {
-        for (int i = 0; i < 3 && condition(); i++)
+        try
         {
-            GC.Collect(2, GCCollectionMode.Forced, blocking: true);
-            GC.WaitForPendingFinalizers();
+            list.Add(2);
+
+            void** vtable = *(void***)view;
+            // IBindableVectorViewVftbl.get_Size follows the six IInspectable entries.
+            var getSize = (delegate* unmanaged[MemberFunction]<void*, uint*, int>)vtable[7];
+            uint size;
+
+            Marshal.ThrowExceptionForHR(getSize(view, &size));
+
+            Assert.AreEqual(2u, size);
+        }
+        finally
+        {
+            _ = Marshal.Release((nint)view);
+            _ = Marshal.Release((nint)vector);
         }
     }
 
-    [DynamicDependency(
-        DynamicallyAccessedMemberTypes.PublicMethods,
-        "WindowsRuntime.InteropServices.BindableIListAdapter",
-        "WinRT.Runtime")]
-    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
-    private static Type GetBindableIListAdapterType()
+    [TestMethod]
+    public void GetViewCanQueryBackToBindableVector()
     {
-        return Type.GetType(
-            "WindowsRuntime.InteropServices.BindableIListAdapter, WinRT.Runtime",
-            throwOnError: true)!;
+        IList list = new TestList();
+
+        using WindowsRuntimeObjectReferenceValue listValue = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(list);
+        void* vector = QueryInterface(listValue.GetThisPtrUnsafe(), in IBindableVector);
+        void* view = GetView(vector);
+
+        try
+        {
+            void* queriedVector = QueryInterface(view, in IBindableVector);
+
+            try
+            {
+                Assert.AreEqual((nint)vector, (nint)queriedVector);
+            }
+            finally
+            {
+                _ = Marshal.Release((nint)queriedVector);
+            }
+        }
+        finally
+        {
+            _ = Marshal.Release((nint)view);
+            _ = Marshal.Release((nint)vector);
+        }
     }
 
-    private static object GetView(IList list)
+    [TestMethod]
+    public void GetViewIndexOfSupportsNull()
     {
-        return GetViewMethod.Invoke(null, [list])!;
+        IList list = new TestList { null };
+
+        using WindowsRuntimeObjectReferenceValue listValue = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(list);
+        void* vector = QueryInterface(listValue.GetThisPtrUnsafe(), in IBindableVector);
+        void* view = GetView(vector);
+
+        try
+        {
+            void** vtable = *(void***)view;
+            // IBindableVectorViewVftbl.IndexOf follows GetAt and get_Size after the six IInspectable entries.
+            var indexOf = (delegate* unmanaged[MemberFunction]<void*, void*, uint*, bool*, int>)vtable[8];
+            uint index;
+            bool found;
+
+            Marshal.ThrowExceptionForHR(indexOf(view, null, &index, &found));
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(0u, index);
+        }
+        finally
+        {
+            _ = Marshal.Release((nint)view);
+            _ = Marshal.Release((nint)vector);
+        }
     }
+
+    private static void* GetView(void* vector)
+    {
+        void** vtable = *(void***)vector;
+        // IBindableVectorVftbl.GetView follows GetAt and get_Size after the six IInspectable entries.
+        var getView = (delegate* unmanaged[MemberFunction]<void*, void**, int>)vtable[8];
+        void* view;
+
+        Marshal.ThrowExceptionForHR(getView(vector, &view));
+
+        return view;
+    }
+
+    private static void* QueryInterface(void* value, in Guid iid)
+    {
+        Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)value, in iid, out nint result));
+
+        return (void*)result;
+    }
+
+    private sealed class TestList : ArrayList;
 }
