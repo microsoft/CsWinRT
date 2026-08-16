@@ -895,6 +895,14 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Failed to discover the non public base class library collection types.
+    /// </summary>
+    public static WellKnownInteropException DiscoverNonPublicBaseClassLibraryCollectionTypesError(Exception exception)
+    {
+        return Exception(103, "Failed to discover the non public collection types that the BCL hands out through public APIs.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

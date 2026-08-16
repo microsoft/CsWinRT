@@ -16,21 +16,25 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 internal static class WindowsRuntimeTypeAnalyzer
 {
     /// <summary>
-    /// Tries to retrieve the most derived Windows Runtime interface type implemented by the specified type.
+    /// Tries to retrieve the most derived Windows Runtime interface type out of a set of interfaces.
     /// </summary>
-    /// <param name="type">The type for which to find the most derived Windows Runtime interface type.</param>
+    /// <param name="interfaceTypes">The interfaces to select from (i.e. those the CCW for some type exposes).</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="interfaceType">The resulting Windows Runtime interface, if found.</param>
     /// <returns>Whether <paramref name="interfaceType"/> was successfully retrieved.</returns>
+    /// <remarks>
+    /// The interfaces are taken as input, rather than being enumerated off the implementing type, so that this
+    /// also works for types that cannot be resolved (see the discovery of non public BCL collection types).
+    /// </remarks>
     public static bool TryGetMostDerivedWindowsRuntimeInterfaceType(
-        TypeSignature type,
+        IEnumerable<TypeSignature> interfaceTypes,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? interfaceType)
     {
         interfaceType = null;
 
-        // Go through all implemented interfaces for the user-defined type
-        foreach (TypeSignature interfaceSignature in type.EnumerateAllInterfaces(interopReferences))
+        // Go through all interfaces exposed by the user-defined type
+        foreach (TypeSignature interfaceSignature in interfaceTypes)
         {
             // If the current interface is not a Windows Runtime type, just skip it.
             // We can only use Windows Runtime interfaces for the runtime class name.

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
@@ -108,6 +109,9 @@ internal partial class InteropGenerator
         // and they need CCW support so that 'WindowsRuntimeInterfaceMarshaller<IActivationFactory>'
         // can create COM callable wrappers for them when they are handed out to native callers.
         DiscoverComponentActivationFactoryTypes(args, discoveryState);
+
+        // Discover the non public collection types the BCL hands out through public APIs
+        DiscoverNonPublicBaseClassLibraryCollectionTypes(args, discoveryState);
 
         // We want to ensure the state will never be mutated after this method completes
         discoveryState.MakeReadOnly();
@@ -671,6 +675,64 @@ internal partial class InteropGenerator
         catch (Exception e)
         {
             WellKnownInteropExceptions.DiscoverActivationFactoryTypesError(componentModule.Name, e).ThrowOrAttach(e);
+        }
+    }
+
+    /// <summary>
+    /// Discovers the non public collection types that the BCL hands out through public APIs.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <remarks>
+    /// <para>
+    /// Some public BCL APIs return internal collection types. The prime example is
+    /// <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>, whose <c>NewItems</c> and
+    /// <c>OldItems</c> are internal list types. Any collection raising a change notification (e.g. an
+    /// <c>ObservableCollection&lt;T&gt;</c> bound from XAML) therefore marshals one of those across the ABI as
+    /// <see cref="System.Collections.IList"/>, which requires a CCW exposing <c>IBindableVector</c>.
+    /// </para>
+    /// <para>
+    /// These types cannot be discovered like any other: the generator only ever sees the framework
+    /// <em>reference</em> assemblies, which contain public API surface only, so the types are not in its input at
+    /// all. They are therefore registered here by name, with the interfaces they implement stated explicitly.
+    /// </para>
+    /// <para>
+    /// The names are resolved when the type map is built, so they are a real compatibility contract: if one of
+    /// these types is ever renamed or removed, Native AOT publishing fails with a type load error from ILC (under
+    /// the JIT the entry simply never matches). That is a loud, early failure, which is the intended trade-off,
+    /// but it does mean this list has to be revisited when adopting a new .NET version.
+    /// </para>
+    /// </remarks>
+    private static void DiscoverNonPublicBaseClassLibraryCollectionTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState)
+    {
+        try
+        {
+            // Use the Windows SDK projection module as the context to create references from, as
+            // it is always available (the same module all the other discovery steps here rely on).
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(discoveryState.WindowsRuntimeSdkProjectionModule!);
+
+            // Both types implement 'IList', 'ICollection' and 'IEnumerable'. Only the first and the last are
+            // Windows Runtime types ('IBindableVector' and 'IBindableIterable'), so those are the vtable entries.
+            TypeSignatureEquatableSet vtableTypes = new TypeSignatureEquatableSet.Builder(
+                interopReferences.IList.ToReferenceTypeSignature(),
+                interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
+
+            foreach (Utf8String typeName in (ReadOnlySpan<Utf8String>)["SingleItemReadOnlyList"u8, "ReadOnlyList"u8])
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                TypeSignature typeSignature = interopReferences.SystemObjectModel
+                    .CreateTypeReference("System.Collections.Specialized"u8, typeName)
+                    .ToReferenceTypeSignature();
+
+                discoveryState.TrackUserDefinedType(typeSignature, vtableTypes);
+            }
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.DiscoverNonPublicBaseClassLibraryCollectionTypesError(e).ThrowOrAttach(e);
         }
     }
 

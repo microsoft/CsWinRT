@@ -1197,11 +1197,20 @@ internal static class WindowsRuntimeExtensions
         {
             RuntimeContext? runtimeContext = interopDefinitions.RuntimeContext;
 
+            // A type that cannot be resolved is never a projected Windows Runtime type, so it has no metadata
+            // name (see the discovery of the non public BCL collection types, which are registered by name and
+            // are absent from the reference assemblies the generator sees).
             return signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
-                ArrayTypeSignature array => array.BaseType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
-                _ => signature.ToTypeDefOrRef().Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions)
+                GenericInstanceTypeSignature generic => generic.GenericType.TryResolve(runtimeContext, out TypeDefinition? genericType)
+                    ? genericType.GetWindowsRuntimeMetadataName(interopDefinitions)
+                    : null,
+                ArrayTypeSignature array => array.BaseType.TryResolve(runtimeContext, out TypeDefinition? elementType)
+                    ? elementType.GetWindowsRuntimeMetadataName(interopDefinitions)
+                    : null,
+                _ => signature.ToTypeDefOrRef().TryResolve(runtimeContext, out TypeDefinition? type)
+                    ? type.GetWindowsRuntimeMetadataName(interopDefinitions)
+                    : null
             };
         }
     }

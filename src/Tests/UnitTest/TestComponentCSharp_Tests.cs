@@ -2745,47 +2745,68 @@ namespace UnitTest
             }
         }
 
-        // Disabled: this currently fails, and is checked in as a repro. The CCW built for
-        // 'SingleItemReadOnlyList' does not expose 'IBindableVector', so marshalling it as 'IList'
-        // throws. Re-enable once that is fixed.
-        //[TestMethod]
-        public unsafe void TestSingleItemReadOnlyListInterfaceMarshalling()
+        [TestMethod]
+        public unsafe void TestNonPublicReadOnlyListInterfaceMarshalling()
         {
-            // 'NotifyCollectionChangedEventArgs' stores a single changed item in 'SingleItemReadOnlyList', an
-            // internal BCL type. Any managed collection raising a single item change (e.g. 'ObservableCollection<T>')
-            // therefore ends up marshalling that type across the ABI as 'IList', which builds a CCW for it.
-            // The value has to be sequential from 0, because the native bindable setter below validates that.
-            NotifyCollectionChangedEventArgs args = new(NotifyCollectionChangedAction.Add, 0, 0);
+            // 'NotifyCollectionChangedEventArgs' stores the changed items in one of two internal BCL list types:
+            // 'SingleItemReadOnlyList' for a single item, and 'ReadOnlyList' for several. Any managed collection
+            // raising a change notification (e.g. an 'ObservableCollection<T>' bound from XAML) therefore ends up
+            // marshalling one of them across the ABI as 'IList', which builds a CCW for it. Neither type is in the
+            // reference assemblies the interop generator sees, so both are registered by name (see the interop
+            // generator's discovery of non public BCL collection types).
+            NotifyCollectionChangedEventArgs singleItemArgs = new(NotifyCollectionChangedAction.Add, 0, 0);
+            NotifyCollectionChangedEventArgs multipleItemsArgs = new(NotifyCollectionChangedAction.Add, new[] { 0, 1, 2 }, 0);
 
-            IList newItems = args.NewItems!;
+            IList singleItem = singleItemArgs.NewItems!;
+            IList multipleItems = multipleItemsArgs.NewItems!;
 
-            Assert.AreEqual("System.Collections.Specialized.SingleItemReadOnlyList", newItems.GetType().FullName);
+            // Guard against the BCL changing which types it uses, so that this test fails loudly
+            // rather than silently covering nothing (the names are also what the generator emits).
+            Assert.AreEqual("System.Collections.Specialized.SingleItemReadOnlyList", singleItem.GetType().FullName);
+            Assert.AreEqual("System.Collections.Specialized.ReadOnlyList", multipleItems.GetType().FullName);
 
-            // The CCW has to expose 'IBindableVector', which is what 'IList' is projected as
-            Guid iidIBindableVector = new("393DE7DE-6FD0-4C0D-BB71-47244A113E93");
+            AssertCcwExposesBindableInterfaces(singleItem);
+            AssertCcwExposesBindableInterfaces(multipleItems);
 
-            void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(newItems);
-
-            try
-            {
-                Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in iidIBindableVector, out nint bindableVectorCcw));
-                Assert.AreNotEqual(IntPtr.Zero, bindableVectorCcw);
-
-                _ = Marshal.Release(bindableVectorCcw);
-            }
-            finally
-            {
-                _ = Marshal.Release((nint)ccw);
-            }
-
-            // Same thing through a projected API taking a bindable vector
-            TestObject.BindableVectorProperty = newItems;
+            // Same thing through a projected API taking a bindable vector. The values have to be
+            // sequential from 0, because the native bindable setter validates exactly that.
+            TestObject.BindableVectorProperty = singleItem;
             CollectionAssert.AreEqual(new[] { 0 }, TestObject.BindableVectorProperty.Cast<int>().ToArray());
 
-            // The whole chain: marshalling the event args marshals its 'NewItems' as 'IList'
-            void* argsCcw = WindowsRuntimeMarshal.ConvertToUnmanaged(args);
+            TestObject.BindableVectorProperty = multipleItems;
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, TestObject.BindableVectorProperty.Cast<int>().ToArray());
 
-            _ = Marshal.Release((nint)argsCcw);
+            // Note: marshalling the event args themselves (the path the failure was originally reported from)
+            // is not covered here, as that activates the real 'NotifyCollectionChangedEventArgs' runtime class,
+            // which is not registered in this test host. Marshalling its items is what used to fail, and that
+            // is exactly what the checks above cover.
+
+            static void AssertCcwExposesBindableInterfaces(IList source)
+            {
+                // 'IList' is projected as 'IBindableVector', and 'IEnumerable' as 'IBindableIterable'
+                Guid iidIBindableVector = new("393DE7DE-6FD0-4C0D-BB71-47244A113E93");
+                Guid iidIBindableIterable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
+
+                void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(source);
+
+                try
+                {
+                    AssertHasInterface(ccw, in iidIBindableVector);
+                    AssertHasInterface(ccw, in iidIBindableIterable);
+                }
+                finally
+                {
+                    _ = Marshal.Release((nint)ccw);
+                }
+
+                static void AssertHasInterface(void* ccw, in Guid iid)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in iid, out nint interfaceCcw));
+                    Assert.AreNotEqual(IntPtr.Zero, interfaceCcw);
+
+                    _ = Marshal.Release(interfaceCcw);
+                }
+            }
         }
 
         [TestMethod]

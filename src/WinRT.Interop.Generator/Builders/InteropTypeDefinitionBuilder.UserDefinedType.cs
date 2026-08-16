@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -181,6 +182,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the proxy type of some user-defined type.
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
+        /// <param name="vtableTypes">The interfaces the CCW for <paramref name="userDefinedType"/> exposes.</param>
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -189,6 +191,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="proxyType">The resulting proxy type.</param>
         public static void Proxy(
             TypeSignature userDefinedType,
+            TypeSignatureEquatableSet vtableTypes,
             TypeDefinition comWrappersMarshallerAttributeType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
@@ -196,48 +199,60 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            TypeDefinition userDefinedTypeDefinition = userDefinedType.Resolve(module.RuntimeContext);
+            // Almost all user-defined types can be resolved. The exception is the non public BCL collection types,
+            // which are registered by name because they are absent from the reference assemblies the generator sees
+            // (see the discovery of those types). Those are plain types with none of the attributes checked below,
+            // so they just take the same path as any other non-authored type.
+            if (userDefinedType.TryResolve(module.RuntimeContext, out TypeDefinition? userDefinedTypeDefinition))
+            {
+                // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
+                // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
+                // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
+                if (userDefinedTypeDefinition.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute))
+                {
+                    InteropTypeDefinitionBuilder.Proxy(
+                        ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                        name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
+                        mappedMetadata: null,
+                        runtimeClassName: null,
+                        metadataTypeName: null,
+                        mappedType: userDefinedType,
+                        referenceType: null,
+                        comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                        interopReferences: interopReferences,
+                        module: module,
+                        out proxyType);
 
-            // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
-            // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
-            // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
-            if (userDefinedTypeDefinition.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute))
-            {
-                InteropTypeDefinitionBuilder.Proxy(
-                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
-                    mappedMetadata: null,
-                    runtimeClassName: null,
-                    metadataTypeName: null,
-                    mappedType: userDefinedType,
-                    referenceType: null,
-                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
-                    interopReferences: interopReferences,
-                    module: module,
-                    out proxyType);
+                    return;
+                }
+
+                if (userDefinedTypeDefinition.IsPublic &&
+                    userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
+                {
+                    // For authored component types, the runtime class name is the type's own fully-qualified name.
+                    InteropTypeDefinitionBuilder.Proxy(
+                        ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                        name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
+                        mappedMetadata: null,
+                        runtimeClassName: MetadataTypeNameGenerator.GetMetadataTypeName(userDefinedType, useWindowsUIXamlProjections),
+                        metadataTypeName: null,
+                        mappedType: null,
+                        referenceType: null,
+                        comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                        interopReferences: interopReferences,
+                        module: module,
+                        out proxyType);
+
+                    return;
+                }
             }
-            else if (userDefinedTypeDefinition.IsPublic &&
-                     userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
+
             {
-                // For authored component types, the runtime class name is the type's own fully-qualified name.
-                InteropTypeDefinitionBuilder.Proxy(
-                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
-                    mappedMetadata: null,
-                    runtimeClassName: MetadataTypeNameGenerator.GetMetadataTypeName(userDefinedType, useWindowsUIXamlProjections),
-                    metadataTypeName: null,
-                    mappedType: null,
-                    referenceType: null,
-                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
-                    interopReferences: interopReferences,
-                    module: module,
-                    out proxyType);
-            }
-            else
-            {
-                // For non-authored user-defined types, get the most derived Windows Runtime interface to use for the runtime class name
+                // For non-authored user-defined types, get the most derived Windows Runtime interface to use for the
+                // runtime class name. The interfaces the CCW exposes are used directly, rather than being read back
+                // off the type, so that this also works for the types that cannot be resolved (see notes above).
                 if (!WindowsRuntimeTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
-                    type: userDefinedType,
+                    interfaceTypes: vtableTypes,
                     interopReferences: interopReferences,
                     interfaceType: out TypeSignature? interfaceType))
                 {
