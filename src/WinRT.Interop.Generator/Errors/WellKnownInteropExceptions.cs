@@ -899,7 +899,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// </summary>
     public static WellKnownInteropException DiscoverNonPublicBaseClassLibraryCollectionTypesError(Exception exception)
     {
-        return Exception(103, "Failed to discover the non public collection types that the BCL hands out through public APIs.", exception);
+        return Exception(103, "Failed to discover the non public collection types from the .NET base class library (e.g. 'SingleItemReadOnlyList').", exception);
     }
 
     /// <summary>

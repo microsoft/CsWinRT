@@ -679,7 +679,7 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Discovers the non public collection types that the BCL hands out through public APIs.
+    /// Discovers the non public collection types that the .NET base class library (BCL) hands out through public APIs.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
@@ -719,7 +719,15 @@ internal partial class InteropGenerator
                 interopReferences.IList.ToReferenceTypeSignature(),
                 interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
 
-            foreach (Utf8String typeName in (ReadOnlySpan<Utf8String>)["SingleItemReadOnlyList"u8, "ReadOnlyList"u8])
+            // The types to register, all from 'System.Collections.Specialized'. Using a 'ReadOnlySpan<T>'
+            // just means the list is stack-allocated, as we only need to enumerate it once from here.
+            ReadOnlySpan<Utf8String> typeNames =
+            [
+                "SingleItemReadOnlyList"u8,
+                "ReadOnlyList"u8
+            ];
+
+            foreach (Utf8String typeName in typeNames)
             {
                 args.Token.ThrowIfCancellationRequested();
 
