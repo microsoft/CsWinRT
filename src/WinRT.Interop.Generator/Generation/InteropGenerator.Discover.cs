@@ -725,8 +725,6 @@ internal partial class InteropGenerator
                 interopReferences.IList.ToReferenceTypeSignature(),
                 interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
 
-            // The types to register, all from 'System.Collections.Specialized'. Using a 'ReadOnlySpan<T>'
-            // just means the list is stack-allocated, as we only need to enumerate it once from here.
             ReadOnlySpan<Utf8String> typeNames =
             [
                 "SingleItemReadOnlyList"u8,
