@@ -13,6 +13,7 @@ namespace UnitTest;
 public unsafe class BindableAdapterTests
 {
     private static readonly Guid IBindableVector = new("393DE7DE-6FD0-4C0D-BB71-47244A113E93");
+    private static readonly Guid IBindableIterable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
     private static readonly Guid IUnknown = new("00000000-0000-0000-C000-000000000046");
 
     [TestMethod]
@@ -98,6 +99,27 @@ public unsafe class BindableAdapterTests
             {
                 _ = Marshal.Release((nint)queriedVector);
             }
+        }
+        finally
+        {
+            _ = Marshal.Release((nint)view);
+            _ = Marshal.Release((nint)vector);
+        }
+    }
+
+    [TestMethod]
+    public void GetViewSupportsBindableIterable()
+    {
+        IList list = new TestList();
+
+        using WindowsRuntimeObjectReferenceValue listValue = ABI.System.Collections.IListMarshaller.ConvertToUnmanaged(list);
+        void* vector = QueryInterface(listValue.GetThisPtrUnsafe(), in IBindableVector);
+        void* view = GetView(vector);
+
+        try
+        {
+            void* iterable = QueryInterface(view, in IBindableIterable);
+            _ = Marshal.Release((nint)iterable);
         }
         finally
         {
