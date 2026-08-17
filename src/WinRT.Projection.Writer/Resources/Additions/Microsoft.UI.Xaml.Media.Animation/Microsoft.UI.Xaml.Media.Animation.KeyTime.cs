@@ -8,8 +8,10 @@ namespace Microsoft.UI.Xaml.Media.Animation
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Media.Animation.KeyTime>")]
     [ABI.Microsoft.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
 #endif
-    public readonly struct KeyTime : IEquatable<KeyTime>
+    public struct KeyTime : IEquatable<KeyTime>
     {
+        public TimeSpan TimeSpan;
+
         public static KeyTime FromTimeSpan(TimeSpan timeSpan)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(timeSpan, TimeSpan.Zero, nameof(timeSpan));
@@ -55,11 +57,6 @@ namespace Microsoft.UI.Xaml.Media.Animation
         public static implicit operator KeyTime(TimeSpan timeSpan)
         {
             return KeyTime.FromTimeSpan(timeSpan);
-        }
-
-        public TimeSpan TimeSpan
-        {
-            readonly get; private init;
         }
     }
 }

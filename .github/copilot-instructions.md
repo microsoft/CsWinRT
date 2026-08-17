@@ -617,6 +617,8 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 
 All tasks extend `ToolTask`, generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
 
+**Visual Studio file-lock avoidance:** the persistent MSBuild build server keeps `WinRT.Generator.Tasks.dll` loaded (via `UsingTask`), so a full-solution build in VS that tries to rebuild it hits `MSB3027` (file locked). To avoid this, developers build the task DLL out-of-band via `src/cswinrt.buildtasks.slnf` (helper: `src/build-tasks.cmd`) and open `src/cswinrt.dev.slnf` in VS, which includes every project **except** `WinRT.Generator.Tasks`. CI is unaffected: all pipelines build the full `src/cswinrt.slnx` (which includes the task project), so it is still built and packaged normally.
+
 ### 11. SDK projection builds (`src/WinRT.Sdk.Projection/`)
 
 A build project (not a tool) used during **official CsWinRT builds** to produce precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` for each supported Windows SDK version. These precompiled .dll-s are bundled into the CsWinRT NuGet package so that consumers don't have to regenerate the entire Windows SDK projection on every publish (as described in the architecture overview).
@@ -735,8 +737,9 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5021`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |
-| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0010`, `9999` |
+| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0014`, `9999` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` (deriving from `WindowsRuntimeObject`), `CSWINRT3002` (type map group types), `CSWINRT3003` (component authoring attributes), `CSWINRT3004` (`WindowsRuntimeReferenceAssemblyAttribute`) |
+| Projections (user-facing markers) | `CSWINRT3xxx` | `CSWINRT3005` (using an experimental Windows Runtime API; emitted by the projection writer as `[Experimental]`, see `docs/attribute-projections.md`) |
 
 ---
 

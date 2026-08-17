@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
@@ -120,6 +121,63 @@ internal static class TypeSignatureExtensions
         }
 
         /// <summary>
+        /// Returns whether the signature is a <c>Windows.Foundation.IReference`1</c> instantiation whose
+        /// argument is a Windows Runtime value type that projects to a .NET reference type, namely
+        /// <c>Windows.UI.Xaml.Interop.TypeName</c> (projected as <see cref="System.Type"/>) or
+        /// <c>Windows.Foundation.HResult</c> (projected as <see cref="System.Exception"/>).
+        /// </summary>
+        /// <remarks>
+        /// Unlike other <c>IReference&lt;T&gt;</c> shapes, these two project to a bare reference type
+        /// rather than a <see cref="System.Nullable{T}"/>, because <see cref="System.Type"/> and
+        /// <see cref="System.Exception"/> are reference types. They marshal correctly as a scalar
+        /// (via <c>ABI.System.TypeMarshaller</c> / <c>ABI.System.ExceptionMarshaller</c>), but cannot
+        /// appear inside a generic instantiation (see <see cref="ContainsNestedNullableTOfReferenceType"/>).
+        /// </remarks>
+        /// <returns><see langword="true"/> if the signature is <c>IReference&lt;TypeName&gt;</c> or <c>IReference&lt;HResult&gt;</c>; otherwise <see langword="false"/>.</returns>
+        public bool IsNullableTOfReferenceType()
+        {
+            if (!sig.IsNullableT())
+            {
+                return false;
+            }
+
+            TypeSignature? inner = sig.GetNullableInnerType();
+
+            return inner is not null && (inner.IsSystemType() || inner.IsHResultException());
+        }
+
+        /// <summary>
+        /// Returns whether the signature is a generic instantiation whose type-argument tree
+        /// (recursively) contains an <see cref="IsNullableTOfReferenceType"/> shape.
+        /// </summary>
+        /// <remarks>
+        /// Such instantiations (e.g. <c>IVector&lt;IReference&lt;TypeName&gt;&gt;</c>) cannot be
+        /// marshalled: the <c>WinRT.Interop</c> marshaller name would embed a <c>Nullable&lt;Type&gt;</c>
+        /// or <c>Nullable&lt;Exception&gt;</c>, which is not a constructible type, so the interop generator
+        /// never produces a matching marshaller. The scalar <see cref="IsNullableTOfReferenceType"/> case
+        /// is intentionally excluded: it appears only as a (nested) type argument here, never as the
+        /// top-level signature, which still projects and marshals correctly on its own.
+        /// </remarks>
+        /// <returns><see langword="true"/> if a reference-projected <c>IReference&lt;T&gt;</c> is nested as a type argument; otherwise <see langword="false"/>.</returns>
+        public bool ContainsNestedNullableTOfReferenceType()
+        {
+            if (sig is not GenericInstanceTypeSignature gi)
+            {
+                return false;
+            }
+
+            foreach (TypeSignature arg in gi.TypeArguments)
+            {
+                if (arg.IsNullableTOfReferenceType() || arg.ContainsNestedNullableTOfReferenceType())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Returns whether the signature has the "ABI reference-pointer" shape: it crosses the
         /// ABI as a <c>void*</c> / <c>IInspectable*</c>. That covers <see cref="string"/> (HSTRING),
         /// any WinRT runtime class or interface (resolved via <paramref name="resolver"/>),
@@ -156,35 +214,6 @@ internal static class TypeSignatureExtensions
                 sig.IsString() ||
                 sig.IsObject() ||
                 resolver.IsRuntimeClassOrInterface(sig);
-        }
-
-        /// <summary>
-        /// Strips trailing <see cref="ByReferenceTypeSignature"/> and <see cref="CustomModifierTypeSignature"/>
-        /// wrappers from the signature, returning the underlying signature.
-        /// </summary>
-        /// <returns>The underlying signature with byref + custom-modifier wrappers stripped.</returns>
-        public TypeSignature StripByRefAndCustomModifiers()
-        {
-            TypeSignature current = sig;
-
-            while (true)
-            {
-                if (current is ByReferenceTypeSignature br)
-                {
-                    current = br.BaseType;
-
-                    continue;
-                }
-
-                if (current is CustomModifierTypeSignature cm)
-                {
-                    current = cm.BaseType;
-
-                    continue;
-                }
-
-                return current;
-            }
         }
 
         /// <summary>

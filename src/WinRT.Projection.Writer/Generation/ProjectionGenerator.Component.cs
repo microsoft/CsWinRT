@@ -4,6 +4,8 @@
 using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
@@ -28,7 +30,7 @@ internal sealed partial class ProjectionGenerator
     /// </returns>
     private (HashSet<TypeDefinition> ComponentActivatable, Dictionary<string, HashSet<TypeDefinition>> ByModule) DiscoverComponentActivatableTypes()
     {
-        HashSet<TypeDefinition> componentActivatable = [];
+        HashSet<TypeDefinition> componentActivatable = new(SignatureComparer.IgnoreVersion);
         Dictionary<string, HashSet<TypeDefinition>> componentByModule = [];
 
         if (!_settings.Component)
@@ -53,7 +55,7 @@ internal sealed partial class ProjectionGenerator
 
                     if (!componentByModule.TryGetValue(moduleName, out HashSet<TypeDefinition>? set))
                     {
-                        set = [];
+                        set = new(SignatureComparer.IgnoreVersion);
                         componentByModule[moduleName] = set;
                     }
 

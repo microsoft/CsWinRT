@@ -38,6 +38,14 @@ internal sealed partial class WinMDWriter
     /// <returns>The mapped <see cref="TypeSignature"/> for use in the output WinMD.</returns>
     private TypeSignature MapTypeSignatureToOutput(TypeSignature inputSignature)
     {
+        // Strip custom modifiers ('modreq'/'modopt') before dispatching on the underlying type.
+        // For example, 'in' parameters on abstract, virtual, interface, or delegate members carry a
+        // 'modreq(System.Runtime.InteropServices.InAttribute)' on their by-reference type. Custom
+        // modifiers have no Windows Runtime representation, and without stripping them a modifier-wrapped
+        // type would fall through to the 'System.Object' fallback at the end of this method, silently
+        // erasing the real signature.
+        inputSignature = inputSignature.StripCustomModifiers();
+
         // Handle 'CorLib' types
         if (inputSignature is CorLibTypeSignature corLib)
         {

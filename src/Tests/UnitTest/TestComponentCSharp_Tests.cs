@@ -2001,6 +2001,74 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestDeprecatedConstructors()
+        {
+            // A '[deprecated]' constructor is still projected, just with '[Obsolete]' on it
+#pragma warning disable CS0618
+            var deprecated = new DeprecatedConstructorClass(1);
+#pragma warning restore CS0618
+
+            Assert.AreEqual(1, deprecated.Value);
+
+            // The two-argument constructor is '[deprecated(remove)]', so it is not projected at all.
+            // Its factory vtable slot is preserved though, which is exactly what lets the three-argument
+            // constructor declared after it still dispatch through the right slot (it sums its arguments,
+            // so a wrong slot would either fail or produce a different value).
+            Assert.IsNull(typeof(DeprecatedConstructorClass).GetConstructor([typeof(int), typeof(int)]));
+
+            var live = new DeprecatedConstructorClass(1, 2, 3);
+
+            Assert.AreEqual(6, live.Value);
+
+            static bool IsObsolete(params Type[] parameterTypes)
+            {
+                ConstructorInfo constructor = typeof(DeprecatedConstructorClass).GetConstructor(parameterTypes);
+
+                Assert.IsNotNull(constructor);
+
+                return constructor.GetCustomAttribute<ObsoleteAttribute>() is not null;
+            }
+
+            Assert.IsTrue(IsObsolete(typeof(int)));
+            Assert.IsFalse(IsObsolete(typeof(int), typeof(int), typeof(int)));
+        }
+
+        [TestMethod]
+        public void TestRemovedConstructors()
+        {
+            // Every constructor of these two classes is '[deprecated(remove)]', so neither is
+            // constructible from the projection: the activatable (sealed) one and the composable
+            // (unsealed) one both have to drop their only constructor.
+            //
+            // 'HasPublicParameterlessConstructor' resolves the 'new()' constrained overload only when the
+            // type *as compiled against* really exposes a public parameterless constructor, so it asserts
+            // the reference projection's surface. That matters because dropping every constructor without
+            // emitting a non-public one in its place would let the C# compiler synthesize an implicit
+            // public parameterless constructor, which the implementation projection does not have.
+            Assert.IsTrue(HasPublicParameterlessConstructor<Class>());
+            Assert.IsFalse(HasPublicParameterlessConstructor<RemovedActivationClass>());
+            Assert.IsFalse(HasPublicParameterlessConstructor<RemovedComposableClass>());
+
+            // The implementation projection agrees with the reference projection above
+            Assert.AreEqual(0, typeof(RemovedActivationClass).GetConstructors().Length);
+            Assert.AreEqual(0, typeof(RemovedComposableClass).GetConstructors().Length);
+
+            // Both types are still fully usable through their static factory methods
+            Assert.AreEqual(42, RemovedActivationClass.Create(42).Value);
+            Assert.AreEqual(42, RemovedComposableClass.Create(42).Value);
+        }
+
+        /// <summary>
+        /// Compile-time probe for a public parameterless constructor: the <c>new()</c> constrained
+        /// overload is only a candidate when <typeparamref name="T"/> has one, so a call resolves to
+        /// the fallback overload otherwise.
+        /// </summary>
+        private static bool HasPublicParameterlessConstructor<T>() where T : new() => true;
+
+        /// <inheritdoc cref="HasPublicParameterlessConstructor{T}()"/>
+        private static bool HasPublicParameterlessConstructor<T>(int _ = 0) => false;
+
+        [TestMethod]
         public void TestStaticMembers()
         {
             Class.StaticIntProperty = 42;
@@ -3090,6 +3158,42 @@ namespace UnitTest
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
+        [TestMethod]
+        public void CompletedTaskAdapters_PreserveTerminalStateAndHandlers()
+        {
+            IAsyncAction completedAction = Task.CompletedTask.AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Completed, completedAction.Status);
+
+            int actionHandlerCalls = 0;
+            completedAction.Completed = (_, status) =>
+            {
+                Assert.AreEqual(AsyncStatus.Completed, status);
+                actionHandlerCalls++;
+            };
+            Assert.AreEqual(1, actionHandlerCalls);
+
+            IAsyncOperation<int> completedOperation = Task.FromResult(42).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Completed, completedOperation.Status);
+            Assert.AreEqual(42, completedOperation.GetResults());
+
+            IAsyncAction faultedAction = Task.FromException(new InvalidOperationException()).AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Error, faultedAction.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(faultedAction.GetResults);
+
+            IAsyncOperation<int> faultedOperation = Task.FromException<int>(new InvalidOperationException()).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Error, faultedOperation.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(() => faultedOperation.GetResults());
+
+            CancellationToken canceledToken = new(canceled: true);
+            IAsyncAction canceledAction = Task.FromCanceled(canceledToken).AsAsyncAction();
+            Assert.AreEqual(AsyncStatus.Canceled, canceledAction.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(canceledAction.GetResults);
+
+            IAsyncOperation<int> canceledOperation = Task.FromCanceled<int>(canceledToken).AsAsyncOperation();
+            Assert.AreEqual(AsyncStatus.Canceled, canceledOperation.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(() => canceledOperation.GetResults());
+        }
+
         async Task InvokeDoitAsyncWithProgress()
         {
             await TestObject.DoitAsyncWithProgress();
@@ -3860,6 +3964,122 @@ namespace UnitTest
             Assert.AreEqual(2, types.Count);
             Assert.AreEqual(typeof(Class), types[0]);
             Assert.AreEqual(typeof(int?), types[1]);
+
+            Type[] copied = new Type[3];
+            types.CopyTo(copied, 1);
+            Assert.IsNull(copied[0]);
+            Assert.AreEqual(typeof(Class), copied[1]);
+            Assert.AreEqual(typeof(int?), copied[2]);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_ValueTypes()
+        {
+            IList<int> ints = TestObject.GetIntVector2();
+            int[] copiedInts = new int[ints.Count + 1];
+            ints.CopyTo(copiedInts, 1);
+            CollectionAssert.AreEqual(new[] { 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, copiedInts);
+
+            IList<ComposedBlittableStruct> blittableStructs = TestObject.GetBlittableStructVector2();
+            ComposedBlittableStruct[] copiedBlittableStructs = new ComposedBlittableStruct[blittableStructs.Count];
+            blittableStructs.CopyTo(copiedBlittableStructs, 0);
+            Assert.AreEqual(4, copiedBlittableStructs[4].blittable.i32);
+
+            IList<ComposedNonBlittableStruct> nonBlittableStructs = TestObject.GetNonBlittableStructVector2();
+            ComposedNonBlittableStruct[] copiedNonBlittableStructs = new ComposedNonBlittableStruct[nonBlittableStructs.Count];
+            nonBlittableStructs.CopyTo(copiedNonBlittableStructs, 0);
+            Assert.AreEqual("String1", copiedNonBlittableStructs[1].strings.str);
+            Assert.IsTrue(copiedNonBlittableStructs[2].bools.w);
+
+            IList<DateTimeOffset> dateTimes = TestObject.GetDateTimeVector2();
+            DateTimeOffset[] copiedDateTimes = new DateTimeOffset[dateTimes.Count];
+            dateTimes.CopyTo(copiedDateTimes, 0);
+            Assert.AreEqual(TimeSpan.FromSeconds(1), copiedDateTimes[1] - copiedDateTimes[0]);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_ReferenceTypes()
+        {
+            IList<Class> classes = TestObject.GetClassVector2();
+            Class[] copiedClasses = new Class[classes.Count + 1];
+            classes.CopyTo(copiedClasses, 1);
+            Assert.IsNull(copiedClasses[0]);
+            Assert.IsNotNull(copiedClasses[1]);
+            Assert.IsNotNull(copiedClasses[2]);
+
+            IList<object> objects = TestObject.GetUriVectorAsIInspectableVector();
+            object[] copiedObjects = new object[objects.Count];
+            objects.CopyTo(copiedObjects, 0);
+            Assert.IsTrue(copiedObjects.All(static item => item is Uri));
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_StringTypeAcrossChunks()
+        {
+            IList<string> strings = TestObject.GetStringVector2();
+            string[] copiedStrings = new string[strings.Count + 2];
+            strings.CopyTo(copiedStrings, 1);
+            Assert.IsNull(copiedStrings[0]);
+            Assert.AreEqual("0", copiedStrings[1]);
+            Assert.AreEqual("64", copiedStrings[65]);
+            Assert.AreEqual("129", copiedStrings[130]);
+            Assert.IsNull(copiedStrings[131]);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_NullableType()
+        {
+            IList<int?> nullableInts = TestObject.GetNullableIntList();
+            int?[] copiedNullableInts = new int?[nullableInts.Count];
+            nullableInts.CopyTo(copiedNullableInts, 0);
+            CollectionAssert.AreEqual(new int?[] { 1, null, 2 }, copiedNullableInts);
+        }
+
+        [TestMethod]
+        public void NativeVectorCopyTo_ExceptionType()
+        {
+            IList<Exception> exceptions = TestObject.GetExceptionVector2();
+            Exception[] copiedExceptions = new Exception[exceptions.Count];
+            exceptions.CopyTo(copiedExceptions, 0);
+            Assert.AreEqual(unchecked((int)0x80004005), copiedExceptions[0].HResult);
+            Assert.AreEqual(unchecked((int)0x80070057), copiedExceptions[1].HResult);
+        }
+
+        [TestMethod]
+        public void ManagedVectorGetMany_BlittableFastPathsAndFallback()
+        {
+            int[] array = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetMany(array, 1, 3));
+
+            List<int> list = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetMany(list, 1, 3));
+
+            Collection<int> collection = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetMany(collection, 1, 3));
+
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetMany(array, (uint)array.Length, 3));
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetMany(array, 0, 0));
+        }
+
+        [TestMethod]
+        public void ManagedVectorViewGetMany_BlittableFastPathsAndFallback()
+        {
+            int[] array = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetManyFromView(array, 1, 3));
+
+            List<int> list = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetManyFromView(list, 1, 3));
+
+            Collection<int> collection = [10, 20, 30, 40, 50];
+            Assert.AreEqual(90L, TestObject.SumIntsWithGetManyFromView(collection, 1, 3));
+
+            // A capacity larger than the number of remaining items is clamped to the latter
+            Assert.AreEqual(120L, TestObject.SumIntsWithGetManyFromView(array, 2, 10));
+            Assert.AreEqual(120L, TestObject.SumIntsWithGetManyFromView(list, 2, 10));
+            Assert.AreEqual(120L, TestObject.SumIntsWithGetManyFromView(collection, 2, 10));
+
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetManyFromView(array, (uint)array.Length, 3));
+            Assert.AreEqual(0L, TestObject.SumIntsWithGetManyFromView(array, 0, 0));
         }
 
         [TestMethod]
@@ -3881,6 +4101,70 @@ namespace UnitTest
         {
             Assert.AreEqual(typeof(int?), Class.ReferenceInt32Type);
             Assert.IsTrue(Class.VerifyTypeIsReferenceInt32Type(typeof(int?)));
+        }
+
+        [TestMethod]
+        public void ReferenceTypeNameProjectsAsType()
+        {
+            // 'IReference<WUX.Interop.TypeName>' projects to 'System.Type', not the invalid 'Nullable<Type>'
+            // ('TypeName' is a Windows Runtime value type, but it projects to the reference type 'System.Type'). The boxed
+            // value round-trips through the native boundary as a 'Type', including the null case.
+            Assert.AreEqual(typeof(Class), Class.BoxedTypeName);
+
+            Assert.AreEqual(typeof(int), Class.RoundtripTypeName(typeof(int)));
+            Assert.AreEqual(typeof(Class), Class.RoundtripTypeName(typeof(Class)));
+            Assert.IsNull(Class.RoundtripTypeName(null));
+        }
+
+        [TestMethod]
+        public void ReferenceHResultProjectsAsException()
+        {
+            // 'IReference<HResult>' projects to 'System.Exception', not the invalid 'Nullable<Exception>'
+            // ('HResult' is a Windows Runtime value type, but it projects to the reference type 'System.Exception'). The
+            // boxed value round-trips through the native boundary as an 'Exception', including the null case.
+            Exception boxed = Class.BoxedHResult;
+
+            Assert.IsNotNull(boxed);
+            Assert.AreEqual(unchecked((int)0x80070057), boxed.HResult); // 'E_INVALIDARG'
+
+            Assert.IsInstanceOfType<ArgumentOutOfRangeException>(Class.RoundtripHResult(new ArgumentOutOfRangeException()));
+            Assert.IsNull(Class.RoundtripHResult(null));
+        }
+
+        [TestMethod]
+        public void ReferenceTypeNameListReturnThrowsNotSupported()
+        {
+            // 'IVector<IReference<TypeName>>' projects its public surface as 'IList<Type>', but it cannot be
+            // marshalled: 'System.Type' is a reference type, so there is no valid 'Nullable<Type>' collection
+            // marshaller for the interop generator to produce. The projected member throws 'NotSupportedException'
+            // instead of referencing a marshaller that does not exist (return-only direction, created in C++)
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.GetReferenceTypeNameList());
+        }
+
+        [TestMethod]
+        public void ReferenceTypeNameListParameterThrowsNotSupported()
+        {
+            // Same limitation as the return direction: passing a managed 'IList<Type>' to a native
+            // 'IVector<IReference<TypeName>>' parameter throws 'NotSupportedException'
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.CountReferenceTypeNameList(new List<Type> { typeof(Class), typeof(int) }));
+        }
+
+        [TestMethod]
+        public void ReferenceHResultListReturnThrowsNotSupported()
+        {
+            // 'IVector<IReference<HResult>>' projects its public surface as 'IList<Exception>', but it cannot be
+            // marshalled: 'System.Exception' is a reference type, so there is no valid 'Nullable<Exception>' collection
+            // marshaller for the interop generator to produce. The projected member throws 'NotSupportedException'
+            // instead of referencing a marshaller that does not exist (return-only direction, created in C++)
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.GetReferenceHResultList());
+        }
+
+        [TestMethod]
+        public void ReferenceHResultListParameterThrowsNotSupported()
+        {
+            // Same limitation as the return direction: passing a managed 'IList<Exception>' to a native
+            // 'IVector<IReference<HResult>>' parameter throws 'NotSupportedException'
+            Assert.ThrowsExactly<NotSupportedException>(() => Class.CountReferenceHResultList(new List<Exception> { new ArgumentException(), new InvalidOperationException() }));
         }
 
         [TestMethod]
@@ -4676,15 +4960,30 @@ namespace UnitTest
             Assert.IsFalse(seventh.Equals(eighth));
         }
 
-        // Manually verify warning for experimental.
+        // Windows Runtime APIs marked '[experimental]' in metadata are projected with the .NET
+        // '[Experimental]' attribute, which reports 'CSWINRT3005' at every use site (see
+        // 'docs/diagnostics/cswinrt3005.md'). This method is what verifies that at compile time: it only
+        // builds because the diagnostic is explicitly suppressed here, exactly as user code would have to.
         private void TestExperimentAttribute()
         {
-            // This method intentionally uses an '[Experimental]' API to manually verify the warning, so suppress
-            // 'CS8305' here to keep the intentional usage from breaking the build (warnings are treated as errors).
-#pragma warning disable CS8305
+#pragma warning disable CSWINRT3005
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
-#pragma warning restore CS8305
+#pragma warning restore CSWINRT3005
+        }
+
+        // Like the carried-over metadata attributes it replaces, the projected '[Experimental]' attribute
+        // is reference-projection-only: it is only ever consumed by compilers and analyzers, which see the
+        // reference projection, so it must not survive into the implementation projection loaded at runtime.
+        [TestMethod]
+        public void TestExperimentalIsNotProjectedInImplementationProjection()
+        {
+            // Naming the type at all is a use site, so the diagnostic has to be suppressed here too
+#pragma warning disable CSWINRT3005
+            Type experimentalType = typeof(CustomExperimentClass);
+#pragma warning restore CSWINRT3005
+
+            Assert.IsNull(experimentalType.GetCustomAttribute<ExperimentalAttribute>());
         }
 
         void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)
@@ -4986,6 +5285,198 @@ namespace UnitTest
             customEquals.Value = 3;
             // Non projected class changes the behavior of the Value property to double it.
             Assert.AreEqual(6, customEquals.Value);
+        }
+
+        // Windows Runtime attribute types are metadata-only: they are never activated, never cross the ABI
+        // boundary, and have no Windows Runtime type signature, so the projection deliberately emits no
+        // marshalling infrastructure for them at all. They are therefore not Windows Runtime types as far as
+        // marshalling is concerned, and behave like plain managed types: a 'List<SomeAttribute>' is handled
+        // exactly like a 'List<SomeManagedClass>', and the attribute instances themselves marshal as opaque
+        // 'IInspectable' objects.
+        //
+        // Treating them as Windows Runtime types instead failed twice over: the interop generator tried to
+        // generate marshalling code for 'IIterable<SomeAttribute>' and failed the build with
+        // 'CSWINRTINTEROPGEN0055' (there is no type signature to compute), and the runtime resolved the
+        // attribute type as its own metadata provider and then threw from 'GetComWrappersMarshaller'.
+        //
+        // This test building at all covers the first failure, as the interop generator runs over this
+        // assembly and sees the instantiations created below. The assertions cover the second one.
+        [TestMethod]
+        public void TestGenericsOverWindowsRuntimeAttributeTypes()
+        {
+            // 'GetCustomAttributes<T>' over a projected Windows Runtime attribute type creates the
+            // 'IEnumerable<MyStringAttribute>' and 'IEnumerator<MyStringAttribute>' instantiations this test
+            // is about, so the call stays. Its result is not used though: implementation projections don't
+            // carry metadata attribute applications over (see the test below), so it finds nothing at runtime.
+            _ = typeof(MultiLineStringAttributeTest).GetCustomAttributes<MyStringAttribute>().ToArray();
+
+            List<MyStringAttribute> list = [new MyStringAttribute { Content = "Hello world" }];
+
+            // Assigning to an 'IIterable<Object>' property actually marshals the collection across the ABI,
+            // which queries the CCW for 'IIterable<IInspectable>'. That interface is in the vtables because
+            // the covariance expansion adds it for 'List<T>'; there is deliberately no
+            // 'IIterable<MyStringAttribute>' entry, as no marshalling code can exist for it. Enumerating the
+            // collection then marshals the attribute instances themselves, as opaque objects. Round-tripping
+            // the property back (unlike a plain 'object' property, which just hands the same CCW back
+            // regardless of its vtables) is what makes this an actual test of the marshalling code.
+            TestObject.ObjectIterableProperty = list;
+
+            Assert.IsTrue(TestObject.ObjectIterableProperty.SequenceEqual(list));
+        }
+
+        // A 'List<SomeAttribute>' must end up with exactly one 'IIterable<IInspectable>' interface entry. Its
+        // own 'IEnumerable<SomeAttribute>' contributes none, as attribute types are not Windows Runtime types,
+        // so the single entry comes from the 'IEnumerable<object>' produced by the covariance expansion. Were
+        // the attribute type to be treated as a Windows Runtime type again, the generated interface entries
+        // would carry the same IID (and vtable) twice, for no reason other than wasted binary size.
+        //
+        // 'IInspectable::GetIids' reports exactly the generated 'ComInterfaceEntries' for the object, so it
+        // can be used to count them. Note that a duplicate entry would be invisible to 'QueryInterface'
+        // (which just returns the first match), so this is the only way to actually observe it.
+        [TestMethod]
+        public unsafe void TestWindowsRuntimeAttributeTypeInterfaceEntriesAreNotDuplicated()
+        {
+            // The IID of 'IIterable<IInspectable>', which the covariance expansion adds for the list
+            Guid iidIIterableInspectable = new("092B849B-60B1-52BE-A44A-6FE8E933CBE4");
+
+            List<MyStringAttribute> list = [new MyStringAttribute { Content = "Hello world" }];
+
+            void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(list);
+
+            try
+            {
+                // 'ConvertToUnmanaged' hands back an 'IUnknown' pointer, so it has to be queried for
+                // 'IInspectable' first: 'GetIids' is not in the 'IUnknown' vtable
+                Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectable));
+
+                try
+                {
+                    uint iidCount = 0;
+                    Guid* iids = null;
+
+                    // 'IInspectable::GetIids' is the fourth vtable entry, right after the 'IUnknown' methods
+                    Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>)(*(void***)inspectable)[3])(
+                        (void*)inspectable,
+                        &iidCount,
+                        &iids));
+
+                    try
+                    {
+                        int matches = 0;
+
+                        for (uint i = 0; i < iidCount; i++)
+                        {
+                            if (iids[i] == iidIIterableInspectable)
+                            {
+                                matches++;
+                            }
+                        }
+
+                        Assert.AreEqual(1, matches, "'IIterable<IInspectable>' should have exactly one entry in the CCW interface entries.");
+                    }
+                    finally
+                    {
+                        Marshal.FreeCoTaskMem((nint)iids);
+                    }
+                }
+                finally
+                {
+                    _ = Marshal.Release(inspectable);
+                }
+            }
+            finally
+            {
+                _ = Marshal.Release((nint)ccw);
+            }
+        }
+
+        // Windows Runtime metadata attributes are deliberately not carried over into implementation
+        // projections: nothing consumes them there (user code, compilers, analyzers and metadata tooling
+        // all see the reference projection instead), and attribute blobs cannot be trimmed by ILLink or
+        // ILC, so they would be permanent metadata in every shipped app. At runtime the projected types
+        // resolve through the forwarder assembly into the implementation projection, so that is what
+        // reflection observes here. The reference projection still carries every application over (see
+        // https://github.com/microsoft/CsWinRT/issues/2491); that side is covered by 'ProjectionWriterTest',
+        // which can assert on both projection modes.
+        [TestMethod]
+        public void TestWindowsRuntimeAttributesAreNotProjectedInImplementationProjection()
+        {
+            // 'RepeatedAttributeTest' is decorated in the '.idl' with four '[attr_repeatable]' applications
+            // and one '[attr_string]' application. None of them survive into the implementation projection.
+            Assert.AreEqual(0, typeof(RepeatedAttributeTest).GetCustomAttributes<MyRepeatableAttribute>().Count());
+            Assert.AreEqual(0, typeof(RepeatedAttributeTest).GetCustomAttributes<MyStringAttribute>().Count());
+
+            // Matching on the namespace rather than on those two types also acts as a blanket guard, so any
+            // future metadata attribute that starts leaking in fails here too. The marshalling attributes
+            // CsWinRT needs at runtime live in the 'ABI.*' namespaces, so they are deliberately not matched.
+            List<string> projectedAttributes = [];
+            bool hasWindowsRuntimeType = false;
+
+            foreach (CustomAttributeData data in typeof(RepeatedAttributeTest).GetCustomAttributesData())
+            {
+                string attributeName = data.AttributeType.FullName ?? string.Empty;
+
+                if (attributeName.StartsWith("TestComponentCSharp.", StringComparison.Ordinal))
+                {
+                    projectedAttributes.Add(attributeName);
+                }
+                else if (attributeName == "WindowsRuntime.WindowsRuntimeTypeAttribute")
+                {
+                    hasWindowsRuntimeType = true;
+                }
+            }
+
+            Assert.AreEqual(0, projectedAttributes.Count, $"Unexpected projected attributes: {string.Join(", ", projectedAttributes)}");
+
+            // The CsWinRT marker driving marshalling must still be applied (guards against over-stripping)
+            Assert.IsTrue(hasWindowsRuntimeType, "'[WindowsRuntimeType]' should still be applied in the implementation projection.");
+        }
+
+        // The Windows Runtime '[allowmultiple]' attribute has no .NET counterpart: it maps to the
+        // 'AllowMultiple' named argument of '[AttributeUsage]' on the projected attribute type. Unlike the
+        // carried-over metadata attributes above, '[AttributeUsage]' is kept in both projection modes: it
+        // models the projected attribute type's own usage contract, which drives
+        // 'Attribute.GetCustomAttributes(inherit: true)' semantics at runtime.
+        [TestMethod]
+        public void TestAllowMultipleIsProjectedOnAttributeUsage()
+        {
+            AttributeUsageAttribute repeatableUsage = typeof(MyRepeatableAttribute).GetCustomAttribute<AttributeUsageAttribute>();
+            AttributeUsageAttribute singleUsage = typeof(MyStringAttribute).GetCustomAttribute<AttributeUsageAttribute>();
+
+            Assert.IsNotNull(repeatableUsage);
+            Assert.IsNotNull(singleUsage);
+
+            Assert.IsTrue(repeatableUsage.AllowMultiple);
+            Assert.IsFalse(singleUsage.AllowMultiple);
+        }
+
+        [TestMethod]
+        [DataRow(unchecked((int)0x80010108))] // RPC_E_DISCONNECTED
+        [DataRow(unchecked((int)0x800706BA))] // RPC_S_SERVER_UNAVAILABLE
+        [DataRow(unchecked((int)0x89020001))] // JSCRIPT_E_CANTEXECUTE
+        public void TestFailingCompletionHandlerWithDisconnectedPeerIsIgnored(int hresult)
+        {
+            // Create an 'IAsyncAction' from a C# task we can complete on demand.
+            TaskCompletionSource taskCompletionSource = new();
+            IAsyncAction asyncAction = AsyncInfo.Run(_ => taskCompletionSource.Task);
+
+            // Pass it to native code, which sets a 'Completed' handler that always throws one
+            // of the well known 'HRESULT'-s indicating that the peer process is gone.
+            Class instance = new();
+            instance.SetFailingCompletedHandler(asyncAction, hresult);
+
+            taskCompletionSource.SetResult();
+
+            // The native handler runs on whichever thread completes the task (the continuation is
+            // registered with 'ExecuteSynchronously'), but poll anyway so the test is not racy.
+            Assert.IsTrue(
+                SpinWait.SpinUntil(() => instance.FailingCompletedHandlerInvoked, TimeSpan.FromSeconds(10)),
+                "The native 'Completed' handler was never invoked.");
+
+            // Reaching this point means the failure from the completion handler was swallowed (had it
+            // been rethrown on the thread pool, as is done for any other 'HRESULT', the process would
+            // have been torn down instead). The async action itself is unaffected by the failure.
+            Assert.AreEqual(AsyncStatus.Completed, asyncAction.Status);
         }
     }
 }

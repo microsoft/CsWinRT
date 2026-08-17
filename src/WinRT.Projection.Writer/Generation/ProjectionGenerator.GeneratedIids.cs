@@ -62,7 +62,7 @@ internal sealed partial class ProjectionGenerator
 
         bool iidWritten = false;
         HashSet<TypeDefinition> interfacesFromClassesEmitted = [];
-        ProjectionEmitContext guidContext = new(_settings, _cache, "ABI");
+        ProjectionEmitContext guidContext = new(_settings, _cache, "ABI", _staticConstructorAnalyzer);
         using IndentedTextWriterOwner guidIndentedOwner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter guidIndented = guidIndentedOwner.Writer;
         IidExpressionGenerator.WriteInterfaceIidsBegin(guidIndented);
@@ -80,6 +80,12 @@ internal sealed partial class ProjectionGenerator
                 bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
 
                 if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
+                {
+                    continue;
+                }
+
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
                 {
                     continue;
                 }

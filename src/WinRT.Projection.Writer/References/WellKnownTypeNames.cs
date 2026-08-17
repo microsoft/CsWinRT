@@ -52,4 +52,11 @@ internal static class WellKnownTypeNames
     /// The Windows SDK XAML <c>TypeName</c> struct (the WinMD source for <see cref="System.Type"/>).
     /// </summary>
     public const string TypeName = "TypeName";
+
+    /// <summary>
+    /// The XAML <c>DependencyProperty</c> type (in either <c>Microsoft.UI.Xaml</c> for WinUI or
+    /// <c>Windows.UI.Xaml</c> for UWP XAML). Authored types register dependency properties as
+    /// <c>static</c> fields of this type.
+    /// </summary>
+    public const string DependencyProperty = "DependencyProperty";
 }

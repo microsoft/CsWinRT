@@ -49,6 +49,15 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     private readonly CancellationToken _token = token;
 
     /// <summary>
+    /// Analyzes the component's managed implementation assemblies to decide which activation
+    /// factories must force the authored type's class constructor to run. Created once and shared
+    /// by every emit context, so its memoization cache is reused across namespaces. Empty (and
+    /// unused) outside component mode, where no implementation assemblies are provided.
+    /// </summary>
+    private readonly ComponentStaticConstructorAnalyzer _staticConstructorAnalyzer =
+        new(ComponentImplementationMetadata.Load(settings.ComponentImplementationAssemblies));
+
+    /// <summary>
     /// Runs the projection-generation pipeline end-to-end.
     /// </summary>
     public void Run()

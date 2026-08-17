@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.Generator;
+using WindowsRuntime.ProjectionWriter.Models;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -16,4 +19,32 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 ///   <item><description><c>AbiMethodBodyFactory.MarshallerDispatch.cs</c> - Per-marshaller ConvertToManaged/Unmanaged dispatch helpers.</description></item>
 /// </list>
 /// </remarks>
-internal static partial class AbiMethodBodyFactory;
+internal static partial class AbiMethodBodyFactory
+{
+    /// <summary>
+    /// Returns whether the method's return type or any parameter type involves a generic
+    /// instantiation over <c>IReference&lt;TypeName&gt;</c> / <c>IReference&lt;HResult&gt;</c>, which
+    /// cannot be marshalled (see <see cref="TypeSignatureExtensions.ContainsNestedNullableTOfReferenceType"/>).
+    /// When this is the case, the projected member's body is replaced with a <c>throw</c> instead of
+    /// emitting a reference to a <c>WinRT.Interop</c> marshaller that the interop generator cannot produce.
+    /// </summary>
+    /// <param name="sig">The interface method signature being emitted.</param>
+    /// <returns><see langword="true"/> if the method cannot be marshalled; otherwise <see langword="false"/>.</returns>
+    private static bool RequiresUnsupportedNullableTOfReferenceTypeMarshalling(MethodSignatureInfo sig)
+    {
+        if (sig.ReturnType is { } rt && rt.ContainsNestedNullableTOfReferenceType())
+        {
+            return true;
+        }
+
+        foreach (ParameterInfo p in sig.Parameters)
+        {
+            if (p.Type.StripByRefAndCustomModifiers().ContainsNestedNullableTOfReferenceType())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

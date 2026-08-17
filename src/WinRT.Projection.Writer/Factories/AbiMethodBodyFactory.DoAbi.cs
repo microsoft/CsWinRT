@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -47,6 +48,21 @@ internal static partial class AbiMethodBodyFactory
             throw WellKnownProjectionWriterExceptions.UnreachableEmissionState(
                 $"EmitDoAbiBodyIfSimple: unexpectedly called for event accessor '{methodName}' " +
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
+        }
+
+        // Generic instantiations over 'IReference<TypeName>' / 'IReference<HResult>' have no valid
+        // 'WinRT.Interop' marshaller (see 'RequiresUnsupportedNullableTOfReferenceTypeMarshalling'), so
+        // the CCW body throws instead of referencing a marshaller the interop generator cannot produce
+        if (RequiresUnsupportedNullableTOfReferenceTypeMarshalling(sig))
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, """
+                {
+                    throw new global::System.NotSupportedException();
+                }
+                """);
+
+            return;
         }
 
         writer.WriteLine();

@@ -50,11 +50,19 @@ internal static class ComponentFactory
     /// <summary>
     /// Writes the per-runtime-class server-activation-factory type for component mode.
     /// </summary>
+    /// <param name="writer">The writer to emit the factory class to.</param>
+    /// <param name="context">The active projection emit context.</param>
+    /// <param name="type">The activatable runtime class to emit a factory for.</param>
     public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         (string typeNs, string typeName) = type.Names();
         string projectedTypeName = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
         string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
+
+        // The static constructor that forces the authored type's class constructor to run before
+        // activation is only needed when the type registers dependency properties, so consult the
+        // component's managed implementation assemblies (the .winmd doesn't carry those fields).
+        bool emitStaticConstructor = context.StaticConstructorAnalyzer.RequiresStaticConstructor(type.FullName);
 
         // Writes the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
         void WriteBaseInterfaceList(IndentedTextWriter writer)
@@ -78,7 +86,10 @@ internal static class ComponentFactory
         // Writes the body of the 'ActivateInstance' method (it throws for non-activatable types)
         void WriteActivateInstanceBody(IndentedTextWriter writer)
         {
-            bool isActivatable = !type.IsStatic && type.HasDefaultConstructor();
+            // A type whose default constructor is removed ([Deprecated(DeprecationType.Remove)]) is no longer
+            // default-activatable: 'new T()' cannot be emitted (it would call the removed authored member),
+            // so default activation falls through to the 'throw' below, which marshals to E_NOTIMPL.
+            bool isActivatable = !type.IsStatic && type.HasActivatableDefaultConstructor();
 
             if (isActivatable)
             {
@@ -88,6 +99,27 @@ internal static class ComponentFactory
             {
                 writer.Write("throw new NotImplementedException();");
             }
+        }
+
+        // Writes the static constructor that forces the projected type's class constructor to run
+        // before activation, so any dependency properties it registers (as static fields) are set
+        // up in time. Types that don't register any don't need it, so the callback emits nothing
+        // for them and the factory omits the constructor entirely, keeping the factory body a
+        // single interpolated template in either case
+        void WriteStaticConstructor(IndentedTextWriter writer)
+        {
+            if (!emitStaticConstructor)
+            {
+                return;
+            }
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                static {{factoryTypeName}}()
+                {
+                    global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({{projectedTypeName}}).TypeHandle);
+                }
+                """);
         }
 
         // Helper wrapper to write additional methods
@@ -101,12 +133,8 @@ internal static class ComponentFactory
             internal sealed class {{factoryTypeName}} : {{WriteBaseInterfaceList}}
             {
                 private static readonly {{factoryTypeName}} _factory = new();
+                {{WriteStaticConstructor}}
 
-                static {{factoryTypeName}}()
-                {
-                    global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({{projectedTypeName}}).TypeHandle);
-                }
-            
                 public static unsafe void* Make()
                 {
                     return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>
@@ -147,7 +175,11 @@ internal static class ComponentFactory
             {
                 foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    if (method.IsConstructor)
+                    // Removed members (DeprecationType.Remove) are omitted from the factory class: the
+                    // projected factory/static interface drops them, their vtable slot is stubbed to
+                    // E_NOTIMPL, and generated code cannot call the authored member anyway (the C#
+                    // compiler treats a call to a '[Deprecated(Remove)]' member as an error).
+                    if (method.IsConstructor || method.IsRemoved)
                     {
                         continue;
                     }
@@ -159,7 +191,7 @@ internal static class ComponentFactory
             {
                 foreach (MethodDefinition method in info.Type.Methods)
                 {
-                    if (method.IsConstructor)
+                    if (method.IsConstructor || method.IsRemoved)
                     {
                         continue;
                     }
@@ -168,10 +200,20 @@ internal static class ComponentFactory
                 }
                 foreach (PropertyDefinition prop in info.Type.Properties)
                 {
+                    if ((prop.GetMethod ?? prop.SetMethod) is { IsRemoved: true })
+                    {
+                        continue;
+                    }
+
                     WriteStaticFactoryProperty(writer, context, prop, projectedTypeName);
                 }
                 foreach (EventDefinition evt in info.Type.Events)
                 {
+                    if (evt.AddMethod is { IsRemoved: true })
+                    {
+                        continue;
+                    }
+
                     WriteStaticFactoryEvent(writer, context, evt, projectedTypeName);
                 }
             }

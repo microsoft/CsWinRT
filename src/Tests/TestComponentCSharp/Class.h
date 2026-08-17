@@ -73,6 +73,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::handle _syncHandle;
         int32_t _asyncResult;
         int32_t _asyncProgress;
+        std::atomic<bool> _failingCompletedHandlerInvoked{ false };
         Windows::Foundation::Point _point{};
         Windows::Foundation::Rect _rect{};
         Windows::Foundation::Size _size{};
@@ -292,6 +293,10 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVector<int32_t> GetIntVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector2();
         Windows::Foundation::Collections::IVector<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector2();
+        Windows::Foundation::Collections::IVector<hstring> GetStringVector2();
+        Windows::Foundation::Collections::IVector<Windows::Foundation::DateTime> GetDateTimeVector2();
+        Windows::Foundation::Collections::IVector<TestComponentCSharp::Class> GetClassVector2();
+        Windows::Foundation::Collections::IVector<hresult> GetExceptionVector2();
 
         Windows::Foundation::Collections::IMap<int32_t, int32_t> GetIntToIntDictionary();
         Windows::Foundation::Collections::IMap<hstring, TestComponentCSharp::ComposedBlittableStruct> GetStringToBlittableDictionary();
@@ -353,6 +358,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
+
+        void SetFailingCompletedHandler(Windows::Foundation::IAsyncAction const& action, int32_t hr);
+        bool FailingCompletedHandlerInvoked();
 
         Windows::Foundation::Point PointProperty();
         void PointProperty(Windows::Foundation::Point const& value);
@@ -427,6 +435,8 @@ namespace winrt::TestComponentCSharp::implementation
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
         int32_t SumNullableIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> const& values);
+        int64_t SumIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<int32_t> const& values, uint32_t startIndex, uint32_t capacity);
+        int64_t SumIntsWithGetManyFromView(winrt::Windows::Foundation::Collections::IVectorView<int32_t> const& values, uint32_t startIndex, uint32_t capacity);
         int32_t CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs);
 
         static int GetPropertyType(Windows::Foundation::IInspectable const& obj);
@@ -442,6 +452,17 @@ namespace winrt::TestComponentCSharp::implementation
         static bool VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static hstring GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type);
+
+        static Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> BoxedTypeName();
+        static Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> RoundtripTypeName(Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> const& value);
+
+        static Windows::Foundation::IReference<winrt::hresult> BoxedHResult();
+        static Windows::Foundation::IReference<winrt::hresult> RoundtripHResult(Windows::Foundation::IReference<winrt::hresult> const& value);
+
+        static Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName>> GetReferenceTypeNameList();
+        static int32_t CountReferenceTypeNameList(Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName>> const& value);
+        static Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<winrt::hresult>> GetReferenceHResultList();
+        static int32_t CountReferenceHResultList(Windows::Foundation::Collections::IVector<Windows::Foundation::IReference<winrt::hresult>> const& value);
 
         static Windows::Foundation::IInspectable EmptyString();
         static Windows::Foundation::IInspectable BoxedDelegate();

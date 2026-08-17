@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -82,6 +83,11 @@ internal static partial class InteropTypeDiscovery
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
+    /// <param name="isNativeExposedType">
+    /// Whether the type was explicitly opted into CCW marshalling code generation via
+    /// <c>[WindowsRuntimeNativeExposedType]</c>. When this is <see langword="true"/>, projected Windows
+    /// Runtime types are not skipped, as they would otherwise never get CCW marshalling code generated.
+    /// </param>
     /// <remarks>
     /// This method expects <paramref name="typeDefinition"/> to either be non-generic, or
     /// to have <paramref name="typeSignature"/> be a fully constructed signature for it.
@@ -93,7 +99,8 @@ internal static partial class InteropTypeDiscovery
         InteropGeneratorDiscoveryState discoveryState,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
-        ModuleDefinition module)
+        ModuleDefinition module,
+        bool isNativeExposedType = false)
     {
         // Ignore types that should explicitly be excluded
         if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
@@ -114,8 +121,10 @@ internal static partial class InteropTypeDiscovery
             return;
         }
 
-        // We can skip all projected Windows Runtime types early, as they don't need CCW support
-        if (typeDefinition.IsProjectedWindowsRuntimeType)
+        // We can skip all projected Windows Runtime types early, as they don't need CCW support. The only
+        // exception is when a type has been explicitly opted into CCW marshalling code generation, in which
+        // case we do want to process it as any other user-defined type (see the analyzer for more details).
+        if (typeDefinition.IsProjectedWindowsRuntimeType && !isNativeExposedType)
         {
             return;
         }

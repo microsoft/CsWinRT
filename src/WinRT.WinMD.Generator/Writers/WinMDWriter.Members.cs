@@ -6,6 +6,7 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.WinMDGenerator.Errors;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAttributes;
 using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
@@ -122,8 +123,9 @@ internal sealed partial class WinMDWriter
 
         outputType.Methods.Add(outputMethod);
 
-        // Copy custom attributes from the input method
-        CopyCustomAttributes(inputMethod, outputMethod);
+        // Copy custom attributes from the input method. Constructors are exposed to Windows Runtime
+        // through activation factory methods, so their '.ctor' row carries no '[Experimental]' marker.
+        CopyCustomAttributes(inputMethod, outputMethod, skipExperimentalAttribute: isConstructor);
     }
 
     /// <summary>
@@ -144,6 +146,11 @@ internal sealed partial class WinMDWriter
     ///   <item>Any other by-reference type (e.g. <c>ref Guid</c> on a COM interop interface) → <c>[in]</c>, matching the MIDL convention for <c>ref const T</c> parameters.</item>
     ///   <item>All other params → <c>[in]</c>.</item>
     /// </list>
+    /// <para>
+    /// Array and span shapes that have no Windows Runtime representation are rejected with a well-known
+    /// error: a by-reference span (e.g. <c>out Span&lt;T&gt;</c>), or a <c>ref</c>/<c>in</c> array (only
+    /// <c>out T[]</c> is a valid by-reference array). See <see cref="GetWinRTParameterAttributes"/>.
+    /// </para>
     /// </remarks>
     private static void AddParameterDefinitions(MethodDefinition outputMethod, MethodDefinition inputMethod)
     {
@@ -157,7 +164,7 @@ internal sealed partial class WinMDWriter
 
             if (sigIndex < inputParamTypes.Count)
             {
-                paramattributes = GetWinRTParameterAttributes(inputParam, inputParamTypes[sigIndex]);
+                paramattributes = GetWinRTParameterAttributes(inputMethod, inputParam, inputParamTypes[sigIndex]);
             }
 
             outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
@@ -168,15 +175,57 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Determines the Windows Runtime parameter attributes based on the input parameter and its type.
+    /// Determines the Windows Runtime parameter attributes based on the input parameter and its type,
+    /// validating that the parameter uses a supported Windows Runtime calling convention.
     /// </summary>
     /// <remarks>
     /// If the input parameter already has <see cref="ParameterAttributes.In"/> or
     /// <see cref="ParameterAttributes.Out"/> set, those flags are preserved unchanged. Otherwise,
     /// the type drives the default per the rules documented on <see cref="AddParameterDefinitions"/>.
+    /// By-reference spans (e.g. <c>out Span&lt;T&gt;</c>) and <c>ref</c>/<c>in</c> arrays have no
+    /// Windows Runtime representation and throw a <see cref="Errors.WellKnownWinMDException"/>.
     /// </remarks>
-    private static ParameterAttributes GetWinRTParameterAttributes(ParameterDefinition inputParam, TypeSignature inputParamType)
+    /// <param name="inputMethod">The method that declares the parameter (used for error context).</param>
+    /// <param name="inputParam">The input <see cref="ParameterDefinition"/> (provides the In/Out direction flags).</param>
+    /// <param name="inputParamType">The input parameter <see cref="TypeSignature"/>.</param>
+    /// <returns>The Windows Runtime <see cref="ParameterAttributes"/> for the parameter.</returns>
+    /// <exception cref="Errors.WellKnownWinMDException">Thrown if the parameter uses an unsupported array or span convention.</exception>
+    private static ParameterAttributes GetWinRTParameterAttributes(
+        MethodDefinition inputMethod,
+        ParameterDefinition inputParam,
+        TypeSignature inputParamType)
     {
+        // Look through any custom modifiers (e.g. the 'modreq(InAttribute)' emitted for 'in' parameters
+        // on abstract, virtual, interface, or delegate members) to inspect the real underlying signature
+        TypeSignature parameterType = inputParamType.StripCustomModifiers();
+
+        // Validate by-reference parameters that wrap a span or array. Windows Runtime spans are always
+        // passed by value, and Windows Runtime arrays use one of three conventions: 'ReadOnlySpan<T>'
+        // (PassArray), 'Span<T>' (FillArray), or 'out T[]' (ReceiveArray). A by-reference span, or a
+        // 'ref'/'in' array, has no Windows Runtime representation and is rejected here.
+        if (parameterType is ByReferenceTypeSignature byReference)
+        {
+            TypeSignature elementType = byReference.BaseType.StripCustomModifiers();
+
+            if (elementType.IsTypeOfSpan() || elementType.IsTypeOfReadOnlySpan())
+            {
+                throw WellKnownWinMDExceptions.ByReferenceSpanParameterNotSupported(
+                    inputMethod.DeclaringType!.FullName,
+                    inputMethod.Name!.Value,
+                    inputParam.Name!.Value);
+            }
+
+            // 'out T[]' (ReceiveArray) is valid, but 'ref T[]'/'in T[]' are not. By-reference non-array
+            // types (e.g. 'ref Guid riid' on a COM interop interface) are still allowed and handled below.
+            if (elementType is SzArrayTypeSignature && !inputParam.IsOut)
+            {
+                throw WellKnownWinMDExceptions.ByReferenceArrayParameterNotSupported(
+                    inputMethod.DeclaringType!.FullName,
+                    inputMethod.Name!.Value,
+                    inputParam.Name!.Value);
+            }
+        }
+
         // Preserve any 'In'/'Out' direction flags the input parameter already carries
         ParameterAttributes inputDirectionFlags = inputParam.Attributes & (ParameterAttributes.In | ParameterAttributes.Out);
 
@@ -186,8 +235,7 @@ internal sealed partial class WinMDWriter
         }
 
         // 'Span<T>' → 'FillArray' pattern: '[out]' without 'BYREF'
-        if (inputParamType is GenericInstanceTypeSignature genericInstanceSignature &&
-            genericInstanceSignature.GenericType.FullName == "System.Span`1")
+        if (parameterType.IsTypeOfSpan())
         {
             return ParameterAttributes.Out;
         }
@@ -227,6 +275,9 @@ internal sealed partial class WinMDWriter
             attributes: PropertyAttributes.None,
             signature: isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
+        MethodDefinition? getter = null;
+        MethodDefinition? setter = null;
+
         // Add getter
         if (inputProperty.GetMethod is not null)
         {
@@ -248,7 +299,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(propertyType)
                 : MethodSignature.CreateInstance(propertyType);
 
-            MethodDefinition getter = new("get_" + inputProperty.Name.Value, attributes, getSignature);
+            getter = new("get_" + inputProperty.Name.Value, attributes, getSignature);
             if (!isInterfaceParent)
             {
                 getter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -278,7 +329,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [propertyType])
                 : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]);
 
-            MethodDefinition setter = new("put_" + inputProperty.Name.Value, attributes, setSignature);
+            setter = new("put_" + inputProperty.Name.Value, attributes, setSignature);
             if (!isInterfaceParent)
             {
                 setter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -293,8 +344,11 @@ internal sealed partial class WinMDWriter
 
         outputType.Properties.Add(outputProperty);
 
-        // Copy custom attributes from the input property
-        CopyCustomAttributes(inputProperty, outputProperty);
+        // Copy custom attributes from the input property. The accessor attributes (e.g. '[Deprecated]')
+        // are emitted on the accessor (the getter, or the setter for write-only properties) rather than
+        // the property row, matching the placement used by MIDL so that they resolve consistently
+        CopyCustomAttributes(inputProperty, outputProperty, skipAccessorAttributes: true);
+        CopyAccessorAttributes(inputProperty, getter ?? setter ?? (IHasCustomAttribute)outputProperty);
     }
 
     /// <summary>
@@ -322,7 +376,10 @@ internal sealed partial class WinMDWriter
 
         outputType.Properties.Add(outputProperty);
 
-        CopyCustomAttributes(inputProperty, outputProperty);
+        // Copy custom attributes from the input property. The accessor attributes (e.g. '[Deprecated]')
+        // are emitted on the setter accessor rather than the property row, matching the placement used by MIDL
+        CopyCustomAttributes(inputProperty, outputProperty, skipAccessorAttributes: true);
+        CopyAccessorAttributes(inputProperty, setter);
     }
 
     /// <summary>
@@ -356,6 +413,8 @@ internal sealed partial class WinMDWriter
         // For interface parents (synthesized interfaces), always use instance signatures
         bool isStatic = !isInterfaceParent && inputEvent.AddMethod?.IsStatic == true;
 
+        MethodDefinition adder;
+
         // Add method
         {
             MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
@@ -379,7 +438,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(tokenSignature, [handlerSignature])
                 : MethodSignature.CreateInstance(tokenSignature, [handlerSignature]);
 
-            MethodDefinition adder = new("add_" + inputEvent.Name.Value, attributes, addSignature);
+            adder = new("add_" + inputEvent.Name.Value, attributes, addSignature);
             if (!isInterfaceParent)
             {
                 adder.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -425,7 +484,9 @@ internal sealed partial class WinMDWriter
 
         outputType.Events.Add(outputEvent);
 
-        // Copy custom attributes from the input event
-        CopyCustomAttributes(inputEvent, outputEvent);
+        // Copy custom attributes from the input event. The accessor attributes (e.g. '[Deprecated]') are
+        // emitted on the 'add' accessor rather than the event row, matching the placement used by MIDL
+        CopyCustomAttributes(inputEvent, outputEvent, skipAccessorAttributes: true);
+        CopyAccessorAttributes(inputEvent, adder);
     }
 }

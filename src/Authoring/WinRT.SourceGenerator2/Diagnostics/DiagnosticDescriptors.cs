@@ -244,4 +244,72 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Public types in a Windows Runtime component should not mix '[ContractVersion]' and '[Version]', as these represent two different versioning schemes. Pick one and apply it consistently across the public API surface of the component.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[WindowsRuntimeNativeExposedType]</c> attribute applied with a target type that cannot be instantiated.
+    /// </summary>
+    public static readonly DiagnosticDescriptor NativeExposedTypeNotInstantiable = new(
+        id: "CSWINRT2018",
+        title: "'[WindowsRuntimeNativeExposedType]' target type cannot be instantiated",
+        messageFormat: """The type '{0}' is used as the target of a '[WindowsRuntimeNativeExposedType]' attribute, but it cannot be instantiated. Only concrete, non generic projected Windows Runtime class types can be used with this attribute, as no CCW would ever be created for a type that cannot be instantiated.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The '[WindowsRuntimeNativeExposedType]' attribute should only be applied with concrete, non generic projected Windows Runtime class types. Types that cannot be instantiated, such as interfaces, abstract classes, static classes, and generic type definitions, have no effect when used as the target of the attribute.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[WindowsRuntimeNativeExposedType]</c> attribute applied with a target type that is not a projected Windows Runtime class.
+    /// </summary>
+    public static readonly DiagnosticDescriptor NativeExposedTypeNotProjectedClass = new(
+        id: "CSWINRT2019",
+        title: "'[WindowsRuntimeNativeExposedType]' target type is not a projected class",
+        messageFormat: """The type '{0}' is used as the target of a '[WindowsRuntimeNativeExposedType]' attribute, but it is not a projected Windows Runtime class type. CCW marshalling code is already generated automatically for all other types (such as user defined types, value types, delegates, arrays, and generic instantiations), so applying the attribute to '{0}' has no effect.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The '[WindowsRuntimeNativeExposedType]' attribute should only be applied with projected Windows Runtime class types. CCW marshalling code is generated automatically for all other types, so applying the attribute to them has no effect.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[WindowsRuntimeNativeExposedType]</c> attribute applied with a target type that is already used by another application of the attribute in the same assembly.
+    /// </summary>
+    public static readonly DiagnosticDescriptor NativeExposedTypeDuplicate = new(
+        id: "CSWINRT2020",
+        title: "Duplicate '[WindowsRuntimeNativeExposedType]' target type",
+        messageFormat: """The type '{0}' is used as the target of more than one '[WindowsRuntimeNativeExposedType]' attribute in the same assembly. CCW marshalling code is only generated once per type, so the additional applications of the attribute for '{0}' have no effect and can be removed.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A given type should only be used as the target of a single '[WindowsRuntimeNativeExposedType]' attribute in an assembly. CCW marshalling code is only generated once per type, so additional applications of the attribute for the same type have no effect.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an <c>[Experimental]</c> attribute applied to a target that Windows Runtime metadata cannot represent.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ExperimentalAttributeUnsupportedTarget = new(
+        id: "CSWINRT2021",
+        title: "Unsupported '[Experimental]' target for Windows Runtime metadata",
+        messageFormat: """The '[Experimental]' attribute applied to '{0}' will not be propagated to the generated '.winmd' file, as the Windows Runtime '[Experimental]' attribute cannot be applied to {1}. It can only be applied to types (runtime classes, interfaces, structs, enums and delegates), methods, properties, events and fields.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The .NET '[Experimental]' attribute supports more targets than the Windows Runtime one it is translated into, so applications on targets that Windows Runtime metadata cannot represent are dropped, making the API appear stable to every other language projection.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an authored API with an <c>[Obsolete]</c> attribute, but no <c>[Deprecated]</c> attribute.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ObsoleteWithoutDeprecated = new(
+        id: "CSWINRT2022",
+        title: "'[Obsolete]' on an authored API without '[Deprecated]'",
+        messageFormat: """The API '{0}' is publicly exposed from a Windows Runtime component and has an '[Obsolete]' attribute applied, but no '[Windows.Foundation.Metadata.Deprecated]' attribute. '[Obsolete]' has no Windows Runtime counterpart, so it is not translated when the '.winmd' is generated, and the deprecation is invisible to every consumer of the component. Apply '[Windows.Foundation.Metadata.Deprecated]' to also deprecate '{0}' in the Windows Runtime metadata.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Deprecating a publicly exposed API of a Windows Runtime component requires '[Windows.Foundation.Metadata.Deprecated]', which is the only deprecation the '.winmd' can carry. '[Obsolete]' is a .NET concept with no Windows Runtime counterpart: it is not translated by the WinMD generator, so on its own it deprecates the API for nobody but the C# code inside the component itself.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }

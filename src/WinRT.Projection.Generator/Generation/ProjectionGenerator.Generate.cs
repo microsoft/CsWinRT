@@ -109,6 +109,11 @@ internal partial class ProjectionGenerator
         List<string> excludes = [];
         List<string> winmdInputs = [];
 
+        // Paths to the managed implementation assemblies of the component(s) being projected, scanned
+        // by the projection writer for implementation details (e.g. the static fields backing XAML
+        // dependency properties) that are not present in the .winmd metadata
+        List<string> componentImplementationAssemblies = [];
+
         // Filter out .winmd files from the resolver paths
         string[] resolverPaths = [.. args.ReferenceAssemblyPaths
             .Where(p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
@@ -141,9 +146,15 @@ internal partial class ProjectionGenerator
 
                 ModuleDefinition refModule = ModuleDefinition.FromFile(refPath, resolver.ReaderParameters);
 
-                if (IsComponentAssembly(refModule) && refModule.Assembly?.Name is Utf8String name)
+                if (IsComponentAssembly(refModule))
                 {
-                    _ = componentAssemblyNameSet.Add(name.Value);
+                    // Keep the path so the projection writer can inspect the managed implementation
+                    componentImplementationAssemblies.Add(refPath);
+
+                    if (refModule.Assembly?.Name is Utf8String name)
+                    {
+                        _ = componentAssemblyNameSet.Add(name.Value);
+                    }
                 }
             }
 
@@ -276,6 +287,7 @@ internal partial class ProjectionGenerator
             Include = includes,
             Exclude = excludes,
             Component = componentMode,
+            ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };

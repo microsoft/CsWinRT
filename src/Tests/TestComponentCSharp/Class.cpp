@@ -1203,6 +1203,39 @@ namespace winrt::TestComponentCSharp::implementation
             });
     }
 
+    IVector<hstring> Class::GetStringVector2()
+    {
+        std::vector<hstring> values;
+        values.reserve(130);
+
+        for (int32_t i = 0; i < 130; i++)
+        {
+            values.push_back(to_hstring(i));
+        }
+
+        return winrt::single_threaded_vector(std::move(values));
+    }
+
+    IVector<DateTime> Class::GetDateTimeVector2()
+    {
+        auto now = winrt::clock::now();
+        return winrt::single_threaded_vector(std::vector{ now, now + std::chrono::seconds{ 1 } });
+    }
+
+    IVector<TestComponentCSharp::Class> Class::GetClassVector2()
+    {
+        return winrt::single_threaded_vector(std::vector
+            {
+                winrt::make<implementation::Class>(),
+                winrt::make<implementation::Class>(),
+            });
+    }
+
+    IVector<winrt::hresult> Class::GetExceptionVector2()
+    {
+        return winrt::single_threaded_vector(std::vector{ winrt::hresult{ -2147467259 }, winrt::hresult{ -2147024809 } });
+    }
+
     // Test IIDOptimizer
     IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
     {
@@ -1248,6 +1281,23 @@ namespace winrt::TestComponentCSharp::implementation
         co_await winrt::resume_on_signal(_syncHandle.get());
         if (cancel()) co_return;
         winrt::check_hresult(_asyncResult);
+    }
+
+    void Class::SetFailingCompletedHandler(IAsyncAction const& action, int32_t hr)
+    {
+        action.Completed([strong = get_strong(), hr](IAsyncAction const&, AsyncStatus)
+        {
+            // Signal that the handler ran before failing, so that tests can wait for this
+            // deterministically (the handler itself can never report anything back, as it throws).
+            strong->_failingCompletedHandlerInvoked.store(true, std::memory_order_release);
+
+            throw winrt::hresult_error(winrt::hresult{ hr }, L"Intentional failure in completion handler");
+        });
+    }
+
+    bool Class::FailingCompletedHandlerInvoked()
+    {
+        return _failingCompletedHandlerInvoked.load(std::memory_order_acquire);
     }
 
     IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()
@@ -1914,6 +1964,50 @@ namespace winrt::TestComponentCSharp::implementation
         return type.Name;
     }
 
+    IReference<Windows::UI::Xaml::Interop::TypeName> Class::BoxedTypeName()
+    {
+        return winrt::box_value(winrt::xaml_typename<winrt::TestComponentCSharp::Class>()).as<IReference<Windows::UI::Xaml::Interop::TypeName>>();
+    }
+
+    IReference<Windows::UI::Xaml::Interop::TypeName> Class::RoundtripTypeName(IReference<Windows::UI::Xaml::Interop::TypeName> const& value)
+    {
+        return value;
+    }
+
+    IReference<winrt::hresult> Class::BoxedHResult()
+    {
+        // Box a known failure 'HRESULT' ('E_INVALIDARG') as 'IReference<HResult>'
+        return winrt::box_value(winrt::hresult{ static_cast<int32_t>(0x80070057) }).as<IReference<winrt::hresult>>();
+    }
+
+    IReference<winrt::hresult> Class::RoundtripHResult(IReference<winrt::hresult> const& value)
+    {
+        return value;
+    }
+
+    IVector<IReference<Windows::UI::Xaml::Interop::TypeName>> Class::GetReferenceTypeNameList()
+    {
+        return single_threaded_vector<IReference<Windows::UI::Xaml::Interop::TypeName>>({
+            winrt::box_value(winrt::xaml_typename<winrt::TestComponentCSharp::Class>()).as<IReference<Windows::UI::Xaml::Interop::TypeName>>(),
+            winrt::box_value(winrt::xaml_typename<int32_t>()).as<IReference<Windows::UI::Xaml::Interop::TypeName>>() });
+    }
+
+    int32_t Class::CountReferenceTypeNameList(IVector<IReference<Windows::UI::Xaml::Interop::TypeName>> const& value)
+    {
+        return value ? static_cast<int32_t>(value.Size()) : 0;
+    }
+
+    IVector<IReference<winrt::hresult>> Class::GetReferenceHResultList()
+    {
+        return single_threaded_vector<IReference<winrt::hresult>>({
+            winrt::box_value(winrt::hresult{ static_cast<int32_t>(0x80070057) }).as<IReference<winrt::hresult>>() });
+    }
+
+    int32_t Class::CountReferenceHResultList(IVector<IReference<winrt::hresult>> const& value)
+    {
+        return value ? static_cast<int32_t>(value.Size()) : 0;
+    }
+
     WF::IInspectable Class::EmptyString()
     {
         return winrt::box_value(hstring{});
@@ -2031,6 +2125,34 @@ namespace winrt::TestComponentCSharp::implementation
                 sum += items[i].Value();
             }
         }
+        return sum;
+    }
+
+    int64_t Class::SumIntsWithGetMany(IVector<int32_t> const& values, uint32_t startIndex, uint32_t capacity)
+    {
+        std::vector<int32_t> items(capacity);
+        uint32_t retrieved = values.GetMany(startIndex, items);
+        int64_t sum = 0;
+
+        for (uint32_t i = 0; i < retrieved; i++)
+        {
+            sum += items[i];
+        }
+
+        return sum;
+    }
+
+    int64_t Class::SumIntsWithGetManyFromView(IVectorView<int32_t> const& values, uint32_t startIndex, uint32_t capacity)
+    {
+        std::vector<int32_t> items(capacity);
+        uint32_t retrieved = values.GetMany(startIndex, items);
+        int64_t sum = 0;
+
+        for (uint32_t i = 0; i < retrieved; i++)
+        {
+            sum += items[i];
+        }
+
         return sum;
     }
 
@@ -2210,4 +2332,3 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<NonProjectedDerivedCustomEquals>();
     }
 }
-

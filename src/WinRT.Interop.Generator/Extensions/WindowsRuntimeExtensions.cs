@@ -8,6 +8,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -825,6 +826,34 @@ internal static class WindowsRuntimeExtensions
                     ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
                     : interopDefinitions.WindowsRuntimeProjectionModule;
         }
+
+        /// <summary>
+        /// Checks whether a <see cref="TypeDefinition"/> represents a Windows Runtime attribute type.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type represents a Windows Runtime attribute type.</returns>
+        /// <remarks>
+        /// <para>
+        /// Windows Runtime attribute types are metadata-only: they are never activated and never cross the ABI
+        /// boundary, so the projection deliberately emits no marshalling infrastructure for them (no default
+        /// interface, no IID, no <c>Impl</c> type, no marshaller). They are still projected as ordinary .NET
+        /// attribute types, and can appear as generic type arguments in managed code (e.g.
+        /// <c>type.GetCustomAttributes&lt;SomeAttribute&gt;()</c> creates an <c>IEnumerable&lt;SomeAttribute&gt;</c>
+        /// instantiation), so they have to be treated as plain managed types, exactly like any type that is
+        /// not projected at all.
+        /// </para>
+        /// <para>
+        /// Windows Runtime attribute types always derive <em>directly</em> from <see cref="Attribute"/>, as the
+        /// Windows Runtime type system does not allow an attribute to derive from another one. Checking the
+        /// immediate base type is therefore both sufficient and much cheaper than walking the base class chain.
+        /// </para>
+        /// </remarks>
+        public bool IsWindowsRuntimeAttributeType(InteropReferences interopReferences)
+        {
+            return
+                type.BaseType is { } baseType &&
+                SignatureComparer.IgnoreVersion.Equals(baseType, interopReferences.Attribute);
+        }
     }
 
     extension(TypeSignature signature)
@@ -1055,6 +1084,13 @@ internal static class WindowsRuntimeExtensions
 
             TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
 
+            // Windows Runtime attribute types carry no marshalling code at all, so they behave exactly like
+            // types that are not projected (see the remarks on the check below for the full rationale).
+            if (type.IsWindowsRuntimeAttributeType(interopReferences))
+            {
+                return false;
+            }
+
             // For all other cases, just check that the type is projected. This will also include manually
             // projected types that are defined in 'WinRT.Runtime.dll' (same attributes). Public types from
             // authored component assemblies, and types from reference projection assemblies, are also
@@ -1123,6 +1159,12 @@ internal static class WindowsRuntimeExtensions
             }
 
             TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
+
+            // Windows Runtime attribute types carry no marshalling code at all (same as above)
+            if (type.IsWindowsRuntimeAttributeType(interopReferences))
+            {
+                return false;
+            }
 
             // For all other cases, first check that the type is projected. Public types from authored
             // component assemblies, and types from reference projection assemblies, are also considered

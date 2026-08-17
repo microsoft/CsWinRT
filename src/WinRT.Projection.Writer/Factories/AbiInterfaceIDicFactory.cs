@@ -246,6 +246,12 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
+            // Removed members are omitted from the projected interface, so emit no DIM forwarder
+            if (method.IsRemoved)
+            {
+                continue;
+            }
+
             MethodSignatureInfo sig = new(method);
             string mname = method.GetRawName();
 
@@ -259,6 +265,13 @@ internal static class AbiInterfaceIDicFactory
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
+            // MIDL places '[Deprecated]' on the accessor (the getter for read/write properties)
+            if ((getter ?? setter) is { IsRemoved: true })
+            {
+                continue;
+            }
+
             string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
@@ -290,6 +303,11 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (EventDefinition evt in type.Events)
         {
+            if (evt.AddMethod is { IsRemoved: true })
+            {
+                continue;
+            }
+
             string evtName = evt.GetRawName();
             writer.WriteLine();
             IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
@@ -367,6 +385,12 @@ internal static class AbiInterfaceIDicFactory
 
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
+            // Removed members are omitted from the projected interface, so emit no DIM forwarder
+            if (method.IsRemoved)
+            {
+                continue;
+            }
+
             MethodSignatureInfo sig = new(method);
             string mname = method.GetRawName();
             IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
@@ -388,6 +412,13 @@ internal static class AbiInterfaceIDicFactory
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
+            // MIDL places '[Deprecated]' on the accessor (the getter for read/write properties)
+            if ((getter ?? setter) is { IsRemoved: true })
+            {
+                continue;
+            }
+
             string pname = prop.GetRawName();
             string propType = InterfaceFactory.WritePropType(context, prop);
 
@@ -446,6 +477,11 @@ internal static class AbiInterfaceIDicFactory
         // dispatch through the static ABI Methods class's event accessor (returns an EventSource).
         foreach (EventDefinition evt in type.Events)
         {
+            if (evt.AddMethod is { IsRemoved: true })
+            {
+                continue;
+            }
+
             string evtName = evt.GetRawName();
             writer.WriteLine();
             IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);

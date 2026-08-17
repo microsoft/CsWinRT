@@ -25,6 +25,11 @@
 // minimum Windows SDK that is currently supported. See this mapping
 // in the Windows SDK projection project. The two should be kept in sync.
 
+// Some of the types wrapped below are deprecated in the Windows SDK, so they are projected with
+// '[Obsolete]'. That is guidance for consumers of these extensions, not for the extensions
+// themselves, which have to name those types to wrap them.
+#pragma warning disable CS0612, CS0618
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

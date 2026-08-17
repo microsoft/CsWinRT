@@ -118,29 +118,17 @@ public static unsafe class RestrictedErrorInfo
 
                 restrictedReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
 
-                // For cross language Windows Runtime exceptions, general information will be available in the description,
-                // which is populated from 'IRestrictedErrorInfo.GetErrorDetails', and more specific information will be
-                // available in 'restrictedError', which also comes from 'IRestrictedErrorInfo.GetErrorDetails'. If both are
-                // available, we need to concatinate them to produce the final exception message.
                 if (errorCode == restrictedError)
                 {
-                    // Append the description first
-                    if (!string.IsNullOrEmpty(description))
-                    {
-                        errorMessage += description;
-
-                        if (!string.IsNullOrEmpty(restrictedDescription))
-                        {
-                            errorMessage += " ";
-                        }
-                    }
-
-                    // Next append the restricted description. If we have both, we insert a space to separate
-                    // the two. We're not using a newline, as exception messages should always be a single line.
-                    if (!string.IsNullOrEmpty(restrictedDescription))
-                    {
-                        errorMessage += restrictedDescription;
-                    }
+                    // For cross-language Windows Runtime exceptions, 'GetErrorDetails' can provide a general
+                    // description and a more specific restricted description. If both are present, insert a
+                    // space between them rather than a newline so the exception message remains a single line.
+                    // Use this ternary without interpolation to avoid intermediate buffers and strings.
+                    errorMessage = string.IsNullOrEmpty(description)
+                        ? restrictedDescription
+                        : string.IsNullOrEmpty(restrictedDescription)
+                            ? description
+                            : string.Concat(description, " ", restrictedDescription);
                 }
             }
             catch (Exception e)

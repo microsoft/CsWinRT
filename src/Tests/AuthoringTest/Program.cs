@@ -2271,12 +2271,34 @@ namespace AuthoringTest
             [Windows.Foundation.Metadata.Deprecated("Use NewMethod instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
             public void OldMethod() { }
 
+            [Windows.Foundation.Metadata.Deprecated("RemovedMethod is gone", Windows.Foundation.Metadata.DeprecationType.Remove, 2u)]
+            public void RemovedMethod() { }
+
             public void NewMethod() { }
 
-            [Windows.Foundation.Metadata.Deprecated("Use NewProp instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
-            public string OldProp => "";
+            [Windows.Foundation.Metadata.Deprecated("Use NewStatic instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+            public static void OldStatic() { }
 
-            public string NewProp => "";
+            [Windows.Foundation.Metadata.Deprecated("RemovedStatic is gone", Windows.Foundation.Metadata.DeprecationType.Remove, 2u)]
+            public static void RemovedStatic() { }
+
+            public static void NewStatic() { }
+
+            [Windows.Foundation.Metadata.Deprecated("Use NewProp instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+            public string OldProp => "OldProp";
+
+            [Windows.Foundation.Metadata.Deprecated("RemovedProp is gone", Windows.Foundation.Metadata.DeprecationType.Remove, 2u)]
+            public string RemovedProp => "RemovedProp";
+
+            public string NewProp => "NewProp";
+
+            [Windows.Foundation.Metadata.Deprecated("Use NewEvent instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+            public event System.EventHandler<int> OldEvent;
+
+            [Windows.Foundation.Metadata.Deprecated("RemovedEvent is gone", Windows.Foundation.Metadata.DeprecationType.Remove, 2u)]
+            public event System.EventHandler<int> RemovedEvent;
+
+            public event System.EventHandler<int> NewEvent;
         }
 
         // Class implementing INotifyPropertyChanged + custom interface

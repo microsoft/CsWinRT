@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -248,6 +249,24 @@ public static class IListAdapterBlittableValueTypeExtensions
             ArgumentNullException.ThrowIfNull(items);
 
             int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+
+            Span<T> destination = new(items, itemCount);
+
+            // Blittable items can be copied in bulk when the wrapped list is one of the well known
+            // implementations we can get a span from, which avoids an interface call per element.
+            if (list is T[] array)
+            {
+                array.AsSpan((int)startIndex, itemCount).CopyTo(destination);
+
+                return (uint)itemCount;
+            }
+
+            if (list is List<T> concreteList)
+            {
+                CollectionsMarshal.AsSpan(concreteList).Slice((int)startIndex, itemCount).CopyTo(destination);
+
+                return (uint)itemCount;
+            }
 
             for (int i = 0; i < itemCount; i++)
             {

@@ -6,6 +6,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
 
@@ -90,6 +91,8 @@ internal static class WellKnownInterfaceIIDs
                 => "Windows_Foundation_IAsyncAction",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
                 => "Windows_Foundation_Collections_IVectorChangedEventArgs",
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IStringable)
+                => "IStringable",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IBuffer)
                 => "Windows_Storage_Streams_IBuffer",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IInputStream)

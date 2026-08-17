@@ -383,6 +383,10 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVector<Int32> GetIntVector2();
         Windows.Foundation.Collections.IVector<ComposedBlittableStruct> GetBlittableStructVector2();
         Windows.Foundation.Collections.IVector<ComposedNonBlittableStruct> GetNonBlittableStructVector2();
+        Windows.Foundation.Collections.IVector<String> GetStringVector2();
+        Windows.Foundation.Collections.IVector<Windows.Foundation.DateTime> GetDateTimeVector2();
+        Windows.Foundation.Collections.IVector<Class> GetClassVector2();
+        Windows.Foundation.Collections.IVector<Windows.Foundation.HResult> GetExceptionVector2();
 
         Windows.Foundation.Collections.IMap<Int32, Int32> GetIntToIntDictionary();
         Windows.Foundation.Collections.IMap<String, ComposedBlittableStruct> GetStringToBlittableDictionary();
@@ -444,6 +448,12 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncOperation<Int32> AddAsync(Int32 lhs, Int32 rhs);
         Windows.Foundation.IAsyncOperationWithProgress<Int32, Int32> AddAsyncWithProgress(Int32 lhs, Int32 rhs);
 
+        // Registers a 'Completed' handler on the supplied async action that always fails with the
+        // specified HRESULT, and a flag that is set right before the handler throws (so that tests
+        // can deterministically wait for the handler to have been invoked).
+        void SetFailingCompletedHandler(Windows.Foundation.IAsyncAction action, Int32 hr);
+        Boolean FailingCompletedHandlerInvoked{ get; };
+
         // Type mappings
         // "Simple" structs (blittable with changes to add properties/functions/constructors/etc.)
         Windows.Foundation.Point PointProperty;
@@ -480,6 +490,8 @@ namespace TestComponentCSharp
         Double Calculate(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Double> > values);
         Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > GetNullableIntList();
         Int32 SumNullableIntsWithGetMany(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > values);
+        Int64 SumIntsWithGetMany(Windows.Foundation.Collections.IVector<Int32> values, UInt32 startIndex, UInt32 capacity);
+        Int64 SumIntsWithGetManyFromView(Windows.Foundation.Collections.IVectorView<Int32> values, UInt32 startIndex, UInt32 capacity);
         Int32 CountKeyValuePairsWithGetMany(Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IKeyValuePair<String, String> > pairs);
 
         // Boxing
@@ -523,6 +535,25 @@ namespace TestComponentCSharp
         static Boolean VerifyTypeIsReferenceInt32Type(Windows.UI.Xaml.Interop.TypeName type);
 
         static String GetTypeNameForType(Windows.UI.Xaml.Interop.TypeName type);
+
+        // 'IReference<WUX.Interop.TypeName>' projects to 'System.Type' ('TypeName' is a Windows Runtime value type
+        // but projects to the reference type 'System.Type', so it must project as 'Type', not 'Nullable<Type>').
+        static Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> BoxedTypeName{ get; };
+        static Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> RoundtripTypeName(Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> value);
+
+        // 'IReference<HResult>' projects to 'System.Exception' ('HResult' is a Windows Runtime value type but
+        // projects to the reference type 'System.Exception', so it must project as 'Exception', not 'Nullable<Exception>').
+        static Windows.Foundation.IReference<Windows.Foundation.HResult> BoxedHResult{ get; };
+        static Windows.Foundation.IReference<Windows.Foundation.HResult> RoundtripHResult(Windows.Foundation.IReference<Windows.Foundation.HResult> value);
+
+        // Generic collections of these reference-projected types: 'IVector<IReference<TypeName>>' and
+        // 'IVector<IReference<HResult>>' both project to 'IList<Type>' / 'IList<Exception>', which collide
+        // with the canonical 'IVector<TypeName>' / 'IVector<HResult>' IIDs. These members exist to verify the
+        // projection still compiles; the matching unit tests document the (broken) runtime behavior.
+        static Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> > GetReferenceTypeNameList();
+        static Int32 CountReferenceTypeNameList(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> > value);
+        static Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.Foundation.HResult> > GetReferenceHResultList();
+        static Int32 CountReferenceHResultList(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Windows.Foundation.HResult> > value);
 
         // Other
         static Object EmptyString { get; };
@@ -713,6 +744,29 @@ And this is another one"
         void f();
     }
 
+    // Repeated applications of an '[allowmultiple]' attribute must all be carried over to the
+    // projection. See https://github.com/microsoft/CsWinRT/issues/2491.
+    [attributeusage(target_runtimeclass, target_interface, target_struct, target_enum, target_delegate, target_field, target_property, target_method, target_event)]
+    [attributename("attr_repeatable")]
+    [allowmultiple]
+    attribute MyRepeatableAttribute
+    {
+        String Name;
+        String GroupName;
+    }
+
+    [attr_repeatable("Normal", "CommonStates")]
+    [attr_repeatable("PointerOver", "CommonStates")]
+    [attr_string("some other attribute in between")]
+    [attr_repeatable("Horizontal", "OrientationStates")]
+    // MIDL allows an '[allowmultiple]' attribute to be applied twice with the same arguments, and
+    // reflection reports both, so the projection has to carry both over as well.
+    [attr_repeatable("Horizontal", "OrientationStates")]
+    runtimeclass RepeatedAttributeTest
+    {
+        void f();
+    }
+
     static runtimeclass StaticDelegateClassTest
     {
         static void Run(EventHandler0 e);
@@ -773,6 +827,56 @@ And this is another one"
         ClassWithExplicitIUnknown();
         ClassWithExplicitIUnknown(Int32 defaultValue);
         Int32 Value{ get; set; };
+    }
+
+    // A constructor has no metadata row of its own: it is projected as a method on the activation
+    // (or composable) factory interface, and that method is where '[deprecated]' lives. These three
+    // classes cover the constructor cases the projection has to handle.
+
+    // A deprecated constructor is projected with '[Obsolete]'; a removed one is dropped from the
+    // projection while its factory vtable slot is preserved, so the constructor declared after it
+    // must still dispatch through the correct slot.
+    [default_interface]
+    runtimeclass DeprecatedConstructorClass
+    {
+        [deprecated("Use the three-argument constructor instead", deprecate, 1)]
+        DeprecatedConstructorClass(Int32 first);
+
+        [deprecated("The two-argument constructor is gone", remove, 1)]
+        DeprecatedConstructorClass(Int32 first, Int32 second);
+
+        DeprecatedConstructorClass(Int32 first, Int32 second, Int32 third);
+
+        Int32 Value{ get; };
+    }
+
+    // Every constructor is removed, so the (sealed, activatable) class cannot be constructed from the
+    // projection at all and instances come from the static factory method instead.
+    //
+    // Note: the constructor parameter cannot be named 'value'. MIDL projects a constructor as
+    // 'CreateInstance' on the activation factory interface and names its '[out, retval]' parameter
+    // 'value', so a user parameter of that name collides with it (MIDL5161).
+    [default_interface]
+    runtimeclass RemovedActivationClass
+    {
+        [deprecated("Use RemovedActivationClass.Create instead", remove, 1)]
+        RemovedActivationClass(Int32 initialValue);
+
+        static RemovedActivationClass Create(Int32 initialValue);
+
+        Int32 Value{ get; };
+    }
+
+    // As above, but unsealed, so its factory is composable rather than activatable.
+    [default_interface]
+    unsealed runtimeclass RemovedComposableClass
+    {
+        [deprecated("Use RemovedComposableClass.Create instead", remove, 1)]
+        RemovedComposableClass();
+
+        static RemovedComposableClass Create(Int32 initialValue);
+
+        Int32 Value{ get; };
     }
 
     // Compile time test for sub windows namespace

@@ -372,7 +372,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IReadOnlyList1IndexOfImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, HRESULT> IndexOf'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, bool*, HRESULT> IndexOf'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -382,7 +382,8 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
                 elementType,
-                interopReferences.UInt32.MakePointerType()]);
+                interopReferences.UInt32.MakePointerType(),
+                interopReferences.Boolean.MakePointerType()]);
     }
 
     /// <summary>
@@ -393,7 +394,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IReadOnlyList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'
         return new(
             attributes: CallingConventionAttributes.Unmanaged,
             returnType: new CustomModifierTypeSignature(
@@ -402,6 +403,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.Int32),
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32,
                 interopReferences.UInt32,
                 elementType.MakePointerType(),
                 interopReferences.UInt32.MakePointerType()]);
@@ -457,18 +459,9 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IList1IndexOfImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, bool*, HRESULT> IndexOf'
-        return new(
-            attributes: CallingConventionAttributes.Unmanaged,
-            returnType: new CustomModifierTypeSignature(
-                modifierType: interopReferences.CallConvMemberFunction,
-                isRequired: false,
-                baseType: interopReferences.Int32),
-            parameterTypes: [
-                interopReferences.Void.MakePointerType(),
-                elementType,
-                interopReferences.UInt32.MakePointerType(),
-                interopReferences.Boolean.MakePointerType()]);
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, bool*, HRESULT> IndexOf'.
+        // This is the same as 'IVectorView<T>.IndexOf', so we can reuse that one here (like the methods above).
+        return IReadOnlyList1IndexOfImpl(elementType, interopReferences);
     }
 
     /// <summary>
@@ -581,7 +574,7 @@ internal static class WellKnownTypeSignatureFactory
     /// <returns>The resulting <see cref="FunctionPointerTypeSignature"/> instance.</returns>
     public static MethodSignature IList1GetManyImpl(TypeSignature elementType, InteropReferences interopReferences)
     {
-        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
+        // Signature for 'delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany'.
         // This is the same as 'IVectorView<T>.GetMany', so we can reuse that one here (like the methods above).
         return IReadOnlyList1GetManyImpl(elementType, interopReferences);
     }

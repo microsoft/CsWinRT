@@ -91,15 +91,17 @@ internal static partial class ImplGenerator
             // Extract the .dll to the new destination path
             dllEntry.ExtractToFile(destinationPath, overwrite: true);
 
-            // Track all extracted reference paths, as well as the output assembly path.
+            // Track all extracted reference paths, as well as the output assembly path. The output
+            // assembly is the only entry at the top level, so entries in the 'reference' subfolder
+            // are always references, even when the same file was also passed as the output assembly.
             // Note that the debug repro only uses filenames, not full paths, for .dll-s.
-            if (dllEntry.Name == args.OutputAssemblyPath)
-            {
-                outputAssemblyPath = destinationPath;
-            }
-            else if (isReferenceDll)
+            if (isReferenceDll)
             {
                 referencePaths.Add(destinationPath);
+            }
+            else if (dllEntry.Name == args.OutputAssemblyPath)
+            {
+                outputAssemblyPath = destinationPath;
             }
             else
             {

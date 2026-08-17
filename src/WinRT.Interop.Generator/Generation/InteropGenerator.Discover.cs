@@ -11,6 +11,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
 using ConsoleAppFramework;
+using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.Generator.References;
@@ -289,6 +290,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Discover all types explicitly opted into CCW marshalling code generation
+        DiscoverNativeExposedTypes(args, discoveryState, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Discover all generic type instantiations
         DiscoverGenericTypeInstantiations(args, discoveryState, module);
 
@@ -446,6 +452,79 @@ internal partial class InteropGenerator
         catch (Exception e)
         {
             WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(module.Name, e).ThrowOrAttach(e);
+        }
+    }
+
+    /// <summary>
+    /// Discovers all types explicitly opted into CCW marshalling code generation via <c>[WindowsRuntimeNativeExposedType]</c>.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="module">The module currently being analyzed.</param>
+    /// <remarks>
+    /// Projected Windows Runtime types are normally skipped when discovering exposed user-defined types, as they are backed
+    /// by native objects and never need CCW marshalling code. This method handles the niche cases where a projected type
+    /// does need such code, by processing the types explicitly requested through the attribute as any other user-defined type.
+    /// </remarks>
+    private static void DiscoverNativeExposedTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module)
+    {
+        try
+        {
+            // Optimization: only implementation assemblies can carry the attribute, as Windows Runtime
+            // reference assemblies only contain projections and no user authored assembly metadata.
+            if (module.Assembly is not { IsWindowsRuntimeReferenceAssembly: false } assembly)
+            {
+                return;
+            }
+
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropDefinitions interopDefinitions = new(
+                interopReferences: interopReferences,
+                windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
+                windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+
+            // Enumerate all '[assembly: WindowsRuntimeNativeExposedType(typeof(<TYPE>))]' attributes on the module
+            foreach (CustomAttribute attribute in assembly.FindCustomAttributes("WindowsRuntime.InteropServices"u8, "WindowsRuntimeNativeExposedTypeAttribute"u8))
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                // Match '[WindowsRuntimeNativeExposedType(typeof(<TYPE>))]' and extract the exposed type
+                if (attribute.Signature is not { FixedArguments: [{ Element: TypeSignature exposedType }] })
+                {
+                    continue;
+                }
+
+                // Resolve the exposed type to its definition. If we can't, it likely means a reference is
+                // missing. We just warn and move on, as the rest of the discovery can still be completed.
+                if (!exposedType.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
+                {
+                    WellKnownInteropExceptions.NativeExposedTypeNotResolvedWarning(exposedType, module).LogOrThrow(args.TreatWarningsAsErrors);
+
+                    continue;
+                }
+
+                // Track the exposed type as a user-defined type, bypassing the check that would normally skip
+                // projected types. All other filters still apply, so if the type is not actually a projected
+                // type that would benefit from CCW support (e.g. it's an interface), this will just be a no-op.
+                InteropTypeDiscovery.TryTrackExposedUserDefinedType(
+                    typeDefinition: typeDefinition,
+                    typeSignature: typeDefinition.ToTypeSignature(),
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module,
+                    isNativeExposedType: true);
+            }
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.DiscoverNativeExposedTypesError(module.Name, e).ThrowOrAttach(e);
         }
     }
 

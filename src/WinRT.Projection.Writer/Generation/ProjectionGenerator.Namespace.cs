@@ -27,7 +27,7 @@ internal sealed partial class ProjectionGenerator
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = state.ExclusiveToInterfaceEntries;
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
         HashSet<TypeDefinition> componentActivatable = state.ComponentActivatable;
-        ProjectionEmitContext context = new(_settings, _cache, ns, state.WindowsRuntimeMetadataTypeEntries);
+        ProjectionEmitContext context = new(_settings, _cache, ns, _staticConstructorAnalyzer, state.WindowsRuntimeMetadataTypeEntries);
         using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter writer = writerOwner.Writer;
 
@@ -44,6 +44,12 @@ internal sealed partial class ProjectionGenerator
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type.FullName))
+                {
+                    continue;
+                }
+
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
                 {
                     continue;
                 }
@@ -116,6 +122,12 @@ internal sealed partial class ProjectionGenerator
                 continue;
             }
 
+            // Skip fully removed types (omitted from both the projection and the ABI)
+            if (type.IsRemoved)
+            {
+                continue;
+            }
+
             (string ns2, string nm2) = type.Names();
 
             // Skip generic types and mapped types
@@ -176,6 +188,12 @@ internal sealed partial class ProjectionGenerator
                     continue;
                 }
 
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
+                {
+                    continue;
+                }
+
                 if (TypeKindResolver.Resolve(type) != TypeKind.Class)
                 {
                     continue;
@@ -200,6 +218,12 @@ internal sealed partial class ProjectionGenerator
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
 
                 if (!_settings.Filter.Includes(type.FullName) && !isFactoryInterface)
+                {
+                    continue;
+                }
+
+                // Skip fully removed types (omitted from both the projection and the ABI)
+                if (type.IsRemoved)
                 {
                     continue;
                 }

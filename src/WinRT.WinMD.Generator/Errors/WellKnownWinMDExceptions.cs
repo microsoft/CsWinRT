@@ -104,6 +104,28 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     }
 
     /// <summary>
+    /// A method has a <c>ref</c> or <c>in</c> array parameter, which is not a valid Windows Runtime array convention.
+    /// </summary>
+    public static Exception ByReferenceArrayParameterNotSupported(string declaringTypeName, string methodName, string parameterName)
+    {
+        return Exception(13,
+            $"Method '{declaringTypeName}.{methodName}' has by-reference array parameter '{parameterName}' passed by 'ref' or 'in'. " +
+            $"Windows Runtime arrays use one of three conventions: 'ReadOnlySpan<T>' for a read-only input array (PassArray), " +
+            $"'Span<T>' for a caller-allocated array (FillArray), or 'out T[]' for a callee-allocated array (ReceiveArray).");
+    }
+
+    /// <summary>
+    /// A method has a by-reference span parameter (e.g. <c>out Span&lt;T&gt;</c>), which has no Windows Runtime representation.
+    /// </summary>
+    public static Exception ByReferenceSpanParameterNotSupported(string declaringTypeName, string methodName, string parameterName)
+    {
+        return Exception(14,
+            $"Method '{declaringTypeName}.{methodName}' has by-reference span parameter '{parameterName}'." +
+            $"Windows Runtime spans are passed by value: use 'ReadOnlySpan<T>' (PassArray) or 'Span<T>' " +
+            $"(FillArray) by value, or 'out T[]' for a callee-allocated array (ReceiveArray).");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     private static Exception Exception(int id, string message, Exception? innerException = null)

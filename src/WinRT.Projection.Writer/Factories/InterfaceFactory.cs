@@ -218,11 +218,19 @@ internal static class InterfaceFactory
     {
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
+            // Skip members removed via '[Deprecated(..., DeprecationType.Remove, ...)]': their ABI
+            // vtable slot is preserved separately, but they are omitted from the projected interface.
+            if (method.IsRemoved)
+            {
+                continue;
+            }
+
             MethodSignatureInfo sig = new(method);
 
-            // Only emit Windows.Foundation.Metadata attributes that have a projected form
-            // (Overload, DefaultOverload, AttributeUsage, Experimental).
-            WriteMethodCustomAttributes(writer, method);
+            // Carried-over metadata attributes ([Overload], [DefaultOverload], [Experimental]) are
+            // reference-projection-only.
+            WriteMethodCustomAttributes(writer, context, method);
+            CustomAttributeFactory.WriteObsoleteAttribute(writer, method);
             IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
             IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
             writer.WriteLine($"{ret} {method.GetRawName()}({parms});");
@@ -232,6 +240,15 @@ internal static class InterfaceFactory
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
 
+            // MIDL places '[Deprecated]' on the property accessor (the getter for read/write
+            // properties), not on the Property row, so deprecation is checked on the accessor.
+            MethodDefinition? accessor = getter ?? setter;
+
+            if (accessor is { IsRemoved: true })
+            {
+                continue;
+            }
+
             // Add 'new' when this interface has a setter-only property AND a property of the same
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
@@ -239,6 +256,12 @@ internal static class InterfaceFactory
                 && TryFindPropertyInBaseInterfaces(context.Cache, type, prop.GetRawName(), out _))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
+
+            if (accessor is not null)
+            {
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, accessor);
+            }
+
             writer.Write($"{newKeyword}{propType} {prop.GetRawName()} {{");
 
             writer.WriteIf(getter is not null || setter is not null, " get;");
@@ -250,6 +273,19 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
+            // MIDL places '[Deprecated]' on the event 'add' accessor, not on the Event row.
+            MethodDefinition? addMethod = evt.AddMethod;
+
+            if (addMethod is { IsRemoved: true })
+            {
+                continue;
+            }
+
+            if (addMethod is not null)
+            {
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, addMethod);
+            }
+
             IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt);
             writer.WriteLine($"event {eventType} {evt.Name?.Value};");
         }
@@ -322,8 +358,18 @@ internal static class InterfaceFactory
     /// Emits the projected custom attributes for an interface method (filtered for the projected
     /// attributes: Overload, DefaultOverload, Experimental).
     /// </summary>
-    private static void WriteMethodCustomAttributes(IndentedTextWriter writer, MethodDefinition method)
+    /// <remarks>
+    /// These attributes are only consumed by compilers, analyzers and metadata tooling, all of which
+    /// see the reference projection. Implementation projections are only ever loaded at runtime, and
+    /// attribute blobs cannot be trimmed by ILLink or ILC, so nothing is emitted for them.
+    /// </remarks>
+    private static void WriteMethodCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
     {
+        if (!context.Settings.ReferenceProjection)
+        {
+            return;
+        }
+
         foreach (CustomAttribute attr in method.CustomAttributes)
         {
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
@@ -342,7 +388,16 @@ internal static class InterfaceFactory
 
             string baseName = nm.EndsWith("Attribute", StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
 
-            if (baseName is not ("Overload" or "DefaultOverload" or "Experimental"))
+            // '[Experimental]' is custom-mapped to the .NET attribute of the same name, which needs a
+            // synthesized diagnostic id, so it goes through the shared writer rather than being copied
+            if (baseName == "Experimental")
+            {
+                CustomAttributeFactory.WriteExperimentalAttribute(writer);
+
+                continue;
+            }
+
+            if (baseName is not ("Overload" or "DefaultOverload"))
             {
                 continue;
             }

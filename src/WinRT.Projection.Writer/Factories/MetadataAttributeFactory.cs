@@ -121,7 +121,20 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        writer.Write("[WindowsRuntimeType]");
+        // The marker states that a type participates in Windows Runtime marshalling, which is not the case for
+        // Windows Runtime attribute types: they are metadata-only, so no marshalling infrastructure is emitted
+        // for them at all (no default interface, no IID, no 'Impl' type, no marshaller). Applying it anyway
+        // would make both consumers treat them as marshallable and then fail to find any marshalling logic: the
+        // runtime resolves a metadata provider for them and then throws from 'GetComWrappersMarshaller', and the
+        // interop generator treats generic instantiations over them as Windows Runtime ones and then fails to
+        // compute a type signature. Without the marker they behave like any other managed type, which is exactly
+        // what they are: the attribute instances marshal as opaque 'IInspectable' objects, and instantiations
+        // such as 'IEnumerable<SomeAttribute>' are covered by the 'IEnumerable<object>' covariance expansion.
+        // The '.winmd' stem below is still recorded, as that is build-time only data for the other generators.
+        if (!type.IsAttributeType)
+        {
+            writer.Write("[WindowsRuntimeType]");
+        }
 
         // Record the type -> .winmd-stem mapping for the centralized lookup type. The metadata value is build-time
         // only (consumed by the interop generator), so keeping it off the type itself lets it be trimmed away.
@@ -592,6 +605,7 @@ internal static class MetadataAttributeFactory
             using WindowsRuntime;
 
             #pragma warning disable CSWINRT3001
+            #pragma warning disable CS0612, CS0618
 
             namespace ABI;
 
@@ -640,6 +654,7 @@ internal static class MetadataAttributeFactory
             using WindowsRuntime;
 
             #pragma warning disable CSWINRT3001
+            #pragma warning disable CS0612, CS0618
 
             namespace ABI;
 
