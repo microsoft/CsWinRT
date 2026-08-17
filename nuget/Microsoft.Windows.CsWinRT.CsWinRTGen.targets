@@ -205,8 +205,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     consumer asking only for 'GetTargetPath') that item is empty: the generators would receive
     implementation assemblies instead of reference assemblies, and Roslyn's
     'ShimReferencePathsWhenCommonTargetsDoesNotUnderstandReferenceAssemblies' would compile
-    against them too. For a reference projection, the implementation assembly is the forwarder,
-    so its types all resolve to type forwards and the compilation fails with CS1069.
+    against them too.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTInteropGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
