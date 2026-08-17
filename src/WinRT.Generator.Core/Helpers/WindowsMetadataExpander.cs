@@ -19,8 +19,14 @@ namespace WindowsRuntime.Generator.Helpers;
 internal static partial class WindowsMetadataExpander
 {
     /// <summary>
+    /// The name of the extension SDK that declares the Windows Runtime contracts a desktop app can use,
+    /// beyond the ones that make up the UAP platform.
+    /// </summary>
+    private const string WindowsDesktopSdkName = "WindowsDesktop";
+
+    /// <summary>
     /// Matches an SDK version string like <c>"10.0.26100.0"</c> or <c>"10.0.26100.0+"</c>
-    /// (the trailing <c>+</c> indicates that extension SDKs should also be included).
+    /// (the trailing <c>+</c> indicates that the remaining extension SDKs should also be included).
     /// </summary>
     [GeneratedRegex(@"^(\d+\.\d+\.\d+\.\d+)\+?$")]
     private static partial Regex SdkVersionRegex { get; }
@@ -95,6 +101,19 @@ internal static partial class WindowsMetadataExpander
             string platformXml = Path.Combine(sdkPath, "Platforms", "UAP", sdkVersion, "Platform.xml");
             AddFilesFromPlatformXml<TErr>(result, sdkVersion, platformXml, sdkPath);
 
+            // 'Platform.xml' only describes the contracts that make up the UAP platform, which is a strict
+            // subset of the contracts the SDK ships (for '10.0.26100.0' it declares 33 of 93). The rest are
+            // declared by the 'WindowsDesktop' extension SDK, which is the surface a desktop app targets and
+            // which the Windows SDK reference projection is built from, so it is always required.
+            string windowsDesktopManifest = Path.Combine(sdkPath, "Extension SDKs", WindowsDesktopSdkName, sdkVersion, "SDKManifest.xml");
+
+            if (File.Exists(windowsDesktopManifest))
+            {
+                AddFilesFromPlatformXml<TErr>(result, sdkVersion, windowsDesktopManifest, sdkPath);
+            }
+
+            // A trailing '+' opts into the remaining extension SDKs (e.g. 'WindowsMobile' and
+            // 'WindowsTeam'), on top of the platform and 'WindowsDesktop' contracts read above.
             if (includeExtensions)
             {
                 string extensionSdks = Path.Combine(sdkPath, "Extension SDKs");
@@ -103,6 +122,12 @@ internal static partial class WindowsMetadataExpander
                 {
                     foreach (string item in Directory.EnumerateDirectories(extensionSdks))
                     {
+                        // Skip the one already read above, so its contracts are not listed twice
+                        if (string.Equals(Path.GetFileName(item), WindowsDesktopSdkName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
                         string xml = Path.Combine(item, sdkVersion, "SDKManifest.xml");
 
                         if (File.Exists(xml))
