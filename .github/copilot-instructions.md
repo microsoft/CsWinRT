@@ -430,7 +430,7 @@ A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT*
 
 The tool is wired through the `RunCsWinRTProjectionRefGenerator` MSBuild task (in `WinRT.Generator.Tasks`).
 
-**Debug repro support**: when `--debug-repro-directory` is provided, captures the expanded set of input `.winmd` files (resolving any `local` / `sdk` / `sdk+` / version / directory tokens to concrete files) and a faithful `.rsp` into a self-contained `ref-projection-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
+**Debug repro support**: when `--debug-repro-directory` is provided, captures the expanded set of input `.winmd` files (resolving directories to concrete files) and a faithful `.rsp` into a self-contained `ref-projection-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
 
 ### 5. Impl generator (`src/WinRT.Impl.Generator/`)
 

@@ -18,7 +18,6 @@
       SDK version to build for. Pass from the pipeline via /p:WindowsSdkBuild=XXXXX.
     -->
     <WindowsSdkBuild Condition="'$(WindowsSdkBuild)' == ''">26100</WindowsSdkBuild>
-    <CsWinRTWindowsMetadata>10.0.$(WindowsSdkBuild).0</CsWinRTWindowsMetadata>
 
     <!-- Output to a per-SDK-version subdirectory so multiple builds don't overwrite each other.
          XAML projection uses a separate intermediate path to avoid artifact collision. -->

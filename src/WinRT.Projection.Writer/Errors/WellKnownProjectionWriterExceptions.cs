@@ -71,7 +71,7 @@ internal static class WellKnownProjectionWriterExceptions
     /// </summary>
     public static WellKnownProjectionWriterException InvalidInputPath(string path)
     {
-        return Exception(5011, $"The input metadata path '{path}' does not exist (must be a <c>.winmd</c> file or a directory containing one).");
+        return Exception(5011, $"The input metadata path '{path}' does not exist (must be a '.winmd' file or a directory containing one).");
     }
 
     /// <summary>

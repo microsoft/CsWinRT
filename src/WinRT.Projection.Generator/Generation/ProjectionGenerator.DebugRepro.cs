@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
-using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionGenerator.Errors;
 
@@ -230,24 +229,17 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Expand the Windows metadata token (a literal path, 'local', 'sdk', 'sdk+', or a version like
-        // '10.0.26100.0') to the concrete set of .winmd files the writer would actually consume. This
-        // makes the debug repro fully self-contained, even when the original Windows metadata token was
-        // a special value that depends on the host environment (e.g. a registered SDK installation).
+        // The Windows metadata is a '.winmd' file, or a directory to scan recursively. Resolve it to
+        // the concrete set of files the writer would consume, so the repro is fully self-contained.
         List<string> expandedWindowsMetadataPaths = [];
 
-        foreach (string expanded in WindowsMetadataExpander.Expand<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata))
+        if (File.Exists(args.WindowsMetadata))
         {
-            // The expander may return either individual files or directories; we want individual
-            // files in the bundled repro so the layout is fully self-describing.
-            if (File.Exists(expanded))
-            {
-                expandedWindowsMetadataPaths.Add(expanded);
-            }
-            else if (Directory.Exists(expanded))
-            {
-                expandedWindowsMetadataPaths.AddRange(Directory.EnumerateFiles(expanded, "*.winmd", SearchOption.AllDirectories));
-            }
+            expandedWindowsMetadataPaths.Add(args.WindowsMetadata);
+        }
+        else if (Directory.Exists(args.WindowsMetadata))
+        {
+            expandedWindowsMetadataPaths.AddRange(Directory.EnumerateFiles(args.WindowsMetadata, "*.winmd", SearchOption.AllDirectories));
         }
 
         args.Token.ThrowIfCancellationRequested();

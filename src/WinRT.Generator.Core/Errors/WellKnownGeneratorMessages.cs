@@ -4,8 +4,7 @@
 namespace WindowsRuntime.Generator.Errors;
 
 /// <summary>
-/// Shared message templates for the well-known logical errors defined by <see cref="IGeneratorErrorFactory"/>
-/// and <see cref="IWindowsMetadataErrorFactory"/>.
+/// Shared message templates for the well-known logical errors defined by <see cref="IGeneratorErrorFactory"/>.
 /// </summary>
 /// <remarks>
 /// Each per-tool <c>WellKnown*Exceptions</c> factory uses these helpers to format its own
@@ -47,15 +46,5 @@ internal static class WellKnownGeneratorMessages
     public static string DebugReproUnrecognizedFileEntry(string path)
     {
         return $"The debug repro file entry with path '{path}' was not recognized.";
-    }
-
-    /// <see cref="IWindowsMetadataErrorFactory.WindowsSdkNotFound"/>
-    public const string WindowsSdkNotFound = "Could not find the Windows SDK in the registry.";
-
-    /// <see cref="IWindowsMetadataErrorFactory.CannotReadWindowsSdkXml"/>
-    /// <param name="path">The Windows SDK XML path that could not be read.</param>
-    public static string CannotReadWindowsSdkXml(string path)
-    {
-        return $"Could not read the Windows SDK's XML at '{path}'.";
     }
 }

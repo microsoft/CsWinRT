@@ -12,8 +12,7 @@ namespace WindowsRuntime.ReferenceProjectionGenerator.Generation;
 /// </summary>
 internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
 {
-    /// <summary>Gets the input <c>.winmd</c> paths (files, directories to recursively scan, or special
-    /// tokens like <c>"local"</c>, <c>"sdk"</c>, <c>"sdk+"</c>, or a version like <c>"10.0.26100.0"</c>).</summary>
+    /// <summary>Gets the input <c>.winmd</c> paths (files, or directories to recursively scan).</summary>
     [CommandLineArgumentName("--input-paths")]
     public required string[] InputPaths { get; init; }
 

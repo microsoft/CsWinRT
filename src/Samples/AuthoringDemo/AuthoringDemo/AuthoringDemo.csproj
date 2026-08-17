@@ -9,7 +9,6 @@
   <!-- CsWinRT properties -->
   <PropertyGroup>
     <CsWinRTComponent>true</CsWinRTComponent>
-    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
     <!-- Uncomment the line below to generate a log.txt in the obj folder -->
     <!--<CsWinRTEnableLogging>true</CsWinRTEnableLogging>-->
   </PropertyGroup>

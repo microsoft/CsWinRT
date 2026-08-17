@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
-using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ProjectionWriter;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
@@ -72,23 +70,13 @@ internal static partial class ReferenceProjectionGenerator
     /// <returns>The resulting <see cref="ProjectionWriterOptions"/>.</returns>
     private static ProjectionWriterOptions BuildWriterOptions(ReferenceProjectionGeneratorArgs args)
     {
-        // Each input may be a literal file or directory path, or a special token like 'local',
-        // 'sdk', 'sdk+', or '10.0.X.Y' which expands to a set of WinMD paths. Expand each input
-        // through WindowsMetadataExpander so the writer always receives concrete paths.
-        List<string> inputPaths = [];
-
-        foreach (string input in args.InputPaths)
-        {
-            inputPaths.AddRange(WindowsMetadataExpander.Expand<WellKnownReferenceProjectionGeneratorExceptions>(input));
-        }
-
         // Make sure the output directory exists. ProjectionWriter.Run will also create it but creating
         // it here matches the OLD target's '<MakeDir Directories="..."/>' step.
         _ = Directory.CreateDirectory(args.OutputDirectory);
 
         return new ProjectionWriterOptions
         {
-            InputPaths = inputPaths,
+            InputPaths = args.InputPaths,
             OutputFolder = args.OutputDirectory,
             Include = args.IncludeNamespaces,
             Exclude = args.ExcludeNamespaces,

@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using AsmResolver.DotNet;
-using WindowsRuntime.Generator.Helpers;
-using WindowsRuntime.WinMDGenerator.Errors;
 
 namespace WindowsRuntime.WinMDGenerator.Helpers;
 
@@ -33,7 +31,7 @@ internal static class WindowsRuntimeMetadataNameResolver
     /// Builds the <c>(namespace, name)</c> to source <c>.winmd</c> stem lookup from the given inputs.
     /// </summary>
     /// <param name="winMDPaths">The input <c>.winmd</c> file or directory paths (third party components and internal metadata).</param>
-    /// <param name="windowsMetadata">The Windows metadata token (path, directory, <c>"local"</c>, <c>"sdk"</c>, <c>"sdk+"</c>, or a version).</param>
+    /// <param name="windowsMetadata">The Windows metadata <c>.winmd</c> file or directory path.</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The resulting metadata-name lookup.</returns>
     public static FrozenDictionary<(string Namespace, string Name), string> Build(
@@ -51,14 +49,10 @@ internal static class WindowsRuntimeMetadataNameResolver
             AddPath(builder, winmdPath);
         }
 
-        // Expand the Windows metadata token (path | directory | "local" | "sdk[+]" | version[+]) into
-        // actual .winmd file paths (or directories to scan), the same way the projection generators do.
-        foreach (string path in WindowsMetadataExpander.Expand<WellKnownWinMDExceptions>(windowsMetadata))
-        {
-            token.ThrowIfCancellationRequested();
+        // Add the Windows metadata, the same way the projection generators do
+        token.ThrowIfCancellationRequested();
 
-            AddPath(builder, path);
-        }
+        AddPath(builder, windowsMetadata);
 
         return builder.ToFrozenDictionary();
     }

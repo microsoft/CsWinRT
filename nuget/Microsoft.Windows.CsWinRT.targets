@@ -200,22 +200,26 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <!-- From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the targeting pack -->
+  <!--
+    From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the
+    targeting pack. This is the only source of Windows metadata: the ref pack ships the '.winmd' files
+    that the Windows SDK reference projection was generated from, so an implementation projection built
+    from them can never disagree with the reference assembly the project compiles against. Set
+    'CsWinRTWindowsMetadata' explicitly to point the tools at a different '.winmd' file or folder.
+  -->
   <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTResolveWindowsMetadata)' != 'false' AND '$(CsWinRTWindowsMetadata)' == ''">
     <!-- Based on the Windows SDK projection profile used, the winmds are in a different folder. -->
     <PropertyGroup>
       <_CsWinRTMetadataSubFolder>windows</_CsWinRTMetadataSubFolder>
       <_CsWinRTMetadataSubFolder Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">xaml</_CsWinRTMetadataSubFolder>
     </PropertyGroup>
-      
+
     <ItemGroup>
       <_WindowsSdkProjectionFolder Include="@(ReferencePath->'%(RootDir)%(Directory)..\..\winmd\$(_CsWinRTMetadataSubFolder)\')" Condition="'%(ReferencePath.FileName)%(ReferencePath.Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
     </ItemGroup>
-      
+
     <PropertyGroup>
       <CsWinRTWindowsMetadata>@(_WindowsSdkProjectionFolder)</CsWinRTWindowsMetadata>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
     </PropertyGroup>
   </Target>
 

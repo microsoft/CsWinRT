@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.DebugRepro;
-using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.ReferenceProjectionGenerator.Errors;
 
@@ -151,15 +150,20 @@ internal static partial class ReferenceProjectionGenerator
 
         _ = Directory.CreateDirectory(inputDirectory);
 
-        // Expand all input paths (which may be file paths, directories to recursively scan, or
-        // special tokens like 'local', 'sdk', 'sdk+', or a version like '10.0.26100.0') into the
-        // concrete set of .winmd files the writer would actually consume. This ensures the debug
-        // repro is fully self-contained and can be replayed without needing the Windows SDK installed.
+        // Input paths are '.winmd' files, or directories to scan recursively. Resolve them to the
+        // concrete set of files the writer would consume, so the repro is fully self-contained.
         List<string> expandedInputPaths = [];
 
         foreach (string inputPath in args.InputPaths)
         {
-            expandedInputPaths.AddRange(WindowsMetadataExpander.Expand<WellKnownReferenceProjectionGeneratorExceptions>(inputPath));
+            if (File.Exists(inputPath))
+            {
+                expandedInputPaths.Add(inputPath);
+            }
+            else if (Directory.Exists(inputPath))
+            {
+                expandedInputPaths.AddRange(Directory.EnumerateFiles(inputPath, "*.winmd", SearchOption.AllDirectories));
+            }
         }
 
         args.Token.ThrowIfCancellationRequested();

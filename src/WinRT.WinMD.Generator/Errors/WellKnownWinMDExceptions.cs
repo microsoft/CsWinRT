@@ -9,7 +9,7 @@ namespace WindowsRuntime.WinMDGenerator.Errors;
 /// <summary>
 /// Well-known exceptions for the WinMD generator.
 /// </summary>
-internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindowsMetadataErrorFactory
+internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
@@ -89,18 +89,6 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     public static Exception DebugReproUnrecognizedFileEntry(string path)
     {
         return Exception(10, WellKnownGeneratorMessages.DebugReproUnrecognizedFileEntry(path));
-    }
-
-    /// <inheritdoc cref="IWindowsMetadataErrorFactory.WindowsSdkNotFound"/>
-    public static Exception WindowsSdkNotFound()
-    {
-        return Exception(11, WellKnownGeneratorMessages.WindowsSdkNotFound);
-    }
-
-    /// <inheritdoc cref="IWindowsMetadataErrorFactory.CannotReadWindowsSdkXml(string)"/>
-    public static Exception CannotReadWindowsSdkXml(string path)
-    {
-        return Exception(12, WellKnownGeneratorMessages.CannotReadWindowsSdkXml(path));
     }
 
     /// <summary>

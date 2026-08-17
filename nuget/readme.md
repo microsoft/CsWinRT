@@ -41,7 +41,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTExcludes | "Windows;Microsoft" | Semicolon-separated namespaces to exclude from projection output |
 | CsWinRTFilters | "" | **Specifies the -includes and -excludes to include in projection output |
 | CsWinRTInputs | *@(ReferencePath) | Specifies WinMD files (beyond the Windows SDK) to read metadata from |
-| CsWinRTWindowsMetadata | \<path\> \| "local" \| "sdk" \| *$(WindowsSDKVersion) | Specifies the source for Windows metadata |
+| CsWinRTWindowsMetadata | \<path\> | Specifies the source for Windows metadata: a WinMD file, or a folder of them. Defaults to the WinMD folder of the Windows SDK projection ref pack |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
 | CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C#/WinRT build messages (see below) |
 
@@ -68,11 +68,13 @@ CsWinRT provides runtime feature switches that allow opt-in/opt-out of specific 
 ### Windows Metadata
 
 Windows Metadata is required for all C#/WinRT projections, and can be supplied by:
-* A package reference, such as to [Microsoft.Windows.SDK.Contracts]( https://www.nuget.org/packages/Microsoft.Windows.SDK.Contracts/)
-* An explicit value, supplied by $(CsWinRTWindowsMetadata)
-* The default value, assigned from $(WindowsSDKVersion)
+* The default value, resolved from the WinMD folder of the Windows SDK projection reference pack (`Microsoft.Windows.SDK.NET.Ref`), which the .NET SDK restores for a `net*-windows10.0.*` target framework
+* An explicit WinMD file or folder, supplied by $(CsWinRTWindowsMetadata)
+* A package reference, such as to [Microsoft.Windows.SDK.Contracts]( https://www.nuget.org/packages/Microsoft.Windows.SDK.Contracts/), pointed at by $(CsWinRTWindowsMetadata)
 
-If a Windows SDK is installed, $(WindowsSDKVersion) is defined when building from a VS command prompt.
+The default is preferred: the reference pack ships the exact metadata the Windows SDK reference projection
+was generated from, so the projection generated from it can never disagree with the reference assembly the
+project compiles against, and no Windows SDK installation is required.
 
 ## Consuming and Producing
 

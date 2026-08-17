@@ -37,9 +37,7 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public string? TargetFramework { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional Windows metadata token (literal path, 'local', 'sdk', 'sdk+',
-    /// or a version string like '10.0.26100.0'). The token is expanded in-tool to the actual
-    /// set of .winmd files.
+    /// Gets or sets the optional Windows metadata: a <c>.winmd</c> file, or a folder of them.
     /// </summary>
     public string? WindowsMetadata { get; set; }
 

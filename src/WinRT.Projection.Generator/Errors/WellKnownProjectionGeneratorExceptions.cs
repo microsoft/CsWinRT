@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionGenerator.Errors;
 /// <summary>
 /// Well known exceptions for the projection generator.
 /// </summary>
-internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFactory, IWindowsMetadataErrorFactory
+internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFactory
 {
     /// <summary>
     /// The prefix for all errors produced by this tool.
@@ -110,18 +110,6 @@ internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFa
     public static Exception DebugReproUnrecognizedFileEntry(string path)
     {
         return Exception(11, WellKnownGeneratorMessages.DebugReproUnrecognizedFileEntry(path));
-    }
-
-    /// <inheritdoc cref="IWindowsMetadataErrorFactory.WindowsSdkNotFound"/>
-    public static Exception WindowsSdkNotFound()
-    {
-        return Exception(12, WellKnownGeneratorMessages.WindowsSdkNotFound);
-    }
-
-    /// <inheritdoc cref="IWindowsMetadataErrorFactory.CannotReadWindowsSdkXml(string)"/>
-    public static Exception CannotReadWindowsSdkXml(string path)
-    {
-        return Exception(13, WellKnownGeneratorMessages.CannotReadWindowsSdkXml(path));
     }
 
     /// <summary>

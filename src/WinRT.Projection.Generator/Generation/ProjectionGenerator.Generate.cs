@@ -8,7 +8,6 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.Generator.Errors;
-using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionWriter;
 
@@ -256,9 +255,8 @@ internal partial class ProjectionGenerator
             excludes.Add("Windows");
         }
 
-        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into
-        // actual .winmd file paths (or directories the writer will recursively scan).
-        winmdInputs.AddRange(WindowsMetadataExpander.Expand<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata));
+        // The Windows metadata is a '.winmd' file, or a directory the writer scans recursively.
+        winmdInputs.Add(args.WindowsMetadata);
 
         // When generating 'WinRT.Component.dll', enable component-specific code generation
         // (activation factories, exclusive-to interfaces, etc.).

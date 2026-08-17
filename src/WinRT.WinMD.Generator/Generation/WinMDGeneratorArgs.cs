@@ -25,7 +25,7 @@ internal sealed class WinMDGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--winmd-paths")]
     public string[] WinMDPaths { get; init; } = [];
 
-    /// <summary>Gets the Windows metadata token (path, directory, <c>local</c>, <c>sdk</c>, <c>sdk+</c>, or a version) expanded to the Windows SDK .winmd files.</summary>
+    /// <summary>Gets the Windows metadata: a <c>.winmd</c> file, or a folder of them.</summary>
     [CommandLineArgumentName("--windows-metadata")]
     [DefaultValue("")]
     public string WindowsMetadata { get; init; } = "";

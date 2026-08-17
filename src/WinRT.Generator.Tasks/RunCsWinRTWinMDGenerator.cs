@@ -33,8 +33,8 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
     public ITaskItem[]? WinMDPaths { get; set; }
 
     /// <summary>
-    /// Gets or sets the Windows metadata token (a literal path, directory, <c>local</c>, <c>sdk</c>,
-    /// <c>sdk+</c>, or a version like <c>10.0.26100.0</c>) used to resolve Windows SDK contract names.
+    /// Gets or sets the Windows metadata (a <c>.winmd</c> file, or a folder of them) used to
+    /// resolve Windows SDK contract names.
     /// </summary>
     public string? WindowsMetadata { get; set; }
 
