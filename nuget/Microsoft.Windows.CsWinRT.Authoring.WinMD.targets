@@ -39,11 +39,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                     _ComputeRunCsWinRTWinMDGeneratorCache
 
     Computes a hash of all input properties to detect when re-generation is needed.
+
+    This and '_RunCsWinRTWinMDGenerator' below depend on 'FindReferenceAssembliesForReferences'
+    as well as on 'CoreCompile', so that '@(ReferencePathWithRefAssemblies)' is populated even on
+    an invocation that reaches them outside the 'Compile' pipeline. See the equivalent note on
+    '_RunCsWinRTInteropGenerator' in 'Microsoft.Windows.CsWinRT.CsWinRTGen.targets'.
     ============================================================
   -->
   <Target
     Name="_ComputeRunCsWinRTWinMDGeneratorCache"
-    DependsOnTargets="CoreCompile;_ResolveCsWinRTWinMDGenToolsDirectory;CsWinRTResolveWindowsMetadata">
+    DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;_ResolveCsWinRTWinMDGenToolsDirectory;CsWinRTResolveWindowsMetadata">
 
     <ItemGroup>
       <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTWinMDGenEffectiveToolsDirectory)" />
@@ -74,7 +79,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTWinMDGenerator"
-    DependsOnTargets="CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache;CsWinRTResolveWindowsMetadata"
+    DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache;CsWinRTResolveWindowsMetadata"
     AfterTargets="CoreCompile"
     Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies);$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTWinMDOutputPath)"
