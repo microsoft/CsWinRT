@@ -201,19 +201,37 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!-- From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the targeting pack -->
-  <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTResolveWindowsMetadata)' != 'false' AND '$(CsWinRTWindowsMetadata)' == ''">
-    <!-- Based on the Windows SDK projection profile used, the winmds are in a different folder. -->
+  <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTResolveWindowsMetadata)' != 'false'">
     <PropertyGroup>
+      <!--
+        A bare Windows SDK version asks for a version, not for a source: it makes the tools locate the
+        '.winmd' files through the registered Windows SDK. The ref pack ships the metadata the Windows SDK
+        reference projection was generated from, so for that same version it is the more accurate source
+        (it cannot drift from the reference assembly, and it needs no registered SDK). Prefer it, and leave
+        an explicit path, or one of the tools' own tokens, alone.
+      -->
+      <_CsWinRTWindowsMetadataIsBareVersion Condition="'$(CsWinRTWindowsMetadata)' != '' and
+                                                       '$(CsWinRTWindowsMetadata)' != 'local' and
+                                                       '$(CsWinRTWindowsMetadata)' != 'sdk' and
+                                                       !$(CsWinRTWindowsMetadata.EndsWith('+')) and
+                                                       !Exists('$(CsWinRTWindowsMetadata)')">true</_CsWinRTWindowsMetadataIsBareVersion>
+
+      <_CsWinRTResolveWindowsMetadataFromRefPack Condition="'$(CsWinRTWindowsMetadata)' == '' or
+                                                            '$(_CsWinRTWindowsMetadataIsBareVersion)' == 'true'">true</_CsWinRTResolveWindowsMetadataFromRefPack>
+    </PropertyGroup>
+
+    <!-- Based on the Windows SDK projection profile used, the winmds are in a different folder. -->
+    <PropertyGroup Condition="'$(_CsWinRTResolveWindowsMetadataFromRefPack)' == 'true'">
       <_CsWinRTMetadataSubFolder>windows</_CsWinRTMetadataSubFolder>
       <_CsWinRTMetadataSubFolder Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">xaml</_CsWinRTMetadataSubFolder>
     </PropertyGroup>
-      
-    <ItemGroup>
+
+    <ItemGroup Condition="'$(_CsWinRTResolveWindowsMetadataFromRefPack)' == 'true'">
       <_WindowsSdkProjectionFolder Include="@(ReferencePath->'%(RootDir)%(Directory)..\..\winmd\$(_CsWinRTMetadataSubFolder)\')" Condition="'%(ReferencePath.FileName)%(ReferencePath.Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
     </ItemGroup>
-      
+
     <PropertyGroup>
-      <CsWinRTWindowsMetadata>@(_WindowsSdkProjectionFolder)</CsWinRTWindowsMetadata>
+      <CsWinRTWindowsMetadata Condition="'@(_WindowsSdkProjectionFolder)' != ''">@(_WindowsSdkProjectionFolder)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
     </PropertyGroup>
