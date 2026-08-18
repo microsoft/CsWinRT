@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
@@ -725,19 +724,9 @@ internal partial class InteropGenerator
                 interopReferences.IList.ToReferenceTypeSignature(),
                 interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
 
-            ReadOnlySpan<Utf8String> typeNames =
-            [
-                "SingleItemReadOnlyList"u8,
-                "ReadOnlyList"u8
-            ];
-
-            foreach (Utf8String typeName in typeNames)
+            foreach (TypeSignature typeSignature in interopReferences.CollectionChangedListTypes)
             {
                 args.Token.ThrowIfCancellationRequested();
-
-                TypeSignature typeSignature = interopReferences.SystemObjectModel
-                    .CreateTypeReference("System.Collections.Specialized"u8, typeName)
-                    .ToReferenceTypeSignature();
 
                 discoveryState.TrackUserDefinedType(typeSignature, vtableTypes);
             }

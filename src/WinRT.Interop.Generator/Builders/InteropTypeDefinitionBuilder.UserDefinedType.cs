@@ -198,11 +198,15 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            // Almost all user-defined types can be resolved. The exception is the list types used by
-            // 'NotifyCollectionChangedEventArgs', which are registered by name, as they are absent from the reference
-            // assemblies the generator sees (see the discovery of those types). Those carry none of the attributes
-            // checked below, so they just take the same path as any other non-authored type.
-            _ = userDefinedType.TryResolve(module.RuntimeContext, out TypeDefinition? userDefinedTypeDefinition);
+            // Almost every user-defined type resolves. The exception is the list types used by
+            // 'NotifyCollectionChangedEventArgs', which are registered by name (see 'CollectionChangedListTypes').
+            // Those carry none of the attributes checked below, so they just take the same path as any other
+            // non-authored type. Any other type failing to resolve is still an error, so resolve it again to throw.
+            if (!userDefinedType.TryResolve(module.RuntimeContext, out TypeDefinition? userDefinedTypeDefinition) &&
+                !interopReferences.CollectionChangedListTypes.Contains(userDefinedType))
+            {
+                _ = userDefinedType.Resolve(module.RuntimeContext);
+            }
 
             // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
             // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
