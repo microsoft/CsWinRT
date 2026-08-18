@@ -1197,12 +1197,20 @@ internal static class WindowsRuntimeExtensions
         {
             RuntimeContext? runtimeContext = interopDefinitions.RuntimeContext;
 
-            return signature switch
+            // Select the type to read the metadata name from (the element type, for constructed generics and arrays)
+            ITypeDefOrRef typeDefOrRef = signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
-                ArrayTypeSignature array => array.BaseType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
-                _ => signature.ToTypeDefOrRef().Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions)
+                GenericInstanceTypeSignature generic => generic.GenericType,
+                ArrayTypeSignature array => array.BaseType.ToTypeDefOrRef(),
+                _ => signature.ToTypeDefOrRef()
             };
+
+            // A type that cannot be resolved is never a projected Windows Runtime type, so it has no metadata name
+            // (see the discovery of the list types used by 'NotifyCollectionChangedEventArgs', which are registered
+            // by name, and so are absent from the reference assemblies the generator sees).
+            return typeDefOrRef.TryResolve(runtimeContext, out TypeDefinition? type)
+                ? type.GetWindowsRuntimeMetadataName(interopDefinitions)
+                : null;
         }
     }
 

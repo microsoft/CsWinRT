@@ -181,6 +181,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the proxy type of some user-defined type.
         /// </summary>
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
+        /// <param name="vtableTypes">The interfaces the CCW for <paramref name="userDefinedType"/> exposes.</param>
         /// <param name="comWrappersMarshallerAttributeType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersMarshallerAttribute"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -189,6 +190,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="proxyType">The resulting proxy type.</param>
         public static void Proxy(
             TypeSignature userDefinedType,
+            TypeSignatureEquatableSet vtableTypes,
             TypeDefinition comWrappersMarshallerAttributeType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
@@ -196,12 +198,20 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            TypeDefinition userDefinedTypeDefinition = userDefinedType.Resolve(module.RuntimeContext);
+            // Almost every user-defined type resolves. The exception is the list types used by
+            // 'NotifyCollectionChangedEventArgs', which are registered by name (see 'CollectionChangedListTypes').
+            // Those carry none of the attributes checked below, so they just take the same path as any other
+            // non-authored type. Any other type failing to resolve is still an error, so resolve it again to throw.
+            if (!userDefinedType.TryResolve(module.RuntimeContext, out TypeDefinition? userDefinedTypeDefinition) &&
+                !interopReferences.CollectionChangedListTypes.Contains(userDefinedType))
+            {
+                _ = userDefinedType.Resolve(module.RuntimeContext);
+            }
 
             // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
             // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
             // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
-            if (userDefinedTypeDefinition.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute))
+            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute) is true)
             {
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
@@ -216,8 +226,7 @@ internal partial class InteropTypeDefinitionBuilder
                     module: module,
                     out proxyType);
             }
-            else if (userDefinedTypeDefinition.IsPublic &&
-                     userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
+            else if (userDefinedTypeDefinition is { IsPublic: true, DeclaringModule.Assembly.IsWindowsRuntimeComponentAssembly: true })
             {
                 // For authored component types, the runtime class name is the type's own fully-qualified name.
                 InteropTypeDefinitionBuilder.Proxy(
@@ -235,9 +244,11 @@ internal partial class InteropTypeDefinitionBuilder
             }
             else
             {
-                // For non-authored user-defined types, get the most derived Windows Runtime interface to use for the runtime class name
+                // For non-authored user-defined types, get the most derived Windows Runtime interface to use for the
+                // runtime class name. The interfaces the CCW exposes are used, rather than being read back off the
+                // type, so this also works for the types that cannot be resolved (see notes above).
                 if (!WindowsRuntimeTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
-                    type: userDefinedType,
+                    interfaceTypes: vtableTypes,
                     interopReferences: interopReferences,
                     interfaceType: out TypeSignature? interfaceType))
                 {

@@ -117,6 +117,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public ITaskItem[]? MarshallingEnabledAssemblies { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to automatically generate the vtables for the list types used by 'NotifyCollectionChangedEventArgs'.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool GenerateCollectionChangedListVtables { get; set; } = true;
+
+    /// <summary>
     /// Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.
     /// </summary>
     public bool ValidateWinRTRuntimeAssemblyVersion { get; set; } = true;
@@ -319,6 +325,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
+        AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());
         AppendResponseFileCommand(args, "--enable-incremental-generation", EnableIncrementalGeneration.ToString());

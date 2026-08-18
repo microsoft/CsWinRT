@@ -6,6 +6,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Models;
 
 #pragma warning disable IDE0032
 
@@ -539,6 +540,31 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/>.
     /// </summary>
     public TypeReference NotifyCollectionChangedEventArgs => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "NotifyCollectionChangedEventArgs"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>System.Collections.Specialized.SingleItemReadOnlyList</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="CollectionChangedListTypes" path="/remarks/node()"/></remarks>
+    public TypeReference SingleItemReadOnlyList => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "SingleItemReadOnlyList"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>System.Collections.Specialized.ReadOnlyList</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="CollectionChangedListTypes" path="/remarks/node()"/></remarks>
+    public TypeReference ReadOnlyList => field ??= SystemObjectModel.CreateTypeReference("System.Collections.Specialized"u8, "ReadOnlyList"u8);
+
+    /// <summary>
+    /// Gets the types that <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> uses for its changed items.
+    /// </summary>
+    /// <remarks>
+    /// These are the only types the generator handles that it cannot resolve: they are <see langword="internal"/> to
+    /// the BCL, so they are absent from the framework reference assemblies it takes as input, and are instead
+    /// registered by name during discovery. Everything that would otherwise resolve them checks this set first, so
+    /// that a type failing to resolve stays an error for every other type.
+    /// </remarks>
+    public TypeSignatureEquatableSet CollectionChangedListTypes => field ??= new TypeSignatureEquatableSet(
+        SingleItemReadOnlyList.ToReferenceTypeSignature(),
+        ReadOnlyList.ToReferenceTypeSignature());
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.ComponentModel.PropertyChangedEventHandler"/>.

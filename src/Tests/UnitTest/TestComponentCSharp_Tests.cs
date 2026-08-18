@@ -2746,6 +2746,65 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public unsafe void TestCollectionChangedListInterfaceMarshalling()
+        {
+            // 'NotifyCollectionChangedEventArgs' stores the changed items in one of two internal list types,
+            // optimized for that scenario: 'SingleItemReadOnlyList' for a single item, and 'ReadOnlyList' for
+            // several. Any managed collection raising a change notification (e.g. an 'ObservableCollection<T>'
+            // bound from XAML) therefore ends up marshalling one of them across the ABI as 'IList', which builds
+            // a CCW for it. Neither type is in the reference assemblies the interop generator sees, so both are
+            // registered by name (see the interop generator's discovery of the collection changed list types).
+            NotifyCollectionChangedEventArgs singleItemArgs = new(NotifyCollectionChangedAction.Add, 0, 0);
+            NotifyCollectionChangedEventArgs multipleItemsArgs = new(NotifyCollectionChangedAction.Add, new[] { 0, 1, 2 }, 0);
+
+            IList singleItem = singleItemArgs.NewItems!;
+            IList multipleItems = multipleItemsArgs.NewItems!;
+
+            // Guard against the BCL changing which types it uses, so that this test fails loudly
+            // rather than silently covering nothing (the names are also what the generator emits).
+            Assert.AreEqual("System.Collections.Specialized.SingleItemReadOnlyList", singleItem.GetType().FullName);
+            Assert.AreEqual("System.Collections.Specialized.ReadOnlyList", multipleItems.GetType().FullName);
+
+            AssertCcwExposesBindableInterfaces(singleItem);
+            AssertCcwExposesBindableInterfaces(multipleItems);
+
+            // Same thing through a projected API taking a bindable vector. The values have to be
+            // sequential from 0, because the native bindable setter validates exactly that.
+            TestObject.BindableVectorProperty = singleItem;
+            CollectionAssert.AreEqual(new[] { 0 }, TestObject.BindableVectorProperty.Cast<int>().ToArray());
+
+            TestObject.BindableVectorProperty = multipleItems;
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, TestObject.BindableVectorProperty.Cast<int>().ToArray());
+
+            static void AssertCcwExposesBindableInterfaces(IList source)
+            {
+                // 'IList' is projected as 'IBindableVector', and 'IEnumerable' as 'IBindableIterable'
+                Guid iidIBindableVector = new("393DE7DE-6FD0-4C0D-BB71-47244A113E93");
+                Guid iidIBindableIterable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
+
+                void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(source);
+
+                try
+                {
+                    AssertHasInterface(ccw, in iidIBindableVector);
+                    AssertHasInterface(ccw, in iidIBindableIterable);
+                }
+                finally
+                {
+                    _ = Marshal.Release((nint)ccw);
+                }
+
+                static void AssertHasInterface(void* ccw, in Guid iid)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in iid, out nint interfaceCcw));
+                    Assert.AreNotEqual(IntPtr.Zero, interfaceCcw);
+
+                    _ = Marshal.Release(interfaceCcw);
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();

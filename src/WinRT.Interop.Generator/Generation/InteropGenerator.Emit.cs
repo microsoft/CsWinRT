@@ -2567,6 +2567,7 @@ internal partial class InteropGenerator
             {
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
+                    vtableTypes: vtableTypes,
                     comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
