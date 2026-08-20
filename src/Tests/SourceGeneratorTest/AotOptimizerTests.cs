@@ -121,6 +121,59 @@ public class AotOptimizerTests
         Assert.IsFalse(generated.Contains("System.Collections.Generic.List`1[System.Int32]"));
     }
 
+    [TestMethod]
+    public void GeneratedBindableCustomProperty_DiscoversPropertyTypes()
+    {
+        const string source = """
+            using System.Collections.ObjectModel;
+            using WinRT;
+
+            [GeneratedBindableCustomProperty]
+            internal partial class ViewModel
+            {
+                private readonly ObservableCollection<string> items = new();
+
+                public ObservableCollection<string> Items
+                {
+                    get { return items; }
+                }
+
+                public ObservableCollection<int> Numbers { get; } = new();
+
+                public ObservableCollection<double> Values => new();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("System.Collections.ObjectModel.ObservableCollection`1[System.String]"));
+        Assert.IsTrue(generated.Contains("System.Collections.ObjectModel.ObservableCollection`1[System.Int32]"));
+        Assert.IsTrue(generated.Contains("System.Collections.ObjectModel.ObservableCollection`1[System.Double]"));
+        Assert.IsTrue(generated.Contains("Windows.Foundation.Collections.IVector`1<String>"));
+    }
+
+    [TestMethod]
+    public void NonBindableProperties_DoNotDiscoverConcreteTypes()
+    {
+        const string source = """
+            using System.Collections.ObjectModel;
+
+            internal class ViewModel
+            {
+                private readonly ObservableCollection<string> items = new();
+
+                public ObservableCollection<string> Items
+                {
+                    get { return items; }
+                }
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsFalse(generated.Contains("System.Collections.ObjectModel.ObservableCollection`1[System.String]"));
+    }
+
     private static string RunAotOptimizer(string source)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));
