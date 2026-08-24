@@ -92,6 +92,7 @@
     <ClInclude Include="CustomIterableTest.h" />
     <ClInclude Include="CustomReadOnlyDictionaryTest.h" />
     <ClInclude Include="ManualProjectionTestClasses.h" />
+    <ClInclude Include="MarshalledValuesTest.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class.h">
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
@@ -115,6 +116,7 @@
     <ClCompile Include="DeprecatedClasses.cpp" />
     <ClCompile Include="CustomIterableTest.cpp" />
     <ClCompile Include="CustomReadOnlyDictionaryTest.cpp" />
+    <ClCompile Include="MarshalledValuesTest.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

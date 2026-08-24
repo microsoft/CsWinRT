@@ -27,6 +27,7 @@
     <ClCompile Include="NonUniqueClass.cpp" />
     <ClCompile Include="CustomIterableTest.cpp" />
     <ClCompile Include="CustomReadOnlyDictionaryTest.cpp" />
+    <ClCompile Include="MarshalledValuesTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -47,6 +48,7 @@
     <ClInclude Include="NonUniqueClass.h" />
     <ClInclude Include="CustomIterableTest.h" />
     <ClInclude Include="CustomReadOnlyDictionaryTest.h" />
+    <ClInclude Include="MarshalledValuesTest.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
