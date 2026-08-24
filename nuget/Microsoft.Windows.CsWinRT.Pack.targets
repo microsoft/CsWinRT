@@ -1,0 +1,44 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    ============================================================
+                    _CsWinRTSuppressPackagingWarnings
+
+    Suppresses the package analysis warnings caused by the assets
+    that '_CsWinRTAddReferenceProjectionToPackage' contributes.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTSuppressPackagingWarnings" AfterTargets="_WalkEachTargetPerFramework">
+
+    <!--
+      This runs after '_WalkEachTargetPerFramework', the target that collects '@(TfmSpecificPackageFile)' from every target
+      framework into '@(_PackageFiles)'. It keys off the assets that were actually contributed rather than off the properties
+      that requested them, because 'pack' runs on the outer build, where per-target-framework values (such as
+      'CsWinRTGenerateReferenceProjection') are not set. That is also why this file is imported from 'buildMultiTargeting'
+      as well: NuGet conditions the imports it generates for 'build' on '$(TargetFramework)', so they never apply to the
+      outer build of a multi-targeted project.
+    -->
+    <ItemGroup>
+      <_CsWinRTPackagedRefAsset Include="@(_PackageFiles)" Condition="'%(_PackageFiles.CsWinRTPackagedAsset)' == 'ref'" />
+      <_CsWinRTPackagedMetadataAsset Include="@(_PackageFiles)" Condition="'%(_PackageFiles.CsWinRTPackagedAsset)' == 'metadata'" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <!--
+        NU5131 asks for a matching '<references>' node in the .nuspec whenever a package has a 'ref/' folder. That is the
+        legacy mechanism for selecting assemblies out of 'lib/', and modern 'ref/' + 'lib/' packages don't use it (this
+        package doesn't either), so the rule fires on every one of them.
+      -->
+      <NoWarn Condition="'@(_CsWinRTPackagedRefAsset)' != ''">$(NoWarn);NU5131</NoWarn>
+
+      <!-- NU5100 flags assemblies outside 'lib/', which is exactly what the 'metadata' folder is for. -->
+      <NoWarn Condition="'@(_CsWinRTPackagedMetadataAsset)' != ''">$(NoWarn);NU5100</NoWarn>
+    </PropertyGroup>
+  </Target>
+
+</Project>
