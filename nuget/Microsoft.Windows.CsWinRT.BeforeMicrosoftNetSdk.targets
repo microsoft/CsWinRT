@@ -13,25 +13,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- We need to set ProduceOnlyReferenceAssembly here before the .NET SDK targets check its value -->
     <CsWinRTGenerateReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == ''">false</CsWinRTGenerateReferenceProjection>
     <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
-
-    <!--
-      Projection assemblies must be runtime-marshalling free, trimmable and AOT-safe. These used to be emitted as assembly
-      attributes straight into the generated projection sources, which meant a project also setting 'DisableRuntimeMarshalling'
-      got the attribute twice (once from here, once from the .NET SDK's generated 'AssemblyInfo.cs') and failed with CS0579.
-      Setting the .NET SDK properties instead lets the SDK emit each attribute exactly once, and gives projects a way to opt
-      out. 'IsAotCompatible' implies 'IsTrimmable', and both emit their '[AssemblyMetadata]' attribute via the ILLink targets.
-
-      This has to be done here, as 'IsAotCompatible' is read during evaluation, before the .NET SDK .targets.
-
-      Reference projections carry no implementation code at all, so they don't need any of this.
-    -->
-    <_CsWinRTIsProjectionAssembly Condition="'$(CsWinRTEnabled)' != 'false' AND
-                                             '$(CsWinRTGenerateProjection)' != 'false' AND
-                                             '$(CsWinRTGenerateReferenceProjection)' != 'true' AND
-                                             ('$(CsWinRTIncludes)$(CsWinRTFilters)' != '' OR '$(CsWinRTComponent)' == 'true')">true</_CsWinRTIsProjectionAssembly>
-
-    <DisableRuntimeMarshalling Condition="'$(_CsWinRTIsProjectionAssembly)' == 'true' AND '$(DisableRuntimeMarshalling)' == ''">true</DisableRuntimeMarshalling>
-    <IsAotCompatible Condition="'$(_CsWinRTIsProjectionAssembly)' == 'true' AND '$(IsAotCompatible)' == ''">true</IsAotCompatible>
   </PropertyGroup>
 
   <!--
