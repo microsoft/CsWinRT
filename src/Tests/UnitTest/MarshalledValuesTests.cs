@@ -14,6 +14,8 @@ namespace UnitTest
     [TestClass]
     public class MarshalledValuesTests
     {
+        private const int ERROR_INVALID_WINDOW_HANDLE = unchecked((int)0x80070578);
+
         [TestMethod]
         public void ManagedImplementation_HResultPropertySetter_MarshalsValue()
         {
@@ -24,6 +26,33 @@ namespace UnitTest
 
             Assert.AreEqual(value.HResult, target.Result.HResult);
             Assert.AreEqual(value.HResult, result.HResult);
+        }
+
+        // Same as above, but with an unrelated 'IRestrictedErrorInfo' left on the current thread, exactly
+        // like any previously failed native call would leave behind (eg. the COM interop tests calling
+        // 'GetForWindow' with an invalid window handle). That state is ambient and sticky, so marshalling a
+        // 'Windows.Foundation.HResult' must never pick it up: the exception the CCW setter creates from the
+        // incoming 'HRESULT' would otherwise carry the unrelated error object, and the CCW getter would then
+        // marshal that exception back out as the unrelated error code instead of the original one.
+        [TestMethod]
+        public void ManagedImplementation_HResultPropertySetter_MarshalsValueWithUnrelatedThreadErrorInfo()
+        {
+            try
+            {
+                Assert.IsTrue(UnitTestHelper.OriginateError(ERROR_INVALID_WINDOW_HANDLE, "Unrelated originated error"));
+
+                ManagedMarshalledValues target = new();
+                Exception value = new NotImplementedException();
+
+                Exception result = MarshalledValuesTest.CallResultProperty(target, value);
+
+                Assert.AreEqual(value.HResult, target.Result.HResult);
+                Assert.AreEqual(value.HResult, result.HResult);
+            }
+            finally
+            {
+                UnitTestHelper.RoClearError();
+            }
         }
 
         [TestMethod]
