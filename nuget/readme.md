@@ -31,6 +31,8 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTEnabled | *true \| false | Master switch — enables/disables all CsWinRT processing |
 | CsWinRTGenerateProjection | *true \| false | Generate C# projection sources from `.winmd` metadata |
 | CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
+| CsWinRTPackReferenceProjection | *true \| false | When generating a reference projection, adds its reference assembly to the NuGet package under `ref/<tfm>` (the forwarder in `lib/<tfm>` has no API surface to compile against). Set to `false` to lay out the package manually |
+| CsWinRTPackedWinMD | *(item)* | An item listing the `.winmd` files to add to the NuGet package under `metadata/`, so consumers can pass them back as `CsWinRTInputs` to generate the merged projection. List only the metadata the package owns: `CsWinRTInputs` also contains dependency `.winmd` files that belong to other packages. Requires `CsWinRTPackReferenceProjection` |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |

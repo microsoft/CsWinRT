@@ -128,6 +128,75 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </PropertyGroup>
 
   <!--
+    A reference projection is split across two assemblies: the reference assembly, carrying the public API surface, and the
+    forwarder that replaces '@(IntermediateAssembly)' and redirects to the merged projection the consuming app generates.
+    Only the forwarder is a build output, so 'lib/<tfm>' is all a NuGet package would get by default, leaving consumers with
+    nothing to compile against. 'CsWinRTPackReferenceProjection' contributes the reference assembly as 'ref/<tfm>' instead.
+
+    Consumers also need the .winmd files this projection was generated from, to produce the merged projection at app build
+    time. Listing them in '@(CsWinRTPackedWinMD)' ships them under a top-level 'metadata' folder (the same layout this
+    package uses for 'WindowsRuntime.Internal.winmd'). That folder is deliberately not one of NuGet's asset conventions, so
+    the metadata never reaches the compiler: WinMD *references* coming from packages are turned back into projection inputs
+    (see 'CsWinRTRemoveWinMDReferences' below), which would make consumers regenerate the very projection the package ships.
+
+    That list is explicit rather than derived from '@(CsWinRTInputs)', because the two are not the same set. Inputs are
+    everything the generator reads, which includes dependency metadata the project does not own: 'CsWinRTRemoveWinMDReferences'
+    adds every referenced .winmd to it, and a project may also declare one directly just to resolve types referenced by the
+    .winmd it actually projects. Packing those would redistribute metadata belonging to other packages.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
+    <CsWinRTPackReferenceProjection Condition="'$(CsWinRTPackReferenceProjection)' == ''">true</CsWinRTPackReferenceProjection>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CsWinRTPackReferenceProjection)' == 'true'">
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_CsWinRTAddReferenceProjectionToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <!--
+    ============================================================
+                    _CsWinRTAddReferenceProjectionToPackage
+
+    Adds the reference assembly of a reference projection, and any
+    '@(CsWinRTPackedWinMD)', to the NuGet package.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTAddReferenceProjectionToPackage" Returns="@(TfmSpecificPackageFile)">
+
+    <!--
+      'ref/' has to use the same folder name NuGet derives for 'lib/', or the two assets won't line up on the same target
+      framework. That name is not just '$(TargetFramework)': NuGet drops a trailing '.0' revision from the platform version
+      (eg. 'net10.0-windows10.0.26100.0' is laid out as 'net10.0-windows10.0.26100'), so ask the .NET SDK for it.
+    -->
+    <GetNuGetShortFolderName Condition="'$(CsWinRTPackReferenceProjection)' == 'true'"
+                             TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
+                             TargetPlatformMoniker="$(TargetPlatformMoniker)">
+      <Output TaskParameter="NuGetShortFolderName" PropertyName="_CsWinRTNuGetShortFolderName" />
+    </GetNuGetShortFolderName>
+
+    <ItemGroup>
+      <TfmSpecificPackageFile Condition="'$(CsWinRTPackReferenceProjection)' == 'true'"
+                              Include="$(_CsWinRTRefAssemblyPath)"
+                              PackagePath="ref\$(_CsWinRTNuGetShortFolderName)\"
+                              CsWinRTPackagedAsset="ref" />
+
+      <!-- The metadata is the same for every target framework, so it is packed once, not per target framework. -->
+      <TfmSpecificPackageFile Include="@(CsWinRTPackedWinMD)"
+                              PackagePath="metadata\"
+                              CsWinRTPackagedAsset="metadata" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+                    _CsWinRTSuppressPackagingWarnings
+
+    Lives in its own file, because it also has to be imported
+    from 'buildMultiTargeting' (see that file for why).
+    ============================================================
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Pack.targets" />
+
+  <!--
     ============================================================
                         _ResolveCsWinRToolsDirectory
 

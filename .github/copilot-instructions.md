@@ -153,6 +153,8 @@ By running the interop generator at the very end of the build process (after all
 | `CsWinRTGenerateProjection` | `true` | Run `cswinrtprojectionrefgen` to generate C# projection sources for the current project |
 | `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
+| `CsWinRTPackReferenceProjection` | `true` | Pack the reference assembly of a reference projection under `ref/<tfm>` |
+| `CsWinRTPackedWinMD` | *(item)* | The `.winmd` files to pack under `metadata/` (explicit: `CsWinRTInputs` also holds dependency metadata) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | `CsWinRTMergeReferencedActivationFactories` | `false` | Merge activation factories from referenced components |
@@ -672,7 +674,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 | `Microsoft.Windows.CsWinRT.props` | Initial setup: sets `CsWinRTPath`, `UsingCsWinRT3` flag, and the `BeforeMicrosoftNETSdkTargets` chain |
 | `Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets` | Pre-SDK configuration: reference projection mode, activation factory merging, stub exe setup |
 | `Microsoft.Windows.CsWinRT.targets` | Main pipeline: invokes `cswinrtprojectionrefgen` for `CsWinRTGenerateProjection`, sets up reference inclusion, integrates with `CoreCompile` |
-| `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
+| `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation, reference projection packaging |
 | `Microsoft.Windows.CsWinRT.CsWinRT2Polyfills.targets` | Generates C# polyfill attributes for CsWinRT 2.x interop (e.g. `DynamicWindowsRuntimeCastAttribute`) when `CsWinRTGenerateVersion2PolyfillAttributes` is `true`, to aid multi-targeting |
 | `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
