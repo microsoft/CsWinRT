@@ -148,8 +148,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTPackReferenceProjection Condition="'$(CsWinRTPackReferenceProjection)' == ''">true</CsWinRTPackReferenceProjection>
   </PropertyGroup>
 
-  <!-- '@(CsWinRTPackedWinMD)' cannot be tested from an evaluation-time condition (MSB4099), so the target is hooked for
-       reference projections and no-ops when there is nothing to contribute. -->
   <PropertyGroup Condition="'$(CsWinRTPackReferenceProjection)' == 'true'">
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_CsWinRTAddReferenceProjectionToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
