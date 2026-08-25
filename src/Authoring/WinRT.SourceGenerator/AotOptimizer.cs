@@ -1319,13 +1319,17 @@ namespace Generator
             }
             else if (context.Node is PropertyDeclarationSyntax propertyDeclaration)
             {
+                var isGeneratedBindableCustomPropertyClass =
+                    context.SemanticModel.GetDeclaredSymbol(propertyDeclaration) is IPropertySymbol propertySymbol &&
+                    GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation, propertySymbol.ContainingSymbol);
+
                 // Detect scenarios where the property declaration has an initializer and is to a boxed or cast type during initialization.
                 if (propertyDeclaration.Initializer != null)
                 {
                     var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
                     if (leftSymbol is INamedTypeSymbol namedType)
                     {
-                        AddVtableAttributesForExpression(propertyDeclaration.Initializer.Value, namedType);
+                        AddVtableAttributesForExpression(propertyDeclaration.Initializer.Value, namedType, isGeneratedBindableCustomPropertyClass);
                     }
                 }
                 else if (propertyDeclaration.ExpressionBody != null)
@@ -1333,7 +1337,7 @@ namespace Generator
                     var leftSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclaration.Type).Symbol;
                     if (leftSymbol is INamedTypeSymbol namedType)
                     {
-                        AddVtableAttributesForExpression(propertyDeclaration.ExpressionBody.Expression, namedType);
+                        AddVtableAttributesForExpression(propertyDeclaration.ExpressionBody.Expression, namedType, isGeneratedBindableCustomPropertyClass);
                     }
                 }
             }
@@ -1355,7 +1359,11 @@ namespace Generator
                     var propertyTypeSymbol = context.SemanticModel.GetSymbolInfo(propertyDeclarationSyntax.Type).Symbol;
                     if (propertyTypeSymbol is ITypeSymbol typeSymbol)
                     {
-                        AddVtableAttributesForExpression(returnDeclaration.Expression, typeSymbol);
+                        var isGeneratedBindableCustomPropertyClass =
+                            context.SemanticModel.GetDeclaredSymbol(propertyDeclarationSyntax) is IPropertySymbol propertySymbol &&
+                            GeneratorHelper.IsGeneratedBindableCustomPropertyClass(context.SemanticModel.Compilation, propertySymbol.ContainingSymbol);
+
+                        AddVtableAttributesForExpression(returnDeclaration.Expression, typeSymbol, isGeneratedBindableCustomPropertyClass);
                     }
                 }
             }
