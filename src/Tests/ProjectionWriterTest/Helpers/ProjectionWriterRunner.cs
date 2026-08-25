@@ -7,6 +7,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Xml.Linq;
 
 namespace ProjectionWriterTest.Helpers;
 
@@ -20,8 +23,11 @@ namespace ProjectionWriterTest.Helpers;
 /// projection modes are generated once per test run and cached, since generating them is the
 /// expensive part and every test only inspects the resulting text.
 /// </remarks>
-internal static class ProjectionWriterRunner
+internal static partial class ProjectionWriterRunner
 {
+    private const int RtManifest = 24;
+    private const uint LoadLibraryAsDataFile = 0x00000002;
+
     /// <summary>
     /// The namespace the projections are restricted to.
     /// </summary>
@@ -91,6 +97,119 @@ internal static class ProjectionWriterRunner
     public static int CountAttributeText(bool referenceProjection, string attributeText)
     {
         return CountOccurrences(GetSources(referenceProjection), attributeText);
+    }
+
+    /// <summary>
+    /// Runs the generator with every path involved in projection generation exceeding the legacy
+    /// Windows <c>MAX_PATH</c> limit.
+    /// </summary>
+    /// <param name="useInputDirectory">Whether the input argument is the containing directory rather than the WinMD file itself.</param>
+    /// <returns>The paths and process result needed to verify the scenario.</returns>
+    internal static LongPathRunResult RunLongPathScenario(bool useInputDirectory)
+    {
+        string toolPath = GetGeneratorPath();
+        string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterLongPathTest_{Guid.NewGuid():N}");
+        string expectedOutputPath;
+
+        do
+        {
+            workingDirectory = Path.Combine(workingDirectory, "segment123456789");
+            expectedOutputPath = Path.Combine(workingDirectory, "output", "Windows.Foundation.Collections.cs");
+        }
+        while (Path.Combine(workingDirectory, "projection.rsp").Length <= 260 ||
+               Path.Combine(workingDirectory, "input").Length <= 260 ||
+               Path.Combine(workingDirectory, "input", "Windows.Foundation.FoundationContract.winmd").Length <= 260 ||
+               expectedOutputPath.Length <= 260);
+
+        string inputDirectory = Path.Combine(workingDirectory, "input");
+        string outputDirectory = Path.Combine(workingDirectory, "output");
+
+        _ = Directory.CreateDirectory(inputDirectory);
+        _ = Directory.CreateDirectory(outputDirectory);
+
+        try
+        {
+            string inputWinmdPath = Path.Combine(inputDirectory, "Windows.Foundation.FoundationContract.winmd");
+            string responseFilePath = Path.Combine(workingDirectory, "projection.rsp");
+            string inputPath = useInputDirectory ? inputDirectory : inputWinmdPath;
+
+            File.Copy(FindWindowsFoundationWinmd(), inputWinmdPath);
+            File.WriteAllLines(responseFilePath,
+            [
+                $"--input-paths {inputPath}",
+                $"--output-directory {outputDirectory}",
+                "--target-framework net10.0",
+                "--include-namespaces Windows.Foundation.Collections",
+                "--reference-projection true"
+            ]);
+
+            (int exitCode, string output) = Run(toolPath, $"@{responseFilePath}");
+
+            return new(
+                ResponseFilePathLength: responseFilePath.Length,
+                InputPathLength: inputPath.Length,
+                OutputPathLength: expectedOutputPath.Length,
+                ExitCode: exitCode,
+                Output: output,
+                OutputExists: File.Exists(expectedOutputPath));
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    /// <summary>
+    /// Gets the value of the generator executable's embedded <c>longPathAware</c> setting.
+    /// </summary>
+    internal static string? GetLongPathAwareManifestValue()
+    {
+        string executablePath = Path.ChangeExtension(GetGeneratorPath(), ".exe");
+
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException("The projection generator executable was not found.", executablePath);
+        }
+
+        nint module = LoadLibraryEx(executablePath, 0, LoadLibraryAsDataFile);
+
+        if (module == 0)
+        {
+            throw new InvalidOperationException($"Failed to load resources from '{executablePath}'.");
+        }
+
+        try
+        {
+            nint resource = FindResource(module, 1, RtManifest);
+
+            if (resource == 0)
+            {
+                throw new InvalidOperationException($"No application manifest was found in '{executablePath}'.");
+            }
+
+            uint size = SizeofResource(module, resource);
+            nint resourceData = LoadResource(module, resource);
+            nint manifestData = LockResource(resourceData);
+
+            if (size == 0 || manifestData == 0)
+            {
+                throw new InvalidOperationException("The embedded application manifest could not be read.");
+            }
+
+            byte[] bytes = new byte[size];
+            Marshal.Copy(manifestData, bytes, 0, bytes.Length);
+
+            string manifest = Encoding.UTF8.GetString(bytes);
+            return XDocument
+                .Parse(manifest)
+                .Descendants()
+                .FirstOrDefault(static element => element.Name.LocalName == "longPathAware")
+                ?.Value;
+        }
+        finally
+        {
+            _ = FreeLibrary(module);
+        }
     }
 
     /// <summary>
@@ -187,6 +306,25 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
+    /// Finds the installed Windows Foundation contract used as the explicit long-path WinMD input.
+    /// </summary>
+    private static string FindWindowsFoundationWinmd()
+    {
+        string referencesDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Windows Kits",
+            "10",
+            "References");
+
+        string? winmdPath = Directory
+            .EnumerateFiles(referencesDirectory, "Windows.Foundation.FoundationContract.winmd", SearchOption.AllDirectories)
+            .OrderByDescending(static path => path, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+
+        return winmdPath ?? throw new FileNotFoundException($"No Windows Foundation contract was found under '{referencesDirectory}'.");
+    }
+
+    /// <summary>
     /// Counts the non-overlapping occurrences of a literal value in some text.
     /// </summary>
     /// <param name="text">The text to search.</param>
@@ -221,4 +359,33 @@ internal static class ProjectionWriterRunner
             // Best effort cleanup; a leftover temp directory must not fail the test
         }
     }
+
+    [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryExW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    private static partial nint LoadLibraryEx(string fileName, nint file, uint flags);
+
+    [LibraryImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
+    private static partial nint FindResource(nint module, nint name, nint type);
+
+    [LibraryImport("kernel32.dll", EntryPoint = "SizeofResource", SetLastError = true)]
+    private static partial uint SizeofResource(nint module, nint resource);
+
+    [LibraryImport("kernel32.dll", EntryPoint = "LoadResource", SetLastError = true)]
+    private static partial nint LoadResource(nint module, nint resource);
+
+    [LibraryImport("kernel32.dll", EntryPoint = "LockResource")]
+    private static partial nint LockResource(nint resourceData);
+
+    [LibraryImport("kernel32.dll", EntryPoint = "FreeLibrary")]
+    private static partial int FreeLibrary(nint module);
+
+    /// <summary>
+    /// Captures the observable result of a long-path generator invocation.
+    /// </summary>
+    internal sealed record LongPathRunResult(
+        int ResponseFilePathLength,
+        int InputPathLength,
+        int OutputPathLength,
+        int ExitCode,
+        string Output,
+        bool OutputExists);
 }

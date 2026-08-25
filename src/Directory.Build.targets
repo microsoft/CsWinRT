@@ -68,6 +68,11 @@
     <IlcResilient>false</IlcResilient>
   </PropertyGroup>
 
+  <!-- All shipped CLI tools must opt into Windows long-path handling. -->
+  <PropertyGroup Condition="'$(IsBuildTool)' == 'true'">
+    <ApplicationManifest>$(MSBuildThisFileDirectory)BuildTool.exe.manifest</ApplicationManifest>
+  </PropertyGroup>
+
   <!-- Setup the generated folders -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
     <GeneratedFilesRootDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'Generated Files'))</GeneratedFilesRootDir>
