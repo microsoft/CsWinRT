@@ -38,13 +38,13 @@ public static partial class UnitTestHelper
     /// </summary>
     /// <param name="error">The <c>HRESULT</c> to originate the error info for.</param>
     /// <param name="message">The error message to associate with the error info.</param>
-    /// <returns>Whether the error info was originated.</returns>
+    /// <returns>
+    /// Whether the error info was originated. This is <see langword="false"/> only if <paramref name="error"/>
+    /// is a success code. Originating replaces whatever error info the thread already had, so callers don't
+    /// need to clear it first.
+    /// </returns>
     internal static unsafe bool OriginateError(int error, string message)
     {
-        // 'RoOriginateError' is a no-op if the current thread already has originated error
-        // info for the same 'HRESULT', so always start from a clean slate to be deterministic
-        RoClearError();
-
         fixed (char* pMessage = message)
         {
             return RoOriginateErrorW(error, (uint)message.Length, pMessage) != 0;
