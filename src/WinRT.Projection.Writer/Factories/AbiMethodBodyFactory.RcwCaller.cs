@@ -84,52 +84,15 @@ internal static partial class AbiMethodBodyFactory
                 continue;
             }
 
-            if (cat == ParameterCategory.Out)
+            if (cat is ParameterCategory.Out or ParameterCategory.Ref)
             {
-                TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
+                TypeSignature underlying = p.Type.StripByRefAndCustomModifiers();
+
+                // Both WinRT 'out T' and 'in T' are passed as a pointer to the ABI form of the value,
+                // which is exactly the type the corresponding local declared further below is typed as.
                 _ = fp.Append(", ");
-
-                if (uOut.IsAbiRefLike(context.AbiTypeKindResolver))
-                {
-                    _ = fp.Append("void**");
-                }
-                else if (uOut.IsSystemType())
-                {
-                    _ = fp.Append(WellKnownAbiTypeNames.AbiSystemTypePointer);
-                }
-                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(context, uOut)); _ = fp.Append('*');
-                }
-                else if (context.AbiTypeKindResolver.IsBlittableStruct(uOut))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(context, uOut)); _ = fp.Append('*');
-                }
-                else
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); _ = fp.Append('*');
-                }
-
-                continue;
-            }
-
-            if (cat == ParameterCategory.Ref)
-            {
-                TypeSignature uRef = p.Type.StripByRefAndCustomModifiers();
-                _ = fp.Append(", ");
-
-                if (context.AbiTypeKindResolver.IsNonBlittableStruct(uRef))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(context, uRef)); _ = fp.Append('*');
-                }
-                else if (context.AbiTypeKindResolver.IsBlittableStruct(uRef))
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(context, uRef)); _ = fp.Append('*');
-                }
-                else
-                {
-                    _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef)); _ = fp.Append('*');
-                }
+                _ = fp.Append(AbiTypeHelpers.GetAbiLocalTypeName(context, underlying));
+                _ = fp.Append('*');
 
                 continue;
             }
@@ -273,12 +236,14 @@ internal static partial class AbiMethodBodyFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (ParameterCategoryResolver.Resolve(p) != ParameterCategory.In)
+            if (!ParameterCategoryResolver.Resolve(p).IsScalarInput())
             {
                 continue;
             }
 
-            if (!p.Type.IsHResultException())
+            TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
+
+            if (!pType.IsHResultException())
             {
                 continue;
             }
@@ -293,19 +258,21 @@ internal static partial class AbiMethodBodyFactory
         {
             ParameterInfo p = sig.Parameters[i];
 
-            if (ParameterCategoryResolver.Resolve(p) != ParameterCategory.In)
+            if (!ParameterCategoryResolver.Resolve(p).IsScalarInput())
             {
                 continue;
             }
 
-            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(p.Type))
+            TypeSignature pType = p.Type.StripByRefAndCustomModifiers();
+
+            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(pType))
             {
                 continue;
             }
 
             string localName = p.GetParamLocalName(paramNameOverride);
             string callName = p.GetParamName(paramNameOverride);
-            writer.WriteLine($"{AbiTypeHelpers.GetMappedAbiTypeName(p.Type)} __{localName} = {AbiTypeHelpers.GetMappedMarshallerName(p.Type)}.ConvertToUnmanaged({callName});");
+            writer.WriteLine($"{AbiTypeHelpers.GetMappedAbiTypeName(pType)} __{localName} = {AbiTypeHelpers.GetMappedMarshallerName(pType)}.ConvertToUnmanaged({callName});");
         }
 
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
@@ -556,8 +523,8 @@ internal static partial class AbiMethodBodyFactory
         }
 
         // Emit typed fixed lines for Ref params.
-        // Skip Ref+NonBlittableStruct: those are marshalled via __local (no fixed needed) and
-        // passed as &__local at the call site (the is-value-type-in path).
+        // Skip the types that require a marshalled ABI local: those have no pinnable projected value
+        // and are passed as &__local at the call site instead.
         int typedFixedCount = 0;
         for (int i = 0; i < sig.Parameters.Count; i++)
         {
@@ -566,17 +533,16 @@ internal static partial class AbiMethodBodyFactory
 
             if (cat == ParameterCategory.Ref)
             {
-                TypeSignature uRefSkip = p.Type.StripByRefAndCustomModifiers();
+                TypeSignature uRef = p.Type.StripByRefAndCustomModifiers();
 
-                if (context.AbiTypeKindResolver.IsNonBlittableStruct(uRefSkip))
+                if (context.AbiTypeKindResolver.RequiresMarshalledAbiInputLocal(uRef))
                 {
                     continue;
                 }
 
                 string callName = p.GetParamName(paramNameOverride);
                 string localName = p.GetParamLocalName(paramNameOverride);
-                TypeSignature uRef = uRefSkip;
-                string abiType = context.AbiTypeKindResolver.IsBlittableStruct(uRef) ? AbiTypeHelpers.GetBlittableStructAbiType(context, uRef) : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef);
+                string abiType = AbiTypeHelpers.GetAbiLocalTypeName(context, uRef);
                 writer.WriteLine($"fixed({abiType}* _{localName} = &{callName})");
                 typedFixedCount++;
             }
@@ -828,9 +794,10 @@ internal static partial class AbiMethodBodyFactory
                 string localName = p.GetParamLocalName(paramNameOverride);
                 TypeSignature uRefArg = p.Type.StripByRefAndCustomModifiers();
 
-                if (context.AbiTypeKindResolver.IsNonBlittableStruct(uRefArg))
+                if (context.AbiTypeKindResolver.RequiresMarshalledAbiInputLocal(uRefArg))
                 {
-                    // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
+                    // 'in T' param whose ABI form differs from the projected one: pass &__local
+                    // (the marshalled ABI value).
                     writer.Write(isMultiline: true, $$"""
                         ,
                           &__{{localName}}
@@ -992,6 +959,14 @@ internal static partial class AbiMethodBodyFactory
             else if (uOut.IsSystemType())
             {
                 writer.Write($"global::ABI.System.TypeMarshaller.ConvertToManaged(__{localName})");
+            }
+            else if (uOut.IsHResultException())
+            {
+                writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged(__{localName})");
+            }
+            else if (context.AbiTypeKindResolver.IsMappedAbiValueType(uOut))
+            {
+                writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(uOut)}.ConvertToManaged(__{localName})");
             }
             else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
             {

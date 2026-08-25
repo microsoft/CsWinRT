@@ -75,12 +75,6 @@ public static unsafe class RestrictedErrorInfo
             // So if any exceptions are thrown internally here, we'll continue and just forward those too.
             try
             {
-                // Initialize an object reference for the global 'IRestrictedErrorInfo' object we retrieved.
-                // We will always need this, regardless of whether we can restore the global exception or not.
-                restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
-                    thisPtr: restrictedErrorInfoPtr,
-                    iid: WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo)!;
-
                 // Check if the stored exception is a language exception, which we can return directly
                 if (IUnknownVftbl.QueryInterfaceUnsafe(
                     thisPtr: restrictedErrorInfoPtr,
@@ -96,6 +90,10 @@ public static unsafe class RestrictedErrorInfo
                         {
                             restoredExceptionFromGlobalState = true;
 
+                            restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
+                                thisPtr: restrictedErrorInfoPtr,
+                                iid: WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo)!;
+
                             RestrictedErrorInfoHelpers.AddExceptionData(exception, restrictedErrorInfoToSave, true);
 
                             return exception;
@@ -107,19 +105,36 @@ public static unsafe class RestrictedErrorInfo
                     }
                 }
 
-                // We're going to create a new exception, so first we extract all the available info
-                // from the global 'IRestrictedErrorInfo' object, to attach it to the managed exception.
+                // We're going to create a new exception, so first we extract all the available info from
+                // the global 'IRestrictedErrorInfo' object, to possibly attach it to the managed exception.
                 IRestrictedErrorInfoMethods.GetErrorDetails(
                     thisPtr: restrictedErrorInfoPtr,
-                    description: out description,
+                    description: out string? globalDescription,
                     error: out HRESULT restrictedError,
-                    restrictedDescription: out restrictedDescription,
-                    capabilitySid: out restrictedCapabilitySid);
+                    restrictedDescription: out string? globalRestrictedDescription,
+                    capabilitySid: out string? globalRestrictedCapabilitySid);
 
-                restrictedReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
-
+                // The thread's 'IRestrictedErrorInfo' object is just ambient state: it is set as a side
+                // effect of some previous failure on this same thread, and 'BorrowErrorInfo' deliberately
+                // puts it right back, so that it also outlives this call. That means there is no guarantee
+                // whatsoever that it has anything to do with the 'HRESULT' being converted here. That is
+                // especially true for 'Windows.Foundation.HResult' values, which are just data crossing the
+                // ABI, and which never set the thread's error info to begin with. Associating an unrelated
+                // error object with the new exception would not just attach a misleading description to it:
+                // 'GetHRForException' reads the 'HRESULT' back out of the attached error object, so such an
+                // exception would later marshal back out as an entirely different error code. Just like
+                // 'AttachErrorInfo' does, use a matching 'HRESULT' as the heuristic for the association.
                 if (errorCode == restrictedError)
                 {
+                    description = globalDescription;
+                    restrictedDescription = globalRestrictedDescription;
+                    restrictedCapabilitySid = globalRestrictedCapabilitySid;
+                    restrictedReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
+
+                    restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
+                        thisPtr: restrictedErrorInfoPtr,
+                        iid: WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo)!;
+
                     // For cross-language Windows Runtime exceptions, 'GetErrorDetails' can provide a general
                     // description and a more specific restricted description. If both are present, insert a
                     // space between them rather than a newline so the exception message remains a single line.

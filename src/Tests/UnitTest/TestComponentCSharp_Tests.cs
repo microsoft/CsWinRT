@@ -3064,6 +3064,27 @@ namespace UnitTest
             }
         }
 
+        // After a managed exception propagates out through a CCW and back into managed code, the
+        // 'IRestrictedErrorInfo' object it produced is left on the current thread (CsWinRT only ever borrows
+        // it, it never consumes it). Marshalling an unrelated 'Windows.Foundation.HResult' afterwards must
+        // not pick that ambient state up: the resulting exception has to carry the 'HRESULT' it was created
+        // for, both on itself and when it is marshalled back out through the ABI.
+        [TestMethod]
+        public void TestExceptionPropagation_DoesNotLeakErrorInfoIntoUnrelatedHResults()
+        {
+            const int E_NOTIMPL = unchecked((int)0x80004001);
+
+            var properties = new ThrowingManagedProperties(new ArgumentNullException("foo"));
+
+            _ = Assert.ThrowsExactly<ArgumentNullException>(() => TestObject.CopyProperties(properties));
+
+            Exception exception = RestrictedErrorInfo.GetExceptionForHR(E_NOTIMPL);
+
+            Assert.IsInstanceOfType<NotImplementedException>(exception);
+            Assert.AreEqual(E_NOTIMPL, exception.HResult);
+            Assert.AreEqual(E_NOTIMPL, RestrictedErrorInfo.GetHRForException(exception));
+        }
+
         class ManagedProperties : IProperties1
         {
             private readonly int _value;

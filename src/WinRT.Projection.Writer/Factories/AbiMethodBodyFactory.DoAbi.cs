@@ -508,22 +508,31 @@ internal static partial class AbiMethodBodyFactory
                     rhs = $"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()";
                 }
 
-                // For enums, function pointer signature uses the projected enum type, no cast needed.
-                // For bool, cast to byte. For char, cast to ushort.
-                // For the local managed value, marshal through <Type>Marshaller.ConvertToUnmanaged
-                // before writing it into the *out ABI struct slot.
+                // HResult, System.Type and the mapped value types (DateTime/TimeSpan) all project to a
+                // managed type that differs from their ABI struct, so the local has to go through their
+                // marshaller before it can be written into the *out ABI slot.
+                else if (underlying.IsHResultException())
+                {
+                    rhs = $"global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(__{raw})";
+                }
+                else if (underlying.IsSystemType())
+                {
+                    rhs = $"global::ABI.System.TypeMarshaller.ConvertToUnmanaged(__{raw})";
+                }
+                else if (context.AbiTypeKindResolver.IsMappedAbiValueType(underlying))
+                {
+                    rhs = $"{AbiTypeHelpers.GetMappedMarshallerName(underlying)}.ConvertToUnmanaged(__{raw})";
+                }
 
-                // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
-                // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
-                // writing it into the *out ABI struct slot.write_marshal_from_managed
-                //: "Marshaller.ConvertToUnmanaged(local)".
+                // Non-blittable struct (e.g. an authored struct with string fields): marshal the local
+                // managed value through <Type>Marshaller.ConvertToUnmanaged as well.
                 else if (context.AbiTypeKindResolver.IsNonBlittableStruct(underlying))
                 {
                     rhs = $"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw})";
                 }
                 else
                 {
-                    // Enums, bool, char, and primitives: the local __<raw> is already the ABI form.
+                    // Blittable structs, enums, bool, char and primitives: the local __<raw> is already the ABI form.
                     rhs = $"__{raw}";
                 }
                 writer.WriteLine($"*{ptr} = {rhs};");
@@ -758,6 +767,12 @@ internal static partial class AbiMethodBodyFactory
             // Mapped value type input (DateTime/TimeSpan): the parameter is the ABI type;
             // convert to the projected managed type via the marshaller.
             writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(p.Type)}.ConvertToManaged({pname})");
+        }
+        else if (p.Type.IsHResultException())
+        {
+            // HResult input: excluded from 'IsMappedAbiValueType', but marshalled the same way
+            // (the parameter is 'global::ABI.System.Exception', the projection is 'System.Exception').
+            writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged({pname})");
         }
         else if (p.Type.IsSystemType())
         {

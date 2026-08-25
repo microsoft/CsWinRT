@@ -240,6 +240,23 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
             || signature.IsGenericInstance();
 
     /// <summary>
+    /// Returns whether a scalar input parameter (a WinRT by-value <c>in</c> or <c>in T</c> parameter)
+    /// of type <paramref name="signature"/> has to be marshalled into a separate ABI-form local before
+    /// the call, because its ABI representation is a different type than its projected one. This covers:
+    /// <list type="bullet">
+    ///   <item>Complex structs (per-field marshalling) — see <see cref="IsNonBlittableStruct"/></item>
+    ///   <item>Mapped value types (WinRT <c>DateTime</c> / <c>TimeSpan</c>) — see <see cref="IsMappedAbiValueType"/></item>
+    ///   <item><c>HResult</c> (projected as <see cref="System.Exception"/>) — see <see cref="TypeSignatureExtensions.IsHResultException"/></item>
+    /// </list>
+    /// For a WinRT <c>in T</c> parameter this also means the local (rather than the projected value) is
+    /// what gets passed by pointer, since the projected value has no pinnable ABI-compatible layout.
+    /// </summary>
+    /// <param name="signature">The stripped (non-byref) parameter type to classify.</param>
+    /// <returns><see langword="true"/> when the type needs a marshalled ABI local; otherwise <see langword="false"/>.</returns>
+    public bool RequiresMarshalledAbiInputLocal(TypeSignature signature)
+        => Resolve(signature) is AbiTypeKind.NonBlittableStruct or AbiTypeKind.MappedAbiValueType or AbiTypeKind.HResultException;
+
+    /// <summary>
     /// Classifies <paramref name="elementType"/> into one of the six
     /// <see cref="AbiArrayElementKind"/> values used by the per-element pointer-type ladders.
     /// This is the discriminator-only form -- callers translate the kind into the per-site

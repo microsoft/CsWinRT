@@ -643,6 +643,53 @@ namespace TestComponentCSharp
         CustomReadOnlyDictionaryTest(Windows.Foundation.Collections.IMapView<String, String> mapView);
     }
 
+    // 'HResult' (projected as 'System.Exception'), the mapped value types 'DateTime' and 'TimeSpan',
+    // and 'Windows.UI.Xaml.Interop.TypeName' (projected as 'System.Type') all have an ABI
+    // representation that differs from their projected one, yet unlike strings and reference types
+    // they don't cross the ABI as an opaque pointer. This interface covers every parameter position
+    // where that distinction matters. It is deliberately a standalone interface (i.e. not
+    // '[exclusiveto]' to a runtimeclass), because that is what makes CsWinRT emit CCW stubs for it,
+    // and the CCW stubs are what exercise the managed side as the callee rather than the caller.
+    interface IMarshalledValues
+    {
+        // Property setter (a distinct CCW call site from a method parameter)
+        Windows.Foundation.HResult Result{ get; set; };
+
+        // Method parameter and return value
+        Windows.Foundation.HResult SwapResult(Windows.Foundation.HResult value);
+
+        // Non-retval 'out' parameters, which are marshalled separately from the return value
+        void ExchangeResult(Windows.Foundation.HResult value, out Windows.Foundation.HResult previous);
+        void ExchangeDateTime(Windows.Foundation.DateTime value, out Windows.Foundation.DateTime previous);
+        void ExchangeTimeSpan(Windows.Foundation.TimeSpan value, out Windows.Foundation.TimeSpan previous);
+        void ExchangeTypeName(Windows.UI.Xaml.Interop.TypeName value, out Windows.UI.Xaml.Interop.TypeName previous);
+
+        // 'ref const' (WinRT 'in T') parameters, which are passed by pointer rather than by value
+        Windows.Foundation.DateTime OffsetDateTime(ref const Windows.Foundation.DateTime value, ref const Windows.Foundation.TimeSpan offset);
+    }
+
+    // Delegates get the same CCW stubs as interfaces, so they need the same coverage
+    delegate Windows.Foundation.HResult HandleResult(Windows.Foundation.HResult value);
+
+    [default_interface]
+    runtimeclass MarshalledValuesTest : IMarshalledValues
+    {
+        MarshalledValuesTest();
+
+        // Invoke each 'IMarshalledValues' member from native code, so that tests can validate the
+        // marshalling of every parameter shape it covers independently. Passing a managed
+        // implementation exercises the CCW direction, and the instance members of this class
+        // exercise the RCW direction of the same shapes.
+        static Windows.Foundation.HResult CallResultProperty(IMarshalledValues target, Windows.Foundation.HResult value);
+        static Windows.Foundation.HResult CallSwapResult(IMarshalledValues target, Windows.Foundation.HResult value);
+        static Windows.Foundation.HResult CallExchangeResult(IMarshalledValues target, Windows.Foundation.HResult value);
+        static Windows.Foundation.DateTime CallExchangeDateTime(IMarshalledValues target, Windows.Foundation.DateTime value);
+        static Windows.Foundation.TimeSpan CallExchangeTimeSpan(IMarshalledValues target, Windows.Foundation.TimeSpan value);
+        static Windows.UI.Xaml.Interop.TypeName CallExchangeTypeName(IMarshalledValues target, Windows.UI.Xaml.Interop.TypeName value);
+        static Windows.Foundation.DateTime CallOffsetDateTime(IMarshalledValues target, Windows.Foundation.DateTime value, Windows.Foundation.TimeSpan offset);
+        static Windows.Foundation.HResult InvokeHandleResult(HandleResult handler, Windows.Foundation.HResult value);
+    }
+
     // SupportedOSPlatform warning tests
     [contract(Windows.Foundation.UniversalApiContract, 10)]
     [attributeusage(target_all)]
