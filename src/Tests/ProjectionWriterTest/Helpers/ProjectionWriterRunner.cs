@@ -10,10 +10,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -32,11 +30,8 @@ namespace ProjectionWriterTest.Helpers;
 /// reference/implementation modes and UWP/WinUI inputs are cached separately, since generating them
 /// is the expensive part and every test only inspects the resulting text.
 /// </remarks>
-internal static partial class ProjectionWriterRunner
+internal static class ProjectionWriterRunner
 {
-    private const int RtManifest = 24;
-    private const uint LoadLibraryAsDataFile = 0x00000002;
-
     /// <summary>
     /// The generated sources, cached separately for each output mode and XAML input.
     /// </summary>
@@ -97,7 +92,7 @@ internal static partial class ProjectionWriterRunner
     /// <returns>The paths and process result needed to verify the scenario.</returns>
     internal static LongPathRunResult RunLongPathScenario(bool useInputDirectory)
     {
-        string toolPath = GetGeneratorPath();
+        string executablePath = Path.ChangeExtension(GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath"), ".exe");
         string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterLongPathTest_{Guid.NewGuid():N}");
         string expectedOutputPath;
 
@@ -133,7 +128,7 @@ internal static partial class ProjectionWriterRunner
                 "--reference-projection true"
             ]);
 
-            (int exitCode, string output) = Run(toolPath, $"@{responseFilePath}");
+            (int exitCode, string output) = RunExecutable(executablePath, $"@{responseFilePath}");
 
             return new(
                 ResponseFilePathLength: responseFilePath.Length,
@@ -146,59 +141,6 @@ internal static partial class ProjectionWriterRunner
         finally
         {
             TryDeleteDirectory(workingDirectory);
-        }
-    }
-
-    /// <summary>
-    /// Gets the value of the generator executable's embedded <c>longPathAware</c> setting.
-    /// </summary>
-    internal static string? GetLongPathAwareManifestValue()
-    {
-        string executablePath = Path.ChangeExtension(GetGeneratorPath(), ".exe");
-
-        if (!File.Exists(executablePath))
-        {
-            throw new FileNotFoundException("The projection generator executable was not found.", executablePath);
-        }
-
-        nint module = LoadLibraryEx(executablePath, 0, LoadLibraryAsDataFile);
-
-        if (module == 0)
-        {
-            throw new InvalidOperationException($"Failed to load resources from '{executablePath}'.");
-        }
-
-        try
-        {
-            nint resource = FindResource(module, 1, RtManifest);
-
-            if (resource == 0)
-            {
-                throw new InvalidOperationException($"No application manifest was found in '{executablePath}'.");
-            }
-
-            uint size = SizeofResource(module, resource);
-            nint resourceData = LoadResource(module, resource);
-            nint manifestData = LockResource(resourceData);
-
-            if (size == 0 || manifestData == 0)
-            {
-                throw new InvalidOperationException("The embedded application manifest could not be read.");
-            }
-
-            byte[] bytes = new byte[size];
-            Marshal.Copy(manifestData, bytes, 0, bytes.Length);
-
-            string manifest = Encoding.UTF8.GetString(bytes);
-            return XDocument
-                .Parse(manifest)
-                .Descendants()
-                .FirstOrDefault(static element => element.Name.LocalName == "longPathAware")
-                ?.Value;
-        }
-        finally
-        {
-            _ = FreeLibrary(module);
         }
     }
 
@@ -352,6 +294,36 @@ internal static partial class ProjectionWriterRunner
     }
 
     /// <summary>
+    /// Runs the projection generator executable directly so its application manifest is exercised.
+    /// </summary>
+    private static (int ExitCode, string Output) RunExecutable(string executablePath, string argument)
+    {
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException("The projection generator executable was not found.", executablePath);
+        }
+
+        ProcessStartInfo startInfo = new(executablePath)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        startInfo.ArgumentList.Add(argument);
+
+        using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the projection generator executable.");
+
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
+
+        process.WaitForExit();
+
+        return (process.ExitCode, standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult());
+    }
+
+    /// <summary>
     /// Resolves a required tool or input file path from assembly metadata.
     /// </summary>
     /// <param name="metadataName">The assembly metadata key containing the path.</param>
@@ -425,24 +397,6 @@ internal static partial class ProjectionWriterRunner
             // Best effort cleanup; a leftover temp directory must not fail the test
         }
     }
-
-    [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryExW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    private static partial nint LoadLibraryEx(string fileName, nint file, uint flags);
-
-    [LibraryImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-    private static partial nint FindResource(nint module, nint name, nint type);
-
-    [LibraryImport("kernel32.dll", EntryPoint = "SizeofResource", SetLastError = true)]
-    private static partial uint SizeofResource(nint module, nint resource);
-
-    [LibraryImport("kernel32.dll", EntryPoint = "LoadResource", SetLastError = true)]
-    private static partial nint LoadResource(nint module, nint resource);
-
-    [LibraryImport("kernel32.dll", EntryPoint = "LockResource")]
-    private static partial nint LockResource(nint resourceData);
-
-    [LibraryImport("kernel32.dll", EntryPoint = "FreeLibrary")]
-    private static partial int FreeLibrary(nint module);
 
     /// <summary>
     /// Captures the observable result of a long-path generator invocation.

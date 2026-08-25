@@ -12,15 +12,6 @@ namespace ProjectionWriterTest;
 public class Test_LongPaths
 {
     [TestMethod]
-    public void GeneratorExecutable_IsLongPathAware()
-    {
-        Assert.AreEqual(
-            "true",
-            ProjectionWriterRunner.GetLongPathAwareManifestValue(),
-            "The embedded application manifest does not enable long-path handling.");
-    }
-
-    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public void LongResponseInputAndOutputPaths_AreSupported(bool useInputDirectory)
