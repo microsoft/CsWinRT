@@ -154,7 +154,7 @@ By running the interop generator at the very end of the build process (after all
 | `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
 | `CsWinRTPackReferenceProjection` | `true` | Pack the reference assembly of a reference projection under `ref/<tfm>` |
-| `CsWinRTPackWinMDInputs` | `true` | Pack `CsWinRTInputs` of a reference projection under `metadata/` |
+| `CsWinRTPackedWinMD` | *(item)* | The `.winmd` files to pack under `metadata/` (explicit: `CsWinRTInputs` also holds dependency metadata) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | `CsWinRTMergeReferencedActivationFactories` | `false` | Merge activation factories from referenced components |

@@ -133,20 +133,24 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Only the forwarder is a build output, so 'lib/<tfm>' is all a NuGet package would get by default, leaving consumers with
     nothing to compile against. 'CsWinRTPackReferenceProjection' contributes the reference assembly as 'ref/<tfm>' instead.
 
-    Consumers also need the .winmd files the projection was generated from, to produce the merged projection at app build
-    time. 'CsWinRTPackWinMDInputs' ships '@(CsWinRTInputs)' under a top-level 'metadata' folder (the same layout this package
-    uses for 'WindowsRuntime.Internal.winmd'). That folder is deliberately not one of NuGet's asset conventions, so the
-    metadata never reaches the compiler: WinMD *references* coming from packages are turned back into projection inputs (see
-    'CsWinRTRemoveWinMDReferences' below), which would make consumers regenerate the very projection the package ships.
+    Consumers also need the .winmd files this projection was generated from, to produce the merged projection at app build
+    time. Listing them in '@(CsWinRTPackedWinMD)' ships them under a top-level 'metadata' folder (the same layout this
+    package uses for 'WindowsRuntime.Internal.winmd'). That folder is deliberately not one of NuGet's asset conventions, so
+    the metadata never reaches the compiler: WinMD *references* coming from packages are turned back into projection inputs
+    (see 'CsWinRTRemoveWinMDReferences' below), which would make consumers regenerate the very projection the package ships.
 
-    Both default to 'true' for reference projections; set either to 'false' to lay out the package manually.
+    That list is explicit rather than derived from '@(CsWinRTInputs)', because the two are not the same set. Inputs are
+    everything the generator reads, which includes dependency metadata the project does not own: 'CsWinRTRemoveWinMDReferences'
+    adds every referenced .winmd to it, and a project may also declare one directly just to resolve types referenced by the
+    .winmd it actually projects. Packing those would redistribute metadata belonging to other packages.
   -->
   <PropertyGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
     <CsWinRTPackReferenceProjection Condition="'$(CsWinRTPackReferenceProjection)' == ''">true</CsWinRTPackReferenceProjection>
-    <CsWinRTPackWinMDInputs Condition="'$(CsWinRTPackWinMDInputs)' == ''">true</CsWinRTPackWinMDInputs>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(CsWinRTPackReferenceProjection)' == 'true' OR '$(CsWinRTPackWinMDInputs)' == 'true'">
+  <!-- '@(CsWinRTPackedWinMD)' cannot be tested from an evaluation-time condition (MSB4099), so the target is hooked for
+       reference projections and no-ops when there is nothing to contribute. -->
+  <PropertyGroup Condition="'$(CsWinRTPackReferenceProjection)' == 'true'">
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_CsWinRTAddReferenceProjectionToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
@@ -154,8 +158,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
                     _CsWinRTAddReferenceProjectionToPackage
 
-    Adds the reference assembly and the input .winmd files of a
-    reference projection to the NuGet package.
+    Adds the reference assembly of a reference projection, and any
+    '@(CsWinRTPackedWinMD)', to the NuGet package.
     ============================================================
   -->
   <Target Name="_CsWinRTAddReferenceProjectionToPackage" Returns="@(TfmSpecificPackageFile)">
@@ -178,8 +182,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                               CsWinRTPackagedAsset="ref" />
 
       <!-- The metadata is the same for every target framework, so it is packed once, not per target framework. -->
-      <TfmSpecificPackageFile Condition="'$(CsWinRTPackWinMDInputs)' == 'true'"
-                              Include="@(CsWinRTInputs)"
+      <TfmSpecificPackageFile Include="@(CsWinRTPackedWinMD)"
                               PackagePath="metadata\"
                               CsWinRTPackagedAsset="metadata" />
     </ItemGroup>
