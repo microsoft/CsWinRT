@@ -1258,21 +1258,21 @@ namespace winrt::TestComponentCSharp::implementation
 
     void Class::CompleteAsync(int32_t hr)
     {
-        assert(_asyncResult == E_PENDING);
-        _asyncResult = hr;
+        assert(_asyncResult.load() == E_PENDING);
+        _asyncResult.store(hr);
         winrt::check_bool(::SetEvent(_syncHandle.get()));
     }
 
     void Class::AdvanceAsync(int32_t delta)
     {
-        assert(_asyncResult == E_PENDING);
-        _asyncProgress += delta;
+        assert(_asyncResult.load() == E_PENDING);
+        _asyncProgress.fetch_add(delta);
         winrt::check_bool(::SetEvent(_syncHandle.get()));
     }
 
     IAsyncAction Class::DoitAsync()
     {
-        _asyncResult = E_PENDING;
+        _asyncResult.store(E_PENDING);
         co_await winrt::resume_background();
 
         auto cancel = co_await winrt::get_cancellation_token();
@@ -1280,7 +1280,7 @@ namespace winrt::TestComponentCSharp::implementation
 
         co_await winrt::resume_on_signal(_syncHandle.get());
         if (cancel()) co_return;
-        winrt::check_hresult(_asyncResult);
+        winrt::check_hresult(_asyncResult.load());
     }
 
     void Class::SetFailingCompletedHandler(IAsyncAction const& action, int32_t hr)
@@ -1302,8 +1302,8 @@ namespace winrt::TestComponentCSharp::implementation
 
     IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()
     {
-        _asyncResult = E_PENDING;
-        _asyncProgress = 0;
+        _asyncResult.store(E_PENDING);
+        _asyncProgress.store(0);
         co_await winrt::resume_background();
 
         auto cancel = co_await winrt::get_cancellation_token();
@@ -1314,16 +1314,16 @@ namespace winrt::TestComponentCSharp::implementation
         {
             co_await winrt::resume_on_signal(_syncHandle.get());
             if (cancel()) co_return;
-            if (_asyncResult != E_PENDING) break;
-            progress(_asyncProgress);
+            if (_asyncResult.load() != E_PENDING) break;
+            progress(_asyncProgress.load());
         }
 
-        winrt::check_hresult(_asyncResult);
+        winrt::check_hresult(_asyncResult.load());
     }
 
     IAsyncOperation<int32_t> Class::AddAsync(int32_t lhs, int32_t rhs)
     {
-        _asyncResult = E_PENDING;
+        _asyncResult.store(E_PENDING);
         co_await winrt::resume_background();
 
         auto cancel = co_await winrt::get_cancellation_token();
@@ -1331,14 +1331,14 @@ namespace winrt::TestComponentCSharp::implementation
 
         co_await winrt::resume_on_signal(_syncHandle.get());
         if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
-        winrt::check_hresult(_asyncResult);
+        winrt::check_hresult(_asyncResult.load());
         co_return lhs + rhs;
     }
 
     IAsyncOperationWithProgress<int32_t, int32_t> Class::AddAsyncWithProgress(int32_t lhs, int32_t rhs)
     {
-        _asyncResult = E_PENDING;
-        _asyncProgress = 0;
+        _asyncResult.store(E_PENDING);
+        _asyncProgress.store(0);
         co_await winrt::resume_background();
 
         auto cancel = co_await winrt::get_cancellation_token();
@@ -1349,11 +1349,11 @@ namespace winrt::TestComponentCSharp::implementation
         {
             co_await winrt::resume_on_signal(_syncHandle.get());
             if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
-            if (_asyncResult != E_PENDING) break;
-            progress(_asyncProgress);
+            if (_asyncResult.load() != E_PENDING) break;
+            progress(_asyncProgress.load());
         }
 
-        winrt::check_hresult(_asyncResult);
+        winrt::check_hresult(_asyncResult.load());
         co_return lhs + rhs;
     }
 

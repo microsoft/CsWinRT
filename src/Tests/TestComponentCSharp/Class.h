@@ -71,8 +71,8 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Microsoft::UI::Xaml::Interop::IBindableIterable>> _bindableIterableChanged;
         winrt::event<Windows::Foundation::EventHandler<Microsoft::UI::Xaml::Interop::IBindableVector>> _bindableVectorChanged;
         winrt::handle _syncHandle;
-        int32_t _asyncResult;
-        int32_t _asyncProgress;
+        std::atomic<int32_t> _asyncResult;
+        std::atomic<int32_t> _asyncProgress;
         std::atomic<bool> _failingCompletedHandlerInvoked{ false };
         Windows::Foundation::Point _point{};
         Windows::Foundation::Rect _rect{};
