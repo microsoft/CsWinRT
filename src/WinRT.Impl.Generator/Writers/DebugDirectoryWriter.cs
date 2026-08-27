@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using AsmResolver;
 using AsmResolver.PE;
 using AsmResolver.PE.Debug;
@@ -38,9 +38,9 @@ internal static class DebugDirectoryWriter
     private const DebugDataType PdbChecksumType = (DebugDataType)19;
 
     /// <summary>
-    /// The name of the hash algorithm used for the PDB checksum.
+    /// The name of the hash algorithm used for the PDB checksum, with its null terminator.
     /// </summary>
-    private const string PdbChecksumAlgorithmName = "SHA256";
+    private static ReadOnlySpan<byte> PdbChecksumAlgorithmName => "SHA256\0"u8;
 
     /// <summary>
     /// Writes the debug directory for a forwarder assembly, embedding its portable PDB.
@@ -93,11 +93,8 @@ internal static class DebugDirectoryWriter
     {
         using MemoryStream stream = new();
 
-        byte[] algorithmName = Encoding.UTF8.GetBytes(PdbChecksumAlgorithmName);
-
-        stream.Write(algorithmName, 0, algorithmName.Length);
-        stream.WriteByte(0);
-        stream.Write(pdb.Checksum, 0, pdb.Checksum.Length);
+        stream.Write(PdbChecksumAlgorithmName);
+        stream.Write(pdb.Checksum);
 
         return stream.ToArray();
     }
