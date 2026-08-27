@@ -477,6 +477,37 @@ if (objectArr.Length != 2 || objectArr[0] is not Class c || c != instance || obj
     return 105;
 }
 
+// Regression test for https://github.com/microsoft/CsWinRT/issues/2537. Binding to the 'Keys' or 'Values'
+// of a dictionary marshals the concrete collection type behind them (eg. 'Dictionary<K, V>.ValueCollection'),
+// which never appears by name in user code and so needs to be discovered through the dictionary itself.
+var readOnlyDictionary = CustomClass.DictionaryInstance;
+
+instance.BindableIterableProperty = readOnlyDictionary.Values;
+if (readOnlyDictionary.Values != instance.BindableIterableProperty)
+{
+    return 106;
+}
+
+instance.BindableIterableProperty = readOnlyDictionary.Keys;
+if (readOnlyDictionary.Keys != instance.BindableIterableProperty)
+{
+    return 106;
+}
+
+var dictionary = CustomClass.DictionaryInstance3;
+
+instance.BindableIterableProperty = dictionary.Values;
+if (dictionary.Values != instance.BindableIterableProperty)
+{
+    return 106;
+}
+
+instance.BindableIterableProperty = dictionary.Keys;
+if (dictionary.Keys != instance.BindableIterableProperty)
+{
+    return 106;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
@@ -505,6 +536,8 @@ sealed partial class CustomClass : INotifyPropertyChanged
             return new Dictionary<int, CustomClass>();
         }
     }
+
+    public static IDictionary<string, CustomClass> DictionaryInstance3 { get; } = new Dictionary<string, CustomClass>();
 }
 
 sealed partial class CustomObservableCollection : System.Collections.ObjectModel.ObservableCollection<CustomClass>
