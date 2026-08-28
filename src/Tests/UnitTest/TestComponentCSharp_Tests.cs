@@ -2805,6 +2805,87 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public unsafe void TestDictionaryKeyAndValueCollectionInterfaceMarshalling()
+        {
+            // Binding a XAML control to a dictionary's keys or values (e.g. '{x:Bind vm.Dict.Values}') marshals
+            // the 'Dictionary<TKey, TValue>.KeyCollection'/'ValueCollection' nested types across the ABI, not the
+            // dictionary itself, which builds a CCW for them. Those types are never named in user code, because
+            // 'Keys'/'Values' are declared as 'IEnumerable<T>' on 'IReadOnlyDictionary<TKey, TValue>' and as
+            // 'ICollection<T>' on 'IDictionary<TKey, TValue>', so they only get one if the interop generator
+            // tracks them off the dictionary instantiation itself.
+            Dictionary<int, string> dictionary = new() { [0] = "zero", [1] = "one", [2] = "two" };
+
+            IReadOnlyDictionary<int, string> readOnlyDictionary = dictionary;
+            IDictionary<int, string> mutableDictionary = dictionary;
+
+            IEnumerable<int> readOnlyKeys = readOnlyDictionary.Keys;
+            IEnumerable<string> readOnlyValues = readOnlyDictionary.Values;
+            ICollection<int> keys = mutableDictionary.Keys;
+            ICollection<string> values = mutableDictionary.Values;
+
+            // Guard against the BCL changing which types it hands out, so that this test fails loudly rather
+            // than silently covering nothing. The types are deliberately identified by name: naming them in
+            // code would put them in this assembly's metadata, which is precisely what the scenario cannot
+            // rely on (the whole point is that they are only reachable through the interface members).
+            AssertIsDictionaryCollection(readOnlyKeys, "KeyCollection");
+            AssertIsDictionaryCollection(readOnlyValues, "ValueCollection");
+            AssertIsDictionaryCollection(keys, "KeyCollection");
+            AssertIsDictionaryCollection(values, "ValueCollection");
+
+            // 'IEnumerable<T>' is projected as 'IIterable<T>', and 'IEnumerable' as 'IBindableIterable'
+            AssertCcwExposesIterableInterfaces(readOnlyKeys, new Guid("81A643FB-F51C-5565-83C4-F96425777B66"));
+            AssertCcwExposesIterableInterfaces(readOnlyValues, new Guid("E2FCC7C1-3BFC-5A0B-B2B0-72E769D1CB7E"));
+
+            // Enumerate the keys from native code, through 'IIterable<int>'
+            int sum = 0;
+
+            using (IEnumerator<int> iterator = TestObject.GetIteratorForCollection(readOnlyKeys))
+            {
+                while (iterator.MoveNext())
+                {
+                    sum += iterator.Current;
+                }
+            }
+
+            Assert.AreEqual(3, sum);
+
+            // Same thing through a projected API taking a bindable iterable, which is what XAML uses to bind
+            // an 'ItemsSource'. The values have to be sequential from 0, because the native setter validates that.
+            TestObject.BindableIterableProperty = readOnlyKeys;
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, TestObject.BindableIterableProperty.Cast<int>().ToArray());
+
+            static void AssertIsDictionaryCollection(IEnumerable source, string name)
+            {
+                Assert.AreEqual($"System.Collections.Generic.Dictionary`2+{name}", source.GetType().GetGenericTypeDefinition().FullName);
+            }
+
+            static void AssertCcwExposesIterableInterfaces(IEnumerable source, Guid iidIIterable)
+            {
+                Guid iidIBindableIterable = new("036D2C08-DF29-41AF-8AA2-D774BE62BA6F");
+
+                void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(source);
+
+                try
+                {
+                    AssertHasInterface(ccw, in iidIIterable);
+                    AssertHasInterface(ccw, in iidIBindableIterable);
+                }
+                finally
+                {
+                    _ = Marshal.Release((nint)ccw);
+                }
+
+                static void AssertHasInterface(void* ccw, in Guid iid)
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, in iid, out nint interfaceCcw));
+                    Assert.AreNotEqual(IntPtr.Zero, interfaceCcw);
+
+                    _ = Marshal.Release(interfaceCcw);
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();
