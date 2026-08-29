@@ -1654,6 +1654,8 @@ namespace Generator
                 return;
             }
 
+            bool isDictionary = false;
+
             foreach (var iface in classType.AllInterfaces)
             {
                 if (iface.MetadataName == "IEnumerable`1")
@@ -1662,7 +1664,20 @@ namespace Generator
                 }
                 else if (iface.MetadataName == "IDictionary`2")
                 {
+                    isDictionary = true;
+
                     LookupAndAddVtableAttributeForGenericType("System.Collections.ObjectModel.ReadOnlyDictionary`2", iface.TypeArguments);
+                    LookupAndAddVtableAttributeForGenericType("System.Collections.Generic.KeyValuePair`2", iface.TypeArguments);
+                    LookupAndAddVtableAttributeForGenericType("ABI.System.Collections.Generic.ConstantSplittableMap`2", iface.TypeArguments);
+                }
+                else if (iface.MetadataName == "IReadOnlyDictionary`2")
+                {
+                    isDictionary = true;
+
+                    // 'IReadOnlyDictionary<K, V>' is projected as 'IMapView<K, V>'. Iterating it hands out
+                    // 'KeyValuePair<K, V>' values and its 'Split' method hands out 'ConstantSplittableMap<K, V>'
+                    // instances, so both need CCW entries. Types also implementing 'IDictionary<K, V>' get these
+                    // from the branch above, but types only implementing the read only interface would be missed.
                     LookupAndAddVtableAttributeForGenericType("System.Collections.Generic.KeyValuePair`2", iface.TypeArguments);
                     LookupAndAddVtableAttributeForGenericType("ABI.System.Collections.Generic.ConstantSplittableMap`2", iface.TypeArguments);
                 }
@@ -1670,6 +1685,12 @@ namespace Generator
                 {
                     LookupAndAddVtableAttributeForGenericType("System.Collections.ObjectModel.ReadOnlyCollection`1", iface.TypeArguments);
                 }
+            }
+
+            if (isDictionary)
+            {
+                AddVtableAttributesForDictionaryCollectionProperty("Keys");
+                AddVtableAttributesForDictionaryCollectionProperty("Values");
             }
 
             if (classType is INamedTypeSymbol namedType && IsDerivedFromOrIsObservableCollection(namedType))
@@ -1721,6 +1742,48 @@ namespace Generator
                     if (vtableAttribute != default)
                     {
                         vtableAttributes.Add(vtableAttribute);
+                    }
+                }
+            }
+
+            // The 'Keys' and 'Values' properties of a dictionary hand out concrete collection types (e.g.
+            // 'Dictionary<K, V>.ValueCollection') which never appear by name in user code and are therefore
+            // never discovered by the rest of the generator. They are commonly marshaled on their own though
+            // (e.g. '{x:Bind ViewModel.Dictionary.Values}'), which requires a CCW for them, so add one here.
+            void AddVtableAttributesForDictionaryCollectionProperty(string propertyName)
+            {
+                for (ITypeSymbol type = classType; type is not null; type = type.BaseType)
+                {
+                    foreach (var member in type.GetMembers(propertyName))
+                    {
+                        // Only consider the public property, as the explicit interface implementations just return
+                        // the same instance typed as an interface, which tells us nothing about the concrete type.
+                        if (member is not IPropertySymbol
+                            {
+                                IsStatic: false,
+                                DeclaredAccessibility: Accessibility.Public,
+                                Type: INamedTypeSymbol { TypeKind: TypeKind.Class, IsAbstract: false } collectionType
+                            })
+                        {
+                            continue;
+                        }
+
+                        var vtableAttribute = GetVtableAttributeToAdd(collectionType, isManagedOnlyType, isWinRTType, mapper, compilation, false);
+                        if (vtableAttribute != default)
+                        {
+                            vtableAttributes.Add(vtableAttribute);
+                        }
+
+                        // The native caller will enumerate the collection, so it needs the enumerator adapter too.
+                        foreach (var collectionInterface in collectionType.AllInterfaces)
+                        {
+                            if (collectionInterface.MetadataName == "IEnumerable`1")
+                            {
+                                AddEnumeratorAdapterForType(collectionInterface.TypeArguments[0], mapper, compilation, isManagedOnlyType, isWinRTType, vtableAttributes);
+                            }
+                        }
+
+                        return;
                     }
                 }
             }

@@ -174,6 +174,138 @@ public class AotOptimizerTests
         Assert.IsFalse(generated.Contains("System.Collections.ObjectModel.ObservableCollection`1[System.String]"));
     }
 
+    // Regression tests for https://github.com/microsoft/CsWinRT/issues/2537. A dictionary hands out its 'Keys' and
+    // 'Values' as concrete collection types (eg. 'Dictionary<K, V>.ValueCollection') that never appear by name in
+    // user code, so nothing else in the generator discovers them. Additionally, 'IReadOnlyDictionary<K, V>' (which
+    // is projected as 'IMapView<K, V>') needs the same adapter types as 'IDictionary<K, V>' for iteration and for
+    // 'IMapView.Split', which were previously only gathered for types implementing 'IDictionary<K, V>'.
+
+    [TestMethod]
+    public void ReadOnlyDictionary_DiscoversKeyAndValueCollections()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class ViewModel
+            {
+                public IReadOnlyDictionary<int, string> Dict { get; } = new Dictionary<int, string>();
+
+                public static IReadOnlyDictionary<string, byte> OtherDict => new Dictionary<string, byte>();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.Dictionary`2+KeyCollection[System.Int32,System.String]"));
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.Dictionary`2+ValueCollection[System.Int32,System.String]"));
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.Dictionary`2+KeyCollection[System.String,System.Byte]"));
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.Dictionary`2+ValueCollection[System.String,System.Byte]"));
+
+        // The native caller iterates those collections, so their enumerator adapters are needed as well
+        Assert.IsTrue(generated.Contains("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.Int32]"));
+        Assert.IsTrue(generated.Contains("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.String]"));
+        Assert.IsTrue(generated.Contains("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.Byte]"));
+    }
+
+    [TestMethod]
+    public void Dictionary_DiscoversKeyAndValueCollections()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class ViewModel
+            {
+                public IDictionary<int, string> Dict { get; } = new Dictionary<int, string>();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.Dictionary`2+KeyCollection[System.Int32,System.String]"));
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.Dictionary`2+ValueCollection[System.Int32,System.String]"));
+        Assert.IsTrue(generated.Contains("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.Int32]"));
+        Assert.IsTrue(generated.Contains("ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.String]"));
+    }
+
+    [TestMethod]
+    public void ReadOnlyDictionaryOnlyType_DiscoversIterationAndSplitAdapters()
+    {
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            internal partial class ReadOnlyDict : IReadOnlyDictionary<int, string>
+            {
+                public string this[int key] => throw null;
+                public IEnumerable<int> Keys => throw null;
+                public IEnumerable<string> Values => throw null;
+                public int Count => 0;
+                public bool ContainsKey(int key) => false;
+                public bool TryGetValue(int key, out string value) { value = null; return false; }
+                public IEnumerator<KeyValuePair<int, string>> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+
+            internal class ViewModel
+            {
+                public object Dict { get; } = new ReadOnlyDict();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        // 'IMapView.Split' hands out 'ConstantSplittableMap<K, V>' instances, and iterating the map hands
+        // out 'KeyValuePair<K, V>' values, so both need CCW entries of their own. The assertions match the
+        // lookup table keys exactly, as those bare type names also appear nested inside other keys.
+        Assert.IsTrue(generated.Contains("== \"ABI.System.Collections.Generic.ConstantSplittableMap`2[System.Int32,System.String]\""));
+        Assert.IsTrue(generated.Contains("== \"System.Collections.Generic.KeyValuePair`2[System.Int32,System.String]\""));
+    }
+
+    [TestMethod]
+    public void CustomDictionary_DiscoversConcreteKeyAndValueCollections()
+    {
+        // The discovery is not specific to 'Dictionary<K, V>': any dictionary handing out its keys and values
+        // through concrete collection types needs those collections on the CCW lookup table as well. The keys
+        // here are typed as an interface though, so there is no concrete type to discover for them.
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            internal sealed class ValueView : IEnumerable<string>
+            {
+                public IEnumerator<string> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+
+            internal partial class ReadOnlyDict : IReadOnlyDictionary<int, string>
+            {
+                public string this[int key] => throw null;
+                public IEnumerable<int> Keys => throw null;
+                public ValueView Values => throw null;
+                IEnumerable<string> IReadOnlyDictionary<int, string>.Values => Values;
+                public int Count => 0;
+                public bool ContainsKey(int key) => false;
+                public bool TryGetValue(int key, out string value) { value = null; return false; }
+                public IEnumerator<KeyValuePair<int, string>> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => throw null;
+            }
+
+            internal class ViewModel
+            {
+                public object Dict { get; } = new ReadOnlyDict();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("== \"ValueView\""));
+        Assert.IsTrue(generated.Contains("== \"ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.String]\""));
+
+        // 'Keys' is typed as 'IEnumerable<int>', which is not an instantiable type, so nothing is registered for it
+        Assert.IsFalse(generated.Contains("== \"System.Collections.Generic.IEnumerable`1[System.Int32]\""));
+        Assert.IsFalse(generated.Contains("== \"ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.Int32]\""));
+    }
+
     private static string RunAotOptimizer(string source)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));
