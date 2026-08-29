@@ -20,7 +20,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="innerInstanceUnknown">The inner COM object, for COM aggregation scenarios.</param>
     /// <param name="newInstanceIid">The IID for the new instance.</param>
     /// <param name="marshalingType">The marshaling type to use for the input native object (either <paramref name="newInstanceUnknown"/> or <paramref name="innerInstanceUnknown"/>).</param>
-    /// <param name="objectReference">The <see cref="WindowsRuntimeObjectReference"/> wrapping the input COM objects.</param>
+    /// <param name="objectReference">The resulting <see cref="WindowsRuntimeObjectReference"/> instance wrapping the input COM object.</param>
     /// <remarks>
     /// <para>
     /// This method differs from <see cref="AttachUnsafe(ref void*, in Guid)"/> and other factory methods in that it also handles
@@ -214,7 +214,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // All the information gathered will flow into the creation flags for our object reference instance.
         CreateObjectReferenceFlags createObjectReferenceFlags = CreateObjectReferenceFlags.None;
 
-        // Set up reference tracking and ownership before the 'ComWrappers' registration below.
+        // Set up reference tracking and ownership before the 'ComWrappers' registration below
         if (isAggregation)
         {
             // Aggregation scenarios should avoid calling 'AddRef' on the 'acquiredNewInstanceUnknown' object.
@@ -305,18 +305,18 @@ public unsafe partial class WindowsRuntimeObjectReference
             // This allows 'ComWrappers' to manage the inner lifetime based on whether this is a
             // XAML reference tracker scenario or not (aggregation is not exclusive to XAML).
             _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance(
-                (nint)acquiredNewInstanceUnknown,
-                createObjectFlags,
-                thisInstance,
-                (nint)acquiredInnerInstanceUnknown);
+                externalComObject: (nint)acquiredNewInstanceUnknown,
+                flags: createObjectFlags,
+                wrapper: thisInstance,
+                inner: (nint)acquiredInnerInstanceUnknown);
         }
         else
         {
             // Same registration as for COM aggregation without reference tracker support for the inner instance (see above)
             _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance(
-                (nint)acquiredNewInstanceUnknown,
-                createObjectFlags,
-                thisInstance);
+                externalComObject: (nint)acquiredNewInstanceUnknown,
+                flags: createObjectFlags,
+                wrapper: thisInstance);
         }
     }
 

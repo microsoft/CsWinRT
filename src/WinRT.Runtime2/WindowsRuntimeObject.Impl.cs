@@ -23,6 +23,11 @@ namespace WindowsRuntime;
 public unsafe partial class WindowsRuntimeObject
 {
     /// <summary>
+    /// The native object reference wrapped by the current instance.
+    /// </summary>
+    private readonly WindowsRuntimeObjectReference _nativeObjectReference;
+
+    /// <summary>
     /// The lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
     /// </summary>
     /// <remarks>
@@ -37,11 +42,6 @@ public unsafe partial class WindowsRuntimeObject
     /// The lazy-loaded cache of additional data associated to type handles.
     /// </summary>
     private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
-
-    /// <summary>
-    /// The native object reference wrapped by the current instance.
-    /// </summary>
-    private readonly WindowsRuntimeObjectReference _nativeObjectReference;
 
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
@@ -284,7 +284,11 @@ public unsafe partial class WindowsRuntimeObject
     /// This object reference should point to an <c>IInspectable</c> native object.
     /// </remarks>
     [WindowsRuntimeImplementationOnlyMember]
-    protected internal WindowsRuntimeObjectReference NativeObjectReference => _nativeObjectReference;
+    protected internal WindowsRuntimeObjectReference NativeObjectReference
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _nativeObjectReference;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the current instance has an unwrappable native object reference.
