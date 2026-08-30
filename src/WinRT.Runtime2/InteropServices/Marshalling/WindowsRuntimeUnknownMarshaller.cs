@@ -35,6 +35,17 @@ public static unsafe class WindowsRuntimeUnknownMarshaller
             return new(windowsRuntimeObject.NativeObjectReference);
         }
 
+        if (WindowsRuntimeAggregation.TryQueryControllingOuter(
+            instance: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IUnknown,
+            interfacePtr: out void* aggregatedPtr,
+            hresult: out HRESULT aggregatedHResult))
+        {
+            Marshal.ThrowExceptionForHR(aggregatedHResult);
+
+            return new(aggregatedPtr);
+        }
+
         // If 'value' is a managed wrapper for a native delegate, return the wrapped native delegate directly
         if (value is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
         {

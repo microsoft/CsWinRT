@@ -22,11 +22,17 @@ internal sealed partial class WinMDWriter
         /// <summary>Contains static methods, properties, and events from the class.</summary>
         Static,
 
-        /// <summary>Contains factory methods (parameterized constructors projected as <c>Create</c> methods).</summary>
+        /// <summary>Contains activation or composition factory methods projected from constructors.</summary>
         Factory,
 
         /// <summary>Contains instance methods, properties, and events not from implemented interfaces.</summary>
-        Default
+        Default,
+
+        /// <summary>Contains the instance members a composable class only exposes to derived types.</summary>
+        Protected,
+
+        /// <summary>Contains the instance members a derived type is allowed to override.</summary>
+        Overridable
     }
 
     /// <summary>
@@ -34,7 +40,8 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// The convention is: <c>I{ClassName}Class</c> for default, <c>I{ClassName}Factory</c>
-    /// for factory, and <c>I{ClassName}Static</c> for static interfaces.
+    /// for factory, <c>I{ClassName}Static</c> for static, <c>I{ClassName}Protected</c> for protected,
+    /// and <c>I{ClassName}Overrides</c> for overridable interfaces.
     /// </remarks>
     /// <param name="className">The simple name of the runtime class.</param>
     /// <param name="type">The type of synthesized interface.</param>
@@ -46,6 +53,8 @@ internal sealed partial class WinMDWriter
             SynthesizedInterfaceType.Default => "Class",
             SynthesizedInterfaceType.Factory => "Factory",
             SynthesizedInterfaceType.Static => "Static",
+            SynthesizedInterfaceType.Protected => "Protected",
+            SynthesizedInterfaceType.Overridable => "Overrides",
             _ => "",
         };
     }
@@ -142,6 +151,15 @@ internal sealed partial class WinMDWriter
         AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Static, membersFromInterfaces);
         AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Factory, membersFromInterfaces);
         AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Default, membersFromInterfaces);
+
+        // Only a composable class can be derived from outside the component, so it is the only shape for
+        // which the protected and overridable surfaces are meaningful. For every other runtime class those
+        // members stay entirely internal to the component, exactly as they were before.
+        if (HasPublicCompositionFactory(inputType))
+        {
+            AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Protected, membersFromInterfaces);
+            AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Overridable, membersFromInterfaces);
+        }
     }
 
     /// <summary>
@@ -152,8 +170,8 @@ internal sealed partial class WinMDWriter
     /// The interface is only emitted if it has at least one member, or if it is the default interface
     /// and the class has no other interface implementations. When emitted, the interface receives
     /// <c>[Version]</c>, <c>[Guid]</c>, and <c>[ExclusiveTo]</c> attributes, and the appropriate
-    /// metadata attribute is added to the class (<c>[Activatable]</c> for factory, <c>[Static]</c>
-    /// for static, <c>[Default]</c> for default).
+    /// metadata attribute is added to the class (<c>[Activatable]</c> or <c>[Composable]</c>
+    /// for factory, <c>[Static]</c> for static, <c>[Default]</c> for default).
     /// </para>
     /// </remarks>
     /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
@@ -183,9 +201,33 @@ internal sealed partial class WinMDWriter
 
         TypeDefinition synthesizedInterface = new(@namespace, interfaceName, typeAttributes);
 
+        bool isComposable = HasPublicCompositionFactory(inputType);
+
         // Add members to the synthesized interface
         foreach (MethodDefinition method in inputType.Methods)
         {
+            if (interfaceType == SynthesizedInterfaceType.Protected)
+            {
+                if (!method.IsSpecialName && IsComposableProtectedMember(method))
+                {
+                    hasMembers = true;
+                    AddMethodToInterface(synthesizedInterface, method);
+                }
+
+                continue;
+            }
+
+            if (interfaceType == SynthesizedInterfaceType.Overridable)
+            {
+                if (!method.IsSpecialName && IsComposableOverridableMember(inputType, method))
+                {
+                    hasMembers = true;
+                    AddMethodToInterface(synthesizedInterface, method);
+                }
+
+                continue;
+            }
+
             if (!method.IsPublic)
             {
                 continue;
@@ -193,11 +235,11 @@ internal sealed partial class WinMDWriter
 
             if (interfaceType == SynthesizedInterfaceType.Factory &&
                 method.IsConstructor &&
-                method.Parameters.Count > 0)
+                (isComposable ||
+                 (!inputType.IsAbstract && method.Parameters.Count > 0)))
             {
-                // Factory methods: parameterized constructors become Create methods
                 hasMembers = true;
-                AddFactoryMethod(synthesizedInterface, inputType, method);
+                AddFactoryMethod(synthesizedInterface, inputType, method, isComposable: HasPublicCompositionFactory(inputType));
             }
             else if (interfaceType == SynthesizedInterfaceType.Static && method.IsStatic && !method.IsConstructor && !method.IsSpecialName)
             {
@@ -206,6 +248,18 @@ internal sealed partial class WinMDWriter
             }
             else if (interfaceType == SynthesizedInterfaceType.Default && !method.IsStatic && !method.IsConstructor && !method.IsSpecialName)
             {
+                // Overridable members of a composable class belong on its '[Overridable]' interface
+                if (isComposable && IsComposableOverridableMember(inputType, method))
+                {
+                    continue;
+                }
+
+                // An override of an authored base class member is already declared by that base class
+                if (method.IsVirtual && !method.IsNewSlot && OverridesAuthoredBaseMember(inputType, method.Name?.Value ?? ""))
+                {
+                    continue;
+                }
+
                 // Only include members not already from an interface
                 if (!membersFromInterfaces.Contains(method.Name?.Value ?? ""))
                 {
@@ -218,10 +272,44 @@ internal sealed partial class WinMDWriter
         // Add properties
         foreach (PropertyDefinition property in inputType.Properties)
         {
+            if (GetPrimaryAccessor(property) is { IsVirtual: true, IsNewSlot: false } overrideAccessor &&
+                OverridesAuthoredBaseMember(inputType, overrideAccessor.Name?.Value ?? ""))
+            {
+                continue;
+            }
+
+            if (interfaceType == SynthesizedInterfaceType.Protected)
+            {
+                if (IsComposableProtectedProperty(property))
+                {
+                    hasMembers = true;
+                    AddPropertyToType(synthesizedInterface, property, isInterfaceParent: true, allowNonPublicSetter: true);
+                }
+
+                continue;
+            }
+
+            if (interfaceType == SynthesizedInterfaceType.Overridable)
+            {
+                if (IsComposableOverridableProperty(inputType, property))
+                {
+                    hasMembers = true;
+                    AddPropertyToType(synthesizedInterface, property, isInterfaceParent: true, allowNonPublicSetter: true);
+                }
+
+                continue;
+            }
+
             bool isStatic = property.GetMethod?.IsStatic == true || property.SetMethod?.IsStatic == true;
             bool isPublic = property.GetMethod?.IsPublic == true || property.SetMethod?.IsPublic == true;
 
             if (!isPublic)
+            {
+                continue;
+            }
+
+            // Overridable properties of a composable class belong on its '[Overridable]' interface
+            if (isComposable && IsComposableOverridableProperty(inputType, property))
             {
                 continue;
             }
@@ -268,6 +356,15 @@ internal sealed partial class WinMDWriter
         // Add events
         foreach (EventDefinition @event in inputType.Events)
         {
+            // Protected and overridable events are not projected: an event accessor pair has no
+            // '[UnsafeAccessor]'-based CCW dispatch in the generated projection, so exposing them
+            // would produce a vtable that cannot be implemented. They stay internal to the component,
+            // exactly as they did before composable classes were supported.
+            if (interfaceType is SynthesizedInterfaceType.Protected or SynthesizedInterfaceType.Overridable)
+            {
+                break;
+            }
+
             bool isStatic = @event.AddMethod?.IsStatic == true;
             bool isPublic = @event.AddMethod?.IsPublic == true || @event.RemoveMethod?.IsPublic == true;
 
@@ -295,7 +392,10 @@ internal sealed partial class WinMDWriter
         }
 
         // Only emit the interface if it has members, or if it's the default and the class has no other interfaces
-        if (hasMembers || (interfaceType == SynthesizedInterfaceType.Default && inputType.Interfaces.Count == 0))
+        if (hasMembers ||
+            (interfaceType == SynthesizedInterfaceType.Default &&
+             (inputType.Interfaces.Count == 0 ||
+              (isComposable && !HasUsableDefaultInterface(inputType)))))
         {
             _outputModule.TopLevelTypes.Add(synthesizedInterface);
 
@@ -317,6 +417,23 @@ internal sealed partial class WinMDWriter
                 // Add '[Default]' attribute on the interface implementation
                 AddDefaultAttribute(interfaceImpl);
             }
+            else if (interfaceType is SynthesizedInterfaceType.Protected or SynthesizedInterfaceType.Overridable)
+            {
+                // The class implements its protected and overridable interfaces, with the marker attribute
+                // on the interface implementation itself (this is where MIDL places them too), so that both
+                // the CsWinRT and the C++/WinRT projections can tell them apart from the public surface.
+                InterfaceImplementation interfaceImpl = new(EnsureTypeReference(synthesizedInterface));
+                classOutputType.Interfaces.Add(interfaceImpl);
+
+                if (interfaceType == SynthesizedInterfaceType.Protected)
+                {
+                    AddProtectedAttribute(interfaceImpl);
+                }
+                else
+                {
+                    AddOverridableAttribute(interfaceImpl);
+                }
+            }
 
             // Add version attribute
             AddVersionAttribute(synthesizedInterface, version);
@@ -329,7 +446,14 @@ internal sealed partial class WinMDWriter
 
             if (interfaceType == SynthesizedInterfaceType.Factory)
             {
-                AddActivatableAttribute(classOutputType, (uint)version, qualifiedInterfaceName);
+                if (HasPublicCompositionFactory(inputType))
+                {
+                    AddComposableAttribute(classOutputType, (uint)version, qualifiedInterfaceName);
+                }
+                else
+                {
+                    AddActivatableAttribute(classOutputType, (uint)version, qualifiedInterfaceName);
+                }
             }
             else if (interfaceType == SynthesizedInterfaceType.Static)
             {
@@ -343,29 +467,51 @@ internal sealed partial class WinMDWriter
     /// Adds a factory method to a synthesized factory interface.
     /// </summary>
     /// <remarks>
-    /// Parameterized constructors are projected as <c>Create{ClassName}</c> factory methods
-    /// in the factory interface. The return type is the runtime class itself.
+    /// Constructors are projected as <c>Create{ClassName}</c> factory methods. Composable
+    /// factories also receive the controlling outer and return the non-delegating inner.
     /// </remarks>
     /// <param name="synthesizedInterface">The factory interface to add the method to.</param>
     /// <param name="classType">The input class <see cref="TypeDefinition"/>.</param>
-    /// <param name="constructor">The parameterized constructor <see cref="MethodDefinition"/>.</param>
-    private void AddFactoryMethod(TypeDefinition synthesizedInterface, TypeDefinition classType, MethodDefinition constructor)
+    /// <param name="constructor">The constructor <see cref="MethodDefinition"/>.</param>
+    /// <param name="isComposable">Whether to append the controlling outer and non-delegating inner parameters.</param>
+    private void AddFactoryMethod(
+        TypeDefinition synthesizedInterface,
+        TypeDefinition classType,
+        MethodDefinition constructor,
+        bool isComposable)
     {
         // Look up the output class TypeDefinition to use as the return type
         string classFullName = classType.FullName;
         TypeDefinition outputClassType = _typeDefinitionMapping[classFullName].OutputType!;
         TypeSignature returnType = new TypeDefOrRefSignature(outputClassType, isValueType: false);
 
-        TypeSignature[] parameterTypes = [.. constructor.Signature!.ParameterTypes
+        List<TypeSignature> parameterTypes = [.. constructor.Signature!.ParameterTypes
             .Select(MapTypeSignatureToOutput)];
+
+        if (isComposable)
+        {
+            parameterTypes.Add(_outputModule.CorLibTypeFactory.Object);
+            parameterTypes.Add(_outputModule.CorLibTypeFactory.Object.MakeByReferenceType());
+        }
 
         MethodDefinition factoryMethod = new(
             name: "Create" + classType.Name!.Value,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
             signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter definitions with correct Windows Runtime attributes
         AddParameterDefinitions(factoryMethod, constructor);
+
+        if (isComposable)
+        {
+            factoryMethod.ParameterDefinitions.Add(new ParameterDefinition(
+                sequence: (ushort)(constructor.Parameters.Count + 1),
+                name: "baseInterface",
+                attributes: AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes.In));
+            factoryMethod.ParameterDefinitions.Add(new ParameterDefinition(
+                sequence: (ushort)(constructor.Parameters.Count + 2),
+                name: "innerInterface",
+                attributes: AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes.Out));
+        }
 
         synthesizedInterface.Methods.Add(factoryMethod);
     }

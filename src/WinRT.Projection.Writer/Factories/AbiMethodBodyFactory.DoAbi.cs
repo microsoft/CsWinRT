@@ -21,7 +21,23 @@ internal static partial class AbiMethodBodyFactory
     /// implementation that uses simple per-marshaller patterns inline rather than the
     /// fully-general <c>abi_marshaler</c> abstraction.
     /// </summary>
-    internal static void EmitDoAbiBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string ifaceFullName, string methodName)
+    /// <param name="writer">The writer to emit the body to.</param>
+    /// <param name="context">The active projection emit context.</param>
+    /// <param name="sig">The signature of the member being implemented.</param>
+    /// <param name="ifaceFullName">The fully qualified name of the type implementing the interface.</param>
+    /// <param name="methodName">The metadata name of the member being implemented.</param>
+    /// <param name="useUnsafeAccessorDispatch">
+    /// Whether to dispatch through an <c>[UnsafeAccessor]</c> rather than calling the member directly. This is
+    /// needed for the <c>[Protected]</c> and <c>[Overridable]</c> interfaces of an authored composable class,
+    /// whose members are not public on it (see <c>ComposableTypeHelpers.IsProtectedOrOverridableInterface</c>).
+    /// </param>
+    internal static void EmitDoAbiBodyIfSimple(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        MethodSignatureInfo sig,
+        string ifaceFullName,
+        string methodName,
+        bool useUnsafeAccessorDispatch = false)
     {
         TypeSignature? rt = sig.ReturnType;
 
@@ -363,6 +379,26 @@ internal static partial class AbiMethodBodyFactory
                 }
             }
 
+            // The '[Protected]' and '[Overridable]' members of an authored composable class are not public on
+            // it, so the CCW dispatches through an '[UnsafeAccessor]' declared right before the call site. The
+            // Windows Runtime property setter prefix ('put_') is translated back to the C# one ('set_'), and
+            // the accessor uses the projected signature, which is exactly what the direct call would use.
+            string accessorFunctionName = "__AuthoredMemberAccessor";
+
+            if (useUnsafeAccessorDispatch)
+            {
+                string accessName = isSetter ? "set_" + methodName[4..] : methodName;
+
+                UnsafeAccessorFactory.EmitInstanceMethod(
+                    writer,
+                    accessName: accessName,
+                    returnType: MethodFactory.WriteProjectionReturnType(context, sig).Format(),
+                    functionName: accessorFunctionName,
+                    receiverType: ifaceFullName,
+                    receiverName: "__instance",
+                    parameterList: MethodFactory.WriteParameterList(context, sig).Format());
+            }
+
             if (returnIsString)
             {
                 writer.Write($"{retLocalName} = ");
@@ -384,18 +420,44 @@ internal static partial class AbiMethodBodyFactory
             if (isGetter)
             {
                 string propName = methodName[4..];
-                writer.WriteLine($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName};");
+
+                if (useUnsafeAccessorDispatch)
+                {
+                    writer.WriteLine($"{accessorFunctionName}({WriteDoAbiInstance(ifaceFullName)});");
+                }
+                else
+                {
+                    writer.WriteLine($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName};");
+                }
             }
             else if (isSetter)
             {
                 string propName = methodName[4..];
-                writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
-                EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
-                writer.WriteLine(";");
+
+                if (useUnsafeAccessorDispatch)
+                {
+                    writer.Write($"{accessorFunctionName}({WriteDoAbiInstance(ifaceFullName)}, ");
+                    EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
+                    writer.WriteLine(");");
+                }
+                else
+                {
+                    writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
+                    EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
+                    writer.WriteLine(";");
+                }
             }
             else
             {
-                writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{methodName}(");
+                if (useUnsafeAccessorDispatch)
+                {
+                    writer.Write($"{accessorFunctionName}({WriteDoAbiInstance(ifaceFullName)}");
+                }
+                else
+                {
+                    writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{methodName}(");
+                }
+
                 for (int i = 0; i < sig.Parameters.Count; i++)
                 {
                     if (i > 0)
@@ -405,6 +467,11 @@ internal static partial class AbiMethodBodyFactory
                           
                         """);
                     }
+                    else if (useUnsafeAccessorDispatch)
+                    {
+                        writer.Write(", ");
+                    }
+
                     ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
@@ -727,6 +794,106 @@ internal static partial class AbiMethodBodyFactory
             }
         }
         writer.WriteLine();
+    }
+
+    /// <summary>
+    /// Writes the expression resolving the managed instance behind a CCW pointer in a Do_Abi body.
+    /// </summary>
+    /// <param name="ifaceFullName">The fully qualified name of the type implementing the interface.</param>
+    /// <returns>The <c>ComInterfaceDispatch.GetInstance</c> expression.</returns>
+    private static string WriteDoAbiInstance(string ifaceFullName)
+    {
+        return $"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr)";
+    }
+
+    /// <summary>
+    /// Emits the CCW body of a composition factory method for an authored (unsealed) runtime class.
+    /// </summary>
+    /// <param name="writer">The writer to emit the body to.</param>
+    /// <param name="context">The active projection emit context.</param>
+    /// <param name="sig">The signature of the composition factory method.</param>
+    /// <param name="ifaceFullName">The fully qualified name of the type implementing the factory interface.</param>
+    /// <param name="methodName">The name of the composition factory method.</param>
+    /// <remarks>
+    /// <para>
+    /// Unlike every other CCW body, the trailing controlling outer and non-delegating inner parameters are
+    /// forwarded as raw pointers rather than being marshalled: the controlling outer is only partially
+    /// constructed at this point (C++/WinRT sets it up right before calling the factory), so calling
+    /// <c>QueryInterface</c> or <c>AddRef</c> on it — which is exactly what building an RCW would do — is
+    /// not allowed. The authored constructor parameters are marshalled normally.
+    /// </para>
+    /// <para>
+    /// Array and generic instance constructor parameters are not supported by composition factories (see
+    /// <c>CSWINRTWINMDGEN0016</c>, which rejects them when the component is authored). If one is ever seen
+    /// here anyway, the factory is stubbed out to return <c>E_NOTIMPL</c>: a CCW body runs under
+    /// <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute"/>, so letting an exception
+    /// escape it would terminate the process rather than fail the call.
+    /// </para>
+    /// </remarks>
+    internal static void EmitDoAbiComposableFactoryBody(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        MethodSignatureInfo sig,
+        string ifaceFullName,
+        string methodName)
+    {
+        int userParameterCount = sig.Parameters.Count - 2;
+        string controllingOuterName = ComponentFactory.GetControllingOuterParameterName(sig);
+        string nonDelegatingInnerName = ComponentFactory.GetNonDelegatingInnerParameterName(sig);
+        string returnValueName = sig.GetReturnNameInfo().ValuePointer;
+
+        // Array and generic instance constructor parameters need the extra locals the general purpose CCW body
+        // declares (an 'InlineArray16<T>'/'ArrayPool<T>' pair, or a hoisted '[UnsafeAccessor]' respectively), so
+        // they are not supported here. Emitting 'E_NOTIMPL' keeps the ABI contract intact: the composing caller
+        // gets a well defined COM failure (which C++/WinRT surfaces as 'hresult_not_implemented'), instead of an
+        // exception escaping an '[UnmanagedCallersOnly]' method and taking the whole process down with it.
+        for (int i = 0; i < userParameterCount; i++)
+        {
+            TypeSignature parameterType = sig.Parameters[i].Type.StripByRefAndCustomModifiers();
+
+            if (parameterType is SzArrayTypeSignature || parameterType.IsGenericInstance())
+            {
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, $$"""
+                    {
+                        *{{returnValueName}} = default;
+                        *{{nonDelegatingInnerName}} = default;
+                        return unchecked((int)0x80004001);
+                    }
+                    """);
+
+                return;
+            }
+        }
+
+        void WriteArguments(IndentedTextWriter writer)
+        {
+            for (int i = 0; i < userParameterCount; i++)
+            {
+                EmitDoAbiParamArgConversion(writer, context, sig.Parameters[i]);
+
+                writer.Write(", ");
+            }
+
+            writer.Write($"{controllingOuterName}, {nonDelegatingInnerName}");
+        }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            {
+                *{{returnValueName}} = default;
+                *{{nonDelegatingInnerName}} = default;
+                try
+                {
+                    *{{returnValueName}} = ComInterfaceDispatch.GetInstance<{{ifaceFullName}}>((ComInterfaceDispatch*)thisPtr).{{methodName}}({{WriteArguments}});
+                    return 0;
+                }
+                catch (Exception __exception__)
+                {
+                    return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
+                }
+            }
+            """);
     }
 
     /// <summary>

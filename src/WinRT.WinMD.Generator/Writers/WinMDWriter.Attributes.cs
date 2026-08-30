@@ -16,6 +16,12 @@ namespace WindowsRuntime.WinMDGenerator.Writers;
 internal sealed partial class WinMDWriter
 {
     /// <summary>
+    /// The full name of the attribute marking an authored interface as an <c>[Overridable]</c> interface of the
+    /// composable runtime classes implementing it (see <c>WindowsRuntimeOverridableAttribute</c> in the runtime).
+    /// </summary>
+    private const string WindowsRuntimeOverridableAttributeName = "WindowsRuntime.WindowsRuntimeOverridableAttribute";
+
+    /// <summary>
     /// Adds a <c>[Guid]</c> attribute to an output type, sourced from the input type's
     /// <c>[Guid]</c> attribute or generated from the type name using SHA1 (UUID v5).
     /// </summary>
@@ -228,6 +234,46 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
+    /// Adds a public <c>[Composable]</c> attribute to an unsealed runtime class.
+    /// </summary>
+    private void AddComposableAttribute(TypeDefinition outputType, uint version, string factoryInterface)
+    {
+        TypeReference composableAttrType = GetOrCreateTypeReference(
+            @namespace: "Windows.Foundation.Metadata",
+            name: "ComposableAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
+        TypeReference compositionType = GetOrCreateTypeReference(
+            @namespace: "Windows.Foundation.Metadata",
+            name: "CompositionType",
+            assemblyName: "Windows.Foundation.FoundationContract");
+        TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
+
+        MemberReference ctor = new(
+            parent: composableAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(
+                returnType: _outputModule.CorLibTypeFactory.Void,
+                parameterTypes:
+                [
+                    systemType.ToTypeSignature(false),
+                    compositionType.ToTypeSignature(true),
+                    _outputModule.CorLibTypeFactory.UInt32
+                ]));
+
+        CustomAttributeSignature signature = new()
+        {
+            FixedArguments =
+            {
+                new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)),
+                new CustomAttributeArgument(compositionType.ToTypeSignature(true), 2),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version)
+            }
+        };
+
+        outputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
+    }
+
+    /// <summary>
     /// Adds a <c>[Static]</c> attribute to the class output type, referencing the static interface.
     /// </summary>
     /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> to add the attribute to.</param>
@@ -312,6 +358,57 @@ internal sealed partial class WinMDWriter
             signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void));
 
         interfaceImpl.CustomAttributes.Add(new CustomAttribute(ctor, new CustomAttributeSignature()));
+    }
+
+    /// <summary>
+    /// Adds a <c>[Protected]</c> attribute to an interface implementation on a class.
+    /// </summary>
+    /// <remarks>
+    /// The <c>[Protected]</c> attribute marks the exclusive interface carrying the members a composable
+    /// runtime class only exposes to types deriving from it. Language projections surface those members
+    /// as protected (C#) or as a protected requirement on the base class template (C++/WinRT), so they
+    /// are never part of the public surface of the runtime class.
+    /// </remarks>
+    /// <param name="interfaceImpl">The <see cref="InterfaceImplementation"/> to mark as protected.</param>
+    private void AddProtectedAttribute(InterfaceImplementation interfaceImpl)
+    {
+        AddParameterlessMetadataAttribute(interfaceImpl, "ProtectedAttribute");
+    }
+
+    /// <summary>
+    /// Adds an <c>[Overridable]</c> attribute to an interface implementation on a class.
+    /// </summary>
+    /// <remarks>
+    /// The <c>[Overridable]</c> attribute marks the exclusive interface carrying the members a derived
+    /// class (in any language) is allowed to override. A derived type implements that interface on the
+    /// controlling outer object of the aggregate, so a call that goes through a delegating interface
+    /// pointer lands on the override, while the composable base implementation stays reachable through
+    /// the non-delegating inner object.
+    /// </remarks>
+    /// <param name="interfaceImpl">The <see cref="InterfaceImplementation"/> to mark as overridable.</param>
+    private void AddOverridableAttribute(InterfaceImplementation interfaceImpl)
+    {
+        AddParameterlessMetadataAttribute(interfaceImpl, "OverridableAttribute");
+    }
+
+    /// <summary>
+    /// Adds a parameterless <c>Windows.Foundation.Metadata</c> attribute to a metadata element.
+    /// </summary>
+    /// <param name="target">The output metadata element to add the attribute to.</param>
+    /// <param name="attributeName">The simple name of the attribute type (e.g. <c>"ProtectedAttribute"</c>).</param>
+    private void AddParameterlessMetadataAttribute(IHasCustomAttribute target, string attributeName)
+    {
+        TypeReference attributeType = GetOrCreateTypeReference(
+            @namespace: "Windows.Foundation.Metadata",
+            name: attributeName,
+            assemblyName: "Windows.Foundation.FoundationContract");
+
+        MemberReference ctor = new(
+            parent: attributeType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void));
+
+        target.CustomAttributes.Add(new CustomAttribute(ctor, new CustomAttributeSignature()));
     }
 
     /// <summary>
@@ -505,9 +602,12 @@ internal sealed partial class WinMDWriter
         // Skip attributes already handled separately by the generator.
         // '[Overload]' is emitted by 'AddOverloadAttributesForType', which honors any author-specified
         // name (see 'RecordUserSpecifiedOverloadName'), so copying it here would produce duplicates.
+        // '[WindowsRuntimeOverridable]' is a C# authoring marker: it is projected as '[Overridable]' on
+        // the interface implementations of the composable classes implementing the interface.
         if (attributeTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
+            WindowsRuntimeOverridableAttributeName or
             "Windows.Foundation.Metadata.VersionAttribute" or
             "Windows.Foundation.Metadata.OverloadAttribute" or
             "System.Reflection.DefaultMemberAttribute")

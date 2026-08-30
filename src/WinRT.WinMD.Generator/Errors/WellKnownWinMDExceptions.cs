@@ -126,6 +126,35 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     }
 
     /// <summary>
+    /// An unsealed (composable) authored class implements an interface that cannot take part in COM aggregation.
+    /// </summary>
+    public static Exception ComposableClassInterfaceNotSupported(string className, string interfaceNames)
+    {
+        return Exception(15,
+            $"Class '{className}' is unsealed and has at least one public constructor, so it is projected as a composable Windows Runtime " +
+            $"class that native code can derive from, but it implements interface(s) '{interfaceNames}' that cannot take part in COM " +
+            $"aggregation. Only Windows Runtime interfaces authored in the same component can be exposed by a composable class: " +
+            $"custom-mapped interfaces (such as 'IDisposable', 'IList<T>' or 'INotifyPropertyChanged'), generic instantiations, and " +
+            $"interfaces from the Windows SDK or from another component all get their COM vtables from shared infrastructure, so no " +
+            $"per-aggregate copy delegating to the controlling outer object can be made for them. Either mark '{className}' as 'sealed' " +
+            $"(making it a normal activatable runtime class), make all of its constructors non-public (making it a non-composable base " +
+            $"type), or remove the offending interface implementations from it.");
+    }
+
+    /// <summary>
+    /// A composition factory method of an unsealed (composable) authored class takes an unsupported parameter.
+    /// </summary>
+    public static Exception ComposableClassConstructorParameterNotSupported(string className, string parameterTypeName)
+    {
+        return Exception(16,
+            $"Class '{className}' is unsealed and has at least one public constructor, so its constructors are projected as composition " +
+            $"factory methods, but one of them takes a parameter of type '{parameterTypeName}'. Array and generic parameters are not " +
+            $"supported on composition factory methods. Either mark '{className}' as 'sealed' (making it a normal activatable runtime " +
+            $"class), make all of its constructors non-public (making it a non-composable base type), or change the constructor to not " +
+            $"take array or generic parameters.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     private static Exception Exception(int id, string message, Exception? innerException = null)

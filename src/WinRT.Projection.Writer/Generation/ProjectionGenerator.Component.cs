@@ -18,7 +18,7 @@ internal sealed partial class ProjectionGenerator
 {
     /// <summary>
     /// Discovers all component-mode activatable runtime classes (those carrying
-    /// <c>[ActivatableAttribute]</c> or <c>[StaticAttribute]</c>) across the cached
+    /// <c>[ActivatableAttribute]</c>, <c>[ComposableAttribute]</c>, or <c>[StaticAttribute]</c>) across the cached
     /// namespaces and groups them by source <c>.winmd</c> module name.
     /// </summary>
     /// <returns>
@@ -48,6 +48,7 @@ internal sealed partial class ProjectionGenerator
                 }
 
                 if (type.HasWindowsFoundationMetadataAttribute(ActivatableAttribute) ||
+                    type.HasWindowsFoundationMetadataAttribute(ComposableAttribute) ||
                     type.HasWindowsFoundationMetadataAttribute(StaticAttribute))
                 {
                     _ = componentActivatable.Add(type);

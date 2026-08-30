@@ -49,6 +49,43 @@ internal static class UnsafeAccessorFactory
     }
 
     /// <summary>
+    /// Emits an <c>[UnsafeAccessor(UnsafeAccessorKind.Method)]</c> static extern declaration targeting an
+    /// instance member of <paramref name="receiverType"/>:
+    /// <code>
+    /// [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "{accessName}")]
+    /// static extern {returnType} {functionName}({receiverType} __instance, {parameterList});
+    /// </code>
+    /// </summary>
+    /// <remarks>
+    /// This resolves the member regardless of its accessibility, and still dispatches virtually when the
+    /// member is virtual, so it behaves exactly like the direct call it replaces.
+    /// </remarks>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="accessName">The metadata name of the instance member being accessed.</param>
+    /// <param name="returnType">The C# return type of the accessor (as a syntax string).</param>
+    /// <param name="functionName">The C# name of the accessor (i.e. the local extern method).</param>
+    /// <param name="receiverType">The fully qualified type declaring the member being accessed.</param>
+    /// <param name="receiverName">The name of the synthetic receiver parameter.</param>
+    /// <param name="parameterList">The trailing parameter list (after the receiver parameter) WITHOUT a
+    /// leading comma. Pass <see cref="string.Empty"/> for the parameter-less form.</param>
+    public static void EmitInstanceMethod(
+        IndentedTextWriter writer,
+        string accessName,
+        string returnType,
+        string functionName,
+        string receiverType,
+        string receiverName,
+        string parameterList)
+    {
+        string commaPrefix = parameterList.Length > 0 ? ", " : "";
+
+        writer.WriteLine(isMultiline: true, $$"""
+            [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "{{accessName}}")]
+            static extern {{returnType}} {{functionName}}({{receiverType}} {{receiverName}}{{commaPrefix}}{{parameterList}});
+            """);
+    }
+
+    /// <summary>
     /// Emits an <c>[UnsafeAccessor(UnsafeAccessorKind.Constructor)]</c> static extern declaration
     /// whose return type is annotated with <c>[return: UnsafeAccessorType("{interopType}")]</c>:
     /// <code>

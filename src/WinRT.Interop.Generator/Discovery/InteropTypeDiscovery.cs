@@ -199,7 +199,8 @@ internal static partial class InteropTypeDiscovery
             typeSignature: typeSignature,
             interfaces: interfaces,
             args: args,
-            interopDefinitions: interopDefinitions))
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences))
         {
             goto FinalizeUserDefinedType;
         }
@@ -485,13 +486,15 @@ internal static partial class InteropTypeDiscovery
     /// <param name="interfaces">The set of interfaces being populated.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>Whether the new interfaces could be added.</returns>
     private static bool TryAddComponentExclusiveToInterfaceTypes(
         TypeDefinition typeDefinition,
         TypeSignature typeSignature,
         TypeSignatureEquatableSet.Builder interfaces,
         InteropGeneratorArgs args,
-        InteropDefinitions interopDefinitions)
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences)
     {
         // Runtime class types from authored components can't be generic, so we can filter those
         // out immediately. Only the Windows SDK is allowed to define generic types. And even then,
@@ -513,26 +516,40 @@ internal static partial class InteropTypeDiscovery
             throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
         }
 
-        // Use the centralized lookup from '[WindowsRuntimeExclusiveToInterface]' attributes (they're all on the
-        // 'WindowsRuntimeExclusiveToInterfaces' type). This avoids scanning all types in the component assembly.
-        if (!interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup().TryGetValue(
-            key: (typeSignature.Namespace, typeSignature.Name),
-            value: out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
-        {
-            return true;
-        }
+        // Include the synthesized interfaces for the authored type and each authored base class.
+        // The managed implementation type only declares the interface synthesized for itself, but
+        // its CCW must also expose the base runtime class interfaces inherited through WinRT class
+        // composition.
+        TypeDefinition? currentType = typeDefinition;
 
-        foreach (TypeSignature interfaceType in exclusiveInterfaces)
+        while (currentType is not null &&
+               currentType.DeclaringModule?.Assembly == typeDefinition.DeclaringModule?.Assembly)
         {
-            // Try to track the current implementation type. Note that this is not actually an interface (since we don't
-            // actually need a managed interface type for this scenario). The emit code will handle this as appropriate.
-            if (!TryAddExposedInterfaceType(
-                typeSignature: typeSignature,
-                interfaceType: interfaceType,
-                interfaces: interfaces,
-                args: args))
+            TypeSignature currentTypeSignature = currentType.ToTypeSignature();
+
+            if (interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup().TryGetValue(
+                key: (currentTypeSignature.Namespace, currentTypeSignature.Name),
+                value: out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
             {
-                return false;
+                foreach (TypeSignature interfaceType in exclusiveInterfaces)
+                {
+                    // Track the interface against the most-derived managed type so calls dispatch to
+                    // the same object while using the declaring runtime class's synthesized vtable.
+                    if (!TryAddExposedInterfaceType(
+                        typeSignature: typeSignature,
+                        interfaceType: interfaceType,
+                        interfaces: interfaces,
+                        args: args))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            if (currentType.BaseType is null ||
+                !currentType.BaseType.TryResolve(interopReferences.RuntimeContext, out currentType))
+            {
+                break;
             }
         }
 

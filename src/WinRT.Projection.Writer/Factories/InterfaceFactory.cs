@@ -216,6 +216,13 @@ internal static class InterfaceFactory
     /// </summary>
     public static void WriteInterfaceMemberSignatures(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        // Composition factory interfaces are handled entirely by CsWinRT in component mode (the interface, its
+        // implementation on the generated activation factory, and its CCW stubs are all generated together), so
+        // their members are projected at the ABI level. This keeps the controlling outer object as a raw pointer:
+        // it is still being constructed when the factory runs, so it must never be wrapped in an RCW (doing so
+        // would 'QueryInterface' and 'AddRef' a half-constructed object, and root it from managed code).
+        bool isComposableFactory = ComposableTypeHelpers.IsComposableFactoryInterface(context, type);
+
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
             // Skip members removed via '[Deprecated(..., DeprecationType.Remove, ...)]': their ABI
@@ -226,6 +233,15 @@ internal static class InterfaceFactory
             }
 
             MethodSignatureInfo sig = new(method);
+
+            if (isComposableFactory && ComposableTypeHelpers.IsComposableFactoryMethod(method))
+            {
+                IndentedTextWriterCallback factoryParameters = ComponentFactory.WriteComposableFactoryParameterList(context, sig);
+
+                writer.WriteLine($"unsafe void* {method.GetRawName()}({factoryParameters});");
+
+                continue;
+            }
 
             // Carried-over metadata attributes ([Overload], [DefaultOverload], [Experimental]) are
             // reference-projection-only.

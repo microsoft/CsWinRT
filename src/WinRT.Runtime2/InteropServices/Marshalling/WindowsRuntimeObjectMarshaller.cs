@@ -37,6 +37,21 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return new(windowsRuntimeObject.InspectableObjectReference);
         }
 
+        // If 'value' is an authored object taking part in COM aggregation, the identity of the aggregate is
+        // the controlling outer object, so that is the object that has to be handed to native code. This
+        // mirrors C++/WinRT, where an aggregated (composed) object only ever hands out interfaces that
+        // delegate their 'IUnknown' methods to 'm_outer'.
+        if (WindowsRuntimeAggregation.TryQueryControllingOuter(
+            instance: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IInspectable,
+            interfacePtr: out void* aggregatedPtr,
+            hresult: out HRESULT aggregatedHResult))
+        {
+            RestrictedErrorInfo.ThrowExceptionForHR(aggregatedHResult);
+
+            return new(aggregatedPtr);
+        }
+
         // If 'value' is a managed wrapper for a native delegate, it probably can't be marshalled
         if (value is Delegate { Target: WindowsRuntimeObjectReference windowsRuntimeDelegate })
         {

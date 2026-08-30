@@ -12,6 +12,7 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
 #pragma warning disable IDE0061
 
@@ -69,10 +70,10 @@ internal static class ComponentFactory
         {
             writer.Write("global::WindowsRuntime.InteropServices.IActivationFactory");
 
-            // Build the inheritance list: factory interfaces ('[Activatable]' or '[Static]') only
+            // Build the inheritance list from all factory interfaces carried by the runtime class.
             foreach ((_, AttributedType type) in AttributedTypes.Get(type, context.Cache))
             {
-                if ((type.Activatable || type.Statics) && type.Type is not null)
+                if ((type.Activatable || type.Statics || type.Composable) && type.Type is not null)
                 {
                     writer.Write(", ");
 
@@ -89,7 +90,10 @@ internal static class ComponentFactory
             // A type whose default constructor is removed ([Deprecated(DeprecationType.Remove)]) is no longer
             // default-activatable: 'new T()' cannot be emitted (it would call the removed authored member),
             // so default activation falls through to the 'throw' below, which marshals to E_NOTIMPL.
-            bool isActivatable = !type.IsStatic && type.HasActivatableDefaultConstructor();
+            bool isActivatable =
+                !type.IsStatic &&
+                type.HasWindowsFoundationMetadataAttribute(ActivatableAttribute) &&
+                type.HasActivatableDefaultConstructor();
 
             if (isActivatable)
             {
@@ -161,7 +165,9 @@ internal static class ComponentFactory
         string projectedTypeName)
     {
         // Emit factory-class members: forwarding methods/properties/events for static factory
-        // interfaces, and constructor wrappers for activatable factory interfaces.
+        // interfaces, plus activation and composition constructor wrappers.
+        bool hasEmittedAggregationEntries = false;
+
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
             AttributedType info = kv.Value;
@@ -185,6 +191,29 @@ internal static class ComponentFactory
                     }
 
                     WriteFactoryActivatableMethod(writer, context, method, projectedTypeName);
+                }
+            }
+            else if (info.Composable)
+            {
+                string defaultInterfaceIid = GetDefaultInterfaceIid(context, type);
+
+                // A runtime class can carry more than one composition factory (that is how Windows Runtime
+                // versions them), but they all compose the same class, so the entries are emitted just once
+                if (!hasEmittedAggregationEntries)
+                {
+                    WriteAggregationEntries(writer, context, type);
+
+                    hasEmittedAggregationEntries = true;
+                }
+
+                foreach (MethodDefinition method in info.Type.Methods)
+                {
+                    if (method.IsConstructor || method.IsRemoved)
+                    {
+                        continue;
+                    }
+
+                    WriteFactoryComposableMethod(writer, context, method, projectedTypeName, defaultInterfaceIid);
                 }
             }
             else if (info.Statics)
@@ -218,6 +247,163 @@ internal static class ComponentFactory
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Returns the IID expression for the default interface of an authored runtime class.
+    /// </summary>
+    private static string GetDefaultInterfaceIid(ProjectionEmitContext context, TypeDefinition classType)
+    {
+        ITypeDefOrRef? defaultInterface = classType.GetDefaultInterface();
+
+        return defaultInterface is null
+            ? "default(global::System.Guid)"
+            : ObjRefNameGenerator.WriteIidExpression(context, defaultInterface).Format();
+    }
+
+    /// <summary>
+    /// Writes the projected parameter list of a composition-factory method.
+    /// </summary>
+    /// <param name="context">The active projection emit context.</param>
+    /// <param name="sig">The signature of the composition-factory method.</param>
+    /// <returns>A callback that writes the parameter list.</returns>
+    /// <remarks>
+    /// The authored constructor parameters keep their projected types, while the trailing controlling outer and
+    /// non-delegating inner parameters stay raw <c>IInspectable</c> pointers (see <see cref="WriteFactoryComposableMethod"/>).
+    /// </remarks>
+    public static IndentedTextWriterCallback WriteComposableFactoryParameterList(ProjectionEmitContext context, MethodSignatureInfo sig)
+    {
+        return writer =>
+        {
+            int userParameterCount = sig.Parameters.Count - 2;
+
+            for (int i = 0; i < userParameterCount; i++)
+            {
+                writer.Write($"{MethodFactory.WriteProjectionParameter(context, sig.Parameters[i])}, ");
+            }
+
+            writer.Write($"void* {GetControllingOuterParameterName(sig)}, void** {GetNonDelegatingInnerParameterName(sig)}");
+        };
+    }
+
+    /// <summary>
+    /// Gets the name of the controlling outer parameter of a composition-factory method.
+    /// </summary>
+    public static string GetControllingOuterParameterName(MethodSignatureInfo sig)
+    {
+        return IdentifierEscaping.EscapeIdentifier(sig.Parameters[sig.Parameters.Count - 2].GetRawName());
+    }
+
+    /// <summary>
+    /// Gets the name of the non-delegating inner parameter of a composition-factory method.
+    /// </summary>
+    public static string GetNonDelegatingInnerParameterName(MethodSignatureInfo sig)
+    {
+        return IdentifierEscaping.EscapeIdentifier(sig.Parameters[sig.Parameters.Count - 1].GetRawName());
+    }
+
+    /// <summary>
+    /// Writes the helper producing the COM aggregation entries for a composable runtime class.
+    /// </summary>
+    /// <param name="writer">The writer to emit the helper to.</param>
+    /// <param name="context">The active projection emit context.</param>
+    /// <param name="classType">The composable runtime class.</param>
+    /// <remarks>
+    /// <para>
+    /// The entries describe every interface the CCW of the class can hand out while the instance is taking part in
+    /// COM aggregation. The runtime uses them to build a private, per-aggregate copy of each of those vtables, with
+    /// only the <c>IUnknown</c> and <c>IInspectable</c> entries replaced by ones delegating to the controlling outer
+    /// object. That is why the size of each vtable is emitted alongside its address.
+    /// </para>
+    /// <para>
+    /// Nothing here is used for a standalone (non-aggregated) instance: those keep the exact same CCW, and the same
+    /// shared vtables, that every other authored object gets, including the <c>IUnknown</c> implementation the
+    /// runtime provides in native code.
+    /// </para>
+    /// </remarks>
+    private static void WriteAggregationEntries(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
+    {
+        void WriteEntries(IndentedTextWriter writer)
+        {
+            bool first = true;
+
+            foreach (TypeDefinition interfaceType in ComposableTypeHelpers.GetAggregableInterfaces(context, classType))
+            {
+                string abiTypeName = TypedefNameWriter.WriteTypedefName(context, interfaceType, TypedefNameType.ABI, true).Format();
+                string iid = ObjRefNameGenerator.WriteIidExpression(context, interfaceType).Format();
+
+                writer.WriteLineIf(!first);
+                writer.Write($"new(in {iid}, {abiTypeName}Impl.Vtable, sizeof({abiTypeName}Vftbl)),");
+
+                first = false;
+            }
+        }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            private static unsafe global::WindowsRuntime.InteropServices.WindowsRuntimeAggregationEntry[] GetAggregationEntries()
+            {
+                return
+                [
+                    {{WriteEntries}}
+                ];
+            }
+            """);
+    }
+
+    /// <summary>
+    /// Writes a composition-factory method on the generated activation factory type.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The two trailing factory parameters are the controlling outer and the non-delegating inner, and are not
+    /// authored constructor arguments. They are projected as raw <c>IInspectable</c> pointers: the controlling
+    /// outer is only partially constructed while the factory runs, so it must not be wrapped in an RCW, and the
+    /// non-delegating inner is a hand-written COM object owned by the runtime rather than a managed object.
+    /// </para>
+    /// <para>
+    /// All the COM aggregation work (registering the controlling outer, creating the CCW with its per-aggregate
+    /// delegating vtables, and producing both the non-delegating inner and the delegating default interface) is
+    /// done by the runtime.
+    /// </para>
+    /// </remarks>
+    private static void WriteFactoryComposableMethod(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        MethodDefinition method,
+        string projectedTypeName,
+        string defaultInterfaceIid)
+    {
+        if (!ComposableTypeHelpers.IsComposableFactoryMethod(method))
+        {
+            return;
+        }
+
+        MethodSignatureInfo sig = new(method);
+        string methodName = method.GetRawName();
+        int userParameterCount = sig.Parameters.Count - 2;
+
+        void WriteArgumentNames(IndentedTextWriter writer)
+        {
+            for (int i = 0; i < userParameterCount; i++)
+            {
+                writer.WriteIf(i > 0, ", ");
+                writer.Write(IdentifierEscaping.EscapeIdentifier(sig.Parameters[i].GetRawName()));
+            }
+        }
+
+        writer.WriteLine();
+        writer.WriteLine(isMultiline: true, $$"""
+            public unsafe void* {{methodName}}({{WriteComposableFactoryParameterList(context, sig)}})
+            {
+                return global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateComposableInstanceUnsafe(
+                    new {{projectedTypeName}}({{WriteArgumentNames}}),
+                    in {{defaultInterfaceIid}},
+                    GetAggregationEntries(),
+                    {{GetControllingOuterParameterName(sig)}},
+                    {{GetNonDelegatingInnerParameterName(sig)}});
+            }
+            """);
     }
 
     /// <summary>

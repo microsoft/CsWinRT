@@ -313,8 +313,9 @@ internal static class AbiInterfaceFactory
         // type (not the interface) since the authored class IS the implementation. This is what
         // 'write_method_abi_invoke' produces because 'method.Parent()' is treated through
         // 'does_abi_interface_implement_ccw_interface' for authoring scenarios.
-        // EXCEPTION: static factory interfaces ([Static] attr on the class) and activation
-        // factory interfaces ([Activatable(typeof(IFooFactory))]) are implemented by the
+        // EXCEPTION: static factory interfaces ([Static] attr on the class), activation
+        // factory interfaces ([Activatable(typeof(IFooFactory))]), and composition factory
+        // interfaces ([Composable(typeof(IFooFactory), ...)]) are implemented by the
         // generated 'ABI.Impl.<NS>.<IFooStatic>'/<IFooFactory>' types, NOT by the user runtime
         // class. For those, the dispatch target must be 'global::ABI.Impl.<NS>.<InterfaceName>'.
         TypeDefinition? exclusiveToOwner = null;
@@ -328,7 +329,7 @@ internal static class AbiInterfaceFactory
             {
                 foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(exclusiveToOwner, context.Cache))
                 {
-                    if (kv.Value.Type == type && (kv.Value.Statics || kv.Value.Activatable))
+                    if (kv.Value.Type == type && (kv.Value.Statics || kv.Value.Activatable || kv.Value.Composable))
                     {
                         exclusiveIsFactoryOrStatic = true;
                         break;
@@ -365,6 +366,15 @@ internal static class AbiInterfaceFactory
         // Build a map of event add/remove methods to their event so we can emit the table field
         // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies.
         Dictionary<MethodDefinition, EventDefinition>? eventMap = AbiTypeHelpers.BuildEventMethodMap(type);
+
+        // Composition factory methods get a dedicated CCW body: they run the COM aggregation handshake at the
+        // ABI level, so the controlling outer object is never wrapped in an RCW while it is being constructed.
+        bool isComposableFactory = ComposableTypeHelpers.IsComposableFactoryInterface(context, type);
+
+        // The '[Protected]' and '[Overridable]' interfaces of an authored composable class carry members that
+        // are not public on it, so their CCW bodies dispatch through an '[UnsafeAccessor]' instead of a direct
+        // call (see the remarks on the helper).
+        bool useUnsafeAccessorDispatch = ComposableTypeHelpers.IsProtectedOrOverridableInterface(context, type);
 
         // Build sets of property accessors and event accessors so the first loop below can
         // iterate "regular" methods (non-property, non-event) only. Do_Abi bodies are emitted in
@@ -439,9 +449,13 @@ internal static class AbiInterfaceFactory
                     EventTableFactory.EmitDoAbiRemoveEvent(writer, context, evt2, sig, ifaceFullName);
                 }
             }
+            else if (isComposableFactory && ComposableTypeHelpers.IsComposableFactoryMethod(method))
+            {
+                AbiMethodBodyFactory.EmitDoAbiComposableFactoryBody(writer, context, sig, ifaceFullName, mname);
+            }
             else
             {
-                AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, ifaceFullName, mname);
+                AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, ifaceFullName, mname, useUnsafeAccessorDispatch);
             }
         }
 

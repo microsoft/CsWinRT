@@ -140,6 +140,15 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <remarks><inheritdoc cref="TryGetOrCreateComInterfaceForObjectExact" path="/remarks/node()"/></remarks>
     public static nint GetOrCreateComInterfaceForObjectExact(object instance, in Guid iid)
     {
+        // If the object is taking part in COM aggregation, the interface has to be resolved through the
+        // controlling outer object, which is the identity of the aggregate (see the remarks on the helper).
+        if (WindowsRuntimeAggregation.TryQueryControllingOuter(instance, in iid, out void* aggregatedPtr, out HRESULT aggregatedHResult))
+        {
+            Marshal.ThrowExceptionForHR(aggregatedHResult);
+
+            return (nint)aggregatedPtr;
+        }
+
         void* thisPtr = (void*)GetOrCreateComInterfaceForObjectExact(instance);
 
         // 'ComWrappers' always returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface'
@@ -211,6 +220,14 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <seealso cref="GetOrCreateComInterfaceForObject(object)"/>
     public nint GetOrCreateComInterfaceForObject(object instance, in Guid iid)
     {
+        // Aggregated objects are marshalled through their controlling outer object (same as the variant above)
+        if (WindowsRuntimeAggregation.TryQueryControllingOuter(instance, in iid, out void* aggregatedPtr, out HRESULT aggregatedHResult))
+        {
+            Marshal.ThrowExceptionForHR(aggregatedHResult);
+
+            return (nint)aggregatedPtr;
+        }
+
         void* thisPtr = (void*)GetOrCreateComInterfaceForObject(instance);
 
         // 'ComWrappers' returns an 'IUnknown' pointer, so we need to do an actual 'QueryInterface' for the interface IID
@@ -236,6 +253,14 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <seealso cref="ComWrappers.GetOrCreateComInterfaceForObject"/>
     public nint GetOrCreateComInterfaceForObject(object instance, CreateComInterfaceFlags flags, in Guid iid)
     {
+        // Aggregated objects are marshalled through their controlling outer object (same as the variants above)
+        if (WindowsRuntimeAggregation.TryQueryControllingOuter(instance, in iid, out void* aggregatedPtr, out HRESULT aggregatedHResult))
+        {
+            Marshal.ThrowExceptionForHR(aggregatedHResult);
+
+            return (nint)aggregatedPtr;
+        }
+
         MarshallingInfo = null;
 
         // Marshal the object ('ComputeVtables' will lookup the proxy type to resolve the right vtable for it)

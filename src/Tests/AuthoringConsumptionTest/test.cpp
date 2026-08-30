@@ -5,6 +5,769 @@ using namespace Windows::Foundation;
 using namespace AuthoringTest;
 using namespace AuthoringTest::AnotherNamespace;
 
+struct NativeDerivedComposable : winrt::AuthoringTest::ComposableBaseT<NativeDerivedComposable>
+{
+    static inline int32_t s_destructorCount{};
+
+    NativeDerivedComposable()
+        : ComposableBaseT()
+    {
+    }
+
+    explicit NativeDerivedComposable(int32_t value)
+        : ComposableBaseT(value)
+    {
+    }
+
+    ~NativeDerivedComposable()
+    {
+        ++s_destructorCount;
+    }
+
+    winrt::hstring GetRuntimeClassName() const
+    {
+        return L"AuthoringTest.NativeDerivedComposable";
+    }
+};
+
+// A native derived class that both consumes the '[Protected]' surface of the composable base and
+// overrides its '[Overridable]' members. Each override calls the base implementation explicitly
+// (through the 'ComposableBaseT<D>' base, which routes to the non-delegating inner object) so the
+// tests can tell the two dispatch directions apart.
+struct NativeOverridingComposable : winrt::AuthoringTest::ComposableBaseT<NativeOverridingComposable>
+{
+    using base_type = winrt::AuthoringTest::ComposableBaseT<NativeOverridingComposable>;
+
+    static inline int32_t s_destructorCount{};
+    static inline int32_t s_computeCoreValueCount{};
+
+    explicit NativeOverridingComposable(int32_t value)
+        : ComposableBaseT(value)
+    {
+    }
+
+    ~NativeOverridingComposable()
+    {
+        ++s_destructorCount;
+    }
+
+    winrt::hstring GetRuntimeClassName() const
+    {
+        return L"AuthoringTest.NativeOverridingComposable";
+    }
+
+    int32_t ComputeValue()
+    {
+        return base_type::ComputeValue() + 1;
+    }
+
+    // Overrides the member of the authored '[Overridable]' interface of the composable base. Unlike the
+    // members above (which come from the interface CsWinRT synthesizes out of the 'virtual' members of the
+    // class), this one is declared by an interface the component authors itself, so the managed base can
+    // name it and dispatch to this override through the controlling outer object.
+    int32_t ComputeCoreValue()
+    {
+        ++s_computeCoreValueCount;
+
+        return base_type::ComputeCoreValue() + 7;
+    }
+
+    winrt::hstring DescribeCore()
+    {
+        return L"NativeDerived:" + base_type::DescribeCore();
+    }
+
+    int32_t OverridableValue()
+    {
+        return base_type::OverridableValue() + 1;
+    }
+
+    // The '[Protected]' members are only reachable from within the derived implementation
+    int32_t CallProtectedGetSecretValue()
+    {
+        return this->GetSecretValue();
+    }
+
+    winrt::hstring CallProtectedGetSecretTag()
+    {
+        return this->SecretTag();
+    }
+
+    void CallProtectedSetSecretTag(winrt::hstring const& value)
+    {
+        this->SecretTag(value);
+    }
+
+    // The base implementations, reached explicitly through the non-delegating inner object
+    int32_t CallBaseComputeValue()
+    {
+        return base_type::ComputeValue();
+    }
+
+    winrt::hstring CallBaseDescribeCore()
+    {
+        return base_type::DescribeCore();
+    }
+
+    int32_t CallBaseOverridableValue()
+    {
+        return base_type::OverridableValue();
+    }
+};
+
+TEST(AuthoringTest, ComposableClassStandaloneActivation)
+{
+    ComposableBase standalone;
+    EXPECT_EQ(standalone.GetValue(), 42);
+    EXPECT_EQ(standalone.GetName(), L"ComposableBase");
+
+    ComposableBase parameterized(7);
+    EXPECT_EQ(parameterized.GetValue(), 7);
+
+    // Standalone activation is not aggregated, so the object keeps its own COM identity
+    // and reports its own runtime class name.
+    EXPECT_EQ(
+        winrt::get_abi(standalone.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(standalone.as<winrt::Windows::Foundation::IUnknown>()));
+    EXPECT_EQ(winrt::get_class_name(standalone), L"AuthoringTest.ComposableBase");
+    EXPECT_EQ(
+        winrt::get_abi(standalone.GetSelf().as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(standalone.as<winrt::Windows::Foundation::IUnknown>()));
+}
+
+TEST(AuthoringTest, ComposableClassNativeDerivation)
+{
+    auto nativeDerived = winrt::make<NativeDerivedComposable>(11);
+
+    EXPECT_EQ(nativeDerived.GetValue(), 11);
+}
+
+// The public surface of a composable base has to keep working through the delegating interface
+// pointers of an aggregate: instance methods, read/write properties, and the statics that live on
+// the activation factory rather than on the instance.
+TEST(AuthoringTest, ComposableClassMembers)
+{
+    // Statics never involve an instance, so they behave the same in every scenario
+    EXPECT_EQ(ComposableBase::DefaultTag(), L"default");
+    EXPECT_EQ(ComposableBase::DescribeValue(5), L"ComposableBase(5)");
+
+    ComposableBase standalone(3);
+
+    EXPECT_EQ(standalone.GetValue(), 3);
+    EXPECT_EQ(standalone.Tag(), L"base");
+
+    standalone.Tag(L"standalone");
+
+    EXPECT_EQ(standalone.Tag(), L"standalone");
+
+    // The same members, reached through the base interface of an aggregate
+    winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(4);
+    ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+    EXPECT_EQ(asBase.GetValue(), 4);
+    EXPECT_EQ(asBase.Tag(), L"base");
+
+    asBase.Tag(L"aggregated");
+
+    EXPECT_EQ(asBase.Tag(), L"aggregated");
+
+    // The base instance of the aggregate is a distinct object, so it kept its own property value
+    EXPECT_EQ(standalone.Tag(), L"standalone");
+
+    // A C# class deriving from the composable base gets the inherited members as well
+    CSharpDerivedComposable csharpDerived;
+
+    EXPECT_EQ(csharpDerived.GetValue(), 84);
+    EXPECT_EQ(csharpDerived.Tag(), L"base");
+
+    csharpDerived.Tag(L"csharp");
+
+    EXPECT_EQ(csharpDerived.Tag(), L"csharp");
+}
+
+// A native derived class reaches the '[Protected]' members of its composable base through the
+// non-delegating inner object, exactly like a C++/WinRT composable base would expose them.
+TEST(AuthoringTest, ComposableClassNativeDerivationProtectedMembers)
+{
+    winrt::com_ptr<NativeOverridingComposable> nativeDerived = winrt::make_self<NativeOverridingComposable>(5);
+
+    EXPECT_EQ(nativeDerived->CallProtectedGetSecretValue(), 15);
+    EXPECT_EQ(nativeDerived->CallProtectedGetSecretTag(), L"secret");
+
+    nativeDerived->CallProtectedSetSecretTag(L"updated");
+
+    EXPECT_EQ(nativeDerived->CallProtectedGetSecretTag(), L"updated");
+
+    // The protected members are not part of the public surface of the runtime class, so they are
+    // only reachable through the exclusive '[Protected]' interface of the base.
+    ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+    EXPECT_EQ(asBase.CallGetSecretValue(), 15);
+    EXPECT_EQ(asBase.as<IComposableBaseProtected>().GetSecretValue(), 15);
+    EXPECT_EQ(asBase.as<IComposableBaseProtected>().SecretTag(), L"updated");
+}
+
+// The protected surface is also available on a standalone (non aggregated) instance and to a C#
+// derived class, where no COM aggregation is involved at all.
+TEST(AuthoringTest, ComposableClassProtectedMembersWithoutAggregation)
+{
+    ComposableBase standalone(5);
+
+    EXPECT_EQ(standalone.CallGetSecretValue(), 15);
+    EXPECT_EQ(standalone.as<IComposableBaseProtected>().GetSecretValue(), 15);
+    EXPECT_EQ(standalone.as<IComposableBaseProtected>().SecretTag(), L"secret");
+
+    standalone.as<IComposableBaseProtected>().SecretTag(L"standalone-secret");
+
+    EXPECT_EQ(standalone.as<IComposableBaseProtected>().SecretTag(), L"standalone-secret");
+
+    CSharpDerivedComposable csharpDerived;
+
+    EXPECT_EQ(csharpDerived.GetDerivedSecretValue(), 252);
+    EXPECT_EQ(csharpDerived.as<IComposableBaseProtected>().GetSecretValue(), 252);
+}
+
+// Overridable dispatch, in both directions:
+//
+//  - going through the base projection (ie. through a delegating interface pointer of the aggregate)
+//    must resolve on the controlling outer object, so the native override wins;
+//  - invoking the base implementation explicitly from the native derived class must go through the
+//    non-delegating inner object, so the managed base implementation runs.
+//
+// Note: these members come from the interface CsWinRT synthesizes out of the 'virtual' members of the
+// composable class, which the authored component cannot name. A call the managed base implementation
+// makes to one of them (e.g. 'CallComputeValue') is therefore plain managed virtual dispatch, and stays
+// on the base implementation while the object is aggregated. Dispatching to the most derived
+// implementation from managed code requires an authored '[Overridable]' interface, which is covered by
+// 'ComposableClassNativeDerivationOverridableDispatchFromManagedCode' below.
+TEST(AuthoringTest, ComposableClassNativeDerivationOverridableDispatch)
+{
+    winrt::com_ptr<NativeOverridingComposable> nativeDerived = winrt::make_self<NativeOverridingComposable>(10);
+
+    ComposableBase asBase = nativeDerived.as<ComposableBase>();
+    IComposableBaseOverrides asOverrides = asBase.as<IComposableBaseOverrides>();
+
+    // Through the base projection: the native override runs (base value + 1)
+    EXPECT_EQ(asOverrides.ComputeValue(), 21);
+    EXPECT_EQ(asOverrides.DescribeCore(), L"NativeDerived:ComposableBase:10");
+    EXPECT_EQ(asOverrides.OverridableValue(), 1011);
+
+    // Explicitly invoking the base implementation: the managed base runs
+    EXPECT_EQ(nativeDerived->CallBaseComputeValue(), 20);
+    EXPECT_EQ(nativeDerived->CallBaseDescribeCore(), L"ComposableBase:10");
+    EXPECT_EQ(nativeDerived->CallBaseOverridableValue(), 1010);
+
+    // Every overridable interface pointer of the aggregate still has the identity of the outer
+    EXPECT_EQ(
+        winrt::get_abi(asOverrides.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(nativeDerived.as<winrt::Windows::Foundation::IUnknown>()));
+}
+
+// The scenario the authored '[Overridable]' interface support exists for: a native derived aggregate is handed
+// back to C#, and managed code makes two ordinary instance calls on it.
+//
+//  - 'DescribeSelf' is not overridable, so it runs the implementation authored in C# (the inner object);
+//  - 'CallComputeCoreValue' is overridable, so it resolves the most derived implementation, which is the
+//    override implemented by this C++ controlling outer. That override in turn calls the base implementation
+//    explicitly, which comes back into the same managed instance through the non-delegating inner object.
+//
+// Both calls are made from inside C#, on the very same instance, and neither is simulated with a callback: the
+// managed base resolves its controlling outer and calls the authored '[Overridable]' interface on it, which is
+// the C#/WinRT equivalent of 'overridable()' in C++/WinRT.
+TEST(AuthoringTest, ComposableClassNativeDerivationOverridableDispatchFromManagedCode)
+{
+    NativeOverridingComposable::s_computeCoreValueCount = 0;
+    ComposableBase::ResetCallCounts();
+
+    winrt::com_ptr<NativeOverridingComposable> nativeDerived = winrt::make_self<NativeOverridingComposable>(10);
+
+    ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+    // 'ComposableBase(10)' is the C# implementation of 'DescribeSelf', '107' is the C++ override of
+    // 'ComputeCoreValue' (10 * 10, computed by the managed base implementation, plus 7), and '1' means the
+    // managed code observed the instance as being aggregated.
+    EXPECT_EQ(ComposableBase::ProbeAggregate(asBase), L"ComposableBase(10)|107|1");
+
+    // The C++ override ran exactly once, reached from managed code
+    EXPECT_EQ(NativeOverridingComposable::s_computeCoreValueCount, 1);
+
+    // ...and it reached the C# implementation of the same member exactly once, through the inner object
+    EXPECT_EQ(ComposableBase::ComputeCoreValueCallCount(), 1);
+
+    // The non overridable member ran the C# implementation exactly once, without ever leaving managed code
+    EXPECT_EQ(ComposableBase::DescribeSelfCallCount(), 1);
+}
+
+// Same two calls, made on instances that are not aggregated. Both must resolve to the implementation authored
+// in C#: the overridable member has no more derived implementation to dispatch to, so it is plain managed
+// virtual dispatch (which is also how a C# derived class gets its own override picked).
+TEST(AuthoringTest, ComposableClassOverridableDispatchFromManagedCodeWithoutAggregation)
+{
+    ComposableBase::ResetCallCounts();
+
+    ComposableBase standalone(10);
+
+    EXPECT_EQ(ComposableBase::ProbeAggregate(standalone), L"ComposableBase(10)|100|0");
+    EXPECT_EQ(standalone.CallComputeCoreValue(), 100);
+    EXPECT_EQ(standalone.as<IComposableBaseOverridable>().ComputeCoreValue(), 100);
+
+    EXPECT_EQ(ComposableBase::ComputeCoreValueCallCount(), 3);
+    EXPECT_EQ(ComposableBase::DescribeSelfCallCount(), 1);
+
+    ComposableBase::ResetCallCounts();
+
+    CSharpDerivedComposable csharpDerived;
+
+    EXPECT_EQ(ComposableBase::ProbeAggregate(csharpDerived), L"ComposableBase(84)|840|0");
+    EXPECT_EQ(ComposableBase::ComputeCoreValueCallCount(), 1);
+
+    // A native derived class that does not override the member is aggregated all the same, and the default
+    // forwarder that C++/WinRT generates for it routes right back to the managed base implementation.
+    ComposableBase::ResetCallCounts();
+
+    winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(10);
+
+    EXPECT_EQ(ComposableBase::ProbeAggregate(nativeDerived.as<ComposableBase>()), L"ComposableBase(10)|100|1");
+    EXPECT_EQ(ComposableBase::ComputeCoreValueCallCount(), 1);
+}
+
+// The round-trip has to leave the identity and the reference counts of the aggregate untouched: managed code
+// resolving its controlling outer object must not disturb them, and neither must the calls it makes through it.
+// Repeating it makes an unbalanced 'AddRef'/'Release' fail deterministically, either as a leak (the aggregate
+// would outlive its last reference) or as a premature destruction.
+//
+// Note: resolving the controlling outer object produces an RCW for it, which holds a reference on the aggregate
+// until it is collected, so the last release is only observable after a garbage collection. That is inherent to
+// referencing a native object from managed code, and is why the check below forces one first.
+TEST(AuthoringTest, ComposableClassNativeDerivationOverridableDispatchFromManagedCodeIdentityAndLifetime)
+{
+    // Flush any RCW an earlier test left holding a reference on its own aggregate, so the destructor
+    // count below only ever reflects the aggregate this test creates
+    ComposableBase::CollectManagedObjects();
+
+    NativeOverridingComposable::s_destructorCount = 0;
+    NativeOverridingComposable::s_computeCoreValueCount = 0;
+    ComposableBase::ResetCallCounts();
+
+    {
+        winrt::com_ptr<NativeOverridingComposable> nativeDerived = winrt::make_self<NativeOverridingComposable>(3);
+
+        winrt::Windows::Foundation::IUnknown outerIdentity = nativeDerived.as<winrt::Windows::Foundation::IUnknown>();
+
+        ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_EQ(ComposableBase::ProbeAggregate(asBase), L"ComposableBase(3)|37|1");
+
+            // Managed code still sees the very same instance, and it still marshals itself back out with
+            // the identity of the controlling outer object
+            ComposableBase self = asBase.GetSelfAsBase();
+
+            EXPECT_TRUE(asBase.IsSameInstance(self));
+            EXPECT_EQ(winrt::get_abi(self.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+        }
+
+        EXPECT_EQ(NativeOverridingComposable::s_computeCoreValueCount, 100);
+        EXPECT_EQ(ComposableBase::ComputeCoreValueCallCount(), 100);
+        EXPECT_EQ(ComposableBase::DescribeSelfCallCount(), 100);
+
+        // The aggregate is still alive and functional after all the round-trips
+        EXPECT_EQ(NativeOverridingComposable::s_destructorCount, 0);
+        EXPECT_EQ(asBase.GetValue(), 3);
+    }
+
+    // Every native reference is gone, so the aggregate is destroyed exactly once, as soon as the RCW that
+    // managed code created for the controlling outer object is collected
+    ComposableBase::CollectManagedObjects();
+
+    EXPECT_EQ(NativeOverridingComposable::s_destructorCount, 1);
+}
+
+// Without a derived class overriding them, the overridable members of a composable class resolve to
+// the base implementation, whether the instance is standalone or is aggregated by a native class
+// that overrides nothing.
+TEST(AuthoringTest, ComposableClassOverridableDispatchWithoutOverride)
+{
+    ComposableBase standalone(10);
+    IComposableBaseOverrides standaloneOverrides = standalone.as<IComposableBaseOverrides>();
+
+    EXPECT_EQ(standaloneOverrides.ComputeValue(), 20);
+    EXPECT_EQ(standaloneOverrides.DescribeCore(), L"ComposableBase:10");
+    EXPECT_EQ(standaloneOverrides.OverridableValue(), 1010);
+
+    // The managed base can also invoke them itself, through plain managed virtual dispatch
+    EXPECT_EQ(standalone.CallComputeValue(), 20);
+    EXPECT_EQ(standalone.CallDescribeCore(), L"ComposableBase:10");
+    EXPECT_EQ(standalone.CallOverridableValue(), 1010);
+
+    // 'NativeDerivedComposable' overrides nothing, so the default forwarders in 'ComposableBaseT'
+    // route every overridable member back to the base implementation on the inner object.
+    winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(10);
+    IComposableBaseOverrides aggregatedOverrides = nativeDerived.as<ComposableBase>().as<IComposableBaseOverrides>();
+
+    EXPECT_EQ(aggregatedOverrides.ComputeValue(), 20);
+    EXPECT_EQ(aggregatedOverrides.DescribeCore(), L"ComposableBase:10");
+    EXPECT_EQ(aggregatedOverrides.OverridableValue(), 1010);
+}
+
+// A C# class deriving from a composable base is a single managed object, so the overridable members
+// are selected by plain managed virtual dispatch, both when called from managed code and when they
+// are invoked through the '[Overridable]' interface of the CCW.
+TEST(AuthoringTest, ComposableClassCSharpDerivationOverridableDispatch)
+{
+    CSharpDerivedComposable csharpDerived;
+
+    EXPECT_EQ(csharpDerived.CallComputeValue(), 169);
+    EXPECT_EQ(csharpDerived.CallDescribeCore(), L"CSharpDerived:ComposableBase:84");
+    EXPECT_EQ(csharpDerived.CallOverridableValue(), 1085);
+
+    IComposableBaseOverrides asOverrides = csharpDerived.as<IComposableBaseOverrides>();
+
+    EXPECT_EQ(asOverrides.ComputeValue(), 169);
+    EXPECT_EQ(asOverrides.DescribeCore(), L"CSharpDerived:ComposableBase:84");
+    EXPECT_EQ(asOverrides.OverridableValue(), 1085);
+
+    // No aggregation is involved, so all of these share the identity of the managed object
+    EXPECT_EQ(
+        winrt::get_abi(asOverrides.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(csharpDerived.as<winrt::Windows::Foundation::IUnknown>()));
+}
+
+// The protected and overridable interfaces of an aggregate have to keep the identity and the
+// lifetime of the controlling outer object, exactly like the public ones.
+TEST(AuthoringTest, ComposableClassNativeDerivationExclusiveInterfaceIdentityAndLifetime)
+{
+    NativeDerivedComposable::s_destructorCount = 0;
+
+    IComposableBaseProtected asProtected{ nullptr };
+
+    {
+        winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(5);
+
+        winrt::Windows::Foundation::IUnknown outerIdentity = nativeDerived.as<winrt::Windows::Foundation::IUnknown>();
+
+        ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+        asProtected = asBase.as<IComposableBaseProtected>();
+
+        EXPECT_EQ(
+            winrt::get_abi(asProtected.as<winrt::Windows::Foundation::IUnknown>()),
+            winrt::get_abi(outerIdentity));
+
+        // Asking twice hands out the very same (cached) interface pointer
+        EXPECT_EQ(winrt::get_abi(asBase.as<IComposableBaseProtected>()), winrt::get_abi(asProtected));
+
+        EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 0);
+    }
+
+    // The outer reference is gone, but the protected interface still keeps the aggregate alive
+    EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 0);
+    EXPECT_EQ(asProtected.GetSecretValue(), 15);
+
+    asProtected = nullptr;
+
+    EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 1);
+}
+
+// The aggregated inner object must not have a COM identity of its own: every interface reachable
+// through the composing (outer) object has to answer 'QueryInterface(IID_IUnknown)' with the
+// identity of the controlling outer, exactly like a C++/WinRT composable base would.
+//
+// Note: 'make_self' is used on purpose here. 'winrt::make' returns 'D::composable' for a composable
+// type (ie. an interface of the aggregated inner object), which would make the checks below compare
+// two pointers derived from the same one.
+TEST(AuthoringTest, ComposableClassNativeDerivationComIdentity)
+{
+    winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(11);
+
+    // The identity of the controlling outer, resolved without going through the aggregated inner object
+    winrt::Windows::Foundation::IUnknown outerIdentity = nativeDerived.as<winrt::Windows::Foundation::IUnknown>();
+
+    ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+    EXPECT_EQ(asBase.GetValue(), 11);
+
+    EXPECT_EQ(
+        winrt::get_abi(asBase.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(outerIdentity));
+
+    // Asking the base interface for the base interface again must round-trip to the same identity
+    ComposableBase asBaseAgain = asBase.as<ComposableBase>();
+
+    EXPECT_EQ(
+        winrt::get_abi(asBaseAgain.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(outerIdentity));
+
+    // 'IInspectable' obtained from the base interface must also be the one of the controlling outer
+    EXPECT_EQ(
+        winrt::get_abi(asBase.as<winrt::Windows::Foundation::IInspectable>()),
+        winrt::get_abi(nativeDerived.as<winrt::Windows::Foundation::IInspectable>()));
+
+    // 'GetRuntimeClassName' is delegated as well, so the base interface reports the derived class
+    EXPECT_EQ(winrt::get_class_name(asBase), L"AuthoringTest.NativeDerivedComposable");
+
+    // The aggregated object marshals itself out with the identity of its controlling outer
+    winrt::Windows::Foundation::IInspectable self = asBase.GetSelf();
+
+    EXPECT_EQ(
+        winrt::get_abi(self.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(outerIdentity));
+}
+
+// All interfaces handed out by the aggregated inner object must share the lifetime of the
+// controlling outer: releasing the outer reference while a base interface is still alive must
+// not destroy the native object, and releasing the last base interface must destroy it.
+TEST(AuthoringTest, ComposableClassNativeDerivationLifetime)
+{
+    NativeDerivedComposable::s_destructorCount = 0;
+
+    ComposableBase asBase{ nullptr };
+
+    {
+        winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(5);
+
+        asBase = nativeDerived.as<ComposableBase>();
+
+        EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 0);
+    }
+
+    // The outer reference is gone, but the base interface still keeps the aggregate alive
+    EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 0);
+    EXPECT_EQ(asBase.GetValue(), 5);
+
+    asBase = nullptr;
+
+    EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 1);
+}
+
+TEST(AuthoringTest, ComposableClassCSharpDerivation)
+{
+    CSharpDerivedComposable csharpDerived;
+    EXPECT_EQ(csharpDerived.GetValue(), 84);
+    EXPECT_EQ(csharpDerived.GetDerivedValue(), 168);
+    EXPECT_EQ(csharpDerived.GetName(), L"CSharpDerivedComposable");
+
+    // A C# class deriving from a C# composable base is a single managed object, so it is not
+    // aggregated: the inherited interface must share its identity.
+    EXPECT_EQ(
+        winrt::get_abi(csharpDerived.as<winrt::Windows::Foundation::IUnknown>()),
+        winrt::get_abi(csharpDerived.as<ComposableBase>().as<winrt::Windows::Foundation::IUnknown>()));
+}
+
+// The CCW interfaces of a composable class use an aggregation-aware 'IUnknown' implementation, but a
+// standalone (non-aggregated) instance must behave exactly like any other authored object: the pointers
+// it hands out keep its own COM identity, and marshalling them back into managed code must resolve the
+// very same managed instance rather than wrapping the CCW in a new RCW.
+TEST(AuthoringTest, ComposableClassStandaloneSelfMarshalling)
+{
+    ComposableBase standalone(13);
+
+    winrt::Windows::Foundation::IUnknown identity = standalone.as<winrt::Windows::Foundation::IUnknown>();
+
+    // The loop also validates reference counting: an unbalanced 'QueryInterface'/'Release' pair on
+    // either the CCW or the returned interface would show up as a leak or as a premature destruction.
+    for (int i = 0; i < 100; ++i)
+    {
+        // Class-typed round-trip (the return type is the composable runtime class itself)
+        ComposableBase self = standalone.GetSelfAsBase();
+
+        EXPECT_EQ(winrt::get_abi(self.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+        EXPECT_TRUE(standalone.IsSameInstance(self));
+
+        // Interface-typed round-trip (the return type is an authored Windows Runtime interface)
+        IComposableThing thing = standalone.GetSelfAsThing();
+
+        EXPECT_EQ(winrt::get_abi(thing.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+        EXPECT_TRUE(standalone.IsSameThing(thing));
+        EXPECT_EQ(thing.GetThingValue(), 14);
+
+        // Inherited (required) authored interface
+        IComposableThingBase thingBase = standalone.GetSelfAsThingBase();
+
+        EXPECT_EQ(winrt::get_abi(thingBase.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+        EXPECT_EQ(thingBase.GetBaseThingValue(), 15);
+
+        // 'IInspectable'-typed round-trip
+        winrt::Windows::Foundation::IInspectable inspectable = standalone.GetSelf();
+
+        EXPECT_EQ(winrt::get_abi(inspectable.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+    }
+
+    EXPECT_EQ(standalone.GetValue(), 13);
+    EXPECT_EQ(standalone.GetThingValue(), 14);
+}
+
+// An aggregated object must hand out the identity of its controlling outer for every interface it
+// marshals itself as, and must do so without disturbing the reference count of either the CCW or the
+// controlling outer. Doing this in a loop makes a leaked CCW reference (which would keep the aggregate
+// alive forever) or an over-released outer (which would tear it down early) fail deterministically.
+TEST(AuthoringTest, ComposableClassNativeDerivationSelfMarshalling)
+{
+    NativeDerivedComposable::s_destructorCount = 0;
+
+    {
+        winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(21);
+
+        winrt::Windows::Foundation::IUnknown outerIdentity = nativeDerived.as<winrt::Windows::Foundation::IUnknown>();
+
+        ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+        for (int i = 0; i < 100; ++i)
+        {
+            ComposableBase self = asBase.GetSelfAsBase();
+
+            EXPECT_EQ(winrt::get_abi(self.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+            EXPECT_TRUE(asBase.IsSameInstance(self));
+
+            IComposableThing thing = asBase.GetSelfAsThing();
+
+            EXPECT_EQ(winrt::get_abi(thing.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+            EXPECT_TRUE(asBase.IsSameThing(thing));
+            EXPECT_EQ(thing.GetThingValue(), 22);
+
+            // Interfaces reachable only through interface inheritance must delegate 'IUnknown' too
+            IComposableThingBase thingBase = asBase.GetSelfAsThingBase();
+
+            EXPECT_EQ(winrt::get_abi(thingBase.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+            EXPECT_EQ(thingBase.GetBaseThingValue(), 23);
+
+            winrt::Windows::Foundation::IInspectable inspectable = asBase.GetSelf();
+
+            EXPECT_EQ(winrt::get_abi(inspectable.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+        }
+
+        // The aggregate is still alive and functional after all the round-trips
+        EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 0);
+        EXPECT_EQ(asBase.GetValue(), 21);
+    }
+
+    // And it is destroyed exactly once, when the last reference goes away
+    EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 1);
+}
+
+// Not every interface a CCW exposes can get a per-aggregate delegating vtable copy: the built-in ones every
+// CCW carries ('IStringable', 'IWeakReferenceSource', 'IMarshal', 'IAgileObject') come from shared vtables in
+// 'WinRT.Runtime'. Those must never be handed out through the aggregated inner object with an identity of
+// their own: either the controlling outer answers them itself, or they are simply not available.
+// Interfaces that cannot take part in aggregation at all are rejected at build time (CSWINRTWINMDGEN0015).
+TEST(AuthoringTest, ComposableClassNativeDerivationSharedVtableInterfaceIdentity)
+{
+    winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(31);
+
+    winrt::Windows::Foundation::IUnknown outerIdentity = nativeDerived.as<winrt::Windows::Foundation::IUnknown>();
+
+    ComposableBase asBase = nativeDerived.as<ComposableBase>();
+
+    // A standalone instance does expose these (they are part of every CCW), so this is really about
+    // what the aggregate does with them, not about whether the managed object implements them.
+    ComposableBase standalone(31);
+
+    EXPECT_NE(standalone.try_as<winrt::Windows::Foundation::IStringable>(), nullptr);
+
+    if (auto stringable = asBase.try_as<winrt::Windows::Foundation::IStringable>())
+    {
+        EXPECT_EQ(winrt::get_abi(stringable.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+    }
+
+    if (auto agile = asBase.try_as<winrt::impl::IAgileObject>())
+    {
+        EXPECT_EQ(winrt::get_abi(agile.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+    }
+
+    // Weak references are resolved by the controlling outer too, so they round-trip to its identity
+    winrt::weak_ref<ComposableBase> weakBase = winrt::make_weak(asBase);
+    ComposableBase resolvedBase = weakBase.get();
+
+    ASSERT_NE(resolvedBase, nullptr);
+    EXPECT_EQ(winrt::get_abi(resolvedBase.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(outerIdentity));
+    EXPECT_EQ(resolvedBase.GetValue(), 31);
+}
+
+// The CCW of a standalone (non-aggregated) instance of a composable class must be a completely ordinary one,
+// keeping the 'IUnknown' implementation the runtime provides in native code. The clearest observable proof of
+// that is the set of interfaces every CCW carries and whose vtables are shared across the whole application:
+// they must all still be there, all with the identity of the object itself. Those are exactly the interfaces
+// an aggregate cannot hand out, so they cannot come from any aggregation-specific code path.
+TEST(AuthoringTest, ComposableClassStandaloneSharedVtableInterfaceIdentity)
+{
+    ComposableBase standalone(17);
+
+    winrt::Windows::Foundation::IUnknown identity = standalone.as<winrt::Windows::Foundation::IUnknown>();
+
+    auto stringable = standalone.try_as<winrt::Windows::Foundation::IStringable>();
+
+    ASSERT_NE(stringable, nullptr);
+    EXPECT_EQ(winrt::get_abi(stringable.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+
+    auto agile = standalone.try_as<winrt::impl::IAgileObject>();
+
+    ASSERT_NE(agile, nullptr);
+    EXPECT_EQ(winrt::get_abi(agile.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+
+    // Weak references go through 'IWeakReferenceSource', which the runtime implements on every CCW
+    winrt::weak_ref<ComposableBase> weakBase = winrt::make_weak(standalone);
+    ComposableBase resolvedBase = weakBase.get();
+
+    ASSERT_NE(resolvedBase, nullptr);
+    EXPECT_EQ(winrt::get_abi(resolvedBase.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+    EXPECT_EQ(resolvedBase.GetValue(), 17);
+    EXPECT_TRUE(standalone.IsSameInstance(resolvedBase));
+}
+
+// Every interface pointer the aggregated inner object hands out is created once and cached, so asking for the
+// same interface twice has to produce the very same pointer, and must not disturb any reference count.
+TEST(AuthoringTest, ComposableClassNativeDerivationInterfacePointersAreStable)
+{
+    NativeDerivedComposable::s_destructorCount = 0;
+
+    {
+        winrt::com_ptr<NativeDerivedComposable> nativeDerived = winrt::make_self<NativeDerivedComposable>(41);
+
+        ComposableBase firstBase = nativeDerived.as<ComposableBase>();
+        ComposableBase secondBase = nativeDerived.as<ComposableBase>();
+
+        EXPECT_EQ(winrt::get_abi(firstBase), winrt::get_abi(secondBase));
+
+        IComposableThing firstThing = nativeDerived.as<IComposableThing>();
+        IComposableThing secondThing = firstBase.as<IComposableThing>();
+
+        EXPECT_EQ(winrt::get_abi(firstThing), winrt::get_abi(secondThing));
+        EXPECT_EQ(firstThing.GetThingValue(), 42);
+
+        EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 0);
+    }
+
+    EXPECT_EQ(NativeDerivedComposable::s_destructorCount, 1);
+}
+
+// A C# class deriving from a C# composable base is a single managed object, so its own CCW is used and
+// no aggregation is involved: the interfaces it hands out must resolve back to that very same instance.
+TEST(AuthoringTest, ComposableClassCSharpDerivationSelfMarshalling)
+{
+    CSharpDerivedComposable csharpDerived;
+
+    winrt::Windows::Foundation::IUnknown identity = csharpDerived.as<winrt::Windows::Foundation::IUnknown>();
+
+    ComposableBase asBase = csharpDerived.as<ComposableBase>();
+
+    ComposableBase self = asBase.GetSelfAsBase();
+
+    EXPECT_EQ(winrt::get_abi(self.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+    EXPECT_TRUE(asBase.IsSameInstance(self));
+
+    IComposableThing thing = asBase.GetSelfAsThing();
+
+    EXPECT_EQ(winrt::get_abi(thing.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+    EXPECT_TRUE(asBase.IsSameThing(thing));
+    EXPECT_EQ(thing.GetThingValue(), 85);
+
+    IComposableThingBase thingBase = asBase.GetSelfAsThingBase();
+
+    EXPECT_EQ(winrt::get_abi(thingBase.as<winrt::Windows::Foundation::IUnknown>()), winrt::get_abi(identity));
+    EXPECT_EQ(thingBase.GetBaseThingValue(), 86);
+}
+
 TEST(AuthoringTest, Statics)
 {
     EXPECT_EQ(TestClass::GetDefaultFactor(), 1);

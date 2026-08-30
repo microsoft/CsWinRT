@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -26,6 +27,17 @@ namespace WinMDGeneratorTest.Helpers;
 /// </remarks>
 internal static class WinMDGeneratorRunner
 {
+    /// <summary>
+    /// The reference assembly paths to pass to the generator, as a single comma separated argument value.
+    /// </summary>
+    /// <remarks>
+    /// The compiled input assembly is always first, followed by the .NET reference assemblies for the target
+    /// framework (if they can be located). Those are needed as soon as a test uses a BCL type the generator has
+    /// to resolve (e.g. a custom-mapped interface such as <c>IDisposable</c>), exactly like a real build, which
+    /// always passes the full set of references the component was compiled against.
+    /// </remarks>
+    private static readonly Lazy<string[]> FrameworkReferenceAssemblyPaths = new(GetFrameworkReferenceAssemblyPaths);
+
     /// <summary>
     /// Asserts that the generator succeeds (exit code <c>0</c>) for the given component source.
     /// </summary>
@@ -169,6 +181,46 @@ internal static class WinMDGeneratorRunner
     /// <returns>A lookup from metadata row to the fully qualified names of the attributes applied to it.</returns>
     public static ILookup<string, string> GetGeneratedAttributes(string source)
     {
+        return GenerateAndRead(source, ReadAttributes);
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and returns the interface implementations of every
+    /// type in the produced <c>.winmd</c>, keyed by <c>Namespace.Type:Namespace.Interface</c>, with the fully
+    /// qualified names of the attributes applied to the interface implementation row as values.
+    /// </summary>
+    /// <remarks>
+    /// Windows Runtime metadata places <c>[Default]</c>, <c>[Protected]</c> and <c>[Overridable]</c> on the
+    /// interface implementation row rather than on the class or the interface, so they are only observable here.
+    /// An interface implementation with no attribute still shows up, with an empty value.
+    /// </remarks>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <returns>A lookup from <c>Namespace.Type:Namespace.Interface</c> to the attributes applied to it.</returns>
+    public static ILookup<string, string> GetGeneratedInterfaceImplementations(string source)
+    {
+        return GenerateAndRead(source, ReadInterfaceImplementations);
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and returns the members of every type in the
+    /// produced <c>.winmd</c>, keyed by <c>Namespace.Type</c>.
+    /// </summary>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <returns>A lookup from type to the metadata names of its methods.</returns>
+    public static ILookup<string, string> GetGeneratedMethods(string source)
+    {
+        return GenerateAndRead(source, ReadMethods);
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and projects the produced <c>.winmd</c>.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result produced by <paramref name="readWinMD"/>.</typeparam>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <param name="readWinMD">The callback reading the generated <c>.winmd</c>.</param>
+    /// <returns>The result produced by <paramref name="readWinMD"/>.</returns>
+    private static TResult GenerateAndRead<TResult>(string source, Func<string, TResult> readWinMD)
+    {
         string toolPath = GetGeneratorPath();
         string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
 
@@ -180,7 +232,7 @@ internal static class WinMDGeneratorRunner
 
             File.WriteAllText(responseFilePath, $"""
                 --input-assembly-path {inputAssemblyPath}
-                --reference-assembly-paths {inputAssemblyPath}
+                --reference-assembly-paths {GetReferenceAssemblyPaths(inputAssemblyPath)}
                 --output-winmd-path {outputWinMDPath}
                 --assembly-version 1.0.0.0
                 --use-windows-ui-xaml-projections false
@@ -190,12 +242,163 @@ internal static class WinMDGeneratorRunner
 
             Assert.AreEqual(0, exitCode, output);
 
-            return ReadAttributes(outputWinMDPath);
+            return readWinMD(outputWinMDPath);
         }
         finally
         {
             TryDeleteDirectory(temporaryDirectory);
         }
+    }
+
+    /// <summary>
+    /// Reads all interface implementations in a <c>.winmd</c>, along with the attributes applied to them.
+    /// </summary>
+    /// <param name="winmdPath">The path of the <c>.winmd</c> to read.</param>
+    /// <returns>A lookup from <c>Namespace.Type:Namespace.Interface</c> to the attributes applied to it.</returns>
+    private static ILookup<string, string> ReadInterfaceImplementations(string winmdPath)
+    {
+        using FileStream stream = File.OpenRead(winmdPath);
+        using PEReader peReader = new(stream);
+
+        MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+
+        List<KeyValuePair<string, string>> implementations = [];
+
+        foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions)
+        {
+            TypeDefinition type = reader.GetTypeDefinition(typeHandle);
+            string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+            foreach (InterfaceImplementationHandle implementationHandle in type.GetInterfaceImplementations())
+            {
+                InterfaceImplementation implementation = reader.GetInterfaceImplementation(implementationHandle);
+                string key = $"{owner}:{GetTypeName(reader, implementation.Interface)}";
+                bool hasAttributes = false;
+
+                foreach (CustomAttributeHandle attributeHandle in implementation.GetCustomAttributes())
+                {
+                    implementations.Add(new KeyValuePair<string, string>(
+                        key,
+                        GetAttributeTypeName(reader, reader.GetCustomAttribute(attributeHandle))));
+
+                    hasAttributes = true;
+                }
+
+                if (!hasAttributes)
+                {
+                    implementations.Add(new KeyValuePair<string, string>(key, string.Empty));
+                }
+            }
+        }
+
+        return implementations.ToLookup(static pair => pair.Key, static pair => pair.Value);
+    }
+
+    /// <summary>
+    /// Reads the methods of every type in a <c>.winmd</c>.
+    /// </summary>
+    /// <param name="winmdPath">The path of the <c>.winmd</c> to read.</param>
+    /// <returns>A lookup from type to the metadata names of its methods.</returns>
+    private static ILookup<string, string> ReadMethods(string winmdPath)
+    {
+        using FileStream stream = File.OpenRead(winmdPath);
+        using PEReader peReader = new(stream);
+
+        MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+
+        List<KeyValuePair<string, string>> methods = [];
+
+        foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions)
+        {
+            TypeDefinition type = reader.GetTypeDefinition(typeHandle);
+            string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+            foreach (MethodDefinitionHandle methodHandle in type.GetMethods())
+            {
+                methods.Add(new KeyValuePair<string, string>(owner, reader.GetString(reader.GetMethodDefinition(methodHandle).Name)));
+            }
+        }
+
+        return methods.ToLookup(static pair => pair.Key, static pair => pair.Value);
+    }
+
+    /// <summary>
+    /// Resolves the fully qualified name of a type referenced from an interface implementation row.
+    /// </summary>
+    /// <param name="reader">The metadata reader for the <c>.winmd</c>.</param>
+    /// <param name="handle">The handle of the type to resolve.</param>
+    /// <returns>The fully qualified name of the type.</returns>
+    private static string GetTypeName(MetadataReader reader, EntityHandle handle)
+    {
+        if (handle.Kind == HandleKind.TypeReference)
+        {
+            TypeReference typeReference = reader.GetTypeReference((TypeReferenceHandle)handle);
+
+            return Format(reader.GetString(typeReference.Namespace), reader.GetString(typeReference.Name));
+        }
+
+        if (handle.Kind == HandleKind.TypeDefinition)
+        {
+            TypeDefinition typeDefinition = reader.GetTypeDefinition((TypeDefinitionHandle)handle);
+
+            return Format(reader.GetString(typeDefinition.Namespace), reader.GetString(typeDefinition.Name));
+        }
+
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Formats the <c>--reference-assembly-paths</c> argument value for a given input assembly.
+    /// </summary>
+    /// <param name="inputAssemblyPath">The full path of the compiled input assembly.</param>
+    /// <returns>The comma separated list of reference assembly paths.</returns>
+    private static string GetReferenceAssemblyPaths(string inputAssemblyPath)
+    {
+        return string.Join(',', new[] { inputAssemblyPath }.Concat(FrameworkReferenceAssemblyPaths.Value));
+    }
+
+    /// <summary>
+    /// Locates the .NET reference assemblies for the target framework of the generated components.
+    /// </summary>
+    /// <returns>The full paths of the reference assemblies, or an empty array if they cannot be located.</returns>
+    private static string[] GetFrameworkReferenceAssemblyPaths()
+    {
+        // The runtime directory is '<dotnet root>\shared\Microsoft.NETCore.App\<version>', so the .NET root
+        // (which is where the reference packs live) is three levels above it. This is resolved from the running
+        // host rather than from 'Environment.ProcessPath', which points at the test host executable.
+        string? dotnetRoot = Path.GetDirectoryName(
+            Path.GetDirectoryName(
+                Path.GetDirectoryName(
+                    Path.TrimEndingDirectorySeparator(RuntimeEnvironment.GetRuntimeDirectory()))));
+
+        if (string.IsNullOrEmpty(dotnetRoot))
+        {
+            return [];
+        }
+
+        string referencePackRoot = Path.Combine(dotnetRoot, "packs", "Microsoft.NETCore.App.Ref");
+
+        if (!Directory.Exists(referencePackRoot))
+        {
+            return [];
+        }
+
+        // Pick the highest installed 10.x reference pack, matching the target framework the components declare
+        string? referencePack = Directory
+            .EnumerateDirectories(referencePackRoot, "10.*")
+            .OrderBy(static path => path, StringComparer.OrdinalIgnoreCase)
+            .LastOrDefault();
+
+        if (referencePack is null)
+        {
+            return [];
+        }
+
+        string referenceDirectory = Path.Combine(referencePack, "ref", "net10.0");
+
+        return Directory.Exists(referenceDirectory)
+            ? Directory.GetFiles(referenceDirectory, "*.dll")
+            : [];
     }
 
     /// <summary>
@@ -318,7 +521,7 @@ internal static class WinMDGeneratorRunner
 
             return $"""
                 --input-assembly-path {inputAssemblyPath}
-                --reference-assembly-paths {inputAssemblyPath}
+                --reference-assembly-paths {GetReferenceAssemblyPaths(inputAssemblyPath)}
                 --output-winmd-path {Path.Combine(temporaryDirectory, "TestInput.winmd")}
                 --assembly-version 1.0.0.0
                 --use-windows-ui-xaml-projections {useWindowsUIXamlProjections}

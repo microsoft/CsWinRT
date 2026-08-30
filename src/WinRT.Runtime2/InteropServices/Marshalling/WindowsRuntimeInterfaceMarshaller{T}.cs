@@ -70,6 +70,18 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         }
         else
         {
+            // If 'value' is an authored object taking part in COM aggregation, the identity of the aggregate is the
+            // controlling outer object, so the interface has to be resolved through it (see the remarks on the helper).
+            if (WindowsRuntimeAggregation.TryQueryControllingOuter(value, in iid, out void* aggregatedPtr, out HRESULT aggregatedHResult))
+            {
+                if (aggregatedHResult.Failed)
+                {
+                    ThrowInvalidCastExceptionManaged(value, in iid, aggregatedHResult);
+                }
+
+                return new(aggregatedPtr);
+            }
+
             // Marshal 'value' as an 'IInspectable' (same as in 'WindowsRuntimeObjectMarshaller')
             void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value);
 
@@ -135,6 +147,19 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         }
         else
         {
+            // Aggregated objects are marshalled through their controlling outer object, same as in the variant above
+            if (WindowsRuntimeAggregation.TryQueryControllingOuter(value, in iid, out void* aggregatedPtr, out HRESULT aggregatedHResult))
+            {
+                if (aggregatedHResult.Failed)
+                {
+                    ThrowInvalidCastExceptionManaged(value, in iid, aggregatedHResult);
+                }
+
+                result = new(aggregatedPtr);
+
+                return true;
+            }
+
             void* thisPtr = null;
 
             // Try to marshal the managed object, if we have available marshalling info for it.

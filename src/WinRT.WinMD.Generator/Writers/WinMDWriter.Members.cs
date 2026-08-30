@@ -262,7 +262,8 @@ internal sealed partial class WinMDWriter
     /// <param name="outputType">The output <see cref="TypeDefinition"/> in the WinMD.</param>
     /// <param name="inputProperty">The input <see cref="PropertyDefinition"/> to add.</param>
     /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
-    private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent)
+    /// <param name="allowNonPublicSetter">Whether a non-public (but derived-type accessible) setter should be emitted.</param>
+    private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent, bool allowNonPublicSetter = false)
     {
         TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
 
@@ -309,7 +310,9 @@ internal sealed partial class WinMDWriter
         }
 
         // Add setter (Windows Runtime uses "put_" prefix)
-        if (inputProperty.SetMethod is not null && inputProperty.SetMethod.IsPublic)
+        if (inputProperty.SetMethod is not null &&
+            (inputProperty.SetMethod.IsPublic ||
+             (allowNonPublicSetter && (inputProperty.SetMethod.IsFamily || inputProperty.SetMethod.IsFamilyOrAssembly))))
         {
             MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
