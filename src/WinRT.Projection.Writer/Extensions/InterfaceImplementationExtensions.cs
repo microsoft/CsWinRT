@@ -36,6 +36,15 @@ internal static class InterfaceImplementationExtensions
         }
 
         /// <summary>
+        /// Returns whether the implemented interface is marked <c>[Protected]</c>.
+        /// </summary>
+        /// <returns><see langword="true"/> if the interface is protected; otherwise <see langword="false"/>.</returns>
+        public bool IsProtected()
+        {
+            return impl.HasWindowsFoundationMetadataAttribute(ProtectedAttribute);
+        }
+
+        /// <summary>
         /// Attempts to resolve the implemented interface to a <see cref="TypeDefinition"/>, handling
         /// the common loop-body pattern of <c>if (impl.Interface is null) continue;</c> followed by
         /// <see cref="ITypeDefOrRefExtensions.ResolveAsTypeDefinition(ITypeDefOrRef, MetadataCache)"/>

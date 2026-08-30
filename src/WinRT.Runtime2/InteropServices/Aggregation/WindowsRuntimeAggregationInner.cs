@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -34,7 +32,7 @@ namespace WindowsRuntime.InteropServices;
 /// <para>
 /// The per-aggregate vtables are private copies of the normal CCW vtables of those interfaces, with their
 /// <c>IUnknown</c> and <c>IInspectable</c> entries replaced by the delegating ones from
-/// <see cref="WindowsRuntimeAggregatedIInspectableImpl"/>. Each copy is preceded by a single slot holding the
+/// <see cref="WindowsRuntimeAggregationIInspectableImpl"/>. Each copy is preceded by a single slot holding the
 /// controlling outer object, so those entries can resolve it with a pair of pointer loads. All other entries
 /// are the original CCW stubs, receiving the very same <see cref="ComInterfaceDispatch"/> pointer they would
 /// receive for a non aggregated object, so interface calls behave identically (and CCW-s for objects that are
@@ -133,7 +131,7 @@ internal static unsafe class WindowsRuntimeAggregationInner
 
                 // Replace all six 'IInspectable' (and therefore 'IUnknown') entries with the delegating ones.
                 // Every remaining entry is left as is, so interface methods keep running the normal CCW stubs.
-                *(IInspectableVftbl*)vtableCopy = *WindowsRuntimeAggregatedIInspectableImpl.Vtable;
+                *(IInspectableVftbl*)vtableCopy = *(IInspectableVftbl*)WindowsRuntimeAggregationIInspectableImpl.Vtable;
 
                 entries[i].IID = entry.IID;
                 entries[i].Vtable = (nint)vtableCopy;

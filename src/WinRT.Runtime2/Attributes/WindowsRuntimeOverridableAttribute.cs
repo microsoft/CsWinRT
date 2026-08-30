@@ -28,5 +28,5 @@ namespace WindowsRuntime;
 /// equivalent of <c>overridable()</c> in C++/WinRT.
 /// </para>
 /// </remarks>
-[AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
 public sealed class WindowsRuntimeOverridableAttribute : Attribute;

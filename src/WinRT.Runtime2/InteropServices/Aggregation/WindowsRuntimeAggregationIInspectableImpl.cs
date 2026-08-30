@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -42,7 +40,7 @@ namespace WindowsRuntime.InteropServices;
 /// code, and can therefore be safely called from native code even during a garbage collection.
 /// </para>
 /// </remarks>
-internal static unsafe class WindowsRuntimeAggregatedIInspectableImpl
+internal static unsafe class WindowsRuntimeAggregationIInspectableImpl
 {
     /// <summary>
     /// The <see cref="IInspectableVftbl"/> value for the delegating <c>IInspectable</c> implementation.
@@ -53,7 +51,7 @@ internal static unsafe class WindowsRuntimeAggregatedIInspectableImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static WindowsRuntimeAggregatedIInspectableImpl()
+    static WindowsRuntimeAggregationIInspectableImpl()
     {
         Vftbl.QueryInterface = &QueryInterface;
         Vftbl.AddRef = &AddRef;
@@ -66,10 +64,10 @@ internal static unsafe class WindowsRuntimeAggregatedIInspectableImpl
     /// <summary>
     /// Gets a pointer to the delegating <c>IInspectable</c> implementation.
     /// </summary>
-    public static IInspectableVftbl* Vtable
+    public static nint Vtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (IInspectableVftbl*)Unsafe.AsPointer(in Vftbl);
+        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <summary>

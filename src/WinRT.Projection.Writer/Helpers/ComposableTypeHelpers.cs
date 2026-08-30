@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
-using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
@@ -111,8 +110,7 @@ internal static class ComposableTypeHelpers
                 continue;
             }
 
-            if (interfaceImplementation.IsOverridable() ||
-                interfaceImplementation.HasWindowsFoundationMetadataAttribute(WellKnownAttributeNames.ProtectedAttribute))
+            if (interfaceImplementation.IsOverridable() || interfaceImplementation.IsProtected())
             {
                 return true;
             }

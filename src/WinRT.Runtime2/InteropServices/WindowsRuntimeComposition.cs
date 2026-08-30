@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-#if !WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 using WindowsRuntime.InteropServices.Marshalling;
 #endif
 

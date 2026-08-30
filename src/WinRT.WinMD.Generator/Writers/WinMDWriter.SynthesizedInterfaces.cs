@@ -7,6 +7,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
+using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Writers;
@@ -239,7 +240,7 @@ internal sealed partial class WinMDWriter
                  (!inputType.IsAbstract && method.Parameters.Count > 0)))
             {
                 hasMembers = true;
-                AddFactoryMethod(synthesizedInterface, inputType, method, isComposable: HasPublicCompositionFactory(inputType));
+                AddFactoryMethod(synthesizedInterface, inputType, method, isComposable);
             }
             else if (interfaceType == SynthesizedInterfaceType.Static && method.IsStatic && !method.IsConstructor && !method.IsSpecialName)
             {
@@ -446,7 +447,7 @@ internal sealed partial class WinMDWriter
 
             if (interfaceType == SynthesizedInterfaceType.Factory)
             {
-                if (HasPublicCompositionFactory(inputType))
+                if (isComposable)
                 {
                     AddComposableAttribute(classOutputType, (uint)version, qualifiedInterfaceName);
                 }
@@ -506,11 +507,11 @@ internal sealed partial class WinMDWriter
             factoryMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 sequence: (ushort)(constructor.Parameters.Count + 1),
                 name: "baseInterface",
-                attributes: AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes.In));
+                attributes: ParameterAttributes.In));
             factoryMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 sequence: (ushort)(constructor.Parameters.Count + 2),
                 name: "innerInterface",
-                attributes: AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes.Out));
+                attributes: ParameterAttributes.Out));
         }
 
         synthesizedInterface.Methods.Add(factoryMethod);

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -22,10 +20,10 @@ namespace WindowsRuntime.InteropServices;
 /// the COM aggregation contract.
 /// </para>
 /// <para>
-/// This lookup is only used when an aggregated object is marshalled out to native code, which is a cold path.
+/// This lookup is used when an aggregated object is marshalled out to native code and by
+/// <see cref="WindowsRuntimeComposition"/> when managed code explicitly resolves the controlling outer.
 /// The <c>IUnknown</c> methods on the interfaces such an object exposes never come through here: they resolve
-/// their controlling outer with a pair of pointer loads instead (see
-/// <see cref="WindowsRuntimeAggregatedIInspectableImpl"/>).
+/// their controlling outer with a pair of pointer loads instead.
 /// </para>
 /// <para>
 /// The controlling outer is deliberately not reference counted: an aggregated object must never keep its

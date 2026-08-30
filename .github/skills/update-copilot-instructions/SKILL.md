@@ -23,6 +23,7 @@ Launch parallel explore agents for each of the 12 CsWinRT 3.0 projects listed in
 
 1. **WinRT.Runtime (`src/WinRT.Runtime2/`)**
    - Directory structure matches what's documented
+   - Authored composable-class support is documented: `InteropServices/Aggregation/`, `WindowsRuntimeComposition`, `WindowsRuntimeOverridableAttribute`, non-delegating inner objects, and per-aggregate delegating vtables
    - Key types listed still exist and have the described purposes
    - T4 templates (`.tt` files) are accurately listed
    - Project settings (TFM, language version, nullable, unsafe, etc.) are current
@@ -43,6 +44,7 @@ Launch parallel explore agents for each of the 12 CsWinRT 3.0 projects listed in
    - Public API surface (`ProjectionWriter.Run`, `ProjectionWriterOptions` shape) is accurate
    - Error ID range (5xxx in `Errors/WellKnownProjectionWriterExceptions.cs`) is accurate
    - Resources structure (`Additions/` per-namespace + `Base/` baseline) matches
+   - Composable component output is current: composition factories, cached aggregation entries, protected/overridable member projection, and `[UnsafeAccessor]` CCW dispatch
 
 4. **Reference projection generator (`src/WinRT.Projection.Ref.Generator/`)**
    - CLI parameters on `ReferenceProjectionGeneratorArgs` are current
@@ -74,6 +76,7 @@ Launch parallel explore agents for each of the 12 CsWinRT 3.0 projects listed in
 8. **WinMD generator (`src/WinRT.WinMD.Generator/`)**
    - CLI parameters on `WinMDGeneratorArgs` are current
    - Error ID range (`CSWINRTWINMDGENxxxx`) in `Errors/WellKnownWinMDExceptions.cs` is accurate
+   - Composable authoring metadata is current: `[Composable]` factories, `[Protected]`/`[Overridable]` interface implementations, and diagnostics for unsupported aggregation interfaces or constructor parameters
    - Project settings and dependencies are current
    - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` is wired (gated on `CsWinRTComponent`)
    - Debug repro support is documented (mentions `--debug-repro-directory`, `winmd-debug-repro.zip`, input component `.dll` + reference assemblies bundled)

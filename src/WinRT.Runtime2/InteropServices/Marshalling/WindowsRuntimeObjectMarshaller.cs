@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -47,7 +48,7 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             interfacePtr: out void* aggregatedPtr,
             hresult: out HRESULT aggregatedHResult))
         {
-            RestrictedErrorInfo.ThrowExceptionForHR(aggregatedHResult);
+            Marshal.ThrowExceptionForHR(aggregatedHResult);
 
             return new(aggregatedPtr);
         }

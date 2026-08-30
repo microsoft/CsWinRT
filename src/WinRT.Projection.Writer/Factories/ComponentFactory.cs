@@ -303,9 +303,9 @@ internal static class ComponentFactory
     }
 
     /// <summary>
-    /// Writes the helper producing the COM aggregation entries for a composable runtime class.
+    /// Writes the cached COM aggregation entries and their initialization helper for a composable runtime class.
     /// </summary>
-    /// <param name="writer">The writer to emit the helper to.</param>
+    /// <param name="writer">The writer to emit the field and helper to.</param>
     /// <param name="context">The active projection emit context.</param>
     /// <param name="classType">The composable runtime class.</param>
     /// <remarks>
@@ -341,6 +341,8 @@ internal static class ComponentFactory
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
+            private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeAggregationEntry[] AggregationEntries = GetAggregationEntries();
+
             private static unsafe global::WindowsRuntime.InteropServices.WindowsRuntimeAggregationEntry[] GetAggregationEntries()
             {
                 return
@@ -399,7 +401,7 @@ internal static class ComponentFactory
                 return global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateComposableInstanceUnsafe(
                     new {{projectedTypeName}}({{WriteArgumentNames}}),
                     in {{defaultInterfaceIid}},
-                    GetAggregationEntries(),
+                    AggregationEntries,
                     {{GetControllingOuterParameterName(sig)}},
                     {{GetNonDelegatingInnerParameterName(sig)}});
             }

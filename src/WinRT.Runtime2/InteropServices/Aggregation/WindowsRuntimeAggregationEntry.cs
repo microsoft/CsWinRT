@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
-
 using System;
 
 namespace WindowsRuntime.InteropServices;

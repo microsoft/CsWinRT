@@ -193,6 +193,7 @@ WinRT.Runtime2/
 ├── Attributes/                      # Public marker attributes (e.g. [WindowsRuntimeClassName])
 ├── InteropServices/                 # Core interop infrastructure
 │   ├── Activation/                  # Object activation factories and helpers
+│   ├── Aggregation/                 # Authored composable-class aggregation and per-aggregate delegating vtables
 │   ├── AsyncInfo/                   # Async operation marshalling (Adapters/, Helpers/, TaskCompletionSources/)
 │   ├── Attributes/                  # Internal attributes consumed by the interop stack
 │   ├── Bindables/                   # XAML data-binding bridge types
@@ -235,6 +236,8 @@ WinRT.Runtime2/
 | `WindowsRuntimeComWrappers` | Singleton `ComWrappers` subclass. Uses thread-local storage for fast-path marshalling. |
 | `WindowsRuntimeComWrappersMarshal` | High-level API: `TryUnwrapObjectReference()`, `IsReferenceToManagedObject()`, etc. |
 | `WindowsRuntimeObjectMarshaller` | Marshals `object` ↔ `IInspectable*`. Core `ConvertToUnmanaged`/`ConvertToManaged` methods. |
+| `WindowsRuntimeComposition` | Public authoring helper for detecting aggregation and resolving the controlling outer for overridable dispatch. |
+| `WindowsRuntimeAggregationInner` | Implementation-only non-delegating inner object for C#-authored composable classes aggregated by native derived types. |
 | `EventSource<T>` | Base event source adapter for Windows Runtime events. Specialized subclasses for `EventHandler`, `EventHandler<T>`, `TypedEventHandler<TSender, TResult>`. |
 | Collection adapters (`IListAdapter<T>`, etc.) | Bridge .NET collections (`IList<T>`, `IDictionary<K,V>`, etc.) to Windows Runtime collections (`IVector<T>`, `IMap<K,V>`, etc.) |
 
@@ -411,6 +414,8 @@ WinRT.Projection.Writer/
 
 **Baseline emission** (`Resources/Base/`): always-emitted files that are not derived from `.winmd` metadata — `ComInteropExtensions.cs` (user-friendly extension methods wrapping internal interop interfaces), `InspectableVftbl.cs` (cached `IInspectable` vtable shape), `ReferenceInterfaceEntries.cs` (CCW interface entry table for the unknown-object fallback).
 
+**Composable authoring output:** In component mode, the writer consumes `[Composable]`, `[Protected]`, and `[Overridable]` metadata to generate composition factory implementations, protected/virtual projected members, and CCW dispatch through `[UnsafeAccessor]`. It also emits a cached set of `WindowsRuntimeAggregationEntry` values describing the authored interfaces whose vtables can be copied for each aggregate.
+
 **Internal interop interfaces** (`WindowsRuntime.Internal.winmd`): a small set of Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard SDK metadata. The .winmd is produced from the C# `WinRT.Internal` project (see project 12 below); it is bundled in the CsWinRT NuGet package (`metadata/WindowsRuntime.Internal.winmd`) and added as additional input to the projection writer when building Windows SDK projections. Interfaces in this metadata carry the `[ProjectionInternal]` attribute, which causes all generated projection code for them to be emitted `internal`. The hand-written extension methods in `Resources/Base/ComInteropExtensions.cs` then surface user-friendly wrappers on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
 
 ### 4. Reference projection generator (`src/WinRT.Projection.Ref.Generator/`)
@@ -564,6 +569,8 @@ WinRT.WinMD.Generator/
 | `--assembly-version` | Assembly version stamped into the generated WinMD |
 | `--use-windows-ui-xaml-projections` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI |
 | `--debug-repro-directory` | Optional directory to write a self-contained debug repro `.zip` to |
+
+**Composable authoring metadata:** Public unsealed C# classes with public constructors are emitted with Windows Runtime composition factory interfaces and `[Composable]`. Protected and virtual members are represented by synthesized exclusive interfaces marked `[Protected]` and `[Overridable]`; `[WindowsRuntimeOverridable]` marks an explicitly authored overridable interface that managed code can use for most-derived dispatch. `CSWINRTWINMDGEN0015` rejects interfaces whose shared vtables cannot safely participate in aggregation, and `CSWINRTWINMDGEN0016` rejects unsupported array or generic composition-factory constructor parameters.
 
 **How it integrates with the build:**
 
@@ -739,7 +746,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 | Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5021`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |
-| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0014`, `9999` |
+| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0016`, `9999` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` (deriving from `WindowsRuntimeObject`), `CSWINRT3002` (type map group types), `CSWINRT3003` (component authoring attributes), `CSWINRT3004` (`WindowsRuntimeReferenceAssemblyAttribute`) |
 | Projections (user-facing markers) | `CSWINRT3xxx` | `CSWINRT3005` (using an experimental Windows Runtime API; emitted by the projection writer as `[Experimental]`, see `docs/attribute-projections.md`) |
 
@@ -754,6 +761,7 @@ CsWinRT 3.0 uses .NET's `ComWrappers` API for all COM interop:
 - **RCW (Runtime Callable Wrapper)**: managed wrapper around native COM objects. Projected runtime classes inherit `WindowsRuntimeObject`, which holds a `WindowsRuntimeObjectReference` wrapping the native `IInspectable*` pointer.
 - **CCW (COM Callable Wrapper)**: native COM representation of managed objects. The interop generator creates interface entry tables and vtable implementations for user types implementing Windows Runtime interfaces.
 - **Vtables**: defined as `[StructLayout(LayoutKind.Sequential)]` structs with `delegate* unmanaged[MemberFunction]<...>` function pointer fields. All vtables are designed to be fully pre-initialized by the Native AOT compiler (ILC) into readonly data sections.
+- **Authored composable classes**: public unsealed C# classes use Windows Runtime composition factories. Native derived types receive a non-delegating inner object, while per-aggregate copies of authored interface vtables delegate identity and lifetime to the controlling outer. `[WindowsRuntimeOverridable]` marks explicitly authored overridable interfaces, and `WindowsRuntimeComposition` provides managed access to the most-derived outer implementation.
 
 ### Type map system
 

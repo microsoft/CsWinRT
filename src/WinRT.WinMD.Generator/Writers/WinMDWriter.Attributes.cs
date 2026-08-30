@@ -236,8 +236,13 @@ internal sealed partial class WinMDWriter
     /// <summary>
     /// Adds a public <c>[Composable]</c> attribute to an unsealed runtime class.
     /// </summary>
+    /// <param name="outputType">The output class to annotate.</param>
+    /// <param name="version">The version of the composable factory.</param>
+    /// <param name="factoryInterface">The fully-qualified composition factory interface name.</param>
     private void AddComposableAttribute(TypeDefinition outputType, uint version, string factoryInterface)
     {
+        const int PublicCompositionType = 2;
+
         TypeReference composableAttrType = GetOrCreateTypeReference(
             @namespace: "Windows.Foundation.Metadata",
             name: "ComposableAttribute",
@@ -265,7 +270,7 @@ internal sealed partial class WinMDWriter
             FixedArguments =
             {
                 new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)),
-                new CustomAttributeArgument(compositionType.ToTypeSignature(true), 2),
+                new CustomAttributeArgument(compositionType.ToTypeSignature(true), PublicCompositionType),
                 new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version)
             }
         };

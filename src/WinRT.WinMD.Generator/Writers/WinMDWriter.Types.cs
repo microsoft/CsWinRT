@@ -727,6 +727,11 @@ internal sealed partial class WinMDWriter
         return false;
     }
 
+    /// <summary>
+    /// Checks whether a class implements an interface that can serve as its default Windows Runtime interface.
+    /// </summary>
+    /// <param name="inputType">The input class to inspect.</param>
+    /// <returns>Whether a surviving, non-protected, non-overridable interface is available.</returns>
     private bool HasUsableDefaultInterface(TypeDefinition inputType)
     {
         foreach (InterfaceImplementation implementation in inputType.Interfaces)
@@ -750,6 +755,12 @@ internal sealed partial class WinMDWriter
         return false;
     }
 
+    /// <summary>
+    /// Checks whether a member is declared by an explicitly authored overridable interface.
+    /// </summary>
+    /// <param name="inputType">The class implementing the interface.</param>
+    /// <param name="memberName">The metadata name of the member.</param>
+    /// <returns>Whether the member belongs to an authored overridable interface.</returns>
     private bool IsAuthoredOverridableInterfaceMember(TypeDefinition inputType, string memberName)
     {
         foreach (InterfaceImplementation implementation in inputType.Interfaces)
@@ -769,6 +780,12 @@ internal sealed partial class WinMDWriter
         return false;
     }
 
+    /// <summary>
+    /// Checks whether a property is declared by an explicitly authored overridable interface.
+    /// </summary>
+    /// <param name="inputType">The class implementing the interface.</param>
+    /// <param name="property">The property to inspect.</param>
+    /// <returns>Whether either accessor belongs to an authored overridable interface.</returns>
     private bool IsAuthoredOverridableInterfaceProperty(TypeDefinition inputType, PropertyDefinition property)
     {
         return
@@ -811,6 +828,12 @@ internal sealed partial class WinMDWriter
             (method.IsPublic || method.IsFamily || method.IsFamilyOrAssembly);
     }
 
+    /// <summary>
+    /// Checks whether a member implements any interface in the class hierarchy.
+    /// </summary>
+    /// <param name="inputType">The class to inspect.</param>
+    /// <param name="memberName">The metadata name of the member.</param>
+    /// <returns>Whether an implemented interface declares the member.</returns>
     private bool IsMemberFromImplementedInterface(TypeDefinition inputType, string memberName)
     {
         foreach (InterfaceImplementation interfaceImplementation in GatherAllInterfaces(inputType))

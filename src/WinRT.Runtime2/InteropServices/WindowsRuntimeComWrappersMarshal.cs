@@ -28,13 +28,13 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// Completes the activation of an authored composable Windows Runtime class instance, taking part in COM
     /// aggregation when a controlling outer object was supplied by the caller of the composition factory.
     /// </summary>
+    /// <typeparam name="T">The type of the authored composable runtime class.</typeparam>
     /// <param name="instance">The newly constructed authored object.</param>
     /// <param name="defaultInterfaceIid">The IID of the default interface of the authored runtime class.</param>
     /// <param name="aggregationEntries">The interfaces the composable runtime class of <paramref name="instance"/> can expose.</param>
     /// <param name="baseInterface">The controlling outer <c>IInspectable</c> object, or <see langword="null"/> for standalone activation.</param>
     /// <param name="innerInterface">The resulting non-delegating inner <c>IInspectable</c> object (<see langword="null"/> for standalone activation).</param>
     /// <returns>The default interface pointer for <paramref name="instance"/>, to return to the composing caller.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="instance"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// For standalone activation this is just a normal CCW creation, followed by a <c>QueryInterface</c> call for
@@ -52,7 +52,6 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// constructed at this point, so only the pointer that was handed to us may be used.
     /// </para>
     /// </remarks>
-    [WindowsRuntimeImplementationOnlyMember]
     public static void* CreateComposableInstanceUnsafe<T>(
         T instance,
         in Guid defaultInterfaceIid,
@@ -61,8 +60,6 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
         void** innerInterface)
         where T : class
     {
-        ArgumentNullException.ThrowIfNull(instance);
-
         *innerInterface = null;
 
         // Standalone activation: there is no controlling outer, so the instance is marshalled as usual and
@@ -274,7 +271,7 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// <see cref="IUnknownImpl"/>), which is what the fast path below checks for. The only other CCW vtables CsWinRT ever
     /// produces are the per-aggregate copies used by an authored object taking part in COM aggregation, whose
     /// <c>IUnknown</c> entries delegate to the controlling outer object (see
-    /// <see cref="WindowsRuntimeAggregatedIInspectableImpl"/>). Those are still valid
+    /// <see cref="WindowsRuntimeAggregationIInspectableImpl"/>). Those are still valid
     /// <see cref="ComWrappers.ComInterfaceDispatch"/> pointers, so they have to be recognized here as well, or the
     /// managed object behind them would not be resolved when they are marshalled back into managed code.
     /// </para>
@@ -297,13 +294,13 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// <remarks>
     /// This is kept out of line so that the (overwhelmingly more common) check for the <c>IUnknown</c> implementation
     /// provided by the runtime stays as small as possible, and so that the static constructor check for
-    /// <see cref="WindowsRuntimeAggregatedIInspectableImpl"/> never shows up on that fast path.
+    /// <see cref="WindowsRuntimeAggregationIInspectableImpl"/> never shows up on that fast path.
     /// </remarks>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool IsReferenceToAggregatedManagedObjectUnsafe(void* externalComObject)
     {
         return WindowsRuntimeAggregation.HasAggregatedInstances
-            && WindowsRuntimeAggregatedIInspectableImpl.IsDelegatingInterfacePointer(externalComObject);
+            && WindowsRuntimeAggregationIInspectableImpl.IsDelegatingInterfacePointer(externalComObject);
     }
 
     /// <summary>
