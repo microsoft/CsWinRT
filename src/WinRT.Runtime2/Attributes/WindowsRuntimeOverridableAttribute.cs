@@ -22,6 +22,12 @@ namespace WindowsRuntime;
 /// projected as an ordinary required interface.
 /// </para>
 /// <para>
+/// On a composable class, the interface is emitted as <c>[ExclusiveTo]</c> that class in the generated <c>.winmd</c>,
+/// which is what Windows Runtime metadata requires of every <c>[Overridable]</c> interface. It is still nameable from
+/// the authoring component and from consumers (exactly like <c>IControlOverrides</c>), it just stops being part of the
+/// general purpose public surface of the component: language projections surface its members on the class itself.
+/// </para>
+/// <para>
 /// A composable class implementing an overridable interface can dispatch to the most derived implementation of its
 /// members by resolving the controlling outer object with
 /// <see cref="InteropServices.WindowsRuntimeComposition.GetControllingOuterObject"/>, which is the C#/WinRT

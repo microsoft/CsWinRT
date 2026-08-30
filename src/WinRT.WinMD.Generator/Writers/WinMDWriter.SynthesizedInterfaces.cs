@@ -447,6 +447,8 @@ internal sealed partial class WinMDWriter
 
             if (interfaceType == SynthesizedInterfaceType.Factory)
             {
+                _ = _factoryInterfaces.Add(synthesizedInterface);
+
                 if (isComposable)
                 {
                     AddComposableAttribute(classOutputType, (uint)version, qualifiedInterfaceName);
@@ -496,7 +498,7 @@ internal sealed partial class WinMDWriter
         }
 
         MethodDefinition factoryMethod = new(
-            name: "Create" + classType.Name!.Value,
+            name: GetUniqueFactoryMethodName(synthesizedInterface, "Create" + classType.Name!.Value),
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
             signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
@@ -515,6 +517,37 @@ internal sealed partial class WinMDWriter
         }
 
         synthesizedInterface.Methods.Add(factoryMethod);
+    }
+
+    /// <summary>
+    /// Gets a unique metadata name for a factory method on a synthesized factory interface.
+    /// </summary>
+    /// <remarks>
+    /// Every constructor of a runtime class is projected as a <c>Create{ClassName}</c> method on the same
+    /// factory interface, so a class with more than one constructor produces overloads. Windows Runtime
+    /// metadata does not allow <c>[Overload]</c> on a factory method (MIDL5130), so unlike ordinary
+    /// overloaded members (which keep their name and get an <c>[Overload]</c> attribute), factory overloads
+    /// get a unique metadata name outright: <c>Create{ClassName}</c>, <c>Create{ClassName}2</c>, and so on.
+    /// This is also what MIDL emits for a runtime class with several constructors.
+    /// </remarks>
+    /// <param name="synthesizedInterface">The factory interface the method is added to.</param>
+    /// <param name="baseName">The name the factory method would have if it was not overloaded.</param>
+    /// <returns>A name not already used by another method on <paramref name="synthesizedInterface"/>.</returns>
+    private static string GetUniqueFactoryMethodName(TypeDefinition synthesizedInterface, string baseName)
+    {
+        if (!synthesizedInterface.Methods.Any(method => method.Name == baseName))
+        {
+            return baseName;
+        }
+
+        int suffix = 2;
+
+        while (synthesizedInterface.Methods.Any(method => method.Name == $"{baseName}{suffix}"))
+        {
+            suffix++;
+        }
+
+        return $"{baseName}{suffix}";
     }
 
     /// <summary>

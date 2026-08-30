@@ -98,6 +98,33 @@ internal sealed partial class WinMDWriter
     private readonly Dictionary<MethodDefinition, string> _userSpecifiedOverloadNames = [];
 
     /// <summary>
+    /// Maps an authored <c>[Overridable]</c> interface (by full name) to the runtime class exposing it.
+    /// </summary>
+    /// <remarks>
+    /// Populated while classes are emitted and consumed during finalization to add the <c>[ExclusiveTo]</c>
+    /// attribute that Windows Runtime metadata requires on every <c>[Overridable]</c> interface (MIDL5052).
+    /// The interface may not have been written yet when the class implementing it is processed, so the
+    /// attribute cannot be added on the spot.
+    /// </remarks>
+    private readonly Dictionary<string, string> _authoredOverridableInterfaceOwners = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The authored overridable interfaces that are exposed by composable runtime classes and therefore require
+    /// <c>[ExclusiveTo]</c> metadata.
+    /// </summary>
+    private readonly HashSet<string> _authoredOverridableInterfacesRequiringExclusiveTo = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The set of synthesized activation and composition factory interfaces.
+    /// </summary>
+    /// <remarks>
+    /// Windows Runtime metadata does not allow <c>[Overload]</c> on a factory method (MIDL5130), so
+    /// overloaded factory methods get unique metadata names instead (see <see cref="AddFactoryMethod"/>),
+    /// and these interfaces are skipped when <c>[Overload]</c> attributes are added during finalization.
+    /// </remarks>
+    private readonly HashSet<TypeDefinition> _factoryInterfaces = [];
+
+    /// <summary>
     /// Creates a new <see cref="WinMDWriter"/> instance.
     /// </summary>
     /// <param name="assemblyName">The name for the output WinMD assembly.</param>

@@ -450,6 +450,11 @@ internal sealed partial class WinMDWriter
 
         _outputModule.TopLevelTypes.Add(outputType);
 
+        // Every runtime class has to declare its threading model and marshalling behavior, or MIDL
+        // refuses to consume it (e.g. when a C++/WinRT runtime class derives from a composable class
+        // authored in C#). Objects created by CsWinRT are always agile, so the values are fixed.
+        AddThreadingAndMarshalingBehaviorAttributes(outputType);
+
         // Register in the mapping early so self-referencing method signatures can find it
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
@@ -600,12 +605,18 @@ internal sealed partial class WinMDWriter
             ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(interfaceImplementation.Interface));
 
             InterfaceImplementation outputInterfaceImplementation = new(outputInterfaceRef);
+            bool isAuthoredOverridableInterface = IsAuthoredOverridableInterface(interfaceImplementation.Interface);
+
+            if (isAuthoredOverridableInterface)
+            {
+                RecordAuthoredOverridableInterfaceOwner(interfaceImplementation.Interface, fullName, isComposable);
+            }
 
             // An authored interface marked '[WindowsRuntimeOverridable]' is the overridable surface of the composable
             // classes implementing it, so its interface implementation carries '[Overridable]' (this is where MIDL
             // places it too). It is only meaningful on a class native code can derive from and turn into the inner
             // object of a COM aggregate, so it is skipped for every other shape, where the interface stays ordinary.
-            if (isComposable && IsAuthoredOverridableInterface(interfaceImplementation.Interface))
+            if (isComposable && isAuthoredOverridableInterface)
             {
                 AddOverridableAttribute(outputInterfaceImplementation);
             }
@@ -725,6 +736,39 @@ internal sealed partial class WinMDWriter
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Records the runtime class exposing an authored <c>[Overridable]</c> interface and whether the interface
+    /// requires <c>[ExclusiveTo]</c> metadata.
+    /// </summary>
+    /// <param name="interfaceRef">The implemented interface from the input assembly.</param>
+    /// <param name="className">The fully-qualified name of the runtime class exposing it.</param>
+    /// <param name="requiresExclusiveTo">Whether the implementing runtime class is composable.</param>
+    private void RecordAuthoredOverridableInterfaceOwner(
+        ITypeDefOrRef interfaceRef,
+        string className,
+        bool requiresExclusiveTo)
+    {
+        string interfaceName = GetInterfaceFullName(interfaceRef);
+
+        if (_authoredOverridableInterfaceOwners.TryGetValue(interfaceName, out string? existingClassName) &&
+            existingClassName != className)
+        {
+            throw WellKnownWinMDExceptions.OverridableInterfaceHasMultipleOwners(
+                interfaceName,
+                existingClassName,
+                className);
+        }
+
+        _authoredOverridableInterfaceOwners[interfaceName] = className;
+
+        if (requiresExclusiveTo)
+        {
+            // An '[Overridable]' (like a '[Protected]') interface also has to be '[ExclusiveTo]' the class
+            // exposing it, or MIDL rejects the class as soon as another component derives from it (MIDL5052).
+            _ = _authoredOverridableInterfacesRequiringExclusiveTo.Add(interfaceName);
+        }
     }
 
     /// <summary>

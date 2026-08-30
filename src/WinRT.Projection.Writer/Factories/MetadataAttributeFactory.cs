@@ -411,14 +411,19 @@ internal static class MetadataAttributeFactory
             return;
         }
 
-        // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
-        if ((type.IsExclusiveTo && !context.Settings.IdicExclusiveTo) ||
+        // An authored overridable interface needs an IDIC mapping even when other exclusive interfaces are
+        // disabled: managed base code uses it to dispatch through the controlling outer of an aggregate.
+        if ((type.IsExclusiveTo &&
+             !context.Settings.IdicExclusiveTo &&
+             !ComposableTypeHelpers.IsExplicitOverridableInterface(context, type)) ||
             type.IsProjectionInternal)
         {
             return;
         }
 
-        string source = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true).Format();
+        string source = context.Settings.Component && ComposableTypeHelpers.IsExplicitOverridableInterface(context, type)
+            ? $"global::{type.FullName}"
+            : TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true).Format();
         string proxy = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.ABI, true).Format();
 
         WriteTypeMapAssociation(writer, "DynamicInterfaceCastableImplementationTypeMapGroup", $"typeof({source})", $"typeof({proxy})");

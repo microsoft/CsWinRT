@@ -88,6 +88,18 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <!-- Reference projection for the multi-layer composition test (see 'Tests/CompositionTest'). -->
+    <Project Path="Projections/Composition/Composition.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
+      <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
+      <BuildDependency Project="Tests/CompositionTestComponent/CompositionTestComponent.vcxproj" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="Debug|*" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
+    </Project>
     <Project Path="Projections/Test/Test.csproj">
       <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM64" Project="ARM64" />
@@ -222,6 +234,29 @@
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <!--
+      Multi-layer composition test: a C++/WinRT component with an unsealed runtime class deriving from
+      the C# authored 'AuthoringTest.ComposableBase', and a C# app deriving from its projection.
+      x64 Release only: that is the configuration where 'AuthoringTest' is published with NativeAOT,
+      which is what lets a managed host activate it with manifest free activation.
+    -->
+    <Project Path="Tests/CompositionTestComponent/CompositionTestComponent.vcxproj" Id="6f2f4e57-4a5a-4c53-9d0f-2f9b6c1a7d31">
+      <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
+      <Build Solution="Debug|*" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
+    </Project>
+    <Project Path="Tests/CompositionTest/CompositionTest.csproj">
+      <BuildDependency Project="Projections/Composition/Composition.csproj" />
+      <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
+      <BuildDependency Project="Tests/CompositionTestComponent/CompositionTestComponent.vcxproj" />
+      <Platform Solution="*|ARM64" Project="x64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x64" />
+      <Build Solution="Debug|*" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
     </Project>
     <Project Path="Tests/BuildDeterminismTest/BuildDeterminismComponent/BuildDeterminismComponent.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />

@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End to end test for a Windows Runtime composition chain spanning three layers and two languages:
+
+      AuthoringTest.ComposableBase                            (C# authored composable class)
+        <- CompositionTestComponent.NativeComposableMiddle    (C++/WinRT unsealed runtime class)
+          <- SealedCSharpOuter / UnsealedCSharpOuter          (C# classes deriving the projection)
+
+    The projection for both components comes from 'Projections/Composition', so the C# classes below
+    derive from a real projected composable class, and constructing one produces a three level COM
+    aggregate (managed outer -> native middle -> managed inner).
+
+    The test only runs in 'Release|x64': that is the configuration where 'AuthoringTest' is published
+    with NativeAOT, which is what makes 'AuthoringTest.dll' a native .dll exporting
+    'DllGetActivationFactory'. Both C++/WinRT and CsWinRT resolve 'AuthoringTest.ComposableBase' with
+    manifest free activation (LoadLibrary + DllGetActivationFactory), so no activation manifest and no
+    JIT hosting (WinRT.Host.dll) are involved. In every other configuration 'AuthoringTest.dll' is a
+    managed assembly, which cannot be activated that way from a managed host.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AuthoringTestOutputFolder>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\AuthoringTest\bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)'))\</AuthoringTestOutputFolder>
+    <CompositionTestComponentOutputFolder>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'CompositionTestComponent', 'bin'))</CompositionTestComponentOutputFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Projections\Composition\Composition.csproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
+  </ItemGroup>
+
+  <!--
+    Deploy the two components next to the test executable, so that manifest free activation can find
+    them. 'AuthoringTest.dll' comes from the NativeAOT publish folder (see the comment at the top),
+    together with the Windows App SDK runtime binaries it needs (the authored component references
+    WinUI types, so its module initialization loads 'Microsoft.WindowsAppRuntime.dll').
+  -->
+  <ItemGroup>
+    <None Include="$(CompositionTestComponentOutputFolder)CompositionTestComponent.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="%(Filename)%(Extension)"
+          Visible="false" />
+  </ItemGroup>
+
+  <!--
+    'AuthoringTest' is only published with NativeAOT as part of its own 'Release|x64' build, which the
+    solution drives. Publish it here too, so building this project on its own is enough to run the test.
+  -->
+  <Target Name="PublishAuthoringTestForCompositionTest"
+          BeforeTargets="ResolveProjectReferences"
+          Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\AuthoringTest\AuthoringTest.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1" />
+  </Target>
+
+  <Target Name="DeployAuthoringTestForCompositionTest"
+          AfterTargets="Build"
+          DependsOnTargets="PublishAuthoringTestForCompositionTest"
+          Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <ItemGroup>
+      <_AuthoringTestDeploymentFiles Include="$(AuthoringTestOutputFolder)publish\AuthoringTest.dll;$(AuthoringTestOutputFolder)publish\*.winmd;$(AuthoringTestOutputFolder)publish\*.pri" />
+      <_AuthoringTestDependencyFiles Include="$(AuthoringTestOutputFolder)publish\*.dll"
+                                     Exclude="$(AuthoringTestOutputFolder)publish\AuthoringTest.dll" />
+      <_AuthoringTestDependencyFiles Remove="@(_AuthoringTestDependencyFiles)"
+                                     Condition="Exists('$(TargetDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AuthoringTestDeploymentFiles);@(_AuthoringTestDependencyFiles)"
+          DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

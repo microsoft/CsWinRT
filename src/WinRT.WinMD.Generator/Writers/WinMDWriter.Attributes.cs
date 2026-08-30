@@ -279,6 +279,58 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
+    /// Adds the <c>[Threading]</c> and <c>[MarshalingBehavior]</c> attributes to a runtime class.
+    /// </summary>
+    /// <remarks>
+    /// Both attributes are required on every runtime class: MIDL rejects a class that is missing either
+    /// of them (<c>MIDL5041</c>) as soon as another component references it, which is exactly what happens
+    /// when a C++/WinRT (or any other language) runtime class derives from a composable class authored in
+    /// C#. Objects created by CsWinRT are always agile and callable from any apartment, so the values are
+    /// fixed: <c>ThreadingModel.Both</c> and <c>MarshalingType.Agile</c>.
+    /// </remarks>
+    /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> to add the attributes to.</param>
+    private void AddThreadingAndMarshalingBehaviorAttributes(TypeDefinition classOutputType)
+    {
+        const int ThreadingModelBoth = 3;
+        const int MarshalingTypeAgile = 2;
+
+        AddEnumMetadataAttribute(classOutputType, "ThreadingAttribute", "ThreadingModel", ThreadingModelBoth);
+        AddEnumMetadataAttribute(classOutputType, "MarshalingBehaviorAttribute", "MarshalingType", MarshalingTypeAgile);
+    }
+
+    /// <summary>
+    /// Adds a <c>Windows.Foundation.Metadata</c> attribute taking a single enum value to a metadata element.
+    /// </summary>
+    /// <param name="target">The output metadata element to add the attribute to.</param>
+    /// <param name="attributeName">The simple name of the attribute type (e.g. <c>"ThreadingAttribute"</c>).</param>
+    /// <param name="enumName">The simple name of the enum type of the constructor parameter.</param>
+    /// <param name="value">The enum value to pass to the constructor.</param>
+    private void AddEnumMetadataAttribute(IHasCustomAttribute target, string attributeName, string enumName, int value)
+    {
+        TypeReference attributeType = GetOrCreateTypeReference(
+            @namespace: "Windows.Foundation.Metadata",
+            name: attributeName,
+            assemblyName: "Windows.Foundation.FoundationContract");
+
+        TypeReference enumType = GetOrCreateTypeReference(
+            @namespace: "Windows.Foundation.Metadata",
+            name: enumName,
+            assemblyName: "Windows.Foundation.FoundationContract");
+
+        MemberReference ctor = new(
+            parent: attributeType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [enumType.ToTypeSignature(true)]));
+
+        CustomAttributeSignature signature = new()
+        {
+            FixedArguments = { new CustomAttributeArgument(enumType.ToTypeSignature(true), value) }
+        };
+
+        target.CustomAttributes.Add(new CustomAttribute(ctor, signature));
+    }
+
+    /// <summary>
     /// Adds a <c>[Static]</c> attribute to the class output type, referencing the static interface.
     /// </summary>
     /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> to add the attribute to.</param>

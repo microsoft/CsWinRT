@@ -72,4 +72,12 @@ internal sealed class ComponentImplementationMetadata
     {
         return _typesByFullName.GetValueOrDefault(fullName);
     }
+
+    /// <summary>
+    /// Gets whether the managed implementation assemblies define a type with the given full name.
+    /// </summary>
+    public bool Contains(string fullName)
+    {
+        return _typesByFullName.ContainsKey(fullName);
+    }
 }

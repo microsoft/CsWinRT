@@ -1,4 +1,4 @@
-    
+
 steps:
 # Enable GC stress
   - task: PowerShell@2
@@ -75,7 +75,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
         dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
-        _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
+        _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml
 
 # Run BuildDeterminism Tests. TODO: Disabled for now until BuildDeterminismTest.exe transient failures can be solved.
   # - task: CmdLine@2
@@ -89,7 +89,7 @@ steps:
   #       dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
   #       Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
 
-# Run Authoring Consumption Tests  
+# Run Authoring Consumption Tests
   - task: CmdLine@2
     displayName: Run Authoring Consumption Tests
     enabled: true
@@ -99,7 +99,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
         dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
-        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml
 
 # Run Multi-Component Authoring Consumption Tests
   - task: CmdLine@2
@@ -111,7 +111,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
         dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest2\bin
-        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest2\bin\AuthoringConsumptionTest2.exe --gtest_output=xml:AUTHORINGTEST2-$(Build.BuildNumber).xml 
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest2\bin\AuthoringConsumptionTest2.exe --gtest_output=xml:AUTHORINGTEST2-$(Build.BuildNumber).xml
 
 # Run WUX Tests
   - task: CmdLine@2
@@ -123,17 +123,33 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
         dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
-        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml
+
+# Run the multi-layer Windows Runtime composition tests (C# composable base <- C++/WinRT unsealed
+# runtime class <- C# derived classes). Only built in Release x64, which is where 'AuthoringTest'
+# is published with NativeAOT and can therefore be activated from a managed host without a manifest.
+  - task: CmdLine@2
+    displayName: Run Composition Tests
+    enabled: true
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src
+      script: |
+        dir Tests\CompositionTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)
+        Tests\CompositionTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\CompositionTest.exe
+        if %errorlevel% NEQ 100 exit /b 1
+        exit /b 0
 
   - task: MSBuild@1
-    displayName: Restore cswinrt.slnx 
+    displayName: Restore cswinrt.slnx
     condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
     inputs:
       solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
       msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),RestorePackagesConfig=true,TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
-  
+
   - task: MSBuild@1
     displayName: Restore WinRT.Generator.Tasks.csproj
     condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
@@ -142,7 +158,7 @@ steps:
       msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=netstandard2.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
-  
+
   - task: MSBuild@1
     displayName: Publish UnitTests for AOT (net10.0)
     condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
@@ -160,12 +176,12 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
       script: |
         dir
-        echo Running UnitTest.exe 
+        echo Running UnitTest.exe
         UnitTest.exe --report-trx --report-trx-filename UNITTEST-AOT-$(Build.BuildNumber).trx
         if %Errorlevel% NEQ 100 (
           exit /b !ErrorLevel!
         )
-        exit /b 0 
+        exit /b 0
 
   - task: PublishTestResults@2
     displayName: Publish UnitTest AOT (net10.0) Results

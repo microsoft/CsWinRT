@@ -155,6 +155,20 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     }
 
     /// <summary>
+    /// An authored overridable interface is assigned to more than one composable runtime class.
+    /// </summary>
+    public static Exception OverridableInterfaceHasMultipleOwners(
+        string interfaceName,
+        string firstClassName,
+        string secondClassName)
+    {
+        return Exception(17,
+            $"Interface '{interfaceName}' is marked with 'WindowsRuntimeOverridableAttribute' and is implemented by both " +
+            $"'{firstClassName}' and '{secondClassName}'. A Windows Runtime overridable interface must be exclusive to exactly one " +
+            $"runtime class. Use a separate overridable interface for each composable class.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     private static Exception Exception(int id, string message, Exception? innerException = null)

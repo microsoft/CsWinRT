@@ -73,17 +73,17 @@ if "%cswinrt_platform%" EQU "x86" set run_functional_tests=true
 if "%cswinrt_platform%" EQU "x64" set run_functional_tests=true
 
 goto :skip_build_tools
-rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents) 
+rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents)
 msbuild -ver | findstr 16.X >nul
 if ErrorLevel 1 (
-  echo Using VS Build Tools 16.X 
+  echo Using VS Build Tools 16.X
   if %cswinrt_platform%==x86 (
     set msbuild_path="%this_dir%.buildtools\MSBuild\Current\Bin\\"
   ) else (
     set msbuild_path="%this_dir%.buildtools\MSBuild\Current\Bin\amd64\\"
   )
   if not exist !msbuild_path! (
-    if not exist .buildtools md .buildtools 
+    if not exist .buildtools md .buildtools
     powershell -NoProfile -ExecutionPolicy unrestricted -File .\get_buildtools.ps1
   )
   set nuget_params=-MSBuildPath !msbuild_path!
@@ -106,11 +106,11 @@ if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https:
 rem Get TestWinRT repo
 call %this_dir%get_testwinrt.cmd
 
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:RestorePackagesConfig=true /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform% %this_dir%cswinrt.slnx 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:RestorePackagesConfig=true /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform% %this_dir%cswinrt.slnx
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors%;PublishBuildTool=true;BuildToolArch=%cswinrt_platform% %this_dir%cswinrt.slnx 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors%;PublishBuildTool=true;BuildToolArch=%cswinrt_platform% %this_dir%cswinrt.slnx
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
@@ -189,7 +189,7 @@ if not exist %dotnet_exe% (
 rem Running Object Lifetime Unit Tests
 echo Running object lifetime tests for %cswinrt_platform% %cswinrt_configuration%
 if '%NUGET_PACKAGES%'=='' set NUGET_PACKAGES=%USERPROFILE%\.nuget\packages
-call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net10.0-windows10.0.19041.0\win-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\3.10.1\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
+call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net10.0-windows10.0.19041.0\win-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\3.10.1\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx
 if ErrorLevel 1 (
   echo.
   echo ERROR: Lifetime test failed, skipping NuGet pack
@@ -232,17 +232,17 @@ if ErrorLevel 1 (
 :hosttest
 rem Run WinRT.Host tests
 echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
+call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml
 if ErrorLevel 1 (
   echo.
   echo ERROR: Host test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
- 
+
 :authortest
 rem Run Authoring tests
 echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
+call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml
 if ErrorLevel 1 (
   echo.
   rem Not skipping due to known issue.
@@ -266,6 +266,20 @@ if /I "%cswinrt_platform%"=="x86" (
     rem Not skipping due to known issue.
     rem echo ERROR: Multi-component authoring test failed, skipping NuGet pack
     rem exit /b !ErrorLevel!
+  )
+)
+
+:compositiontest
+rem Run the multi-layer Windows Runtime composition test (C# composable base <- C++/WinRT unsealed
+rem runtime class <- C# derived classes). It only builds in Release x64, which is where AuthoringTest
+rem is published with NativeAOT and can therefore be activated from a managed host without a manifest.
+if /I "%cswinrt_platform%"=="x64" if /I "%cswinrt_configuration%"=="Release" (
+  echo Running cswinrt composition tests for %cswinrt_platform% %cswinrt_configuration%
+  call :exec %this_dir%Tests\CompositionTest\bin\%cswinrt_platform%\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\CompositionTest.exe
+  if !errorlevel! NEQ 100 (
+    echo.
+    echo ERROR: Composition test failed with !errorlevel!, skipping NuGet pack
+    exit /b !ErrorLevel!
   )
 )
 

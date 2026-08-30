@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Reference projection for the two components taking part in the multi-layer composition test:
+
+      AuthoringTest.ComposableBase                          (C# authored composable class)
+        <- CompositionTestComponent.NativeComposableMiddle  (C++/WinRT unsealed runtime class)
+
+    Only the composable surface of 'AuthoringTest' is projected: the rest of that component is
+    covered by 'AuthoringConsumptionTest', and projecting all of it (XAML controls, custom
+    collections, and so on) here would only slow the build down.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+
+    <!-- This projection is always needed by 'CompositionTest', regardless of 'GenerateTestProjection' -->
+    <CsWinRTGenerateProjection>true</CsWinRTGenerateProjection>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AuthoringTestOutputFolder>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\Tests\AuthoringTest\bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)'))\</AuthoringTestOutputFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\Windows\Windows.csproj" />
+    <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
+
+    <!-- The .winmd of this one is picked up automatically from the project reference -->
+    <ProjectReference Include="..\..\Tests\CompositionTestComponent\CompositionTestComponent.vcxproj" />
+
+    <!--
+      'AuthoringTest' is a C# component: referencing its output assembly would bring in the managed
+      types themselves (which are not a projection), so only the build ordering is taken from the
+      project reference and the .winmd is added as an explicit input below.
+    -->
+    <ProjectReference Include="..\..\Tests\AuthoringTest\AuthoringTest.csproj"
+                      ReferenceOutputAssembly="false"
+                      SetTargetFramework="TargetFramework=net10.0-windows10.0.26100.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <CsWinRTInputs Include="$(AuthoringTestOutputFolder)AuthoringTest.winmd" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CsWinRTIncludes>
+      AuthoringTest.ComposableBase;
+      AuthoringTest.CSharpDerivedComposable;
+      AuthoringTest.IComposable;
+      AuthoringTest.ICSharpDerivedComposable;
+      CompositionTestComponent;
+    </CsWinRTIncludes>
+  </PropertyGroup>
+
+</Project>

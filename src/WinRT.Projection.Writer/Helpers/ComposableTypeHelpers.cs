@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
@@ -90,7 +91,41 @@ internal static class ComposableTypeHelpers
     /// </remarks>
     public static bool IsProtectedOrOverridableInterface(ProjectionEmitContext context, TypeDefinition interfaceType)
     {
-        if (!context.Settings.Component || !interfaceType.IsExclusiveTo)
+        return IsExclusiveInterfaceImplementation(
+            context,
+            interfaceType,
+            true,
+            static implementation => implementation.IsOverridable() || implementation.IsProtected());
+    }
+
+    /// <summary>
+    /// Checks whether a given interface is an explicitly authored <c>[Overridable]</c> interface of a runtime class.
+    /// </summary>
+    public static bool IsExplicitOverridableInterface(ProjectionEmitContext context, TypeDefinition interfaceType)
+    {
+        if (!context.Settings.Component ||
+            !context.StaticConstructorAnalyzer.HasImplementationType(interfaceType.FullName))
+        {
+            return false;
+        }
+
+        return IsExclusiveInterfaceImplementation(
+            context,
+            interfaceType,
+            true,
+            static implementation => implementation.IsOverridable());
+    }
+
+    /// <summary>
+    /// Checks whether an exclusive interface implementation on an authored runtime class matches a predicate.
+    /// </summary>
+    private static bool IsExclusiveInterfaceImplementation(
+        ProjectionEmitContext context,
+        TypeDefinition interfaceType,
+        bool requireComponent,
+        Func<InterfaceImplementation, bool> predicate)
+    {
+        if ((requireComponent && !context.Settings.Component) || !interfaceType.IsExclusiveTo)
         {
             return false;
         }
@@ -110,7 +145,7 @@ internal static class ComposableTypeHelpers
                 continue;
             }
 
-            if (interfaceImplementation.IsOverridable() || interfaceImplementation.IsProtected())
+            if (predicate(interfaceImplementation))
             {
                 return true;
             }

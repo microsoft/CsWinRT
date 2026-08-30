@@ -25,7 +25,9 @@ internal static class AbiInterfaceIDicFactory
     /// </summary>
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.IsExclusiveTo && !context.Settings.IdicExclusiveTo)
+        if (type.IsExclusiveTo &&
+            !context.Settings.IdicExclusiveTo &&
+            !ComposableTypeHelpers.IsExplicitOverridableInterface(context, type))
         {
             return;
         }
@@ -36,7 +38,7 @@ internal static class AbiInterfaceIDicFactory
         }
 
         string nameStripped = type.GetStrippedName();
-        IndentedTextWriterCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
+        string parent = GetInterfaceTypeName(context, type);
         IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
 
         writer.WriteLine();
@@ -242,7 +244,7 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
-        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
+        string ccwIfaceName = GetInterfaceTypeName(context, type);
 
         foreach (MethodDefinition method in type.GetNonSpecialMethods())
         {
@@ -378,7 +380,7 @@ internal static class AbiInterfaceIDicFactory
     internal static void WriteInterfaceIdicImplMembersForInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
-        string ccwIfaceName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
+        string ccwIfaceName = GetInterfaceTypeName(context, type);
 
         // The static ABI Methods class name.
         string abiClass = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.StaticAbiClass, true).Format();
@@ -444,6 +446,7 @@ internal static class AbiInterfaceIDicFactory
                     IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
                     writer.Write($"get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
                 }
+
             }
 
             // Emit the set accessor when this interface declares it; otherwise nothing.
@@ -501,5 +504,19 @@ internal static class AbiInterfaceIDicFactory
                 }
                 """);
         }
+    }
+
+    /// <summary>
+    /// Gets the managed interface type implemented by an IDIC proxy.
+    /// </summary>
+    private static string GetInterfaceTypeName(ProjectionEmitContext context, TypeDefinition type)
+    {
+        // Component code casts to the interface declared in the authored assembly. Normally the projected and
+        // authored names are identical, but an exclusive interface is projected into ABI.Impl to avoid colliding
+        // with that authored type. Overridable interfaces still need their IDIC proxy to implement the authored type
+        // so managed base code can dispatch to a native controlling outer.
+        return context.Settings.Component && ComposableTypeHelpers.IsExplicitOverridableInterface(context, type)
+            ? $"global::{type.FullName}"
+            : TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true).Format();
     }
 }

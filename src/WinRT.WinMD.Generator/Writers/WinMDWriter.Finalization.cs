@@ -85,14 +85,33 @@ internal sealed partial class WinMDWriter
         // synthesized) carry '[Overload]' attributes, since a runtime class exposes its members
         // through interfaces (where the Windows Runtime ABI method names live). Emitting them on a
         // class as well would be redundant and could conflict with the names on its interfaces.
+        // Activation and composition factory interfaces are excluded: Windows Runtime metadata does
+        // not allow '[Overload]' on a factory method (MIDL5130), so their overloads are given unique
+        // metadata names when they are emitted instead (see 'AddFactoryMethod').
         foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
-            if (declaration.OutputType is not { IsInterface: true })
+            if (declaration.OutputType is not { IsInterface: true } outputInterface ||
+                _factoryInterfaces.Contains(outputInterface))
             {
                 continue;
             }
 
             AddOverloadAttributesForType(declaration.OutputType);
+        }
+
+        // Phase 5: Add the '[ExclusiveTo]' attribute to the authored '[Overridable]' interfaces. Windows
+        // Runtime metadata requires every overridable (and protected) interface to be exclusive to the
+        // class exposing it, or MIDL rejects that class as soon as another component derives from it.
+        foreach (string interfaceName in _authoredOverridableInterfacesRequiringExclusiveTo)
+        {
+            if (_authoredOverridableInterfaceOwners.TryGetValue(interfaceName, out string? className) &&
+                _typeDefinitionMapping.TryGetValue(interfaceName, out TypeDeclaration? interfaceDeclaration) &&
+                interfaceDeclaration.OutputType is { } overridableInterface &&
+                !overridableInterface.CustomAttributes.Any(static attribute =>
+                    attribute.Constructor?.DeclaringType?.FullName == "Windows.Foundation.Metadata.ExclusiveToAttribute"))
+            {
+                AddExclusiveToAttribute(overridableInterface, className);
+            }
         }
     }
 

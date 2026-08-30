@@ -854,6 +854,56 @@ public class Test_ComposableClasses
     }
 
     [TestMethod]
+    public void AuthoredOverridableInterfaceImplementedByMultipleComposableClasses_IsReported()
+    {
+        WinMDGeneratorRunner.AssertFailure(OverridableAttributeDeclaration + """
+            namespace Component
+            {
+                [WindowsRuntime.WindowsRuntimeOverridable]
+                public interface IThingOverrides
+                {
+                    int ComputeCoreValue();
+                }
+
+                public class FirstComposable : IThingOverrides
+                {
+                    public virtual int ComputeCoreValue() => 1;
+                }
+
+                public class SecondComposable : IThingOverrides
+                {
+                    public virtual int ComputeCoreValue() => 2;
+                }
+            }
+            """, error: "CSWINRTWINMDGEN0017");
+    }
+
+    [TestMethod]
+    public void AuthoredOverridableInterfaceImplementedByComposableAndSealedClasses_IsReported()
+    {
+        WinMDGeneratorRunner.AssertFailure(OverridableAttributeDeclaration + """
+            namespace Component
+            {
+                [WindowsRuntime.WindowsRuntimeOverridable]
+                public interface IThingOverrides
+                {
+                    int ComputeCoreValue();
+                }
+
+                public class ComposableClass : IThingOverrides
+                {
+                    public virtual int ComputeCoreValue() => 1;
+                }
+
+                public sealed class SealedClass : IThingOverrides
+                {
+                    public int ComputeCoreValue() => 2;
+                }
+            }
+            """, error: "CSWINRTWINMDGEN0017");
+    }
+
+    [TestMethod]
     public void ComposableClass_AuthoredOverridableAttributeIsNotCopiedToMetadata()
     {
         // '[WindowsRuntimeOverridable]' is a C# authoring marker, not a Windows Runtime attribute: it is
@@ -875,6 +925,162 @@ public class Test_ComposableClasses
             """);
 
         Assert.IsFalse(attributes["Component.IThingOverrides"].Contains("WindowsRuntime.WindowsRuntimeOverridableAttribute"));
+    }
+
+    [TestMethod]
+    public void ComposableClass_AuthoredOverridableInterfaceIsExclusiveToTheClass()
+    {
+        // Windows Runtime metadata requires every '[Overridable]' (and '[Protected]') interface to be
+        // '[ExclusiveTo]' the class exposing it, or MIDL rejects that class with 'MIDL5052' as soon as
+        // another component derives from it
+        var attributes = WinMDGeneratorRunner.GetGeneratedAttributes(OverridableAttributeDeclaration + """
+            namespace Component
+            {
+                [WindowsRuntime.WindowsRuntimeOverridable]
+                public interface IThingOverrides
+                {
+                    int ComputeCoreValue();
+                }
+
+                public class ComposableBase : IThingOverrides
+                {
+                    public virtual int ComputeCoreValue() => 2;
+                }
+            }
+            """);
+
+        Assert.IsTrue(attributes["Component.IThingOverrides"].Contains("Windows.Foundation.Metadata.ExclusiveToAttribute"));
+    }
+
+    [TestMethod]
+    public void ComposableClass_AuthoredOverridableInterfaceOnANonComposableClassIsNotExclusiveTo()
+    {
+        // The marker is only meaningful on a class native code can derive from, so on any other shape the
+        // interface stays an ordinary one, and must not be locked to the class implementing it
+        var attributes = WinMDGeneratorRunner.GetGeneratedAttributes(OverridableAttributeDeclaration + """
+            namespace Component
+            {
+                [WindowsRuntime.WindowsRuntimeOverridable]
+                public interface IThingOverrides
+                {
+                    int ComputeCoreValue();
+                }
+
+                public sealed class SealedClass : IThingOverrides
+                {
+                    public int ComputeCoreValue() => 2;
+                }
+            }
+            """);
+
+        Assert.IsFalse(attributes["Component.IThingOverrides"].Contains("Windows.Foundation.Metadata.ExclusiveToAttribute"));
+    }
+
+    [TestMethod]
+    public void RuntimeClass_DeclaresThreadingAndMarshalingBehavior()
+    {
+        // Both attributes are required on every runtime class, or MIDL rejects it with 'MIDL5041' when
+        // another component references it. Objects created by CsWinRT are always agile.
+        var attributes = WinMDGeneratorRunner.GetGeneratedAttributes("""
+            namespace Component;
+
+            public class ComposableBase
+            {
+                public ComposableBase()
+                {
+                }
+
+                public int Value => 42;
+            }
+
+            public sealed class SealedClass
+            {
+                public SealedClass()
+                {
+                }
+            }
+
+            public static class StaticClass
+            {
+                public static int Value => 42;
+            }
+            """);
+
+        foreach (string type in (string[])["Component.ComposableBase", "Component.SealedClass", "Component.StaticClass"])
+        {
+            Assert.IsTrue(attributes[type].Contains("Windows.Foundation.Metadata.ThreadingAttribute"), type);
+            Assert.IsTrue(attributes[type].Contains("Windows.Foundation.Metadata.MarshalingBehaviorAttribute"), type);
+        }
+
+        // The attributes belong on the runtime class, not on the interfaces it exposes
+        Assert.IsFalse(attributes["Component.IComposableBaseClass"].Contains("Windows.Foundation.Metadata.ThreadingAttribute"));
+        Assert.IsFalse(attributes["Component.IComposableBaseClass"].Contains("Windows.Foundation.Metadata.MarshalingBehaviorAttribute"));
+    }
+
+    [TestMethod]
+    public void ComposableClass_OverloadedFactoryMethodsGetUniqueNamesInsteadOfOverloadAttributes()
+    {
+        // Windows Runtime metadata does not allow '[Overload]' on a factory method ('MIDL5130'), so
+        // overloaded composition factory methods get a unique metadata name outright, exactly like the
+        // ones MIDL emits for a runtime class with several constructors
+        const string source = """
+            namespace Component;
+
+            public class ComposableBase
+            {
+                public ComposableBase()
+                {
+                }
+
+                public ComposableBase(int value)
+                {
+                }
+
+                public ComposableBase(int value, string tag)
+                {
+                }
+            }
+            """;
+
+        var methods = WinMDGeneratorRunner.GetGeneratedMethods(source);
+        var attributes = WinMDGeneratorRunner.GetGeneratedAttributes(source);
+
+        CollectionAssert.AreEquivalent(
+            (string[])["CreateComposableBase", "CreateComposableBase2", "CreateComposableBase3"],
+            methods["Component.IComposableBaseFactory"].ToArray());
+
+        Assert.IsFalse(attributes["Component.IComposableBaseFactory.CreateComposableBase"].Contains("Windows.Foundation.Metadata.OverloadAttribute"));
+        Assert.IsFalse(attributes["Component.IComposableBaseFactory.CreateComposableBase2"].Contains("Windows.Foundation.Metadata.OverloadAttribute"));
+        Assert.IsFalse(attributes["Component.IComposableBaseFactory.CreateComposableBase3"].Contains("Windows.Foundation.Metadata.OverloadAttribute"));
+    }
+
+    [TestMethod]
+    public void SealedClass_OverloadedFactoryMethodsGetUniqueNamesInsteadOfOverloadAttributes()
+    {
+        // Same as above for the activation factory of a sealed class
+        const string source = """
+            namespace Component;
+
+            public sealed class SealedClass
+            {
+                public SealedClass()
+                {
+                }
+
+                public SealedClass(int value)
+                {
+                }
+            }
+            """;
+
+        var methods = WinMDGeneratorRunner.GetGeneratedMethods(source);
+        var attributes = WinMDGeneratorRunner.GetGeneratedAttributes(source);
+
+        CollectionAssert.AreEquivalent(
+            (string[])["CreateSealedClass"],
+            methods["Component.ISealedClassFactory"].ToArray());
+
+        Assert.IsFalse(attributes["Component.ISealedClassFactory.CreateSealedClass"].Contains("Windows.Foundation.Metadata.OverloadAttribute"));
     }
 
     /// <summary>

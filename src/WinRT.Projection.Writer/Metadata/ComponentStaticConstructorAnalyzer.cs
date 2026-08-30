@@ -64,6 +64,14 @@ internal sealed class ComponentStaticConstructorAnalyzer
     }
 
     /// <summary>
+    /// Gets whether the managed component implementation defines a type with the given full name.
+    /// </summary>
+    public bool HasImplementationType(string typeFullName)
+    {
+        return _metadata.Contains(typeFullName);
+    }
+
+    /// <summary>
     /// Memoized core: whether <paramref name="type"/> (or an authored base type) registers a
     /// dependency property.
     /// </summary>

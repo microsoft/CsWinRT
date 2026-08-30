@@ -1,0 +1,94 @@
+namespace CompositionTestComponent
+{
+    // A metadata exposed, unsealed C++/WinRT runtime class deriving from the C# authored composable
+    // class 'AuthoringTest.ComposableBase'. This is the middle layer of the composition chain:
+    //
+    //   AuthoringTest.ComposableBase (C#)
+    //     <- CompositionTestComponent.NativeComposableMiddle (C++/WinRT, this class)
+    //       <- user defined C# classes (sealed and unsealed)
+    //
+    // Because this class is itself unsealed, it has a composable factory, so a C# class can derive
+    // from its projection, which makes the resulting object a three level COM aggregate spanning
+    // managed -> native -> managed.
+    [default_interface]
+    unsealed runtimeclass NativeComposableMiddle : AuthoringTest.ComposableBase
+    {
+        NativeComposableMiddle();
+
+        // Note: the constructor parameter cannot be named 'value'. MIDL projects a constructor as
+        // 'CreateInstance' on the composable factory interface and names its '[out, retval]'
+        // parameter 'value', so a user parameter of that name collides with it (MIDL5161).
+        NativeComposableMiddle(Int32 initialValue);
+
+        // Plain (non overridable) members. A derived Windows Runtime type cannot replace these,
+        // so they always run this implementation, even when this instance is the inner object of
+        // an aggregate controlled by a derived C# class.
+        Int32 GetMiddleValue();
+        String MiddleTag;
+        String DescribeMiddle();
+
+        // Members only derived types can call. These are projected onto the '[protected]'
+        // exclusive interface of the runtime class, exactly like the ones of the C# base.
+        protected Int32 GetMiddleSecretValue();
+        protected String MiddleSecretTag;
+
+        // Overridable members, projected onto the '[overridable]' exclusive interface, so a
+        // derived C# class can replace them for the whole aggregate.
+        overridable Int32 ComputeMiddleValue();
+        overridable String DescribeMiddleCore();
+
+        // Dispatch to the most derived implementation of the overridable members above. This is
+        // the C++/WinRT 'overridable()' pattern, which resolves through the controlling outer
+        // object, so it reaches a derived C# override.
+        Int32 CallComputeMiddleValue();
+        String CallDescribeMiddleCore();
+
+        // Reach the implementation declared by this class, skipping any derived override.
+        Int32 CallOwnComputeMiddleValue();
+        String CallOwnDescribeMiddleCore();
+
+        // Reach the members of the C# base through the non delegating inner object.
+        Int32 CallBaseSecretValue();
+        String GetBaseSecretTag();
+        void SetBaseSecretTag(String value);
+        String CallBaseDescribeSelf();
+        Int32 CallBaseGetValue();
+        Int32 CallBaseComputeValue();
+        String CallBaseDescribeCore();
+        Int32 CallBaseOverridableValue();
+
+        // Reach the base implementation of the member this class overrides.
+        Int32 CallBaseComputeCoreValue();
+
+        // Ask the C# base to dispatch to the most derived implementation of its own authored
+        // '[overridable]' interface, which is how a managed base reaches a derived override.
+        Int32 CallBaseCallComputeCoreValue();
+
+        // COM identity helpers. In C++/WinRT '*this' produces the controlling outer object of the
+        // aggregate, so these hand the derived C# instance back to managed code.
+        Object GetSelfAsObject();
+        NativeComposableMiddle GetSelfAsMiddle();
+        AuthoringTest.ComposableBase GetSelfAsBaseClass();
+        Boolean IsSameMiddle(NativeComposableMiddle other);
+
+        // Instrumentation, so tests can assert on native object lifetime and on which
+        // implementation of an overridable member actually ran.
+        static Int32 LiveInstanceCount{ get; };
+        static Int32 DestroyedInstanceCount{ get; };
+        static Int32 ComputeMiddleValueCallCount{ get; };
+        static Int32 MiddleComputeCoreValueCallCount{ get; };
+        static void ResetMiddleCallCounts();
+        static String DescribeMiddleValue(Int32 middleValue);
+    }
+
+    // A sealed native class deriving from the same middle class, so tests can compare a native
+    // derived type against the C# derived ones.
+    [default_interface]
+    runtimeclass NativeComposableLeaf : NativeComposableMiddle
+    {
+        NativeComposableLeaf();
+        NativeComposableLeaf(Int32 initialValue);
+
+        Int32 GetLeafValue();
+    }
+}
