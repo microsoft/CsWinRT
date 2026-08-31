@@ -149,6 +149,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
@@ -158,6 +159,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption -Runtime NativeAot
       workingDirectory: $(Build.SourcesDirectory)
@@ -167,6 +169,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
@@ -176,6 +179,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring -Runtime NativeAot
       workingDirectory: $(Build.SourcesDirectory)
@@ -185,6 +189,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Projection -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
@@ -194,6 +199,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test WindowsSdkProjection -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
@@ -203,6 +209,7 @@ steps:
     continueOnError: true
     inputs:
       targetType: filePath
+      pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test WindowsSdkXamlProjection -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
