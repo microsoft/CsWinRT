@@ -41,9 +41,10 @@ public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetActivationFactor
 }
 ```
 
-The generated base is separate from the projected class (which is often `sealed`) and provides an implicit
-conversion to it, so an instance can be passed anywhere the projected type is expected. Any additional
-(non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
+The generated base is separate from the projected class (which is often `sealed`) and converts to and from
+it, so an instance can be passed anywhere the projected type is expected (see
+[Passing implementations around](#passing-implementations-around)). Any additional (non-exclusive) Windows
+Runtime interfaces declared on the factory are added to its vtable as well.
 
 ### When the factory can be omitted
 
@@ -62,6 +63,33 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 This requires an accessible parameterless constructor, and only one implementation of that runtime class in
 the project. A generic type is never activatable, so it never gets one. Declaring the factory anyway always
 takes precedence, which is what to do when it needs to carry extra interop interfaces on its vtable.
+
+## Passing implementations around
+
+An implementation does not derive from the projected class, so the two are unrelated types and no cast
+between them succeeds on its own. The generated base declares conversions in both directions instead:
+
+```csharp
+MyWidget implementation = new();
+
+// Implicit: hand it to anything expecting the projected type
+Contoso.Widgets.Widget widget = implementation;
+
+// Explicit: get the implementation back
+MyWidget original = (MyWidget)widget;
+```
+
+Callers always receive the projected type, including callers in this same process receiving an object this
+project created. That is deliberate: a consumer of `Contoso.Widgets.Widget` should not need to know, or be
+able to tell, whether the object behind it was implemented in C#, implemented natively, or lives in another
+process. It also means a consumer cannot reach an implementation by accident — `obj as MyWidget` on a
+projected instance is `null`, and no conversion applies, because conversions are chosen at compile time from
+the static type of the expression, and `Widget` declares none to `MyWidget`.
+
+The conversions preserve identity: converting the same implementation twice yields the same projected
+instance, and converting it back yields the original implementation. The explicit conversion throws
+`InvalidCastException` when the instance has no managed implementation to return (it wraps a native or
+out-of-process object), or wraps an implementation of a different runtime class.
 
 ## Activating from native code
 

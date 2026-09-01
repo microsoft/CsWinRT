@@ -259,6 +259,14 @@ internal static class AbiImplementableClassFactory
 
         CollectImplementedInterfaces(context, type, null, [.. baseClosure], bases);
 
+        // Mark the base so an implementation deriving from it can be recognized at runtime with a single type
+        // test. Marshalling needs that to hand callers the projected type rather than the implementation (see
+        // the conversions below). Only the root base declares it; deriving bases inherit it.
+        if (baseType is null)
+        {
+            bases.Add("global::WindowsRuntime.IWindowsRuntimeImplementableClass");
+        }
+
         string inheritance = bases.Count > 0 ? " : " + string.Join(", ", bases) : string.Empty;
 
         // Identify the Windows Runtime class this base stands for. The CCW of a type deriving from it
@@ -317,6 +325,37 @@ internal static class AbiImplementableClassFactory
                         using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
 
                         return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManagedUnsafe(objectReferenceValue.GetThisPtrUnsafe())!;
+                    }
+                    """);
+            }
+
+            // The reverse conversion, for an author needing their own implementation back from a projected
+            // instance. It is explicit because it can fail: the instance may wrap a native implementation, or
+            // an implementation of a different type. The conversion only has to reach this base, as the cast to
+            // the implementation type itself is then a standard downcast the compiler supplies, which is also
+            // what makes casting to the wrong implementation type throw as it should.
+            writer.WriteLine();
+
+            if (context.Settings.ReferenceProjection)
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    public static explicit operator {{nameStripped}}?({{projectedType}}? value)
+                    {
+                        throw null;
+                    }
+                    """);
+            }
+            else
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    public static explicit operator {{nameStripped}}?({{projectedType}}? value)
+                    {
+                        if (value is null)
+                        {
+                            return null;
+                        }
+
+                        return ({{nameStripped}})WindowsRuntimeObjectMarshaller.ConvertToImplementation(value, typeof({{nameStripped}}));
                     }
                     """);
             }
