@@ -172,7 +172,7 @@ unsafe
 
     try
     {
-        object? marshalled = WindowsRuntimeObjectMarshaller.ConvertToManaged(nativeInstance);
+        object marshalled = WindowsRuntimeObjectMarshaller.ConvertToManaged(nativeInstance);
 
         // The projected type is what the caller asked for, so a plain type test has to succeed
         if (marshalled is not global::TestComponent.Class marshalledClass)
