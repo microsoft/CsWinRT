@@ -5,6 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using ImplementWinMDTypes;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 // Implements Windows Runtime types declared in 'TestComponent' metadata by deriving from the abstract
 // bases the projection generates for them.
@@ -142,6 +143,60 @@ if (ReferenceEquals(projectedClass, (global::TestComponent.Class)otherClass))
 if (!ReferenceEquals(projectedComposable, (global::TestComponent.Composable)myComposable))
 {
     return 117;
+}
+
+// An author can get their own implementation back from a projected instance wrapping it. The conversion is
+// explicit because it can fail (the instance may wrap a native implementation, or a different one), unlike
+// the implicit one above, which only ever has to create a wrapper.
+if (!ReferenceEquals((MyClass)projectedClass, myClass))
+{
+    return 118;
+}
+
+if (!ReferenceEquals((MyComposable)projectedComposable, myComposable))
+{
+    return 119;
+}
+
+// Marshalling an implementation back from native code gives the projected type, not the implementation.
+// This is what a consumer receiving one from an API sees, and it is the same thing they would get for a
+// class implemented natively, or activated out of process. It matters most for an API returning 'object'
+// (no conversion can apply to one, as none can be declared from a base type), which is how the extension
+// and factory APIs that hand out these classes are shaped.
+unsafe
+{
+    if (!NativeActivate("TestComponent.Class", out void* nativeInstance))
+    {
+        return 120;
+    }
+
+    try
+    {
+        object? marshalled = WindowsRuntimeObjectMarshaller.ConvertToManaged(nativeInstance);
+
+        // The projected type is what the caller asked for, so a plain type test has to succeed
+        if (marshalled is not global::TestComponent.Class marshalledClass)
+        {
+            return 121;
+        }
+
+        // The implementation is deliberately not handed back: it is unrelated to the projected type, so a
+        // caller expecting the latter would silently get 'null' from every cast or type test it tried.
+        if (marshalled is MyClass)
+        {
+            return 122;
+        }
+
+        // The implementation behind it is still reachable, through the same explicit conversion as above
+        if ((MyClass)marshalledClass is null)
+        {
+            return 123;
+        }
+    }
+    finally
+    {
+        Release(nativeInstance);
+    }
 }
 
 return 100;
