@@ -1708,7 +1708,10 @@ namespace Generator
             foreach (var attribute in attributes)
             {
                 var attributeType = attribute.AttributeClass;
-                if (attributeType.DeclaredAccessibility != Accessibility.Public)
+                if (!attributeType.IsPubliclyAccessible() ||
+                    attribute.AttributeConstructor?.DeclaredAccessibility != Accessibility.Public ||
+                    attribute.ConstructorArguments.Any(ReferencesNonPublicType) ||
+                    attribute.NamedArguments.Any(argument => ReferencesNonPublicType(argument.Value)))
                 {
                     continue;
                 }
@@ -1753,6 +1756,30 @@ namespace Generator
                     constructorReference.First(),
                     metadataBuilder.GetOrAddBlob(attributeSignature));
             }
+        }
+
+        private static bool ReferencesNonPublicType(TypedConstant constant)
+        {
+            if (constant.Kind == TypedConstantKind.Array)
+            {
+                return constant.Values.Any(ReferencesNonPublicType);
+            }
+
+            return constant.Kind == TypedConstantKind.Type &&
+                (constant.Value is not ITypeSymbol type || !IsPubliclyAccessibleType(type));
+        }
+
+        private static bool IsPubliclyAccessibleType(ITypeSymbol type)
+        {
+            return type switch
+            {
+                IArrayTypeSymbol arrayType => IsPubliclyAccessibleType(arrayType.ElementType),
+                IPointerTypeSymbol => false,
+                IErrorTypeSymbol => false,
+                INamedTypeSymbol namedType => namedType.IsPubliclyAccessible() &&
+                    namedType.TypeArguments.All(IsPubliclyAccessibleType),
+                _ => type.IsPubliclyAccessible()
+            };
         }
 
         public override void VisitEnumDeclaration(EnumDeclarationSyntax node)

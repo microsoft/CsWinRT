@@ -55,6 +55,7 @@ namespace AuthoringTest
     public delegate void DoubleDelegate(double value);
     internal delegate void PrivateDelegate(uint value);
 
+    [System.Diagnostics.DebuggerTypeProxy(typeof(NonProjectedDisposableClass))]
     public sealed class BasicClass
     {
         private BasicEnum basicEnum = BasicEnum.First;
