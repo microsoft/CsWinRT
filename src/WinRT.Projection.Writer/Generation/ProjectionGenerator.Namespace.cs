@@ -261,9 +261,22 @@ internal sealed partial class ProjectionGenerator
         _token.ThrowIfCancellationRequested();
         if (_settings.AdditionFilter.Includes(ns))
         {
-            foreach (string resName in Additions.EnumerateByNamespace(ns))
+            foreach (Addition addition in Additions.EnumerateByNamespace(ns))
             {
-                using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
+                // Additions are hand-written companions to types that come from the projected
+                // metadata: they either augment one (eg. 'partial struct Thickness') or replace a
+                // custom-mapped one while still being written against its metadata-only siblings
+                // (eg. 'Duration', which has a field of type 'DurationType'). Namespaces are not
+                // owned by a single metadata source though: WinUI 2 reuses 'Microsoft.UI.Xaml' but
+                // declares only 'XamlContract' in it, so emitting the additions there would produce
+                // types referencing enums that don't exist. Skip any addition whose metadata types
+                // are absent from the input metadata.
+                if (!IsAdditionSupportedByMetadata(addition))
+                {
+                    continue;
+                }
+
+                using Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(addition.ResourceName);
 
                 if (stream is null)
                 {
@@ -280,6 +293,25 @@ internal sealed partial class ProjectionGenerator
         string filename = ns + ".cs";
         string fullPath = Path.Combine(_settings.OutputFolder, filename);
         writer.FlushToFile(fullPath);
+        return true;
+    }
+
+    /// <summary>
+    /// Checks whether all the Windows Runtime types a namespace addition is defined in terms of are
+    /// declared by the projected metadata.
+    /// </summary>
+    /// <param name="addition">The addition to check.</param>
+    /// <returns>Whether <paramref name="addition"/> can be emitted.</returns>
+    private bool IsAdditionSupportedByMetadata(in Addition addition)
+    {
+        foreach (string requiredType in addition.RequiredTypes)
+        {
+            if (_cache.Find(requiredType) is null)
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 }
