@@ -56,7 +56,10 @@ namespace WinRT
     /// This in turns ensures that the necessary metadata is kept during trimming so that the cast can work correctly in all scenarios.
     /// </summary>
     /// <seealso cref="global::System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute"/>
-    [global::System.AttributeUsage(global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Field, AllowMultiple = true, Inherited = false)]
+    [global::System.AttributeUsage(
+        global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Field,
+        AllowMultiple = true,
+        Inherited = false)]
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [global::Microsoft.CodeAnalysis.Embedded]
     [global::System.Diagnostics.Conditional("CSWINRT2_0_POLYFILL_ATTRIBUTES")]
