@@ -55,18 +55,18 @@ namespace WinRT
     /// An attribute that indicates that the annotated member or field (initializer) is performing a dynamic cast to a Windows Runtime type.
     /// This in turns ensures that the necessary metadata is kept during trimming so that the cast can work correctly in all scenarios.
     /// </summary>
-    /// <seealso cref="DynamicDependencyAttribute"/>
-    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Field, AllowMultiple = true, Inherited = false)]
+    /// <seealso cref="global::System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute"/>
+    [global::System.AttributeUsage(global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Field, AllowMultiple = true, Inherited = false)]
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [global::Microsoft.CodeAnalysis.Embedded]
     [global::System.Diagnostics.Conditional("CSWINRT2_0_POLYFILL_ATTRIBUTES")]
-    internal sealed class DynamicWindowsRuntimeCastAttribute : Attribute
+    internal sealed class DynamicWindowsRuntimeCastAttribute : global::System.Attribute
     {
         /// <summary>
         /// Creates a new <see cref="DynamicWindowsRuntimeCastAttribute"/> instance with the specified parameters.
         /// </summary>
         /// <param name="type">The Windows Runtime type being used for the cast.</param>
-        public DynamicWindowsRuntimeCastAttribute(Type type)
+        public DynamicWindowsRuntimeCastAttribute(global::System.Type type)
         {
         }
     }
