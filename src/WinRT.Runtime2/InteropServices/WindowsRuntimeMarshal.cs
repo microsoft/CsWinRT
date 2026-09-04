@@ -194,6 +194,8 @@ public static unsafe class WindowsRuntimeMarshal
 
         hresult.Assert();
 
+        // Use the queried 'IInspectable' pointer for conversion: the original pointer may refer to a
+        // different interface with an incompatible vtable, even if the object implements 'IInspectable'.
         try
         {
             return WindowsRuntimeObjectMarshaller.ConvertToManaged(inspectablePtr);
