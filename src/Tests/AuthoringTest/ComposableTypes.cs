@@ -30,6 +30,11 @@ public interface IComposableThing : IComposableThingBase
     int GetThingValue();
 }
 
+public interface IComposableConstructorSink
+{
+    void Set(ComposableBase value);
+}
+
 /// <summary>
 /// The overridable surface of <see cref="ComposableBase"/>, declared explicitly as a Windows Runtime interface.
 /// </summary>
@@ -71,6 +76,12 @@ public class ComposableBase : IComposableThing, IComposableBaseOverridable
     public ComposableBase(int value)
     {
         _value = value;
+    }
+
+    public ComposableBase(int value, IComposableConstructorSink sink)
+    {
+        _value = value;
+        sink.Set(this);
     }
 
     /// <summary>

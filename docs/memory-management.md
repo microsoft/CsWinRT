@@ -66,6 +66,8 @@ Because the inner object resolves and caches every delegating interface pointer 
 
 As with any COM aggregation, the inner object never reference counts the controlling outer: the outer holds the only reference to the inner, and is therefore guaranteed to outlive it.
 
+An authored composable class must not marshal `this` to native code from its constructor. The managed constructor runs before the composition factory can register the controlling outer, so such an escape would otherwise create a normal standalone CCW and then a second aggregation-aware CCW for the same object. Those wrappers would have different COM identities and independent reference counts. C#/WinRT detects a CCW created during construction and fails the composition factory instead of constructing an invalid aggregate. Constructor code may initialize managed state normally; only crossing the Windows Runtime boundary with the instance itself is unsupported until construction completes.
+
 #### Interfaces that cannot take part in aggregation
 
 A per-aggregate vtable copy can only be made for an interface whose CCW vtable C#/WinRT knows about *together with* the composable class, i.e. the Windows Runtime interfaces authored in the same component (including the synthesized per-runtime-class interfaces, the ones inherited from authored base classes, and everything in the transitive closure of their required interfaces). Every other interface gets its vtable from shared infrastructure the projection has no handle to:

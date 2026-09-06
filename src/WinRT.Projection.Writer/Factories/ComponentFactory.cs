@@ -398,12 +398,29 @@ internal static class ComponentFactory
         writer.WriteLine(isMultiline: true, $$"""
             public unsafe void* {{methodName}}({{WriteComposableFactoryParameterList(context, sig)}})
             {
-                return global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateComposableInstanceUnsafe(
-                    new {{projectedTypeName}}({{WriteArgumentNames}}),
-                    in {{defaultInterfaceIid}},
-                    AggregationEntries,
-                    {{GetControllingOuterParameterName(sig)}},
-                    {{GetNonDelegatingInnerParameterName(sig)}});
+                bool isAggregating = {{GetControllingOuterParameterName(sig)}} is not null;
+
+                if (isAggregating)
+                {
+                    global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.BeginComposableConstruction();
+                }
+
+                try
+                {
+                    return global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.CreateComposableInstanceUnsafe(
+                        new {{projectedTypeName}}({{WriteArgumentNames}}),
+                        in {{defaultInterfaceIid}},
+                        AggregationEntries,
+                        {{GetControllingOuterParameterName(sig)}},
+                        {{GetNonDelegatingInnerParameterName(sig)}});
+                }
+                finally
+                {
+                    if (isAggregating)
+                    {
+                        global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshal.EndComposableConstruction();
+                    }
+                }
             }
             """);
     }

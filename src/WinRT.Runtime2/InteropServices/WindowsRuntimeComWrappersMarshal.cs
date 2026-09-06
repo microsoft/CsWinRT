@@ -25,6 +25,22 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class WindowsRuntimeComWrappersMarshal
 {
     /// <summary>
+    /// Starts tracking objects marshalled while an authored composable constructor is running.
+    /// </summary>
+    public static void BeginComposableConstruction()
+    {
+        WindowsRuntimeComWrappers.BeginComposableConstruction();
+    }
+
+    /// <summary>
+    /// Stops tracking objects marshalled while an authored composable constructor is running.
+    /// </summary>
+    public static void EndComposableConstruction()
+    {
+        WindowsRuntimeComWrappers.EndComposableConstruction();
+    }
+
+    /// <summary>
     /// Completes the activation of an authored composable Windows Runtime class instance, taking part in COM
     /// aggregation when a controlling outer object was supplied by the caller of the composition factory.
     /// </summary>
@@ -69,9 +85,17 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
             return (void*)WindowsRuntimeComWrappers.GetOrCreateComInterfaceForObjectExact(instance, in defaultInterfaceIid);
         }
 
-        // Mark the instance as aggregated before its CCW can be handed out to native code, so that marshalling
-        // it out to native code hands out the identity of the controlling outer object from the start.
-        WindowsRuntimeAggregation.Register(instance, baseInterface);
+        // The managed constructor runs before this method receives the completed instance. If it marshalled
+        // 'this' to native code, the default ComWrappers instance has already created a normal CCW for it.
+        // Aggregating the same instance would then create a second CCW with a different IUnknown identity and
+        // an independent reference count. Fail activation instead of producing an invalid COM aggregate.
+        if (!WindowsRuntimeComWrappers.TryRegisterComposableInstance(instance, baseInterface))
+        {
+            throw new InvalidOperationException(
+                $"An instance of composable Windows Runtime class '{instance.GetType()}' was marshalled to native code " +
+                "before its constructor completed. A composable object cannot expose 'this' across the Windows Runtime " +
+                "boundary during construction because its controlling outer object is not registered until construction completes.");
+        }
 
         void* innerPtr = null;
         bool isRegistered = true;

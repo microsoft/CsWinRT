@@ -7,7 +7,9 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable IDE0046
@@ -59,6 +61,26 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     private static void* CreateObjectTargetInterfacePointer;
 
     /// <summary>
+    /// The number of authored composable constructors currently running.
+    /// </summary>
+    private static int ActiveComposableConstructionCount;
+
+    /// <summary>
+    /// The objects marshalled through this instance while an authored composable constructor was running.
+    /// </summary>
+    private static readonly ConditionalWeakTable<object, object> ObjectsMarshalledDuringComposableConstruction = [];
+
+    /// <summary>
+    /// The shared marker stored in <see cref="ObjectsMarshalledDuringComposableConstruction"/>.
+    /// </summary>
+    private static readonly object ComposableConstructionMarker = new();
+
+    /// <summary>
+    /// Synchronizes constructor-time CCW creation with the transition to aggregation.
+    /// </summary>
+    private static readonly Lock ComposableConstructionLock = new();
+
+    /// <summary>
     /// Creates a new <see cref="WindowsRuntimeComWrappers"/> instance.
     /// </summary>
     private WindowsRuntimeComWrappers()
@@ -72,6 +94,48 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// This instance is the one that CsWinRT will use to marshal all Windows Runtime objects.
     /// </remarks>
     public static WindowsRuntimeComWrappers Default { get; } = CreateAndRegisterDefault();
+
+    /// <summary>
+    /// Starts tracking CCWs created while an authored composable constructor is running.
+    /// </summary>
+    public static void BeginComposableConstruction()
+    {
+        _ = Interlocked.Increment(ref ActiveComposableConstructionCount);
+    }
+
+    /// <summary>
+    /// Stops tracking CCWs created while an authored composable constructor is running on this thread.
+    /// </summary>
+    public static void EndComposableConstruction()
+    {
+        _ = Interlocked.Decrement(ref ActiveComposableConstructionCount);
+    }
+
+    /// <summary>
+    /// Gets whether a specific object was marshalled while an authored composable constructor was running.
+    /// </summary>
+    private static bool WasMarshalledDuringComposableConstruction(object instance)
+    {
+        return ObjectsMarshalledDuringComposableConstruction.TryGetValue(instance, out _);
+    }
+
+    /// <summary>
+    /// Registers a constructed object for aggregation unless a standalone CCW was already created for it.
+    /// </summary>
+    public static bool TryRegisterComposableInstance(object instance, void* controllingOuter)
+    {
+        lock (ComposableConstructionLock)
+        {
+            if (WasMarshalledDuringComposableConstruction(instance))
+            {
+                return false;
+            }
+
+            WindowsRuntimeAggregation.Register(instance, controllingOuter);
+
+            return true;
+        }
+    }
 
     /// <summary>
     /// Creates and registers the default instance of <see cref="WindowsRuntimeComWrappers"/>.
@@ -340,6 +404,30 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
     {
+        // The overwhelming majority of applications never construct an aggregate. Keep their first-CCW
+        // path to two volatile reads, and only synchronize while a composable constructor is active or at
+        // least one aggregate exists. For a relevant object, one of those states remains true throughout
+        // the transition from construction to registration.
+        if (Volatile.Read(ref ActiveComposableConstructionCount) != 0 ||
+            WindowsRuntimeAggregation.HasAggregatedInstances)
+        {
+            lock (ComposableConstructionLock)
+            {
+                // A marshalling call can select the standalone path before registration, then reach this
+                // method after the object has become aggregated. Abort that stale standalone creation.
+                if (WindowsRuntimeAggregation.GetControllingOuter(obj) is not null)
+                {
+                    throw new InvalidOperationException(
+                        "A standalone COM callable wrapper cannot be created after an object has been registered for aggregation.");
+                }
+
+                if (Volatile.Read(ref ActiveComposableConstructionCount) != 0)
+                {
+                    ObjectsMarshalledDuringComposableConstruction.AddOrUpdate(obj, ComposableConstructionMarker);
+                }
+            }
+        }
+
         WindowsRuntimeMarshallingInfo? marshallingInfo = MarshallingInfo;
 
         // Try to get the marshalling info for the input type. If we can't find it, we fallback to the marshalling info

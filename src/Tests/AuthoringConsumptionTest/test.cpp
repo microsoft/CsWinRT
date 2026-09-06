@@ -30,6 +30,29 @@ struct NativeDerivedComposable : winrt::AuthoringTest::ComposableBaseT<NativeDer
     }
 };
 
+struct ComposableConstructorSink : winrt::implements<ComposableConstructorSink, IComposableConstructorSink>
+{
+    void Set(ComposableBase const& value)
+    {
+        Value = value;
+    }
+
+    ComposableBase Value{ nullptr };
+};
+
+struct NativeConstructorEscapingComposable : winrt::AuthoringTest::ComposableBaseT<NativeConstructorEscapingComposable>
+{
+    NativeConstructorEscapingComposable(int32_t value, IComposableConstructorSink const& sink)
+        : ComposableBaseT(value, sink)
+    {
+    }
+
+    winrt::hstring GetRuntimeClassName() const
+    {
+        return L"AuthoringTest.NativeConstructorEscapingComposable";
+    }
+};
+
 // A native derived class that both consumes the '[Protected]' surface of the composable base and
 // overrides its '[Overridable]' members. Each override calls the base implementation explicitly
 // (through the 'ComposableBaseT<D>' base, which routes to the non-delegating inner object) so the
@@ -140,6 +163,26 @@ TEST(AuthoringTest, ComposableClassNativeDerivation)
     auto nativeDerived = winrt::make<NativeDerivedComposable>(11);
 
     EXPECT_EQ(nativeDerived.GetValue(), 11);
+}
+
+TEST(AuthoringTest, ComposableClassConstructorSelfMarshallingIsRejected)
+{
+    winrt::com_ptr<ComposableConstructorSink> sink = winrt::make_self<ComposableConstructorSink>();
+
+    try
+    {
+        static_cast<void>(winrt::make_self<NativeConstructorEscapingComposable>(17, *sink));
+        FAIL() << "Expected composable activation to reject a constructor that marshals 'this'.";
+    }
+    catch (winrt::hresult_error const& exception)
+    {
+        EXPECT_EQ(exception.code(), winrt::hresult{ static_cast<int32_t>(0x80131509) });
+    }
+
+    // The constructor did run and hand out its temporary standalone CCW, but no aggregate with a second
+    // COM identity was created. Dropping the sink releases the only native reference to that failed instance.
+    ASSERT_NE(sink->Value, nullptr);
+    sink->Value = nullptr;
 }
 
 // The public surface of a composable base has to keep working through the delegating interface
