@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -146,18 +147,63 @@ public static unsafe class WindowsRuntimeMarshal
     }
 
     /// <summary>
-    /// Converts an unmanaged pointer to a Windows Runtime object to a managed object, either by unwrapping the
+    /// Converts an unmanaged pointer to a COM object to a managed object, either by unwrapping the
     /// original managed object that was previously marshalled, or retrieving or creating an RCW for it.
     /// </summary>
-    /// <param name="value">The input object to convert to managed.</param>
-    /// <returns>The resulting managed managed object.</returns>
+    /// <param name="value">A valid COM interface pointer to the input object, or <see langword="null"/>.</param>
+    /// <returns>The resulting managed object, or <see langword="null"/> if <paramref name="value"/> is <see langword="null"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not a recognized managed CCW and does not implement <c>IInspectable</c>.</exception>
+    /// <remarks>
+    /// Native objects must implement <c>IInspectable</c>, which is queried before creating or retrieving an RCW.
+    /// This method does not take ownership of the input pointer: the caller remains responsible for releasing it.
+    /// </remarks>
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
     public static object? ConvertToManaged(void* value)
     {
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
         throw null;
 #elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-        return WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        if (value is null)
+        {
+            return null;
+        }
+
+        // Unwrap recognized managed CCWs before requiring 'IInspectable', which they might not implement
+        if (TryGetManagedObject(value, out object? managedObject))
+        {
+            return managedObject;
+        }
+
+        // Only the public API accepts arbitrary COM interface pointers. Internal marshallers already
+        // receive the correct interface pointer and must not pay for this extra 'QueryInterface' call.
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(value, in WellKnownWindowsInterfaceIIDs.IID_IInspectable, out void* inspectablePtr);
+
+        if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+            {
+                throw new ArgumentException(
+                    "The native COM object cannot be converted to a managed Windows Runtime object " +
+                    "because it does not implement 'IInspectable'.", nameof(value));
+            }
+
+            ThrowArgumentException();
+        }
+
+        hresult.Assert();
+
+        // Use the queried 'IInspectable' pointer for conversion: the original pointer may refer to a
+        // different interface with an incompatible vtable, even if the object implements 'IInspectable'.
+        try
+        {
+            return WindowsRuntimeObjectMarshaller.ConvertToManaged(inspectablePtr);
+        }
+        finally
+        {
+            _ = IUnknownVftbl.ReleaseUnsafe(inspectablePtr);
+        }
 #endif
     }
 
