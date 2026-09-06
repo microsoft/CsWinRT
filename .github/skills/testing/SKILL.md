@@ -242,7 +242,7 @@ public async Task InvalidType_Warns()
 - `RestoreSources` overrides all inherited NuGet sources: the local CsWinRT build output (`CsWinRTPackageSource`) plus the `CsWinRTDependencies` feed (`CsWinRTDependenciesSource`), which provides the preview Windows SDK ref pack and `Microsoft.Windows.SDK.Contracts`
 - `CsWinRTPackageVersion`/`CsWinRTPackageSource` default to the local `build.cmd x64 Release` output and are overridden by the build/CI that produced the package
 
-**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly (shared verification). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the three reference-projection tests are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
+**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly, and that the forwarder ships embedded symbols (shared verification). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the three reference-projection tests are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
 
 ### 7. WinMD generator tests (`src/Tests/WinMDGeneratorTest/`)
 
@@ -283,6 +283,22 @@ public void RefArrayParameter_IsRejected()
 - Each test is a single `AssertSuccess`/`AssertFailure` call; the runner makes the exit-code and error-output assertions
 - Failure cases assert the tool exits non-zero and its output contains the expected `CSWINRTWINMDGEN` error id
 
+### 8. Impl generator tests (`src/Tests/ImplGeneratorTest/`)
+
+**What it tests:** End-to-end behavior of the `cswinrtimplgen` build tool (the forwarder generator), focusing on the **PE-level shape of the forwarder assembly** it produces. That assembly ships in `lib/<tfm>` of a projection NuGet package, so what it carries (in particular its debug information) is directly observable by consumers and by NuGet package health checks.
+
+**When to add tests here:** For anything about the forwarder assembly itself — its debug directory, embedded portable PDB, determinism, or type forwards. Reference-projection *codegen* is covered by `ProjectionWriterTest/`, and the full packaging layout by `SmokeTests/`.
+
+**Project settings:** Same shape as `WinMDGeneratorTest/` above, referencing `WinRT.Impl.Generator` instead, with the tool path passed via the `ImplGeneratorAssemblyPath` `AssemblyMetadata` item.
+
+**Test classes:**
+| Test class | What it tests |
+|------------|---------------|
+| `Test_DebugDirectory` | The forwarder carries the debug directory of a deterministic build with embedded symbols (`CodeView`, `PdbChecksum`, `Reproducible`, `EmbeddedPortablePdb`), that those entries are mutually consistent, that the embedded PDB has one embedded `/_` prefixed document describing the type forwards plus valid compiler flags, and that two runs are byte identical |
+
+**Test helper (in `Helpers/`):**
+- `ImplGeneratorRunner` — compiles a C# input assembly (optionally with symbols), runs the actual tool as a subprocess, and exposes PE/PDB inspection helpers (`GetDebugDirectoryEntryTypes`, `GetEmbeddedPortablePdbDocumentNames`, `GetEmbeddedPortablePdbDocumentText`, `GetCompilationOptionValue`, `IsCodeViewEntryConsistent`, `IsPdbChecksumValid`, `RunTwice`).
+
 ## Deciding where to add tests
 
 | You want to test... | Add test to... |
@@ -298,6 +314,7 @@ public void RefArrayParameter_IsRejected()
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
 | WinRT component authoring patterns | `AuthoringTest/` |
 | A WinMD generator failure mode (a `CSWINRTWINMDGEN` error) | `WinMDGeneratorTest/` (add to `Test_ParameterConventions` or `Test_InvalidInputs`) |
+| The forwarder assembly's PE shape, symbols, or determinism | `ImplGeneratorTest/` (add to `Test_DebugDirectory`) |
 | The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/`, `Authoring/`, or a reference-projection project) |
 | Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
 

@@ -19,7 +19,7 @@
       * Projection: a class library generates a reference projection for a third-party
         component's '.winmd' (reusing the one emitted by the authoring test), validating the
         reference projection generator and the forwarder generator, exactly as a NuGet
-        projection author would.
+        projection author would. The forwarder is also checked to ship embedded symbols.
 
       * WindowsSdkProjection: a class library generates the base Windows SDK reference projection
         from the 'Microsoft.Windows.SDK.Contracts' '.winmd' files, exactly as the
@@ -254,7 +254,35 @@ function Invoke-ReferenceProjectionSmokeTest {
         throw "The $Name build did not produce the 'ref\$Name.dll' reference assembly."
     }
 
+    # The forwarder is what lands in 'lib/<tfm>' of a projection package, so it has to ship symbols. It
+    # is emitted as metadata rather than compiled, so its debug information is synthesized by
+    # 'cswinrtimplgen'; without that, the whole package reports as having no symbols.
+    Assert-HasEmbeddedSymbols -Path $forwarder.FullName
+
     Write-Host "Verified the $Name projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
+}
+
+# Verifies that an assembly carries an embedded portable PDB and is marked as reproducible.
+function Assert-HasEmbeddedSymbols {
+    param ([Parameter(Mandatory = $true)] [string] $Path)
+
+    $stream = [IO.File]::OpenRead($Path)
+    try {
+        $peReader = [Reflection.PortableExecutable.PEReader]::new($stream)
+        try {
+            $entryTypes = $peReader.ReadDebugDirectory() | ForEach-Object { $_.Type }
+
+            foreach ($required in @('EmbeddedPortablePdb', 'Reproducible', 'CodeView', 'PdbChecksum')) {
+                if ($entryTypes -notcontains $required) {
+                    throw "'$([IO.Path]::GetFileName($Path))' is missing the '$required' debug directory entry (has: $($entryTypes -join ', '))."
+                }
+            }
+        }
+        finally { $peReader.Dispose() }
+    }
+    finally { $stream.Dispose() }
+
+    Write-Host "Verified '$([IO.Path]::GetFileName($Path))' ships embedded symbols." -ForegroundColor DarkGray
 }
 
 if ($Test -in @('All', 'Consumption')) {

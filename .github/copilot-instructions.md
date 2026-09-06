@@ -460,7 +460,10 @@ A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary.
 2. Creates a new empty assembly (the "impl" assembly)
 3. Copies well-known assembly attributes (version, debug info, etc.)
 4. Emits `[TypeForwarder]` entries for all public top-level types, routing to the appropriate projection assembly
-5. Optionally signs with a strong-name key
+5. Synthesizes a portable PDB for the forwarder and embeds it (see "Forwarder debug information" below)
+6. Optionally signs with a strong-name key
+
+**Forwarder debug information**: the forwarder is emitted as metadata rather than compiled, so it has no symbols of its own, and there are none to carry over either (the input is compiled with `ProduceOnlyReferenceAssembly`, and a reference-only compilation emits no debug information at all). Since the forwarder is the assembly that ships in `lib/<tfm>` of a projection NuGet package, that gap makes the whole package report as having no symbols. The tool therefore synthesizes the debug information itself (`Writers/PortablePdbWriter.cs`, `Writers/DebugDirectoryWriter.cs`), emitting the same debug directory a deterministic build with embedded symbols produces — `CodeView`, `PdbChecksum`, `Reproducible`, and `EmbeddedPortablePdb`. The embedded portable PDB carries a single, embedded, generated document (`/_/<AssemblyName>.TypeForwards.g.cs`, written by `Writers/TypeForwardsDocumentWriter.cs`) listing every type forward in the assembly as the C# that would produce it, plus the compilation options and metadata references that tooling expects. Everything is derived from the forwarder itself, so the output stays byte-for-byte deterministic.
 
 **Debug repro support**: when `--debug-repro-directory` is provided, captures the output assembly and all reference assemblies along with a faithful `.rsp` into a self-contained `impl-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
 

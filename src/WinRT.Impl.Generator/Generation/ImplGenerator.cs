@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Frozen;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -15,6 +16,7 @@ using System.Threading;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.PE;
+using AsmResolver.PE.Builder;
 using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
@@ -24,6 +26,7 @@ using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.Parsing;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.ImplGenerator.Errors;
+using WindowsRuntime.ImplGenerator.Writers;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 
@@ -326,12 +329,76 @@ internal static partial class ImplGenerator
 
         try
         {
-            implModule.Write(implAssemblyPath);
+            // We can't just use 'implModule.Write(path)' here, as that gives us no chance to populate
+            // the debug directory of the resulting .dll. Go through the PE image and the file builder
+            // explicitly instead, which is exactly what 'Write' does anyway.
+            PEImage implImage = implModule.ToPEImage();
+
+            EmitDebugDirectory(implModule, implImage);
+
+            implImage.ToPEFile(new ManagedPEFileBuilder()).Write(implAssemblyPath);
         }
         catch (Exception e)
         {
             throw WellKnownImplExceptions.EmitDllError(e);
         }
+    }
+
+    /// <summary>
+    /// Emits the debug directory (and the portable PDB it embeds) for the impl image.
+    /// </summary>
+    /// <param name="implModule">The impl module being generated.</param>
+    /// <param name="implImage">The <see cref="PEImage"/> for the impl module being generated.</param>
+    /// <remarks>
+    /// <para>
+    /// The impl assembly is built from scratch, so it starts with an empty debug directory. That would make
+    /// it ship with no symbols at all: no Source Link, no compiler flags, and no way for tooling to tell it
+    /// was built deterministically. It is also the assembly that ends up in <c>lib/&lt;tfm&gt;</c> of the
+    /// resulting NuGet package, so that gap makes the whole package report as having no symbols.
+    /// </para>
+    /// <para>
+    /// There is no PDB to carry over either: the input assembly is compiled as a reference assembly (see
+    /// 'Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets'), and a reference-only compilation emits no
+    /// debug information at all. Even if it did, that PDB would describe method bodies the impl assembly does
+    /// not have. The debug information is therefore synthesized here, describing the impl assembly itself.
+    /// </para>
+    /// </remarks>
+    private static void EmitDebugDirectory(ModuleDefinition implModule, PEImage implImage)
+    {
+        // The document name has to be deterministic (and is, as it only depends on the assembly name).
+        // The '/_' prefix is the same marker the .NET SDK uses for path mapped, deterministic builds.
+        string assemblyName = Path.GetFileNameWithoutExtension(implModule.Name!);
+        string documentName = $"/_/{assemblyName}.TypeForwards.g.cs";
+
+        PortablePdb pdb = PortablePdbWriter.Write(
+            documentName: documentName,
+            documentText: TypeForwardsDocumentWriter.Write(implModule),
+            references: TypeForwardsDocumentWriter.GetReferences(implModule),
+            compilationOptions: GetCompilationOptions());
+
+        DebugDirectoryWriter.Write(implImage, pdb, $"{assemblyName}.pdb");
+    }
+
+    /// <summary>
+    /// Gets the compilation options to record in the portable PDB of the impl assembly.
+    /// </summary>
+    /// <returns>The compilation options, as key/value pairs.</returns>
+    /// <remarks>
+    /// The <c>version</c> entry is the version of this metadata format (not of any tool), and tooling relies
+    /// on it to decide whether the remaining information can be trusted. The rest describes how the impl
+    /// assembly was produced, which is by this generator rather than by a C# compiler.
+    /// </remarks>
+    private static List<KeyValuePair<string, string>> GetCompilationOptions()
+    {
+        return
+        [
+            new("version", "2"),
+            new("compiler-version", typeof(ImplGenerator).Assembly.GetName().Version?.ToString() ?? "0.0.0.0"),
+            new("name", "cswinrtimplgen"),
+            new("language", "C#"),
+            new("source-file-count", "1"),
+            new("output-kind", "DynamicallyLinkedLibrary")
+        ];
     }
 
     /// <summary>
