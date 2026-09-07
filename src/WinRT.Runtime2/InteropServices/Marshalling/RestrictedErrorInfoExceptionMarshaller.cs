@@ -18,6 +18,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// </remarks>
 /// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
 [CustomMarshaller(typeof(Exception), MarshalMode.ManagedToUnmanagedOut, typeof(RestrictedErrorInfoExceptionMarshaller))]
+[CustomMarshaller(typeof(Exception), MarshalMode.UnmanagedToManagedOut, typeof(RestrictedErrorInfoExceptionMarshaller))]
 public static class RestrictedErrorInfoExceptionMarshaller
 {
     /// <summary>
