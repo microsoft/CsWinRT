@@ -273,13 +273,14 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
     auto host_path = host_module;
     host_path.remove_filename();
 
-    std::wstring target_path;
+    std::filesystem::path target_path;
+    std::wstring target_file;
 
-    std::vector<std::wstring> probe_paths;
+    std::vector<std::filesystem::path> probe_paths;
 
     auto probe = [&](const wchar_t* suffix)
     {
-        auto probe_path = target_path + suffix;
+        auto probe_path = host_path / (target_file + suffix);
         auto end = probe_paths.end();
         if (std::find(probe_paths.begin(), end, probe_path) == end)
         {
@@ -292,16 +293,15 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
         }
         return false;
     };
-
     auto shorten_target_path = [&]()
     {
-        std::size_t count = target_path.rfind('.');
+        std::size_t count = target_file.rfind('.');
         if (count == std::wstring::npos)
         {
-            target_path.clear();
+            target_file.clear();
             return false;
         }
-        target_path.resize(count);
+        target_file.resize(count);
         return true;
     };
 
@@ -312,11 +312,10 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
     };
 
     // Probe for target assembly by host name, if renamed (most common)
-    if (host_file.wstring() != L"winrt.host.dll")
+    if (::CompareStringOrdinal(host_file.c_str(), -1, L"WinRT.Host.dll", -1, TRUE) != CSTR_EQUAL)
     {
         probe_paths.push_back(host_module);
-        target_path = host_module;
-        target_path.resize(target_path.size() - 4);
+        target_file = host_file.stem().wstring();
         if (probe_target())
         {
             return target_path;
@@ -324,7 +323,7 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
     }
 
     // Probe for target assembly by runtime class name (less common)
-    target_path = host_path.wstring() + std::wstring(class_id.c_str());
+    target_file = class_id.c_str();
     if(probe_target())
     {
         return target_path;
