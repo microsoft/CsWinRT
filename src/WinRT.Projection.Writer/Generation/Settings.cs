@@ -57,9 +57,14 @@ internal sealed class Settings
     public int MaxDegreesOfParallelism { get; init; } = -1;
 
     /// <summary>
-    /// Gets the namespace prefixes to include in projection (when empty, all namespaces are included).
+    /// Gets the namespace or type-name prefixes to include in the projection.
     /// </summary>
     public HashSet<string> Include { get; } = [];
+
+    /// <summary>
+    /// Gets the fully qualified type names to include in the projection, matched exactly.
+    /// </summary>
+    public HashSet<string> IncludeTypes { get; } = [];
 
     /// <summary>
     /// Gets the namespace prefixes to exclude from projection.
@@ -72,7 +77,7 @@ internal sealed class Settings
     public HashSet<string> AdditionExclude { get; } = [];
 
     /// <summary>
-    /// Gets the compiled type-name filter built from <see cref="Include"/> and <see cref="Exclude"/>.
+    /// Gets the compiled type-name filter built from <see cref="Include"/>, <see cref="IncludeTypes"/>, and <see cref="Exclude"/>.
     /// Only valid after <see cref="MakeReadOnly"/> has been called.
     /// </summary>
     /// <exception cref="WellKnownProjectionWriterException">
@@ -85,7 +90,8 @@ internal sealed class Settings
     }
 
     /// <summary>
-    /// Gets the compiled type-name filter built from <see cref="Include"/> and <see cref="AdditionExclude"/>, used for namespace-additions resources only.
+    /// Gets the compiled filter used for namespace-additions resources only.
+    /// Exact type includes keep an otherwise empty filter from including all namespaces, but do not match namespaces themselves.
     /// Only valid after <see cref="MakeReadOnly"/> has been called.
     /// </summary>
     /// <exception cref="WellKnownProjectionWriterException">
@@ -141,8 +147,8 @@ internal sealed class Settings
             throw WellKnownProjectionWriterExceptions.SettingsAlreadyReadOnly();
         }
 
-        Filter = new TypeFilter(Include, Exclude);
-        AdditionFilter = new TypeFilter(Include, AdditionExclude);
+        Filter = new TypeFilter(Include, Exclude, IncludeTypes);
+        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes);
         _isReadOnly = true;
     }
 }

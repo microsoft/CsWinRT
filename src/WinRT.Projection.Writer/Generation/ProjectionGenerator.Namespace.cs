@@ -259,7 +259,7 @@ internal sealed partial class ProjectionGenerator
 
         // Phase 4: Custom additions to namespaces
         _token.ThrowIfCancellationRequested();
-        if (_settings.AdditionFilter.Includes(ns))
+        if (_settings.AdditionFilter.IncludesNamespace(ns))
         {
             foreach (Addition addition in Additions.EnumerateByNamespace(ns))
             {

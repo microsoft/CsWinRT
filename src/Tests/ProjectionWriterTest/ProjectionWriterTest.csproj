@@ -52,11 +52,17 @@
     match the path published as assembly metadata below.
   -->
   <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Projection.Ref.Generator\WinRT.Projection.Ref.Generator.csproj"
                       ReferenceOutputAssembly="false"
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\WinRT.Projection.Writer\Helpers\TypeFilter.cs" Link="Helpers\TypeFilter.cs" />
   </ItemGroup>
 
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->

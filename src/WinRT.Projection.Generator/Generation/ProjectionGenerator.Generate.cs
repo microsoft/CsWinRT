@@ -106,6 +106,7 @@ internal partial class ProjectionGenerator
         componentAssemblyNames = [];
 
         List<string> includes = [];
+        List<string> includeTypes = [];
         List<string> excludes = [];
         List<string> winmdInputs = [];
 
@@ -181,7 +182,7 @@ internal partial class ProjectionGenerator
                         continue;
                     }
 
-                    includes.Add(type.FullName);
+                    includeTypes.Add(type.FullName);
                     hasTypesToProject = true;
                 }
             }
@@ -244,7 +245,8 @@ internal partial class ProjectionGenerator
 
                 foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
                 {
-                    includes.Add(exportedType.FullName);
+                    // Reference assemblies describe exact type identities, not namespace prefixes
+                    includeTypes.Add(exportedType.FullName);
                     hasTypesToProject = true;
                 }
             }
@@ -285,6 +287,7 @@ internal partial class ProjectionGenerator
             InputPaths = winmdInputs,
             OutputFolder = outputFolder,
             Include = includes,
+            IncludeTypes = includeTypes,
             Exclude = excludes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,

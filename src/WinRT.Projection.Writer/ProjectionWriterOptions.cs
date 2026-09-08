@@ -27,12 +27,19 @@ public sealed class ProjectionWriterOptions
     public required string OutputFolder { get; init; }
 
     /// <summary>
-    /// Optional list of namespace prefixes to include in the projection.
+    /// Optional list of namespace or type-name prefixes to include in the projection.
     /// </summary>
     public IReadOnlyList<string> Include { get; init; } = [];
 
     /// <summary>
-    /// Optional list of namespace prefixes to exclude from the projection.
+    /// Optional list of fully qualified type names to include in the projection, matched exactly.
+    /// These entries do not include namespace additions or other types with the same name prefix.
+    /// An exact include wins over shorter exclude prefixes; an identical exclude wins the tie.
+    /// </summary>
+    public IReadOnlyList<string> IncludeTypes { get; init; } = [];
+
+    /// <summary>
+    /// Optional list of namespace or type-name prefixes to exclude from the projection.
     /// </summary>
     public IReadOnlyList<string> Exclude { get; init; } = [];
 
