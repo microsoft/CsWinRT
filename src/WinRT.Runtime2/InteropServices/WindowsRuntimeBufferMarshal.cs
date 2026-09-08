@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Windows.Foundation;
 using Windows.Storage.Streams;
@@ -13,6 +14,40 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 public static partial class WindowsRuntimeBufferMarshal
 {
+    /// <summary>
+    /// Gets a pointer to the underlying data representation of the <see cref="IBuffer"/>.
+    /// </summary>
+    /// <param name="buffer">The buffer to get the data pointer for.</param>
+    /// <returns>The pointer to the underlying data representation of the buffer.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="buffer"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if the underlying data representation of <paramref name="buffer"/> cannot be retrieved.</exception>
+    /// <exception cref="InvalidCastException">Thrown if <paramref name="buffer"/> is a native object that doesn't implement <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess"><c>IBufferByteAccess</c></see>.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
+    /// <remarks>
+    /// Callers are responsible for ensuring that the buffer is kept alive while the pointer is in use. For instance,
+    /// they can use <see cref="GC.KeepAlive"/> after the last use of the pointer, to ensure that this is the case.
+    /// </remarks>
+    public static unsafe byte* GetDataUnsafe(IBuffer buffer)
+    {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+        ArgumentNullException.ThrowIfNull(buffer);
+
+        if (!TryGetDataUnsafe(buffer, out byte* data))
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance, nameof(buffer));
+
+            ThrowArgumentException();
+        }
+
+        return data;
+#endif
+    }
+
     /// <summary>
     /// Tries to get a pointer to the underlying data representation of the <see cref="IBuffer"/>.
     /// </summary>
@@ -52,6 +87,41 @@ public static partial class WindowsRuntimeBufferMarshal
         data = null;
 
         return false;
+#endif
+    }
+
+    /// <summary>
+    /// Gets a pointer to the underlying data representation of the <see cref="IMemoryBufferReference"/>.
+    /// </summary>
+    /// <param name="buffer">The buffer to get the data pointer for.</param>
+    /// <param name="capacity">The capacity of the buffer.</param>
+    /// <returns>The pointer to the underlying data representation of the buffer.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="buffer"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if the underlying data representation of <paramref name="buffer"/> cannot be retrieved.</exception>
+    /// <exception cref="InvalidCastException">Thrown if <paramref name="buffer"/> is a native object that doesn't implement <see href="https://learn.microsoft.com/previous-versions//mt297505(v=vs.85)"><c>IMemoryBufferByteAccess</c></see>.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/winrt/imemorybufferbyteaccess-getbuffer"><c>IMemoryBufferByteAccess.GetBuffer</c></see> on the input buffer fails.</exception>
+    /// <remarks>
+    /// Callers are responsible for ensuring that the buffer is kept alive while the pointer is in use. For instance,
+    /// they can use <see cref="GC.KeepAlive"/> after the last use of the pointer, to ensure that this is the case.
+    /// </remarks>
+    public static unsafe byte* GetDataUnsafe(IMemoryBufferReference buffer, out uint capacity)
+    {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+        ArgumentNullException.ThrowIfNull(buffer);
+
+        if (!TryGetDataUnsafe(buffer, out byte* data, out capacity))
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIMemoryBufferReferenceInstance, nameof(buffer));
+
+            ThrowArgumentException();
+        }
+
+        return data;
 #endif
     }
 
