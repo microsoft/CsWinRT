@@ -127,6 +127,15 @@
     <CopyFileToFolders Include="DottedDirectoryTargetNotFound.manifest">
       <DeploymentContent>true</DeploymentContent>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="MixedCaseGenericHost.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="MultiDotRenamedHost.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ClassFallbackServer.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="ProbeByHost.manifest">
       <DeploymentContent>true</DeploymentContent>
     </CopyFileToFolders>

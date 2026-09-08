@@ -24,7 +24,22 @@
             $(OutDir)Test.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(OutDir)WinRT.Host.runtimeconfig.json;
-            $(OutDir)WinRT.Host.Shim.dll"
+            $(OutDir)WinRT.Host.Shim.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(OutDir)WinRT.Host.runtimeconfig.json;
+            $(OutDir)WinRT.Host.Shim.dll;
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(OutDir)Test.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(OutDir)Test.Host.runtimeconfig.json;
+            $(OutDir)WinRT.Host.Shim.dll;
+            $(OutDir)Test.dll;
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(OutDir)WinRT.Host.runtimeconfig.json;
+            $(OutDir)WinRT.Host.Shim.dll;
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(OutDir)TestHost.ProbeByClass.dll"
           DestinationFiles="
             $(OutDir)WinRT.Host.dll.mui;
             $(OutDir)WinRT.Host.dll;
@@ -41,7 +56,22 @@
             $(OutDir)Dotted.dll;
             $(OutDir)Dotted.Directory.TargetNotFound\Unmatched.Host.dll;
             $(OutDir)Dotted.Directory.TargetNotFound\Unmatched.Host.runtimeconfig.json;
-            $(OutDir)Dotted.Directory.TargetNotFound\WinRT.Host.Shim.dll"
+            $(OutDir)Dotted.Directory.TargetNotFound\WinRT.Host.Shim.dll;
+            $(OutDir)MixedCaseGeneric\wInRt.HoSt.dll;
+            $(OutDir)MixedCaseGeneric\wInRt.HoSt.runtimeconfig.json;
+            $(OutDir)MixedCaseGeneric\WinRT.Host.Shim.dll;
+            $(OutDir)MixedCaseGeneric\TestHost.ProbeByClass.dll;
+            $(OutDir)MixedCaseGeneric\wInRt.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.Host.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.Host.runtimeconfig.json;
+            $(OutDir)Multi.Dot.Host\WinRT.Host.Shim.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.Server.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.dll;
+            $(OutDir)ClassFallbackServer\WinRT.Host.dll;
+            $(OutDir)ClassFallbackServer\WinRT.Host.runtimeconfig.json;
+            $(OutDir)ClassFallbackServer\WinRT.Host.Shim.dll;
+            $(OutDir)ClassFallbackServer\TestHost.Server.dll;
+            $(OutDir)ClassFallbackServer\TestHost.dll"
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>  
   

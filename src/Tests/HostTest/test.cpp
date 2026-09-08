@@ -91,6 +91,18 @@ TEST(HostTest, ProbeByClass)
 	EXPECT_TRUE(Activate<ProbeByClass>(L"ProbeByClass.manifest") == L"TestHost.ProbeByClass.dll");
 }
 
+TEST(HostTest, ProbeByClassWithMixedCaseGenericHost)
+{
+	EXPECT_TRUE(
+		Activate<ProbeByClass>(L"MixedCaseGenericHost.manifest") ==
+		L"TestHost.ProbeByClass.dll");
+}
+
+TEST(HostTest, ProbeByClassUsesServerSuffixFirstWhenFallingBackToClassName)
+{
+	EXPECT_TRUE(Activate<ProbeByClass>(L"ClassFallbackServer.manifest") == L"TestHost.Server.dll");
+}
+
 // ClassId:				Host:									Target:
 // TestHost.ProbeByClass	Dotted.Directory\Unmatched.Host.dll		Dotted.Directory\TestHost.ProbeByClass.dll
 //
@@ -106,6 +118,13 @@ TEST(HostTest, TargetNotFoundWithRenamedHostInDottedDirectory)
 	Activate<ProbeByClass>(
 		L"DottedDirectoryTargetNotFound.manifest",
 		HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+}
+
+TEST(HostTest, ProbeByHostUsesServerSuffixFirstWithMultiDotHostName)
+{
+	EXPECT_TRUE(
+		Activate<ProbeByHost>(L"MultiDotRenamedHost.manifest") ==
+		L"Alpha.Beta.Server.dll");
 }
 
 // ClassId:				Host:				Target:

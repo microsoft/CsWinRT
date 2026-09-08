@@ -49,6 +49,15 @@
     <CopyFileToFolders Include="DottedDirectoryTargetNotFound.manifest">
       <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="MixedCaseGenericHost.manifest">
+      <Filter>Manifest Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="MultiDotRenamedHost.manifest">
+      <Filter>Manifest Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ClassFallbackServer.manifest">
+      <Filter>Manifest Files</Filter>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="ProbeByHost.manifest">
       <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
