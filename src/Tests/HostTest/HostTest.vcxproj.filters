@@ -43,6 +43,9 @@
     <CopyFileToFolders Include="ProbeByClass.manifest">
       <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="DottedDirectory.manifest">
+      <Filter>Manifest Files</Filter>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="ProbeByHost.manifest">
       <Filter>Manifest Files</Filter>
     </CopyFileToFolders>

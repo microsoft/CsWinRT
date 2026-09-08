@@ -91,6 +91,16 @@ TEST(HostTest, ProbeByClass)
 	EXPECT_TRUE(Activate<ProbeByClass>(L"ProbeByClass.manifest") == L"TestHost.ProbeByClass.dll");
 }
 
+// ClassId:				Host:									Target:
+// TestHost.ProbeByClass	Dotted.Directory\Unmatched.Host.dll		Dotted.Directory\TestHost.ProbeByClass.dll
+//
+// A renamed host must fall back to class-name probing without escaping a
+// dotted host directory.
+TEST(HostTest, ProbeByClassWithRenamedHostInDottedDirectory)
+{
+	EXPECT_TRUE(Activate<ProbeByClass>(L"DottedDirectory.manifest") == L"TestHost.ProbeByClass.dll");
+}
+
 // ClassId:				Host:				Target:
 // TestHost.Class		Test.Host.dll		Test.dll
 // 
@@ -139,4 +149,3 @@ TEST(HostTest, RuntimeConflict)
 {
 	Activate<ClassNotFound>(L"RuntimeNotFound.manifest", CoreHostIncompatibleConfig);
 }
-

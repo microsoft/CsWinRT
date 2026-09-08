@@ -237,7 +237,9 @@ void init_runtime(const wchar_t* host_path, const wchar_t* host_config)
     }
 }
 
-std::wstring find_mapped_target_assembly(std::filesystem::path host_config, winrt::hstring class_id)
+std::wstring find_mapped_target_assembly(
+    std::filesystem::path const& host_config,
+    winrt::hstring const& class_id)
 {
     std::wstring target_assembly;
 
@@ -267,11 +269,12 @@ std::wstring find_mapped_target_assembly(std::filesystem::path host_config, winr
     return target_assembly;
 }
 
-std::filesystem::path probe_for_target_assembly(std::filesystem::path host_module, winrt::hstring class_id)
+std::filesystem::path probe_for_target_assembly(
+    std::filesystem::path const& host_module,
+    winrt::hstring const& class_id)
 {
-    auto host_file = host_module.filename();
-    auto host_path = host_module;
-    host_path.remove_filename();
+    const auto host_file = host_module.filename();
+    const auto host_path = host_module.parent_path();
 
     std::filesystem::path target_path;
     std::wstring target_file;
@@ -281,8 +284,8 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
     auto probe = [&](const wchar_t* suffix)
     {
         auto probe_path = host_path / (target_file + suffix);
-        auto end = probe_paths.end();
-        if (std::find(probe_paths.begin(), end, probe_path) == end)
+        if (std::find(probe_paths.begin(), probe_paths.end(), probe_path)
+            == probe_paths.end())
         {
             if (std::filesystem::exists(probe_path))
             {
@@ -293,9 +296,10 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
         }
         return false;
     };
-    auto shorten_target_path = [&]()
+
+    auto shorten_target_file = [&]()
     {
-        std::size_t count = target_file.rfind('.');
+        const auto count = target_file.rfind('.');
         if (count == std::wstring::npos)
         {
             target_file.clear();
@@ -307,12 +311,22 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
 
     auto probe_target = [&]()
     {
-        while (!probe(L".Server.dll") && !probe(L".dll") && shorten_target_path()) {};
-        return !target_path.empty();
+        while (true)
+        {
+            if (probe(L".Server.dll") || probe(L".dll"))
+            {
+                return true;
+            }
+            if (!shorten_target_file())
+            {
+                return false;
+            }
+        }
     };
 
     // Probe for target assembly by host name, if renamed (most common)
-    if (::CompareStringOrdinal(host_file.c_str(), -1, L"WinRT.Host.dll", -1, TRUE) != CSTR_EQUAL)
+    if (::CompareStringOrdinal(
+        host_file.c_str(), -1, L"WinRT.Host.dll", -1, TRUE) != CSTR_EQUAL)
     {
         probe_paths.push_back(host_module);
         target_file = host_file.stem().wstring();
@@ -324,7 +338,7 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
 
     // Probe for target assembly by runtime class name (less common)
     target_file = class_id.c_str();
-    if(probe_target())
+    if (probe_target())
     {
         return target_path;
     }
