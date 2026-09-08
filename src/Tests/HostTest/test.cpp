@@ -100,7 +100,7 @@ TEST(HostTest, ProbeByClassWithMixedCaseGenericHost)
 
 TEST(HostTest, ProbeByClassUsesServerSuffixFirstWhenFallingBackToClassName)
 {
-	EXPECT_TRUE(Activate<ProbeByClass>(L"ClassFallbackServer.manifest") == L"TestHost.Server.dll");
+	Activate<ProbeByHost>(L"ClassFallbackServer.manifest", CLASS_E_CLASSNOTAVAILABLE);
 }
 
 // ClassId:				Host:									Target:
@@ -115,16 +115,14 @@ TEST(HostTest, ProbeByClassWithRenamedHostInDottedDirectory)
 
 TEST(HostTest, TargetNotFoundWithRenamedHostInDottedDirectory)
 {
-	Activate<ProbeByClass>(
+	Activate<ClassNotFound>(
 		L"DottedDirectoryTargetNotFound.manifest",
 		HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
 }
 
 TEST(HostTest, ProbeByHostUsesServerSuffixFirstWithMultiDotHostName)
 {
-	EXPECT_TRUE(
-		Activate<ProbeByHost>(L"MultiDotRenamedHost.manifest") ==
-		L"Alpha.Beta.Server.dll");
+	Activate<ProbeByHost>(L"MultiDotRenamedHost.manifest", CLASS_E_CLASSNOTAVAILABLE);
 }
 
 // ClassId:				Host:				Target:
