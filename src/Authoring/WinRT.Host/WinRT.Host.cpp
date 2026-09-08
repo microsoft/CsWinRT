@@ -4,6 +4,7 @@
 #include "hostfxr_status.h"
 #include <filesystem>
 #include <sstream>
+#include <string_view>
 
 #undef GetObject  
 
@@ -269,6 +270,59 @@ std::wstring find_mapped_target_assembly(
     return target_assembly;
 }
 
+bool probe_for_target_file_with_suffix(
+    std::filesystem::path const& host_path,
+    std::wstring const& target_file,
+    wchar_t const* suffix,
+    std::vector<std::filesystem::path>& probe_paths,
+    std::filesystem::path& target_path)
+{
+    auto probe_path = host_path / (target_file + suffix);
+    if (std::find(probe_paths.begin(), probe_paths.end(), probe_path)
+        != probe_paths.end())
+    {
+        return false;
+    }
+
+    if (std::filesystem::exists(probe_path))
+    {
+        target_path = std::move(probe_path);
+        return true;
+    }
+
+    probe_paths.emplace_back(std::move(probe_path));
+    return false;
+}
+
+std::filesystem::path probe_for_target_file(
+    std::filesystem::path const& host_path,
+    std::wstring_view target_file,
+    std::vector<std::filesystem::path>& probe_paths)
+{
+    std::wstring candidate{target_file};
+
+    while (!candidate.empty())
+    {
+        std::filesystem::path target_path;
+        if (probe_for_target_file_with_suffix(
+                host_path, candidate, L".Server.dll", probe_paths, target_path)
+            || probe_for_target_file_with_suffix(
+                host_path, candidate, L".dll", probe_paths, target_path))
+        {
+            return target_path;
+        }
+
+        const auto count = candidate.rfind('.');
+        if (count == std::wstring::npos)
+        {
+            return {};
+        }
+        candidate.resize(count);
+    }
+
+    return {};
+}
+
 std::filesystem::path probe_for_target_assembly(
     std::filesystem::path const& host_module,
     winrt::hstring const& class_id)
@@ -276,69 +330,24 @@ std::filesystem::path probe_for_target_assembly(
     const auto host_file = host_module.filename();
     const auto host_path = host_module.parent_path();
 
-    std::filesystem::path target_path;
-    std::wstring target_file;
-
     std::vector<std::filesystem::path> probe_paths;
-
-    auto probe = [&](const wchar_t* suffix)
-    {
-        auto probe_path = host_path / (target_file + suffix);
-        if (std::find(probe_paths.begin(), probe_paths.end(), probe_path)
-            == probe_paths.end())
-        {
-            if (std::filesystem::exists(probe_path))
-            {
-                target_path = probe_path;
-                return true;
-            }
-            probe_paths.emplace_back(std::move(probe_path));
-        }
-        return false;
-    };
-
-    auto shorten_target_file = [&]()
-    {
-        const auto count = target_file.rfind('.');
-        if (count == std::wstring::npos)
-        {
-            target_file.clear();
-            return false;
-        }
-        target_file.resize(count);
-        return true;
-    };
-
-    auto probe_target = [&]()
-    {
-        while (true)
-        {
-            if (probe(L".Server.dll") || probe(L".dll"))
-            {
-                return true;
-            }
-            if (!shorten_target_file())
-            {
-                return false;
-            }
-        }
-    };
 
     // Probe for target assembly by host name, if renamed (most common)
     if (::CompareStringOrdinal(
         host_file.c_str(), -1, L"WinRT.Host.dll", -1, TRUE) != CSTR_EQUAL)
     {
         probe_paths.push_back(host_module);
-        target_file = host_file.stem().wstring();
-        if (probe_target())
+        auto const target_file = host_file.stem().wstring();
+        if (auto target_path = probe_for_target_file(host_path, target_file, probe_paths);
+            !target_path.empty())
         {
             return target_path;
         }
     }
 
     // Probe for target assembly by runtime class name (less common)
-    target_file = class_id.c_str();
-    if (probe_target())
+    if (auto target_path = probe_for_target_file(host_path, class_id.c_str(), probe_paths);
+        !target_path.empty())
     {
         return target_path;
     }
