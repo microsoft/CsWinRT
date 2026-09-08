@@ -101,6 +101,13 @@ TEST(HostTest, ProbeByClassWithRenamedHostInDottedDirectory)
 	EXPECT_TRUE(Activate<ProbeByClass>(L"DottedDirectory.manifest") == L"TestHost.ProbeByClass.dll");
 }
 
+TEST(HostTest, TargetNotFoundWithRenamedHostInDottedDirectory)
+{
+	Activate<ProbeByClass>(
+		L"DottedDirectoryTargetNotFound.manifest",
+		HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+}
+
 // ClassId:				Host:				Target:
 // TestHost.Class		Test.Host.dll		Test.dll
 // 

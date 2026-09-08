@@ -46,6 +46,9 @@
     <CopyFileToFolders Include="DottedDirectory.manifest">
       <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="DottedDirectoryTargetNotFound.manifest">
+      <Filter>Manifest Files</Filter>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="ProbeByHost.manifest">
       <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
