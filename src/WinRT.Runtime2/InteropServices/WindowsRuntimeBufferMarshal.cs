@@ -78,19 +78,8 @@ public static partial class WindowsRuntimeBufferMarshal
             goto Failure;
         }
 
-        // Similar handling as in 'WindowsRuntimeBufferHelpers.TryGetNativeData', but for native 'IMemoryBufferByteAccess' instances
-        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        if (WindowsRuntimeBufferHelpers.TryGetNativeData(buffer, out data, out capacity))
         {
-            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IMemoryBufferByteAccess);
-
-            fixed (byte** dataPtr = &data)
-            fixed (uint* capacityPtr = &capacity)
-            {
-                HRESULT hresult = IMemoryBufferByteAccessVftbl.GetBufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), dataPtr, capacityPtr);
-
-                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-            }
-
             return true;
         }
 
