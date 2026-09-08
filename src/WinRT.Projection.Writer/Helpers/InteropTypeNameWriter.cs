@@ -140,9 +140,12 @@ internal static class InteropTypeNameWriter
             _ = sb.Append("ABI.");
         }
 
-        // Special case for EventSource on Windows.Foundation event-handler delegate types
-        // (e.g. EventHandler<T>, TypedEventHandler<S,R>).
-        if (nameType == TypedefNameType.EventSource && typeNs == WindowsFoundation)
+        // The interop generator names these event sources after their specialized runtime base
+        // types, with EventSource before the generic arity and arguments.
+        bool isCollectionEventHandler = typeNs == WindowsFoundationCollections
+            && typeName is "VectorChangedEventHandler`1" or "MapChangedEventHandler`2";
+
+        if (nameType == TypedefNameType.EventSource && (typeNs == WindowsFoundation || isCollectionEventHandler))
         {
             // Determine generic arity from the .winmd type name (e.g. "EventHandler`1" => 1).
             int arity = 0;
@@ -153,7 +156,9 @@ internal static class InteropTypeNameWriter
                 arity = parsed;
             }
 
-            _ = sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
+            _ = sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>");
+            _ = sb.Append(isCollectionEventHandler ? typeName.AsSpan(0, tickIdx) : "EventHandler");
+            _ = sb.Append("EventSource'");
             _ = sb.Append(arity.ToString(CultureInfo.InvariantCulture));
 
             // Append the generic args (if any).
