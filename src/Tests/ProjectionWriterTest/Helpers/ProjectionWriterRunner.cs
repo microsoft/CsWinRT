@@ -30,7 +30,7 @@ internal static class ProjectionWriterRunner
     /// <c>Windows.Foundation</c> (which also covers <c>Windows.Foundation.Collections</c> and
     /// <c>Windows.Foundation.Metadata</c>) is small enough to generate in well under a second, while
     /// still covering every projected type kind and every carried-over attribute of interest.
-    /// The two XAML collection types also cover generic vector events with projected and object arguments.
+    /// The two XAML collection types also cover generic vector events with projected and 'object' arguments.
     /// </para>
     /// <para>
     /// Tests must only assert on things this namespace is guaranteed to contain in every Windows SDK:

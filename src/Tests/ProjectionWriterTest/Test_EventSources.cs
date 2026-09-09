@@ -6,14 +6,14 @@ using ProjectionWriterTest.Helpers;
 namespace ProjectionWriterTest;
 
 /// <summary>
-/// Tests the names used to construct generic event sources in WinRT.Interop.
+/// Tests the names used to construct generic event sources in 'WinRT.Interop'.
 /// </summary>
 [TestClass]
 public class Test_EventSources
 {
     /// <summary>
     /// Specialized event sources use the runtime event-source base name, not the delegate name
-    /// followed by an EventSource suffix after its generic arguments.
+    /// followed by an 'EventSource' suffix after its generic arguments.
     /// </summary>
     [TestMethod]
     [DataRow("VectorChangedEventHandlerEventSource'1<<#Windows>Windows-UI-Xaml-DependencyObject>")]

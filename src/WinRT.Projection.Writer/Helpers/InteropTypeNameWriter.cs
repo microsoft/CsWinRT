@@ -141,13 +141,13 @@ internal static class InteropTypeNameWriter
         }
 
         // The interop generator names these event sources after their specialized runtime base
-        // types, with EventSource before the generic arity and arguments.
+        // types, with 'EventSource' before the generic arity and arguments.
         bool isCollectionEventHandler = typeNs == WindowsFoundationCollections
             && typeName is "VectorChangedEventHandler`1" or "MapChangedEventHandler`2";
 
         if (nameType == TypedefNameType.EventSource && (typeNs == WindowsFoundation || isCollectionEventHandler))
         {
-            // Determine generic arity from the .winmd type name (e.g. "EventHandler`1" => 1).
+            // Determine generic arity from the .winmd type name (e.g. 'EventHandler`1' => 1).
             int arity = 0;
             int tickIdx = typeName.IndexOf('`');
 
