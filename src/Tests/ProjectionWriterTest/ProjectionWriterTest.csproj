@@ -34,6 +34,11 @@
     <PackageReference Include="MSTest.SourceGeneration" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Only the metadata is needed: do not import WinUI build targets or reference its assemblies. -->
+    <PackageDownload Include="Microsoft.WindowsAppSDK.WinUI" Version="[$(MicrosoftWinAppSDKWinUIVersion)]" />
+  </ItemGroup>
+
   <!--
     Build the reference projection generator tool, but do not reference its assembly: the tests invoke
     it as a separate process (end-to-end), driving the projection writer exactly as a real build does.
@@ -54,10 +59,12 @@
                       Private="false" />
   </ItemGroup>
 
-  <!-- Pass the built tool's path to the tests via assembly metadata -->
+  <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->
   <ItemGroup>
     <AssemblyMetadata Include="ProjectionRefGeneratorAssemblyPath"
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\cswinrtprojectionrefgen.dll" />
+    <AssemblyMetadata Include="WinUIMetadataPath"
+                      Value="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(MicrosoftWinAppSDKWinUIVersion)\metadata\Microsoft.UI.Xaml.winmd" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -17,49 +17,30 @@ namespace ProjectionWriterTest.Helpers;
 /// <remarks>
 /// The tool is invoked as a separate process with a response file, exactly as the
 /// <c>CsWinRTGenerateProjection</c> MSBuild target does, so the tests cover the real code path. Both
-/// projection modes are generated once per test run and cached, since generating them is the
-/// expensive part and every test only inspects the resulting text.
+/// reference/implementation modes and UWP/WinUI inputs are cached separately, since generating them
+/// is the expensive part and every test only inspects the resulting text.
 /// </remarks>
 internal static class ProjectionWriterRunner
 {
     /// <summary>
-    /// The namespace the projections are restricted to.
+    /// The generated sources, cached separately for each output mode and XAML input.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <c>Windows.Foundation</c> (which also covers <c>Windows.Foundation.Collections</c> and
-    /// <c>Windows.Foundation.Metadata</c>) is small enough to generate in well under a second, while
-    /// still covering every projected type kind and every carried-over attribute of interest.
-    /// </para>
-    /// <para>
-    /// Tests must only assert on things this namespace is guaranteed to contain in every Windows SDK:
-    /// the input metadata is whichever SDK is installed on the machine, so an assertion that some API
-    /// carries a given attribute is really an assertion about that SDK, and breaks when an agent has a
-    /// different one (an experimental API becoming stable, or not existing yet, is enough).
-    /// </para>
+    /// Lazy initialization prevents concurrent tests from generating the same sources more than once.
     /// </remarks>
-    private const string IncludeNamespace = "Windows.Foundation";
-
-    /// <summary>
-    /// The lazily generated reference projection sources.
-    /// </summary>
-    private static readonly Lazy<string> ReferenceProjectionSources = new(static () => Generate(referenceProjection: true));
-
-    /// <summary>
-    /// The lazily generated implementation projection sources.
-    /// </summary>
-    private static readonly Lazy<string> ImplementationProjectionSources = new(static () => Generate(referenceProjection: false));
+    private static readonly ConcurrentDictionary<(bool ReferenceProjection, bool UseWinUI), Lazy<string>> Sources = new();
 
     /// <summary>
     /// Gets all generated C# sources for the requested projection mode, concatenated.
     /// </summary>
     /// <param name="referenceProjection">Whether to get the reference projection (rather than the implementation projection).</param>
+    /// <param name="useWinUI">Whether to use WinUI metadata and collection types instead of UWP XAML.</param>
     /// <returns>The concatenated contents of every generated <c>.cs</c> file.</returns>
-    public static string GetSources(bool referenceProjection)
+    public static string GetSources(bool referenceProjection, bool useWinUI = false)
     {
-        return referenceProjection
-            ? ReferenceProjectionSources.Value
-            : ImplementationProjectionSources.Value;
+        return Sources.GetOrAdd(
+            (referenceProjection, useWinUI),
+            static input => new(() => Generate(input.ReferenceProjection, input.UseWinUI))).Value;
     }
 
     /// <summary>
@@ -96,11 +77,21 @@ internal static class ProjectionWriterRunner
     /// <summary>
     /// Generates a projection for the requested mode and returns all generated sources, concatenated.
     /// </summary>
+    /// <remarks>
+    /// Each fixture projects 'Windows.Foundation' and two collection types from the selected XAML
+    /// namespace. WinUI metadata is an additional input, not a replacement for its Windows SDK dependencies.
+    /// The SDK input is whichever version is installed, so tests must assert stable projection behavior
+    /// rather than incidental metadata such as whether a particular API is experimental.
+    /// </remarks>
     /// <param name="referenceProjection">Whether to generate a reference projection.</param>
+    /// <param name="useWinUI">Whether to use WinUI metadata and collection types instead of UWP XAML.</param>
     /// <returns>The concatenated contents of every generated <c>.cs</c> file.</returns>
-    private static string Generate(bool referenceProjection)
+    private static string Generate(bool referenceProjection, bool useWinUI)
     {
-        string toolPath = GetGeneratorPath();
+        string toolPath = GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
+        string inputPaths = useWinUI ? $"sdk,{GetRequiredFilePath("WinUIMetadataPath")}" : "sdk";
+        string xamlNamespace = useWinUI ? "Microsoft.UI.Xaml" : "Windows.UI.Xaml";
+        string includeNamespaces = $"Windows.Foundation,{xamlNamespace}.DependencyObjectCollection,{xamlNamespace}.Controls.ItemCollection";
         string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterTest_{Guid.NewGuid():N}");
         string outputDirectory = Path.Combine(workingDirectory, "Generated");
 
@@ -114,16 +105,16 @@ internal static class ProjectionWriterRunner
             // input token makes the tool resolve the Windows SDK metadata installed on the machine.
             File.WriteAllLines(responseFile,
             [
-                "--input-paths sdk",
+                $"--input-paths {inputPaths}",
                 $"--output-directory {outputDirectory}",
                 "--target-framework net10.0",
-                $"--include-namespaces {IncludeNamespace}",
+                $"--include-namespaces {includeNamespaces}",
                 $"--reference-projection {(referenceProjection ? "true" : "false")}"
             ]);
 
             (int exitCode, string output) = Run(toolPath, $"@{responseFile}");
 
-            Assert.AreEqual(0, exitCode, $"The projection writer failed for '{IncludeNamespace}':{Environment.NewLine}{output}");
+            Assert.AreEqual(0, exitCode, $"The projection writer failed for '{includeNamespaces}':{Environment.NewLine}{output}");
 
             string[] sourceFiles = Directory.GetFiles(outputDirectory, "*.cs", SearchOption.AllDirectories);
 
@@ -168,20 +159,21 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
-    /// Resolves the path to the built <c>cswinrtprojectionrefgen</c> tool from assembly metadata.
+    /// Resolves a required tool or input file path from assembly metadata.
     /// </summary>
-    /// <returns>The full path of the tool assembly.</returns>
-    private static string GetGeneratorPath()
+    /// <param name="metadataName">The assembly metadata key containing the path.</param>
+    /// <returns>The full path of the required file.</returns>
+    private static string GetRequiredFilePath(string metadataName)
     {
         string? path = typeof(ProjectionWriterRunner).Assembly
             .GetCustomAttributes<AssemblyMetadataAttribute>()
-            .FirstOrDefault(static attribute => attribute.Key == "ProjectionRefGeneratorAssemblyPath")?.Value;
+            .FirstOrDefault(attribute => attribute.Key == metadataName)?.Value;
 
-        Assert.IsFalse(string.IsNullOrEmpty(path), "The 'ProjectionRefGeneratorAssemblyPath' assembly metadata was not found.");
+        Assert.IsFalse(string.IsNullOrEmpty(path), $"The '{metadataName}' assembly metadata was not found.");
 
         string fullPath = Path.GetFullPath(path!);
 
-        Assert.IsTrue(File.Exists(fullPath), $"The projection generator was not found at '{fullPath}'.");
+        Assert.IsTrue(File.Exists(fullPath), $"The file specified by '{metadataName}' was not found at '{fullPath}'.");
 
         return fullPath;
     }
