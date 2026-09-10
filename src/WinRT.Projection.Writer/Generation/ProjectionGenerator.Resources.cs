@@ -35,7 +35,7 @@ internal sealed partial class ProjectionGenerator
             // Skip ComInteropExtensions if Windows is not included
             string fileName = resName[(resName.IndexOf(ResourcesBaseSegment, StringComparison.Ordinal) + ResourcesBaseSegment.Length)..];
 
-            if (fileName == "ComInteropExtensions.cs" && !_settings.Filter.Includes("Windows"))
+            if (fileName == "ComInteropExtensions.cs" && !_settings.Filter.IncludesNamespace("Windows"))
             {
                 continue;
             }
