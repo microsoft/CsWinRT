@@ -185,7 +185,7 @@ public partial class CustomPropertyProviderGenerator
                     FullyQualifiedTypeName: propertySymbol.Type.GetFullyQualifiedNameWithNullabilityAnnotations(),
                     FullyQualifiedIndexerTypeName: indexerType?.GetFullyQualifiedNameWithNullabilityAnnotations(),
                     CanRead: propertySymbol.GetMethod is { DeclaredAccessibility: Accessibility.Public },
-                    CanWrite: propertySymbol.SetMethod is { DeclaredAccessibility: Accessibility.Public },
+                    CanWrite: propertySymbol.SetMethod is { DeclaredAccessibility: Accessibility.Public, IsInitOnly: false },
                     IsStatic: propertySymbol.IsStatic));
             }
 
