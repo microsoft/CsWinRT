@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -13,6 +14,125 @@ namespace WindowsRuntime.SourceGenerator.Tests;
 [TestClass]
 public class Test_CustomPropertyProviderGenerator
 {
+    [TestMethod]
+    [DataRow("string?", "string", "\"Initialized\"", typeof(string), false)]
+    [DataRow("string?", "string", "\"Initialized\"", typeof(string), true)]
+    [DataRow("object?", "object", "new object()", typeof(object), false)]
+    [DataRow("object?", "object", "new object()", typeof(object), true)]
+    [DataRow("string?[]?", "string[]", "new string?[] { \"Initialized\", null }", typeof(string[]), false)]
+    [DataRow("string?[]?", "string[]", "new string?[] { \"Initialized\", null }", typeof(string[]), true)]
+    [DataRow("List<string?>?", "List<string>", "new() { \"Initialized\", null }", typeof(List<string>), false)]
+    [DataRow("List<string?>?", "List<string>", "new() { \"Initialized\", null }", typeof(List<string>), true)]
+    [DataRow("Dictionary<string, List<int?>?>?", "Dictionary<string, List<int?>>", "new() { [\"key\"] = new() { 42, null } }", typeof(Dictionary<string, List<int?>>), false)]
+    [DataRow("Dictionary<string, List<int?>?>?", "Dictionary<string, List<int?>>", "new() { [\"key\"] = new() { 42, null } }", typeof(Dictionary<string, List<int?>>), true)]
+    [DataRow("int?", "int?", "42", typeof(int?), false)]
+    [DataRow("int?", "int?", "42", typeof(int?), true)]
+    [DataRow("DateTime?", "DateTime?", "new DateTime(2026, 9, 11)", typeof(DateTime?), false)]
+    [DataRow("DateTime?", "DateTime?", "new DateTime(2026, 9, 11)", typeof(DateTime?), true)]
+    [DataRow("KeyValuePair<string?, int?>?", "KeyValuePair<string, int?>?", "new(\"key\", 42)", typeof(KeyValuePair<string, int?>?), false)]
+    [DataRow("KeyValuePair<string?, int?>?", "KeyValuePair<string, int?>?", "new(\"key\", 42)", typeof(KeyValuePair<string, int?>?), true)]
+    [DataRow("(string? Text, int? Number)?", "(string Text, int? Number)?", "(\"Initialized\", 42)", typeof((string, int?)?), false)]
+    [DataRow("(string? Text, int? Number)?", "(string Text, int? Number)?", "(\"Initialized\", 42)", typeof((string, int?)?), true)]
+    public void NullableTypes_UseRuntimeTypesAndPreserveAccessors(string typeName, string typeOfName, string initializer, Type expectedType, bool explicitSelection)
+    {
+        string source = $$"""
+            #nullable enable
+
+            using System;
+            using System.Collections.Generic;
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            [GeneratedCustomPropertyProvider{{(explicitSelection ? $"([nameof(Writable), nameof(InitOnly)], [typeof({typeOfName})])" : "")}}]
+            public sealed partial class MyType
+            {
+                private {{typeName}} indexedValue = {{initializer}};
+
+                public object? LastIndex;
+
+                public {{typeName}} Writable { get; set; }
+
+                public required {{typeName}} InitOnly { get; init; }
+
+                public {{typeName}} this[{{typeName}} index]
+                {
+                    get
+                    {
+                        LastIndex = index;
+                        return indexedValue;
+                    }
+                    set
+                    {
+                        LastIndex = index;
+                        indexedValue = value;
+                    }
+                }
+
+                public static MyType Create() => new MyType { InitOnly = {{initializer}} };
+            }
+            """;
+
+        ICustomPropertyProvider provider = CreateProvider(source);
+        ICustomProperty initOnly = provider.GetCustomProperty("InitOnly");
+        ICustomProperty writable = provider.GetCustomProperty("Writable");
+        ICustomProperty indexer = provider.GetIndexedProperty("Item", expectedType);
+
+        Assert.IsNotNull(initOnly);
+        Assert.IsNotNull(writable);
+        Assert.IsNotNull(indexer);
+        Assert.AreEqual(3, provider.GetType().Assembly.GetTypes().Count(type => typeof(ICustomProperty).IsAssignableFrom(type)));
+        Assert.IsNull(provider.GetIndexedProperty("Item", typeof(bool)));
+
+        Assert.AreEqual(expectedType, initOnly.Type);
+        Assert.IsTrue(initOnly.CanRead);
+        Assert.IsFalse(initOnly.CanWrite);
+
+        object initialValue = initOnly.GetValue(provider);
+
+        Assert.IsNotNull(initialValue);
+        Assert.IsTrue(expectedType.IsInstanceOfType(initialValue));
+        Assert.ThrowsExactly<NotSupportedException>(() => initOnly.SetValue(provider, null));
+        Assert.AreEqual(initialValue, initOnly.GetValue(provider));
+
+        Assert.AreEqual(expectedType, writable.Type);
+        Assert.IsTrue(writable.CanRead);
+        Assert.IsTrue(writable.CanWrite);
+        Assert.IsNull(writable.GetValue(provider));
+
+        writable.SetValue(provider, initialValue);
+
+        Assert.AreEqual(initialValue, writable.GetValue(provider));
+
+        writable.SetValue(provider, null);
+
+        Assert.IsNull(writable.GetValue(provider));
+
+        Assert.AreEqual(expectedType, indexer.Type);
+        Assert.IsTrue(indexer.CanRead);
+        Assert.IsTrue(indexer.CanWrite);
+
+        object indexedValue = indexer.GetIndexedValue(provider, null);
+        FieldInfo lastIndex = provider.GetType().GetField("LastIndex");
+
+        Assert.IsNotNull(indexedValue);
+        Assert.IsTrue(expectedType.IsInstanceOfType(indexedValue));
+        Assert.IsNotNull(lastIndex);
+        Assert.IsNull(lastIndex.GetValue(provider));
+
+        indexer.SetIndexedValue(provider, initialValue, initialValue);
+
+        Assert.AreEqual(initialValue, lastIndex.GetValue(provider));
+        Assert.AreEqual(initialValue, indexer.GetIndexedValue(provider, null));
+        Assert.IsNull(lastIndex.GetValue(provider));
+
+        indexer.SetIndexedValue(provider, null, null);
+
+        Assert.IsNull(lastIndex.GetValue(provider));
+        Assert.IsNull(indexer.GetIndexedValue(provider, initialValue));
+        Assert.AreEqual(initialValue, lastIndex.GetValue(provider));
+    }
+
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
