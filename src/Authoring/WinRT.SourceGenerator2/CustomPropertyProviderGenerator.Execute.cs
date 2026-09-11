@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -138,6 +139,7 @@ public partial class CustomPropertyProviderGenerator
             token.ThrowIfCancellationRequested();
 
             using PooledArrayBuilder<CustomPropertyInfo> customPropertyInfo = new();
+            HashSet<string> discoveredPropertyNames = new(StringComparer.Ordinal);
 
             // Enumerate all members of the annotated type to discover all properties
             foreach (ISymbol symbol in typeSymbol.EnumerateAllMembers())
@@ -147,6 +149,13 @@ public partial class CustomPropertyProviderGenerator
                 // Only gather public properties, and ignore overrides (we'll find the base definition instead).
                 // We also ignore partial property implementations, as we only care about the partial definitions.
                 if (symbol is not IPropertySymbol { DeclaredAccessibility: Accessibility.Public, IsOverride: false, PartialDefinitionPart: null } propertySymbol)
+                {
+                    continue;
+                }
+
+                // The hierarchy is enumerated most-derived first. A hidden property must not produce
+                // another descriptor, even if the hiding property's type cannot be boxed.
+                if (!propertySymbol.IsIndexer && !discoveredPropertyNames.Add(propertySymbol.Name))
                 {
                     continue;
                 }
