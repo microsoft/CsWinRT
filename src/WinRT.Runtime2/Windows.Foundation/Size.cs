@@ -47,8 +47,8 @@ public struct Size : IEquatable<Size>, IFormattable
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="width"/> or <paramref name="height"/> are less than zero.</exception>
     public Size(float width, float height)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(width);
-        ArgumentOutOfRangeException.ThrowIfNegative(height);
+        ArgumentOutOfRangeException.ThrowIfLessThanZero(width);
+        ArgumentOutOfRangeException.ThrowIfLessThanZero(height);
 
         Width = width;
         Height = height;

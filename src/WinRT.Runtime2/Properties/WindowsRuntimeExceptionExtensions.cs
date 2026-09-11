@@ -365,6 +365,28 @@ internal static class WindowsRuntimeExceptionExtensions
     extension(ArgumentOutOfRangeException)
     {
         /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is less than zero.
+        /// </summary>
+        /// <param name="value">The value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is less than zero.</exception>
+        /// <remarks>NaN and negative zero are allowed.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfLessThanZero(float value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(float value, string? paramName)
+                => ArgumentOutOfRangeException.ThrowIfNegative(value, paramName);
+
+            if (value < 0)
+            {
+                ThrowArgumentOutOfRangeException(value, paramName);
+            }
+        }
+
+        /// <summary>
         /// Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="length"/> exceeds <paramref name="capacity"/>.
         /// </summary>
         /// <param name="length">The specified buffer length.</param>
