@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Collections.Immutable;
 using System.Threading;
 
 #pragma warning disable CS1573, IDE0046
@@ -21,6 +22,11 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// The registered hook into activation to hook/mock activation of Windows Runtime types.
     /// </summary>
     private static volatile WindowsRuntimeActivationHandler? activationHandler;
+
+    /// <summary>
+    /// The registered fallback activation handlers of Windows Runtime types.
+    /// </summary>
+    private static ImmutableArray<WindowsRuntimeActivationHandler> fallbackHandlers = [];
 
     /// <summary>
     /// Set the <see cref="WindowsRuntimeActivationHandler"/> callback for activating Windows Runtime types.
@@ -50,6 +56,38 @@ public static unsafe class WindowsRuntimeActivationFactory
     }
 
     /// <summary>
+    /// Registers a fallback <see cref="WindowsRuntimeActivationHandler"/> callback for activating Windows Runtime types.
+    /// This handler is called after the main activation handler (if set via <see cref="SetWindowsRuntimeActivationHandler"/>) and after RoGetActivationFactory-based activation fails, but before the manifest-free activation is attempted.
+    /// </summary>
+    /// <remarks>
+    /// If the same <see cref="WindowsRuntimeActivationHandler"/> instance has already been registered before, this method does nothing.
+    /// </remarks>
+    /// <param name="fallbackHandler">The <see cref="WindowsRuntimeActivationHandler"/> handler to be registered.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="fallbackHandler"/> is <see langword="null"/>.</exception>
+    public static void RegisterFallbackActivationHandler(WindowsRuntimeActivationHandler fallbackHandler)
+    {
+        ArgumentNullException.ThrowIfNull(fallbackHandler);
+
+        _ = ImmutableInterlocked.Update(ref fallbackHandlers, static (arr, it) =>
+            arr.AsSpan().Contains(it) ? arr : arr.Add(it),
+            fallbackHandler);
+    }
+
+    /// <summary>
+    /// Unregisters a fallback <see cref="WindowsRuntimeActivationHandler"/> callback for activating Windows Runtime types.
+    /// </summary>
+    /// <param name="fallbackHandler">The <see cref="WindowsRuntimeActivationHandler"/> handler to be unregistered.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="fallbackHandler"/> is <see langword="null"/>.</exception>
+    public static void UnregisterFallbackActivationHandler(WindowsRuntimeActivationHandler fallbackHandler)
+    {
+        ArgumentNullException.ThrowIfNull(fallbackHandler);
+
+        _ = ImmutableInterlocked.Update(ref fallbackHandlers, static (arr, it) =>
+            arr.Remove(it),
+            fallbackHandler);
+    }
+
+    /// <summary>
     /// Gets the activation factory for a Windows Runtime type with the specified runtime class name.
     /// </summary>
     /// <param name="runtimeClassName">The runtime class name of the type to activate (ie. the fully qualified type name).</param>
@@ -60,6 +98,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <list type="bullet">
     ///   <item>If <see cref="SetWindowsRuntimeActivationHandler"/> has been called, the registered activation handler will be used first.</item>
     ///   <item>Otherwise, <a href="https://learn.microsoft.com/windows/win32/api/roapi/nf-roapi-rogetactivationfactory"><c>RoGetActivationFactory</c></a> will be used.</item>
+    ///   <item>Otherwise, fallback activation handlers registered via <see cref="RegisterFallbackActivationHandler"/> will be used.</item>
     ///   <item>Otherwise, the manifest-free fallback path will be used to try to resolve the target .dll to load based on <paramref name="runtimeClassName"/>.</item>
     /// </list>
     /// </para>
@@ -140,6 +179,14 @@ public static unsafe class WindowsRuntimeActivationFactory
             return hresult;
         }
 
+        // Attempt activation with the fallback handlers, if any (3)
+        hresult = GetActivationFactoryFromFallbackHandlersUnsafe(runtimeClassName, in defaultIid, hresult, out activationFactory);
+
+        if (hresult.Succeeded)
+        {
+            return hresult;
+        }
+
         // If manifest free activation is enabled, we must stop here.
         // At this point the 'HRESULT' should be 'REGDB_E_CLASSNOTREG'.
         if (!WindowsRuntimeFeatureSwitches.EnableManifestFreeActivation)
@@ -147,7 +194,7 @@ public static unsafe class WindowsRuntimeActivationFactory
             return hresult;
         }
 
-        // Attempt manifest-free activation as a last resort (3)
+        // Attempt manifest-free activation as a last resort (4)
         return Unsafe.IsNullRef(in iid)
             ? GetActivationFactoryFromDllUnsafe(runtimeClassName, hresult, out activationFactory)
             : GetActivationFactoryFromDllUnsafe(runtimeClassName, in iid, hresult, out activationFactory);
@@ -168,6 +215,31 @@ public static unsafe class WindowsRuntimeActivationFactory
 
         // Delegate to the registered handler (it should not throw an exception)
         return activationHandler(runtimeClassName, in iid, out activationFactory);
+    }
+
+    /// <summary>Tries to get the activation factory for a Windows Runtime type with the specified runtime class name, using only the registered fallback activation handlers, if any.</summary>
+    /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, in Guid, out void*)"/>
+    private static HRESULT GetActivationFactoryFromFallbackHandlersUnsafe(string runtimeClassName, in Guid iid, HRESULT hresult, out void* activationFactory)
+    {
+        // Check the fallback handlers first, immediately stop if we don't have any
+        ImmutableArray<WindowsRuntimeActivationHandler> fallbackHandlers = WindowsRuntimeActivationFactory.fallbackHandlers;
+        if (fallbackHandlers.IsDefaultOrEmpty)
+        {
+            activationFactory = null;
+            return hresult;
+        }
+
+        foreach (WindowsRuntimeActivationHandler fallbackHandler in fallbackHandlers)
+        {
+            HRESULT fallbackHresult = fallbackHandler(runtimeClassName, in iid, out activationFactory);
+            if (fallbackHresult.Succeeded)
+            {
+                return fallbackHresult;
+            }
+        }
+
+        activationFactory = null;
+        return hresult;
     }
 
     /// <summary>Tries to get the activation factory for a Windows Runtime type with the specified runtime class name, using only manifest-free activation.</summary>
