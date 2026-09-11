@@ -1195,8 +1195,11 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    /// <remarks>Request eligibility is validated by <see cref="InteropDefinitions.UserDefinedInterfaceEntries"/> before accessing its cache.</remarks>
     public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(numberOfEntries, InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries);
+
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: $"<UserDefinedInterfaceEntries(Count={numberOfEntries})>",
@@ -1208,8 +1211,6 @@ internal static partial class WellKnownTypeDefinitionFactory
 
         // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces
         int numberOfDynamicEntries = numberOfEntries - InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries;
-
-        ArgumentOutOfRangeException.ThrowIfLessThan(numberOfDynamicEntries, 1, nameof(numberOfEntries));
 
         // Add a field for each interface entry
         for (int i = 0; i < numberOfDynamicEntries; i++)

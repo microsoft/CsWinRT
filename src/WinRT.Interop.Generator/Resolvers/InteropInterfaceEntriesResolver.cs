@@ -287,7 +287,7 @@ internal static class InteropInterfaceEntriesResolver
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="interfaceEntryInfo">The resulting <see cref="InteropInterfaceEntryInfo"/> value for <c>IStringable</c>, if found.</param>
     /// <returns>Whether <paramref name="interfaceEntryInfo"/> was found.</returns>
-    private static bool TryGetUserDefinedIStringableInterfaceImplementation(
+    public static bool TryGetUserDefinedIStringableInterfaceImplementation(
         TypeSignatureEquatableSet vtableTypes,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out InteropInterfaceEntryInfo? interfaceEntryInfo)

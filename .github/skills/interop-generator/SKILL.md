@@ -637,6 +637,8 @@ Builds the interface entries list for CCW (COM Callable Wrapper) types. Each use
 5. `IInspectable`
 6. `IUnknown` (always last)
 
+User-defined layouts normally require at least one additional metadata/component entry. The only built-in-only exception is an explicitly implemented, recognized `IStringable` interface, selected through the same resolver as its reserved vtable slot. `InteropDefinitions.UserDefinedInterfaceEntries` validates every request against its implemented-interface set before consulting the count-keyed layout cache. Automatic `IStringable` support and an `object.ToString()` override do not qualify. Types implementing only `[GeneratedComInterface]` interfaces (including `IMarshal`) remain excluded by discovery.
+
 ### `InteropMarshallerTypeResolver`
 
 Locates the marshaller type for a given type signature. Resolution order:
