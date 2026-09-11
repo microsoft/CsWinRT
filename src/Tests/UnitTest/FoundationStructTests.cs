@@ -9,7 +9,7 @@ namespace UnitTest;
 [TestClass]
 public class FoundationStructTests
 {
-    // Bit patterns preserve signed zeros and NaNs without relying on floating-point data row generation.
+    // Use bit patterns for signed zeros and NaN variants, avoiding floating-point data row generation.
     private const uint PositiveZeroBits = 0x00000000;
     private const uint NegativeZeroBits = 0x80000000;
     private const uint PositiveEpsilonBits = 0x00000001;
@@ -43,8 +43,8 @@ public class FoundationStructTests
 
         Size size = new(value, value);
 
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(size.Width));
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(size.Height));
+        AssertValuePreserved(valueBits, size.Width);
+        AssertValuePreserved(valueBits, size.Height);
         Assert.IsFalse(size.IsEmpty);
     }
 
@@ -67,8 +67,8 @@ public class FoundationStructTests
 
         Assert.AreEqual(-1f, rect.X);
         Assert.AreEqual(-2f, rect.Y);
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(rect.Width));
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(rect.Height));
+        AssertValuePreserved(valueBits, rect.Width);
+        AssertValuePreserved(valueBits, rect.Height);
         Assert.IsFalse(rect.IsEmpty);
     }
 
@@ -94,10 +94,10 @@ public class FoundationStructTests
         Point point = new(value, value);
         Rect rect = new(value, value, 1, 2);
 
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(point.X));
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(point.Y));
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(rect.X));
-        Assert.AreEqual(valueBits, BitConverter.SingleToUInt32Bits(rect.Y));
+        AssertValuePreserved(valueBits, point.X);
+        AssertValuePreserved(valueBits, point.Y);
+        AssertValuePreserved(valueBits, rect.X);
+        AssertValuePreserved(valueBits, rect.Y);
     }
 
     [TestMethod]
@@ -180,5 +180,18 @@ public class FoundationStructTests
 
         Assert.IsTrue(rect.IsEmpty);
         Assert.AreEqual(Rect.Empty, rect);
+    }
+
+    private static void AssertValuePreserved(uint expectedBits, float actual)
+    {
+        // Floating-point loads and returns can quiet signaling NaNs, notably on x86.
+        if (float.IsNaN(BitConverter.UInt32BitsToSingle(expectedBits)))
+        {
+            Assert.IsTrue(float.IsNaN(actual));
+        }
+        else
+        {
+            Assert.AreEqual(expectedBits, BitConverter.SingleToUInt32Bits(actual));
+        }
     }
 }
