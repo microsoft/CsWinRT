@@ -141,7 +141,7 @@ public partial class CustomPropertyProviderGenerator
                     // If we have a match, return the cached property implementation for the current indexer
                     writer.WriteLine(skipIfPresent: true);
                     writer.WriteLine($$"""
-                        if (type == typeof({{propertyInfo.FullyQualifiedIndexerTypeName}}))
+                        if (type == typeof({{propertyInfo.FullyQualifiedIndexerTypeNameForTypeOf}}))
                         {
                             return global::WindowsRuntime.Xaml.Generated.{{implementationTypeName}}.Instance;
                         }
@@ -263,7 +263,7 @@ public partial class CustomPropertyProviderGenerator
                     public string Name => "{{propertyInfo.Name}}";
 
                     /// <inheritdoc/>
-                    public Type Type => typeof({{propertyInfo.FullyQualifiedTypeName}});
+                    public Type Type => typeof({{propertyInfo.FullyQualifiedTypeNameForTypeOf}});
                     """, isMultiline: true);
 
                 writer.WriteLine();
@@ -392,7 +392,7 @@ public partial class CustomPropertyProviderGenerator
                     public string Name => "this";
 
                     /// <inheritdoc/>
-                    public Type Type => typeof({{propertyInfo.FullyQualifiedTypeName}});
+                    public Type Type => typeof({{propertyInfo.FullyQualifiedTypeNameForTypeOf}});
                     """, isMultiline: true);
 
                 // This is an indexed property, so non indexed ones will always throw

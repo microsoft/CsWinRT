@@ -188,11 +188,13 @@ public partial class CustomPropertyProviderGenerator
                     continue;
                 }
 
-                // Gather all the info for the current property
+                // Keep nullability annotations in casts, but not nullable reference annotations in 'typeof' operands
                 customPropertyInfo.Add(new CustomPropertyInfo(
                     Name: propertySymbol.Name,
                     FullyQualifiedTypeName: propertySymbol.Type.GetFullyQualifiedNameWithNullabilityAnnotations(),
+                    FullyQualifiedTypeNameForTypeOf: propertySymbol.Type.GetFullyQualifiedName(),
                     FullyQualifiedIndexerTypeName: indexerType?.GetFullyQualifiedNameWithNullabilityAnnotations(),
+                    FullyQualifiedIndexerTypeNameForTypeOf: indexerType?.GetFullyQualifiedName(),
                     CanRead: propertySymbol.GetMethod is { DeclaredAccessibility: Accessibility.Public },
                     CanWrite: propertySymbol.SetMethod is { DeclaredAccessibility: Accessibility.Public, IsInitOnly: false },
                     IsStatic: propertySymbol.IsStatic));
