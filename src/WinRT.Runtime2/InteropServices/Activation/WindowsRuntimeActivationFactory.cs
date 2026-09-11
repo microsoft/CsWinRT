@@ -68,8 +68,8 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
         ArgumentNullException.ThrowIfNull(fallbackHandler);
 
-        _ = ImmutableInterlocked.Update(ref fallbackHandlers, (arr, it) =>
-            arr.AsSpan().Contains(fallbackHandler) ? arr : arr.Add(it),
+        _ = ImmutableInterlocked.Update(ref fallbackHandlers, static (arr, it) =>
+            arr.AsSpan().Contains(it) ? arr : arr.Add(it),
             fallbackHandler);
     }
 
@@ -82,7 +82,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
         ArgumentNullException.ThrowIfNull(fallbackHandler);
 
-        _ = ImmutableInterlocked.Update(ref fallbackHandlers, (arr, it) =>
+        _ = ImmutableInterlocked.Update(ref fallbackHandlers, static (arr, it) =>
             arr.Remove(it),
             fallbackHandler);
     }
