@@ -33,7 +33,12 @@ public class Test_CustomPropertyProviderGenerator
     [DataRow("KeyValuePair<string?, int?>?", "KeyValuePair<string, int?>?", "new(\"key\", 42)", typeof(KeyValuePair<string, int?>?), true)]
     [DataRow("(string? Text, int? Number)?", "(string Text, int? Number)?", "(\"Initialized\", 42)", typeof((string, int?)?), false)]
     [DataRow("(string? Text, int? Number)?", "(string Text, int? Number)?", "(\"Initialized\", 42)", typeof((string, int?)?), true)]
-    public void NullableTypes_UseRuntimeTypesAndPreserveAccessors(string typeName, string typeOfName, string initializer, Type expectedType, bool explicitSelection)
+    public void NullableTypes_UseRuntimeTypesAndPreserveAccessors(
+        string typeName,
+        string typeOfName,
+        string initializer,
+        Type expectedType,
+        bool explicitSelection)
     {
         string source = $$"""
             #nullable enable
