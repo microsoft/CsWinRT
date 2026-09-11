@@ -188,7 +188,7 @@ public partial class CustomPropertyProviderGenerator
                     continue;
                 }
 
-                // Keep nullability annotations in casts, but not nullable reference annotations in 'typeof' operands.
+                // Keep nullability annotations in casts, but not nullable reference annotations in 'typeof' operands
                 customPropertyInfo.Add(new CustomPropertyInfo(
                     Name: propertySymbol.Name,
                     FullyQualifiedTypeName: propertySymbol.Type.GetFullyQualifiedNameWithNullabilityAnnotations(),
