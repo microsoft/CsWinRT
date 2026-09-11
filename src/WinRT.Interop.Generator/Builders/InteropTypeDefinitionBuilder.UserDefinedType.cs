@@ -82,7 +82,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences));
 
             // Get or create the interface entries type for this user-defined type (we reuse them based on number of entries)
-            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count);
+            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count, vtableTypes);
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
