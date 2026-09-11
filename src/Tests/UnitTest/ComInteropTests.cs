@@ -37,10 +37,14 @@ namespace UnitTest
     public class ComInteropTests
     {
         [TestMethod]
-        public unsafe void TestIStringableOnlyCCW()
+        [DataRow(false)]
+        [DataRow(true)]
+        public unsafe void TestIStringableCCW(bool withAdditionalInterface)
         {
+            IStringable instance = withAdditionalInterface ? new StringableAndDisposable() : new StringableOnly();
+
             using WindowsRuntimeObjectReferenceValue ccw = WindowsRuntimeInterfaceMarshaller<IStringable>.ConvertToUnmanaged(
-                new StringableOnly(), typeof(IStringable).GUID);
+                instance, typeof(IStringable).GUID);
 
             void* thisPtr = ccw.GetThisPtrUnsafe();
             void* result = null;
@@ -62,6 +66,13 @@ namespace UnitTest
         private sealed class StringableOnly : IStringable
         {
             public override string ToString() => "server test";
+        }
+
+        private sealed class StringableAndDisposable : IStringable, IDisposable
+        {
+            public override string ToString() => "server test";
+
+            public void Dispose() { }
         }
 
         [TestMethod]
