@@ -125,7 +125,7 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
-    public async Task CollectionExpression_TargetingInterface_ReadOnly_NotEmpty_Warns()
+    public async Task CollectionExpression_TargetingInterface_ReadOnly_NotEmpty_LocalOnly_DoesNotWarn()
     {
         const string source = """
             using System.Collections.Generic;
@@ -134,15 +134,15 @@ public class DiagnosticAnalyzerTests
             {
                 void M(int x, IEnumerable<int> y)
                 {
-                    IEnumerable<int> a = {|CsWinRT1032:[1, 2, 3]|};
-                    IEnumerable<int> b = {|CsWinRT1032:[x]|};
-                    IEnumerable<int> c = {|CsWinRT1032:[1, x, ..y]|};
-                    IReadOnlyCollection<int> d = {|CsWinRT1032:[1, 2, 3]|};
-                    IReadOnlyCollection<int> e = {|CsWinRT1032:[x]|};
-                    IReadOnlyCollection<int> f = {|CsWinRT1032:[1, x, ..y]|};
-                    IReadOnlyList<int> g = {|CsWinRT1032:[1, 2, 3]|};
-                    IReadOnlyList<int> h = {|CsWinRT1032:[x]|};
-                    IReadOnlyList<int> i = {|CsWinRT1032:[1, x, ..y]|};
+                    IEnumerable<int> a = [1, 2, 3];
+                    IEnumerable<int> b = [x];
+                    IEnumerable<int> c = [1, x, ..y];
+                    IReadOnlyCollection<int> d = [1, 2, 3];
+                    IReadOnlyCollection<int> e = [x];
+                    IReadOnlyCollection<int> f = [1, x, ..y];
+                    IReadOnlyList<int> g = [1, 2, 3];
+                    IReadOnlyList<int> h = [x];
+                    IReadOnlyList<int> i = [1, x, ..y];
                 }
             }
             """;
@@ -163,6 +163,15 @@ public class DiagnosticAnalyzerTests
                     void M(int x, IEnumerable<int> y)
                     {
                         IEnumerable<int> a = {|CsWinRT1032:[1, 2, 3]|};
+                        new RuntimeClass().SetItems(a);
+                    }
+                }
+
+                [WinRT.WindowsRuntimeType]
+                class RuntimeClass
+                {
+                    public void SetItems(IEnumerable<int> value)
+                    {
                     }
                 }
             }
@@ -181,6 +190,450 @@ public class DiagnosticAnalyzerTests
                     public Type BuilderType { get; }
                     public string MethodName { get; }
                 }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_TargetingInterface_ReadOnly_NotEmpty_FlowingToWinRT_Warns()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+            using System.Threading.Tasks;
+
+            class Test
+            {
+                private IEnumerable<int> stored = {|CsWinRT1032:[1]|};
+                private IEnumerable<int> StoredProperty { get; set; } = {|CsWinRT1032:[2]|};
+
+                void Direct(RuntimeClass api)
+                {
+                    api.SetItems({|CsWinRT1032:[3]|});
+                }
+
+                void ThroughAliases(RuntimeClass api)
+                {
+                    IEnumerable<int> value = {|CsWinRT1032:[4]|};
+                    IEnumerable<int> alias = value;
+                    api.SetItems(alias);
+                }
+
+                static IEnumerable<int> Create()
+                {
+                    return {|CsWinRT1032:[5]|};
+                }
+
+                void ThroughReturn(RuntimeClass api)
+                {
+                    api.SetItems(Create());
+                }
+
+                void ThroughStorage(RuntimeClass api)
+                {
+                    api.SetItems(stored);
+                    api.SetItems(StoredProperty);
+                }
+
+                void ThroughForwarder(RuntimeClass api)
+                {
+                    Forward(api, {|CsWinRT1032:[6]|});
+                }
+
+                static void Forward(RuntimeClass api, IEnumerable<int> value)
+                {
+                    api.SetItems(value);
+                }
+
+                void ThroughDelegate(RuntimeClass api)
+                {
+                    Func<IEnumerable<int>> factory = () => {|CsWinRT1032:[7]|};
+                    api.SetItems(factory());
+                }
+
+                static async Task<IEnumerable<int>> CreateAsync()
+                {
+                    await Task.Yield();
+                    return {|CsWinRT1032:[8]|};
+                }
+
+                async Task ThroughAsyncReturn(RuntimeClass api)
+                {
+                    api.SetItems(await CreateAsync());
+                }
+
+                void ThroughArrayStorage(RuntimeClass api)
+                {
+                    IEnumerable<int>[] values = new IEnumerable<int>[1];
+                    values[0] = {|CsWinRT1032:[9]|};
+                    api.SetItems(values[0]);
+                }
+
+                void ThroughWinRTProperty(RuntimeClass api)
+                {
+                    api.Items = {|CsWinRT1032:[10]|};
+                }
+
+                void ThroughDelegateParameter(RuntimeClass api)
+                {
+                    Action<IEnumerable<int>> forward = value => api.SetItems(value);
+                    forward({|CsWinRT1032:[11]|});
+                }
+
+                void ThroughMethodGroupParameter(RuntimeClass api)
+                {
+                    Action<IEnumerable<int>> forward = api.SetItems;
+                    forward({|CsWinRT1032:[12]|});
+                }
+
+                static void CreateOut(out IEnumerable<int> value)
+                {
+                    value = {|CsWinRT1032:[13]|};
+                }
+
+                void ThroughOutParameter(RuntimeClass api)
+                {
+                    CreateOut(out IEnumerable<int> value);
+                    api.SetItems(value);
+                }
+
+                static void CreateRef(ref IEnumerable<int> value)
+                {
+                    value = {|CsWinRT1032:[14]|};
+                }
+
+                void ThroughRefParameter(RuntimeClass api)
+                {
+                    IEnumerable<int> value = Array.Empty<int>();
+                    CreateRef(ref value);
+                    api.SetItems(value);
+                }
+
+                void ThroughArrayAlias(RuntimeClass api)
+                {
+                    IEnumerable<int>[] original = new IEnumerable<int>[1];
+                    IEnumerable<int>[] alias = original;
+                    alias[0] = {|CsWinRT1032:[15]|};
+                    api.SetItems(original[0]);
+                }
+
+                void ThroughForwardedDelegate(RuntimeClass api)
+                {
+                    Action<IEnumerable<int>> forward = value => api.SetItems(value);
+                    Invoke(forward, {|CsWinRT1032:[16]|});
+                }
+
+                static void Invoke(Action<IEnumerable<int>> action, IEnumerable<int> value)
+                {
+                    action(value);
+                }
+
+                void ThroughLocalFunction(RuntimeClass api)
+                {
+                    static IEnumerable<int> Create()
+                    {
+                        return {|CsWinRT1032:[17]|};
+                    }
+
+                    api.SetItems(Create());
+                }
+
+                void ThroughInterfaceReturn(RuntimeClass api, IFactory factory)
+                {
+                    api.SetItems(factory.Create());
+                }
+
+                void ThroughInterfaceParameter(IForwarder forwarder)
+                {
+                    forwarder.Forward({|CsWinRT1032:[19]|});
+                }
+
+                void ThroughManagedPropertySetter(PropertyForwarder forwarder)
+                {
+                    forwarder.Items = {|CsWinRT1032:[20]|};
+                }
+
+                void ThroughDelegateField(DelegateForwarder forwarder)
+                {
+                    forwarder.Forward({|CsWinRT1032:[21]|});
+                }
+
+                void ThroughReturnedDelegate(RuntimeClass api)
+                {
+                    GetForwarder(api)({|CsWinRT1032:[22]|});
+                }
+
+                static Action<IEnumerable<int>> GetForwarder(RuntimeClass api)
+                {
+                    return api.SetItems;
+                }
+
+                void ThroughArrayFieldAlias(RuntimeClass api, ArrayStorage storage)
+                {
+                    IEnumerable<int>[] original = new IEnumerable<int>[1];
+                    storage.Values = original;
+                    storage.Values[0] = {|CsWinRT1032:[23]|};
+                    api.SetItems(original[0]);
+                }
+
+                void ThroughInterfaceProperty(RuntimeClass api, IPropertyFactory factory)
+                {
+                    api.SetItems(factory.Items);
+                }
+
+                void ThroughCoalesceAssignment(RuntimeClass api)
+                {
+                    IEnumerable<int> value = null;
+                    value ??= {|CsWinRT1032:[25]|};
+                    api.SetItems(value);
+                }
+
+                void ThroughDelegateCompoundAssignment(RuntimeClass api)
+                {
+                    Action<IEnumerable<int>> forward = _ => { };
+                    forward += api.SetItems;
+                    forward({|CsWinRT1032:[26]|});
+                }
+
+                void ThroughArrayFieldInitializerAlias(RuntimeClass api)
+                {
+                    ArrayInitializerStorage.Alias[0] = {|CsWinRT1032:[27]|};
+                    api.SetItems(ArrayInitializerStorage.Original[0]);
+                }
+
+                void ThroughDelegateFieldInitializerAlias()
+                {
+                    DelegateInitializerStorage.Alias({|CsWinRT1032:[28]|});
+                }
+
+                void ThroughDynamicCall(dynamic api)
+                {
+                    IEnumerable<int> value = {|CsWinRT1032:[29]|};
+                    api.SetItems(value);
+                }
+            }
+
+            [WinRT.WindowsRuntimeType]
+            class RuntimeClass
+            {
+                public void SetItems(IEnumerable<int> value)
+                {
+                }
+
+                public IEnumerable<int> Items { get; set; }
+            }
+
+            interface IFactory
+            {
+                IEnumerable<int> Create();
+            }
+
+            class Factory : IFactory
+            {
+                public IEnumerable<int> Create()
+                {
+                    return {|CsWinRT1032:[18]|};
+                }
+            }
+
+            interface IForwarder
+            {
+                void Forward(IEnumerable<int> value);
+            }
+
+            class Forwarder : IForwarder
+            {
+                private readonly RuntimeClass api = new();
+
+                public void Forward(IEnumerable<int> value)
+                {
+                    api.SetItems(value);
+                }
+            }
+
+            class PropertyForwarder
+            {
+                private readonly RuntimeClass api = new();
+
+                public IEnumerable<int> Items
+                {
+                    set => api.SetItems(value);
+                }
+            }
+
+            class DelegateForwarder
+            {
+                public Action<IEnumerable<int>> Forward;
+
+                public DelegateForwarder(RuntimeClass api)
+                {
+                    Forward = api.SetItems;
+                }
+            }
+
+            class ArrayStorage
+            {
+                public IEnumerable<int>[] Values;
+            }
+
+            interface IPropertyFactory
+            {
+                IEnumerable<int> Items { get; }
+            }
+
+            class PropertyFactory : IPropertyFactory
+            {
+                public IEnumerable<int> Items => {|CsWinRT1032:[24]|};
+            }
+
+            static class ArrayInitializerStorage
+            {
+                public static readonly IEnumerable<int>[] Original = new IEnumerable<int>[1];
+                public static readonly IEnumerable<int>[] Alias = Original;
+            }
+
+            static class DelegateInitializerStorage
+            {
+                private static readonly RuntimeClass Api = new();
+                public static readonly Action<IEnumerable<int>> Original = Api.SetItems;
+                public static readonly Action<IEnumerable<int>> Alias = Original;
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_TargetingInterface_ReadOnly_NotEmpty_NotFlowingToWinRT_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+            using System.Threading.Tasks;
+
+            class Test
+            {
+                private IEnumerable<int> stored = [1];
+                private IEnumerable<int> StoredProperty { get; set; } = [2];
+
+                static IEnumerable<int> Create()
+                {
+                    return [3];
+                }
+
+                static async Task<IEnumerable<int>> CreateAsync()
+                {
+                    await Task.Yield();
+                    return [6];
+                }
+
+                void ManagedOnly()
+                {
+                    IEnumerable<int> value = [4];
+                    IEnumerable<int> alias = value;
+                    Consume(alias);
+
+                    Func<IEnumerable<int>> factory = () => [5];
+                    _ = factory();
+
+                    IEnumerable<int>[] values = new IEnumerable<int>[1];
+                    values[0] = [7];
+                    _ = values[0];
+                }
+
+                static void Consume(IEnumerable<int> value)
+                {
+                    foreach (int item in value)
+                    {
+                        _ = item;
+                    }
+                }
+            }
+
+            [WinRT.WindowsRuntimeType]
+            class RuntimeClass
+            {
+                private IEnumerable<int> stored = [8];
+                private IEnumerable<int> StoredProperty { get; set; } = [9];
+
+                void ManagedOnly()
+                {
+                    Helper([10]);
+                }
+
+                private static void Helper(IEnumerable<int> value)
+                {
+                }
+
+                public void SetItems(IEnumerable<int> value)
+                {
+                }
+
+                public IEnumerable<int> GetItems()
+                {
+                    Func<IEnumerable<int>> unused = () => [12];
+                    return Array.Empty<int>();
+                }
+            }
+
+            class DelegateTest
+            {
+                void NestedDelegateReturnDoesNotFlow(RuntimeClass api)
+                {
+                    Func<IEnumerable<int>> outer = () =>
+                    {
+                        Func<IEnumerable<int>> nested = () => [11];
+                        return Array.Empty<int>();
+                    };
+
+                    api.SetItems(outer());
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_TargetingInterface_ReadOnly_NotEmpty_MethodGroupWinRTSink_Warns()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+
+            class Test
+            {
+                void M(RuntimeClass api)
+                {
+                    Action<IEnumerable<int>> forward = api.SetItems;
+                    forward({|CsWinRT1032:[1]|});
+                }
+            }
+
+            [WinRT.WindowsRuntimeType]
+            class RuntimeClass
+            {
+                public void SetItems(IEnumerable<int> value)
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_TargetingInterface_ReadOnly_BindableProperty_Warns()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            [WinRT.GeneratedBindableCustomProperty]
+            partial class ViewModel
+            {
+                public IEnumerable<int> Items { get; } = {|CsWinRT1032:[1]|};
             }
             """;
 
