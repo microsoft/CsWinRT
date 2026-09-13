@@ -413,6 +413,7 @@ public class DiagnosticAnalyzerTests
                     IEnumerable<int> value = {|CsWinRT1032:[29]|};
                     api.SetItems(value);
                 }
+
             }
 
             [WinRT.WindowsRuntimeType]
@@ -500,6 +501,7 @@ public class DiagnosticAnalyzerTests
                 public static readonly Action<IEnumerable<int>> Original = Api.SetItems;
                 public static readonly Action<IEnumerable<int>> Alias = Original;
             }
+
             """;
 
         await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(source, editorconfig: [("CsWinRTAotOptimizerEnabled", "auto")]);
@@ -683,6 +685,144 @@ public class DiagnosticAnalyzerTests
             [
                 ("CsWinRTAotOptimizerEnabled", "auto"),
                 ("CsWinRTComponent", "true")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_ModuleEscapes_WarnAtLevel3()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using System.Linq;
+
+            public class LibraryApi
+            {
+                public IEnumerable<int> Field = {|CsWinRT1032:[1]|};
+                public IEnumerable<int> Property { get; } = {|CsWinRT1032:[2]|};
+
+                public IEnumerable<int> GetItems()
+                {
+                    return {|CsWinRT1032:[3]|};
+                }
+
+                internal IEnumerable<int> GetInternalItems()
+                {
+                    return [4];
+                }
+
+                public int CallExternal()
+                {
+                    return Enumerable.Count({|CsWinRT1032:[5]|});
+                }
+
+                public IEnumerable<int> Deconstructed { get; private set; }
+                public IEnumerable<int>[][] Nested { get; } = new IEnumerable<int>[1][];
+
+                private void StoreThroughOtherAssignmentShapes()
+                {
+                    IEnumerable<int> local;
+                    (Deconstructed, local) = ({|CsWinRT1032:[7]|}, [8]);
+
+                    Nested[0] = new IEnumerable<int>[1];
+                    Nested[0][0] = {|CsWinRT1032:[9]|};
+                }
+
+                private void ManagedOnly()
+                {
+                    IEnumerable<int> value = [6];
+                    Consume(value);
+
+                    System.Action<IEnumerable<int>> localDelegate = _ => { };
+                    localDelegate([10]);
+
+                    WriteOnly = [11];
+                }
+
+                private static void Consume(IEnumerable<int> value)
+                {
+                }
+
+                public IEnumerable<int> WriteOnly { private get; set; }
+
+                public void InvokeUnknown(System.Action<IEnumerable<int>> callback)
+                {
+                    callback({|CsWinRT1032:[12]|});
+                }
+
+                private void DeconstructThenEscape()
+                {
+                    (IEnumerable<int> value, int count) = ({|CsWinRT1032:[13]|}, 0);
+                    _ = Enumerable.Count(value);
+                }
+
+                private void OperatorThenEscape()
+                {
+                    _ = new OperatorForwarder() + {|CsWinRT1032:[15]|};
+                }
+            }
+
+            public interface IExternalContract
+            {
+                IEnumerable<int> GetItems();
+            }
+
+            internal sealed class InternalImplementation : IExternalContract
+            {
+                public IEnumerable<int> GetItems()
+                {
+                    return {|CsWinRT1032:[14]|};
+                }
+            }
+
+            internal sealed class OperatorForwarder
+            {
+                public static OperatorForwarder operator +(OperatorForwarder forwarder, IEnumerable<int> value)
+                {
+                    _ = Enumerable.Count(value);
+                    return forwarder;
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "3")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_ModuleEscapes_DoNotWarnAtLevel2()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using System.Linq;
+
+            public class LibraryApi
+            {
+                public IEnumerable<int> Field = [1];
+                public IEnumerable<int> Property { get; } = [2];
+
+                public IEnumerable<int> GetItems()
+                {
+                    return [3];
+                }
+
+                public int CallExternal()
+                {
+                    return Enumerable.Count([4]);
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "2")
             ]);
     }
 

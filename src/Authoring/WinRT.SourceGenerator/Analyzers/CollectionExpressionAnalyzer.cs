@@ -58,6 +58,8 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
             ImmutableArray<INamedTypeSymbol> collectionBuilderSymbols = context.Compilation.GetTypesByMetadataName("System.Runtime.CompilerServices.CollectionBuilderAttribute");
             TypeMapper typeMapper = new(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
             bool isCsWinRTComponent = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent();
+            bool includeModuleEscapes =
+                context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel() >= 3;
             Func<ISymbol, TypeMapper, bool> isWinRTType = GeneratorHelper.IsWinRTType(
                 context.Compilation,
                 isCsWinRTComponent);
@@ -75,6 +77,8 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
             ConcurrentDictionary<ISymbol, bool> winRTBoundaryTypes = new(SymbolEqualityComparer.Default);
             ConcurrentDictionary<ISymbol, bool> winRTBoundaryMethods = new(SymbolEqualityComparer.Default);
             ConcurrentDictionary<ISymbol, byte> methodsWithDispatchFlows = new(SymbolEqualityComparer.Default);
+            ConcurrentDictionary<FlowNode, byte> delegateSlotsWithKnownTargets = new(FlowNodeComparer.Instance);
+            ConcurrentDictionary<FlowNode, byte> invokedDelegateSlots = new(FlowNodeComparer.Instance);
 
             CollectionExpressionCandidate? GetCandidate(ICollectionExpressionOperation operation)
             {
@@ -135,6 +139,59 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 }
 
                 return FlowNode.ForSymbol(NormalizeFlowSymbol(symbol));
+            }
+
+            void AddDirectDelegateArgumentFlows(IOperation value, IOperation delegateTarget, int parameterOrdinal)
+            {
+                IMethodSymbol? targetMethod = delegateTarget switch
+                {
+                    IAnonymousFunctionOperation anonymousFunction => anonymousFunction.Symbol,
+                    IMethodReferenceOperation methodReference => methodReference.Method,
+                    _ => null
+                };
+
+                if (targetMethod is not null && parameterOrdinal < targetMethod.Parameters.Length)
+                {
+                    AddValueFlows(value, GetSymbolNode(targetMethod.Parameters[parameterOrdinal]));
+                }
+            }
+
+            void AddInvokedDelegateSlots(IOperation delegateInstance, int parameterOrdinal)
+            {
+                switch (delegateInstance)
+                {
+                    case ILocalReferenceOperation local:
+                        invokedDelegateSlots.TryAdd(
+                            FlowNode.ForDelegateParameter(NormalizeFlowSymbol(local.Local), parameterOrdinal),
+                            0);
+                        break;
+                    case IParameterReferenceOperation parameter:
+                        invokedDelegateSlots.TryAdd(
+                            FlowNode.ForDelegateParameter(NormalizeFlowSymbol(parameter.Parameter), parameterOrdinal),
+                            0);
+                        break;
+                    case IFieldReferenceOperation field:
+                        invokedDelegateSlots.TryAdd(
+                            FlowNode.ForDelegateParameter(NormalizeFlowSymbol(field.Field), parameterOrdinal),
+                            0);
+                        break;
+                    case IPropertyReferenceOperation property:
+                        invokedDelegateSlots.TryAdd(
+                            FlowNode.ForDelegateParameter(NormalizeFlowSymbol(property.Property), parameterOrdinal),
+                            0);
+                        break;
+                    case IInvocationOperation invocation:
+                        invokedDelegateSlots.TryAdd(
+                            FlowNode.ForDelegateParameter(NormalizeFlowSymbol(invocation.TargetMethod), parameterOrdinal),
+                            0);
+                        break;
+                    case IConversionOperation conversion:
+                        AddInvokedDelegateSlots(conversion.Operand, parameterOrdinal);
+                        break;
+                    case IParenthesizedOperation parenthesized:
+                        AddInvokedDelegateSlots(parenthesized.Operand, parameterOrdinal);
+                        break;
+                }
             }
 
             void AddEdge(FlowNode source, FlowNode target)
@@ -198,6 +255,19 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                         AddEdge(GetSymbolNode(methodReference.Method), target);
 
                         if (IsWinRTBoundaryMethod(methodReference.Method))
+                        {
+                            foreach (IParameterSymbol parameter in methodReference.Method.Parameters)
+                            {
+                                if (parameter.RefKind != RefKind.Out)
+                                {
+                                    sinks.TryAdd(GetSymbolNode(parameter), 0);
+                                }
+                            }
+                        }
+                        else if (includeModuleEscapes &&
+                                 !SymbolEqualityComparer.Default.Equals(
+                                     methodReference.Method.ContainingAssembly,
+                                     context.Compilation.Assembly))
                         {
                             foreach (IParameterSymbol parameter in methodReference.Method.Parameters)
                             {
@@ -275,9 +345,9 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 foreach (IParameterSymbol parameter in targetMethod.Parameters)
                 {
                     // Scope parameter slots to the stored delegate, not just its Action<> or Func<> type.
-                    AddEdge(
-                        FlowNode.ForDelegateParameter(delegateSymbol, parameter.Ordinal),
-                        GetSymbolNode(parameter));
+                    FlowNode delegateParameter = FlowNode.ForDelegateParameter(delegateSymbol, parameter.Ordinal);
+                    delegateSlotsWithKnownTargets.TryAdd(delegateParameter, 0);
+                    AddEdge(delegateParameter, GetSymbolNode(parameter));
                 }
             }
 
@@ -390,6 +460,9 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                 switch (target)
                 {
+                    case IDeclarationExpressionOperation declaration:
+                        AddAssignmentFlows(declaration.Expression, value);
+                        break;
                     case ILocalReferenceOperation local:
                         FlowNode localNode = GetSymbolNode(local.Local);
                         AddValueFlows(value, localNode);
@@ -428,6 +501,11 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                         {
                             AddDelegateAliasFlows(fieldNode, field.Field.Type, value);
                         }
+
+                        if (includeModuleEscapes && IsModuleEscapeMember(field.Field))
+                        {
+                            sinks.TryAdd(fieldNode, 0);
+                        }
                         break;
                     case IPropertyReferenceOperation property:
                         FlowNode propertyNode = GetSymbolNode(property.Property);
@@ -451,9 +529,18 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                         {
                             sinks.TryAdd(propertyNode, 0);
                         }
+                        else if (includeModuleEscapes && IsModuleEscapeMember(property.Property))
+                        {
+                            sinks.TryAdd(propertyNode, 0);
+                        }
                         break;
                     case IArrayElementReferenceOperation arrayElement:
                         AddFlowsToReferencedStorage(value, arrayElement.ArrayReference);
+
+                        if (includeModuleEscapes)
+                        {
+                            AddModuleEscapeStorageSink(arrayElement.ArrayReference);
+                        }
                         break;
                 }
             }
@@ -555,6 +642,9 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     case IParenthesizedOperation parenthesized:
                         AddFlowsToReferencedStorage(value, parenthesized.Operand);
                         break;
+                    case IArrayElementReferenceOperation arrayElement when includeModuleEscapes:
+                        AddFlowsToReferencedStorage(value, arrayElement.ArrayReference);
+                        break;
                 }
             }
 
@@ -586,6 +676,70 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 }
             }
 
+            void AddModuleEscapeStorageSink(IOperation storage)
+            {
+                switch (storage)
+                {
+                    case IFieldReferenceOperation field when IsModuleEscapeMember(field.Field):
+                        sinks.TryAdd(GetSymbolNode(field.Field), 0);
+                        break;
+                    case IPropertyReferenceOperation property when IsModuleEscapeMember(property.Property):
+                        sinks.TryAdd(GetSymbolNode(property.Property), 0);
+                        break;
+                    case IConversionOperation conversion:
+                        AddModuleEscapeStorageSink(conversion.Operand);
+                        break;
+                    case IParenthesizedOperation parenthesized:
+                        AddModuleEscapeStorageSink(parenthesized.Operand);
+                        break;
+                    case IArrayElementReferenceOperation arrayElement when includeModuleEscapes:
+                        AddModuleEscapeStorageSink(arrayElement.ArrayReference);
+                        break;
+                }
+            }
+
+            void AddDeconstructionFlows(IOperation target, IOperation value)
+            {
+                while (value is IConversionOperation conversion)
+                {
+                    value = conversion.Operand;
+                }
+
+                if (target is ITupleOperation targetTuple &&
+                    value is ITupleOperation valueTuple &&
+                    targetTuple.Elements.Length == valueTuple.Elements.Length)
+                {
+                    for (int i = 0; i < targetTuple.Elements.Length; i++)
+                    {
+                        AddDeconstructionFlows(targetTuple.Elements[i], valueTuple.Elements[i]);
+                    }
+
+                    return;
+                }
+
+                AddAssignmentFlows(target, value);
+            }
+
+            void AddOperatorArgumentFlows(IMethodSymbol? operatorMethod, int parameterOrdinal, IOperation value)
+            {
+                if (operatorMethod is null ||
+                    parameterOrdinal >= operatorMethod.Parameters.Length ||
+                    !CanCarryCollectionExpression(value.Type))
+                {
+                    return;
+                }
+
+                FlowNode parameterNode = GetSymbolNode(operatorMethod.Parameters[parameterOrdinal]);
+                AddValueFlows(value, parameterNode);
+
+                if (IsWinRTBoundaryMethod(operatorMethod) ||
+                    (includeModuleEscapes &&
+                     !SymbolEqualityComparer.Default.Equals(operatorMethod.ContainingAssembly, context.Compilation.Assembly)))
+                {
+                    sinks.TryAdd(parameterNode, 0);
+                }
+            }
+
             void AddDelegateArgumentFlows(IOperation value, IOperation delegateInstance, int parameterOrdinal)
             {
                 switch (delegateInstance)
@@ -604,6 +758,9 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                         break;
                     case IInvocationOperation invocation:
                         AddValueFlows(value, FlowNode.ForDelegateParameter(NormalizeFlowSymbol(invocation.TargetMethod), parameterOrdinal));
+                        break;
+                    case IDelegateCreationOperation delegateCreation when includeModuleEscapes:
+                        AddDirectDelegateArgumentFlows(value, delegateCreation.Target, parameterOrdinal);
                         break;
                     case IConversionOperation conversion:
                         AddDelegateArgumentFlows(value, conversion.Operand, parameterOrdinal);
@@ -691,6 +848,54 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     (property.SetMethod is not null && IsWinRTBoundaryMethod(property.SetMethod));
             }
 
+            bool IsModuleEscapeMember(ISymbol symbol)
+            {
+                if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, context.Compilation.Assembly))
+                {
+                    return true;
+                }
+
+                return symbol switch
+                {
+                    IPropertySymbol property =>
+                        property.GetMethod is not null && IsVisibleOutsideAssembly(property.GetMethod),
+                    _ => IsVisibleOutsideAssembly(symbol)
+                };
+            }
+
+            bool IsVisibleOutsideAssembly(ISymbol symbol)
+            {
+                if (IsDirectlyVisibleOutsideAssembly(symbol))
+                {
+                    return true;
+                }
+
+                return symbol switch
+                {
+                    IMethodSymbol method => GetContractMethods(method).Any(IsDirectlyVisibleOutsideAssembly),
+                    IPropertySymbol property => GetContractProperties(property).Any(IsDirectlyVisibleOutsideAssembly),
+                    _ => false
+                };
+            }
+
+            static bool IsDirectlyVisibleOutsideAssembly(ISymbol symbol)
+            {
+                if (!IsExternallyVisible(symbol.DeclaredAccessibility))
+                {
+                    return false;
+                }
+
+                for (INamedTypeSymbol? type = symbol.ContainingType; type is not null; type = type.ContainingType)
+                {
+                    if (!IsExternallyVisible(type.DeclaredAccessibility))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
             static bool IsExternallyVisible(Accessibility accessibility)
             {
                 return accessibility is
@@ -741,6 +946,15 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 AddAssignmentFlows(assignment.Target, assignment.Value);
             }, OperationKind.CoalesceAssignment);
 
+            if (includeModuleEscapes)
+            {
+                context.RegisterOperationAction(context =>
+                {
+                    IDeconstructionAssignmentOperation assignment = (IDeconstructionAssignmentOperation)context.Operation;
+                    AddDeconstructionFlows(assignment.Target, assignment.Value);
+                }, OperationKind.DeconstructionAssignment);
+            }
+
             context.RegisterOperationAction(context =>
             {
                 ICompoundAssignmentOperation assignment = (ICompoundAssignmentOperation)context.Operation;
@@ -749,7 +963,34 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 {
                     AddAssignmentFlows(assignment.Target, assignment.Value);
                 }
+
+                if (includeModuleEscapes)
+                {
+                    AddOperatorArgumentFlows(assignment.OperatorMethod, 1, assignment.Value);
+                }
             }, OperationKind.CompoundAssignment);
+
+            if (includeModuleEscapes)
+            {
+                context.RegisterOperationAction(context =>
+                {
+                    IBinaryOperation operation = (IBinaryOperation)context.Operation;
+                    AddOperatorArgumentFlows(operation.OperatorMethod, 0, operation.LeftOperand);
+                    AddOperatorArgumentFlows(operation.OperatorMethod, 1, operation.RightOperand);
+                }, OperationKind.Binary);
+
+                context.RegisterOperationAction(context =>
+                {
+                    IUnaryOperation operation = (IUnaryOperation)context.Operation;
+                    AddOperatorArgumentFlows(operation.OperatorMethod, 0, operation.Operand);
+                }, OperationKind.Unary);
+
+                context.RegisterOperationAction(context =>
+                {
+                    IConversionOperation operation = (IConversionOperation)context.Operation;
+                    AddOperatorArgumentFlows(operation.OperatorMethod, 0, operation.Operand);
+                }, OperationKind.Conversion);
+            }
 
             context.RegisterOperationAction(context =>
             {
@@ -779,7 +1020,16 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                         AddDelegateAliasFlows(parameterNode, parameter.Type, argument.Value);
                     }
 
-                    if (parameter.ContainingSymbol is IMethodSymbol method && IsWinRTBoundaryMethod(method))
+                    IMethodSymbol? containingMethod = parameter.ContainingSymbol as IMethodSymbol;
+
+                    if (containingMethod is not null && IsWinRTBoundaryMethod(containingMethod))
+                    {
+                        sinks.TryAdd(parameterNode, 0);
+                    }
+                    else if (includeModuleEscapes &&
+                             containingMethod is { MethodKind: not MethodKind.DelegateInvoke } &&
+                             parameter.ContainingAssembly is { } containingAssembly &&
+                             !SymbolEqualityComparer.Default.Equals(containingAssembly, context.Compilation.Assembly))
                     {
                         sinks.TryAdd(parameterNode, 0);
                     }
@@ -797,6 +1047,11 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     })
                 {
                     AddDelegateArgumentFlows(argument.Value, delegateInstance, parameter.Ordinal);
+
+                    if (includeModuleEscapes)
+                    {
+                        AddInvokedDelegateSlots(delegateInstance, parameter.Ordinal);
+                    }
                 }
             }, OperationKind.Argument);
 
@@ -873,6 +1128,10 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 {
                     sinks.TryAdd(returnNode, 0);
                 }
+                else if (includeModuleEscapes && IsVisibleOutsideAssembly(method))
+                {
+                    sinks.TryAdd(returnNode, 0);
+                }
             }, OperationKind.Return);
 
             context.RegisterOperationAction(context =>
@@ -896,6 +1155,11 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     else if (field.Type.TypeKind == TypeKind.Delegate)
                     {
                         AddDelegateAliasFlows(fieldNode, field.Type, initializer.Value);
+                    }
+
+                    if (includeModuleEscapes && IsModuleEscapeMember(field))
+                    {
+                        sinks.TryAdd(fieldNode, 0);
                     }
                 }
             }, OperationKind.FieldInitializer);
@@ -927,6 +1191,10 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     {
                         sinks.TryAdd(propertyNode, 0);
                     }
+                    else if (includeModuleEscapes && IsModuleEscapeMember(property))
+                    {
+                        sinks.TryAdd(propertyNode, 0);
+                    }
                 }
             }, OperationKind.PropertyInitializer);
 
@@ -948,6 +1216,81 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     }
 
                     sources.Add(edge.Source);
+                }
+
+                if (includeModuleEscapes && !invokedDelegateSlots.IsEmpty)
+                {
+                    HashSet<FlowNode> resolvedDelegateSlots = new(
+                        delegateSlotsWithKnownTargets.Keys,
+                        FlowNodeComparer.Instance);
+                    Queue<FlowNode> pendingResolvedDelegateSlots = new(resolvedDelegateSlots);
+
+                    while (pendingResolvedDelegateSlots.Count > 0)
+                    {
+                        FlowNode target = pendingResolvedDelegateSlots.Dequeue();
+
+                        if (!sourcesByTarget.TryGetValue(target, out List<FlowNode>? sources))
+                        {
+                            continue;
+                        }
+
+                        foreach (FlowNode source in sources)
+                        {
+                            if (source.Kind == FlowNodeKind.DelegateParameter &&
+                                resolvedDelegateSlots.Add(source))
+                            {
+                                pendingResolvedDelegateSlots.Enqueue(source);
+                            }
+                        }
+                    }
+
+                    HashSet<FlowNode> unresolvedDelegateSlots = new(FlowNodeComparer.Instance);
+                    Queue<FlowNode> pendingUnresolvedDelegateSlots = new();
+
+                    foreach (FlowEdge edge in edges)
+                    {
+                        if (edge.Source.Kind == FlowNodeKind.DelegateParameter &&
+                            !resolvedDelegateSlots.Contains(edge.Source) &&
+                            unresolvedDelegateSlots.Add(edge.Source))
+                        {
+                            pendingUnresolvedDelegateSlots.Enqueue(edge.Source);
+                        }
+
+                        if (edge.Target.Kind == FlowNodeKind.DelegateParameter &&
+                            !resolvedDelegateSlots.Contains(edge.Target) &&
+                            unresolvedDelegateSlots.Add(edge.Target))
+                        {
+                            pendingUnresolvedDelegateSlots.Enqueue(edge.Target);
+                        }
+                    }
+
+                    while (pendingUnresolvedDelegateSlots.Count > 0)
+                    {
+                        FlowNode target = pendingUnresolvedDelegateSlots.Dequeue();
+
+                        if (!sourcesByTarget.TryGetValue(target, out List<FlowNode>? sources))
+                        {
+                            continue;
+                        }
+
+                        foreach (FlowNode source in sources)
+                        {
+                            if (source.Kind == FlowNodeKind.DelegateParameter &&
+                                unresolvedDelegateSlots.Add(source))
+                            {
+                                pendingUnresolvedDelegateSlots.Enqueue(source);
+                            }
+                        }
+                    }
+
+                    foreach (FlowNode invokedDelegateSlot in invokedDelegateSlots.Keys)
+                    {
+                        if (!resolvedDelegateSlots.Contains(invokedDelegateSlot) ||
+                            unresolvedDelegateSlots.Contains(invokedDelegateSlot))
+                        {
+                            sinks.TryAdd(invokedDelegateSlot, 0);
+                        }
+                    }
                 }
 
                 HashSet<FlowNode> reachesWinRT = new(FlowNodeComparer.Instance);
