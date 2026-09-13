@@ -57,9 +57,10 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
             // We can just use an array here, since in the vast majority of cases we only expect 1-2 items.
             ImmutableArray<INamedTypeSymbol> collectionBuilderSymbols = context.Compilation.GetTypesByMetadataName("System.Runtime.CompilerServices.CollectionBuilderAttribute");
             TypeMapper typeMapper = new(context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTUseWindowsUIXamlProjections());
+            bool isCsWinRTComponent = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent();
             Func<ISymbol, TypeMapper, bool> isWinRTType = GeneratorHelper.IsWinRTType(
                 context.Compilation,
-                context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTComponent());
+                isCsWinRTComponent);
             Func<ISymbol, bool, bool> isWinRTClassOrInterface = GeneratorHelper.IsWinRTClassOrInterface(
                 context.Compilation,
                 isWinRTType,
@@ -616,7 +617,13 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
             bool IsWinRTBoundaryType(INamedTypeSymbol? type)
             {
                 return type is not null &&
-                    winRTBoundaryTypes.GetOrAdd(type, symbol => isWinRTClassOrInterface(symbol, true));
+                    winRTBoundaryTypes.GetOrAdd(
+                        type,
+                        symbol =>
+                            isWinRTClassOrInterface(symbol, true) ||
+                            (isCsWinRTComponent &&
+                             SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, context.Compilation.Assembly) &&
+                             isWinRTType(symbol, typeMapper)));
             }
 
             bool IsWinRTBoundaryMethod(IMethodSymbol method)

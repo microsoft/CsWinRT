@@ -641,6 +641,52 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task CollectionExpression_CsWinRTComponent_PublicRuntimeClassBoundary_Warns()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            public sealed class Component
+            {
+                public void SetItems(IEnumerable<int> value)
+                {
+                }
+
+                public IEnumerable<int> GetItems()
+                {
+                    return {|CsWinRT1032:[1]|};
+                }
+            }
+
+            class Test
+            {
+                void M(Component component)
+                {
+                    component.SetItems({|CsWinRT1032:[2]|});
+
+                    var helper = new ManagedHelper();
+                    helper.SetItems([3]);
+                }
+            }
+
+            class ManagedHelper
+            {
+                public void SetItems(IEnumerable<int> value)
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTComponent", "true")
+            ]);
+    }
+
+    [TestMethod]
     public async Task ComImportInterfaceCast_ValidCast_DoesNotWarn()
     {
         const string source = """
