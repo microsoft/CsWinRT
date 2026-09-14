@@ -380,7 +380,7 @@ internal static class CustomAttributeFactory
     /// <summary>
     /// Writes the Windows Runtime metadata custom attributes carried over from <paramref name="member"/>
     /// to the projection (e.g. <c>[AttributeUsage]</c>, and — in reference projections only —
-    /// <c>[Overload]</c>, <c>[Experimental]</c>, <c>[ContractVersion]</c>, plus the synthesized
+    /// <c>[Overload]</c>, <c>[CreateFromString]</c>, <c>[Experimental]</c>, <c>[ContractVersion]</c>, plus the synthesized
     /// <c>[SupportedOSPlatform]</c>).
     /// </summary>
     /// <remarks>
@@ -604,7 +604,7 @@ internal static class CustomAttributeFactory
         // here as it is custom-mapped rather than carried over (see 'WriteCustomAttributes').
         if (ns == WindowsFoundationMetadata)
         {
-            return strippedName is "ContractVersion" or "ApiContract" or "DefaultOverload" or "Overload" or "Experimental";
+            return strippedName is "ContractVersion" or "ApiContract" or "DefaultOverload" or "Overload" or "CreateFromString" or "Experimental";
         }
 
         // Attributes from any other namespace (e.g. '[Microsoft.UI.Xaml.TemplatePart]') are themselves

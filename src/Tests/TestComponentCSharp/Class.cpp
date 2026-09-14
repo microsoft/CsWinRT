@@ -337,6 +337,14 @@ namespace winrt::TestComponentCSharp::implementation
     {
         return winrt::clock::now();
     }
+    TestComponentCSharp::Class Class::CreateFromString(hstring const& value)
+    {
+        return winrt::make<Class>(0, value);
+    }
+    TestComponentCSharp::NonBlittableStringStruct Class::CreateStructFromString(hstring const& value)
+    {
+        return { value };
+    }
     winrt::event_token Class::Event0(TestComponentCSharp::EventHandler0 const& handler)
     {
         return _event0.add(handler);

@@ -47,6 +47,7 @@ namespace TestComponentCSharp
         BlittableStruct blittable;
     };
 
+    [createfromstring("TestComponentCSharp.Class.CreateStructFromString")]
     struct NonBlittableStringStruct
     {
         String str;
@@ -195,6 +196,7 @@ namespace TestComponentCSharp
     }
 
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
+    [createfromstring("TestComponentCSharp.Class.CreateFromString")]
     runtimeclass Class :
         Windows.Foundation.IStringable
         //, ICowboy
@@ -231,6 +233,8 @@ namespace TestComponentCSharp
         static Int32 StaticReadWriteProperty{ set; };
         static Windows.Foundation.TimeSpan FromSeconds(Int32 seconds);
         static Windows.Foundation.DateTime Now();
+        static Class CreateFromString(String value);
+        static NonBlittableStringStruct CreateStructFromString(String value);
 
         // class
         event EventHandler0 Event0;

@@ -116,6 +116,8 @@ namespace winrt::TestComponentCSharp::implementation
         static void StaticReadWriteProperty(int32_t value);
         static Windows::Foundation::TimeSpan FromSeconds(int32_t seconds);
         static Windows::Foundation::DateTime Now();
+        static TestComponentCSharp::Class CreateFromString(hstring const& value);
+        static TestComponentCSharp::NonBlittableStringStruct CreateStructFromString(hstring const& value);
         winrt::event_token Event0(TestComponentCSharp::EventHandler0 const& handler);
         void Event0(winrt::event_token const& token) noexcept;
         void InvokeEvent0();
