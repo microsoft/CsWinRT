@@ -26,7 +26,11 @@ namespace Generator;
 public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [WinRTRules.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
+    [
+        WinRTRules.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType,
+        WinRTRules.CollectionExpressionEscapesModule
+    ];
 
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)
@@ -73,7 +77,8 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
             // Edges point from a value's origin to its destination. Compilation-end analysis walks them
             // backwards from WinRT sinks so values that stay in managed code do not produce diagnostics.
             ConcurrentBag<FlowEdge> edges = [];
-            ConcurrentDictionary<FlowNode, byte> sinks = new(FlowNodeComparer.Instance);
+            ConcurrentDictionary<FlowNode, byte> winRTSinks = new(FlowNodeComparer.Instance);
+            ConcurrentDictionary<FlowNode, byte> moduleEscapeSinks = new(FlowNodeComparer.Instance);
             ConcurrentDictionary<ISymbol, bool> winRTBoundaryTypes = new(SymbolEqualityComparer.Default);
             ConcurrentDictionary<ISymbol, bool> winRTBoundaryMethods = new(SymbolEqualityComparer.Default);
             ConcurrentDictionary<ISymbol, byte> methodsWithDispatchFlows = new(SymbolEqualityComparer.Default);
@@ -260,7 +265,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                             {
                                 if (parameter.RefKind != RefKind.Out)
                                 {
-                                    sinks.TryAdd(GetSymbolNode(parameter), 0);
+                                    winRTSinks.TryAdd(GetSymbolNode(parameter), 0);
                                 }
                             }
                         }
@@ -273,7 +278,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                             {
                                 if (parameter.RefKind != RefKind.Out)
                                 {
-                                    sinks.TryAdd(GetSymbolNode(parameter), 0);
+                                    moduleEscapeSinks.TryAdd(GetSymbolNode(parameter), 0);
                                 }
                             }
                         }
@@ -504,7 +509,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                         if (includeModuleEscapes && IsModuleEscapeMember(field.Field))
                         {
-                            sinks.TryAdd(fieldNode, 0);
+                            moduleEscapeSinks.TryAdd(fieldNode, 0);
                         }
                         break;
                     case IPropertyReferenceOperation property:
@@ -527,11 +532,11 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                         if (IsWinRTBoundaryProperty(property.Property))
                         {
-                            sinks.TryAdd(propertyNode, 0);
+                            winRTSinks.TryAdd(propertyNode, 0);
                         }
                         else if (includeModuleEscapes && IsModuleEscapeMember(property.Property))
                         {
-                            sinks.TryAdd(propertyNode, 0);
+                            moduleEscapeSinks.TryAdd(propertyNode, 0);
                         }
                         break;
                     case IArrayElementReferenceOperation arrayElement:
@@ -681,10 +686,10 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 switch (storage)
                 {
                     case IFieldReferenceOperation field when IsModuleEscapeMember(field.Field):
-                        sinks.TryAdd(GetSymbolNode(field.Field), 0);
+                        moduleEscapeSinks.TryAdd(GetSymbolNode(field.Field), 0);
                         break;
                     case IPropertyReferenceOperation property when IsModuleEscapeMember(property.Property):
-                        sinks.TryAdd(GetSymbolNode(property.Property), 0);
+                        moduleEscapeSinks.TryAdd(GetSymbolNode(property.Property), 0);
                         break;
                     case IConversionOperation conversion:
                         AddModuleEscapeStorageSink(conversion.Operand);
@@ -732,11 +737,14 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 FlowNode parameterNode = GetSymbolNode(operatorMethod.Parameters[parameterOrdinal]);
                 AddValueFlows(value, parameterNode);
 
-                if (IsWinRTBoundaryMethod(operatorMethod) ||
-                    (includeModuleEscapes &&
-                     !SymbolEqualityComparer.Default.Equals(operatorMethod.ContainingAssembly, context.Compilation.Assembly)))
+                if (IsWinRTBoundaryMethod(operatorMethod))
                 {
-                    sinks.TryAdd(parameterNode, 0);
+                    winRTSinks.TryAdd(parameterNode, 0);
+                }
+                else if (includeModuleEscapes &&
+                         !SymbolEqualityComparer.Default.Equals(operatorMethod.ContainingAssembly, context.Compilation.Assembly))
+                {
+                    moduleEscapeSinks.TryAdd(parameterNode, 0);
                 }
             }
 
@@ -998,9 +1006,13 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                 if (argument.Parameter is not { } parameter)
                 {
-                    FlowNode unknownCallSink = FlowNode.ForUnknownCall();
-                    AddValueFlows(argument.Value, unknownCallSink);
-                    sinks.TryAdd(unknownCallSink, 0);
+                    if (includeModuleEscapes)
+                    {
+                        FlowNode unknownCallSink = FlowNode.ForUnknownCall();
+                        AddValueFlows(argument.Value, unknownCallSink);
+                        moduleEscapeSinks.TryAdd(unknownCallSink, 0);
+                    }
+
                     return;
                 }
 
@@ -1024,14 +1036,14 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                     if (containingMethod is not null && IsWinRTBoundaryMethod(containingMethod))
                     {
-                        sinks.TryAdd(parameterNode, 0);
+                        winRTSinks.TryAdd(parameterNode, 0);
                     }
                     else if (includeModuleEscapes &&
                              containingMethod is { MethodKind: not MethodKind.DelegateInvoke } &&
                              parameter.ContainingAssembly is { } containingAssembly &&
                              !SymbolEqualityComparer.Default.Equals(containingAssembly, context.Compilation.Assembly))
                     {
-                        sinks.TryAdd(parameterNode, 0);
+                        moduleEscapeSinks.TryAdd(parameterNode, 0);
                     }
                 }
 
@@ -1057,6 +1069,11 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
             context.RegisterOperationAction(context =>
             {
+                if (!includeModuleEscapes)
+                {
+                    return;
+                }
+
                 IDynamicInvocationOperation invocation = (IDynamicInvocationOperation)context.Operation;
                 FlowNode unknownCallSink = FlowNode.ForUnknownCall();
 
@@ -1068,7 +1085,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     }
                 }
 
-                sinks.TryAdd(unknownCallSink, 0);
+                moduleEscapeSinks.TryAdd(unknownCallSink, 0);
             }, OperationKind.DynamicInvocation);
 
             context.RegisterOperationAction(context =>
@@ -1126,11 +1143,11 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     ? IsWinRTBoundaryProperty(property)
                     : IsWinRTBoundaryMethod(method))
                 {
-                    sinks.TryAdd(returnNode, 0);
+                    winRTSinks.TryAdd(returnNode, 0);
                 }
                 else if (includeModuleEscapes && IsVisibleOutsideAssembly(method))
                 {
-                    sinks.TryAdd(returnNode, 0);
+                    moduleEscapeSinks.TryAdd(returnNode, 0);
                 }
             }, OperationKind.Return);
 
@@ -1159,7 +1176,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                     if (includeModuleEscapes && IsModuleEscapeMember(field))
                     {
-                        sinks.TryAdd(fieldNode, 0);
+                        moduleEscapeSinks.TryAdd(fieldNode, 0);
                     }
                 }
             }, OperationKind.FieldInitializer);
@@ -1189,18 +1206,18 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
                     if (IsWinRTBoundaryProperty(property))
                     {
-                        sinks.TryAdd(propertyNode, 0);
+                        winRTSinks.TryAdd(propertyNode, 0);
                     }
                     else if (includeModuleEscapes && IsModuleEscapeMember(property))
                     {
-                        sinks.TryAdd(propertyNode, 0);
+                        moduleEscapeSinks.TryAdd(propertyNode, 0);
                     }
                 }
             }, OperationKind.PropertyInitializer);
 
             context.RegisterCompilationEndAction(context =>
             {
-                if (candidates.IsEmpty || sinks.IsEmpty)
+                if (candidates.IsEmpty || (winRTSinks.IsEmpty && moduleEscapeSinks.IsEmpty))
                 {
                     return;
                 }
@@ -1288,48 +1305,65 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                         if (!resolvedDelegateSlots.Contains(invokedDelegateSlot) ||
                             unresolvedDelegateSlots.Contains(invokedDelegateSlot))
                         {
-                            sinks.TryAdd(invokedDelegateSlot, 0);
+                            moduleEscapeSinks.TryAdd(invokedDelegateSlot, 0);
                         }
                     }
                 }
 
-                HashSet<FlowNode> reachesWinRT = new(FlowNodeComparer.Instance);
-                Queue<FlowNode> pending = new();
-
-                foreach (FlowNode sink in sinks.Keys)
+                HashSet<FlowNode> GetReachableSources(IEnumerable<FlowNode> sinks)
                 {
-                    if (reachesWinRT.Add(sink))
+                    HashSet<FlowNode> reachableSources = new(FlowNodeComparer.Instance);
+                    Queue<FlowNode> pending = new();
+
+                    foreach (FlowNode sink in sinks)
                     {
-                        pending.Enqueue(sink);
-                    }
-                }
-
-                while (pending.Count > 0)
-                {
-                    context.CancellationToken.ThrowIfCancellationRequested();
-
-                    FlowNode target = pending.Dequeue();
-
-                    if (!sourcesByTarget.TryGetValue(target, out List<FlowNode>? sources))
-                    {
-                        continue;
-                    }
-
-                    foreach (FlowNode source in sources)
-                    {
-                        if (reachesWinRT.Add(source))
+                        if (reachableSources.Add(sink))
                         {
-                            pending.Enqueue(source);
+                            pending.Enqueue(sink);
                         }
                     }
+
+                    while (pending.Count > 0)
+                    {
+                        context.CancellationToken.ThrowIfCancellationRequested();
+
+                        FlowNode target = pending.Dequeue();
+
+                        if (!sourcesByTarget.TryGetValue(target, out List<FlowNode>? sources))
+                        {
+                            continue;
+                        }
+
+                        foreach (FlowNode source in sources)
+                        {
+                            if (reachableSources.Add(source))
+                            {
+                                pending.Enqueue(source);
+                            }
+                        }
+                    }
+
+                    return reachableSources;
                 }
+
+                HashSet<FlowNode> reachesWinRT = GetReachableSources(winRTSinks.Keys);
+                HashSet<FlowNode> escapesModule = GetReachableSources(moduleEscapeSinks.Keys);
 
                 foreach (CollectionExpressionCandidate candidate in candidates.Values)
                 {
-                    if (reachesWinRT.Contains(FlowNode.ForCollectionExpression(candidate.Key)))
+                    FlowNode candidateNode = FlowNode.ForCollectionExpression(candidate.Key);
+
+                    if (reachesWinRT.Contains(candidateNode))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             WinRTRules.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType,
+                            candidate.Location,
+                            candidate.Type));
+                    }
+                    else if (escapesModule.Contains(candidateNode))
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            WinRTRules.CollectionExpressionEscapesModule,
                             candidate.Location,
                             candidate.Type));
                     }

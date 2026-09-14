@@ -410,7 +410,7 @@ public class DiagnosticAnalyzerTests
 
                 void ThroughDynamicCall(dynamic api)
                 {
-                    IEnumerable<int> value = {|CsWinRT1032:[29]|};
+                    IEnumerable<int> value = [29];
                     api.SetItems(value);
                 }
 
@@ -697,12 +697,12 @@ public class DiagnosticAnalyzerTests
 
             public class LibraryApi
             {
-                public IEnumerable<int> Field = {|CsWinRT1032:[1]|};
-                public IEnumerable<int> Property { get; } = {|CsWinRT1032:[2]|};
+                public IEnumerable<int> Field = {|CsWinRT1036:[1]|};
+                public IEnumerable<int> Property { get; } = {|CsWinRT1036:[2]|};
 
                 public IEnumerable<int> GetItems()
                 {
-                    return {|CsWinRT1032:[3]|};
+                    return {|CsWinRT1036:[3]|};
                 }
 
                 internal IEnumerable<int> GetInternalItems()
@@ -712,7 +712,7 @@ public class DiagnosticAnalyzerTests
 
                 public int CallExternal()
                 {
-                    return Enumerable.Count({|CsWinRT1032:[5]|});
+                    return Enumerable.Count({|CsWinRT1036:[5]|});
                 }
 
                 public IEnumerable<int> Deconstructed { get; private set; }
@@ -721,10 +721,10 @@ public class DiagnosticAnalyzerTests
                 private void StoreThroughOtherAssignmentShapes()
                 {
                     IEnumerable<int> local;
-                    (Deconstructed, local) = ({|CsWinRT1032:[7]|}, [8]);
+                    (Deconstructed, local) = ({|CsWinRT1036:[7]|}, [8]);
 
                     Nested[0] = new IEnumerable<int>[1];
-                    Nested[0][0] = {|CsWinRT1032:[9]|};
+                    Nested[0][0] = {|CsWinRT1036:[9]|};
                 }
 
                 private void ManagedOnly()
@@ -746,19 +746,26 @@ public class DiagnosticAnalyzerTests
 
                 public void InvokeUnknown(System.Action<IEnumerable<int>> callback)
                 {
-                    callback({|CsWinRT1032:[12]|});
+                    callback({|CsWinRT1036:[12]|});
                 }
 
                 private void DeconstructThenEscape()
                 {
-                    (IEnumerable<int> value, int count) = ({|CsWinRT1032:[13]|}, 0);
+                    (IEnumerable<int> value, int count) = ({|CsWinRT1036:[13]|}, 0);
                     _ = Enumerable.Count(value);
                 }
 
                 private void OperatorThenEscape()
                 {
-                    _ = new OperatorForwarder() + {|CsWinRT1032:[15]|};
+                    _ = new OperatorForwarder() + {|CsWinRT1036:[15]|};
                 }
+
+                private void DynamicEscape(dynamic api)
+                {
+                    IEnumerable<int> value = {|CsWinRT1036:[17]|};
+                    api.SetItems(value);
+                }
+
             }
 
             public interface IExternalContract
@@ -770,7 +777,7 @@ public class DiagnosticAnalyzerTests
             {
                 public IEnumerable<int> GetItems()
                 {
-                    return {|CsWinRT1032:[14]|};
+                    return {|CsWinRT1036:[14]|};
                 }
             }
 
@@ -782,6 +789,7 @@ public class DiagnosticAnalyzerTests
                     return forwarder;
                 }
             }
+
             """;
 
         await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(
@@ -814,6 +822,12 @@ public class DiagnosticAnalyzerTests
                 {
                     return Enumerable.Count([4]);
                 }
+
+                public void CallDynamic(dynamic api)
+                {
+                    IEnumerable<int> value = [5];
+                    api.SetItems(value);
+                }
             }
             """;
 
@@ -823,6 +837,41 @@ public class DiagnosticAnalyzerTests
             [
                 ("CsWinRTAotOptimizerEnabled", "auto"),
                 ("CsWinRTAotWarningLevel", "2")
+            ]);
+    }
+
+    [TestMethod]
+    public async Task CollectionExpression_ProvenWinRTFlowTakesPrecedenceOverModuleEscape()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using System.Linq;
+
+            class Test
+            {
+                void M(RuntimeClass api)
+                {
+                    IEnumerable<int> value = {|CsWinRT1032:[1]|};
+                    api.SetItems(value);
+                    _ = Enumerable.Count(value);
+                }
+            }
+
+            [WinRT.WindowsRuntimeType]
+            class RuntimeClass
+            {
+                public void SetItems(IEnumerable<int> value)
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<CollectionExpressionAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "3")
             ]);
     }
 

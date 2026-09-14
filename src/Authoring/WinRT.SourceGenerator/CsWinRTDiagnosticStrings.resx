@@ -363,6 +363,12 @@
   <data name="NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text" xml:space="preserve">
     <value>Collection expressions targeting non mutable interface type '{0}' do not have a defined concrete type, and are not supported for trimming and AOT compatibility with WinRT scenarios (consider changing the target type to be a concrete type, a mutable interface type, or add an explicit cast for either of these on the collection expression, eg. '(string[])["A", "B", "C"]')</value>
   </data>
+  <data name="CollectionExpressionEscapesModule_Brief" xml:space="preserve">
+    <value>Collection expression may not be safe outside this module</value>
+  </data>
+  <data name="CollectionExpressionEscapesModule_Text" xml:space="preserve">
+    <value>Collection expression targeting non mutable interface type '{0}' may escape this module and later be passed to WinRT, but its concrete type cannot be statically determined for trimming and AOT compatibility (consider changing the target type to be a concrete type, a mutable interface type, or add an explicit cast for either of these on the collection expression, eg. '(string[])["A", "B", "C"]')</value>
+  </data>
   <data name="ComImportInterfaceCast_Brief" xml:space="preserve">
     <value>Cast to [ComImport] type not supported</value>
   </data>

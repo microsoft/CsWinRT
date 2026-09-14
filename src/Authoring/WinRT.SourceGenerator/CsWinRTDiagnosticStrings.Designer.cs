@@ -526,6 +526,24 @@ namespace WinRT.SourceGenerator {
                 return ResourceManager.GetString("NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType_Text", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Collection expression may not be safe outside this module.
+        /// </summary>
+        internal static string CollectionExpressionEscapesModule_Brief {
+            get {
+                return ResourceManager.GetString("CollectionExpressionEscapesModule_Brief", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Collection expression targeting non mutable interface type &apos;{0}&apos; may escape this module and later be passed to WinRT, but its concrete type cannot be statically determined for trimming and AOT compatibility.
+        /// </summary>
+        internal static string CollectionExpressionEscapesModule_Text {
+            get {
+                return ResourceManager.GetString("CollectionExpressionEscapesModule_Text", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Invalid Interface Inherited.

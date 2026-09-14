@@ -4,3 +4,4 @@
 ### New Rules
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
+CsWinRT1036 | Usage | Warning | Collection expressions that escape the current module may not be statically verifiable for AOT support with WinRT.

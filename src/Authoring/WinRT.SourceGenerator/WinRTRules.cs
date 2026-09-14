@@ -271,5 +271,12 @@ namespace WinRT.SourceGenerator
             CsWinRTDiagnosticStrings.IReferenceTypeCast_Text,
             false,
             true);
+
+        public static DiagnosticDescriptor CollectionExpressionEscapesModule = MakeRule(
+            "CsWinRT1036",
+            CsWinRTDiagnosticStrings.CollectionExpressionEscapesModule_Brief,
+            CsWinRTDiagnosticStrings.CollectionExpressionEscapesModule_Text,
+            false,
+            true);
     }
 } 
