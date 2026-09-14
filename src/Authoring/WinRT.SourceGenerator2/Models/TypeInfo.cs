@@ -15,7 +15,8 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// <param name="QualifiedName">The qualified name for the type.</param>
 /// <param name="Kind">The type of the type in the hierarchy.</param>
 /// <param name="IsRecord">Whether the type is a record type.</param>
-internal sealed record TypeInfo(string QualifiedName, TypeKind Kind, bool IsRecord)
+/// <param name="HasTypeParameters">Whether the type declares generic type parameters.</param>
+internal sealed record TypeInfo(string QualifiedName, TypeKind Kind, bool IsRecord, bool HasTypeParameters)
 {
     /// <summary>
     /// Gets the keyword for the current type kind.

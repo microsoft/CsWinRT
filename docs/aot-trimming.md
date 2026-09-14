@@ -65,6 +65,18 @@ public partial class MyViewModel
 }
 ```
 
+Generic types and types nested in generic containing types are supported, including their generic constraints:
+
+```csharp
+[GeneratedCustomPropertyProvider]
+public partial class Box<T>
+{
+    public T Value { get; set; } = default!;
+}
+```
+
+Property descriptors are cached separately for each closed owner type. For example, `Box<int>` and `Box<string>` expose `Value` as `int` and `string`, respectively, and use separate descriptors. Generic property types, indexer parameter types, and static properties retain the owner's generic context.
+
 ### Requirements
 
 - The type must be a non-abstract, non-static `class` or `struct`
