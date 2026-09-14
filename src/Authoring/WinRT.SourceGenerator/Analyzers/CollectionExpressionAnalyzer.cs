@@ -9,7 +9,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
@@ -35,7 +37,7 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
 
         context.RegisterCompilationStartAction(static context =>
@@ -46,10 +48,22 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            // Avoid registering the flow analysis for the common case where the compilation has no
-            // collection expressions at all.
+            // Avoid registering the flow analysis for the common case where user code has no collection expressions.
             if (!context.Compilation.SyntaxTrees.Any(
-                tree => tree.GetRoot(context.CancellationToken).DescendantNodes().Any(static node => node is CollectionExpressionSyntax)))
+                tree =>
+                {
+                    SyntaxNode root = tree.GetRoot(context.CancellationToken);
+
+                    if (IsGeneratedCode(tree, root))
+                    {
+                        return false;
+                    }
+
+                    CollectionExpressionFinder finder = new();
+                    finder.Visit(root);
+
+                    return finder.Found;
+                }))
             {
                 return;
             }
@@ -122,28 +136,37 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
             FlowNode GetSymbolNode(ISymbol symbol)
             {
-                if (symbol is IMethodSymbol method)
+                if (symbol is IMethodSymbol method && MayHaveDispatchContracts(method))
                 {
                     AddMethodDispatchFlows(method);
                 }
-                else if (symbol is IParameterSymbol { ContainingSymbol: IMethodSymbol containingMethod })
+                else if (symbol is IParameterSymbol { ContainingSymbol: IMethodSymbol containingMethod } &&
+                         MayHaveDispatchContracts(containingMethod))
                 {
                     AddMethodDispatchFlows(containingMethod);
                 }
                 else if (symbol is IPropertySymbol property)
                 {
-                    if (property.GetMethod is not null)
+                    if (property.GetMethod is not null && MayHaveDispatchContracts(property.GetMethod))
                     {
                         AddMethodDispatchFlows(property.GetMethod);
                     }
 
-                    if (property.SetMethod is not null)
+                    if (property.SetMethod is not null && MayHaveDispatchContracts(property.SetMethod))
                     {
                         AddMethodDispatchFlows(property.SetMethod);
                     }
                 }
 
                 return FlowNode.ForSymbol(NormalizeFlowSymbol(symbol));
+            }
+
+            bool MayHaveDispatchContracts(IMethodSymbol method)
+            {
+                return SymbolEqualityComparer.Default.Equals(method.ContainingAssembly, context.Compilation.Assembly) &&
+                    (method.OverriddenMethod is not null ||
+                     !method.ExplicitInterfaceImplementations.IsEmpty ||
+                     (method.ContainingType is not null && !method.ContainingType.AllInterfaces.IsEmpty));
             }
 
             void AddDirectDelegateArgumentFlows(IOperation value, IOperation delegateTarget, int parameterOrdinal)
@@ -1310,60 +1333,71 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
                     }
                 }
 
-                HashSet<FlowNode> GetReachableSources(IEnumerable<FlowNode> sinks)
-                {
-                    HashSet<FlowNode> reachableSources = new(FlowNodeComparer.Instance);
-                    Queue<FlowNode> pending = new();
+                Dictionary<FlowNode, SinkKind> reachableSources = new(FlowNodeComparer.Instance);
+                Queue<FlowNode> pending = new();
 
+                void AddSinks(IEnumerable<FlowNode> sinks, SinkKind sinkKind)
+                {
                     foreach (FlowNode sink in sinks)
                     {
-                        if (reachableSources.Add(sink))
+                        reachableSources.TryGetValue(sink, out SinkKind current);
+
+                        if ((current & sinkKind) == 0)
                         {
+                            reachableSources[sink] = current | sinkKind;
                             pending.Enqueue(sink);
                         }
                     }
-
-                    while (pending.Count > 0)
-                    {
-                        context.CancellationToken.ThrowIfCancellationRequested();
-
-                        FlowNode target = pending.Dequeue();
-
-                        if (!sourcesByTarget.TryGetValue(target, out List<FlowNode>? sources))
-                        {
-                            continue;
-                        }
-
-                        foreach (FlowNode source in sources)
-                        {
-                            if (reachableSources.Add(source))
-                            {
-                                pending.Enqueue(source);
-                            }
-                        }
-                    }
-
-                    return reachableSources;
                 }
 
-                HashSet<FlowNode> reachesWinRT = GetReachableSources(winRTSinks.Keys);
-                HashSet<FlowNode> escapesModule = GetReachableSources(moduleEscapeSinks.Keys);
+                AddSinks(winRTSinks.Keys, SinkKind.WinRT);
+                AddSinks(moduleEscapeSinks.Keys, SinkKind.ModuleEscape);
+
+                while (pending.Count > 0)
+                {
+                    context.CancellationToken.ThrowIfCancellationRequested();
+
+                    FlowNode target = pending.Dequeue();
+
+                    if (!sourcesByTarget.TryGetValue(target, out List<FlowNode>? sources))
+                    {
+                        continue;
+                    }
+
+                    SinkKind targetKinds = reachableSources[target];
+
+                    foreach (FlowNode source in sources)
+                    {
+                        reachableSources.TryGetValue(source, out SinkKind sourceKinds);
+                        SinkKind updatedKinds = sourceKinds | targetKinds;
+
+                        if (updatedKinds != sourceKinds)
+                        {
+                            reachableSources[source] = updatedKinds;
+                            pending.Enqueue(source);
+                        }
+                    }
+                }
 
                 foreach (CollectionExpressionCandidate candidate in candidates.Values)
                 {
-                    FlowNode candidateNode = FlowNode.ForCollectionExpression(candidate.Key);
+                    reachableSources.TryGetValue(
+                        FlowNode.ForCollectionExpression(candidate.Key),
+                        out SinkKind sinkKinds);
 
-                    if (reachesWinRT.Contains(candidateNode))
+                    DiagnosticDescriptor? descriptor = sinkKinds switch
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(
+                        _ when (sinkKinds & SinkKind.WinRT) != 0 =>
                             WinRTRules.NonEmptyCollectionExpressionTargetingNonBuilderInterfaceType,
-                            candidate.Location,
-                            candidate.Type));
-                    }
-                    else if (escapesModule.Contains(candidateNode))
+                        _ when (sinkKinds & SinkKind.ModuleEscape) != 0 =>
+                            WinRTRules.CollectionExpressionEscapesModule,
+                        _ => null
+                    };
+
+                    if (descriptor is not null)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            WinRTRules.CollectionExpressionEscapesModule,
+                            descriptor,
                             candidate.Location,
                             candidate.Type));
                     }
@@ -1394,9 +1428,85 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
 
     private static bool CanCarryCollectionExpression(ITypeSymbol? type)
     {
-        return type is null or IArrayTypeSymbol ||
+        if (type is null or IArrayTypeSymbol ||
             type.SpecialType == SpecialType.System_Object ||
-            type.TypeKind is TypeKind.Interface or TypeKind.TypeParameter or TypeKind.Dynamic or TypeKind.Delegate;
+            type.TypeKind is TypeKind.TypeParameter or TypeKind.Dynamic or TypeKind.Delegate)
+        {
+            return true;
+        }
+
+        if (type is not INamedTypeSymbol { TypeKind: TypeKind.Interface } namedType)
+        {
+            return false;
+        }
+
+        if (namedType.OriginalDefinition.SpecialType is
+                SpecialType.System_Collections_IEnumerable or
+                SpecialType.System_Collections_Generic_IEnumerable_T or
+                SpecialType.System_Collections_Generic_ICollection_T or
+                SpecialType.System_Collections_Generic_IList_T or
+                SpecialType.System_Collections_Generic_IReadOnlyCollection_T or
+                SpecialType.System_Collections_Generic_IReadOnlyList_T)
+        {
+            return true;
+        }
+
+        return namedType.Arity == 0 &&
+            namedType.MetadataName is "ICollection" or "IList" &&
+            namedType.ContainingNamespace is
+            {
+                Name: "Collections",
+                ContainingNamespace:
+                {
+                    Name: "System",
+                    ContainingNamespace.IsGlobalNamespace: true
+                }
+            };
+    }
+
+    private static bool IsGeneratedCode(SyntaxTree tree, SyntaxNode root)
+    {
+        string fileName = Path.GetFileName(tree.FilePath);
+
+        if (fileName.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".designer.cs", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        foreach (SyntaxTrivia trivia in root.GetLeadingTrivia())
+        {
+            if ((trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+                 trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
+                 trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) ||
+                 trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia)) &&
+                trivia.ToString().IndexOf("<auto-generated", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private sealed class CollectionExpressionFinder : CSharpSyntaxWalker
+    {
+        public bool Found { get; private set; }
+
+        public override void Visit(SyntaxNode? node)
+        {
+            if (!Found)
+            {
+                base.Visit(node);
+            }
+        }
+
+        public override void VisitCollectionExpression(CollectionExpressionSyntax node)
+        {
+            Found = true;
+        }
     }
 
     private readonly record struct CollectionExpressionKey(SyntaxTree SyntaxTree, TextSpan Span);
@@ -1450,6 +1560,14 @@ public sealed class CollectionExpressionAnalyzer : DiagnosticAnalyzer
         CollectionExpression,
         DelegateParameter,
         UnknownCall
+    }
+
+    [Flags]
+    private enum SinkKind : byte
+    {
+        None = 0,
+        WinRT = 1,
+        ModuleEscape = 2
     }
 
     private sealed class FlowNodeComparer : IEqualityComparer<FlowNode>
