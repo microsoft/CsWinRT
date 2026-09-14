@@ -181,7 +181,7 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteCustomPropertyImplementationTypes(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
-            // Nest helpers in the owner so they inherit all generic parameters and constraints.
+            // Nest helpers in the owner so they inherit all generic parameters and constraints
             for (int i = 0; i < info.CustomProperties.Length; i++)
             {
                 // Ensure members are correctly separated by one line

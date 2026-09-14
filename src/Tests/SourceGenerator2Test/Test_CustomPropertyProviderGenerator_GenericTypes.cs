@@ -366,17 +366,28 @@ public class Test_CustomPropertyProviderGenerator_GenericTypes
 
         Assembly assembly = CSharpGeneratorTest<CustomPropertyProviderGenerator>.Compile(source);
         ICustomPropertyProvider provider = CreateProvider(assembly, "MyNamespace.Outer`1+MyType`1", typeof(string), typeof(int));
+        ICustomPropertyProvider otherProvider = CreateProvider(assembly, "MyNamespace.Outer`1+MyType`1", typeof(object), typeof(int));
 
         Assert.AreEqual(provider.GetType(), provider.Type);
-        AssertWritableProperty(provider, "Value", typeof(int), 42);
+        ICustomProperty property = AssertWritableProperty(provider, "Value", typeof(int), 42);
+        ICustomProperty otherProperty = AssertWritableProperty(otherProvider, "Value", typeof(int), 100);
+
+        Assert.AreNotSame(property, otherProperty);
+        Assert.ThrowsExactly<InvalidCastException>(() => property.GetValue(otherProvider));
+
         ICustomProperty shared = provider.GetCustomProperty("Shared");
+        ICustomProperty otherShared = otherProvider.GetCustomProperty("Shared");
 
         Assert.IsNotNull(shared);
+        Assert.IsNotNull(otherShared);
         Assert.AreEqual(typeof(int), shared.Type);
+        Assert.AreNotSame(shared, otherShared);
 
         shared.SetValue(null, 100);
+        otherShared.SetValue(null, 200);
 
         Assert.AreEqual(100, shared.GetValue(null));
+        Assert.AreEqual(200, otherShared.GetValue(null));
     }
 
     [TestMethod]
@@ -445,6 +456,209 @@ public class Test_CustomPropertyProviderGenerator_GenericTypes
         shared.SetValue(null, "shared");
 
         Assert.AreEqual("shared", shared.GetValue(null));
+    }
+
+    [TestMethod]
+    public void GenericNestedOwners_PreserveDistinctContainingTypeConstraints()
+    {
+        const string source = """
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            public interface IItem { }
+
+            public class Item : IItem { }
+
+            public class DerivedItem : Item { }
+
+            public partial class Outer<TBase> where TBase : class, IItem, new()
+            {
+                public partial class Middle<TItem> where TItem : TBase, new()
+                {
+                    [GeneratedCustomPropertyProvider]
+                    public sealed partial class MyType<TValue> where TValue : unmanaged
+                    {
+                        public TBase BaseValue { get; set; } = new();
+
+                        public TItem Value { get; set; } = new();
+
+                        public TValue? Optional { get; set; }
+
+                        public TItem this[TValue index]
+                        {
+                            get => Value;
+                            set => Value = value;
+                        }
+                    }
+                }
+            }
+            """;
+
+        Assembly assembly = CSharpGeneratorTest<CustomPropertyProviderGenerator>.Compile(source);
+        Type baseType = assembly.GetType("MyNamespace.Item", throwOnError: true);
+        Type itemType = assembly.GetType("MyNamespace.DerivedItem", throwOnError: true);
+        ICustomPropertyProvider provider = CreateProvider(assembly, "MyNamespace.Outer`1+Middle`1+MyType`1", baseType, itemType, typeof(int));
+
+        Assert.AreEqual(provider.GetType(), provider.Type);
+        AssertWritableProperty(provider, "BaseValue", baseType, Activator.CreateInstance(baseType));
+        object item = Activator.CreateInstance(itemType);
+        ICustomProperty property = AssertWritableProperty(provider, "Value", itemType, item);
+        ICustomProperty indexer = provider.GetIndexedProperty("Item", typeof(int));
+
+        Assert.IsNotNull(indexer);
+        Assert.AreEqual(itemType, indexer.Type);
+        Assert.AreSame(item, indexer.GetIndexedValue(provider, 1));
+
+        object replacement = Activator.CreateInstance(itemType);
+        indexer.SetIndexedValue(provider, replacement, 1);
+
+        Assert.AreSame(replacement, property.GetValue(provider));
+        AssertWritableProperty(provider, "Optional", typeof(int?), 42);
+    }
+
+    [TestMethod]
+    [DataRow("class")]
+    [DataRow("record")]
+    [DataRow("struct")]
+    [DataRow("record struct")]
+    public void GenericOwnerKinds_PreserveNullableValueTypeConstraints(string typeKind)
+    {
+        string source = $$"""
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            [GeneratedCustomPropertyProvider]
+            public partial {{typeKind}} MyType<T> where T : struct
+            {
+                public T? Value => default(T);
+            }
+            """;
+
+        Assembly assembly = CSharpGeneratorTest<CustomPropertyProviderGenerator>.Compile(source);
+        ICustomPropertyProvider provider = CreateProvider(assembly, "MyNamespace.MyType`1", typeof(int));
+        ICustomProperty property = provider.GetCustomProperty("Value");
+
+        Assert.AreEqual(provider.GetType(), provider.Type);
+        Assert.IsNotNull(property);
+        Assert.AreEqual(typeof(int?), property.Type);
+        Assert.IsTrue(property.CanRead);
+        Assert.IsFalse(property.CanWrite);
+        Assert.AreEqual(0, property.GetValue(provider));
+        Assert.ThrowsExactly<NotSupportedException>(() => property.SetValue(provider, 42));
+    }
+
+    [TestMethod]
+    public void GenericOwner_AllowsRefStructPreservesBoxableProperties()
+    {
+        const string source = """
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            [GeneratedCustomPropertyProvider]
+            public sealed partial class MyType<T> where T : allows ref struct
+            {
+                public int Count { get; set; }
+
+                public T Unboxable => default;
+            }
+            """;
+
+        Assembly assembly = CSharpGeneratorTest<CustomPropertyProviderGenerator>.Compile(source);
+        ICustomPropertyProvider provider = CreateProvider(assembly, "MyNamespace.MyType`1", typeof(Span<int>));
+
+        Assert.AreEqual(provider.GetType(), provider.Type);
+        Assert.IsNull(provider.GetCustomProperty("Unboxable"));
+        AssertWritableProperty(provider, "Count", typeof(int), 42);
+    }
+
+    [TestMethod]
+    [DataRow("Type")]
+    [DataRow("ICustomProperty")]
+    [DataRow("NotSupportedException")]
+    [DataRow("GeneratedCode")]
+    public void GenericParameterNames_DoNotShadowHelperDependencies(string parameterName)
+    {
+        string source = $$"""
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            [GeneratedCustomPropertyProvider]
+            public sealed partial class MyType<{{parameterName}}>
+            {
+                public {{parameterName}} Value => default;
+            }
+            """;
+
+        Assembly assembly = CSharpGeneratorTest<CustomPropertyProviderGenerator>.Compile(source);
+        ICustomPropertyProvider provider = CreateProvider(assembly, "MyNamespace.MyType`1", typeof(int));
+        ICustomProperty property = provider.GetCustomProperty("Value");
+
+        Assert.IsNotNull(property);
+        Assert.AreEqual(typeof(int), property.Type);
+        Assert.AreEqual(0, property.GetValue(provider));
+        Assert.IsFalse(property.CanWrite);
+        Assert.ThrowsExactly<NotSupportedException>(() => property.SetValue(provider, 42));
+    }
+
+    [TestMethod]
+    [DataRow("", typeof(string), typeof(string), "text")]
+    [DataRow("where T : class", typeof(string), typeof(string), "text")]
+    [DataRow("where T : class?", typeof(string), typeof(string), "text")]
+    [DataRow("where T : struct", typeof(int), typeof(int?), 42)]
+    public void GenericNullableProperties_PreserveRuntimeTypesAndAccessors(string constraints, Type argumentType, Type propertyType, object value)
+    {
+        string source = $$"""
+            #nullable enable
+
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            [GeneratedCustomPropertyProvider]
+            public sealed partial class MyType<T> {{constraints}}
+            {
+                public T? Value { get; set; }
+
+                public T? this[T? index]
+                {
+                    get => Value;
+                    set => Value = value;
+                }
+            }
+            """;
+
+        Assembly assembly = CSharpGeneratorTest<CustomPropertyProviderGenerator>.Compile(source);
+        ICustomPropertyProvider provider = CreateProvider(assembly, "MyNamespace.MyType`1", argumentType);
+        ICustomProperty property = provider.GetCustomProperty("Value");
+        ICustomProperty indexer = provider.GetIndexedProperty("Item", propertyType);
+
+        Assert.IsNotNull(property);
+        Assert.AreEqual(propertyType, property.Type);
+        Assert.IsNotNull(indexer);
+        Assert.AreEqual(propertyType, indexer.Type);
+        Assert.IsNull(property.GetValue(provider));
+
+        property.SetValue(provider, value);
+
+        Assert.AreEqual(value, property.GetValue(provider));
+        Assert.AreEqual(value, indexer.GetIndexedValue(provider, null));
+
+        indexer.SetIndexedValue(provider, null, value);
+
+        Assert.IsNull(property.GetValue(provider));
+        Assert.IsNull(indexer.GetIndexedValue(provider, value));
+
+        indexer.SetIndexedValue(provider, value, null);
+
+        Assert.AreEqual(value, property.GetValue(provider));
+
+        property.SetValue(provider, null);
+
+        Assert.IsNull(property.GetValue(provider));
     }
 
     private static ICustomPropertyProvider CreateProvider(Assembly assembly, string metadataName, params Type[] typeArguments)
