@@ -1849,7 +1849,7 @@ remove => %;
                 }
                 if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && 
                     attribute_name != "AttributeUsage" && attribute_name != "ContractVersion" &&
-                    attribute_name != "Experimental")
+                    attribute_name != "Experimental" && attribute_name != "CreateFromString")
                 {
                     continue;
                 }
