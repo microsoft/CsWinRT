@@ -77,8 +77,6 @@ public partial class Box<T>
 
 Property descriptors are cached separately for each closed owner type. For example, `Box<int>` and `Box<string>` expose `Value` as `int` and `string`, respectively, and use separate descriptors. Generic property types, indexer parameter types, and static properties retain the owner's generic context.
 
-The interop generator also follows static initializers for discovered closed generic types. This preserves marshalling support for concrete instances and arrays allocated in interface- or `object`-typed caches, including caches reached through other static initializers.
-
 ### Requirements
 
 - The type must be a non-abstract, non-static `class` or `struct`
