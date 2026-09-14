@@ -13,6 +13,11 @@
         built and run, validating that the generated projection and interop assemblies, and
         the 'WinRT.Runtime' ref/impl assemblies, are wired up correctly.
 
+      * MixedConsumption: a .NET app combines Windows SDK projections with an authored component
+        implementing an SDK interface and taking an SDK type in a constructor. This validates
+        component projection generation against SDK forwarders without duplicate type definitions
+        or missing SDK assembly identities.
+
       * Authoring: a Windows Runtime component library is built, validating WinMD
         generation, the reference projection, and the forwarder assembly.
 
@@ -41,9 +46,10 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection',
-    'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as its own step (passing a
-    single value), so an individual failure is reported in isolation; local builds use the default 'All'.
+    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'Authoring', 'Projection',
+    'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as
+    its own step (passing a single value), so an individual failure is reported in isolation; local
+    builds use the default 'All'.
 
 .PARAMETER Runtime
     Which runtime to target: 'CoreCLR' (the default) builds and runs on the managed runtime;
@@ -71,7 +77,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -88,6 +94,7 @@ $nativeAotRid = 'win-x64'
 
 $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
+$mixedConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'MixedConsumption', 'MixedConsumption.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
@@ -142,32 +149,37 @@ function Assert-WinMDDefinesType {
 
 # Consumption: build (CoreCLR) or Native AOT publish, then run (must not crash).
 function Invoke-ConsumptionSmokeTest {
-    Write-Host "`n=== Consumption smoke test ($Runtime) ===" -ForegroundColor Green
+    param (
+        [Parameter(Mandatory = $true)] [string] $Name,
+        [Parameter(Mandatory = $true)] [string] $Project
+    )
+
+    Write-Host "`n=== $Name smoke test ($Runtime) ===" -ForegroundColor Green
 
     if ($Runtime -eq 'NativeAot') {
         # Publish the whole app with Native AOT (self-contained, no managed host).
-        Invoke-Dotnet (@('publish', $consumptionProject, '--runtime', $nativeAotRid, '-p:PublishAot=true') + $commonBuildArgs)
+        Invoke-Dotnet (@('publish', $Project, '--runtime', $nativeAotRid, '-p:PublishAot=true') + $commonBuildArgs)
     }
     else {
-        Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
+        Invoke-Dotnet (@('build', $Project) + $commonBuildArgs)
     }
 
     # Locate the freshly built app, asserting a clean (zero) exit code when run. A Native AOT
     # publish drops a self-contained '.exe' under a 'publish' folder, so filter to it; a CoreCLR
     # build leaves the '.exe' directly under the target framework folder.
-    $consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'bin')) -Filter 'Consumption.exe' -Recurse |
+    $consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine([IO.Path]::GetDirectoryName($Project), 'bin')) -Filter "$Name.exe" -Recurse |
         Where-Object { $Runtime -ne 'NativeAot' -or $_.FullName -match '\\publish\\' } |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
     if ($null -eq $consumptionExe) {
-        throw "Could not find the built 'Consumption.exe'."
+        throw "Could not find the built '$Name.exe'."
     }
 
     Write-Host "Running '$($consumptionExe.FullName)'" -ForegroundColor DarkGray
     & $consumptionExe.FullName
     if ($LASTEXITCODE -ne 0) {
-        throw "Consumption smoke test crashed or failed with exit code $LASTEXITCODE."
+        throw "$Name smoke test crashed or failed with exit code $LASTEXITCODE."
     }
 }
 
@@ -286,7 +298,11 @@ function Assert-HasEmbeddedSymbols {
 }
 
 if ($Test -in @('All', 'Consumption')) {
-    Invoke-ConsumptionSmokeTest
+    Invoke-ConsumptionSmokeTest -Name 'Consumption' -Project $consumptionProject
+}
+
+if ($Test -in @('All', 'MixedConsumption')) {
+    Invoke-ConsumptionSmokeTest -Name 'MixedConsumption' -Project $mixedConsumptionProject
 }
 
 if ($Test -in @('All', 'Authoring')) {

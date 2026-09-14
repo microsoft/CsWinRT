@@ -567,6 +567,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_ComponentProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
       <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
 
+      <!-- Use SDK forwarders to preserve authored assembly references without duplicating the generated SDK types. -->
+      <_ComponentProjectionSdkForwarderPaths Include="@(RuntimePackAsset)" Condition="'%(Extension)' == '.dll' and ('%(FileName)' == 'Microsoft.Windows.SDK.NET' or '%(FileName)' == 'Microsoft.Windows.UI.Xaml')" />
+      <_ComponentProjectionReferenceAssemblyPaths Remove="@(_ComponentProjectionSdkForwarderPaths)" MatchOnMetadata="FileName;Extension" MatchOnMetadataOptions="CaseInsensitive" />
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(_ComponentProjectionSdkForwarderPaths)" />
+
       <!-- Add the current project's .winmd so the projection generator can process it -->
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
       <_ComponentWinMDPaths Include="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(AssemblyName).winmd'))"
