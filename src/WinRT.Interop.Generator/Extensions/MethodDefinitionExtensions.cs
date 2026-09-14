@@ -234,5 +234,42 @@ internal static class MethodDefinitionExtensions
                 yield return elementType;
             }
         }
+
+        /// <summary>
+        /// Enumerates the declaring types and value types of fields accessed by a method.
+        /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
+        /// <returns>The types visible through field accesses.</returns>
+        public IEnumerable<TypeSignature> EnumerateFieldAccessTypes(RuntimeContext? runtimeContext)
+        {
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                if (instruction.OpCode.OperandType is not CilOperandType.InlineField ||
+                    instruction.Operand is not IFieldDescriptor { Signature.FieldType: { } fieldType } field)
+                {
+                    continue;
+                }
+
+                if (field.DeclaringType is ITypeDefOrRef declaringType)
+                {
+                    TypeSignature declaringTypeSignature = declaringType.ToTypeSignature(runtimeContext);
+
+                    yield return declaringTypeSignature;
+
+                    // Field parameters belong to the declaring type, not the accessing method's type
+                    if (declaringTypeSignature is GenericInstanceTypeSignature genericType)
+                    {
+                        fieldType = fieldType.InstantiateGenericTypes(new GenericContext(genericType, null));
+                    }
+                }
+
+                yield return fieldType;
+            }
+        }
     }
 }
