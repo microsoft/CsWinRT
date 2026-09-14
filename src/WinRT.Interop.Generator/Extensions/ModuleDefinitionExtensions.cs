@@ -303,14 +303,8 @@ internal static partial class ModuleDefinitionExtensions
         // Follow its initializer transitively, regardless of the declared types of its cached fields.
         while (pendingTypeInitializers.TryDequeue(out GenericInstanceTypeSignature? typeSignature))
         {
-            if (!typeSignature.TryResolve(module.RuntimeContext, out TypeDefinition? type))
-            {
-                continue;
-            }
-
-            MethodDefinition? initializer = type.Methods.FirstOrDefault(static method => method.IsStatic && method.Name == ".cctor");
-
-            if (initializer is null)
+            if (!typeSignature.TryResolve(module.RuntimeContext, out TypeDefinition? type) ||
+                !type.TryGetStaticConstructor(out MethodDefinition? initializer))
             {
                 continue;
             }
