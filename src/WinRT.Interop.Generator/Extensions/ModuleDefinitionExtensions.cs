@@ -180,13 +180,22 @@ internal static partial class ModuleDefinitionExtensions
         where TResult : TypeSignature
     {
         HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
+        HashSet<GenericInstanceTypeSignature> visitedTypeInitializers = new(SignatureComparer.IgnoreVersion);
+        Queue<GenericInstanceTypeSignature> pendingTypeInitializers = new();
 
         // Helper to crawl a signature, recursively
-        static IEnumerable<TResult> EnumerateTypeSignatures(
-            TypeSignature? type,
-            HashSet<TResult> results,
-            ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
+        IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type)
         {
+            // Initializers need their closed context even when we are only collecting array signatures
+            foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
+            {
+                if (genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
+                    visitedTypeInitializers.Add(genericType))
+                {
+                    pendingTypeInitializers.Enqueue(genericType);
+                }
+            }
+
             foreach (TResult result in type?.AcceptVisitor(visitor) ?? [])
             {
                 if (results.Add(result))
@@ -200,14 +209,14 @@ internal static partial class ModuleDefinitionExtensions
         // without them appearing in the type specification table. This ensures that we're not missing those.
         foreach (FieldDefinition field in module.EnumerateTableMembers<FieldDefinition>(TableIndex.Field))
         {
-            foreach (TResult result in EnumerateTypeSignatures(field.Signature?.FieldType, results, visitor))
+            foreach (TResult result in EnumerateTypeSignatures(field.Signature?.FieldType))
             {
                 yield return result;
             }
         }
 
         // Enumerate the method table, to ensure we can detect signatures for return types and parameter types.
-        // In each method, we also walk the method body to find local variable types, 'newobj' and 'newarr' types.
+        // In each method, we also walk the body to find locals, allocations, and types used in field accesses.
         // Note that methods in this table might require type arguments, which we don't have from here. However,
         // rather than just ignoring them here, we rely on types not fully constructed to be filtered out later.
         // This is still useful even in those cases, as we might see partially constructed signatures where
@@ -216,7 +225,7 @@ internal static partial class ModuleDefinitionExtensions
         {
             foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
             {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType, results, visitor))
+                foreach (TResult result in EnumerateTypeSignatures(visibleType))
                 {
                     yield return result;
                 }
@@ -228,7 +237,7 @@ internal static partial class ModuleDefinitionExtensions
         // types (for generic types or not), as well as implemented (generic) interfaces.
         foreach (TypeSpecification specification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
         {
-            foreach (TResult result in EnumerateTypeSignatures(specification.Signature, results, visitor))
+            foreach (TResult result in EnumerateTypeSignatures(specification.Signature))
             {
                 yield return result;
             }
@@ -259,7 +268,7 @@ internal static partial class ModuleDefinitionExtensions
             {
                 foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
                 {
-                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
+                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext)))
                     {
                         yield return result;
                     }
@@ -283,7 +292,28 @@ internal static partial class ModuleDefinitionExtensions
 
             foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes(module.RuntimeContext))
             {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
+                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext)))
+                {
+                    yield return result;
+                }
+            }
+        }
+
+        // A closed cache type may only become visible after substituting a caller's generic arguments.
+        // Follow its initializer transitively, regardless of the declared types of its cached fields.
+        while (pendingTypeInitializers.TryDequeue(out GenericInstanceTypeSignature? typeSignature))
+        {
+            if (!typeSignature.TryResolve(module.RuntimeContext, out TypeDefinition? type) ||
+                !type.TryGetStaticConstructor(out MethodDefinition? initializer))
+            {
+                continue;
+            }
+
+            GenericContext genericContext = new(typeSignature, null);
+
+            foreach (TypeSignature visibleType in initializer.EnumerateAllVisibleTypes(module.RuntimeContext))
+            {
+                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext)))
                 {
                     yield return result;
                 }

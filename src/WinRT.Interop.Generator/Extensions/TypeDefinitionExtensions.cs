@@ -202,6 +202,28 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Tries to get the static constructor of the specified type.
+        /// </summary>
+        /// <param name="constructor">The resulting static constructor, if found.</param>
+        /// <returns>Whether <paramref name="constructor"/> was successfully found.</returns>
+        public bool TryGetStaticConstructor([NotNullWhen(true)] out MethodDefinition? constructor)
+        {
+            foreach (MethodDefinition candidate in type.Methods)
+            {
+                if (candidate.IsStatic && candidate.Name?.AsSpan().SequenceEqual(".cctor"u8) is true)
+                {
+                    constructor = candidate;
+
+                    return true;
+                }
+            }
+
+            constructor = null;
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the first property with a given name from the specified type.
         /// </summary>
         /// <param name="name">The name of the property to get.</param>

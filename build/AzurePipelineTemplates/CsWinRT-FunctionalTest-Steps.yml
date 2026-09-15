@@ -4,6 +4,7 @@ parameters:
     default: 
     - JsonValueFunctionCalls
     - ClassActivation
+    - CustomPropertyProvider
     - Structs
     - Events
     - DynamicInterfaceCasting
