@@ -562,15 +562,21 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <ItemGroup>
 
+      <!--
+        Prefer an existing sibling 'lib' assembly for packaged 'ref' references. Projection forwarders
+        preserve the original assembly identities without duplicating types in the generated projections.
+        Leave references without a sibling unchanged, and handle 'WinRT.Runtime' separately below.
+      -->
+      <_CsWinRTComponentProjectionReference Include="@(ReferencePath)" Condition="'%(Extension)' != '.winmd' and '%(FileName)' != 'WinRT.Runtime' and $([System.String]::new('%(FullPath)').Contains('\ref\'))">
+        <ForwarderPath>$([System.String]::new('%(FullPath)').Replace('\ref\', '\lib\'))</ForwarderPath>
+      </_CsWinRTComponentProjectionReference>
+      <_CsWinRTComponentProjectionForwarder Include="@(_CsWinRTComponentProjectionReference)" Condition="Exists('%(ForwarderPath)')" />
+
       <!-- Compile against the 'WinRT.Runtime' implementation assembly (not the reference assembly) -->
-      <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd')) and ('%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true')" />
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Exclude="@(_CsWinRTComponentProjectionForwarder)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd')) and ('%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true')" />
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(_CsWinRTComponentProjectionForwarder->'%(ForwarderPath)')" />
       <_ComponentProjectionReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
       <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
-
-      <!-- Use SDK forwarders to preserve authored assembly references without duplicating the generated SDK types. -->
-      <_ComponentProjectionSdkForwarderPaths Include="@(RuntimePackAsset)" Condition="'%(Extension)' == '.dll' and ('%(FileName)' == 'Microsoft.Windows.SDK.NET' or '%(FileName)' == 'Microsoft.Windows.UI.Xaml')" />
-      <_ComponentProjectionReferenceAssemblyPaths Remove="@(_ComponentProjectionSdkForwarderPaths)" MatchOnMetadata="FileName;Extension" MatchOnMetadataOptions="CaseInsensitive" />
-      <_ComponentProjectionReferenceAssemblyPaths Include="@(_ComponentProjectionSdkForwarderPaths)" />
 
       <!-- Add the current project's .winmd so the projection generator can process it -->
       <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
