@@ -136,23 +136,29 @@ internal static class MetadataAttributeFactory
             writer.Write("[WindowsRuntimeType]");
         }
 
-        // Record the type -> .winmd-stem mapping for the centralized lookup type. The metadata value is build-time
-        // only (consumed by the interop generator), so keeping it off the type itself lets it be trimmed away.
-        if (context.WindowsRuntimeMetadataTypeEntries is { } entries)
+        (string typeNs, string typeName) = type.Names();
+
+        // Component projection types (including exclusive interfaces) live under 'ABI.Impl',
+        // unlike the original authored types recorded by 'ComponentFactory.AddMetadataTypeEntry'.
+        string emittedNs = context.Settings.Component ? $"ABI.Impl.{typeNs}" : typeNs;
+
+        AddWindowsRuntimeMetadataTypeEntry(context, type, TypedefNameWriter.BuildGlobalQualifiedName(emittedNs, typeName));
+    }
+
+    /// <summary>
+    /// Records a projected or authored type and its source <c>.winmd</c> stem in the centralized metadata lookup.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The source metadata type.</param>
+    /// <param name="projectedTypeName">The fully qualified C# name of the type to record.</param>
+    public static void AddWindowsRuntimeMetadataTypeEntry(ProjectionEmitContext context, TypeDefinition type, string projectedTypeName)
+    {
+        if (!context.Settings.ReferenceProjection && context.WindowsRuntimeMetadataTypeEntries is { } entries)
         {
             string path = context.Cache.GetSourcePath(type);
             string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-            (string typeNs, string typeName) = type.Names();
 
-            // The centralized lookup references each type via 'typeof(...)', so the recorded name must match where
-            // the type is actually emitted. In component mode, projected types are wrapped in the 'ABI.Impl.<Ns>'
-            // namespace (see 'WriteBeginProjectedNamespace'), so mirror that same prefix here. Without it the
-            // 'typeof(...)' fails to resolve (authored exclusive-to interfaces live under 'ABI.Impl.<Ns>', not
-            // '<Ns>'), and the key wouldn't match the '(Namespace, Name)' the interop generator computes for the type.
-            string emittedNs = context.Settings.Component ? $"ABI.Impl.{typeNs}" : typeNs;
-            string globalName = TypedefNameWriter.BuildGlobalQualifiedName(emittedNs, typeName);
-
-            _ = entries.TryAdd(globalName, stem);
+            _ = entries.TryAdd(projectedTypeName, stem);
         }
     }
 
