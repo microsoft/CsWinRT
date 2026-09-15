@@ -390,7 +390,7 @@ internal partial class InteropGenerator
                 return;
             }
 
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
@@ -426,7 +426,7 @@ internal partial class InteropGenerator
                 return;
             }
 
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -483,7 +483,7 @@ internal partial class InteropGenerator
                 return;
             }
 
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -544,7 +544,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -585,7 +585,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -642,7 +642,7 @@ internal partial class InteropGenerator
 
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(componentModule);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(componentModule, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -716,7 +716,7 @@ internal partial class InteropGenerator
         {
             // Use the Windows SDK projection module as the context to create references from, as
             // it is always available (the same module all the other discovery steps here rely on).
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(discoveryState.WindowsRuntimeSdkProjectionModule!);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(discoveryState.WindowsRuntimeSdkProjectionModule!, discoveryState);
 
             // Both types implement 'IList', 'ICollection' and 'IEnumerable'. Only the first and the last are
             // Windows Runtime types ('IBindableVector' and 'IBindableIterable'), so those are the vtable entries.
@@ -824,8 +824,9 @@ internal partial class InteropGenerator
     /// Creates an <see cref="InteropReferences"/> instance that can be used for the discovery phase.
     /// </summary>
     /// <param name="module">The module currently being analyzed.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <returns>The <see cref="InteropReferences"/> instance to use for the discovery phase.</returns>
-    private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module)
+    private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module, InteropGeneratorDiscoveryState discoveryState)
     {
         // Create the interop references scoped to this module, which we need to lookup some references from
         // the 'WinRT.Runtime.dll' assembly. We haven't loaded it here just yet, so we can't use the real
@@ -851,7 +852,8 @@ internal partial class InteropGenerator
         return new(
             runtimeContext: module.RuntimeContext,
             corLibTypeFactory: module.CorLibTypeFactory,
-            windowsRuntimeModule: windowsRuntimeAssembly);
+            windowsRuntimeModule: windowsRuntimeAssembly,
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
     }
 
     /// <summary>
