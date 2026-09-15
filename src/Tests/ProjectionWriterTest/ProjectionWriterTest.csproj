@@ -21,6 +21,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+
     <!-- Core MSTest attributes/assertions -->
     <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="MSTest.Analyzers" />
@@ -52,6 +55,8 @@
     match the path published as assembly metadata below.
   -->
   <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Projection.Ref.Generator\WinRT.Projection.Ref.Generator.csproj"

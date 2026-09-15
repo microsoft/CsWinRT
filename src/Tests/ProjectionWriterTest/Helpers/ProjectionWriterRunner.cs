@@ -88,10 +88,23 @@ internal static class ProjectionWriterRunner
     /// <returns>The concatenated contents of every generated <c>.cs</c> file.</returns>
     private static string Generate(bool referenceProjection, bool useWinUI)
     {
-        string toolPath = GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
         string inputPaths = useWinUI ? $"sdk,{GetRequiredFilePath("WinUIMetadataPath")}" : "sdk";
         string xamlNamespace = useWinUI ? "Microsoft.UI.Xaml" : "Windows.UI.Xaml";
         string includeNamespaces = $"Windows.Foundation,{xamlNamespace}.DependencyObjectCollection,{xamlNamespace}.Controls.ItemCollection";
+
+        return string.Join(Environment.NewLine, GenerateSources(referenceProjection, inputPaths, includeNamespaces));
+    }
+
+    /// <summary>
+    /// Generates individual source files for custom metadata inputs, so tests can compile the result.
+    /// </summary>
+    /// <param name="referenceProjection">Whether to generate a reference projection.</param>
+    /// <param name="inputPaths">The comma-separated metadata input paths or SDK tokens.</param>
+    /// <param name="includeNamespaces">The comma-separated namespace or type filters.</param>
+    /// <returns>The contents of each generated source file.</returns>
+    public static string[] GenerateSources(bool referenceProjection, string inputPaths, string includeNamespaces)
+    {
+        string toolPath = GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
         string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterTest_{Guid.NewGuid():N}");
         string outputDirectory = Path.Combine(workingDirectory, "Generated");
 
@@ -120,7 +133,7 @@ internal static class ProjectionWriterRunner
 
             Assert.AreNotEqual(0, sourceFiles.Length, "The projection writer produced no sources.");
 
-            return string.Join(Environment.NewLine, sourceFiles.Select(File.ReadAllText));
+            return sourceFiles.Select(File.ReadAllText).ToArray();
         }
         finally
         {
