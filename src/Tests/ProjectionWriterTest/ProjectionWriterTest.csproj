@@ -43,8 +43,8 @@
   </ItemGroup>
 
   <!--
-    Build the reference projection generator tool, but do not reference its assembly: the tests invoke
-    it as a separate process (end-to-end), driving the projection writer exactly as a real build does.
+    Build the reference and implementation projection generator tools, but do not reference their
+    assemblies: the tests invoke them as separate processes, exactly as a real build does.
     'UndefineProperties' drops the build-tool publishing properties ('BuildToolArch' and
     'PublishBuildTool', plus 'RuntimeIdentifier' / 'SelfContained') from this reference so the
     generator is always built framework-dependent for the build host (output under 'net10.0\',
@@ -64,6 +64,11 @@
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
+    <ProjectReference Include="..\..\WinRT.Projection.Generator\WinRT.Projection.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -74,6 +79,8 @@
   <ItemGroup>
     <AssemblyMetadata Include="ProjectionRefGeneratorAssemblyPath"
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\cswinrtprojectionrefgen.dll" />
+    <AssemblyMetadata Include="ProjectionGeneratorAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Generator\bin\$(Configuration)\net10.0\cswinrtprojectiongen.dll" />
     <AssemblyMetadata Include="WinUIMetadataPath"
                       Value="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(MicrosoftWinAppSDKWinUIVersion)\metadata\Microsoft.UI.Xaml.winmd" />
   </ItemGroup>
