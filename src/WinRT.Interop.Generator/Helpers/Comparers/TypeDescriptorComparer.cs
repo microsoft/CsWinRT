@@ -59,10 +59,12 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         {
             handler.AppendFormatted(type);
 
-            if (type.Scope is IResolutionScope scope)
+            // Definitions use a module scope, while references use an assembly scope.
+            // Compare their assembly identities rather than their different display forms.
+            if (type.Scope?.GetAssembly() is AssemblyDescriptor assembly)
             {
                 handler.AppendLiteral(", ");
-                handler.AppendFormatted(scope);
+                handler.AppendFormatted(assembly);
             }
         }
 

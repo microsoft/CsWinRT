@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
@@ -31,6 +32,8 @@ internal partial class InteropGenerator
     private static void Emit(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
     {
         args.Token.ThrowIfCancellationRequested();
+
+        NormalizeAssemblyReferenceFlags(discoveryState);
 
         // Initialize the emit state, which tracks all state to use during the emit phase specifically.
         // For instance, it enables fast lookups for type definitions referenced in multiple places.
@@ -196,6 +199,38 @@ internal partial class InteropGenerator
 
         // Emit the interop .dll to disk
         WriteInteropModuleToDisk(args, module);
+    }
+
+    /// <summary>
+    /// Removes processor-architecture flags that are not part of .NET assembly binding.
+    /// </summary>
+    /// <param name="discoveryState">The completed discovery state.</param>
+    private static void NormalizeAssemblyReferenceFlags(InteropGeneratorDiscoveryState discoveryState)
+    {
+        // Implicit imports copy these flags from definitions (e.g. '0x70' in 'System.Runtime'), while
+        // ordinary references omit them. Equivalent discovered signatures must serialize identically.
+        // Only the in-memory metadata is updated, after parallel discovery has completed.
+        foreach (ModuleDefinition inputModule in discoveryState.Modules.Values.Concat([
+            discoveryState.WindowsRuntimeSdkProjectionModule,
+            discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+            discoveryState.WindowsRuntimeProjectionModule,
+            discoveryState.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>())
+        {
+            if (inputModule.Assembly is { } assembly)
+            {
+                assembly.Attributes &= ~AssemblyAttributes.FullMask;
+            }
+
+            foreach (AssemblyReference reference in inputModule.AssemblyReferences)
+            {
+                reference.Attributes &= ~AssemblyAttributes.FullMask;
+            }
+
+            if (inputModule.CorLibTypeFactory.CorLibScope is AssemblyReference corLib)
+            {
+                corLib.Attributes &= ~AssemblyAttributes.FullMask;
+            }
+        }
     }
 
     /// <summary>
