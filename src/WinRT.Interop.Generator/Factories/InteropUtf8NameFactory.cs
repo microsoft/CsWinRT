@@ -58,8 +58,13 @@ internal static class InteropUtf8NameFactory
     /// <param name="typeSignature">The source <see cref="TypeSignature"/> for the type to generate.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use (for resolving types and locating implementation projections).</param>
     /// <param name="nameSuffix">The optional name suffix to use.</param>
+    /// <param name="includeNamespace">Whether to include the source namespace when the generated type is placed in a different namespace.</param>
     /// <returns>The name to use.</returns>
-    public static Utf8String TypeName(TypeSignature typeSignature, InteropDefinitions interopDefinitions, string? nameSuffix = null)
+    public static Utf8String TypeName(
+        TypeSignature typeSignature,
+        InteropDefinitions interopDefinitions,
+        string? nameSuffix = null,
+        bool includeNamespace = false)
     {
         DefaultInterpolatedStringHandler interpolatedStringHandler = new(literalLength: 2, formattedCount: 1);
 
@@ -179,8 +184,8 @@ internal static class InteropUtf8NameFactory
             interpolatedStringHandler.AppendLiteral(">");
         }
 
-        // Append the full type name first
-        AppendTypeName(ref interpolatedStringHandler, typeSignature, interopDefinitions, depth: 0);
+        // Include the source namespace when it is not preserved by the generated type's namespace
+        AppendTypeName(ref interpolatedStringHandler, typeSignature, interopDefinitions, depth: includeNamespace ? 1 : 0);
 
         // Append the suffix, if we have one
         interpolatedStringHandler.AppendFormatted(nameSuffix);
