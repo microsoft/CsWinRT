@@ -17,10 +17,10 @@ The **mangled namespace** for a given type is defined as follows:
 The **mangled type name** for a given type is defined as follows:
 
 1. **Primitive types**: well-known primitive types (e.g., `int`, `string`) are mapped to their corresponding identifiers.
-2. **User-defined types**: the type name is prefixed with the assembly name (or a compact identifier for well-known assemblies) within angle brackets (i.e. `<>`), and suffixed with the type name. The namespace is not included, as it matches the containing namespace for the generated type (without the `ABI[.]` prefix).
+2. **User-defined types**: the type name is prefixed with the assembly name (or a compact identifier for well-known assemblies) within angle brackets (i.e. `<>`), and suffixed with the type name. By default, the namespace is not included, as it matches the containing namespace for the generated type (without the `ABI[.]` prefix). Callers that place helpers in a different namespace use `TypeName(..., includeNamespace: true)` to include the source namespace in the name instead.
 3. **Generic types**: their type arguments are enclosed in angle brackets, right after the type name. Nested generics are recursively processed, and type arguments are separated by a pipe (i.e. `|`). Each type argument also has its name prefixed by the containing namespace.
 4. **Array types**: single-dimensional arrays (SZ arrays) are represented by wrapping the mangled name of the element type in angle brackets, and appending `Array` (i.e., `<NAME>Array`) as a suffix. The element type uses the same mangling rules as any other type (primitive, user-defined, generic, or nested array).
-5. **Nested types**: when a type is nested, the declaring type chain is concatenated using `+` separators (e.g. `Outer+Inner`). The namespace is still omitted (as with top-level user-defined types) at the root depth, and only the chain of nested type names is emitted after the assembly segment. If a declaring (or nested) type is generic, its (unmangled) metadata name, including its arity marker (`` ` ``) is first transformed by replacing the backtick with `'` (apostrophe) like for any other type name, and then used in the chain. For nested types appearing inside generic type arguments (i.e. at non-root depth), their fully-qualified name (namespace plus nested path) is emitted as a single component before character substitutions are applied.
+5. **Nested types**: when a type is nested, the declaring type chain is concatenated using `+` separators (e.g. `Outer+Inner`). The namespace is omitted at the root depth unless `includeNamespace` is enabled. If a declaring (or nested) type is generic, its (unmangled) metadata name, including its arity marker (`` ` ``) is first transformed by replacing the backtick with `'` (apostrophe) like for any other type name, and then used in the chain. For nested types appearing inside generic type arguments, or at the root with `includeNamespace` enabled, their fully-qualified name (namespace plus nested path) is emitted as a single component before character substitutions are applied. Constructed generic arguments are appended after the complete declaring type chain.
 
 All `.` characters in the final mangled name are replaced with `-` characters. Additionally, all `` ` `` characters (backticks) in the final mangled name are replaced with `'` characters (apostrophes). These substitutions apply to the **entire** mangled name, including assembly identifiers inside angle brackets. For example, an assembly named `System.Numerics.Vectors` becomes `System-Numerics-Vectors` in the final output.
 
@@ -28,6 +28,21 @@ All `.` characters in the final mangled name are replaced with `-` characters. A
 > The `.` character replacement is not strictly required, as the `.` character is a valid character for an identifier as per ECMA-335. However, using that character can be inconvenient when using reflection APIs to inspect such types, as it makes it not possible to easily distinguish the namespace from the actual type name. So to account for this, we just do this substitution, given the final length of the mangled name remains the same anyway when doing so.
 > 
 > The `` ` `` character replacement is done to avoid issues with tooling, such as ILSpy, which assume that all types with `` ` `` in their name are generic types. The generated types for marshalling generic types are not themselves generic, which causes these tools to incorrectly interpret the type metadata.
+
+## Shared user-defined helpers
+
+User-defined CCW interface-entry implementations and marshaller attributes are emitted into the fixed `WindowsRuntime.Interop.UserDefinedTypes` namespace. Both use `includeNamespace: true`, so types with the same simple name in different source namespaces cannot produce identical helper names. For example, `First.Operation` and `Second.Operation` from `MyAssembly` produce:
+
+```text
+WindowsRuntime.Interop.UserDefinedTypes.<MyAssembly>First-OperationInterfaceEntriesImpl
+WindowsRuntime.Interop.UserDefinedTypes.<MyAssembly>Second-OperationInterfaceEntriesImpl
+WindowsRuntime.Interop.UserDefinedTypes.<MyAssembly>First-OperationComWrappersMarshallerAttribute
+WindowsRuntime.Interop.UserDefinedTypes.<MyAssembly>Second-OperationComWrappersMarshallerAttribute
+```
+
+The same qualification applies to nested types, constructed generics, and array element types. Proxy types still use the default naming mode, because their generated `ABI.*` namespace already preserves the source namespace.
+
+Equivalent COM interface sets continue to share one interface-entry implementation and one marshaller attribute. The fully-qualified source type ordering selects a deterministic representative for each set; qualification changes its helper names, not the sharing rules or the proxy/type-map associations.
 
 ## Well-known assemblies
 
@@ -73,7 +88,7 @@ For types not belonging to any well-known assembly, the implementation also deri
 **Generic nested type**
 
 - Type: `MyNamespace.Outer<int>.Inner<string>` (assemblies `MyAssembly` for all types)
-- Mangled name: `ABI.MyNamespace.<MyAssembly>Outer'1<int>+Inner'1<string>`
+- Mangled name: `ABI.MyNamespace.<MyAssembly>Outer'1+Inner'1<int|string>`
 
 **Array type (primitive element)**
 
