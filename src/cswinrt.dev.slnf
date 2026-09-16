@@ -55,6 +55,7 @@
       "Tests\\FunctionalTests\\TestImplementExclusiveTo\\TestImplementExclusiveTo.csproj",
       "Tests\\FunctionalTests\\TestLibrary\\Test-Library.csproj",
       "Tests\\FunctionalTests\\TypeMarshaling\\TypeMarshaling.csproj",
+      "Tests\\FunctionalTests\\UserDefinedTypeNames\\UserDefinedTypeNames.csproj",
       "Authoring\\WinRT.SourceGenerator2\\WinRT.SourceGenerator2.csproj",
       "WinRT.Generator.Core\\WinRT.Generator.Core.csproj",
       "WinRT.Impl.Generator\\WinRT.Impl.Generator.csproj",
