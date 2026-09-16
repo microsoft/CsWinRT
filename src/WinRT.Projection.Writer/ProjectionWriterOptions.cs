@@ -72,9 +72,20 @@ public sealed class ProjectionWriterOptions
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
+    /// Fully qualified exclusive-to interface names to make public, independently of <see cref="PublicExclusiveTo"/>.
+    /// </summary>
+    public IReadOnlyList<string> PublicExclusiveToTypes { get; init; } = [];
+
+    /// <summary>
     /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }
+
+    /// <summary>
+    /// Fully qualified exclusive-to interface names to make dynamically interface castable,
+    /// independently of <see cref="IdicExclusiveTo"/>.
+    /// </summary>
+    public IReadOnlyList<string> IdicExclusiveToTypes { get; init; } = [];
 
     /// <summary>
     /// Generate a projection to be used as a reference assembly.

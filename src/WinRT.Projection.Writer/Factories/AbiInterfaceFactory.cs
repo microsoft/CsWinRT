@@ -550,33 +550,28 @@ internal static class AbiInterfaceFactory
     }
 
     /// <summary>
-    /// Writes a minimal interface 'Methods' static class with method body emission.
-    /// blittable-primitive-return/no-args methods get real implementations; everything else
-    /// remains as 'throw null!' stubs (deferred — needs full per-parameter marshalling).
+    /// Writes the interface 'Methods' static class with ABI call and marshalling implementations.
     /// </summary>
     private static void WriteInterfaceMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = type.GetStrippedName();
 
-        // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
-        // [ProjectionInternal]; public otherwise.
-        bool useInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
+        bool publicExclusiveTo = context.Settings.IsPublicExclusiveTo(type.FullName);
+        bool standaloneExclusiveTo = type.IsExclusiveTo &&
+            (publicExclusiveTo || context.Settings.IsIdicExclusiveTo(type.FullName));
+        bool useInternal = (type.IsExclusiveTo && !publicExclusiveTo)
             || type.IsProjectionInternal;
 
-        // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
-        // class, skip emitting it entirely — its members are merged into the default
-        // interface's Methods class
-        if (ClassFactory.IsFastAbiOtherInterface(context.Cache, type))
+        // The RCW uses the merged default vtable for Fast ABI. Standalone interface casts
+        // instead QI for the interface's own IID and need its own Methods class and slot indices.
+        if (!standaloneExclusiveTo && ClassFactory.IsFastAbiOtherInterface(context.Cache, type))
         {
             return;
         }
 
-        // If the interface is exclusive-to a class that's been excluded from the projection,
-        // skip emitting the entire *Methods class — it would be dead code (the owning class
-        // is manually projected in WinRT.Runtime, e.g. IColorHelperStatics for ColorHelper,
-        // IColorsStatics for Colors, IFontWeightsStatics for FontWeights). the original code also
-        // omits these because their owning class is not projected.
-        if (type.IsExclusiveTo)
+        // Ordinary exclusive helpers are only used by their owner. Explicitly public or
+        // dynamically castable interfaces need them even when that owner lives in another assembly.
+        if (type.IsExclusiveTo && !standaloneExclusiveTo)
         {
             TypeDefinition? owningClass = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
@@ -589,7 +584,7 @@ internal static class AbiInterfaceFactory
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
 
-        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !standaloneExclusiveTo)
         {
             TypeDefinition? classType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
 
@@ -615,14 +610,15 @@ internal static class AbiInterfaceFactory
         List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = [];
         (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = ClassFactory.GetFastAbiClassForInterface(context.Cache, type);
         bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
-            && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, type);
+            && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, type)
+            && context.Settings.Filter.Includes(fastAbi.Value.Class.FullName);
 
         if (isFastAbiDefault)
         {
             int slot = InspectableMethodCount;
 
-            // Default interface: skip its events (they're inlined in the RCW class).
-            segments.Add((type, slot, true));
+            // Public/IDIC default interfaces also need the event helpers used by their DIMs.
+            segments.Add((type, slot, !standaloneExclusiveTo));
             slot += AbiTypeHelpers.CountMethods(type) + AbiTypeHelpers.GetClassHierarchyIndex(context.Cache, fastAbi!.Value.Class);
             foreach (TypeDefinition other in fastAbi.Value.Others)
             {

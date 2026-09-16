@@ -49,6 +49,11 @@ internal static partial class ProjectionGenerator
         // skip the source generation and emit phases entirely (no .dll will be produced at all).
         if (!processingState.HasTypesToProject)
         {
+            // Removing the last supplemental reference must not leave a stale projection behind.
+            runner.RunPhase(
+                phaseName: "emit",
+                body: args => File.Delete(Path.Combine(args.GeneratedAssemblyDirectory, args.AssemblyName + ".dll")));
+
             return;
         }
 

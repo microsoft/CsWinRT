@@ -160,7 +160,7 @@ internal static class AbiClassFactory
             return true;
         }
 
-        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.IsPublicExclusiveTo(type.FullName))
         {
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.

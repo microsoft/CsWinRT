@@ -107,6 +107,7 @@ internal partial class ProjectionGenerator
 
         List<string> includes = [];
         List<string> includeTypes = [];
+        List<string> publicInterfaces = [];
         List<string> excludes = [];
         List<string> winmdInputs = [];
 
@@ -248,6 +249,14 @@ internal partial class ProjectionGenerator
                     // Reference assemblies describe exact type identities, not namespace prefixes
                     includeTypes.Add(exportedType.FullName);
                     hasTypesToProject = true;
+
+                    // A public interface in a reference projection must remain usable for casts
+                    // from native objects. Reference assemblies contain no IDIC implementation
+                    // metadata, so infer this requirement from their public interface surface.
+                    if (exportedType.IsPublic && exportedType.IsInterface)
+                    {
+                        publicInterfaces.Add(exportedType.FullName);
+                    }
                 }
             }
         }
@@ -288,6 +297,8 @@ internal partial class ProjectionGenerator
             OutputFolder = outputFolder,
             Include = includes,
             IncludeTypes = includeTypes,
+            PublicExclusiveToTypes = publicInterfaces,
+            IdicExclusiveToTypes = publicInterfaces,
             Exclude = excludes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
