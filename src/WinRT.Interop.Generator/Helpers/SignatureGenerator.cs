@@ -172,7 +172,7 @@ internal static partial class SignatureGenerator
 
         // For types from authored component assemblies, the IID lives in the generated
         // 'ABI.InterfaceIIDs' type in 'WinRT.Component.dll', not as a '[Guid]' attribute.
-        if (type.IsComponentWindowsRuntimeType &&
+        if (type.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule) &&
             interopDefinitions.WindowsRuntimeComponentModule is { } componentModule)
         {
             return InterfaceIIDResolver.TryGetIID(componentModule, type.FullName, out iid);
@@ -209,7 +209,7 @@ internal static partial class SignatureGenerator
         }
 
         // For types from authored component assemblies, the default interface info is in 'WinRT.Component.dll'
-        if (type.IsComponentWindowsRuntimeType &&
+        if (type.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule) &&
             interopDefinitions.WindowsRuntimeComponentModule?.GetDefaultInterfacesLookup().TryGetValue((type.Namespace, type.Name), out signature) is true)
         {
             defaultInterface = signature;

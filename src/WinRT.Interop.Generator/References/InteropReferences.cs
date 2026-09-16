@@ -33,20 +33,28 @@ internal sealed class InteropReferences
     /// <param name="runtimeContext">The <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.</param>
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).</param>
+    /// <param name="windowsRuntimeComponentModule">The generated component projection, if available.</param>
     public InteropReferences(
         RuntimeContext runtimeContext,
         CorLibTypeFactory corLibTypeFactory,
-        IResolutionScope windowsRuntimeModule)
+        IResolutionScope windowsRuntimeModule,
+        ModuleDefinition? windowsRuntimeComponentModule)
     {
         RuntimeContext = runtimeContext;
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
+        WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
     }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> instance associated with this instance.
     /// </summary>
     public RuntimeContext RuntimeContext { get; }
+
+    /// <summary>
+    /// Gets the generated component projection containing the exported authored type metadata.
+    /// </summary>
+    public ModuleDefinition? WindowsRuntimeComponentModule { get; }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> instance associated with this instance.

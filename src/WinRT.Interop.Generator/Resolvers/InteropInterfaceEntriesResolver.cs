@@ -51,8 +51,8 @@ internal static class InteropInterfaceEntriesResolver
         InteropGeneratorEmitState emitState,
         bool useWindowsUIXamlProjections)
     {
-        // Append all entries for the type (which we share for all matching user-defined types)
-        foreach (TypeSignature typeSignature in vtableTypes)
+        // Equivalent sets can have different insertion orders after parallel discovery
+        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName())
         {
             // Handle generic types first, and then custom-mapped and manually projected types.
             // These require special handling, because their ABI types are in different locations.
@@ -129,7 +129,7 @@ internal static class InteropInterfaceEntriesResolver
             // For public (non-exclusive) interfaces from authored component assemblies, the type resolves
             // from the authored assembly but the Impl and IID live in 'WinRT.Component.dll'.
             if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
-                interfaceType.IsInterface && interfaceType.IsComponentWindowsRuntimeType)
+                interfaceType.IsInterface && interfaceType.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule))
             {
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentPublicInterfaceTypeImpl(
                     type: interfaceType,
@@ -185,7 +185,7 @@ internal static class InteropInterfaceEntriesResolver
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences)
     {
-        // For public value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
+        // For exported value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
         // These are needed so the struct can be boxed as 'IReference<T>' when used as a generic type argument.
         TypeDefinition userDefinedTypeDefinition = componentType.Resolve(interopReferences.RuntimeContext);
 
@@ -196,7 +196,7 @@ internal static class InteropInterfaceEntriesResolver
         }
 
         // Filter down to just authored types from components written in C#
-        if (!userDefinedTypeDefinition.IsComponentWindowsRuntimeType ||
+        if (!userDefinedTypeDefinition.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule) ||
             interopDefinitions.WindowsRuntimeComponentModule is not { } componentModule)
         {
             yield break;
