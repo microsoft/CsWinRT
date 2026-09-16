@@ -45,6 +45,15 @@ internal static class ComponentFactory
         string metadataTypeName = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, true).Format();
 
         _ = map.TryAdd(typeName, metadataTypeName);
+
+        // The authored types themselves aren't emitted again in component mode. Record their
+        // exported contract so the interop generator can distinguish them from managed helpers.
+        (string typeNamespace, string originalTypeName) = type.Names();
+
+        MetadataAttributeFactory.AddWindowsRuntimeMetadataTypeEntry(
+            context,
+            type,
+            TypedefNameWriter.BuildGlobalQualifiedName(typeNamespace, originalTypeName));
     }
 
     /// <summary>

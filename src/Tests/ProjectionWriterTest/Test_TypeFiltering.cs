@@ -4,6 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProjectionWriterTest.Helpers;
 using WindowsRuntime.ProjectionWriter;
 
@@ -69,6 +71,53 @@ public class Test_TypeFiltering
             StringAssert.Contains(source, "IUserStaticsMethods");
             StringAssert.Contains(iids, "IUserStatics");
             StringAssert.Contains(iids, "IUser");
+        });
+    }
+
+    [TestMethod]
+    public void ComponentProjection_RecordsOnlyExportedAuthoredTypes()
+    {
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                Include = ["Contoso"],
+                Exclude = ["Contoso.User2", "Contoso.IUser2", "Contoso.UserProfile"],
+                Component = true
+            });
+
+            string metadata = File.ReadAllText(Path.Combine(outputFolder, "WindowsRuntimeMetadataTypes.cs"));
+            string[] types = CSharpSyntaxTree.ParseText(metadata).GetRoot()
+                .DescendantNodes().OfType<TypeOfExpressionSyntax>()
+                .Select(type => type.Type.ToString().Replace("global::", "", StringComparison.Ordinal).Replace("@", "", StringComparison.Ordinal))
+                .ToArray();
+
+            CollectionAssert.Contains(types, "Contoso.User");
+            CollectionAssert.Contains(types, "ABI.Impl.Contoso.IUser");
+            CollectionAssert.DoesNotContain(types, "Contoso.IUser");
+            CollectionAssert.DoesNotContain(types, "Contoso.IUserStatics");
+            Assert.IsFalse(types.Any(type => type.Contains("User2", StringComparison.Ordinal)));
+            Assert.IsFalse(types.Any(type => type.Contains("UserProfile", StringComparison.Ordinal)));
+        });
+    }
+
+    [TestMethod]
+    public void ComponentReferenceProjection_DoesNotRecordInteropMetadata()
+    {
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                IncludeTypes = ["Contoso.User"],
+                Component = true,
+                ReferenceProjection = true
+            });
+
+            Assert.IsFalse(File.Exists(Path.Combine(outputFolder, "WindowsRuntimeMetadataTypes.cs")));
         });
     }
 
