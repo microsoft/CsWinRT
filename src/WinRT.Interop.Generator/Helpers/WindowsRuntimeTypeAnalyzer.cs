@@ -25,6 +25,7 @@ internal static class WindowsRuntimeTypeAnalyzer
     /// <remarks>
     /// The interfaces are taken as input, rather than being enumerated off the implementing type, so that this
     /// also works for types that cannot be resolved (see the discovery of the collection changed list types).
+    /// Unrelated interfaces are considered in fully qualified name order to make the choice deterministic.
     /// </remarks>
     public static bool TryGetMostDerivedWindowsRuntimeInterfaceType(
         IEnumerable<TypeSignature> interfaceTypes,
@@ -33,8 +34,8 @@ internal static class WindowsRuntimeTypeAnalyzer
     {
         interfaceType = null;
 
-        // Go through all interfaces exposed by the user-defined type
-        foreach (TypeSignature interfaceSignature in interfaceTypes)
+        // Use a stable order to break ties between unrelated interfaces
+        foreach (TypeSignature interfaceSignature in interfaceTypes.OrderByFullyQualifiedTypeName())
         {
             // If the current interface is not a Windows Runtime type, just skip it.
             // We can only use Windows Runtime interfaces for the runtime class name.

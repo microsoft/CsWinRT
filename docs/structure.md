@@ -59,7 +59,7 @@ Contains various testing-related projects:
 
 - [`DiagnosticTests`](../src/Tests/DiagnosticTests): Tests for the CsWinRT diagnostic and analyzer rules, driven by positive and negative source snippets.
 
-- [`BuildDeterminismTest`](../src/Tests/BuildDeterminismTest): Builds a component twice and compares the hashes of the generated `WinRT.Interop.dll` to verify deterministic builds.
+- [`BuildDeterminismTest`](../src/Tests/BuildDeterminismTest): Compares whole-file SHA256 hashes of freshly generated `WinRT.Interop.dll` files across maximum parallelism values `-1`, `1`, and `2`, including repeated runs. By default it performs clean component builds with all-assembly marshalling discovery. To isolate the generator from MSBuild, run `BuildDeterminismTest --interop <generator.exe|generator.dll> <response.rsp>` with fixed inputs. Each invocation uses a fresh process and output directory with incremental generation disabled; failed replay outputs are retained for inspection. Relative paths in the response file are resolved from the current working directory.
 
 - [`OOPExe`](../src/Tests/OOPExe): An out-of-process executable harness used by the authoring test scenarios.
 
@@ -78,6 +78,8 @@ Contains the **forwarder assembly generator** (`cswinrtimplgen.exe`). This tool 
 ## [`src/WinRT.Interop.Generator`](../src/WinRT.Interop.Generator)
 
 Contains the **interop assembly generator** (`cswinrtinteropgen.exe`). This tool runs at **app build time** after all assemblies are compiled, analyzing the entire application to generate `WinRT.Interop.dll`. This assembly contains deduplicated native COM interface entries, vtable implementations, and marshalling infrastructure for all WinRT types used across the app. Because it sees the whole application, it avoids the code duplication and type map conflicts that would occur if marshalling code were generated per-project.
+
+To keep output independent of parallel discovery, interface entries and fallback runtime class names use stable type-name ordering. Type comparisons use assembly identities for both definitions and references, and non-binding assembly processor-architecture flags are normalized in memory before emission.
 
 ## [`src/WinRT.Projection.Generator`](../src/WinRT.Projection.Generator)
 
@@ -108,4 +110,3 @@ Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `
 ## [`src/WinRT.Sdk.Projection`](../src/WinRT.Sdk.Projection)
 
 Contains the project that produces the `WinRT.Sdk.Projection` assembly, which includes projected types from the `Windows.*` and `WinRT.Interop.*` namespaces.
-

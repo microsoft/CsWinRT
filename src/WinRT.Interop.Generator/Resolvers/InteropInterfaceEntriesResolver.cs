@@ -51,8 +51,8 @@ internal static class InteropInterfaceEntriesResolver
         InteropGeneratorEmitState emitState,
         bool useWindowsUIXamlProjections)
     {
-        // Append all entries for the type (which we share for all matching user-defined types)
-        foreach (TypeSignature typeSignature in vtableTypes)
+        // Equivalent sets can have different insertion orders after parallel discovery
+        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName())
         {
             // Handle generic types first, and then custom-mapped and manually projected types.
             // These require special handling, because their ABI types are in different locations.
