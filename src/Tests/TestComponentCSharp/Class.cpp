@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "AsyncSignal.h"
 #include "Class.h"
 #include "Class.g.cpp"
 #include "CustomEquals.h"
@@ -1286,7 +1287,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto cancel = co_await winrt::get_cancellation_token();
         cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
 
-        co_await winrt::resume_on_signal(_syncHandle.get());
+        co_await async_signal_awaiter{ _syncHandle.get() };
         if (cancel()) co_return;
         winrt::check_hresult(_asyncResult.load());
     }
@@ -1320,7 +1321,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto progress = co_await winrt::get_progress_token();
         while (true)
         {
-            co_await winrt::resume_on_signal(_syncHandle.get());
+            co_await async_signal_awaiter{ _syncHandle.get() };
             if (cancel()) co_return;
             if (_asyncResult.load() != E_PENDING) break;
             progress(_asyncProgress.load());
@@ -1337,7 +1338,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto cancel = co_await winrt::get_cancellation_token();
         cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
 
-        co_await winrt::resume_on_signal(_syncHandle.get());
+        co_await async_signal_awaiter{ _syncHandle.get() };
         if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
         winrt::check_hresult(_asyncResult.load());
         co_return lhs + rhs;
@@ -1355,7 +1356,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto progress = co_await winrt::get_progress_token();
         while (true)
         {
-            co_await winrt::resume_on_signal(_syncHandle.get());
+            co_await async_signal_awaiter{ _syncHandle.get() };
             if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
             if (_asyncResult.load() != E_PENDING) break;
             progress(_asyncProgress.load());

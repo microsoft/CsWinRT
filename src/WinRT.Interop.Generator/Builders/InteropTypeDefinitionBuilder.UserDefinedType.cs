@@ -86,7 +86,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "InterfaceEntriesImpl", includeNamespace: true),
                 entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
@@ -116,7 +116,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "ComWrappersMarshallerAttribute", includeNamespace: true),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
