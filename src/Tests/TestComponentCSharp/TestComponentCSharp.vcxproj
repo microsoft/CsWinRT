@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClInclude Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.h" />
     <ClInclude Include="AnotherAssembly.SetPropertyClass.h" />
+    <ClInclude Include="AsyncSignal.h" />
     <ClInclude Include="ClassWithExplicitIUnknown.h" />
     <ClInclude Include="CustomExperimentClass.h" />
     <ClInclude Include="CustomEquals.h" />
