@@ -2550,7 +2550,7 @@ internal partial class InteropGenerator
         // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
         Dictionary<TypeSignature, TypeDefinition> marshallerAttributeMap = new(SignatureComparer.IgnoreVersion);
 
-        // A non-XAML type can implement the same interfaces as a XAML-derived type without needing its bridge.
+        // A type can implement the same interfaces as a FrameworkElement-derived type without needing its bridge.
         foreach (IGrouping<(TypeSignatureEquatableSet VtableTypes, bool AddXamlCustomPropertyProvider), KeyValuePair<TypeSignature, TypeSignatureEquatableSet>> group in
             discoveryState.UserDefinedAndVtableTypes
                 .GroupBy(pair => (

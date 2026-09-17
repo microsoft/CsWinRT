@@ -44,10 +44,14 @@ internal static unsafe partial class XamlTypeBridgeTests
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedControl)), typeof(DerivedControl), automaticProvider);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<int>)), typeof(GenericControl<int>), automaticProvider);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<string>)), typeof(GenericControl<string>), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(StringableDependencyObject)), typeof(StringableDependencyObject), automaticProvider);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(FrameworkElementProbe)), typeof(FrameworkElementProbe), automaticProvider);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedFrameworkElementProbe)), typeof(DerivedFrameworkElementProbe), automaticProvider);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), hasProvider: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(StringableDependencyObject)), typeof(StringableDependencyObject), hasProvider: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ApplicationProbe)), typeof(ApplicationProbe), hasProvider: false);
             CheckProvider(new NonXamlObject(), typeof(NonXamlObject), hasProvider: false);
 
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ExplicitProviderDependencyObject)), typeof(ExplicitProviderDependencyObject), hasProvider: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(EmptyProviderControl)), typeof(EmptyProviderControl), hasProvider: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ExplicitProviderControl)), typeof(ExplicitProviderControl), hasProvider: true, hasProperties: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(InheritedProviderControl)), typeof(ExplicitProviderControl), hasProvider: true, hasProperties: true);
@@ -105,12 +109,21 @@ internal static unsafe partial class XamlTypeBridgeTests
 
 #if TEST_WINUI
             const string ControlRuntimeClassName = "Microsoft.UI.Composition.IAnimationObject";
+            const string ProviderRuntimeClassName = "Microsoft.UI.Xaml.Data.ICustomPropertyProvider";
+            const string ApplicationRuntimeClassName = "Microsoft.UI.Xaml.IApplicationOverrides";
 #else
             const string ControlRuntimeClassName = "Windows.UI.Composition.IAnimationObject";
+            const string ProviderRuntimeClassName = "Windows.UI.Xaml.Data.ICustomPropertyProvider";
+            const string ApplicationRuntimeClassName = "Windows.UI.Xaml.IApplicationOverrides";
 #endif
-            string expectedClassName = value is UnannotatedControl
-                ? ControlRuntimeClassName
-                : value is StringableDependencyObject or NonXamlObject ? "Windows.Foundation.IStringable" : "Object";
+            string expectedClassName = value switch
+            {
+                UIElement => ControlRuntimeClassName,
+                StringableDependencyObject or NonXamlObject => "Windows.Foundation.IStringable",
+                ExplicitProviderDependencyObject => ProviderRuntimeClassName,
+                ApplicationProbe => ApplicationRuntimeClassName,
+                _ => "Object"
+            };
 
             Check(className == expectedClassName, $"The type bridge changed the runtime class name of {value.GetType()}: {className}.");
 
@@ -233,13 +246,27 @@ internal static unsafe partial class XamlTypeBridgeTests
         public override string ToString() => "non-XAML";
     }
 
+    private class FrameworkElementProbe : FrameworkElement
+    {
+        public override string ToString() => "control";
+    }
+
+    private sealed class DerivedFrameworkElementProbe : FrameworkElementProbe;
+
     private class DependencyObjectProbe : DependencyObject
     {
         public override string ToString() => "control";
     }
 
-    // This has the same explicit interface set as NonXamlObject, but must not share its bridge-less table.
     private sealed class StringableDependencyObject : DependencyObjectProbe, IStringable;
+
+    private sealed class ApplicationProbe : Application
+    {
+        public override string ToString() => "control";
+    }
+
+    [GeneratedCustomPropertyProvider([], [])]
+    private sealed partial class ExplicitProviderDependencyObject : DependencyObjectProbe;
 
     [GeneratedCustomPropertyProvider([], [])]
     private sealed partial class EmptyProviderControl : UnannotatedControl;

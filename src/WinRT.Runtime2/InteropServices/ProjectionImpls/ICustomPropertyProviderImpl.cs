@@ -10,7 +10,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The type-only <c>ICustomPropertyProvider</c> implementation for managed XAML-derived objects.
+/// The type-only <c>ICustomPropertyProvider</c> implementation for managed <c>FrameworkElement</c>-derived objects.
 /// </summary>
 [WindowsRuntimeImplementationOnlyMember]
 public static unsafe class ICustomPropertyProviderImpl

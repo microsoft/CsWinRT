@@ -18,13 +18,13 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 internal static class WindowsRuntimeTypeAnalyzer
 {
     /// <summary>
-    /// Checks whether a type is a managed class derived from a projected XAML class.
+    /// Checks whether a type is a managed class derived from a projected XAML <c>FrameworkElement</c>.
     /// </summary>
     /// <param name="type">The user-defined type to analyze.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML instead of WinUI projections.</param>
-    /// <returns>Whether the type is a managed XAML-derived class.</returns>
-    public static bool IsManagedXamlDerivedType(
+    /// <returns>Whether the type directly or indirectly derives from a projected <c>FrameworkElement</c>.</returns>
+    public static bool IsManagedFrameworkElementDerivedType(
         TypeSignature type,
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
@@ -42,30 +42,20 @@ internal static class WindowsRuntimeTypeAnalyzer
         {
             TypeDefinition baseDefinition = baseType.Resolve(interopReferences.RuntimeContext);
 
-            if (baseDefinition.Namespace is not { } typeNamespace)
+            if (baseDefinition is { Name: { } typeName, Namespace: { } typeNamespace } &&
+                typeName.AsSpan().SequenceEqual("FrameworkElement"u8) &&
+                typeNamespace.AsSpan().SequenceEqual(xamlNamespace) &&
+                (baseDefinition.IsProjectedWindowsRuntimeType || baseDefinition.IsReferenceProjectionWindowsRuntimeType))
             {
-                continue;
+                return true;
             }
-
-            ReadOnlySpan<byte> baseNamespace = typeNamespace.AsSpan();
-
-            if (!(baseNamespace.SequenceEqual(xamlNamespace) ||
-                (baseNamespace.StartsWith(xamlNamespace) &&
-                 baseNamespace.Length > xamlNamespace.Length &&
-                 baseNamespace[xamlNamespace.Length] == '.')) ||
-                !(baseDefinition.IsProjectedWindowsRuntimeType || baseDefinition.IsReferenceProjectionWindowsRuntimeType))
-            {
-                continue;
-            }
-
-            return true;
         }
 
         return false;
     }
 
     /// <summary>
-    /// Checks whether a managed XAML-derived type needs the type-only <c>ICustomPropertyProvider</c> bridge.
+    /// Checks whether a managed <c>FrameworkElement</c>-derived type needs the type-only <c>ICustomPropertyProvider</c> bridge.
     /// </summary>
     /// <param name="type">The user-defined type to analyze.</param>
     /// <param name="interfaceTypes">The interfaces already exposed by its CCW.</param>
@@ -78,7 +68,7 @@ internal static class WindowsRuntimeTypeAnalyzer
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
-        if (!IsManagedXamlDerivedType(type, interopReferences, useWindowsUIXamlProjections))
+        if (!IsManagedFrameworkElementDerivedType(type, interopReferences, useWindowsUIXamlProjections))
         {
             return false;
         }

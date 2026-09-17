@@ -277,23 +277,13 @@ internal partial class InteropTypeDefinitionBuilder
                 // For non-authored user-defined types, get the most derived Windows Runtime interface to use for the
                 // runtime class name. The interfaces the CCW exposes are used, rather than being read back off the
                 // type, so this also works for the types that cannot be resolved (see notes above).
-                string runtimeClassName;
-
-                if (WindowsRuntimeTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
+                if (!WindowsRuntimeTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
                     interfaceTypes: vtableTypes,
                     interopReferences: interopReferences,
                     interfaceType: out TypeSignature? interfaceType))
                 {
-                    runtimeClassName = RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, interopReferences.RuntimeContext, useWindowsUIXamlProjections);
-                }
-                else if (WindowsRuntimeTypeAnalyzer.IsManagedXamlDerivedType(userDefinedType, interopReferences, useWindowsUIXamlProjections))
-                {
-                    // Types such as managed DependencyObject subclasses have no projected interfaces. Preserve the
-                    // opaque-object name they used before acquiring a type bridge, including when it is disabled.
-                    runtimeClassName = RuntimeClassNameGenerator.GetRuntimeClassName(interopReferences.Object, interopReferences.RuntimeContext, useWindowsUIXamlProjections);
-                }
-                else
-                {
+                    // We should always find at least one Windows Runtime interface, or the user-defined type wouldn't have
+                    // been added to the set of exposed types during discovery. However, let's validate that here too.
                     throw WellKnownInteropExceptions.PrimaryWindowsRuntimeInterfaceNotFoundError(userDefinedType);
                 }
 
@@ -301,7 +291,7 @@ internal partial class InteropTypeDefinitionBuilder
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
                     name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
                     mappedMetadata: null,
-                    runtimeClassName: runtimeClassName,
+                    runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                     metadataTypeName: null,
                     mappedType: null,
                     referenceType: null,
