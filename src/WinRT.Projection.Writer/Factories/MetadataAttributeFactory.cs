@@ -418,7 +418,7 @@ internal static class MetadataAttributeFactory
         }
 
         // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
-        if ((type.IsExclusiveTo && !context.Settings.IdicExclusiveTo) ||
+        if ((type.IsExclusiveTo && !context.Settings.IsIdicExclusiveTo(type.FullName)) ||
             type.IsProjectionInternal)
         {
             return;

@@ -31,6 +31,8 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTEnabled | *true \| false | Master switch — enables/disables all CsWinRT processing |
 | CsWinRTGenerateProjection | *true \| false | Generate C# projection sources from `.winmd` metadata |
 | CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
+| CsWinRTPublicExclusiveToInterfaces | true \| *false | Make selected `[ExclusiveTo]` interfaces public. App-time implementation generation preserves public interfaces from reference projections on a per-type basis |
+| CsWinRTDynamicallyInterfaceCastableExclusiveTo | true \| *false | Generate dynamic-interface-casting implementations for exclusive interfaces when generating implementation sources directly. Public interfaces in reference projections automatically receive this support at app build time |
 | CsWinRTPackReferenceProjection | *true \| false | When generating a reference projection, adds its reference assembly to the NuGet package under `ref/<tfm>` (the forwarder in `lib/<tfm>` has no API surface to compile against). Set to `false` to lay out the package manually |
 | CsWinRTPackedWinMD | *(item)* | An item listing the `.winmd` files to add to the NuGet package under `metadata/`, so consumers can pass them back as `CsWinRTInputs` to generate the merged projection. List only the metadata the package owns: `CsWinRTInputs` also contains dependency `.winmd` files that belong to other packages. Requires `CsWinRTPackReferenceProjection` |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
@@ -157,4 +159,3 @@ Example:
 > msbuild project.vcxproj /verbosity:minimal /property:CsWinRTMessageImportance=high ...
 
 For more complex analysis of build errors, the [MSBuild Binary and Structured Log Viewer](http://msbuildlog.com/) is highly recommended.
-

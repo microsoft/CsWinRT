@@ -147,7 +147,7 @@ internal static class ProjectionWriterRunner
     /// <param name="toolPath">The path of the tool assembly to run.</param>
     /// <param name="argument">The single command line argument to pass.</param>
     /// <returns>The process exit code and its combined standard output and error.</returns>
-    private static (int ExitCode, string Output) Run(string toolPath, string argument)
+    public static (int ExitCode, string Output) Run(string toolPath, string argument)
     {
         ProcessStartInfo startInfo = new("dotnet")
         {
@@ -176,7 +176,7 @@ internal static class ProjectionWriterRunner
     /// </summary>
     /// <param name="metadataName">The assembly metadata key containing the path.</param>
     /// <returns>The full path of the required file.</returns>
-    private static string GetRequiredFilePath(string metadataName)
+    public static string GetRequiredFilePath(string metadataName)
     {
         string? path = typeof(ProjectionWriterRunner).Assembly
             .GetCustomAttributes<AssemblyMetadataAttribute>()

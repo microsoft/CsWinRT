@@ -76,6 +76,25 @@ flowchart TD
     build --> nupkg
 ```
 
+### Projecting standalone exclusive interfaces
+
+A reference projection can expose selected `[ExclusiveTo]` interfaces without also projecting their owning runtime classes. For example, a supplemental UWP XAML projection can expose an interface from the Windows SDK while its owner remains in `WinRT.Sdk.Xaml.Projection.dll`:
+
+```xml
+<PropertyGroup>
+  <UseUwp>true</UseUwp>
+  <UseUwpTools>false</UseUwpTools>
+  <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+  <CsWinRTIncludes>Windows.UI.Xaml.IFrameworkElementProtected7</CsWinRTIncludes>
+  <CsWinRTPublicExclusiveToInterfaces>true</CsWinRTPublicExclusiveToInterfaces>
+  <CsWinRTDynamicallyInterfaceCastableExclusiveTo>true</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
+</PropertyGroup>
+```
+
+At app build time, the public interfaces in reference projections retain their visibility and receive dynamic-interface-casting implementations and interface-local ABI helpers. This is inferred per type from the reference assembly's public surface, so existing reference-projection packages do not need to be rebuilt. It does not expose other exclusive interfaces or move their owning classes between projection assemblies.
+
+Consumers do not need to repeat the producer's exclusive-interface options. A projection over Windows SDK metadata alone also does not need to redistribute that metadata or add it to `CsWinRTInputs`: the app-time generator uses the configured Windows SDK metadata.
+
 ### Distributing the projection
 
 The reference and forwarder assembly is typically distributed along with the implementation assemblies as a NuGet package for applications to reference.

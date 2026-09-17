@@ -122,9 +122,39 @@ internal sealed class Settings
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
+    /// Gets the fully qualified exclusive-to interface names to emit as public.
+    /// </summary>
+    public HashSet<string> PublicExclusiveToTypes { get; } = [];
+
+    /// <summary>
     /// Gets or sets a value indicating whether the IDIC pattern is applied to <c>[ExclusiveTo]</c> interfaces.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }
+
+    /// <summary>
+    /// Gets the fully qualified exclusive-to interface names to make dynamically interface castable.
+    /// </summary>
+    public HashSet<string> IdicExclusiveToTypes { get; } = [];
+
+    /// <summary>
+    /// Gets whether the exclusive-to interface with the given name should be public.
+    /// </summary>
+    /// <param name="typeName">The fully qualified interface name.</param>
+    /// <returns>Whether the global or per-type public-exclusive option is enabled.</returns>
+    public bool IsPublicExclusiveTo(string typeName)
+    {
+        return PublicExclusiveTo || PublicExclusiveToTypes.Contains(typeName);
+    }
+
+    /// <summary>
+    /// Gets whether the exclusive-to interface with the given name should support dynamic interface casting.
+    /// </summary>
+    /// <param name="typeName">The fully qualified interface name.</param>
+    /// <returns>Whether the global or per-type dynamic-interface-casting option is enabled.</returns>
+    public bool IsIdicExclusiveTo(string typeName)
+    {
+        return IdicExclusiveTo || IdicExclusiveToTypes.Contains(typeName);
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether reference-only projection mode is enabled (no implementation, no IID file).

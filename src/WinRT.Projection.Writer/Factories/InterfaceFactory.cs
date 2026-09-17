@@ -439,12 +439,12 @@ internal static class InterfaceFactory
     /// </summary>
     public static void WriteInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // [Default] and overridable interfaces aren't used in the projection. Skip them unless
-        // public_exclusiveto is set (or in reference projection or component mode).
+        // Other exclusive interfaces are unused unless explicitly public or dynamically castable.
         if (!context.Settings.ReferenceProjection &&
             !context.Settings.Component &&
             type.IsExclusiveTo &&
-            !context.Settings.PublicExclusiveTo &&
+            !context.Settings.IsPublicExclusiveTo(type.FullName) &&
+            !context.Settings.IsIdicExclusiveTo(type.FullName) &&
             !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))
         {
             return;
@@ -464,7 +464,7 @@ internal static class InterfaceFactory
             """);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
-        bool isInternal = (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo) ||
+        bool isInternal = (type.IsExclusiveTo && !context.Settings.IsPublicExclusiveTo(type.FullName)) ||
                           type.IsProjectionInternal;
         IndentedTextWriterCallback name = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.CCW, false);
         IndentedTextWriterCallback inheritance = WriteTypeInheritance(context, type, false, false);
