@@ -53,25 +53,54 @@ public static unsafe class ICustomPropertyProviderImpl
     }
 
     /// <summary>
-    /// Returns no property descriptor: property binding still requires an explicit provider.
+    /// Reports that property binding requires an explicit provider.
     /// </summary>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetCustomProperty(void* thisPtr, HSTRING name, void** property)
     {
         *property = null;
 
-        return WellKnownErrorCodes.S_OK;
+        try
+        {
+            throw CreatePropertyBindingNotSupportedException(thisPtr);
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 
     /// <summary>
-    /// Returns no indexer descriptor: property binding still requires an explicit provider.
+    /// Reports that indexer binding requires an explicit provider.
     /// </summary>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetIndexedProperty(void* thisPtr, HSTRING name, ABI.System.Type type, void** property)
     {
         *property = null;
 
-        return WellKnownErrorCodes.S_OK;
+        try
+        {
+            throw CreatePropertyBindingNotSupportedException(thisPtr);
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    /// <summary>
+    /// Creates the unsupported-binding exception for a type-only provider.
+    /// </summary>
+    /// <param name="thisPtr">The COM interface pointer for the managed object.</param>
+    /// <returns>An exception describing how to opt into property binding.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static NotSupportedException CreatePropertyBindingNotSupportedException(void* thisPtr)
+    {
+        object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+        return new NotSupportedException(
+            $"ICustomProperty support used by XAML binding for type '{instance.GetType()}' requires an explicit 'ICustomPropertyProvider' implementation. " +
+            "Mark the type with 'WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute' to generate one, or use a wrapper type that provides this support.");
     }
 
     /// <summary>
