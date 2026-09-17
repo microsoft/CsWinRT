@@ -3,10 +3,18 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
+using Basic.Reference.Assemblies;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
+using WindowsRuntime;
 
 namespace ProjectionWriterTest.Helpers;
 
@@ -139,6 +147,51 @@ internal static class ProjectionWriterRunner
         {
             TryDeleteDirectory(workingDirectory);
         }
+    }
+
+    /// <summary>
+    /// Compiles generated projection sources or a consumer against the runtime implementation.
+    /// </summary>
+    public static string CompileSources(
+        IEnumerable<string> sources,
+        string assemblyPath,
+        bool referenceProjection = false,
+        OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary,
+        params string[] additionalReferences)
+    {
+        CSharpParseOptions parseOptions = new(LanguageVersion.CSharp14,
+            preprocessorSymbols: referenceProjection ? ["CSWINRT_REFERENCE_PROJECTION"] : []);
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            Path.GetFileNameWithoutExtension(assemblyPath),
+            sources.Select((source, index) => CSharpSyntaxTree.ParseText(source, parseOptions, path: $"Source{index}.cs")),
+            [
+                .. Net100.References.All,
+                MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location),
+                .. additionalReferences.Select(path => MetadataReference.CreateFromFile(path))
+            ],
+            new CSharpCompilationOptions(outputKind, allowUnsafe: true));
+        using FileStream stream = File.Create(assemblyPath);
+        EmitResult result = compilation.Emit(stream,
+            options: new EmitOptions(metadataOnly: referenceProjection, includePrivateMembers: !referenceProjection));
+        Assert.IsTrue(result.Success, $"Projection compilation failed:\n{string.Join("\n", result.Diagnostics)}");
+        return assemblyPath;
+    }
+
+    /// <summary>
+    /// Gets the runtime implementation assemblies needed by the post-build generators.
+    /// </summary>
+    public static string[] GetRuntimeReferencePaths()
+    {
+        return
+        [
+            typeof(WindowsRuntimeObject).Assembly.Location,
+            .. Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll").Where(static path =>
+            {
+                using FileStream stream = File.OpenRead(path);
+                using PEReader reader = new(stream);
+                return reader.HasMetadata;
+            })
+        ];
     }
 
     /// <summary>

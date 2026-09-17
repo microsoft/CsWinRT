@@ -516,7 +516,7 @@ internal static class AbiInterfaceFactory
     /// </summary>
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.IsExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.IsPublicExclusiveTo(type.FullName))
         {
             return;
         }
