@@ -692,7 +692,7 @@ internal static partial class InteropTypeDefinitionBuilder
 
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
 
-            skipEntry?.Instruction = cctorInstructions.Add(Nop);
+            _ = skipEntry?.Instruction = cctorInstructions.Add(Nop);
         }
 
         _ = cctorInstructions.Add(Ret);
