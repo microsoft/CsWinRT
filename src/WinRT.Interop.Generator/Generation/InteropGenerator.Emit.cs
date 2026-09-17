@@ -2550,13 +2550,16 @@ internal partial class InteropGenerator
         // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
         Dictionary<TypeSignature, TypeDefinition> marshallerAttributeMap = new(SignatureComparer.IgnoreVersion);
 
-        // A type can implement the same interfaces as a FrameworkElement-derived type without needing its bridge.
+        // A type can implement the same interfaces as a 'FrameworkElement'-derived type without needing its bridge
         foreach (IGrouping<(TypeSignatureEquatableSet VtableTypes, bool AddXamlCustomPropertyProvider), KeyValuePair<TypeSignature, TypeSignatureEquatableSet>> group in
             discoveryState.UserDefinedAndVtableTypes
                 .GroupBy(pair => (
                     VtableTypes: pair.Value,
                     AddXamlCustomPropertyProvider: args.EnableXamlCustomPropertyProvider && WindowsRuntimeTypeAnalyzer.NeedsXamlCustomPropertyProvider(
-                        pair.Key, pair.Value, interopReferences, args.UseWindowsUIXamlProjections)))
+                        type: pair.Key,
+                        interfaceTypes: pair.Value,
+                        interopReferences: interopReferences,
+                        useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections)))
                 .OrderBy(static group => group.Key.VtableTypes)
                 .ThenBy(static group => group.Key.AddXamlCustomPropertyProvider))
         {
@@ -2575,12 +2578,12 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
                     vtableTypes: group.Key.VtableTypes,
-                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
-                    addXamlCustomPropertyProvider: group.Key.AddXamlCustomPropertyProvider,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
+                    addXamlCustomPropertyProvider: group.Key.AddXamlCustomPropertyProvider,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 

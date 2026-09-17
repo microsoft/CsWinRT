@@ -29,6 +29,13 @@ internal static class WindowsRuntimeTypeAnalyzer
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
+        // Value types cannot derive from 'FrameworkElement'
+        if (type.IsValueType)
+        {
+            return false;
+        }
+
+        // Ignore projected types and types that cannot be resolved
         if (!type.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? definition) ||
             definition.IsProjectedWindowsRuntimeType ||
             definition.IsReferenceProjectionWindowsRuntimeType)
@@ -36,19 +43,31 @@ internal static class WindowsRuntimeTypeAnalyzer
             return false;
         }
 
+        // Select the active XAML namespace
         ReadOnlySpan<byte> xamlNamespace = useWindowsUIXamlProjections ? "Windows.UI.Xaml"u8 : "Microsoft.UI.Xaml"u8;
 
+        // Walk the base types to find the projected 'FrameworkElement'
         foreach (TypeSignature baseType in type.EnumerateBaseTypes(interopReferences))
         {
             TypeDefinition baseDefinition = baseType.Resolve(interopReferences.RuntimeContext);
 
-            if (baseDefinition is { Name: { } typeName, Namespace: { } typeNamespace } &&
-                typeName.AsSpan().SequenceEqual("FrameworkElement"u8) &&
-                typeNamespace.AsSpan().SequenceEqual(xamlNamespace) &&
-                (baseDefinition.IsProjectedWindowsRuntimeType || baseDefinition.IsReferenceProjectionWindowsRuntimeType))
+            if (baseDefinition is not { Name: { } typeName, Namespace: { } typeNamespace })
             {
-                return true;
+                continue;
             }
+
+            if (!typeName.AsSpan().SequenceEqual("FrameworkElement"u8) ||
+                !typeNamespace.AsSpan().SequenceEqual(xamlNamespace))
+            {
+                continue;
+            }
+
+            if (!baseDefinition.IsProjectedWindowsRuntimeType && !baseDefinition.IsReferenceProjectionWindowsRuntimeType)
+            {
+                continue;
+            }
+
+            return true;
         }
 
         return false;
@@ -68,12 +87,15 @@ internal static class WindowsRuntimeTypeAnalyzer
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
-        if (!IsManagedFrameworkElementDerivedType(type, interopReferences, useWindowsUIXamlProjections))
+        if (!IsManagedFrameworkElementDerivedType(
+            type: type,
+            interopReferences: interopReferences,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections))
         {
             return false;
         }
 
-        // Check the IID, not just the managed name, so inherited and custom COM providers also win.
+        // Check the IID, not just the managed name, so inherited and custom COM providers also win
         foreach (TypeSignature interfaceType in interfaceTypes)
         {
             if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&

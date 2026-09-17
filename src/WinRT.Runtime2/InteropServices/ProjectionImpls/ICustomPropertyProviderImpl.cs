@@ -89,21 +89,6 @@ public static unsafe class ICustomPropertyProviderImpl
     }
 
     /// <summary>
-    /// Creates the unsupported-binding exception for a type-only provider.
-    /// </summary>
-    /// <param name="thisPtr">The COM interface pointer for the managed object.</param>
-    /// <returns>An exception describing how to opt into property binding.</returns>
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static NotSupportedException CreatePropertyBindingNotSupportedException(void* thisPtr)
-    {
-        object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-        return new NotSupportedException(
-            $"ICustomProperty support used by XAML binding for type '{instance.GetType()}' requires an explicit 'ICustomPropertyProvider' implementation. " +
-            "Mark the type with 'WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute' to generate one, or use a wrapper type that provides this support.");
-    }
-
-    /// <summary>
     /// Returns the managed object's string representation.
     /// </summary>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
@@ -145,5 +130,20 @@ public static unsafe class ICustomPropertyProviderImpl
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
+    }
+
+    /// <summary>
+    /// Creates the unsupported-binding exception for a type-only provider.
+    /// </summary>
+    /// <param name="thisPtr">The COM interface pointer for the managed object.</param>
+    /// <returns>An exception describing how to opt into property binding.</returns>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static NotSupportedException CreatePropertyBindingNotSupportedException(void* thisPtr)
+    {
+        object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+        return new NotSupportedException(
+            $"ICustomProperty support used by XAML binding for type '{instance.GetType()}' requires an explicit 'ICustomPropertyProvider' implementation. " +
+            "Mark the type with 'WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute' to generate one, or use a wrapper type that provides this support.");
     }
 }
