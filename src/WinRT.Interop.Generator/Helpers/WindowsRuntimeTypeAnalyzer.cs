@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
+using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
@@ -15,6 +17,65 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 /// </summary>
 internal static class WindowsRuntimeTypeAnalyzer
 {
+    /// <summary>
+    /// Checks whether a managed XAML-derived type needs the type-only <c>ICustomPropertyProvider</c> bridge.
+    /// </summary>
+    /// <param name="type">The user-defined type to analyze.</param>
+    /// <param name="interfaceTypes">The interfaces already exposed by its CCW.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML instead of WinUI projections.</param>
+    /// <returns>Whether the fallback provider should be added.</returns>
+    public static bool NeedsXamlCustomPropertyProvider(
+        TypeSignature type,
+        TypeSignatureEquatableSet interfaceTypes,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
+    {
+        if (!type.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? definition) ||
+            definition.IsProjectedWindowsRuntimeType ||
+            definition.IsReferenceProjectionWindowsRuntimeType)
+        {
+            return false;
+        }
+
+        ReadOnlySpan<byte> xamlNamespace = useWindowsUIXamlProjections ? "Windows.UI.Xaml"u8 : "Microsoft.UI.Xaml"u8;
+
+        foreach (TypeSignature baseType in type.EnumerateBaseTypes(interopReferences))
+        {
+            TypeDefinition baseDefinition = baseType.Resolve(interopReferences.RuntimeContext);
+
+            if (baseDefinition.Namespace is not { } typeNamespace)
+            {
+                continue;
+            }
+
+            ReadOnlySpan<byte> baseNamespace = typeNamespace.AsSpan();
+
+            if (!(baseNamespace.SequenceEqual(xamlNamespace) ||
+                (baseNamespace.StartsWith(xamlNamespace) &&
+                 baseNamespace.Length > xamlNamespace.Length &&
+                 baseNamespace[xamlNamespace.Length] == '.')) ||
+                !(baseDefinition.IsProjectedWindowsRuntimeType || baseDefinition.IsReferenceProjectionWindowsRuntimeType))
+            {
+                continue;
+            }
+
+            // Check the IID, not just the managed name, so inherited and custom COM providers also win.
+            foreach (TypeSignature interfaceType in interfaceTypes)
+            {
+                if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
+                    iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Tries to retrieve the most derived Windows Runtime interface type out of a set of interfaces.
     /// </summary>

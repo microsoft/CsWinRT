@@ -820,6 +820,11 @@ internal sealed class InteropReferences
     public TypeReference IStringableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IStringableImpl"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.ICustomPropertyProviderImpl</c>.
+    /// </summary>
+    public TypeReference ICustomPropertyProviderImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "ICustomPropertyProviderImpl"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl</c>.
     /// </summary>
     public TypeReference IMarshalImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMarshalImpl"u8);
@@ -2117,6 +2122,20 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
+        .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.IntPtr));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.ICustomPropertyProviderImpl.get_IID()</c>.
+    /// </summary>
+    public MemberReference ICustomPropertyProviderImplget_IID => field ??= ICustomPropertyProviderImpl
+        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.ICustomPropertyProviderImpl.get_Vtable()</c>.
+    /// </summary>
+    public MemberReference ICustomPropertyProviderImplget_Vtable => field ??= ICustomPropertyProviderImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
 

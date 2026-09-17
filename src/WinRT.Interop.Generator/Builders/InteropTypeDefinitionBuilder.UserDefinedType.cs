@@ -43,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="addXamlCustomPropertyProvider">Whether to add the type-only XAML provider.</param>
         /// <param name="interfaceEntriesType">The resulting interface entries type.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
@@ -53,6 +54,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
+            bool addXamlCustomPropertyProvider,
             out TypeDefinition interfaceEntriesType,
             out TypeDefinition interfaceEntriesImplType)
         {
@@ -61,6 +63,14 @@ internal partial class InteropTypeDefinitionBuilder
 
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
+
+            // Keep the optional bridge first, separate from the explicitly implemented interfaces.
+            if (addXamlCustomPropertyProvider)
+            {
+                entriesList.Add(InteropInterfaceEntriesResolver.Create(
+                    interopReferences.ICustomPropertyProviderImplget_IID,
+                    interopReferences.ICustomPropertyProviderImplget_Vtable));
+            }
 
             // Add all entries for explicitly implemented interfaces
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
