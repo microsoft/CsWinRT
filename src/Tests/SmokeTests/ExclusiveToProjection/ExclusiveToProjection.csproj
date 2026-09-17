@@ -2,11 +2,20 @@
   <PropertyGroup>
     <UseUwp>true</UseUwp>
     <UseUwpTools>false</UseUwpTools>
+    <PackageId>CsWinRT.SmokeTests.ExclusiveToProjection</PackageId>
     <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
-    <CsWinRTIncludes>Windows.UI.Xaml.IFrameworkElementProtected7</CsWinRTIncludes>
+    <CsWinRTIncludes>Windows.Data.Json.IJsonArray;Windows.Data.Json.IJsonObjectWithDefaultValues;Windows.UI.Xaml.IFrameworkElementProtected7</CsWinRTIncludes>
+    <!-- Includes are prefixes: do not accidentally project the JsonArray activation-factory interface. -->
+    <CsWinRTExcludes>Windows.Data.Json.IJsonArrayStatics</CsWinRTExcludes>
     <CsWinRTPublicExclusiveToInterfaces>true</CsWinRTPublicExclusiveToInterfaces>
     <CsWinRTDynamicallyInterfaceCastableExclusiveTo>true</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
+    <!-- The runner relocates intermediate output; exclude artifacts from ordinary local builds too. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
   </PropertyGroup>
 
-  <!-- The interface is in the Windows SDK. No package-owned WinMD inputs are needed. -->
+  <!--
+    Only the standalone interfaces belong to this projection; their runtime classes remain in the
+    SDK projections. The JSON interfaces allow real native RCW tests without a XAML desktop.
+    All metadata is in the Windows SDK, so this package needs no package-owned WinMD inputs.
+  -->
 </Project>
