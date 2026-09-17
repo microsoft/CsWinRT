@@ -50,6 +50,11 @@ internal static partial class ProjectionGenerator
         // types to project, but its activation entry point still has to be merged, so it is not "nothing".
         if (!processingState.HasTypesToProject && !processingState.HasMergedActivation)
         {
+            // Removing the last supplemental reference must not leave a stale projection behind.
+            runner.RunPhase(
+                phaseName: "emit",
+                body: args => File.Delete(Path.Combine(args.GeneratedAssemblyDirectory, args.AssemblyName + ".dll")));
+
             return;
         }
 

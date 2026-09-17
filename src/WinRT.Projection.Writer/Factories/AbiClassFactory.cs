@@ -160,7 +160,7 @@ internal static class AbiClassFactory
             return true;
         }
 
-        if (type.IsExclusiveTo && !context.Settings.PublicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.IsPublicExclusiveTo(type.FullName))
         {
             // A runtime class implemented in C# needs the CCW vtables for its '[exclusiveto]' interfaces:
             // that is what a native call dispatches through to reach the author's overrides.

@@ -536,7 +536,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
                         _RunCsWinRTMergedProjectionGenerator
 
-    Runs 'cswinrtprojectiongen' to produce the forwarders assembly.
+    Runs 'cswinrtprojectiongen' to produce the merged implementation assembly.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
@@ -562,18 +562,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkXamlAssemblyPath)" Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'" />
     </ItemGroup>
 
-    <!-- Skip the generator if there are no WinMD inputs beyond CsWinRTInteropMetadata -->
-    <PropertyGroup>
-      <_HasMergedProjectionWinMDInputs Condition="'@(_ReferencePathsWithWinMDs)' != '' or '@(CsWinRTInputs)' != ''">true</_HasMergedProjectionWinMDInputs>
-    </PropertyGroup>
-
-    <!-- Delete any stale output when there are no WinMD inputs to process -->
-    <Delete Files="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
-            Condition="'$(_HasMergedProjectionWinMDInputs)' != 'true' and Exists('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)')" />
-
-      <!-- Invoke 'cswinrtprojectiongen' -->
+    <!--
+      Reference projections can expose supplemental Windows SDK interfaces without shipping any
+      WinMD inputs. Let the generator inspect the reference assemblies to decide whether a merged
+      projection is needed, using the SDK metadata already supplied through WindowsMetadata.
+    -->
     <RunCsWinRTMergedProjectionGenerator
-      Condition="'$(_HasMergedProjectionWinMDInputs)' == 'true'"
       ReferenceAssemblyPaths="@(_MergedProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_WinMDPathsList)"

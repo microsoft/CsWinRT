@@ -25,7 +25,7 @@ internal static class AbiInterfaceIDicFactory
     /// </summary>
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.IsExclusiveTo && !context.Settings.IdicExclusiveTo)
+        if (type.IsExclusiveTo && !context.Settings.IsIdicExclusiveTo(type.FullName))
         {
             return;
         }

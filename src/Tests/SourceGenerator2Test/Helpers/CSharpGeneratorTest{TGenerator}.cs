@@ -104,7 +104,6 @@ internal static class CSharpGeneratorTest<TGenerator>
 
         return Assembly.Load(stream.ToArray());
     }
-    }
 
     /// <summary>
     /// Creates a compilation from a given source.

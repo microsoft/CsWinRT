@@ -83,6 +83,11 @@ public sealed class ProjectionWriterOptions
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
+    /// Fully qualified exclusive-to interface names to make public, independently of <see cref="PublicExclusiveTo"/>.
+    /// </summary>
+    public IReadOnlyList<string> PublicExclusiveToTypes { get; init; } = [];
+
+    /// <summary>
     /// Additionally emit, for every runtime class the projection covers, the abstract
     /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;ActivationFactory</c> base
     /// classes that let it be implemented (authored) in C#, along with the exclusive-to interfaces they
@@ -106,6 +111,12 @@ public sealed class ProjectionWriterOptions
     /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }
+
+    /// <summary>
+    /// Fully qualified exclusive-to interface names to make dynamically interface castable,
+    /// independently of <see cref="IdicExclusiveTo"/>.
+    /// </summary>
+    public IReadOnlyList<string> IdicExclusiveToTypes { get; init; } = [];
 
     /// <summary>
     /// Generate a projection to be used as a reference assembly.

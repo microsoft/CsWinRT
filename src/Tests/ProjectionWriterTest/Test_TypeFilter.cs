@@ -26,10 +26,14 @@ public class Test_TypeFilter
     [TestMethod]
     [DataRow("Contoso.User", true)]
     [DataRow("Contoso.User2", true)]
-    [DataRow("Contoso.UserProfile.UserSetupManager", true)]
+    [DataRow("Contoso.UserProfile.UserSetupManager", false)]
     [DataRow("Unrelated.User", false)]
     public void PrefixIncludes_KeepExistingSemantics(string name, bool expected)
     {
+        // A rule is matched against the namespace on a segment boundary, so 'Contoso.User' does not claim the
+        // unrelated 'Contoso.UserProfile' namespace (without this, the Windows SDK projection's 'Windows' rule
+        // claims every type under 'WindowsRuntime'). It is still matched as a prefix against the type name
+        // within a namespace, which is why 'Contoso.User2' is included.
         TypeFilter filter = new(["Contoso.User"], []);
 
         Assert.AreEqual(expected, filter.Includes(name));

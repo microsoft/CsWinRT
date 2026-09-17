@@ -18,6 +18,10 @@
         component projection generation against SDK forwarders without duplicate type definitions
         or missing SDK assembly identities.
 
+      * ExclusiveToConsumption: a .NET app consumes a standalone public exclusive interface through
+        a reference/forwarder projection, using only Windows SDK metadata. The interface must retain
+        its implementation even though its owning runtime class stays in the SDK XAML projection.
+
       * Authoring: a Windows Runtime component library is built, validating WinMD
         generation, the reference projection, and the forwarder assembly.
 
@@ -52,10 +56,10 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'Authoring', 'Projection',
-    'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection', or 'All' (the default).
-    The CI runs each test as its own step (passing a single value), so an individual failure is reported
-    in isolation; local
+    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Authoring',
+    'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection', or 'All'
+    (the default). The CI runs each test as its own step (passing a single value), so an individual failure
+    is reported in isolation; local
     builds use the default 'All'.
 
 .PARAMETER Runtime
@@ -84,7 +88,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -102,6 +106,7 @@ $nativeAotRid = 'win-x64'
 $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
 $mixedConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'MixedConsumption', 'MixedConsumption.csproj')
+$exclusiveToConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'ExclusiveToConsumption', 'ExclusiveToConsumption.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
@@ -387,6 +392,10 @@ if ($Test -in @('All', 'Consumption')) {
 
 if ($Test -in @('All', 'MixedConsumption')) {
     Invoke-ConsumptionSmokeTest -Name 'MixedConsumption' -Project $mixedConsumptionProject
+}
+
+if ($Test -in @('All', 'ExclusiveToConsumption')) {
+    Invoke-ConsumptionSmokeTest -Name 'ExclusiveToConsumption' -Project $exclusiveToConsumptionProject
 }
 
 if ($Test -in @('All', 'Authoring')) {
