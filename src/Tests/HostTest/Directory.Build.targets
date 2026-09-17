@@ -4,6 +4,10 @@
     <!--Work around WinUI assumption that client requires building PRI, etc -->
     <MsAppxPackageTargets>$(MSBuildProjectDirectory)/DoNotImport_MsAppxPackageTargets.targets</MsAppxPackageTargets>
     <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
+    <HostTestSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)'))</HostTestSourceDir>
+    <TestProjectionOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\Test\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</TestProjectionOutDir>
+    <TestHostProbeByClassOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\TestHost.ProbeByClass\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</TestHostProbeByClassOutDir>
+    <WinRTHostShimOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Authoring\WinRT.Host.Shim\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</WinRTHostShimOutDir>
   </PropertyGroup>
 
   <!--Rename host/test dlls for various tests (requires disabling hardlinks)-->
@@ -16,7 +20,30 @@
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
-            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll" 
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
+            $(WinRTHostShimOutDir)WinRT.Host.Shim.dll;
+            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
+            $(TestProjectionOutDir)Test.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
+            $(WinRTHostShimOutDir)WinRT.Host.Shim.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
+            $(WinRTHostShimOutDir)WinRT.Host.Shim.dll;
+            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
+            $(TestProjectionOutDir)Test.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(HostTestSourceDir)Test.Host.runtimeconfig.json;
+            $(WinRTHostShimOutDir)WinRT.Host.Shim.dll;
+            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
+            $(TestProjectionOutDir)Test.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
+            $(WinRTHostShimOutDir)WinRT.Host.Shim.dll;
+            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
+            $(TestProjectionOutDir)Test.dll"
           DestinationFiles="
             $(OutDir)WinRT.Host.dll.mui;
             $(OutDir)WinRT.Host.dll;
@@ -25,7 +52,45 @@
             $(OutDir)ClassNotFound.Host.dll;
             $(OutDir)BadMappedTarget.Host.dll;
             $(OutDir)NoRuntimeConfig.Host.dll;
-            $(OutDir)RuntimeNotFound.Host.dll" 
+            $(OutDir)RuntimeNotFound.Host.dll;
+            $(OutDir)Dotted.Directory\Unmatched.Host.dll;
+            $(OutDir)Dotted.Directory\Unmatched.Host.runtimeconfig.json;
+            $(OutDir)Dotted.Directory\WinRT.Host.Shim.dll;
+            $(OutDir)Dotted.Directory\TestHost.ProbeByClass.dll;
+            $(OutDir)Dotted.dll;
+            $(OutDir)Dotted.Directory.TargetNotFound\Unmatched.Host.dll;
+            $(OutDir)Dotted.Directory.TargetNotFound\Unmatched.Host.runtimeconfig.json;
+            $(OutDir)Dotted.Directory.TargetNotFound\WinRT.Host.Shim.dll;
+            $(OutDir)MixedCaseGeneric\wInRt.HoSt.dll;
+            $(OutDir)MixedCaseGeneric\wInRt.HoSt.runtimeconfig.json;
+            $(OutDir)MixedCaseGeneric\WinRT.Host.Shim.dll;
+            $(OutDir)MixedCaseGeneric\TestHost.ProbeByClass.dll;
+            $(OutDir)MixedCaseGeneric\wInRt.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.Host.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.Host.runtimeconfig.json;
+            $(OutDir)Multi.Dot.Host\WinRT.Host.Shim.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.Server.dll;
+            $(OutDir)Multi.Dot.Host\Alpha.Beta.dll;
+            $(OutDir)ClassFallbackServer\WinRT.Host.dll;
+            $(OutDir)ClassFallbackServer\WinRT.Host.runtimeconfig.json;
+            $(OutDir)ClassFallbackServer\WinRT.Host.Shim.dll;
+            $(OutDir)ClassFallbackServer\TestHost.Server.dll;
+            $(OutDir)ClassFallbackServer\TestHost.dll"
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)WinRT.Runtime.dll;$(OutDir)Microsoft.Windows.SDK.NET.dll"
+          DestinationFolder="$(OutDir)Dotted.Directory\"
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)WinRT.Runtime.dll;$(OutDir)Microsoft.Windows.SDK.NET.dll"
+          DestinationFolder="$(OutDir)Dotted.Directory.TargetNotFound\"
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)WinRT.Runtime.dll;$(OutDir)Microsoft.Windows.SDK.NET.dll"
+          DestinationFolder="$(OutDir)MixedCaseGeneric\"
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)WinRT.Runtime.dll;$(OutDir)Microsoft.Windows.SDK.NET.dll"
+          DestinationFolder="$(OutDir)Multi.Dot.Host\"
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)WinRT.Runtime.dll;$(OutDir)Microsoft.Windows.SDK.NET.dll"
+          DestinationFolder="$(OutDir)ClassFallbackServer\"
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>  
   
