@@ -90,8 +90,17 @@ internal sealed class AssemblyAnalyzer
     {
         RuntimeContext? runtimeContext = _inputModule.RuntimeContext;
 
-        for (TypeDefinition? current = type.BaseType?.Resolve(runtimeContext); current is not null;)
+        for (ITypeDefOrRef? baseType = type.BaseType; baseType is not null;)
         {
+            // A base type the generator has no reference for cannot be one of the bases CsWinRT generates,
+            // so stop walking rather than failing. Every chain ends at a type from the framework itself
+            // ('System.Object', or 'System.Enum' and friends for value types), and those are not necessarily
+            // resolvable from the references this generator was given.
+            if (!baseType.TryResolve(runtimeContext, out TypeDefinition? current))
+            {
+                return false;
+            }
+
             foreach (CustomAttribute attribute in current.CustomAttributes)
             {
                 if (attribute.Constructor?.DeclaringType?.FullName is
@@ -102,7 +111,7 @@ internal sealed class AssemblyAnalyzer
                 }
             }
 
-            current = current.BaseType?.Resolve(runtimeContext);
+            baseType = current.BaseType;
         }
 
         return false;
