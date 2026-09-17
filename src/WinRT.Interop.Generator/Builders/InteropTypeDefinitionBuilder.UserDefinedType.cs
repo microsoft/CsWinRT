@@ -101,7 +101,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences,
                 module: module,
                 implType: out interfaceEntriesImplType,
-                firstEntryCondition: addXamlCustomPropertyProvider ? interopReferences.WindowsRuntimeFeatureSwitchesget_EnableXamlCustomPropertyProvider : null,
                 implTypes: CollectionsMarshal.AsSpan(entriesList));
         }
 
@@ -114,7 +113,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="addXamlCustomPropertyProvider">Whether the first entry is the optional type-only XAML provider.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
         public static void ComWrappersMarshallerAttribute(
             TypeSignature userDefinedType,
@@ -123,7 +121,6 @@ internal partial class InteropTypeDefinitionBuilder
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
-            bool addXamlCustomPropertyProvider,
             out TypeDefinition marshallerType)
         {
             // We're declaring an 'internal sealed class' type
@@ -165,23 +162,6 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ret }
                 }
             };
-
-            if (addXamlCustomPropertyProvider)
-            {
-                // The unused first slot is also left uninitialized when disabled, so its implementation can be trimmed.
-                computeVtablesMethod.CilInstructions.InsertRange(0,
-                [
-                    new(Call, interopReferences.WindowsRuntimeFeatureSwitchesget_EnableXamlCustomPropertyProvider),
-                    new(Brtrue, computeVtablesMethod.CilInstructions[0].CreateLabel()),
-                    new(Ldarg_1),
-                    CilInstruction.CreateLdcI4(interfaceEntriesType.Fields.Count - 1),
-                    new(Stind_I4),
-                    new(Call, interfaceEntriesImplType.GetMethod("get_Vtables"u8)),
-                    new(Sizeof, interopReferences.ComInterfaceEntry),
-                    new(Add),
-                    new(Ret)
-                ]);
-            }
 
             marshallerType.Methods.Add(computeVtablesMethod);
 

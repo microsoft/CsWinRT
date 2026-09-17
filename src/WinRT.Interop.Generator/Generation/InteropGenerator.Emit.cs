@@ -2555,7 +2555,7 @@ internal partial class InteropGenerator
             discoveryState.UserDefinedAndVtableTypes
                 .GroupBy(pair => (
                     VtableTypes: pair.Value,
-                    AddXamlCustomPropertyProvider: WindowsRuntimeTypeAnalyzer.NeedsXamlCustomPropertyProvider(
+                    AddXamlCustomPropertyProvider: args.EnableXamlCustomPropertyProvider && WindowsRuntimeTypeAnalyzer.NeedsXamlCustomPropertyProvider(
                         pair.Key, pair.Value, interopReferences, args.UseWindowsUIXamlProjections)))
                 .OrderBy(static group => group.Key.VtableTypes)
                 .ThenBy(static group => group.Key.AddXamlCustomPropertyProvider))
@@ -2591,7 +2591,6 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
-                    addXamlCustomPropertyProvider: group.Key.AddXamlCustomPropertyProvider,
                     out TypeDefinition comWrappersMarshallerType);
 
                 // Track the marshaller attribute for later

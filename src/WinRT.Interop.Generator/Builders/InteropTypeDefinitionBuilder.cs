@@ -569,7 +569,6 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="implType">The resulting implementation type.</param>
     /// <param name="implTypes">The set of vtable accessors to use for each entry.</param>
-    /// <param name="firstEntryCondition">An optional feature-switch getter guarding initialization of the first entry.</param>
     private static void InterfaceEntriesImpl(
         Utf8String ns,
         Utf8String name,
@@ -577,7 +576,6 @@ internal static partial class InteropTypeDefinitionBuilder
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition implType,
-        IMethodDefOrRef? firstEntryCondition = null,
         params ReadOnlySpan<InteropInterfaceEntryInfo> implTypes)
     {
         InterfaceEntriesImpl(
@@ -589,7 +587,6 @@ internal static partial class InteropTypeDefinitionBuilder
             get_IID: static (arg, il, references) => arg.LoadIID(il, references),
             get_Vtable: static (arg, il, references) => arg.LoadVtable(il, references),
             implTypes: implTypes,
-            firstEntryCondition: firstEntryCondition,
             implType: out implType);
     }
 
@@ -606,7 +603,6 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="get_IID">The callback to emit code to get the IID.</param>
     /// <param name="get_Vtable">The callback to emit code to get the vtable.</param>
     /// <param name="implType">The resulting implementation type.</param>
-    /// <param name="firstEntryCondition">An optional feature-switch getter guarding initialization of the first entry.</param>
     private static void InterfaceEntriesImpl<TArg>(
         Utf8String ns,
         Utf8String name,
@@ -616,8 +612,7 @@ internal static partial class InteropTypeDefinitionBuilder
         ReadOnlySpan<TArg> implTypes,
         Action<TArg, CilInstructionCollection, InteropReferences> get_IID,
         Action<TArg, CilInstructionCollection, InteropReferences> get_Vtable,
-        out TypeDefinition implType,
-        IMethodDefOrRef? firstEntryCondition = null)
+        out TypeDefinition implType)
     {
         // Enforce that we can initialize all interface entries
         ArgumentOutOfRangeException.ThrowIfNotEqual(implTypes.Length, entriesFieldType.Fields.Count, nameof(implTypes));
@@ -667,16 +662,6 @@ internal static partial class InteropTypeDefinitionBuilder
         // Each 'Impl' types is assumed to always have the 'IID' and 'Vtable' properties, in this order.
         for (int i = 0; i < implTypes.Length; i++)
         {
-            CilInstructionLabel? skipEntry = null;
-
-            if (i == 0 && firstEntryCondition is not null)
-            {
-                skipEntry = new CilInstructionLabel();
-
-                _ = cctorInstructions.Add(Call, firstEntryCondition);
-                _ = cctorInstructions.Add(Brfalse, skipEntry);
-            }
-
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
 
@@ -691,8 +676,6 @@ internal static partial class InteropTypeDefinitionBuilder
             get_Vtable(implTypes[i], cctorInstructions, interopReferences);
 
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
-
-            _ = skipEntry?.Instruction = cctorInstructions.Add(Nop);
         }
 
         _ = cctorInstructions.Add(Ret);

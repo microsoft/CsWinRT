@@ -103,7 +103,7 @@ internal static class WindowsRuntimeFeatureSwitches
     public static bool EnableMarshalingTypeMetadataSupport { get; } = GetConfigurationValue(EnableMarshalingTypeMetadataSupportPropertyName, defaultValue: true);
 
     /// <summary>
-    /// Gets a value indicating whether or not managed <c>FrameworkElement</c>-derived objects automatically expose a type-only custom property provider (defaults to <see langword="true"/>).
+    /// Gets the type-only custom property provider configuration value (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableXamlCustomPropertyProviderPropertyName)]
     public static bool EnableXamlCustomPropertyProvider { get; } = GetConfigurationValue(EnableXamlCustomPropertyProviderPropertyName, defaultValue: true);

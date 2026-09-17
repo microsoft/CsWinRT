@@ -825,11 +825,6 @@ internal sealed class InteropReferences
     public TypeReference ICustomPropertyProviderImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "ICustomPropertyProviderImpl"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeFeatureSwitches</c>.
-    /// </summary>
-    public TypeReference WindowsRuntimeFeatureSwitches => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeFeatureSwitches"u8);
-
-    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl</c>.
     /// </summary>
     public TypeReference IMarshalImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMarshalImpl"u8);
@@ -2143,13 +2138,6 @@ internal sealed class InteropReferences
     public MemberReference ICustomPropertyProviderImplget_Vtable => field ??= ICustomPropertyProviderImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.WindowsRuntimeFeatureSwitches.get_EnableXamlCustomPropertyProvider()</c>.
-    /// </summary>
-    public MemberReference WindowsRuntimeFeatureSwitchesget_EnableXamlCustomPropertyProvider => field ??= WindowsRuntimeFeatureSwitches
-        .CreateMemberReference("get_EnableXamlCustomPropertyProvider"u8, MethodSignature.CreateStatic(
-            returnType: Boolean));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl.get_Vtable()</c>.
