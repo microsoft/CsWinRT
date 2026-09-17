@@ -312,4 +312,17 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Deprecating a publicly exposed API of a Windows Runtime component requires '[Windows.Foundation.Metadata.Deprecated]', which is the only deprecation the '.winmd' can carry. '[Obsolete]' is a .NET concept with no Windows Runtime counterpart: it is not translated by the WinMD generator, so on its own it deprecates the API for nobody but the C# code inside the component itself.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for reading from a write-only <see cref="System.Span{T}"/> parameter on a Windows Runtime method.
+    /// </summary>
+    public static readonly DiagnosticDescriptor WriteOnlySpanParameterRead = new(
+        id: "CSWINRT2023",
+        title: "Reading from a write-only 'Span<T>' parameter",
+        messageFormat: """The 'Span<T>' parameter '{0}' is projected as a fill array in the Windows Runtime ABI, which is write-only, so the method implementation should only write to it and not read from it""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A 'Span<T>' parameter on a Windows Runtime method is projected as a fill array in the ABI, meaning the implementation is only allowed to write to it, not read from it. Reading from such a parameter (e.g. by indexing it for a value or a readonly reference, converting it to 'ReadOnlySpan<T>', or iterating over it) is not supported. Use 'ReadOnlySpan<T>' for a parameter that should be read from instead.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
