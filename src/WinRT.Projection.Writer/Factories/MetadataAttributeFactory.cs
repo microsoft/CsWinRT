@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -76,6 +77,30 @@ internal static class MetadataAttributeFactory
         IndentedTextWriter writer = writerOwner.Writer;
         WriteFileHeader(writer);
         return writer.ToString();
+    }
+
+    /// <summary>
+    /// Writes reference-only key/value metadata for the effective exclusive-to IDIC selection.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="idicExclusiveToTypes">The selected metadata type names, in ordinal order.</param>
+    public static void WriteReferenceAssemblyMetadata(IndentedTextWriter writer, IEnumerable<string> idicExclusiveToTypes)
+    {
+        writer.WriteLine(isMultiline: true, """
+            #if CSWINRT_REFERENCE_PROJECTION
+            #pragma warning disable CSWINRT3004
+            """);
+
+        foreach (string typeName in idicExclusiveToTypes)
+        {
+            writer.WriteLine($"""[assembly: global::{WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName}("{WindowsRuntimeReferenceAssemblyMetadata.IdicExclusiveTo}", "{typeName}")]""");
+        }
+
+        writer.WriteLine(isMultiline: true, """
+            #pragma warning restore CSWINRT3004
+            #endif
+
+            """);
     }
 
     /// <summary>
@@ -411,15 +436,7 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The interface type definition.</param>
     public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Generic interfaces are handled elsewhere.
-        if (type.GenericParameters.Count != 0)
-        {
-            return;
-        }
-
-        // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
-        if ((type.IsExclusiveTo && !context.Settings.IsIdicExclusiveTo(type.FullName)) ||
-            type.IsProjectionInternal)
+        if (!AbiInterfaceIDicFactory.IsEnabled(context, type))
         {
             return;
         }

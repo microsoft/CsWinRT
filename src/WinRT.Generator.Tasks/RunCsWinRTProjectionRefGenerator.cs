@@ -80,6 +80,16 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool IdicExclusiveTo { get; set; }
 
     /// <summary>
+    /// Gets or sets the namespace or type-name prefixes to select when exclusive-to IDIC is enabled.
+    /// </summary>
+    public ITaskItem[]? IdicExclusiveToIncludes { get; set; }
+
+    /// <summary>
+    /// Gets or sets the namespace or type-name prefixes to exclude from exclusive-to IDIC.
+    /// </summary>
+    public ITaskItem[]? IdicExclusiveToExcludes { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the generated projection should be a reference assembly projection.
     /// </summary>
     public bool ReferenceProjection { get; set; }
@@ -253,6 +263,16 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         if (IdicExclusiveTo)
         {
             AppendResponseFileCommand(args, "--idic-exclusive-to", "true");
+        }
+
+        if (IdicExclusiveToIncludes is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, "--idic-exclusive-to-includes", string.Join(",", IdicExclusiveToIncludes.Select(static i => i.ItemSpec)));
+        }
+
+        if (IdicExclusiveToExcludes is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, "--idic-exclusive-to-excludes", string.Join(",", IdicExclusiveToExcludes.Select(static i => i.ItemSpec)));
         }
 
         if (ReferenceProjection)
