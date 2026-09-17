@@ -91,14 +91,9 @@ A reference projection can expose selected `[ExclusiveTo]` interfaces without al
 </PropertyGroup>
 ```
 
-The two switches are independent. `CsWinRTPublicExclusiveToInterfaces` controls public visibility; it does
-**not** enable dynamic interface casting. `CsWinRTDynamicallyInterfaceCastableExclusiveTo` enables IDIC
-support without making an internal interface public. Both default to `false`. Public-only interfaces still
-have the ABI helpers and CCW implementations needed for managed implementations; disabling IDIC does not
-remove this infrastructure, default interfaces, or overridable interfaces.
+The two switches are independent. `CsWinRTPublicExclusiveToInterfaces` controls public visibility; it does **not** enable dynamic interface casting. `CsWinRTDynamicallyInterfaceCastableExclusiveTo` enables IDIC support without making an internal interface public. Both default to `false`. Public-only interfaces still have the ABI helpers and CCW implementations needed for managed implementations; disabling IDIC does not remove this infrastructure, default interfaces, or overridable interfaces.
 
-To narrow the IDIC opt-in while keeping all projected exclusive interfaces public, set dedicated filters on
-the projection project:
+To narrow the IDIC opt-in while keeping all projected exclusive interfaces public, set dedicated filters on the projection project:
 
 ```xml
 <PropertyGroup>
@@ -120,28 +115,11 @@ the projection project:
 | `true` | A;B | B | Only eligible matches of A that do not match B |
 | `true` | A specific type | Its namespace | None; exclusions always win |
 
-Lists are semicolon-separated and use the same **case-sensitive namespace/type-name prefix matching**
-as projection filters, not wildcard or regular-expression syntax. For example, `Contoso.IWidget` also
-matches `Contoso.IWidget2`; use narrower prefixes and exclusions where necessary. Outer whitespace is
-trimmed, empty entries are ignored, and duplicates are removed. Invalid prefixes (such as `Contoso.*`,
-`Contoso..IWidget`, or embedded whitespace) produce `CSWINRTPROJECTIONGEN5022`; valid unmatched prefixes
-are harmless. The CLI equivalents are `--idic-exclusive-to-includes` and `--idic-exclusive-to-excludes`,
-with comma-separated lists in the response file.
+Lists are semicolon-separated and use the same **case-sensitive namespace/type-name prefix matching** as projection filters, not wildcard or regular-expression syntax. For example, `Contoso.IWidget` also matches `Contoso.IWidget2`; use narrower prefixes and exclusions where necessary. Outer whitespace is trimmed, empty entries are ignored, and duplicates are removed. Invalid prefixes (such as `Contoso.*`, `Contoso..IWidget`, or embedded whitespace) produce `CSWINRTPROJECTIONGEN5022`; valid unmatched prefixes are harmless. The CLI equivalents are `--idic-exclusive-to-includes` and `--idic-exclusive-to-excludes`, with comma-separated lists in the response file.
 
-These filters affect casting support only, not public visibility or which APIs are selected by
-`CsWinRTIncludes` / `CsWinRTExcludes`. Ordinary, non-exclusive interfaces are unaffected. For a native
-wrapper that does not statically implement an excluded interface, `is` returns `false`, `as` returns
-`null`, and an explicit cast throws `InvalidCastException`. Ordinary casts to interfaces already
-implemented by an object are unaffected. Enabled dynamic casts still require the native object to
-support the interface IID and the runtime's `CsWinRTEnableIDynamicInterfaceCastableSupport` switch
-to remain enabled.
+These filters affect casting support only, not public visibility or which APIs are selected by `CsWinRTIncludes` / `CsWinRTExcludes`. Ordinary, non-exclusive interfaces are unaffected. For a native wrapper that does not statically implement an excluded interface, `is` returns `false`, `as` returns `null`, and an explicit cast throws `InvalidCastException`. Ordinary casts to interfaces already implemented by an object are unaffected. Enabled dynamic casts still require the native object to support the interface IID and the runtime's `CsWinRTEnableIDynamicInterfaceCastableSupport` switch to remain enabled.
 
-**Reference packages and consumers:** the producer records the sorted, exact effective IDIC type names
-as `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value pairs, one per selected interface.
-This WinRT-specific attribute has the same shape as `AssemblyMetadataAttribute`: a `(string key, string? value)`
-constructor and read-only `Key` / `Value` properties, with repeated keys supported. The reference assembly
-marker `WindowsRuntimeReferenceAssemblyAttribute` is unchanged. For example, generated reference metadata
-can contain:
+**Reference packages and consumers:** the producer records the sorted, exact effective IDIC type names as `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value pairs, one per selected interface. This WinRT-specific attribute has the same shape as `AssemblyMetadataAttribute`: a `(string key, string? value)` constructor and read-only `Key` / `Value` properties, with repeated keys supported. The reference assembly marker `WindowsRuntimeReferenceAssemblyAttribute` is unchanged. For example, generated reference metadata can contain:
 
 ```csharp
 [assembly: WindowsRuntimeReferenceAssembly]
@@ -149,25 +127,11 @@ can contain:
 [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.IdicExclusiveTo.v1", "Contoso.IWidget3")]
 ```
 
-These are generator-owned attributes, not annotations to write manually. String names preserve intent
-even for internal interfaces omitted by reference-assembly compilation. The metadata remains in the
-packed `ref/<tfm>` assembly, not the forwarder; the consumer restores exactly that selection independently
-of the actual public reference surface. Unknown keys are ignored, and ordinary `AssemblyMetadataAttribute`
-entries do not opt interfaces into IDIC. Prefixes are not reapplied to other packages.
-No selection entries means no exclusive-interface IDIC; **regenerate older
-preview projection packages that need IDIC support**. There is no public-visibility inference or
-consumer-side policy override.
+These are generator-owned attributes, not annotations to write manually. String names preserve intent even for internal interfaces omitted by reference-assembly compilation. The metadata remains in the packed `ref/<tfm>` assembly, not the forwarder; the consumer restores exactly that selection independently of the actual public reference surface. Unknown keys are ignored, and ordinary `AssemblyMetadataAttribute` entries do not opt interfaces into IDIC. Prefixes are not reapplied to other packages. No selection entries means no exclusive-interface IDIC; **regenerate older preview projection packages that need IDIC support**. There is no public-visibility inference or consumer-side policy override.
 
-Consumers do not need to repeat the producer's exclusive-interface options. Changing a producer switch
-or either filter invalidates its projection input cache; consumers track the resulting reference assembly
-as a generation input. Projected type identities must be globally unique: duplicate definitions across
-reference projections fail with `CSWINRTPROJECTIONGEN0015`, regardless of whether their policies agree.
-Malformed IDIC metadata fails with `CSWINRTPROJECTIONGEN0014`.
+Consumers do not need to repeat the producer's exclusive-interface options. Changing a producer switch or either filter invalidates its projection input cache; consumers track the resulting reference assembly as a generation input. Projected type identities must be globally unique: duplicate definitions across reference projections fail with `CSWINRTPROJECTIONGEN0015`, regardless of whether their policies agree. Malformed IDIC metadata fails with `CSWINRTPROJECTIONGEN0014`.
 
-A projection over Windows SDK metadata alone does not need to redistribute that metadata or add it to
-`CsWinRTInputs`: the app-time generator uses the configured Windows SDK metadata. The standalone
-`IFrameworkElementProtected7` example above therefore keeps its owner in `WinRT.Sdk.Xaml.Projection.dll`
-while preserving both public visibility and IDIC for the selected interface.
+A projection over Windows SDK metadata alone does not need to redistribute that metadata or add it to `CsWinRTInputs`: the app-time generator uses the configured Windows SDK metadata. The standalone `IFrameworkElementProtected7` example above therefore keeps its owner in `WinRT.Sdk.Xaml.Projection.dll` while preserving both public visibility and IDIC for the selected interface.
 
 ### Distributing the projection
 

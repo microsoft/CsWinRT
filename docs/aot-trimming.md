@@ -32,26 +32,11 @@ Feature switches are set as MSBuild properties in your project file:
 
 ## Selecting dynamic casting for exclusive interfaces
 
-`CsWinRTPublicExclusiveToInterfaces` controls visibility, not dynamic casting. A projection producer
-must set `CsWinRTDynamicallyInterfaceCastableExclusiveTo=true` to opt eligible `[ExclusiveTo]`
-interfaces into IDIC. The optional `CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes` and
-`CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes` prefix lists narrow that opt-in; exclusions
-always win, and filters alone never enable it. The same selection applies to CoreCLR and Native AOT.
-See the [usage guide](usage.md#projecting-standalone-exclusive-interfaces) for syntax and precedence.
+`CsWinRTPublicExclusiveToInterfaces` controls visibility, not dynamic casting. A projection producer must set `CsWinRTDynamicallyInterfaceCastableExclusiveTo=true` to opt eligible `[ExclusiveTo]` interfaces into IDIC. The optional `CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes` and `CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes` prefix lists narrow that opt-in; exclusions always win, and filters alone never enable it. The same selection applies to CoreCLR and Native AOT. See the [usage guide](usage.md#projecting-standalone-exclusive-interfaces) for syntax and precedence.
 
-Reference projection packages preserve the exact effective selection as generator-owned
-`WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of the public API
-surface. These entries remain in the reference assembly and are not copied to the forwarder.
-Applications consume that policy automatically.
-Missing metadata does not imply IDIC, so older preview projection packages that need dynamic casting
-must be regenerated. The runtime switch `CsWinRTEnableIDynamicInterfaceCastableSupport` remains the
-separate, application-wide switch for all dynamic interface casting.
+Reference projection packages preserve the exact effective selection as generator-owned `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of the public API surface. These entries remain in the reference assembly and are not copied to the forwarder. Applications consume that policy automatically. Missing metadata does not imply IDIC, so older preview projection packages that need dynamic casting must be regenerated. The runtime switch `CsWinRTEnableIDynamicInterfaceCastableSupport` remains the separate, application-wide switch for all dynamic interface casting.
 
-Opting out avoids the selected interface's IDIC shim and type-map association, but does not remove
-ABI helpers or CCW implementations still needed by public/default/overridable interfaces. In the
-single-method exclusive-interface regression fixture, opting in adds exactly one shim type, one DIM
-method, and one assembly type-map association. Final binary size depends on trimming and reachability;
-this output-shape measurement is not a published-size estimate.
+Opting out avoids the selected interface's IDIC shim and type-map association, but does not remove ABI helpers or CCW implementations still needed by public/default/overridable interfaces. In the single-method exclusive-interface regression fixture, opting in adds exactly one shim type, one DIM method, and one assembly type-map association. Final binary size depends on trimming and reachability; this output-shape measurement is not a published-size estimate.
 
 ## ICustomPropertyProvider support for XAML binding
 
