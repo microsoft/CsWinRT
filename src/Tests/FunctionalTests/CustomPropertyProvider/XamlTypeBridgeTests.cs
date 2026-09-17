@@ -27,6 +27,7 @@ internal static unsafe partial class XamlTypeBridgeTests
     private static readonly Guid ProviderIid = new("7C925755-3E48-42B4-8677-76372267033F");
     private static readonly Guid InspectableIid = new("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90");
     private const int E_NOINTERFACE = unchecked((int)0x80004002);
+    private const int E_NOTSUPPORTED = unchecked((int)0x80131515);
 
     public static int Run()
     {
@@ -40,12 +41,12 @@ internal static unsafe partial class XamlTypeBridgeTests
 
             // Exercise the managed CCWs without activating XAML or requiring a UI thread/package.
             // No native Control members are used; real style/layout coverage lives in ObjectLifetimeTests.
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(UnannotatedControl)), typeof(UnannotatedControl), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedControl)), typeof(DerivedControl), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<int>)), typeof(GenericControl<int>), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<string>)), typeof(GenericControl<string>), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(FrameworkElementProbe)), typeof(FrameworkElementProbe), automaticProvider);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedFrameworkElementProbe)), typeof(DerivedFrameworkElementProbe), automaticProvider);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(UnannotatedControl)), typeof(UnannotatedControl), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedControl)), typeof(DerivedControl), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<int>)), typeof(GenericControl<int>), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<string>)), typeof(GenericControl<string>), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(FrameworkElementProbe)), typeof(FrameworkElementProbe), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedFrameworkElementProbe)), typeof(DerivedFrameworkElementProbe), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), hasProvider: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(StringableDependencyObject)), typeof(StringableDependencyObject), hasProvider: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ApplicationProbe)), typeof(ApplicationProbe), hasProvider: false);
@@ -74,7 +75,7 @@ internal static unsafe partial class XamlTypeBridgeTests
         }
     }
 
-    private static void CheckProvider(object value, Type expectedType, bool hasProvider, bool hasProperties = false, string expectedString = "control")
+    private static void CheckProvider(object value, Type expectedType, bool hasProvider, bool hasProperties = false, string expectedString = "control", bool supportsPropertyLookup = true)
     {
         void* unknown = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
         nint inspectable = 0;
@@ -129,6 +130,12 @@ internal static unsafe partial class XamlTypeBridgeTests
 
             int hr = Marshal.QueryInterface((nint)unknown, ProviderIid, out provider);
 
+            if (!RuntimeFeature.IsDynamicCodeCompiled && value is UIElement)
+            {
+                object info = GetMarshallingInfo(null, value.GetType());
+                CheckReadOnlyImageMemory(GetVtableEntries(GetVtableInfo(info)), "COM interface entries");
+            }
+
             if (!hasProvider)
             {
                 Check(hr == E_NOINTERFACE && provider == 0, $"Unexpected automatic provider for {value.GetType()}.");
@@ -141,6 +148,11 @@ internal static unsafe partial class XamlTypeBridgeTests
 
             void** providerVtable = *(void***)provider;
 
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                CheckReadOnlyImageMemory(providerVtable, "ICustomPropertyProvider vtable");
+            }
+
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, ABI.System.Type*, int>)providerVtable[9])(provider, &typeName));
 
             Check((int)typeName.Kind == 2 && HStringMarshaller.ConvertToManaged(typeName.Name) == expectedType.AssemblyQualifiedName,
@@ -149,10 +161,10 @@ internal static unsafe partial class XamlTypeBridgeTests
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, void**, int>)providerVtable[8])(provider, &stringRepresentation));
             Check(HStringMarshaller.ConvertToManaged(stringRepresentation) == expectedString, "Incorrect string representation.");
 
-            CheckProperty(provider, "Included", indexed: false, expected: hasProperties);
-            CheckProperty(provider, "Excluded", indexed: false, expected: false);
-            CheckProperty(provider, "Missing", indexed: false, expected: false);
-            CheckProperty(provider, "Item", indexed: true, expected: hasProperties);
+            CheckProperty(provider, "Included", indexed: false, expected: hasProperties, supported: supportsPropertyLookup);
+            CheckProperty(provider, "Excluded", indexed: false, expected: false, supported: supportsPropertyLookup);
+            CheckProperty(provider, "Missing", indexed: false, expected: false, supported: supportsPropertyLookup);
+            CheckProperty(provider, "Item", indexed: true, expected: hasProperties, supported: supportsPropertyLookup);
         }
         finally
         {
@@ -166,10 +178,10 @@ internal static unsafe partial class XamlTypeBridgeTests
         }
     }
 
-    private static void CheckProperty(nint provider, string name, bool indexed, bool expected)
+    private static void CheckProperty(nint provider, string name, bool indexed, bool expected, bool supported)
     {
         void* propertyName = HStringMarshaller.ConvertToUnmanaged(name);
-        void* property = null;
+        void* property = (void*)1;
         ABI.System.Type indexType = ABI.System.TypeMarshaller.ConvertToUnmanaged(typeof(int));
 
         try
@@ -179,7 +191,18 @@ internal static unsafe partial class XamlTypeBridgeTests
                 ? ((delegate* unmanaged[MemberFunction]<nint, void*, ABI.System.Type, void**, int>)vtable[7])(provider, propertyName, indexType, &property)
                 : ((delegate* unmanaged[MemberFunction]<nint, void*, void**, int>)vtable[6])(provider, propertyName, &property);
 
-            Check(hr == 0 && (property is not null) == expected, $"Incorrect property lookup for {name}.");
+            if (!supported)
+            {
+                Check(hr == E_NOTSUPPORTED && property is null, $"Unsupported property lookup for {name} must fail and clear its output.");
+                Exception error = RestrictedErrorInfoExceptionMarshaller.ConvertToManaged(hr);
+
+                Check(error is NotSupportedException && error.Message.Contains("GeneratedCustomPropertyProviderAttribute", StringComparison.Ordinal),
+                    "Unsupported property binding must provide actionable restricted error information.");
+
+                return;
+            }
+
+            Check(hr == 0 && property != (void*)1 && (property is not null) == expected, $"Incorrect property lookup for {name}.");
 
             if (expected)
             {
@@ -191,7 +214,10 @@ internal static unsafe partial class XamlTypeBridgeTests
         finally
         {
             ABI.System.TypeMarshaller.Dispose(indexType);
-            WindowsRuntimeMarshal.Free(property);
+            if (property != (void*)1)
+            {
+                WindowsRuntimeMarshal.Free(property);
+            }
             HStringMarshaller.Free(propertyName);
         }
     }
@@ -225,6 +251,46 @@ internal static unsafe partial class XamlTypeBridgeTests
             throw new InvalidOperationException(message);
         }
     }
+
+    private static void CheckReadOnlyImageMemory(void* address, string description)
+    {
+        MemoryBasicInformation memory = default;
+
+        Check(VirtualQuery(address, &memory, (nuint)sizeof(MemoryBasicInformation)) != 0,
+            $"VirtualQuery failed for {description}.");
+        Check(memory.Protect == 0x02 && memory.Type == 0x1000000,
+            $"{description} must be preinitialized in read-only image memory (protection 0x{memory.Protect:X}, type 0x{memory.Type:X}).");
+    }
+
+    [DllImport("kernel32.dll", ExactSpelling = true)]
+    private static extern nuint VirtualQuery(void* address, MemoryBasicInformation* information, nuint length);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MemoryBasicInformation
+    {
+        public void* BaseAddress;
+        public void* AllocationBase;
+        public uint AllocationProtect;
+        public nuint RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
+
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "GetInfo")]
+    [return: UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeMarshallingInfo, WinRT.Runtime")]
+    private static extern object GetMarshallingInfo(
+        [UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeMarshallingInfo, WinRT.Runtime")] object unused,
+        Type type);
+
+    [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "GetVtableInfo")]
+    [return: UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeVtableInfo, WinRT.Runtime")]
+    private static extern object GetVtableInfo(
+        [UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeMarshallingInfo, WinRT.Runtime")] object info);
+
+    [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_VtableEntries")]
+    private static extern ComWrappers.ComInterfaceEntry* GetVtableEntries(
+        [UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeVtableInfo, WinRT.Runtime")] object info);
 
     private class UnannotatedControl : Control
     {
