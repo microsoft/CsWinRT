@@ -416,6 +416,18 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/FunctionalTests/XamlCustomPropertyProviderDisabled/XamlCustomPropertyProviderDisabled.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/XamlCustomPropertyProviderWinUI/XamlCustomPropertyProviderWinUI.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/Tests/FunctionalTests/PublishProfiles/">
     <File Path="Tests/FunctionalTests/PublishProfiles/win-arm64.pubxml" />
