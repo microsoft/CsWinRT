@@ -337,10 +337,11 @@ internal static partial class InteropTypeDiscovery
 
         // If the user-defined type implements at least a Windows Runtime interface, then it's considered exposed.
         // We don't want to handle marshalling code for types with only '[GeneratedComInterface]' interfaces.
-        // We also unconditionally track public value types from component assemblies, as they may need CCW
+        // We also unconditionally track exported value types from component assemblies, as they may need CCW
         // support when boxed (e.g. as 'IReference<T>' for generic type arguments), even without interfaces.
         if (hasAnyProjectedWindowsRuntimeInterfaces ||
-            typeDefinition is { IsComponentWindowsRuntimeType: true, IsValueType: true, IsEnum: false })
+            (typeDefinition is { IsValueType: true, IsEnum: false } &&
+             typeDefinition.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule)))
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
@@ -501,21 +502,17 @@ internal static partial class InteropTypeDiscovery
             return true;
         }
 
-        // If the type is not from an authored component, we can stop immediately
-        if (typeDefinition.DeclaringModule is not { Assembly.IsWindowsRuntimeComponentAssembly: true })
+        ModuleDefinition? componentModule = interopDefinitions.WindowsRuntimeComponentModule;
+
+        // Managed helpers in a component do not have authored exclusive interfaces
+        if (!typeDefinition.IsComponentWindowsRuntimeType(componentModule))
         {
             return true;
         }
 
-        // We're going to need the 'WinRT.Component.dll' assembly, so make sure it was generated and passed in
-        if (interopDefinitions.WindowsRuntimeComponentModule is null)
-        {
-            throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
-        }
-
         // Use the centralized lookup from '[WindowsRuntimeExclusiveToInterface]' attributes (they're all on the
         // 'WindowsRuntimeExclusiveToInterfaces' type). This avoids scanning all types in the component assembly.
-        if (!interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup().TryGetValue(
+        if (!componentModule.GetExclusiveToInterfacesLookup().TryGetValue(
             key: (typeSignature.Namespace, typeSignature.Name),
             value: out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
         {

@@ -23,6 +23,11 @@ namespace WindowsRuntime;
 public unsafe partial class WindowsRuntimeObject
 {
     /// <summary>
+    /// The native object reference wrapped by the current instance.
+    /// </summary>
+    private readonly WindowsRuntimeObjectReference _nativeObjectReference;
+
+    /// <summary>
     /// The lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
     /// </summary>
     /// <remarks>
@@ -48,7 +53,7 @@ public unsafe partial class WindowsRuntimeObject
     {
         ArgumentNullException.ThrowIfNull(nativeObjectReference);
 
-        NativeObjectReference = nativeObjectReference;
+        _nativeObjectReference = nativeObjectReference;
     }
 
     /// <summary>
@@ -86,13 +91,14 @@ public unsafe partial class WindowsRuntimeObject
         // Initialize a 'WindowsRuntimeObjectReference' for the current native objects and the managed instance we're
         // constructing. This will also take care of registering things with 'ComWrappers', and setting up all the
         // reference tracker infrastructure, in case the native object implements the 'IReferenceTracker' interface.
-        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+        WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
             isAggregation: false,
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
             newInstanceIid: in iid,
-            marshalingType: marshalingType);
+            marshalingType: marshalingType,
+            objectReference: out _nativeObjectReference);
     }
 
     /// <summary>
@@ -142,13 +148,14 @@ public unsafe partial class WindowsRuntimeObject
         // Initialize a 'WindowsRuntimeObjectReference' for the current native objects and the managed instance we're
         // constructing. This will also take care of registering things with 'ComWrappers', and setting up all the
         // reference tracker infrastructure, in case the native object implements the 'IReferenceTracker' interface.
-        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+        WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
             isAggregation: !hasUnwrappableNativeObjectReference,
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
             newInstanceIid: in iid,
-            marshalingType: marshalingType);
+            marshalingType: marshalingType,
+            objectReference: out _nativeObjectReference);
 
         // Optimization: if we are activating the current type for composition, then the returned object reference
         // will wrap the 'IInspectable' pointer for the controlling instance (ie. 'innerInterface'). In this case,
@@ -206,13 +213,14 @@ public unsafe partial class WindowsRuntimeObject
         void* innerInterface = null;
 
         // Initialize the 'WindowsRuntimeObjectReference' for the default interface (same as above)
-        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+        WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
             isAggregation: false,
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
             newInstanceIid: in iid,
-            marshalingType: marshalingType);
+            marshalingType: marshalingType,
+            objectReference: out _nativeObjectReference);
     }
 
     /// <summary>
@@ -253,13 +261,14 @@ public unsafe partial class WindowsRuntimeObject
             defaultInterface: out void* defaultInterface);
 
         // Initialize a 'WindowsRuntimeObjectReference' object (see detailed explanation above)
-        NativeObjectReference = WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
+        WindowsRuntimeObjectReference.InitializeFromManagedTypeUnsafe(
             isAggregation: !hasUnwrappableNativeObjectReference,
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
             newInstanceIid: in iid,
-            marshalingType: marshalingType);
+            marshalingType: marshalingType,
+            objectReference: out _nativeObjectReference);
 
         // Optimization: pre-cache the inspectable object reference if possible (see detailed explanation above)
         if (!hasUnwrappableNativeObjectReference)
@@ -275,7 +284,11 @@ public unsafe partial class WindowsRuntimeObject
     /// This object reference should point to an <c>IInspectable</c> native object.
     /// </remarks>
     [WindowsRuntimeImplementationOnlyMember]
-    protected internal WindowsRuntimeObjectReference NativeObjectReference { get; }
+    protected internal WindowsRuntimeObjectReference NativeObjectReference
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _nativeObjectReference;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the current instance has an unwrappable native object reference.
@@ -572,10 +585,9 @@ public unsafe partial class WindowsRuntimeObject
         // We explicitly don't handle overridable interfaces, as well as 'IInspectable' and 'IWeakReferenceSource'.
         // This last one in particular must be ignored to avoid issues when an RCW object is used as a target
         // for a 'WeakReference' object. Lastly, we also need to not handle this 'QueryInterface' request when
-        // 'NativeObjectReference' is 'null', which will be the case during initialization (because objects are
-        // constructed entirely from this base 'WindowsRuntimeObject' type). In that case, 'QueryInterface' calls
-        // will be coming for the outer instance from the inner one, where the outer calls 'GetInterface' first,
-        // and they wouldn't need to be handled anyway.
+        // 'NativeObjectReference' is 'null', which is the case during activation before the inner object reference
+        // has been created. In that case, 'QueryInterface' calls come from the inner object to the outer instance,
+        // where the outer calls 'GetInterface' first, and they don't need to be handled here.
         if (IsOverridableInterface(in iid) ||
             WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid ||
             WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource == iid ||

@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Models;
+using WindowsRuntime.InteropGenerator.Resolvers;
 
 namespace WindowsRuntime.InteropGenerator.References;
 
@@ -217,9 +220,22 @@ internal sealed class InteropDefinitions
     /// Gets the <see cref="TypeDefinition"/> for the COM interface entries type for user-defined types with the specified number of entries.
     /// </summary>
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <param name="vtableTypes">The interfaces explicitly implemented by the user-defined type.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public TypeDefinition UserDefinedInterfaceEntries(int numberOfEntries)
+    /// <remarks>
+    /// A layout without additional entries requires an explicit <c>IStringable</c> implementation.
+    /// Types implementing only <c>IMarshal</c> are not exposed by Windows Runtime type discovery.
+    /// </remarks>
+    public TypeDefinition UserDefinedInterfaceEntries(int numberOfEntries, TypeSignatureEquatableSet vtableTypes)
     {
+        // Validate each request before consulting the count-keyed cache, including cache hits.
+        // Only an explicit implementation selected for the reserved slot permits a built-in-only layout.
+        if (numberOfEntries != InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries ||
+            !InteropInterfaceEntriesResolver.TryGetUserDefinedIStringableInterfaceImplementation(vtableTypes, _interopReferences, out _))
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(numberOfEntries, InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries + 1);
+        }
+
         return _userDefinedInterfaceEntries.GetOrAdd(
             key: numberOfEntries,
             valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.UserDefinedInterfaceEntriesType(numberOfEntries, _interopReferences));

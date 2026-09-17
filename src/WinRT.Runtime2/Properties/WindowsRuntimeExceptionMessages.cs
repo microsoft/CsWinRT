@@ -36,6 +36,8 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string Argument_InvalidIBufferInstance = "The provided 'IBuffer' instance is not valid, and retrieving its underlying data failed.";
 
+    public const string Argument_InvalidIMemoryBufferReferenceInstance = "The provided 'IMemoryBufferReference' instance is not valid, and retrieving its underlying data failed.";
+
     public const string Argument_StreamPositionBeyondEndOfStream = "The specified position is beyond the end of the stream.";
 
     public const string ArgumentOutOfRange_BufferLengthExceedsArrayMaxLength = "The specified buffer length exceeds the maximum array length.";

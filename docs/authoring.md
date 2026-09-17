@@ -256,6 +256,8 @@ C#/WinRT supports authoring out-of-process components that can be consumed by Wi
 
 Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
 
+See also [attribute projections](attribute-projections.md), which covers the attributes CsWinRT translates between C# and Windows Runtime metadata (for instance, how to mark an authored API as deprecated or experimental).
+
 1. [Simple C#/WinRT component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo) and associated [walkthrough on creating a C#/WinRT component and consuming it from C++/WinRT](https://docs.microsoft.com/windows/uwp/csharp-winrt/create-windows-runtime-component-cswinrt) 
 
 2. [Background Task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent) demonstrating consuming an out-of-process C#/WinRT component from a packaged .NET WPF app

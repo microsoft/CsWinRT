@@ -11,6 +11,12 @@ namespace Benchmarks
         ClassWithMarshalingRoutines instance;
         IDictionary<String, WrappedClass> instanceDictionary;
         ManagedObjectWithInterfaces managedObject;
+        IList<string> instanceList;
+        ProvideInt existingIntDelegate;
+        string[] listCopyDestination;
+
+        [Params(4, 32, 128)]
+        public int CopyCount { get; set; }
 
         [GlobalSetup]
         public void Setup()
@@ -18,6 +24,15 @@ namespace Benchmarks
             instance = new ClassWithMarshalingRoutines();
             instanceDictionary = instance.ExistingDictionary;
             managedObject = new ManagedObjectWithInterfaces();
+            instanceList = instance.NewList();
+            instanceList.Add("Hello");
+            existingIntDelegate = instance.ExistingIntDelegate;
+            listCopyDestination = new string[CopyCount];
+
+            for (int i = 1; i < CopyCount; i++)
+            {
+                instanceList.Add("Hello");
+            }
         }
 
         [Benchmark]
@@ -130,6 +145,31 @@ namespace Benchmarks
         {
             var dict = instance.ExistingDictionary;
             return dict["a"];
+        }
+
+        [Benchmark]
+        public int ExistingListCount()
+        {
+            return instanceList.Count;
+        }
+
+        [Benchmark]
+        public string ExistingListIndexer()
+        {
+            return instanceList[0];
+        }
+
+        [Benchmark]
+        public int InvokeExistingIntDelegate()
+        {
+            return existingIntDelegate();
+        }
+
+        [Benchmark]
+        public string CopyExistingList()
+        {
+            instanceList.CopyTo(listCopyDestination, 0);
+            return listCopyDestination[^1];
         }
 
         [Benchmark]

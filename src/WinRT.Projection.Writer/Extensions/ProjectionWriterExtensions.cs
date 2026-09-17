@@ -52,9 +52,11 @@ internal static class ProjectionWriterExtensions
                 #pragma warning disable CA2207, CA1063, CA1033, CA1001, CA2213
                 #pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
                 #pragma warning disable CSWINRT3002 // "Type '...' is a private implementation detail"
-                #pragma warning disable CSWINRT3005 // "Type '...' is a private implementation detail"
+                #pragma warning disable CSWINRT3006 // "Type '...' is a private implementation detail"
                 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
                 #pragma warning disable CS8669 // "The annotation for nullable reference types should only be used in code within a '#nullable' annotations context"
+                #pragma warning disable CS0612, CS0618 // "'...' is obsolete" (deprecated Windows Runtime APIs are projected as '[Obsolete]', but generated code still has to reference them)
+                #pragma warning disable CSWINRT3005 // "'...' is for evaluation purposes only" (experimental Windows Runtime APIs are projected as '[Experimental]', but generated code still has to reference them)
                 
                 """);
         }

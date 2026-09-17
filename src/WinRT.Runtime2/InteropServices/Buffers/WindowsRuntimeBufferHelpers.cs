@@ -3,12 +3,13 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Windows.Foundation;
 using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Provides internal helpers for working with <see cref="IBuffer"/> objects.
+/// Provides internal helpers for working with Windows Runtime buffer types.
 /// </summary>
 internal static class WindowsRuntimeBufferHelpers
 {
@@ -171,6 +172,36 @@ internal static class WindowsRuntimeBufferHelpers
         }
 
         data = null;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the underlying data for the specified buffer, only if backed by native memory.
+    /// </summary>
+    /// <param name="buffer">The input <see cref="IMemoryBufferReference"/> instance.</param>
+    /// <param name="data">The underlying data, if retrieved.</param>
+    /// <param name="capacity">The capacity of the buffer, if retrieved.</param>
+    /// <returns>Whether <paramref name="data"/> could be retrieved.</returns>
+    public static unsafe bool TryGetNativeData(IMemoryBufferReference buffer, out byte* data, out uint capacity)
+    {
+        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        {
+            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IMemoryBufferByteAccess);
+
+            fixed (byte** dataPtr = &data)
+            fixed (uint* capacityPtr = &capacity)
+            {
+                HRESULT hresult = IMemoryBufferByteAccessVftbl.GetBufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), dataPtr, capacityPtr);
+
+                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            }
+
+            return true;
+        }
+
+        data = null;
+        capacity = 0;
 
         return false;
     }

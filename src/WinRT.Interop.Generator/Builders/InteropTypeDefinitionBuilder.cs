@@ -483,9 +483,13 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             implType.Methods.Add(method);
 
+            FieldDefinition vtableSlot = vftblType.Fields[vtableOffset++];
+
+            VtableSignatureValidator.ValidateSlot(vtableSlot, method);
+
             _ = cctor.CilMethodBody.Instructions.Add(Ldsflda, vftblField);
             _ = cctor.CilMethodBody.Instructions.Add(Ldftn, method);
-            _ = cctor.CilMethodBody.Instructions.Add(Stfld, vftblType.Fields[vtableOffset++]);
+            _ = cctor.CilMethodBody.Instructions.Add(Stfld, vtableSlot);
         }
 
         // Enforce that we did initialize all vtable entries

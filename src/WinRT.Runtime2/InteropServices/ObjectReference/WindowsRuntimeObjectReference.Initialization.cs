@@ -20,7 +20,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="innerInstanceUnknown">The inner COM object, for COM aggregation scenarios.</param>
     /// <param name="newInstanceIid">The IID for the new instance.</param>
     /// <param name="marshalingType">The marshaling type to use for the input native object (either <paramref name="newInstanceUnknown"/> or <paramref name="innerInstanceUnknown"/>).</param>
-    /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping the input COM objects.</returns>
+    /// <param name="objectReference">The resulting <see cref="WindowsRuntimeObjectReference"/> instance wrapping the input COM object.</param>
     /// <remarks>
     /// <para>
     /// This method differs from <see cref="AttachUnsafe(ref void*, in Guid)"/> and other factory methods in that it also handles
@@ -31,13 +31,14 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// This method takes ownership of both <paramref name="newInstanceUnknown"/> and <paramref name="innerInstanceUnknown"/>.
     /// </para>
     /// </remarks>
-    internal static WindowsRuntimeObjectReference InitializeFromManagedTypeUnsafe(
+    internal static void InitializeFromManagedTypeUnsafe(
         bool isAggregation,
         WindowsRuntimeObject thisInstance,
         ref void* newInstanceUnknown,
         ref void* innerInstanceUnknown,
         in Guid newInstanceIid,
-        CreateObjectReferenceMarshalingType marshalingType)
+        CreateObjectReferenceMarshalingType marshalingType,
+        out WindowsRuntimeObjectReference objectReference)
     {
         void* acquiredNewInstanceUnknown = newInstanceUnknown;
         void* acquiredInnerInstanceUnknown = innerInstanceUnknown;
@@ -203,27 +204,6 @@ public unsafe partial class WindowsRuntimeObjectReference
             createObjectFlags |= CreateObjectFlags.TrackerObject;
         }
 
-        // We now need to create and register a native object wrapper (ie. RCW). Note that the 'ComWrappers' API that
-        // does this operation will call 'QueryInterface' on the supplied instance, therefore it is important that the
-        // enclosing managed object wrapper (ie. CCW) forwards to its inner object, if COM aggregation is involved.
-        // This is typically accomplished through an implementation of 'ICustomQueryInterface'. Because all of the
-        // Windows Runtime projected types have a base class, we have this common logic in 'WindowsRuntimeObject'.
-        if (isAggregation)
-        {
-            // Indicate the scenario is COM aggregation
-            createObjectFlags |= CreateObjectFlags.Aggregation;
-
-            // Here we pass both the aggregated instance and the inner instance to 'ComWrappers'.
-            // This allows 'ComWrappers' to manage the inner lifetime based on whether this is a
-            // XAML reference tracker scenario or not (aggregation is not exclusive to XAML).
-            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)acquiredNewInstanceUnknown, createObjectFlags, thisInstance, (nint)acquiredInnerInstanceUnknown);
-        }
-        else
-        {
-            // Same registration as for COM aggregation without reference tracker support for the inner instance (see above)
-            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)acquiredNewInstanceUnknown, createObjectFlags, thisInstance);
-        }
-
         // This value is the reference tracker pointer we will wrap in the returned object reference.
         // It mirrors 'externalComObject'. We neeed this because in some scenarios we will not actually
         // keep a reference to the input reference tracker, but rather we'll discard it in this method.
@@ -234,7 +214,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // All the information gathered will flow into the creation flags for our object reference instance.
         CreateObjectReferenceFlags createObjectReferenceFlags = CreateObjectReferenceFlags.None;
 
-        // The rest of the logic handles the reference tracker setup, after the 'ComWrappers' registration above
+        // Set up reference tracking and ownership before the 'ComWrappers' registration below
         if (isAggregation)
         {
             // Aggregation scenarios should avoid calling 'AddRef' on the 'acquiredNewInstanceUnknown' object.
@@ -293,17 +273,51 @@ public unsafe partial class WindowsRuntimeObjectReference
         // additional overhead of the state to track the current context, and having to manage a lazy agile reference.
         if (isFreeThreaded)
         {
-            return new FreeThreadedObjectReference(externalComObject, externalReferenceTracker, createObjectReferenceFlags);
+            objectReference = new FreeThreadedObjectReference(externalComObject, externalReferenceTracker, createObjectReferenceFlags);
+        }
+        else
+        {
+            // Otherwise, use a context aware object reference to track it, with the specialized instance.
+            // In this method, the IID for the object reference depends on whether we are in an aggregation
+            // scenario. That is because if we are, then the wrapped COM object will be the inner instance,
+            // not the outer one (which would have its own default interface as IID). And the inner instance
+            // will be an 'IInspectable', when returned by the activation factory.
+            objectReference = isAggregation
+                ? new ContextAwareInspectableObjectReference(externalComObject, externalReferenceTracker, createObjectReferenceFlags)
+                : new ContextAwareInterfaceObjectReference(externalComObject, externalReferenceTracker, iid: in newInstanceIid, createObjectReferenceFlags);
         }
 
-        // Otherwise, use a context aware object reference to track it, with the specialized instance.
-        // In this method, the IID for the object reference depends on whether we are in an aggregation
-        // scenario. That is because if we are, then the wrapped COM object will be the inner instance,
-        // not the outer one (which would have its own default interface as IID). And the inner instance
-        // will be an 'IInspectable', when returned by the activation factory.
-        return isAggregation
-            ? new ContextAwareInspectableObjectReference(externalComObject, externalReferenceTracker, createObjectReferenceFlags)
-            : new ContextAwareInterfaceObjectReference(externalComObject, externalReferenceTracker, iid: in newInstanceIid, createObjectReferenceFlags);
+        // We now need to create and register a native object wrapper (ie. RCW). Note that the 'ComWrappers' API that
+        // does this operation will call 'QueryInterface' on the supplied instance, therefore it is important that the
+        // enclosing managed object wrapper (ie. CCW) forwards to its inner object, if COM aggregation is involved.
+        // This is typically accomplished through an implementation of 'ICustomQueryInterface'. Because all of the
+        // Windows Runtime projected types have a base class, we have this common logic in 'WindowsRuntimeObject'.
+        //
+        // The object reference must be assigned before this call. In aggregation scenarios, 'ComWrappers' queries
+        // the outer object for 'IReferenceTracker' during registration, and 'ICustomQueryInterface' needs the object
+        // reference to forward that query to the inner object.
+        if (isAggregation)
+        {
+            // Indicate the scenario is COM aggregation
+            createObjectFlags |= CreateObjectFlags.Aggregation;
+
+            // Here we pass both the aggregated instance and the inner instance to 'ComWrappers'.
+            // This allows 'ComWrappers' to manage the inner lifetime based on whether this is a
+            // XAML reference tracker scenario or not (aggregation is not exclusive to XAML).
+            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance(
+                externalComObject: (nint)acquiredNewInstanceUnknown,
+                flags: createObjectFlags,
+                wrapper: thisInstance,
+                inner: (nint)acquiredInnerInstanceUnknown);
+        }
+        else
+        {
+            // Same registration as for COM aggregation without reference tracker support for the inner instance (see above)
+            _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance(
+                externalComObject: (nint)acquiredNewInstanceUnknown,
+                flags: createObjectFlags,
+                wrapper: thisInstance);
+        }
     }
 
     /// <summary>

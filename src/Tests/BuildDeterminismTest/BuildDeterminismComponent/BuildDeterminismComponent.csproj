@@ -16,6 +16,7 @@
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <CsWinRTGenerateInteropAssembly>true</CsWinRTGenerateInteropAssembly>
+    <CsWinRTMarshallingMode>All</CsWinRTMarshallingMode>
   </PropertyGroup>
 
   <PropertyGroup>

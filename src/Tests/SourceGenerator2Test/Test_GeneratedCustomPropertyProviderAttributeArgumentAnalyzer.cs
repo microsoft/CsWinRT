@@ -121,6 +121,29 @@ public class Test_GeneratedCustomPropertyProviderAttributeArgumentAnalyzer
     }
 
     [TestMethod]
+    public async Task HiddenInheritedPropertyName_DoesNotWarn()
+    {
+        const string source = """
+            using WindowsRuntime.Xaml;
+
+            public class Behavior
+            {
+                public object AssociatedObject { get; private set; } = "target";
+            }
+
+            public class Behavior<T> : Behavior where T : class
+            {
+                public new T AssociatedObject => (T)base.AssociatedObject;
+            }
+
+            [GeneratedCustomPropertyProvider([nameof(AssociatedObject)], [])]
+            public partial class MyType : Behavior<string>;
+            """;
+
+        await CSharpAnalyzerTest<GeneratedCustomPropertyProviderAttributeArgumentAnalyzer>.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task InheritedIndexerType_DoesNotWarn()
     {
         string source = """

@@ -5,15 +5,12 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Benchmarks/">
-    <Project Path="Benchmarks/Benchmarks.csproj">
-      <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
-      <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
-      <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
-      <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Build Solution="*|ARM64" Project="false" />
+    <Project Path="Benchmarks/Benchmarks/Benchmarks.csproj">
+      <Platform Project="x64" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Benchmarks/BenchmarkProjection/BenchmarkProjection.csproj">
+      <Build Project="false" />
     </Project>
     <Project Path="TestWinRT/BenchmarkComponent/BenchmarkComponent.vcxproj" Id="78d85f23-7cb1-44a1-9238-6df2c76754e4">
       <Platform Solution="*|ARM64" Project="Win32" />
@@ -263,6 +260,12 @@
     <Project Path="Tests/HostTest/HostTest.vcxproj" Id="b511b7c9-c8e2-47ed-a0d1-538c00747d30">
       <Build Project="false" />
     </Project>
+    <Project Path="Tests/ImplGeneratorTest/ImplGeneratorTest.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
       <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -348,6 +351,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Project="false" />
     </Project>
+    <Project Path="Tests/FunctionalTests/CustomPropertyProvider/CustomPropertyProvider.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/FunctionalTests/DerivedClassActivation/DerivedClassActivation.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -415,6 +424,12 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/FunctionalTests/TypeMarshaling/TypeMarshaling.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/UserDefinedTypeNames/UserDefinedTypeNames.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />

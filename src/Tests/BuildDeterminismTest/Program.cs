@@ -6,12 +6,23 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using AsmResolver.DotNet;
 
-// Entry point: forwards command-line args (e.g., MSBuild properties from CI) to the runner.
+if (args.Length > 0 && args[0] == "--interop")
+{
+    if (args.Length != 3)
+    {
+        Console.Error.WriteLine("Usage: BuildDeterminismTest --interop <generator.exe|generator.dll> <response.rsp>");
+        return 1;
+    }
+
+    return InteropDeterminismRunner.Run(args[1], args[2]);
+}
+
+// Other command-line arguments are MSBuild properties forwarded from CI
 return BuildDeterminismRunner.Run(args);
 
 /// <summary>
-/// Builds BuildDeterminismComponent twice from clean state and compares the output DLL hashes
-/// to verify the build is deterministic. Accepts optional MSBuild arguments (e.g., /p:... /bl:...)
+/// Builds BuildDeterminismComponent from clean state with varying parallelism and compares the output DLL hashes.
+/// Accepts optional MSBuild arguments (e.g., /p:...)
 /// passed through from the CI pipeline invocation.
 /// </summary>
 internal sealed class BuildDeterminismRunner
@@ -36,7 +47,7 @@ internal sealed class BuildDeterminismRunner
     }
 
     /// <summary>
-    /// Resolves build settings, locates the target project, and runs two clean builds
+    /// Resolves build settings, locates the target project, and runs repeated clean builds
     /// to compare output hashes. Returns 0 if deterministic, 1 otherwise.
     /// </summary>
     internal static int Run(string[] args)
@@ -73,25 +84,29 @@ internal sealed class BuildDeterminismRunner
         Console.WriteLine($"Target project: {projectPath}");
         Console.WriteLine($"Configuration: {config}, Platform: {platform}");
 
-        // Build twice from clean state and compare SHA256 hashes of the output DLL.
-        string hash1 = runner.CleanBuildAndHash("first");
-        string hash2 = runner.CleanBuildAndHash("second");
-
-        if (hash1 == hash2)
+        string? expectedHash = null;
+        for (int i = 0; i < InteropDeterminismRunner.DegreesOfParallelism.Length; i++)
         {
-            Console.WriteLine("Build is deterministic!");
-            return 0;
+            int degree = InteropDeterminismRunner.DegreesOfParallelism[i];
+            string hash = runner.CleanBuildAndHash($"run-{i + 1}-dop-{degree}", degree);
+            expectedHash ??= hash;
+
+            if (hash != expectedHash)
+            {
+                Console.Error.WriteLine($"Build is NOT deterministic (maximum parallelism {degree})!");
+                return 1;
+            }
         }
 
-        Console.Error.WriteLine("Build is NOT deterministic!");
-        return 1;
+        Console.WriteLine("Build is deterministic across repeated serial and parallel runs!");
+        return 0;
     }
 
     /// <summary>
     /// Deletes bin output, restores packages, builds, and returns the SHA256 hash
-    /// of the output DLL for the given pass (first/second).
+    /// of the output DLL for the given pass and maximum parallelism.
     /// </summary>
-    private string CleanBuildAndHash(string passLabel)
+    private string CleanBuildAndHash(string passLabel, int maxDegreesOfParallelism)
     {
         // MSBuild Clean doesn't remove the bin and obj folders, so delete them explicitly.
         string projectFolder = Path.GetDirectoryName(_projectPath)!;
@@ -113,17 +128,29 @@ internal sealed class BuildDeterminismRunner
         }
 
         Console.WriteLine("Restoring...");
-        RunMSBuild($"\"{_projectPath}\" -t:Restore");
+        string restoreBinlog = Path.Combine(AppContext.BaseDirectory, $"restore-{Guid.NewGuid():N}.binlog");
+        RunMSBuild(
+            $"\"{_projectPath}\" -t:Restore -m -p:Platform={_platform},Configuration={_config} " +
+            $"{_msbuildArgs} -bl:\"{restoreBinlog}\"");
 
         // Build with platform/config and any additional CI MSBuild args (e.g., /p:CIBuildReason=CI,...).
         Console.WriteLine($"Building ({passLabel} pass)...");
-        RunMSBuild($"\"{_projectPath}\" -p:Platform={_platform},Configuration={_config} {_msbuildArgs}".TrimEnd());
+        string buildBinlog = Path.Combine(AppContext.BaseDirectory, $"{passLabel}-{Guid.NewGuid():N}.binlog");
+        RunMSBuild(
+            $"\"{_projectPath}\" -m -p:Platform={_platform},Configuration={_config} {_msbuildArgs} " +
+            "-p:CsWinRTGeneratorEnableIncrementalGeneration=false " +
+            $"-p:CsWinRTGeneratorMaxDegreesOfParallelism={maxDegreesOfParallelism} -bl:\"{buildBinlog}\"");
 
         string outputDir = Path.Combine(
             Path.GetDirectoryName(_projectPath)!,
             "bin", _platform, _config, TargetFramework);
 
         string dllPath = Path.Combine(outputDir, OutputDllName);
+        return HashOutput(dllPath, passLabel);
+    }
+
+    internal static string HashOutput(string dllPath, string passLabel)
+    {
         if (!File.Exists(dllPath))
         {
             throw new FileNotFoundException($"Output DLL not found: {dllPath}");
@@ -147,14 +174,18 @@ internal sealed class BuildDeterminismRunner
     /// </summary>
     private void RunMSBuild(string arguments)
     {
-        var psi = new ProcessStartInfo
+        RunProcess(new ProcessStartInfo
         {
             FileName = _msbuildPath,
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
+            Arguments = arguments
+        });
+    }
+
+    internal static void RunProcess(ProcessStartInfo psi)
+    {
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.UseShellExecute = false;
 
         using var process = Process.Start(psi)!;
 
@@ -177,7 +208,7 @@ internal sealed class BuildDeterminismRunner
 
         if (process.ExitCode != 0)
         {
-            throw new Exception($"'msbuild {arguments}' failed with exit code {process.ExitCode}");
+            throw new Exception($"'{psi.FileName}' failed with exit code {process.ExitCode}");
         }
     }
 

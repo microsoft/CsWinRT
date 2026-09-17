@@ -75,9 +75,9 @@ internal static class StructEnumMarshallerFactory
 
         // For structs that are mapped (e.g. Duration, KeyTime, RepeatBehavior — they have
         // EmitAbi=true and an addition file that completely replaces the public struct), skip
-        // the per-field ConvertToUnmanaged/ConvertToManaged because the projected struct's
-        // public fields don't match the WinMD field layout. The truth marshaller for these
-        // contains only BoxToUnmanaged/UnboxToManaged.
+        // the per-field ConvertToUnmanaged/ConvertToManaged: no ABI struct is emitted for them
+        // (see AbiStructFactory), as they are passed through by value. The truth marshaller for
+        // these contains only BoxToUnmanaged/UnboxToManaged.
         (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = isNonBlittableStruct && MappedTypes.Get(typeNs, typeNm) is not null;
 

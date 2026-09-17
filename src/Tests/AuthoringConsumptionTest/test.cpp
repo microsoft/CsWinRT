@@ -977,10 +977,22 @@ TEST(AuthoringTest, AsyncMethodClass)
 TEST(AuthoringTest, DeprecatedMembersClass)
 {
     DeprecatedMembersClass obj;
+
+    // Members marked [Deprecated(DeprecationType.Remove)] are omitted from the projection, so they are
+    // intentionally not referenced here. Their ABI vtable slot is still preserved (stubbed to E_NOTIMPL):
+    // the new members below sit after the removed slots in vtable order, so their correct dispatch confirms
+    // the removed slots remain in place and the layout did not shift. The deprecated members and the new
+    // members both remain projected and fully usable.
     obj.OldMethod();
     obj.NewMethod();
-    EXPECT_EQ(obj.OldProp(), L"");
-    EXPECT_EQ(obj.NewProp(), L"");
+    EXPECT_EQ(obj.OldProp(), L"OldProp");
+    EXPECT_EQ(obj.NewProp(), L"NewProp");
+
+    DeprecatedMembersClass::OldStatic();
+    DeprecatedMembersClass::NewStatic();
+
+    auto oldToken = obj.OldEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
+    auto newToken = obj.NewEvent(auto_revoke, [](IInspectable const&, int32_t const&) {});
 }
 
 TEST(AuthoringTest, FullFeaturedClass)

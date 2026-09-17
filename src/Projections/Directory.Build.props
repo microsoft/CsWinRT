@@ -16,9 +16,6 @@
     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0108;CS0109;CS0114;CS1591;CS0219;CS0628;CS0660;CA2257</WarningsNotAsErrors>
 
-    <!-- Generated projections surface evaluation-only ('[Experimental]') Windows Runtime APIs, so 'CS8305' is expected -->
-    <NoWarn>$(NoWarn);CS8305</NoWarn>
-
     <!-- Projection settings -->
     <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>

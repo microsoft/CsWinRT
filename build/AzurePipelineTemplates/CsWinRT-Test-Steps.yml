@@ -65,6 +65,20 @@ steps:
         --no-build
       testRunTitle: Projection Writer Tests
 
+# Run Impl Generator Tests. Gated to x64 only for the same reason as the other generator tests: these
+# run the 'cswinrtimplgen' tool end-to-end as a separate process (which is always built for the build
+# host), so the target platform makes no difference to what they cover.
+  - task: DotNetCoreCLI@2
+    displayName: Run Impl Generator Tests
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/ImplGeneratorTest/ImplGeneratorTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Impl Generator Tests
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests

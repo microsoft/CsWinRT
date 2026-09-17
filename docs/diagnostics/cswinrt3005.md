@@ -1,27 +1,45 @@
-# CsWinRT warning CSWINRT3005
+# CsWinRT error CSWINRT3005
 
-The `WindowsRuntimeImplementableClassAttribute` and `WindowsRuntimeImplementableClassFactoryAttribute` types (in the `WindowsRuntime` namespace) are private implementation details of `WinRT.Runtime.dll`. They are applied by CsWinRT to the abstract base classes it generates for Windows Runtime types that can be implemented (authored) in C#, to identify the Windows Runtime class each one stands for. Unlike most other CsWinRT implementation details, they are not stripped from the reference assembly, because the reference projections carrying those base classes are compiled against them. They are not intended for direct use in user code.
+Windows Runtime APIs can be marked as experimental in their Windows Runtime metadata, with the `[Windows.Foundation.Metadata.Experimental]` attribute (`[experimental]` in MIDL). Such an API is published for evaluation purposes only: it can change shape or be removed entirely in any future Windows SDK, with no compatibility guarantee. CsWinRT projects that marker as `[System.Diagnostics.CodeAnalysis.Experimental]` with the `CSWINRT3005` diagnostic id, so the compiler reports every use site.
 
 For instance, the following sample generates CSWINRT3005:
 
 ```csharp
-using WindowsRuntime;
+using Windows.Graphics.Capture;
 
-// CSWINRT3005: the implementable class attribute is a private implementation detail
-[WindowsRuntimeImplementableClass(typeof(Contoso.Widgets.Widget))]
-public abstract class MyBase;
+// CSWINRT3005: 'IDisplayGraphicsCaptureSession' is marked as experimental
+void Capture(IDisplayGraphicsCaptureSession session)
+{
+}
 ```
 
 ## Additional resources
 
-`CSWINRT3005` is emitted when user code references the `WindowsRuntimeImplementableClassAttribute` or `WindowsRuntimeImplementableClassFactoryAttribute` types directly. CsWinRT emits them automatically onto the abstract `ABI.<Namespace>.<Class>` and `ABI.<Namespace>.<Class>ActivationFactory` base classes produced when a projection is built with `CsWinRTImplementWinMDTypes`, and CsWinRT tooling reads them to recognize those bases and to determine the runtime class name a derived implementation reports to the Windows Runtime. All of that generated code suppresses this diagnostic, so it never affects normal builds.
+`CSWINRT3005` is reported when user code references a Windows Runtime API that CsWinRT projected with `[Experimental]`. Windows Runtime metadata has no per-API diagnostic id (the metadata attribute takes no arguments), so all experimental Windows Runtime APIs share this one id.
 
-The attributes are not considered part of the versioned API surface of `WinRT.Runtime.dll`, and they may be modified or removed across any version change. Using them in user code is undefined behavior and not supported.
+Following the [experimental attribute](https://learn.microsoft.com/dotnet/csharp/language-reference/proposals/csharp-12.0/experimental-attribute) design, this is reported as an **error** rather than a warning, so that depending on an experimental API is always a deliberate choice. It can be suppressed exactly like a warning, which is how the opt-in is expressed.
+
+Generated projection code suppresses this diagnostic: a projection has to name an experimental type in order to project it at all, so the marker is guidance for the consumers of a projection rather than for the projection itself.
+
+> **Note**: previous versions of CsWinRT relied on the C# compiler recognizing `Windows.Foundation.Metadata.ExperimentalAttribute` by name and reporting `CS8305`. That warning was not actionable per API: it could not be suppressed for one API without suppressing it for all of them, and it carried no link to any documentation. Suppressions of `CS8305` should be replaced with `CSWINRT3005`.
 
 ## Recommended action
 
-- Do not reference the `WindowsRuntimeImplementableClassAttribute` or `WindowsRuntimeImplementableClassFactoryAttribute` types in user code, and let CsWinRT emit them for you.
-- To implement a Windows Runtime type declared in an existing `.winmd`, extend the generated `ABI.<Namespace>.<Class>` abstract base class from a projection built with `CsWinRTImplementWinMDTypes`, rather than annotating a base class of your own.
-- To customize the runtime class name that an unrelated type reports to the Windows Runtime, use `WindowsRuntimeClassNameAttribute` instead, which is supported for that purpose.
+- Prefer a stable API when one exists, and treat the experimental one as temporary.
+- If you do want to depend on an experimental API, opt in explicitly and as narrowly as possible:
 
-Keeping the attribute exclusive to generated code is what allows CsWinRT to evolve the projection infrastructure rapidly. Respecting the diagnostic ensures your applications remain stable across updates.
+```csharp
+#pragma warning disable CSWINRT3005
+IDisplayGraphicsCaptureSession session = CreateSession();
+#pragma warning restore CSWINRT3005
+```
+
+  Or, to opt in for a whole project, add the id to `NoWarn`:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);CSWINRT3005</NoWarn>
+</PropertyGroup>
+```
+
+- Be ready for the API to change: because it is experimental, an update to the Windows SDK your project targets can change its signature or remove it, and no servicing guarantee applies.

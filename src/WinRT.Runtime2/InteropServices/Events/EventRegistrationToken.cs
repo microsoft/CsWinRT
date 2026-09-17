@@ -20,6 +20,11 @@ namespace WindowsRuntime.InteropServices;
 public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
 {
     /// <summary>
+    /// The reference to the delegate. A valid reference will not have a value of zero.
+    /// </summary>
+    public long Value;
+
+    /// <summary>
     /// Creates a new <see cref="EventRegistrationToken"/> value with the specified parameters.
     /// </summary>
     /// <param name="value">The reference to the delegate. A valid reference will not have a value of zero.</param>
@@ -27,11 +32,6 @@ public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
     {
         Value = value;
     }
-
-    /// <summary>
-    /// Gets or sets the reference to the delegate. A valid reference will not have a value of zero.
-    /// </summary>
-    public long Value { readonly get; set; }
 
     /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

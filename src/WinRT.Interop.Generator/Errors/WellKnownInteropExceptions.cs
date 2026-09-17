@@ -895,6 +895,14 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Failed to discover the list types used by 'NotifyCollectionChangedEventArgs'.
+    /// </summary>
+    public static WellKnownInteropException DiscoverCollectionChangedListTypesError(Exception exception)
+    {
+        return Exception(103, "Failed to discover the list types used by 'NotifyCollectionChangedEventArgs' (e.g. 'SingleItemReadOnlyList').", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

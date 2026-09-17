@@ -292,13 +292,16 @@ Properties consumers may set on the vcxproj:
     CsWinRTGenerateComponentInterop copies the generated hosting bundle
     (WinRT.Component.dll and friends) into $(OutDir) as loose files, which belong
     to no output group and so are never harvested into a wapproj / MSIX package.
-    DesktopBridgeCopyLocalOutputGroup returns @(ReferenceCopyLocalPaths), so add the
-    bundle to it during the harvest invocation (the files exist by then). The Exists
-    guard makes this a no-op when there are no component references.
+    Both harvest paths build their payload from @(ReferenceCopyLocalPaths), so add
+    the bundle to it during the harvest invocation (the files exist by then):
+    DesktopBridgeCopyLocalOutputGroup for a wapproj, and CopyLocalFilesOutputGroup
+    for the direct AppX pipeline a packaging vcxproj uses. Only the one the
+    consumer's packaging drives will run. The Exists guard makes this a no-op when
+    there are no component references.
     ============================================================
   -->
   <Target Name="_CsWinRTAddGeneratedBundleToOutputGroups"
-          BeforeTargets="DesktopBridgeCopyLocalOutputGroup"
+          BeforeTargets="DesktopBridgeCopyLocalOutputGroup;CopyLocalFilesOutputGroup"
           Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
 
     <ItemGroup>

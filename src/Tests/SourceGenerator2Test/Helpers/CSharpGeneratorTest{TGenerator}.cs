@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Emit;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
 
@@ -79,6 +81,29 @@ internal static class CSharpGeneratorTest<TGenerator>
         CollectionAssert.AreEquivalent((Diagnostic[])[], diagnostics);
 
         return compilation.SyntaxTrees.Single(tree => Path.GetFileName(tree.FilePath) == filename).ToString();
+    }
+
+    /// <summary>
+    /// Compiles the generated sources and loads the resulting assembly.
+    /// </summary>
+    /// <param name="source">The input source to process.</param>
+    /// <param name="languageVersion">The language version to use to run the test.</param>
+    /// <param name="isCsWinRTComponent">Whether to set the <c>"CsWinRTComponent"</c> MSBuild property to <see langword="true"/>.</param>
+    /// <returns>The compiled assembly.</returns>
+    public static Assembly Compile(string source, LanguageVersion languageVersion = LanguageVersion.CSharp14, bool isCsWinRTComponent = false)
+    {
+        RunGenerator(source, languageVersion, isCsWinRTComponent, out Compilation compilation, out ImmutableArray<Diagnostic> diagnostics);
+
+        CollectionAssert.AreEquivalent((Diagnostic[])[], diagnostics);
+
+        using MemoryStream stream = new();
+
+        EmitResult result = compilation.Emit(stream);
+
+        Assert.IsTrue(result.Success, string.Join("\n", result.Diagnostics));
+
+        return Assembly.Load(stream.ToArray());
+    }
     }
 
     /// <summary>

@@ -132,6 +132,10 @@ internal sealed partial class WinMDWriter
             }
 
             outputType.Fields.Add(outputField);
+
+            // Copy custom attributes from the input field: Windows Runtime metadata supports member
+            // markers (e.g. '[Deprecated]' and '[Experimental]') on individual enum members
+            CopyCustomAttributes(field, outputField);
         }
     }
 
@@ -360,6 +364,10 @@ internal sealed partial class WinMDWriter
                 signature: new FieldSignature(MapTypeSignatureToOutput(field.Signature!.FieldType)));
 
             outputType.Fields.Add(outputField);
+
+            // Copy custom attributes from the input field: Windows Runtime metadata supports member
+            // markers (e.g. '[Deprecated]' and '[Experimental]') on individual struct fields
+            CopyCustomAttributes(field, outputField);
         }
     }
 

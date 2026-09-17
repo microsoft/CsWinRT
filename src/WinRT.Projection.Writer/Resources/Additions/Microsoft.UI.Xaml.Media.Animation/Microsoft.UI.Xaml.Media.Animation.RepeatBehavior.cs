@@ -10,6 +10,10 @@ namespace Microsoft.UI.Xaml.Media.Animation
 #endif
     public struct RepeatBehavior : IFormattable, IEquatable<RepeatBehavior>
     {
+        public double Count;
+        public TimeSpan Duration;
+        public RepeatBehaviorType Type;
+
         internal static bool IsFinite(double value)
         {
             return !(double.IsNaN(value) || double.IsInfinity(value));
@@ -61,21 +65,6 @@ namespace Microsoft.UI.Xaml.Media.Animation
             {
                 return Type == RepeatBehaviorType.Duration;
             }
-        }
-
-        public double Count
-        {
-            readonly get; set;
-        }
-
-        public TimeSpan Duration
-        {
-            readonly get; set;
-        }
-
-        public RepeatBehaviorType Type
-        {
-            readonly get; set;
         }
 
         public readonly override string ToString()

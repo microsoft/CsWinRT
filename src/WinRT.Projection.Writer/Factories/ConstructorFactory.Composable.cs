@@ -56,6 +56,15 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
+            // Skip removed composable constructor overloads; the factory vtable slot is preserved
+            // (methodIndex still advances) so the remaining constructors dispatch through the correct slot.
+            if (method.IsRemoved)
+            {
+                methodIndex++;
+
+                continue;
+            }
+
             // Composable factory methods have signature like:
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.
@@ -71,6 +80,8 @@ internal static partial class ConstructorFactory
             bool isParameterless = userParamCount == 0;
 
             writer.WriteLine();
+
+            CustomAttributeFactory.WriteObsoleteAttribute(writer, method);
 
             writer.WriteIf(!string.IsNullOrEmpty(platformAttribute), platformAttribute);
 

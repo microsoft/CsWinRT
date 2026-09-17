@@ -86,6 +86,11 @@ internal static partial class ClassMembersFactory
                 setterPlat = string.Empty;
             }
 
+            if (s.DeprecationAccessor is { } deprecationAccessor)
+            {
+                CustomAttributeFactory.WriteObsoleteAttribute(writer, deprecationAccessor);
+            }
+
             writer.WriteIf(!string.IsNullOrEmpty(propertyPlat), propertyPlat);
 
             writer.Write($"{s.Access}{s.MethodSpec}{s.PropTypeText} {kvp.Key}");

@@ -195,14 +195,44 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Returns whether the type declares a parameterless instance constructor.
+        /// Returns whether the type declares a parameterless instance constructor that is usable for
+        /// default activation, i.e. one that is not marked as removed (<c>[Deprecated(DeprecationType.Remove)]</c>).
         /// </summary>
-        /// <returns><see langword="true"/> if the type has a default constructor; otherwise <see langword="false"/>.</returns>
-        public bool HasDefaultConstructor()
+        /// <remarks>
+        /// A removed default constructor is omitted from the projection, so the type is no longer
+        /// default-activatable: the activation factory cannot emit <c>new T()</c> for it (the C# compiler
+        /// treats a call to a removed member as an error), and default activation returns <c>E_NOTIMPL</c> instead.
+        /// </remarks>
+        /// <returns><see langword="true"/> if the type has a non-removed default constructor; otherwise <see langword="false"/>.</returns>
+        public bool HasActivatableDefaultConstructor()
         {
             foreach (MethodDefinition m in type.Methods)
             {
                 if (m.IsDefaultConstructor)
+                {
+                    return !m.IsRemoved;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns whether the type (an activation or composable factory interface) declares at least one
+        /// method that still projects to a constructor, i.e. one that is neither special nor marked as
+        /// removed (<c>[Deprecated(DeprecationType.Remove)]</c>).
+        /// </summary>
+        /// <remarks>
+        /// A factory interface with no such methods contributes no constructors to the projected class, so
+        /// (in reference-projection mode) the class needs a synthetic non-public parameterless constructor
+        /// to suppress the C# compiler's implicit public default constructor.
+        /// </remarks>
+        /// <returns><see langword="true"/> if the factory interface has a non-removed factory method; otherwise <see langword="false"/>.</returns>
+        public bool HasActivatableFactoryMethod()
+        {
+            foreach (MethodDefinition m in type.GetNonSpecialMethods())
+            {
+                if (!m.IsRemoved)
                 {
                     return true;
                 }

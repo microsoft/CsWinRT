@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AsmResolver.DotNet;
+
 namespace WindowsRuntime.ProjectionWriter.Models;
 
 /// <summary>
@@ -18,6 +20,13 @@ internal sealed class StaticPropertyAccessorState
     /// Gets or sets whether a static setter accessor has been seen for this property.
     /// </summary>
     public bool HasSetter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the accessor method used to determine whether the static property is deprecated
+    /// (the getter when present, otherwise the setter). MIDL places <c>[Deprecated]</c> on the
+    /// accessor, not on the Property row.
+    /// </summary>
+    public MethodDefinition? DeprecationAccessor { get; set; }
 
     /// <summary>
     /// Gets or sets the projected C# type text of the property (for the unified getter+setter declaration).

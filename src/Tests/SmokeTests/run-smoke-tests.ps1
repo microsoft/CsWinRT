@@ -13,13 +13,18 @@
         built and run, validating that the generated projection and interop assemblies, and
         the 'WinRT.Runtime' ref/impl assemblies, are wired up correctly.
 
+      * MixedConsumption: a .NET app combines Windows SDK projections with an authored component
+        implementing an SDK interface and taking an SDK type in a constructor. This validates
+        component projection generation against SDK forwarders without duplicate type definitions
+        or missing SDK assembly identities.
+
       * Authoring: a Windows Runtime component library is built, validating WinMD
         generation, the reference projection, and the forwarder assembly.
 
       * Projection: a class library generates a reference projection for a third-party
         component's '.winmd' (reusing the one emitted by the authoring test), validating the
         reference projection generator and the forwarder generator, exactly as a NuGet
-        projection author would.
+        projection author would. The forwarder is also checked to ship embedded symbols.
 
       * WindowsSdkProjection: a class library generates the base Windows SDK reference projection
         from the 'Microsoft.Windows.SDK.Contracts' '.winmd' files, exactly as the
@@ -47,9 +52,10 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection',
-    'WindowsSdkXamlProjection', 'ComponentUsingProjection', or 'All' (the default). The CI runs each test
-    as its own step (passing a single value), so an individual failure is reported in isolation; local
+    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'Authoring', 'Projection',
+    'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection', or 'All' (the default).
+    The CI runs each test as its own step (passing a single value), so an individual failure is reported
+    in isolation; local
     builds use the default 'All'.
 
 .PARAMETER Runtime
@@ -78,7 +84,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -95,6 +101,7 @@ $nativeAotRid = 'win-x64'
 
 $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
+$mixedConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'MixedConsumption', 'MixedConsumption.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
@@ -153,32 +160,37 @@ function Assert-WinMDDefinesType {
 
 # Consumption: build (CoreCLR) or Native AOT publish, then run (must not crash).
 function Invoke-ConsumptionSmokeTest {
-    Write-Host "`n=== Consumption smoke test ($Runtime) ===" -ForegroundColor Green
+    param (
+        [Parameter(Mandatory = $true)] [string] $Name,
+        [Parameter(Mandatory = $true)] [string] $Project
+    )
+
+    Write-Host "`n=== $Name smoke test ($Runtime) ===" -ForegroundColor Green
 
     if ($Runtime -eq 'NativeAot') {
         # Publish the whole app with Native AOT (self-contained, no managed host).
-        Invoke-Dotnet (@('publish', $consumptionProject, '--runtime', $nativeAotRid, '-p:PublishAot=true') + $commonBuildArgs)
+        Invoke-Dotnet (@('publish', $Project, '--runtime', $nativeAotRid, '-p:PublishAot=true') + $commonBuildArgs)
     }
     else {
-        Invoke-Dotnet (@('build', $consumptionProject) + $commonBuildArgs)
+        Invoke-Dotnet (@('build', $Project) + $commonBuildArgs)
     }
 
     # Locate the freshly built app, asserting a clean (zero) exit code when run. A Native AOT
     # publish drops a self-contained '.exe' under a 'publish' folder, so filter to it; a CoreCLR
     # build leaves the '.exe' directly under the target framework folder.
-    $consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'bin')) -Filter 'Consumption.exe' -Recurse |
+    $consumptionExe = Get-ChildItem -Path ([IO.Path]::Combine([IO.Path]::GetDirectoryName($Project), 'bin')) -Filter "$Name.exe" -Recurse |
         Where-Object { $Runtime -ne 'NativeAot' -or $_.FullName -match '\\publish\\' } |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
     if ($null -eq $consumptionExe) {
-        throw "Could not find the built 'Consumption.exe'."
+        throw "Could not find the built '$Name.exe'."
     }
 
     Write-Host "Running '$($consumptionExe.FullName)'" -ForegroundColor DarkGray
     & $consumptionExe.FullName
     if ($LASTEXITCODE -ne 0) {
-        throw "Consumption smoke test crashed or failed with exit code $LASTEXITCODE."
+        throw "$Name smoke test crashed or failed with exit code $LASTEXITCODE."
     }
 }
 
@@ -265,6 +277,11 @@ function Invoke-ReferenceProjectionSmokeTest {
         throw "The $Name build did not produce the 'ref\$Name.dll' reference assembly."
     }
 
+    # The forwarder is what lands in 'lib/<tfm>' of a projection package, so it has to ship symbols. It
+    # is emitted as metadata rather than compiled, so its debug information is synthesized by
+    # 'cswinrtimplgen'; without that, the whole package reports as having no symbols.
+    Assert-HasEmbeddedSymbols -Path $forwarder.FullName
+
     Write-Host "Verified the $Name projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
 }
 
@@ -341,8 +358,35 @@ function Assert-PackageHasReferenceAssemblyLayout {
     Write-Host "Verified the projection package ships '$referenceAssembly', '$forwarder' and '$metadata'." -ForegroundColor DarkGray
 }
 
+# Verifies that an assembly carries an embedded portable PDB and is marked as reproducible.
+function Assert-HasEmbeddedSymbols {
+    param ([Parameter(Mandatory = $true)] [string] $Path)
+
+    $stream = [IO.File]::OpenRead($Path)
+    try {
+        $peReader = [Reflection.PortableExecutable.PEReader]::new($stream)
+        try {
+            $entryTypes = $peReader.ReadDebugDirectory() | ForEach-Object { $_.Type }
+
+            foreach ($required in @('EmbeddedPortablePdb', 'Reproducible', 'CodeView', 'PdbChecksum')) {
+                if ($entryTypes -notcontains $required) {
+                    throw "'$([IO.Path]::GetFileName($Path))' is missing the '$required' debug directory entry (has: $($entryTypes -join ', '))."
+                }
+            }
+        }
+        finally { $peReader.Dispose() }
+    }
+    finally { $stream.Dispose() }
+
+    Write-Host "Verified '$([IO.Path]::GetFileName($Path))' ships embedded symbols." -ForegroundColor DarkGray
+}
+
 if ($Test -in @('All', 'Consumption')) {
-    Invoke-ConsumptionSmokeTest
+    Invoke-ConsumptionSmokeTest -Name 'Consumption' -Project $consumptionProject
+}
+
+if ($Test -in @('All', 'MixedConsumption')) {
+    Invoke-ConsumptionSmokeTest -Name 'MixedConsumption' -Project $mixedConsumptionProject
 }
 
 if ($Test -in @('All', 'Authoring')) {

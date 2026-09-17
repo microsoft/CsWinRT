@@ -63,6 +63,12 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--marshalling-enabled-assembly-names")]
     public string[] MarshallingEnabledAssemblyNames { get; init; } = [];
 
+    /// <summary>Gets whether to automatically generate the vtables for the list types used by <c>NotifyCollectionChangedEventArgs</c>.</summary>
+    /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--generate-collection-changed-list-vtables")]
+    [DefaultValue(true)]
+    public bool GenerateCollectionChangedListVtables { get; init; }
+
     /// <summary>Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.</summary>
     [CommandLineArgumentName("--validate-winrt-runtime-assembly-version")]
     public required bool ValidateWinRTRuntimeAssemblyVersion { get; init; }

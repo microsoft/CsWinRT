@@ -277,6 +277,16 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         WindowsRuntimeObjectComWrappersCallback? objectComWrappersCallback,
         WindowsRuntimeUnsealedObjectComWrappersCallback? unsealedObjectComWrappersCallback)
     {
+        // Save the current state before overwriting it, so that it can be restored below. For a top-level
+        // marshalling operation this is all 'null', but it will not be when re-entering this method from a
+        // marshalling operation that is already in flight on this thread. That happens whenever a marshaller
+        // also needs to marshal nested objects (eg. the one for 'NotifyCollectionChangedEventArgs', which
+        // marshals its 'NewItems'/'OldItems' collections). Restoring, rather than unconditionally clearing,
+        // keeps the state of the outer marshalling operation intact for when control returns to it.
+        WindowsRuntimeObjectComWrappersCallback? previousObjectComWrappersCallback = ObjectComWrappersCallback;
+        WindowsRuntimeUnsealedObjectComWrappersCallback? previousUnsealedObjectComWrappersCallback = UnsealedObjectComWrappersCallback;
+        void* previousCreateObjectTargetInterfacePointer = CreateObjectTargetInterfacePointer;
+
         ObjectComWrappersCallback = objectComWrappersCallback;
         UnsealedObjectComWrappersCallback = unsealedObjectComWrappersCallback;
         CreateObjectTargetInterfacePointer = (void*)externalComObject;
@@ -290,14 +300,15 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         }
         finally
         {
-            // Always reset the shared state after the call, regardless of whether the call succeeded. We want to
-            // make sure that those fields are always 'null' before any following calls. This is necessary because
-            // we cannot guarantee callers will always go through this overload to set them correctly. In particular,
-            // the 'WeakReference<T>' callback might use this 'ComWrappers' instance externally, and if any of these
-            // fields were set it would cause issues. See additional notes below for this in 'CreateObject'.
-            ObjectComWrappersCallback = null;
-            UnsealedObjectComWrappersCallback = null;
-            CreateObjectTargetInterfacePointer = null;
+            // Always restore the shared state after the call, regardless of whether the call succeeded. For a
+            // top-level marshalling operation the saved values are all 'null', so this preserves the invariant
+            // that these fields are 'null' before any following calls. That invariant is necessary because we
+            // cannot guarantee callers will always go through this overload to set them correctly. In particular,
+            // the 'WeakReference<T>' callback might use this 'ComWrappers' instance externally, and if any of
+            // these fields were set it would cause issues. See additional notes below for this in 'CreateObject'.
+            ObjectComWrappersCallback = previousObjectComWrappersCallback;
+            UnsealedObjectComWrappersCallback = previousUnsealedObjectComWrappersCallback;
+            CreateObjectTargetInterfacePointer = previousCreateObjectTargetInterfacePointer;
         }
     }
 
@@ -343,6 +354,14 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // We always need this, and all callers are expected to be providing one.
         void* interfacePointer = CreateObjectTargetInterfacePointer;
 
+        // Whether we acquired 'interfacePointer' ourselves, and are therefore responsible for releasing it below.
+        // This must be tracked in a local: it cannot be inferred in the 'finally' block by checking whether
+        // 'CreateObjectTargetInterfacePointer' is 'null', because re-entrant marshalling on the same thread (ie.
+        // a marshaller which also marshals nested objects, such as the one for 'NotifyCollectionChangedEventArgs'
+        // marshalling its 'NewItems'/'OldItems' collections) resets that field before we get to observe it. Doing
+        // so would make us release an interface pointer that was supplied by the caller, and that we do not own.
+        bool isInterfacePointerOwned = false;
+
         // There is a rare case where we might not have an input interface pointer, and that is if this
         // call was directly to 'ComWrappers' through the rehydration path in 'WeakReference<T>'. That
         // is, if we had a 'WeakReference<T>' instance pointing to an RCW object which got collected,
@@ -361,6 +380,8 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
             // Manually 'QueryInterface' to retrieve the 'IInspectable' object we need
             IUnknownVftbl.QueryInterfaceUnsafe((void*)externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IInspectable, out interfacePointer).Assert();
+
+            isInterfacePointerOwned = true;
         }
 
         try
@@ -454,7 +475,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         {
             // If we hit the special case mentioned above where we had to manually 'QueryInterface' for 'IInspectable', as the caller
             // hadn't provided a valid interface pointer, we need to also make sure to release that acquired interface pointer here.
-            if (CreateObjectTargetInterfacePointer is null)
+            if (isInterfacePointerOwned)
             {
                 _ = IUnknownVftbl.ReleaseUnsafe(interfacePointer);
             }

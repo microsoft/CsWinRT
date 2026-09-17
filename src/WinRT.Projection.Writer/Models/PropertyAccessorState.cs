@@ -29,6 +29,13 @@ internal sealed class PropertyAccessorState
     public bool HasSetter { get; set; }
 
     /// <summary>
+    /// Gets or sets the accessor method used to determine whether the property is deprecated (the
+    /// getter when present, otherwise the setter). MIDL places <c>[Deprecated]</c> on the accessor,
+    /// not on the Property row, so the projected property's <c>[Obsolete]</c> is derived from it.
+    /// </summary>
+    public MethodDefinition? DeprecationAccessor { get; set; }
+
+    /// <summary>
     /// Gets or sets the projected C# type text of the property (for the unified getter+setter declaration).
     /// </summary>
     public string PropTypeText { get; set; } = string.Empty;

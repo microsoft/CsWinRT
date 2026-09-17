@@ -92,8 +92,17 @@ public static class IListMethods<T>
             ArgumentException.ThrowInsufficientSpaceToCopyCollection();
         }
 
-        // Copy all items into the target array, at the specified starting offset
-        for (int i = 0; i < count; i++)
+        // If there are no items to copy, we can just stop here
+        if (count == 0)
+        {
+            return;
+        }
+
+        int copied = TMethods.GetMany(thisReference, array, arrayIndex, count);
+
+        // Some vectors might return fewer items than requested, so preserve the semantics
+        // of 'ICollection<T>.CopyTo' by retrieving any remaining items individually.
+        for (int i = copied; i < count; i++)
         {
             array[i + arrayIndex] = Item<TMethods>(thisReference, i);
         }

@@ -67,7 +67,7 @@ if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
-set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW, NativeExposedType
+set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, CustomPropertyProvider, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW, NativeExposedType
 
 if "%cswinrt_platform%" EQU "x86" set run_functional_tests=true
 if "%cswinrt_platform%" EQU "x64" set run_functional_tests=true
@@ -317,11 +317,21 @@ rem verify that the real package (ref/lib assemblies, generators, and build targ
 rem for a consuming app, a component author, and a projection author, fully isolated from the
 rem repo build infrastructure. They run only on x64 (matching the native build tools packaged
 rem for the host architecture) and can be skipped by setting 'cswinrt_run_smoke_tests=false'.
+rem They run on PowerShell 7 ('pwsh'), which is what the CI tasks use as well: the tests inspect
+rem the built assemblies with 'System.Reflection.Metadata', which Windows PowerShell lacks.
 if /I not "%cswinrt_platform%"=="x64" goto :eof
 if /I "%cswinrt_run_smoke_tests%"=="false" goto :eof
 
+where /q pwsh.exe
+if ErrorLevel 1 (
+ echo.
+ echo ERROR: The smoke tests require PowerShell 7 ^('pwsh'^), which was not found on PATH.
+ echo Install it from https://aka.ms/powershell, or skip the smoke tests with 'cswinrt_run_smoke_tests=false'.
+ exit /b 1
+)
+
 echo Running smoke tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%this_dir%Tests\SmokeTests\run-smoke-tests.ps1" -PackageSource "%cswinrt_bin_dir%" -PackageVersion %cswinrt_version_string% -Configuration %cswinrt_configuration%
+call :exec pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "%this_dir%Tests\SmokeTests\run-smoke-tests.ps1" -PackageSource "%cswinrt_bin_dir%" -PackageVersion %cswinrt_version_string% -Configuration %cswinrt_configuration%
 if ErrorLevel 1 (
  echo.
  echo ERROR: Smoke tests failed

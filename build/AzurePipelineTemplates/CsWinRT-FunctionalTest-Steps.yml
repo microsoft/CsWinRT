@@ -4,6 +4,7 @@ parameters:
     default: 
     - JsonValueFunctionCalls
     - ClassActivation
+    - CustomPropertyProvider
     - Structs
     - Events
     - DynamicInterfaceCasting
@@ -14,6 +15,7 @@ parameters:
     - CCW
     - TypeMarshaling
     - ImplementWinMDTypes
+    - UserDefinedTypeNames
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

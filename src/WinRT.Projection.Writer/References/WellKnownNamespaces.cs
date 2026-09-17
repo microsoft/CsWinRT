@@ -29,6 +29,11 @@ internal static class WellKnownNamespaces
     public const string System = "System";
 
     /// <summary>
+    /// The <c>System.Diagnostics.CodeAnalysis</c> namespace (where the .NET <c>[Experimental]</c> attribute lives).
+    /// </summary>
+    public const string SystemDiagnosticsCodeAnalysis = "System.Diagnostics.CodeAnalysis";
+
+    /// <summary>
     /// The <c>WindowsRuntime.Internal</c> namespace (internal interop interfaces).
     /// </summary>
     public const string WindowsRuntimeInternal = "WindowsRuntime.Internal";

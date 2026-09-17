@@ -28,6 +28,8 @@
     <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.WinMD.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.CsWinRTGen.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.Pack.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.MultiTargeting.targets" target="buildMultiTargeting\Microsoft.Windows.CsWinRT.targets"/>
     <file src="Microsoft.Windows.CsWinRT.CsWinRT2Polyfills.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="build"/>

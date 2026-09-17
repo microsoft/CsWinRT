@@ -10,6 +10,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.References;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
 
 #pragma warning disable IDE0046
@@ -113,23 +114,13 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Gets a value indicating whether the type comes from an authored Windows Runtime component assembly.
-        /// </summary>
-        /// <remarks>
-        /// This says nothing about the type itself. Component assemblies are marked with an assembly level attribute,
-        /// and they also contain plenty of types that are not projected at all, so this is only the first half of the
-        /// question. Use <c>IsComponentWindowsRuntimeType</c> to ask whether the type is a Windows Runtime type.
-        /// </remarks>
-        public bool IsFromComponentAssembly => type.Scope?.GetAssembly() is { IsWindowsRuntimeComponentAssembly: true };
-
-        /// <summary>
         /// Gets a value indicating whether the type is from a Windows Runtime reference projection assembly.
         /// </summary>
         /// <remarks>
         /// Types in a reference projection assembly (marked with <c>[WindowsRuntimeReferenceAssembly]</c>) are
-        /// projected Windows Runtime types, but they do not carry the per-type <c>[WindowsRuntimeMetadata]</c>
-        /// attribute that implementation projections use (it is stripped from reference projections). This mirrors
-        /// how authored component assemblies expose projected types without that attribute (the <c>IsComponentWindowsRuntimeType</c> extension property).
+        /// projected Windows Runtime types, but they do not carry the per-type <c>[WindowsRuntimeType]</c>
+        /// marker that implementation projections use (it is stripped from reference projections). Authored component
+        /// types are instead recognized from the exported type metadata in their generated component projection.
         /// </remarks>
         public bool IsReferenceProjectionWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeReferenceAssembly: true };
 
@@ -669,7 +660,7 @@ internal static class WindowsRuntimeExtensions
                     ? interopReferences.WinRTSdkProjection
                     : type.IsProjectedWindowsSdkXamlType
                         ? interopReferences.WinRTSdkXamlProjection
-                        : typeDefinition.IsFromComponentAssembly
+                        : typeDefinition.IsComponentWindowsRuntimeType(interopReferences.WindowsRuntimeComponentModule)
                             ? interopReferences.WinRTComponent
                             : interopReferences.WinRTProjection;
 
@@ -718,6 +709,41 @@ internal static class WindowsRuntimeExtensions
 
     extension(TypeDefinition type)
     {
+        /// <summary>
+        /// Checks whether a type belongs to the exported contract of an authored Windows Runtime component.
+        /// </summary>
+        /// <param name="componentModule">The generated component projection containing the exported type metadata.</param>
+        /// <returns>Whether the type is exported by its component.</returns>
+        public bool IsComponentWindowsRuntimeType([NotNullWhen(true)] ModuleDefinition? componentModule)
+        {
+            // Declare types that we can statically verify they're for sure not component types.
+            // For instance, all component types must be public, non-nested, and non-generic.
+            if (type is not
+                {
+                    IsPublic: true,
+                    DeclaringType: null,
+                    HasGenericParameters: false,
+                    DeclaringModule.Assembly.IsWindowsRuntimeComponentAssembly: true
+                })
+            {
+                return false;
+            }
+
+            // The type might be a component type, but we must have a component module to
+            // verify it. If we don't have one here, we can't perform this validation at all.
+            if (componentModule is null)
+            {
+                throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
+            }
+
+            // Visibility and the assembly marker alone can also admit managed helpers (which would be excluded
+            // from metadata generation). Only types recorded from the component's '.winmd' file are eligible
+            // for Windows Runtime signatures.
+            return
+                componentModule.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace, type.Name), out (TypeSignature Type, Utf8String Stem) metadata) &&
+                SignatureComparer.IgnoreVersion.Equals(type.ToTypeSignature(), metadata.Type);
+        }
+
         /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a projected Windows Runtime class type.
         /// </summary>
@@ -881,9 +907,9 @@ internal static class WindowsRuntimeExtensions
         public Utf8String? GetWindowsRuntimeMetadataName(InteropDefinitions interopDefinitions)
         {
             if (type.GetImplementationProjectionModule(interopDefinitions) is { } projectionModule &&
-                projectionModule.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace, type.Name), out Utf8String? metadataName))
+                projectionModule.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace, type.Name), out (TypeSignature Type, Utf8String Stem) metadata))
             {
-                return metadataName;
+                return metadata.Stem;
             }
 
             return null;
@@ -935,17 +961,6 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(baseType, interopReferences.Attribute);
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the type is a Windows Runtime type authored in a component assembly.
-        /// </summary>
-        /// <remarks>
-        /// Only public, non nested types make it into the <c>.winmd</c> a component produces. The rest are ordinary
-        /// managed types (internal helpers, and compiler generated ones such as the nested binding classes the XAML
-        /// compiler emits), and they carry none of the metadata, such as an IID, that marshalling code needs. This
-        /// lives here rather than next to <c>IsFromComponentAssembly</c> because accessibility is only known
-        /// once the type is resolved.
-        /// </remarks>
-        public bool IsComponentWindowsRuntimeType => type.IsFromComponentAssembly && type is { IsPublic: true, DeclaringType: null };
     }
 
     extension(TypeSignature signature)
@@ -1184,10 +1199,13 @@ internal static class WindowsRuntimeExtensions
             }
 
             // For all other cases, just check that the type is projected. This will also include manually
-            // projected types that are defined in 'WinRT.Runtime.dll' (same attributes). Public types from
-            // authored component assemblies, and types from reference projection assemblies, are also
-            // considered Windows Runtime types (they don't carry the per-type '[WindowsRuntimeMetadata]' attribute).
-            return type.IsProjectedWindowsRuntimeType || type.IsComponentWindowsRuntimeType || type.IsReferenceProjectionWindowsRuntimeType;
+            // projected types that are defined in 'WinRT.Runtime.dll' (same attributes). Exported authored
+            // component types and reference projection types don't carry the per-type '[WindowsRuntimeType]'
+            // marker, so recognize them from their component contract or reference assembly marker instead.
+            return
+                type.IsProjectedWindowsRuntimeType ||
+                type.IsComponentWindowsRuntimeType(interopReferences.WindowsRuntimeComponentModule) ||
+                type.IsReferenceProjectionWindowsRuntimeType;
         }
 
         /// <summary>
@@ -1258,10 +1276,10 @@ internal static class WindowsRuntimeExtensions
                 return false;
             }
 
-            // For all other cases, first check that the type is projected. Public types from authored
-            // component assemblies, and types from reference projection assemblies, are also considered
-            // projected, even without '[WindowsRuntimeMetadata]'.
-            if (!type.IsProjectedWindowsRuntimeType && !type.IsComponentWindowsRuntimeType && !type.IsReferenceProjectionWindowsRuntimeType)
+            // Apply the same exported component contract check as 'IsWindowsRuntimeType'.
+            if (!type.IsProjectedWindowsRuntimeType &&
+                !type.IsComponentWindowsRuntimeType(interopReferences.WindowsRuntimeComponentModule) &&
+                !type.IsReferenceProjectionWindowsRuntimeType)
             {
                 return false;
             }
@@ -1289,12 +1307,20 @@ internal static class WindowsRuntimeExtensions
         {
             RuntimeContext? runtimeContext = interopDefinitions.RuntimeContext;
 
-            return signature switch
+            // Select the type to read the metadata name from (the element type, for constructed generics and arrays)
+            ITypeDefOrRef typeDefOrRef = signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
-                ArrayTypeSignature array => array.BaseType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions),
-                _ => signature.ToTypeDefOrRef().Resolve(runtimeContext).GetWindowsRuntimeMetadataName(interopDefinitions)
+                GenericInstanceTypeSignature generic => generic.GenericType,
+                ArrayTypeSignature array => array.BaseType.ToTypeDefOrRef(),
+                _ => signature.ToTypeDefOrRef()
             };
+
+            // A type that cannot be resolved is never a projected Windows Runtime type, so it has no metadata name
+            // (see the discovery of the list types used by 'NotifyCollectionChangedEventArgs', which are registered
+            // by name, and so are absent from the reference assemblies the generator sees).
+            return typeDefOrRef.TryResolve(runtimeContext, out TypeDefinition? type)
+                ? type.GetWindowsRuntimeMetadataName(interopDefinitions)
+                : null;
         }
     }
 
@@ -1335,8 +1361,9 @@ internal static class WindowsRuntimeExtensions
             {
                 Utf8String? corLibName = module.CorLibTypeFactory.CorLibScope?.Name;
 
-                return corLibName == WellKnownMetadataNames.NetStandardAssemblyName ||
-                       corLibName == WellKnownMetadataNames.MSCorLibAssemblyName;
+                return
+                    corLibName == WellKnownMetadataNames.NetStandardAssemblyName ||
+                    corLibName == WellKnownMetadataNames.MSCorLibAssemblyName;
             }
         }
 

@@ -94,9 +94,15 @@ CsWinRT 3.0 will update the projection of `T[]` parameters to use first-class sp
 
 This means you no longer need to allocate and copy stuff into arrays all over the place (because you also need the size to be exactly right, so you can't even use the array pool). Instead, you'll be able to just use spans normally. Which also means you can now even make it 0-alloc and pass stack-allocated params entirely. This is source compatible thanks to the [first class span](https://learn.microsoft.com/dotnet/csharp/language-reference/proposals/first-class-span-types) types feature of C# 14.
 
-### Fixing `Point`/`Rect`/`Size` properties
+### Fixing `Point`/`Rect`/`Size` fields
 
-These foundational types have historically been projecting their fields as `double`, instead of `float`. This is not ideal for several reasons: it introduces implicit casts when assigning to or reading from them, it doesn't match the WinRT ABI (the backing data is still just floats), and it unnecessary impacts performance when doing lots of heavy calculations with them. In CsWinRT 3.0, we want to try fixing this design aspect and correctly projecting these members as `float`, and monitor what the real impact is on popular projects using WinRT from C#.
+These foundational types have historically been projecting their fields as `double` properties, instead of `float` fields. This is not ideal for several reasons: it introduces implicit casts when assigning to or reading from them, it doesn't match the WinRT ABI (the backing data is still just floats), and it unnecessary impacts performance when doing lots of heavy calculations with them. In CsWinRT 3.0, we want to try fixing this design aspect and correctly projecting these members as `float` fields, and monitor what the real impact is on popular projects using WinRT from C#.
+
+### Projecting struct fields as fields
+
+Windows Runtime structs are plain data: all their members are fields in metadata. CsWinRT 3.0 projects them as C# fields, matching both the metadata and what C++/WinRT does. This keeps the projected shape honest (there is no accessor to run any logic behind), it allows callers to take a reference to a member (e.g. to pass it as a `ref` argument), and it makes authoring work symmetrically: `cswinrtwinmdgen.exe` maps public instance fields of an authored `struct` back to Windows Runtime struct fields, so the shape you consume is exactly the shape you author.
+
+This also applies to the manually projected and custom-mapped struct types, such as `Windows.Foundation.Point` and `Microsoft.UI.Xaml.CornerRadius`. Any additional member those types expose that does not correspond to a Windows Runtime struct field (e.g. `Rect.Left` or `GridLength.IsAuto`) remains a managed-only property.
 
 ### Unifying foundational event handers with .NET
 

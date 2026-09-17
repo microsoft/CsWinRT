@@ -26,7 +26,7 @@ resources:
   - repository: TestWinRT
     type: git
     name: TestWinRT.mirror
-    ref: '938301db9c5b5e94899bef2e533bb96dae5fc643'
+    ref: '1022329bb09e6283e3f5f8c2110ae2b7a1496d70'
 
 extends:
   template: v2/Microsoft.NonOfficial.yml@templates
@@ -64,5 +64,6 @@ extends:
 
       - stage: Nuget
         dependsOn: BuildAndTest
+        condition: and(succeeded(), ne(variables['_BenchmarksOnly'], 'true'))
         jobs:
         - template: build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Stage-OneBranch.yml@self

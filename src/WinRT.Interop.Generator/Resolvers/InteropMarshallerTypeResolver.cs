@@ -73,7 +73,7 @@ internal static class InteropMarshallerTypeResolver
                 ? interopReferences.WinRTSdkProjection
                 : type.IsProjectedWindowsSdkXamlType
                     ? interopReferences.WinRTSdkXamlProjection
-                    : type.IsFromComponentAssembly
+                    : type.Resolve(interopReferences.RuntimeContext).IsComponentWindowsRuntimeType(interopReferences.WindowsRuntimeComponentModule)
                         ? interopReferences.WinRTComponent
                         : interopReferences.WinRTProjection;
 

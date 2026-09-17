@@ -10,6 +10,7 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// <summary>
 /// Include/exclude type filter using longest-prefix-match semantics: type/namespace is checked
 /// against each prefix in the include/exclude lists, and the longest matching prefix wins.
+/// Exact type includes match only the specified type, not namespaces or other type-name prefixes.
 /// </summary>
 /// <remarks>
 /// The semantics are:
@@ -26,28 +27,53 @@ internal sealed class TypeFilter
 {
     private readonly List<string> _include;
     private readonly List<string> _exclude;
+    private readonly HashSet<string> _includeTypes;
 
     /// <summary>
     /// Initializes a new <see cref="TypeFilter"/> with the given include and exclude prefix lists.
     /// </summary>
     /// <param name="include">The include prefixes (a type matches if any prefix matches).</param>
     /// <param name="exclude">The exclude prefixes (a type is rejected if any prefix matches and no longer include prefix wins).</param>
-    public TypeFilter(IEnumerable<string> include, IEnumerable<string> exclude)
+    /// <param name="includeTypes">Optional fully qualified type names to include, matched exactly.</param>
+    public TypeFilter(IEnumerable<string> include, IEnumerable<string> exclude, IEnumerable<string>? includeTypes = null)
     {
         _include = [.. include.OrderByDescending(s => s.Length)];
         _exclude = [.. exclude.OrderByDescending(s => s.Length)];
+        _includeTypes = new HashSet<string>(includeTypes ?? [], StringComparer.Ordinal);
     }
 
     /// <summary>
     /// Returns whether the given type name passes the include/exclude filter.
+    /// Exact type includes win over shorter prefixes, but not an identical exclude.
+    /// </summary>
+    public bool Includes(string fullName)
+    {
+        if (_includeTypes.Contains(fullName))
+        {
+            return !_exclude.Contains(fullName);
+        }
+
+        return IncludesPrefix(fullName);
+    }
+
+    /// <summary>
+    /// Returns whether a namespace passes the prefix filter, without matching exact type includes.
+    /// </summary>
+    public bool IncludesNamespace(string ns)
+    {
+        return IncludesPrefix(ns);
+    }
+
+    /// <summary>
+    /// Returns whether the given name passes the include/exclude prefix filter.
     /// Rules are sorted by descending prefix length (with excludes winning ties over includes);
     /// the first matching rule wins. Match semantics split the full type name into
     /// <c>namespace.typeName</c> parts and treat the rule prefix as either a namespace-prefix or
     /// a namespace + typename-prefix.
     /// </summary>
-    public bool Includes(string fullName)
+    private bool IncludesPrefix(string fullName)
     {
-        if (_include.Count == 0 && _exclude.Count == 0)
+        if (_include.Count == 0 && _exclude.Count == 0 && _includeTypes.Count == 0)
         {
             return true;
         }
@@ -115,7 +141,7 @@ internal sealed class TypeFilter
             }
         }
 
-        // No rule matched. Since at least one rule exists (the both-empty case returned true
+        // No rule matched. Since at least one rule exists (the all-empty case returned true
         // above), default to exclude. This means an excludes-only configuration (no includes)
         // projects nothing rather than everything-but-excluded.
         return false;

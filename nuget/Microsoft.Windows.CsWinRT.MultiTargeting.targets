@@ -1,0 +1,15 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Imported into the outer build of multi-targeted projects. NuGet conditions the imports it generates for the 'build'
+    folder on '$(TargetFramework)', so none of them apply there, but 'pack' runs on exactly that build. Only the packaging
+    logic belongs here; everything else is per target framework and stays in 'build'.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)..\build\Microsoft.Windows.CsWinRT.Pack.targets" />
+
+</Project>

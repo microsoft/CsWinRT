@@ -46,12 +46,15 @@
     generator is always built framework-dependent for the build host (output under 'net10.0\',
     with no 'win-<arch>' RID subfolder). Without this, the generator's 'PublishAot' build is
     self-contained and cannot be referenced by this non self-contained test project (NETSDK1151).
+    'Platform' is dropped as well: this project builds as x64/x86, but the generator declares no
+    platforms, so letting it through would place its output under 'bin\<platform>\' and no longer
+    match the path published as assembly metadata below (leaving the tests running a stale tool).
   -->
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
                       ReferenceOutputAssembly="false"
                       OutputItemType="_CsWinRTToolReference"
-                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
   </ItemGroup>
 

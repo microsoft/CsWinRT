@@ -109,6 +109,9 @@ internal partial class InteropGenerator
         // can create COM callable wrappers for them when they are handed out to native callers.
         DiscoverComponentActivationFactoryTypes(args, discoveryState);
 
+        // Discover the list types that 'NotifyCollectionChangedEventArgs' uses for its changed items
+        DiscoverCollectionChangedListTypes(args, discoveryState);
+
         // We want to ensure the state will never be mutated after this method completes
         discoveryState.MakeReadOnly();
 
@@ -387,7 +390,7 @@ internal partial class InteropGenerator
                 return;
             }
 
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
@@ -423,7 +426,7 @@ internal partial class InteropGenerator
                 return;
             }
 
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -480,7 +483,7 @@ internal partial class InteropGenerator
                 return;
             }
 
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -541,7 +544,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -582,7 +585,7 @@ internal partial class InteropGenerator
     {
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -639,7 +642,7 @@ internal partial class InteropGenerator
 
         try
         {
-            InteropReferences interopReferences = CreateDiscoveryInteropReferences(componentModule);
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(componentModule, discoveryState);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -671,6 +674,66 @@ internal partial class InteropGenerator
         catch (Exception e)
         {
             WellKnownInteropExceptions.DiscoverActivationFactoryTypesError(componentModule.Name, e).ThrowOrAttach(e);
+        }
+    }
+
+    /// <summary>
+    /// Discovers the list types that <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> uses for its changed items.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <remarks>
+    /// <para>
+    /// The <c>NewItems</c> and <c>OldItems</c> of a
+    /// <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> are internal list types,
+    /// optimized for that scenario. Any collection raising a change notification (e.g. an
+    /// <c>ObservableCollection&lt;T&gt;</c> bound from XAML) therefore marshals one of them across the ABI as
+    /// <see cref="System.Collections.IList"/>, which requires a CCW exposing <c>IBindableVector</c>.
+    /// </para>
+    /// <para>
+    /// These types cannot be discovered like any other: the generator only ever sees the framework
+    /// <em>reference</em> assemblies, which contain public API surface only, so the types are not in its input at
+    /// all. They are therefore registered here by name, with the interfaces they implement stated explicitly.
+    /// </para>
+    /// <para>
+    /// The names are resolved when the type map is built, so they are a real compatibility contract: if one of
+    /// these types is ever renamed or removed, Native AOT publishing fails with a type load error from ILC (under
+    /// the JIT the entry simply never matches). That is a loud, early failure, which is the intended trade-off,
+    /// but it does mean this list has to be revisited when adopting a new .NET version.
+    /// </para>
+    /// </remarks>
+    private static void DiscoverCollectionChangedListTypes(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState)
+    {
+        // Allow opting out of these types, should one of them ever be renamed or removed in a future .NET version
+        if (!args.GenerateCollectionChangedListVtables)
+        {
+            return;
+        }
+
+        try
+        {
+            // Use the Windows SDK projection module as the context to create references from, as
+            // it is always available (the same module all the other discovery steps here rely on).
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(discoveryState.WindowsRuntimeSdkProjectionModule!, discoveryState);
+
+            // Both types implement 'IList', 'ICollection' and 'IEnumerable'. Only the first and the last are
+            // Windows Runtime types ('IBindableVector' and 'IBindableIterable'), so those are the vtable entries.
+            TypeSignatureEquatableSet vtableTypes = new TypeSignatureEquatableSet.Builder(
+                interopReferences.IList.ToReferenceTypeSignature(),
+                interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
+
+            foreach (TypeSignature typeSignature in interopReferences.CollectionChangedListTypes)
+            {
+                args.Token.ThrowIfCancellationRequested();
+
+                discoveryState.TrackUserDefinedType(typeSignature, vtableTypes);
+            }
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.DiscoverCollectionChangedListTypesError(e).ThrowOrAttach(e);
         }
     }
 
@@ -761,8 +824,9 @@ internal partial class InteropGenerator
     /// Creates an <see cref="InteropReferences"/> instance that can be used for the discovery phase.
     /// </summary>
     /// <param name="module">The module currently being analyzed.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <returns>The <see cref="InteropReferences"/> instance to use for the discovery phase.</returns>
-    private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module)
+    private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module, InteropGeneratorDiscoveryState discoveryState)
     {
         // Create the interop references scoped to this module, which we need to lookup some references from
         // the 'WinRT.Runtime.dll' assembly. We haven't loaded it here just yet, so we can't use the real
@@ -788,7 +852,8 @@ internal partial class InteropGenerator
         return new(
             runtimeContext: module.RuntimeContext,
             corLibTypeFactory: module.CorLibTypeFactory,
-            windowsRuntimeModule: windowsRuntimeAssembly);
+            windowsRuntimeModule: windowsRuntimeAssembly,
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
     }
 
     /// <summary>

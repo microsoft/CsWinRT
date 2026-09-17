@@ -80,7 +80,7 @@ internal static class WindowsRuntimeConstants
     /// <summary>
     /// The diagnostic id for the <c>WindowsRuntimeImplementableClassAttribute</c> and <c>WindowsRuntimeImplementableClassFactoryAttribute</c> types.
     /// </summary>
-    public const string WindowsRuntimeImplementableClassObsoleteDiagnosticId = "CSWINRT3005";
+    public const string WindowsRuntimeImplementableClassObsoleteDiagnosticId = "CSWINRT3006";
 
     /// <summary>
     /// The URL format for all custom diagnostics for CsWinRT.
