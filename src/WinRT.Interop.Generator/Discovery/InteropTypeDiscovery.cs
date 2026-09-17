@@ -339,7 +339,9 @@ internal static partial class InteropTypeDiscovery
         // We don't want to handle marshalling code for types with only '[GeneratedComInterface]' interfaces.
         // We also unconditionally track exported value types from component assemblies, as they may need CCW
         // support when boxed (e.g. as 'IReference<T>' for generic type arguments), even without interfaces.
+        // XAML-derived classes also need the type bridge when their base exposes no overridable interfaces.
         if (hasAnyProjectedWindowsRuntimeInterfaces ||
+            WindowsRuntimeTypeAnalyzer.IsManagedXamlDerivedType(typeSignature, interopReferences, args.UseWindowsUIXamlProjections) ||
             (typeDefinition is { IsValueType: true, IsEnum: false } &&
              typeDefinition.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule)))
         {

@@ -18,16 +18,14 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 internal static class WindowsRuntimeTypeAnalyzer
 {
     /// <summary>
-    /// Checks whether a managed XAML-derived type needs the type-only <c>ICustomPropertyProvider</c> bridge.
+    /// Checks whether a type is a managed class derived from a projected XAML class.
     /// </summary>
     /// <param name="type">The user-defined type to analyze.</param>
-    /// <param name="interfaceTypes">The interfaces already exposed by its CCW.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML instead of WinUI projections.</param>
-    /// <returns>Whether the fallback provider should be added.</returns>
-    public static bool NeedsXamlCustomPropertyProvider(
+    /// <returns>Whether the type is a managed XAML-derived class.</returns>
+    public static bool IsManagedXamlDerivedType(
         TypeSignature type,
-        TypeSignatureEquatableSet interfaceTypes,
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
@@ -60,20 +58,42 @@ internal static class WindowsRuntimeTypeAnalyzer
                 continue;
             }
 
-            // Check the IID, not just the managed name, so inherited and custom COM providers also win.
-            foreach (TypeSignature interfaceType in interfaceTypes)
-            {
-                if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
-                    iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
-                {
-                    return false;
-                }
-            }
-
             return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Checks whether a managed XAML-derived type needs the type-only <c>ICustomPropertyProvider</c> bridge.
+    /// </summary>
+    /// <param name="type">The user-defined type to analyze.</param>
+    /// <param name="interfaceTypes">The interfaces already exposed by its CCW.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML instead of WinUI projections.</param>
+    /// <returns>Whether the fallback provider should be added.</returns>
+    public static bool NeedsXamlCustomPropertyProvider(
+        TypeSignature type,
+        TypeSignatureEquatableSet interfaceTypes,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
+    {
+        if (!IsManagedXamlDerivedType(type, interopReferences, useWindowsUIXamlProjections))
+        {
+            return false;
+        }
+
+        // Check the IID, not just the managed name, so inherited and custom COM providers also win.
+        foreach (TypeSignature interfaceType in interfaceTypes)
+        {
+            if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
+                iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
