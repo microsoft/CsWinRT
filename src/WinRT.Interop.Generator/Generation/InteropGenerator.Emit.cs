@@ -2591,6 +2591,7 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
+                    addXamlCustomPropertyProvider: group.Key.AddXamlCustomPropertyProvider,
                     out TypeDefinition comWrappersMarshallerType);
 
                 // Track the marshaller attribute for later
