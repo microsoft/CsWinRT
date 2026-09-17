@@ -58,19 +58,9 @@ C#/WinRT behavior can be customized with these project properties:
 * -exclude $(CsWinRTExcludes)
 * -include $(CsWinRTIncludes)
 
-The IDIC-exclusive filters are separate from `CsWinRTIncludes` / `CsWinRTExcludes`: they select casting
-support, not projection APIs. They use prefix matching (no wildcards or regular expressions), trim outer
-whitespace, ignore empty entries, and deduplicate entries. Valid prefixes with no matches select nothing;
-invalid syntax produces `CSWINRTPROJECTIONGEN5022`. Filters alone never enable IDIC.
+The IDIC-exclusive filters are separate from `CsWinRTIncludes` / `CsWinRTExcludes`: they select casting support, not projection APIs. They use prefix matching (no wildcards or regular expressions), trim outer whitespace, ignore empty entries, and deduplicate entries. Valid prefixes with no matches select nothing; invalid syntax produces `CSWINRTPROJECTIONGEN5022`. Filters alone never enable IDIC.
 
-Set these options on the **projection producer**. Its reference assembly records the exact effective IDIC
-selection in `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of public
-visibility, and consumers use that metadata without repeating the options.
-Missing metadata does not enable IDIC; regenerate older preview projection packages that require it.
-Projected type identities must be globally unique; duplicate reference projections are rejected with
-`CSWINRTPROJECTIONGEN0015`, rather than merging their policies.
-See [exclusive interface configuration](../docs/usage.md#projecting-standalone-exclusive-interfaces)
-for examples, precedence, and package propagation.
+Set these options on the **projection producer**. Its reference assembly records the exact effective IDIC selection in `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of public visibility, and consumers use that metadata without repeating the options. Missing metadata does not enable IDIC; regenerate older preview projection packages that require it. Projected type identities must be globally unique; duplicate reference projections are rejected with `CSWINRTPROJECTIONGEN0015`, rather than merging their policies. See [exclusive interface configuration](../docs/usage.md#projecting-standalone-exclusive-interfaces) for examples, precedence, and package propagation.
 
 ## Runtime feature switches
 
