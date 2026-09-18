@@ -399,6 +399,9 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IMap<Int32, Windows.Foundation.Collections.IVector<EnumValue> > GetIntToListDictionary();
         Windows.Foundation.Collections.IMap<Windows.Foundation.TimeSpan, Windows.Foundation.TimeSpan> GetTimeSpanToTimeSpanDictionary();
 
+        static Windows.Foundation.Collections.IObservableMap<String, String> CreateObservableStringMap(Boolean allowEventCalls);
+        static Windows.Foundation.Collections.IObservableMap<Int32, Int32> CreateObservableIntMap(Boolean allowEventCalls);
+
         // Test IIDOptimizer
         Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();
         Windows.Foundation.Collections.IVectorView<ProvideUri> GetNonGenericDelegateVector();
