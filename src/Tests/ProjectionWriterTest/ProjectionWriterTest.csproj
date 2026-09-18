@@ -69,10 +69,17 @@
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
+    <ProjectReference Include="..\..\WinRT.Interop.Generator\WinRT.Interop.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\..\WinRT.Projection.Writer\Helpers\TypeFilter.cs" Link="Helpers\TypeFilter.cs" />
+    <Compile Remove="Resources\ArrayPropertySetterTests.cs" />
+    <EmbeddedResource Include="Resources\ArrayPropertySetterTests.cs" />
   </ItemGroup>
 
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->
@@ -81,6 +88,8 @@
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\cswinrtprojectionrefgen.dll" />
     <AssemblyMetadata Include="ProjectionGeneratorAssemblyPath"
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Generator\bin\$(Configuration)\net10.0\cswinrtprojectiongen.dll" />
+    <AssemblyMetadata Include="InteropGeneratorAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
     <AssemblyMetadata Include="WinUIMetadataPath"
                       Value="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(MicrosoftWinAppSDKWinUIVersion)\metadata\Microsoft.UI.Xaml.winmd" />
   </ItemGroup>

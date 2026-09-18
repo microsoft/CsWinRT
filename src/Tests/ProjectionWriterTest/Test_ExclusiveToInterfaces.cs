@@ -4,16 +4,11 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Cil;
-using Basic.Reference.Assemblies;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Emit;
 using ProjectionWriterTest.Helpers;
-using WindowsRuntime;
 using WindowsRuntime.ProjectionWriter;
 
 namespace ProjectionWriterTest;
@@ -143,6 +138,7 @@ public class Test_ExclusiveToInterfaces
             Assert.AreEqual(idicExclusiveTo, source.Contains("file interface IWidget2", StringComparison.Ordinal));
             Assert.AreEqual(idicExclusiveTo, source.Contains("source: typeof(global::Contoso.IWidget2)", StringComparison.Ordinal));
             Assert.AreEqual(publicExclusiveTo || idicExclusiveTo, source.Contains("class IWidget2Methods", StringComparison.Ordinal));
+            Assert.AreEqual(publicExclusiveTo, source.Contains("class IWidget2Marshaller", StringComparison.Ordinal));
             _ = Compile(output, Path.Combine(directory, "implementation.dll"), referenceProjection: false);
         });
     }
@@ -167,7 +163,7 @@ public class Test_ExclusiveToInterfaces
             string reference = Compile(referenceSources, Path.Combine(directory, "Supplemental.dll"), referenceProjection: true);
             string output = Directory.CreateDirectory(Path.Combine(directory, "merged")).FullName;
             string responseFile = Path.Combine(directory, "projection.rsp");
-            string[] references = [reference, typeof(WindowsRuntimeObject).Assembly.Location, .. Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll").Where(IsManagedAssembly)];
+            string[] references = [reference, .. ProjectionWriterRunner.GetRuntimeReferencePaths()];
             File.WriteAllText(responseFile, $"""
                 --reference-assembly-paths {string.Join(",", references)}
                 --generated-assembly-directory {output}
@@ -224,26 +220,10 @@ public class Test_ExclusiveToInterfaces
 
     private static string Compile(string sourceDirectory, string assemblyPath, bool referenceProjection)
     {
-        CSharpParseOptions parseOptions = new(LanguageVersion.CSharp14,
-            preprocessorSymbols: referenceProjection ? ["CSWINRT_REFERENCE_PROJECTION"] : []);
-        CSharpCompilation compilation = CSharpCompilation.Create(
-            Path.GetFileNameWithoutExtension(assemblyPath),
-            Directory.GetFiles(sourceDirectory, "*.cs").Select(path => CSharpSyntaxTree.ParseText(
-                File.ReadAllText(path), parseOptions, path: path)),
-            [.. Net100.References.All, MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location)],
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
-        using FileStream stream = File.Create(assemblyPath);
-        EmitResult result = compilation.Emit(stream,
-            options: new EmitOptions(metadataOnly: referenceProjection, includePrivateMembers: !referenceProjection));
-        Assert.IsTrue(result.Success, $"Projection compilation failed:\n{string.Join("\n", result.Diagnostics)}");
-        return assemblyPath;
-    }
-
-    private static bool IsManagedAssembly(string path)
-    {
-        using FileStream stream = File.OpenRead(path);
-        using System.Reflection.PortableExecutable.PEReader reader = new(stream);
-        return reader.HasMetadata;
+        return ProjectionWriterRunner.CompileSources(
+            Directory.GetFiles(sourceDirectory, "*.cs").Select(File.ReadAllText),
+            assemblyPath,
+            referenceProjection);
     }
 
     private static void WithMetadata(bool fastAbi, Action<string, string> action)

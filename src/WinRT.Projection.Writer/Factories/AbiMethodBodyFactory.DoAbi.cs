@@ -37,6 +37,7 @@ internal static partial class AbiMethodBodyFactory
 
         bool isGetter = sig.Method.IsGetter;
         bool isSetter = sig.Method.IsSetter;
+        bool isArraySetter = isSetter && sig.Parameters[0].Type is SzArrayTypeSignature;
         bool isAddEvent = sig.Method.IsAdder;
         bool isRemoveEvent = sig.Method.IsRemover;
 
@@ -240,7 +241,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                if (!cat.IsArrayInput())
+                if (!cat.IsArrayInput() || isArraySetter)
                 {
                     continue;
                 }
@@ -278,6 +279,26 @@ internal static partial class AbiMethodBodyFactory
                 """);
             writer.IncreaseIndent();
 
+            if (isArraySetter)
+            {
+                ParameterInfo p = sig.Parameters[0];
+                SzArrayTypeSignature arrayType = (SzArrayTypeSignature)p.Type;
+                string raw = p.GetRawName();
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(arrayType.BaseType));
+                string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, arrayType.BaseType);
+
+                // Properties require an owned array: a setter may retain it after this call returns.
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToManaged",
+                    returnType: $"{elementProjected.Format()}[]",
+                    functionName: $"ConvertToManaged_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(arrayType.BaseType),
+                    parameterList: $"uint length, {elementAbi}* data");
+                writer.WriteLine($"var __{raw} = ConvertToManaged_{raw}(null, __{raw}Size, ({elementAbi}*){ptr});");
+            }
+
             // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
             // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
             // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
@@ -285,7 +306,7 @@ internal static partial class AbiMethodBodyFactory
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.PassArray))
             {
 
-                if (p.Type is not SzArrayTypeSignature szArr)
+                if (isArraySetter || p.Type is not SzArrayTypeSignature szArr)
                 {
                     continue;
                 }
@@ -390,7 +411,16 @@ internal static partial class AbiMethodBodyFactory
             {
                 string propName = methodName[4..];
                 writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
-                EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
+
+                if (isArraySetter)
+                {
+                    writer.Write($"__{sig.Parameters[0].GetRawName()}");
+                }
+                else
+                {
+                    EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
+                }
+
                 writer.WriteLine(";");
             }
             else
@@ -556,7 +586,7 @@ internal static partial class AbiMethodBodyFactory
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.FillArray))
             {
 
-                if (p.Type is not SzArrayTypeSignature szFA)
+                if (isArraySetter || p.Type is not SzArrayTypeSignature szFA)
                 {
                     continue;
                 }
@@ -666,7 +696,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                if (!cat.IsArrayInput())
+                if (!cat.IsArrayInput() || isArraySetter)
                 {
                     continue;
                 }
@@ -697,7 +727,7 @@ internal static partial class AbiMethodBodyFactory
                     ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                    if (!cat.IsArrayInput())
+                    if (!cat.IsArrayInput() || isArraySetter)
                     {
                         continue;
                     }
