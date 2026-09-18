@@ -54,7 +54,7 @@ internal partial class InteropGenerator
         RuntimeContext runtimeContext = new(targetRuntime, pathAssemblyResolver);
         SignatureComparer signatureComparer = new(runtimeContext, SignatureComparisonFlags.VersionAgnostic);
 
-        // Anchor target-corlib references before any parallel reader can enumerate assembly references.
+        // Anchor target-corlib references before any parallel reader can enumerate assembly references
         ModuleDefinition outputModule = runtimeContext.LoadModule(args.OutputAssemblyPath);
         CorLibTypeFactory corLibTypeFactory = new(targetRuntime.GetDefaultCorLib().ImportWith(outputModule.DefaultImporter));
 
