@@ -167,6 +167,7 @@ internal sealed partial class TypeSignatureEquatableSet :
         }
 
         TypeDescriptorComparer comparer = new(((SignatureComparer)_set.Comparer).RuntimeContext);
+
         using IEnumerator<TypeSignature> left = _set.Order<TypeSignature>(comparer).GetEnumerator();
         using IEnumerator<TypeSignature> right = other.Order<TypeSignature>(comparer).GetEnumerator();
 
