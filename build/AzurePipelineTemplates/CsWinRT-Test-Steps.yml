@@ -79,6 +79,18 @@ steps:
         --no-build
       testRunTitle: Impl Generator Tests
 
+# Run the interop generator end-to-end; like the other generator tests, one host architecture is sufficient.
+  - task: DotNetCoreCLI@2
+    displayName: Run Interop Generator Tests
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/InteropGeneratorTest/InteropGeneratorTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Interop Generator Tests
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests

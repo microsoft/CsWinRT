@@ -177,7 +177,9 @@ generated interop assembly small.
 | `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
 | `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
 
-Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. Assemblies targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework) are never analyzed, since the interop generator can only marshal types declared against a modern .NET runtime.
+Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit opt-in rules as other libraries. Assemblies targeting .NET Framework are not analyzed.
+
+Framework type references are normalized to the application's target reference assemblies before interop discovery. This keeps forwarded identities from older libraries, portable libraries, and implementation assemblies from producing duplicate type-map entries. For example, in .NET 10, `ReadOnlyDictionary<TKey, TValue>` is declared in the `System.Runtime` reference assembly; references through `System.ObjectModel` are forwarded to that same declaration. Generic arguments and nested types are normalized recursively, while genuinely different assembly identities remain distinct.
 
 ### Opting in specific assemblies
 

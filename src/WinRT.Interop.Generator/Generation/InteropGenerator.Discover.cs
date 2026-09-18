@@ -42,7 +42,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Get the set of assemblies to actually process (filtered from all input assemblies)
-        string[] assembliesToProcess = GetAssembliesToProcess(args);
+        string[] assembliesToProcess = GetAssembliesToProcess(args, out List<ModuleDefinition> frameworkReferenceModules);
 
         // Initialize the assembly resolver (we need to reuse this to allow caching)
         PathAssemblyResolver pathAssemblyResolver = new(assembliesToProcess);
@@ -69,6 +69,7 @@ internal partial class InteropGenerator
         InteropGeneratorDiscoveryState discoveryState = new()
         {
             RuntimeContext = runtimeContext,
+            TypeCanonicalizer = new(runtimeContext, frameworkReferenceModules, runtimeContext.LoadModule(args.OutputAssemblyPath)),
             MarshallingEnabledAssemblyNames = marshallingEnabledAssemblyNames
         };
 
@@ -315,7 +316,7 @@ internal partial class InteropGenerator
     /// <param name="module">The module to check.</param>
     /// <returns>Whether <paramref name="module"/> should be analyzed for discovery.</returns>
     /// <remarks>
-    /// Modules targeting a legacy or portable runtime are never analyzed. Otherwise, modules that reference the
+    /// Modules targeting .NET Framework are never analyzed. Otherwise, modules that reference the
     /// Windows Runtime assembly were built targeting a Windows TFM (i.e. <c>netX.0-windows10.0.XXXX.0</c>), and
     /// the Windows Runtime assembly itself, are always analyzed, regardless of the marshalling mode. Assemblies
     /// explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c> are also always analyzed. Only modules
@@ -323,16 +324,8 @@ internal partial class InteropGenerator
     /// </remarks>
     private static bool ShouldProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
     {
-        // Never analyze modules targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework), even
-        // when opted in. The entire interop generator infrastructure identifies well-known types (including custom-
-        // mapped types such as 'IEnumerable<T>') by comparing against type references scoped to the modern .NET
-        // corlib (e.g. 'System.Runtime'), which is also the corlib the emit phase uses. A legacy-runtime module
-        // declares those same types against a different corlib ('netstandard' or 'mscorlib'), which AsmResolver's
-        // 'SignatureComparer' treats as a distinct scope, so the generator can't match them and marshalling code for
-        // them would fail to generate. Such modules could in principle still use custom-mapped types that need
-        // marshalling, but for simplicity we skip them entirely. This was not an issue before the marshalling mode
-        // was introduced, as only assemblies referencing the Windows Runtime were analyzed, and those always target
-        // a modern .NET runtime.
+        // .NET Framework remains unsupported. Portable .NET Standard identities are canonicalized
+        // against the application's target framework before discovery and follow the normal mode rules.
         if (module.TargetsLegacyRuntime)
         {
             return false;
@@ -552,7 +545,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
+            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(discoveryState.TypeCanonicalizer))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -593,7 +586,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
+            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(discoveryState.TypeCanonicalizer))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -851,23 +844,26 @@ internal partial class InteropGenerator
         // We don't need to import the 'WinRT.Runtime.dll' module here, as we're reusing the same runtime context everywhere
         return new(
             runtimeContext: module.RuntimeContext,
-            corLibTypeFactory: module.CorLibTypeFactory,
+            corLibTypeFactory: discoveryState.TypeCanonicalizer.CorLibTypeFactory,
             windowsRuntimeModule: windowsRuntimeAssembly,
-            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+            typeCanonicalizer: discoveryState.TypeCanonicalizer);
     }
 
     /// <summary>
     /// Gets the set of assemblies that need to be processed by the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="frameworkReferenceModules">The framework modules providing canonical public type identities.</param>
     /// <returns>The set of assemblies that need to be processed by the generator.</returns>
-    private static string[] GetAssembliesToProcess(InteropGeneratorArgs args)
+    private static string[] GetAssembliesToProcess(InteropGeneratorArgs args, out List<ModuleDefinition> frameworkReferenceModules)
     {
         // Local path assembly resolver just scoped to the full set of reference assemblies
         PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
 
         HashSet<string> projectionFileNames = new(args.ReferenceAssemblyPaths.Length, StringComparer.OrdinalIgnoreCase);
         List<string> assembliesToProcess = new(args.ImplementationAssemblyPaths.Length);
+        frameworkReferenceModules = [];
 
         // Iterate through the reference assemblies first to filter them
         foreach (string path in args.ReferenceAssemblyPaths)
@@ -881,6 +877,10 @@ internal partial class InteropGenerator
                 _ = projectionFileNames.Add(Path.GetFileName(path));
 
                 assembliesToProcess.Add(path);
+            }
+            else if (module.IsBaseClassLibraryModule && !module.IsWindowsRuntimeModule)
+            {
+                frameworkReferenceModules.Add(module);
             }
         }
 

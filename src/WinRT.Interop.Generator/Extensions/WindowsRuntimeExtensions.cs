@@ -1265,31 +1265,14 @@ internal static class WindowsRuntimeExtensions
         public bool IsBaseClassLibraryModule => BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(module.Assembly?.GetPublicKeyToken());
 
         /// <summary>
-        /// Checks whether a <see cref="ModuleDefinition"/> targets a legacy or portable runtime (i.e. .NET Standard
-        /// or .NET Framework), as opposed to a modern .NET runtime, based on its corlib scope.
+        /// Checks whether a <see cref="ModuleDefinition"/> targets .NET Framework, based on its corlib scope.
         /// </summary>
-        /// <returns>Whether the module targets a legacy or portable runtime.</returns>
+        /// <returns>Whether the module targets .NET Framework.</returns>
         /// <remarks>
-        /// The entire interop generator infrastructure identifies well-known types (including custom-mapped types
-        /// such as <c>IEnumerable&lt;T&gt;</c>) by comparing against type references scoped to the modern .NET corlib
-        /// (e.g. <c>System.Runtime</c>), which is also the corlib the emit phase uses. Modules targeting a legacy or
-        /// portable runtime declare those same types against a different corlib (<c>netstandard</c> or <c>mscorlib</c>),
-        /// which <c>AsmResolver</c>'s <c>SignatureComparer</c> treats as a distinct scope. As a result, the generator
-        /// cannot match (and therefore cannot marshal) their types, and attempting to do so would fail during emit.
-        /// Such modules could in principle still use custom-mapped types that need marshalling, but for simplicity
-        /// they are skipped entirely.
+        /// .NET Standard modules are supported by canonicalizing their framework types to the application's
+        /// target reference identities. This does not change the exclusion of .NET Framework assemblies.
         /// </remarks>
-        public bool TargetsLegacyRuntime
-        {
-            get
-            {
-                Utf8String? corLibName = module.CorLibTypeFactory.CorLibScope?.Name;
-
-                return
-                    corLibName == WellKnownMetadataNames.NetStandardAssemblyName ||
-                    corLibName == WellKnownMetadataNames.MSCorLibAssemblyName;
-            }
-        }
+        public bool TargetsLegacyRuntime => module.CorLibTypeFactory.CorLibScope?.Name == WellKnownMetadataNames.MSCorLibAssemblyName;
 
         /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
