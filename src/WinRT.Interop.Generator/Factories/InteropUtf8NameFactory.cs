@@ -94,8 +94,13 @@ internal static class InteropUtf8NameFactory
             }
             else
             {
+                ITypeDescriptor originalTypeDescriptor = ((typeSignature as GenericInstanceTypeSignature)?.GenericType) ?? (ITypeDescriptor)typeSignature;
+                ITypeDescriptor typeDescriptor = originalTypeDescriptor.TryResolve(interopDefinitions.RuntimeContext, out TypeDefinition? definition)
+                    ? definition
+                    : originalTypeDescriptor;
+
                 Utf8String assemblyName = AssemblyNameOrWellKnownIdentifier(
-                    assemblyName: typeSignature.Scope!.GetAssembly()!.Name!,
+                    assemblyName: typeDescriptor.Scope!.GetAssembly()!.Name!,
                     typeSignature: typeSignature,
                     interopDefinitions: interopDefinitions);
 
@@ -104,11 +109,8 @@ internal static class InteropUtf8NameFactory
                 interpolatedStringHandler.AppendFormatted(assemblyName);
                 interpolatedStringHandler.AppendLiteral(">");
 
-                // Extract the generic type if we have a generic signature, or use the type signature directly
-                ITypeDescriptor originalTypeDescriptor = ((typeSignature as GenericInstanceTypeSignature)?.GenericType) ?? (ITypeDescriptor)typeSignature;
-
                 // Append the original type name first, regardless of whether it's an array or a constructed generic
-                AppendRawTypeName(ref interpolatedStringHandler, originalTypeDescriptor, depth);
+                AppendRawTypeName(ref interpolatedStringHandler, typeDescriptor, depth);
 
                 // If the type is generic, append the definition name and the type arguments. We pass the original
                 // type descriptor here, because we also want to detect arrays with an element type that's generic.
@@ -221,7 +223,7 @@ internal static class InteropUtf8NameFactory
         // Replace some assembly names with well known constants, to make the names more compact
         return assemblyName switch
         {
-            { Value: "System.Runtime" } => "#corlib"u8,
+            { Value: "System.Runtime" or "System.Private.CoreLib" } => "#corlib"u8,
             { Value: "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" } => "#Windows"u8,
             { Value: "WinRT.Runtime" } => "#CsWinRT"u8,
             _ => typeSignature.GetWindowsRuntimeMetadataName(interopDefinitions) ?? assemblyName
@@ -237,6 +239,8 @@ internal static class InteropUtf8NameFactory
     [UnconditionalSuppressMessage("Style", "IDE0072", Justification = "We only special case some known primitive types.")]
     private static bool TryGetWellKnownIdentifier(TypeSignature typeSignature, [NotNullWhen(true)] out Utf8String? identifier)
     {
+        typeSignature = typeSignature.ContextModule?.CorLibTypeFactory.FromType(typeSignature) ?? typeSignature;
+
         if (typeSignature is CorLibTypeSignature corLibTypeSignature)
         {
             // If the type is a corlib type, we can use the well known identifier

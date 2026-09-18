@@ -154,22 +154,22 @@ internal static partial class ModuleDefinitionExtensions
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
-    /// <param name="canonicalizer">The canonicalizer for discovered signatures.</param>
+    /// <param name="signatureComparer">The comparer for discovered signatures.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module, FrameworkTypeCanonicalizer canonicalizer)
+    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module, SignatureComparer signatureComparer)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, canonicalizer);
+        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, signatureComparer);
     }
 
     /// <summary>
     /// Enumerates all SZ array type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
-    /// <param name="canonicalizer">The canonicalizer for discovered signatures.</param>
+    /// <param name="signatureComparer">The comparer for discovered signatures.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module, FrameworkTypeCanonicalizer canonicalizer)
+    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module, SignatureComparer signatureComparer)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, canonicalizer);
+        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, signatureComparer);
     }
 
     /// <summary>
@@ -177,26 +177,21 @@ internal static partial class ModuleDefinitionExtensions
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
-    /// <param name="canonicalizer">The canonicalizer for discovered signatures.</param>
+    /// <param name="signatureComparer">The comparer for discovered signatures.</param>
     /// <returns>All (unique) type signatures of interest in the module.</returns>
     public static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(
         this ModuleDefinition module,
         ITypeSignatureVisitor<IEnumerable<TResult>> visitor,
-        FrameworkTypeCanonicalizer canonicalizer)
+        SignatureComparer signatureComparer)
         where TResult : TypeSignature
     {
-        HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
-        HashSet<GenericInstanceTypeSignature> visitedTypeInitializers = new(SignatureComparer.IgnoreVersion);
+        HashSet<TResult> results = new(signatureComparer);
+        HashSet<GenericInstanceTypeSignature> visitedTypeInitializers = new(signatureComparer);
         Queue<GenericInstanceTypeSignature> pendingTypeInitializers = new();
 
         // Helper to crawl a signature, recursively
         IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type)
         {
-            if (type is not null)
-            {
-                type = canonicalizer.Canonicalize(type);
-            }
-
             // Initializers need their closed context even when we are only collecting array signatures
             foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
             {

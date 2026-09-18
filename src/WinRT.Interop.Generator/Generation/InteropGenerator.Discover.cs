@@ -11,7 +11,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
 using ConsoleAppFramework;
-using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.Generator.References;
@@ -42,7 +41,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Get the set of assemblies to actually process (filtered from all input assemblies)
-        string[] assembliesToProcess = GetAssembliesToProcess(args, out List<ModuleDefinition> frameworkReferenceModules);
+        string[] assembliesToProcess = GetAssembliesToProcess(args);
 
         // Initialize the assembly resolver (we need to reuse this to allow caching)
         PathAssemblyResolver pathAssemblyResolver = new(assembliesToProcess);
@@ -53,6 +52,11 @@ internal partial class InteropGenerator
         // use our assembly resolver, and it will also take care of caching all loaded modules. Every
         // module load will go through this object, rather than using the assembly resolver directly.
         RuntimeContext runtimeContext = new(targetRuntime, pathAssemblyResolver);
+        SignatureComparer signatureComparer = new(runtimeContext, SignatureComparisonFlags.VersionAgnostic);
+
+        // Anchor target-corlib references before any parallel reader can enumerate assembly references.
+        ModuleDefinition outputModule = runtimeContext.LoadModule(args.OutputAssemblyPath);
+        CorLibTypeFactory corLibTypeFactory = new(targetRuntime.GetDefaultCorLib().ImportWith(outputModule.DefaultImporter));
 
         // Build the set of assembly names explicitly opted in for analysis via 'CsWinRTMarshallingEnabledAssembly'.
         // Each entry is normalized to its bare assembly name (dropping any directory and the '.dll' extension), so
@@ -66,10 +70,9 @@ internal partial class InteropGenerator
 
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
-        InteropGeneratorDiscoveryState discoveryState = new()
+        InteropGeneratorDiscoveryState discoveryState = new(runtimeContext, signatureComparer)
         {
-            RuntimeContext = runtimeContext,
-            TypeCanonicalizer = new(runtimeContext, frameworkReferenceModules, runtimeContext.LoadModule(args.OutputAssemblyPath)),
+            CorLibTypeFactory = corLibTypeFactory,
             MarshallingEnabledAssemblyNames = marshallingEnabledAssemblyNames
         };
 
@@ -324,8 +327,8 @@ internal partial class InteropGenerator
     /// </remarks>
     private static bool ShouldProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
     {
-        // .NET Framework remains unsupported. Portable .NET Standard identities are canonicalized
-        // against the application's target framework before discovery and follow the normal mode rules.
+        // .NET Framework remains unsupported. Resolution-aware comparisons let .NET Standard
+        // modules participate in discovery under the normal marshalling-mode rules.
         if (module.TargetsLegacyRuntime)
         {
             return false;
@@ -426,9 +429,6 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
-
-            // We can share a single builder when processing all types to reduce allocations
-            TypeSignatureEquatableSet.Builder interfaces = new();
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
@@ -545,7 +545,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(discoveryState.TypeCanonicalizer))
+            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(discoveryState.SignatureComparer))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -586,7 +586,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(discoveryState.TypeCanonicalizer))
+            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(discoveryState.SignatureComparer))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -648,7 +648,7 @@ internal partial class InteropGenerator
                 args.Token.ThrowIfCancellationRequested();
 
                 // Ignore types that don't implement 'IActivationFactory'
-                if (!type.Implements(interopReferences.IActivationFactory, SignatureComparer.IgnoreVersion))
+                if (!type.Implements(interopReferences.IActivationFactory, interopReferences.SignatureComparer))
                 {
                     continue;
                 }
@@ -714,6 +714,7 @@ internal partial class InteropGenerator
             // Both types implement 'IList', 'ICollection' and 'IEnumerable'. Only the first and the last are
             // Windows Runtime types ('IBindableVector' and 'IBindableIterable'), so those are the vtable entries.
             TypeSignatureEquatableSet vtableTypes = new TypeSignatureEquatableSet.Builder(
+                interopReferences.SignatureComparer,
                 interopReferences.IList.ToReferenceTypeSignature(),
                 interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
 
@@ -844,26 +845,24 @@ internal partial class InteropGenerator
         // We don't need to import the 'WinRT.Runtime.dll' module here, as we're reusing the same runtime context everywhere
         return new(
             runtimeContext: module.RuntimeContext,
-            corLibTypeFactory: discoveryState.TypeCanonicalizer.CorLibTypeFactory,
+            corLibTypeFactory: discoveryState.CorLibTypeFactory,
             windowsRuntimeModule: windowsRuntimeAssembly,
             windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
-            typeCanonicalizer: discoveryState.TypeCanonicalizer);
+            signatureComparer: discoveryState.SignatureComparer);
     }
 
     /// <summary>
     /// Gets the set of assemblies that need to be processed by the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="frameworkReferenceModules">The framework modules providing canonical public type identities.</param>
     /// <returns>The set of assemblies that need to be processed by the generator.</returns>
-    private static string[] GetAssembliesToProcess(InteropGeneratorArgs args, out List<ModuleDefinition> frameworkReferenceModules)
+    private static string[] GetAssembliesToProcess(InteropGeneratorArgs args)
     {
         // Local path assembly resolver just scoped to the full set of reference assemblies
         PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
 
         HashSet<string> projectionFileNames = new(args.ReferenceAssemblyPaths.Length, StringComparer.OrdinalIgnoreCase);
         List<string> assembliesToProcess = new(args.ImplementationAssemblyPaths.Length);
-        frameworkReferenceModules = [];
 
         // Iterate through the reference assemblies first to filter them
         foreach (string path in args.ReferenceAssemblyPaths)
@@ -877,10 +876,6 @@ internal partial class InteropGenerator
                 _ = projectionFileNames.Add(Path.GetFileName(path));
 
                 assembliesToProcess.Add(path);
-            }
-            else if (module.IsBaseClassLibraryModule && !module.IsWindowsRuntimeModule)
-            {
-                frameworkReferenceModules.Add(module);
             }
         }
 

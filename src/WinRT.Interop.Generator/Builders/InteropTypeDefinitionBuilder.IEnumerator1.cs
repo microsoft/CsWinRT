@@ -462,7 +462,10 @@ internal partial class InteropTypeDefinitionBuilder
             // If the element type is a value type, we need to box it
             if (elementType.IsValueType)
             {
-                _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Box, elementType.ToTypeDefOrRef());
+                TypeSignature boxedType = elementType is CorLibTypeSignature primitive
+                    ? interopReferences.CorLibTypeFactory.FromElementType(primitive.ElementType)!
+                    : elementType;
+                _ = get_IEnumeratorCurrentMethod.CilMethodBody.Instructions.Add(Box, boxedType.ToTypeDefOrRef());
             }
 
             // Add the return

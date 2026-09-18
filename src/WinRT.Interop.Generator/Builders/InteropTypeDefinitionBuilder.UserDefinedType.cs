@@ -211,7 +211,7 @@ internal partial class InteropTypeDefinitionBuilder
             // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
             // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
             // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
-            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute) is true)
+            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute, interopReferences.SignatureComparer) is true)
             {
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),

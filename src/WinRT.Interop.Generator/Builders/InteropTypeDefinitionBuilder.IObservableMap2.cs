@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -59,7 +58,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the constructor for the generic event source type
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
-                comparer: SignatureComparer.IgnoreVersion,
+                comparer: interopReferences.SignatureComparer,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     interopReferences.Int32])!;
@@ -136,7 +135,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the constructor for the generic event source type (same as above)
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
-                comparer: SignatureComparer.IgnoreVersion,
+                comparer: interopReferences.SignatureComparer,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     interopReferences.Int32])!;

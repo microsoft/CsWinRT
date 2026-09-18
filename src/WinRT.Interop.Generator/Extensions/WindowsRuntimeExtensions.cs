@@ -8,7 +8,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
@@ -50,7 +49,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
         public bool TryGetGuidAttribute(InteropReferences interopReferences, out Guid iid)
         {
-            if (member.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
+            if (member.TryGetCustomAttribute(interopReferences.GuidAttribute, interopReferences.SignatureComparer, out CustomAttribute? customAttribute))
             {
                 if (customAttribute.Signature is { FixedArguments: [{ Element: Utf8String guidString }, ..] })
                 {
@@ -130,7 +129,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="Guid"/> type.</returns>
         public bool IsTypeOfGuid(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
+            return interopReferences.SignatureComparer.Equals(type, interopReferences.Guid);
         }
 
         /// <summary>
@@ -139,7 +138,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="Type"/> type.</returns>
         public bool IsTypeOfType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type);
+            return interopReferences.SignatureComparer.Equals(type, interopReferences.Type);
         }
 
         /// <summary>
@@ -148,7 +147,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="Exception"/> type.</returns>
         public bool IsTypeOfException(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception);
+            return interopReferences.SignatureComparer.Equals(type, interopReferences.Exception);
         }
 
         /// <summary>
@@ -185,25 +184,25 @@ internal static class WindowsRuntimeExtensions
         public bool IsFundamentalWindowsRuntimeType(InteropReferences interopReferences)
         {
             // Check all fundamental primitive types
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Boolean) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.String) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Single) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Double) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.UInt16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.UInt32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.UInt64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Int16) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Int32) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Int64) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Char) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Byte) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Object))
+            if (interopReferences.SignatureComparer.Equals(type, interopReferences.Boolean) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.String) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Single) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Double) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.UInt16) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.UInt32) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.UInt64) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Int16) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Int32) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Int64) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Char) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Byte) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Object))
             {
                 return true;
             }
 
             // 'Guid' is special and also counts as a fundamental type
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Guid);
+            return interopReferences.SignatureComparer.Equals(type, interopReferences.Guid);
         }
 
         /// <summary>
@@ -217,22 +216,22 @@ internal static class WindowsRuntimeExtensions
         public bool IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Uri) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Matrix3x2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Matrix4x4) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Plane) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Quaternion) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector3) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Vector4) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DataErrorsChangedEventArgs) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventArgs) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedAction) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventArgs);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.TimeSpan) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.DateTimeOffset) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Exception) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Type) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Uri) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Matrix3x2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Matrix4x4) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Plane) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Quaternion) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Vector2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Vector3) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Vector4) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.DataErrorsChangedEventArgs) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.PropertyChangedEventArgs) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.NotifyCollectionChangedAction) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.NotifyCollectionChangedEventArgs);
         }
 
         /// <summary>
@@ -246,14 +245,14 @@ internal static class WindowsRuntimeExtensions
         public bool IsManuallyProjectedWindowsRuntimeNonGenericStructOrClassType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.CollectionChange) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncStatus) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyType) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventRegistrationToken) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.InputStreamOptions);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.CollectionChange) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncStatus) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.PropertyType) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Point) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Rect) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.Size) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.EventRegistrationToken) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.InputStreamOptions);
         }
 
         /// <summary>
@@ -264,12 +263,12 @@ internal static class WindowsRuntimeExtensions
         public bool IsCustomMappedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyList1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDictionary2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IReadOnlyDictionary2);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IEnumerable1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IEnumerator1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IList1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IReadOnlyList1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IDictionary2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IReadOnlyDictionary2);
         }
 
         /// <summary>
@@ -280,12 +279,12 @@ internal static class WindowsRuntimeExtensions
         public bool IsManuallyProjectedWindowsRuntimeGenericInterfaceType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncActionWithProgress1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperation1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncOperationWithProgress2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IMapChangedEventArgs1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableMap2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IObservableVector1);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IAsyncActionWithProgress1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IAsyncOperation1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IAsyncOperationWithProgress2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IMapChangedEventArgs1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IObservableMap2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IObservableVector1);
         }
 
         /// <summary>
@@ -296,15 +295,15 @@ internal static class WindowsRuntimeExtensions
         public bool IsCustomMappedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IDisposable) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IServiceProvider) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.ICommand) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerable) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IEnumerator) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IList) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyCollectionChanged) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyDataErrorInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.INotifyPropertyChanged);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IDisposable) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IServiceProvider) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.ICommand) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IEnumerable) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IEnumerator) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IList) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.INotifyCollectionChanged) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.INotifyDataErrorInfo) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.INotifyPropertyChanged);
         }
 
         /// <summary>
@@ -315,16 +314,16 @@ internal static class WindowsRuntimeExtensions
         public bool IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IActivationFactory) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IBuffer) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IMemoryBufferReference) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IInputStream) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IOutputStream) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IRandomAccessStream);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IActivationFactory) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IAsyncAction) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IAsyncInfo) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IVectorChangedEventArgs) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IStringable) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IBuffer) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IMemoryBufferReference) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IInputStream) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IOutputStream) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.IRandomAccessStream);
         }
 
         /// <summary>
@@ -335,8 +334,8 @@ internal static class WindowsRuntimeExtensions
         public bool IsCustomMappedWindowsRuntimeGenericDelegateType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler2);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.EventHandler1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.EventHandler2);
         }
 
         /// <summary>
@@ -347,13 +346,13 @@ internal static class WindowsRuntimeExtensions
         public bool IsManuallyProjectedWindowsRuntimeGenericDelegateType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionProgressHandler1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationCompletedHandler1) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationProgressHandler2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.MapChangedEventHandler2) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.VectorChangedEventHandler1);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncActionProgressHandler1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncActionWithProgressCompletedHandler1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncOperationCompletedHandler1) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncOperationProgressHandler2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncOperationWithProgressCompletedHandler2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.MapChangedEventHandler2) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.VectorChangedEventHandler1);
         }
 
         /// <summary>
@@ -364,9 +363,9 @@ internal static class WindowsRuntimeExtensions
         public bool IsCustomMappedWindowsRuntimeNonGenericDelegateType(InteropReferences interopReferences)
         {
             return
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.NotifyCollectionChangedEventHandler) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.PropertyChangedEventHandler) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventHandler);
+                interopReferences.SignatureComparer.Equals(type, interopReferences.NotifyCollectionChangedEventHandler) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.PropertyChangedEventHandler) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.EventHandler);
         }
 
         /// <summary>
@@ -376,7 +375,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type represents a manually-projected Windows Runtime non-generic delegate type.</returns>
         public bool IsManuallyProjectedWindowsRuntimeNonGenericDelegateType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals(type, interopReferences.AsyncActionCompletedHandler);
+            return interopReferences.SignatureComparer.Equals(type, interopReferences.AsyncActionCompletedHandler);
         }
 
         /// <summary>
@@ -413,8 +412,8 @@ internal static class WindowsRuntimeExtensions
             }
 
             // The 'TimeSpan' and 'DateTimeOffset' types are not blittable (even though they're custom-mapped)
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            if (interopReferences.SignatureComparer.Equals(type, interopReferences.TimeSpan) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.DateTimeOffset))
             {
                 return false;
             }
@@ -471,8 +470,8 @@ internal static class WindowsRuntimeExtensions
             }
 
             // The 'TimeSpan' and 'DateTimeOffset' are not blittable, but don't need disposal
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            if (interopReferences.SignatureComparer.Equals(type, interopReferences.TimeSpan) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.DateTimeOffset))
             {
                 return false;
             }
@@ -560,8 +559,8 @@ internal static class WindowsRuntimeExtensions
             }
 
             // The 'TimeSpan' and 'DateTimeOffset' types are not blittable, but they're also unmanaged
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+            if (interopReferences.SignatureComparer.Equals(type, interopReferences.TimeSpan) ||
+                interopReferences.SignatureComparer.Equals(type, interopReferences.DateTimeOffset))
             {
                 return false;
             }
@@ -604,13 +603,13 @@ internal static class WindowsRuntimeExtensions
             }
 
             // 'Type' is a class, but is custom-mapped to the 'TypeName' struct type
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type))
+            if (interopReferences.SignatureComparer.Equals(type, interopReferences.Type))
             {
                 return false;
             }
 
             // 'Exception' is also a class, but is custom-mapped to the 'HResult' struct type
-            if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception))
+            if (interopReferences.SignatureComparer.Equals(type, interopReferences.Exception))
             {
                 return false;
             }
@@ -640,17 +639,19 @@ internal static class WindowsRuntimeExtensions
                 // If the type is blittable, then it's the same as the ABI type
                 if (type.IsBlittable(interopReferences))
                 {
-                    return type.ToTypeDefOrRef().ToValueTypeSignature();
+                    return type is CorLibTypeSignature primitive
+                        ? interopReferences.CorLibTypeFactory.FromElementType(primitive.ElementType)!
+                        : type.ToTypeDefOrRef().ToValueTypeSignature();
                 }
 
                 // 'TimeSpan' is custom-mapped and not blittable
-                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.TimeSpan))
+                if (interopReferences.SignatureComparer.Equals(type, interopReferences.TimeSpan))
                 {
                     return interopReferences.AbiTimeSpan.ToValueTypeSignature();
                 }
 
                 // 'DateTimeOffset' also is custom-mapped and not blittable
-                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.DateTimeOffset))
+                if (interopReferences.SignatureComparer.Equals(type, interopReferences.DateTimeOffset))
                 {
                     return interopReferences.AbiDateTimeOffset.ToValueTypeSignature();
                 }
@@ -674,13 +675,13 @@ internal static class WindowsRuntimeExtensions
             if (typeDefinition.IsClass)
             {
                 // 'Type' is a class, but is custom-mapped to the 'TypeName' struct type
-                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Type))
+                if (interopReferences.SignatureComparer.Equals(type, interopReferences.Type))
                 {
                     return interopReferences.AbiType.ToValueTypeSignature();
                 }
 
                 // 'Exception' is also a class, but is custom-mapped to the 'HResult' struct type
-                if (SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Exception))
+                if (interopReferences.SignatureComparer.Equals(type, interopReferences.Exception))
                 {
                     return interopReferences.AbiException.ToValueTypeSignature();
                 }
@@ -741,7 +742,7 @@ internal static class WindowsRuntimeExtensions
             // for Windows Runtime signatures.
             return
                 componentModule.GetWindowsRuntimeMetadataTypesLookup().TryGetValue((type.Namespace, type.Name), out (TypeSignature Type, Utf8String Stem) metadata) &&
-                SignatureComparer.IgnoreVersion.Equals(type.ToTypeSignature(), metadata.Type);
+                new SignatureComparer(componentModule.RuntimeContext, SignatureComparisonFlags.VersionAgnostic).Equals(type.ToTypeSignature(), metadata.Type);
         }
 
         /// <summary>
@@ -883,7 +884,7 @@ internal static class WindowsRuntimeExtensions
         {
             return
                 type.BaseType is { } baseType &&
-                SignatureComparer.IgnoreVersion.Equals(baseType, interopReferences.Attribute);
+                interopReferences.SignatureComparer.Equals(baseType, interopReferences.Attribute);
         }
     }
 
@@ -907,7 +908,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // Check that we actually have a constructed 'Nullable<T>' type
-            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Nullable1))
+            if (!interopReferences.SignatureComparer.Equals(genericSignature.GenericType, interopReferences.Nullable1))
             {
                 underlyingType = null;
 
@@ -945,7 +946,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</returns>
         public bool IsConstructedKeyValuePairType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
+            return interopReferences.SignatureComparer.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.KeyValuePair2);
         }
 
         /// <inheritdoc cref="IsConstructedKeyValuePairType(TypeSignature, InteropReferences)"/>
@@ -967,7 +968,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // Same check as overload above
-            if (!SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.KeyValuePair2))
+            if (!interopReferences.SignatureComparer.Equals(genericSignature.GenericType, interopReferences.KeyValuePair2))
             {
                 keyType = null;
                 valueType = null;
@@ -988,7 +989,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is some <see cref="Nullable{T}"/> type.</returns>
         public bool IsConstructedNullableValueType(InteropReferences interopReferences)
         {
-            return SignatureComparer.IgnoreVersion.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.Nullable1);
+            return interopReferences.SignatureComparer.Equals((signature as GenericInstanceTypeSignature)?.GenericType, interopReferences.Nullable1);
         }
 
         /// <summary>
@@ -1005,8 +1006,8 @@ internal static class WindowsRuntimeExtensions
 
             // Check for both 'Span<T>' and 'ReadOnlySpan<T>'
             return
-                SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.Span1) ||
-                SignatureComparer.IgnoreVersion.Equals(genericSignature.GenericType, interopReferences.ReadOnlySpan1);
+                interopReferences.SignatureComparer.Equals(genericSignature.GenericType, interopReferences.Span1) ||
+                interopReferences.SignatureComparer.Equals(genericSignature.GenericType, interopReferences.ReadOnlySpan1);
         }
 
         /// <summary>
@@ -1269,8 +1270,8 @@ internal static class WindowsRuntimeExtensions
         /// </summary>
         /// <returns>Whether the module targets .NET Framework.</returns>
         /// <remarks>
-        /// .NET Standard modules are supported by canonicalizing their framework types to the application's
-        /// target reference identities. This does not change the exclusion of .NET Framework assemblies.
+        /// .NET Standard modules are supported through resolution-aware signature comparisons.
+        /// This does not change the exclusion of .NET Framework assemblies.
         /// </remarks>
         public bool TargetsLegacyRuntime => module.CorLibTypeFactory.CorLibScope?.Name == WellKnownMetadataNames.MSCorLibAssemblyName;
 

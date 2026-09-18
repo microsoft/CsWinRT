@@ -6,9 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -16,7 +14,9 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <summary>
 /// Global state tracking type for <see cref="InteropGenerator"/>, specifically for the discovery phase.
 /// </summary>
-internal sealed class InteropGeneratorDiscoveryState
+/// <param name="runtimeContext">The runtime context for this invocation.</param>
+/// <param name="signatureComparer">The resolution-aware, version-agnostic signature comparer.</param>
+internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeContext, SignatureComparer signatureComparer)
 {
     /// <summary>Backing field for <see cref="Modules"/>.</summary>
     private readonly ConcurrentDictionary<string, ModuleDefinition> _modules = [];
@@ -37,61 +37,61 @@ internal sealed class InteropGeneratorDiscoveryState
     private readonly ConcurrentDictionary<string, string> _typeHierarchyEntries = [];
 
     /// <summary>Backing field for <see cref="IEnumerator1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ienumerator1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ienumerator1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IEnumerable1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ienumerable1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ienumerable1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IList1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ilist1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ilist1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IReadOnlyList1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyList1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyList1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IDictionary2Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _idictionary2Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _idictionary2Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IReadOnlyDictionary2Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyDictionary2Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _ireadOnlyDictionary2Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IObservableVector1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableVector1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableVector1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IObservableMap2Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableMap2Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iobservableMap2Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IMapChangedEventArgs1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _imapChangedEventArgs1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _imapChangedEventArgs1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IAsyncActionWithProgress1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncActionWithProgress1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncActionWithProgress1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IAsyncOperation1Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncOperation1Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncOperation1Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="IAsyncOperationWithProgress2Types"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncOperationWithProgress2Types = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _iasyncOperationWithProgress2Types = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="GenericDelegateTypes"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _genericDelegateTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _genericDelegateTypes = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="KeyValuePairTypes"/>.</summary>
-    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<GenericInstanceTypeSignature, byte> _keyValuePairTypes = new(signatureComparer);
 
     /// <summary>Backing field to support <see cref="TryMarkUserDefinedType"/>.</summary>
-    private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<TypeSignature, byte> _markedUserDefinedTypes = new(signatureComparer);
 
     /// <summary>Backing field to support <see cref="TryMarkSzArrayType"/>.</summary>
-    private readonly ConcurrentDictionary<TypeSignature, byte> _markedSzArrayTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<TypeSignature, byte> _markedSzArrayTypes = new(signatureComparer);
 
     /// <summary>Backing field to support <see cref="TryMarkWindowsRuntimeGenericInterfaceTypeInstance"/>.</summary>
-    private readonly ConcurrentDictionary<TypeSignature, byte> _markedWindowsRuntimeGenericInterfaceTypeInstances = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<TypeSignature, byte> _markedWindowsRuntimeGenericInterfaceTypeInstances = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="UserDefinedAndVtableTypes"/>.</summary>
-    private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<TypeSignature, TypeSignatureEquatableSet> _userDefinedTypes = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="SzArrayAndVtableTypes"/>.</summary>
-    private readonly ConcurrentDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<SzArrayTypeSignature, TypeSignatureEquatableSet> _szArrayTypes = new(signatureComparer);
 
     /// <summary>Backing field for <see cref="UserDefinedVtableTypes"/>.</summary>
     /// <remarks>
@@ -102,7 +102,10 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>
     /// The mapping of all types that failed resolution.
     /// </summary>
-    private readonly ConcurrentDictionary<(TypeSignature, ModuleDefinition), byte> _failedResolutionTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleLeftComparer<ModuleDefinition>());
+    private readonly ConcurrentDictionary<(TypeSignature, ModuleDefinition), byte> _failedResolutionTypes = new(signatureComparer.MakeValueTupleLeftComparer<ModuleDefinition>());
+
+    /// <summary>The reusable interface-set builders for this invocation.</summary>
+    private readonly ConcurrentBag<TypeSignatureEquatableSet.Builder> _interfaceSetBuilders = [];
 
     /// <summary>
     /// Indicates whether the current state is readonly.
@@ -117,12 +120,17 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>
     /// Gets the runtime context to use for the current invocation.
     /// </summary>
-    public required RuntimeContext RuntimeContext { get; init; }
+    public RuntimeContext RuntimeContext { get; } = runtimeContext;
 
     /// <summary>
-    /// Gets the canonicalizer shared by all discovery and emission paths.
+    /// Gets the comparer shared by discovery and emission.
     /// </summary>
-    public required FrameworkTypeCanonicalizer TypeCanonicalizer { get; init; }
+    public SignatureComparer SignatureComparer { get; } = signatureComparer;
+
+    /// <summary>
+    /// Gets the corlib references for the application's target framework.
+    /// </summary>
+    public required CorLibTypeFactory CorLibTypeFactory { get; init; }
 
     /// <summary>
     /// Gets the set of assembly names (without extension) explicitly opted in for analysis via
@@ -255,6 +263,27 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
     /// </summary>
     public bool HasWinRTRuntimeDllVersion2References => _hasWinRTRuntimeDllVersion2References;
+
+    /// <summary>
+    /// Rents an interface-set builder using this invocation's comparer.
+    /// </summary>
+    /// <returns>An empty builder.</returns>
+    public TypeSignatureEquatableSet.Builder RentInterfaceSetBuilder()
+    {
+        return _interfaceSetBuilders.TryTake(out TypeSignatureEquatableSet.Builder? builder)
+            ? builder
+            : new TypeSignatureEquatableSet.Builder(SignatureComparer);
+    }
+
+    /// <summary>
+    /// Returns an interface-set builder to the invocation-local pool.
+    /// </summary>
+    /// <param name="builder">The builder to return.</param>
+    public void ReturnInterfaceSetBuilder(TypeSignatureEquatableSet.Builder builder)
+    {
+        builder.Clear();
+        _interfaceSetBuilders.Add(builder);
+    }
 
     /// <summary>
     /// Tracks a loaded module definition.

@@ -71,7 +71,7 @@ internal partial class SignatureGenerator
         InteropReferences interopReferences)
     {
         // For '[Flags]' enum types, the underlying types is always 'uint', otherwise 'int'
-        string underlyingTypeSignature = typeDefinition.HasCustomAttribute(interopReferences.FlagsAttribute)
+        string underlyingTypeSignature = typeDefinition.HasCustomAttribute(interopReferences.FlagsAttribute, interopReferences.SignatureComparer)
             ? UIntSignature
             : IntSignature;
 

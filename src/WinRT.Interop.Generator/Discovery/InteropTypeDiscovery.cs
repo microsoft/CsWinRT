@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -21,11 +20,6 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 /// </summary>
 internal static partial class InteropTypeDiscovery
 {
-    /// <summary>
-    /// A pool of <see cref="TypeSignatureEquatableSet.Builder"/> instances that can be reused by discovery logic.
-    /// </summary>
-    private static readonly ConcurrentBag<TypeSignatureEquatableSet.Builder> TypeSignatureBuilderPool = [];
-
     /// <summary>
     /// A pool of <see cref="HashSet{T}"/> instances used to validate duplicate IIDs.
     /// </summary>
@@ -102,8 +96,6 @@ internal static partial class InteropTypeDiscovery
         ModuleDefinition module,
         bool isNativeExposedType = false)
     {
-        typeSignature = interopReferences.TypeCanonicalizer.Canonicalize(typeSignature);
-
         // Ignore types that should explicitly be excluded
         if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
         {
@@ -171,10 +163,7 @@ internal static partial class InteropTypeDiscovery
         // discovery logic, we'll also be tracking the additional 'ReadOnlyCollection<T>' type, as that's
         // needed from the 'IListAdapter<T>.GetView' method. That type will itself be analyzed here just
         // like any other user-define type, and so on. So the pool is needed to avoid creating conflicts.
-        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
-        {
-            interfaces = new TypeSignatureEquatableSet.Builder();
-        }
+        TypeSignatureEquatableSet.Builder interfaces = discoveryState.RentInterfaceSetBuilder();
 
         // Since we're reusing the builder for all types, make sure to clear it first
         interfaces.Clear();
@@ -242,17 +231,15 @@ internal static partial class InteropTypeDiscovery
             // - 'IEnumerable<IEnumerable<object>>'
             // - 'IEnumerable<IEnumerable>'
             // - 'IEnumerable<IDisposable>'
-            foreach (TypeSignature discoveredInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
+            foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
             {
-                TypeSignature covariantInterfaceSignature = interopReferences.TypeCanonicalizer.Canonicalize(discoveredInterfaceSignature);
-
                 // Check for projected Windows Runtime interfaces first. We want to explicitly ignore
                 // '[exclusiveto]' interfaces too, which might still show up as part of the covariant
                 // expansion. However, those would then either fail to resolve or just result in
                 // unnecessary binary size increase, since nobody would ever use them from here.
                 // We also have an additional check to include overridable interfaces (see notes above).
                 if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences) ||
-                    (isInterfaceWindowsRuntime && SignatureComparer.IgnoreVersion.Equals(covariantInterfaceSignature, interfaceSignature)))
+                    (isInterfaceWindowsRuntime && interopReferences.SignatureComparer.Equals(covariantInterfaceSignature, interfaceSignature)))
                 {
                     hasAnyProjectedWindowsRuntimeInterfaces = true;
 
@@ -351,7 +338,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Return the builder and set to the pool for reuse
-        TypeSignatureBuilderPool.Add(interfaces);
+        discoveryState.ReturnInterfaceSetBuilder(interfaces);
         IidHashSetPool.Add(iids);
     }
 
@@ -378,8 +365,6 @@ internal static partial class InteropTypeDiscovery
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        typeSignature = (SzArrayTypeSignature)interopReferences.TypeCanonicalizer.Canonicalize(typeSignature);
-
         // Ignore types that should explicitly be excluded
         if (TypeExclusions.IsExcluded(typeSignature, interopReferences))
         {
@@ -410,10 +395,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Get or create a builder (see additional notes above)
-        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
-        {
-            interfaces = new TypeSignatureEquatableSet.Builder();
-        }
+        TypeSignatureEquatableSet.Builder interfaces = discoveryState.RentInterfaceSetBuilder();
 
         // Make sure to clear the builder first (see additional notes above)
         interfaces.Clear();
@@ -433,10 +415,8 @@ internal static partial class InteropTypeDiscovery
             }
 
             // Enumerate the current interface and the covariant combinations (see additional notes above)
-            foreach (TypeSignature discoveredInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
+            foreach (TypeSignature covariantInterfaceSignature in WindowsRuntimeTypeAnalyzer.EnumerateCovarianceExpandedInterfaceTypes(interfaceSignature, interopReferences).Concat([interfaceSignature]))
             {
-                TypeSignature covariantInterfaceSignature = interopReferences.TypeCanonicalizer.Canonicalize(discoveredInterfaceSignature);
-
                 // Track all interfaces except '[exclusiveto]' ones (see additional notes above). We don't need to care about
                 // overridable interfaces here, since those can only apply to classes, and SZ arrays will never have any.
                 if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences))
@@ -483,7 +463,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Return the builder to the pool for reuse
-        TypeSignatureBuilderPool.Add(interfaces);
+        discoveryState.ReturnInterfaceSetBuilder(interfaces);
     }
 
     /// <summary>

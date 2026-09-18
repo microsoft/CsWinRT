@@ -42,6 +42,7 @@ internal static class ITypeDescriptorExtensions
         /// Sorts the values of a sequence in ascending order, based on the fully qualified type names of the selected key descriptors.
         /// </summary>
         /// <param name="keySelector">The selection function to retrieve <see cref="ITypeDescriptor"/> values to use for sorting.</param>
+        /// <param name="runtimeContext">The context for ordering resolved type identities.</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are sorted.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="descriptors"/> is <see langword="null"/>.</exception>
         /// <remarks>
@@ -49,10 +50,10 @@ internal static class ITypeDescriptorExtensions
         /// information that is required to perform the action. The query represented by this method is not executed until the
         /// object is enumerated by calling its <see cref="IEnumerable{T}.GetEnumerator"/> method.
         /// </remarks>
-        public IEnumerable<T> OrderByFullyQualifiedTypeName<TKey>(Func<T, TKey> keySelector)
+        public IEnumerable<T> OrderByFullyQualifiedTypeName<TKey>(Func<T, TKey> keySelector, RuntimeContext? runtimeContext = null)
             where TKey : class, ITypeDescriptor
         {
-            return descriptors.OrderBy(keySelector, TypeDescriptorComparer.Create<TKey>());
+            return descriptors.OrderBy(keySelector, TypeDescriptorComparer.Create<TKey>(runtimeContext));
         }
     }
 
@@ -62,6 +63,7 @@ internal static class ITypeDescriptorExtensions
         /// <summary>
         /// Sorts the <see cref="ITypeDescriptor"/> values of a sequence in ascending order, based on their fully qualified type names.
         /// </summary>
+        /// <param name="runtimeContext">The context for ordering resolved type identities.</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are sorted.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="descriptors"/> is <see langword="null"/>.</exception>
         /// <remarks>
@@ -69,9 +71,9 @@ internal static class ITypeDescriptorExtensions
         /// information that is required to perform the action. The query represented by this method is not executed until the
         /// object is enumerated by calling its <see cref="IEnumerable{T}.GetEnumerator"/> method.
         /// </remarks>
-        public IEnumerable<T> OrderByFullyQualifiedTypeName()
+        public IEnumerable<T> OrderByFullyQualifiedTypeName(RuntimeContext? runtimeContext = null)
         {
-            return descriptors.Order(TypeDescriptorComparer.Create<T>());
+            return descriptors.Order(TypeDescriptorComparer.Create<T>(runtimeContext));
         }
     }
 }

@@ -179,7 +179,7 @@ generated interop assembly small.
 
 Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit opt-in rules as other libraries. Assemblies targeting .NET Framework are not analyzed.
 
-Framework type references are normalized to the application's target reference assemblies before interop discovery. This keeps forwarded identities from older libraries, portable libraries, and implementation assemblies from producing duplicate type-map entries. For example, in .NET 10, `ReadOnlyDictionary<TKey, TValue>` is declared in the `System.Runtime` reference assembly; references through `System.ObjectModel` are forwarded to that same declaration. Generic arguments and nested types are normalized recursively, while genuinely different assembly identities remain distinct.
+Interop discovery compares signatures using the application's runtime context, following type forwarding while ignoring assembly versions. References from older libraries, portable libraries, and implementation assemblies that resolve to the same type therefore share a type-map entry, including when used in generic arguments, nested types, or arrays. Genuinely different assembly identities remain distinct. Generated helper names, ordering, and type-valued attribute serialization use resolved identities so output does not depend on which equivalent reference was discovered first.
 
 ### Opting in specific assemblies
 

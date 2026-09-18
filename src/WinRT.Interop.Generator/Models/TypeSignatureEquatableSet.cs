@@ -4,9 +4,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Helpers;
 
 namespace WindowsRuntime.InteropGenerator.Models;
@@ -20,11 +20,6 @@ internal sealed partial class TypeSignatureEquatableSet :
     IComparable<TypeSignatureEquatableSet>
 {
     /// <summary>
-    /// The comparer for the <see cref="TypeSignature"/> set.
-    /// </summary>
-    private static readonly IEqualityComparer<HashSet<TypeSignature>> SetComparer = HashSet<TypeSignature>.CreateSetComparer();
-
-    /// <summary>
     /// The underlying <see cref="TypeSignature"/> set.
     /// </summary>
     private readonly HashSet<TypeSignature> _set;
@@ -32,10 +27,11 @@ internal sealed partial class TypeSignatureEquatableSet :
     /// <summary>
     /// Creates a new <see cref="TypeSignatureEquatableSet"/> instance.
     /// </summary>
+    /// <param name="signatureComparer">The comparer for this invocation.</param>
     /// <param name="typeSignatures">The input <see cref="TypeSignature"/>-s to wrap.</param>
-    public TypeSignatureEquatableSet(params ReadOnlySpan<TypeSignature> typeSignatures)
+    public TypeSignatureEquatableSet(SignatureComparer signatureComparer, params ReadOnlySpan<TypeSignature> typeSignatures)
     {
-        HashSet<TypeSignature> set = new(typeSignatures.Length, SignatureComparer.IgnoreVersion);
+        HashSet<TypeSignature> set = new(typeSignatures.Length, signatureComparer);
 
         foreach (TypeSignature typeSignature in typeSignatures)
         {
@@ -48,10 +44,11 @@ internal sealed partial class TypeSignatureEquatableSet :
     /// <summary>
     /// Creates a new <see cref="TypeSignatureEquatableSet"/> instance.
     /// </summary>
+    /// <param name="signatureComparer">The comparer for this invocation.</param>
     /// <param name="typeSignatures">The input <see cref="TypeSignature"/>-s to wrap.</param>
-    public TypeSignatureEquatableSet(params IEnumerable<TypeSignature> typeSignatures)
+    public TypeSignatureEquatableSet(SignatureComparer signatureComparer, params IEnumerable<TypeSignature> typeSignatures)
     {
-        _set = new HashSet<TypeSignature>(typeSignatures, SignatureComparer.IgnoreVersion);
+        _set = new HashSet<TypeSignature>(typeSignatures, signatureComparer);
     }
 
     /// <summary>
@@ -84,7 +81,7 @@ internal sealed partial class TypeSignatureEquatableSet :
     /// <inheritdoc/>
     public bool Equals(TypeSignatureEquatableSet? other)
     {
-        return other is not null && SetComparer.Equals(_set, other._set);
+        return other is not null && _set.SetEquals(other._set);
     }
 
     /// <inheritdoc/>
@@ -96,18 +93,16 @@ internal sealed partial class TypeSignatureEquatableSet :
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        // We are intentionally implementing 'GetHashCode' manually here, rather than reusing the
-        // set comparer. This is because that instance will ignore the actual equality comparer
-        // being used by the set, and just always use the default. Which is flat out incorrect.
-        // And results in different hashcodes for equivalent signatures, which breaks everything.
-        HashCode hashCode = default;
+        // Equal sets can retain different forwarded spellings, with different lexical sort orders.
+        // Combine the actual element comparer hashes without depending on that order.
+        int hashCode = 0;
 
-        foreach (TypeSignature typeSignature in _set.OrderByFullyQualifiedTypeName())
+        foreach (TypeSignature typeSignature in _set)
         {
-            hashCode.Add(typeSignature, SignatureComparer.IgnoreVersion);
+            hashCode ^= _set.Comparer.GetHashCode(typeSignature);
         }
 
-        return hashCode.ToHashCode();
+        return hashCode;
     }
 
     /// <inheritdoc/>
@@ -160,7 +155,7 @@ internal sealed partial class TypeSignatureEquatableSet :
             return 1;
         }
 
-        if (ReferenceEquals(this, other))
+        if (ReferenceEquals(this, other) || Equals(other))
         {
             return 0;
         }
@@ -171,8 +166,9 @@ internal sealed partial class TypeSignatureEquatableSet :
             return 0;
         }
 
-        using IEnumerator<TypeSignature> left = _set.OrderByFullyQualifiedTypeName().GetEnumerator();
-        using IEnumerator<TypeSignature> right = other.OrderByFullyQualifiedTypeName().GetEnumerator();
+        TypeDescriptorComparer comparer = new(((SignatureComparer)_set.Comparer).RuntimeContext);
+        using IEnumerator<TypeSignature> left = _set.Order<TypeSignature>(comparer).GetEnumerator();
+        using IEnumerator<TypeSignature> right = other.Order<TypeSignature>(comparer).GetEnumerator();
 
         // We want to enumerate pairs of items from both sets, one at a time
         while (true)
@@ -199,7 +195,7 @@ internal sealed partial class TypeSignatureEquatableSet :
                 return 1;
             }
 
-            int result = TypeDescriptorComparer.Instance.Compare(left.Current, right.Current);
+            int result = comparer.Compare(left.Current, right.Current);
 
             // If the items are not equal, just return that result. That is,
             // the first pair of items that is not equal determines the set.
