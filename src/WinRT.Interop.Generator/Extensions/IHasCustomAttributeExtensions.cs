@@ -21,7 +21,11 @@ internal static class IHasCustomAttributeExtensions
     /// <param name="signatureComparer">The comparer for this invocation.</param>
     /// <param name="attribute">The resulting attribute, if found.</param>
     /// <returns>Whether <paramref name="attribute"/> was successfully retrieved.</returns>
-    public static bool TryGetCustomAttribute(this IHasCustomAttribute member, ITypeDescriptor attributeType, SignatureComparer signatureComparer, [NotNullWhen(true)] out CustomAttribute? attribute)
+    public static bool TryGetCustomAttribute(
+        this IHasCustomAttribute member,
+        ITypeDescriptor attributeType,
+        SignatureComparer signatureComparer,
+        [NotNullWhen(true)] out CustomAttribute? attribute)
     {
         for (int i = 0; i < member.CustomAttributes.Count; i++)
         {
