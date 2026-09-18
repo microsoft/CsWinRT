@@ -29,6 +29,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
+    <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"
+                      ReferenceOutputAssembly="false"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
     <ProjectReference Include="..\..\WinRT.Interop.Generator\WinRT.Interop.Generator.csproj"
                       ReferenceOutputAssembly="false"
                       OutputItemType="_CsWinRTToolReference"
@@ -41,6 +45,10 @@
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
     <AssemblyMetadata Include="NetStandard20ReferenceDirectory"
                       Value="$(NuGetPackageRoot)netstandard.library\2.0.3\build\netstandard2.0\ref" />
+    <AssemblyMetadata Include="GeneratorTasksAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll" />
+    <AssemblyMetadata Include="CsWinRTTargetsPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\..\nuget\Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 </Project>

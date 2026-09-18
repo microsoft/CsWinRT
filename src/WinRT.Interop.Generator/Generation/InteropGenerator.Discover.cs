@@ -319,7 +319,8 @@ internal partial class InteropGenerator
     /// <param name="module">The module to check.</param>
     /// <returns>Whether <paramref name="module"/> should be analyzed for discovery.</returns>
     /// <remarks>
-    /// Modules targeting .NET Framework are never analyzed. Otherwise, modules that reference the
+    /// Modules targeting .NET Framework are never analyzed, and .NET Standard modules are skipped when
+    /// <see cref="InteropGeneratorArgs.AnalyzeNetStandardAssemblies"/> is disabled. Otherwise, modules that reference the
     /// Windows Runtime assembly were built targeting a Windows TFM (i.e. <c>netX.0-windows10.0.XXXX.0</c>), and
     /// the Windows Runtime assembly itself, are always analyzed, regardless of the marshalling mode. Assemblies
     /// explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c> are also always analyzed. Only modules
@@ -327,9 +328,8 @@ internal partial class InteropGenerator
     /// </remarks>
     private static bool ShouldProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
     {
-        // .NET Framework remains unsupported. Resolution-aware comparisons let .NET Standard
-        // modules participate in discovery under the normal marshalling-mode rules.
-        if (module.TargetsNetFramework)
+        // Apply framework exclusions before explicit opt-ins and marshalling-mode filtering
+        if (module.TargetsNetFramework || (!args.AnalyzeNetStandardAssemblies && module.TargetsNetStandard))
         {
             return false;
         }

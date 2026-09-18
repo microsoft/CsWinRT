@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
@@ -52,6 +53,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
     private readonly string[] implementationPaths;
     private readonly string applicationPath;
     private readonly string sdkProjectionPath;
+    private int msbuildInvocation;
 
     public InteropGeneratorRunner(bool useFrameworkImplementations = false, bool overlappingFrameworkReferences = false)
     {
@@ -128,9 +130,12 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool reverseInputs = false,
         int parallelism = 1,
         string marshallingMode = "Minimal",
-        bool optInNetStandard = false)
+        bool optInNetStandard = false,
+        bool? analyzeNetStandardAssemblies = null,
+        string? debugReproDirectory = null)
     {
-        (int exitCode, string log, string outputPath) = await RunAsync(name, reverseInputs, parallelism, marshallingMode, optInNetStandard);
+        (int exitCode, string log, string outputPath) = await RunAsync(
+            name, reverseInputs, parallelism, marshallingMode, optInNetStandard, analyzeNetStandardAssemblies, debugReproDirectory);
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
@@ -141,7 +146,9 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool reverseInputs,
         int parallelism,
         string marshallingMode,
-        bool optInNetStandard)
+        bool optInNetStandard,
+        bool? analyzeNetStandardAssemblies,
+        string? debugReproDirectory)
     {
         string directory = Directory.CreateDirectory(Path.Combine(Root, name)).FullName;
         string responsePath = Path.Combine(directory, "interop.rsp");
@@ -156,7 +163,9 @@ internal sealed class InteropGeneratorRunner : IDisposable
             --generated-assembly-directory {directory}
             --use-windows-ui-xaml-projections False
             --marshalling-mode {marshallingMode}
+            {(analyzeNetStandardAssemblies is { } analyze ? $"--analyze-net-standard-assemblies {analyze}" : "")}
             {(optInNetStandard ? "--marshalling-enabled-assembly-names NetStandardTypes" : "")}
+            {(debugReproDirectory is not null ? $"--debug-repro-directory {debugReproDirectory}" : "")}
             --generate-collection-changed-list-vtables False
             --validate-winrt-runtime-assembly-version True
             --validate-winrt-runtime-dll-version-2-references True
@@ -165,17 +174,32 @@ internal sealed class InteropGeneratorRunner : IDisposable
             --max-degrees-of-parallelism {parallelism}
             """);
 
-        string toolPath = GetAssemblyMetadata("InteropGeneratorAssemblyPath");
+        (int exitCode, string log) = await InvokeGeneratorAsync(responsePath);
 
-        ProcessStartInfo startInfo = new("dotnet")
+        return (exitCode, log, Path.Combine(directory, "WinRT.Interop.dll"));
+    }
+
+    public static Task<(int ExitCode, string Log)> InvokeGeneratorAsync(string inputPath)
+    {
+        ProcessStartInfo startInfo = CreateProcessStartInfo();
+        startInfo.ArgumentList.Add(Path.GetFullPath(GetAssemblyMetadata("InteropGeneratorAssemblyPath")));
+        startInfo.ArgumentList.Add(Path.GetExtension(inputPath) == ".zip" ? inputPath : "@" + inputPath);
+
+        return RunProcessAsync(startInfo);
+    }
+
+    private static ProcessStartInfo CreateProcessStartInfo()
+    {
+        return new("dotnet")
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        startInfo.ArgumentList.Add(Path.GetFullPath(toolPath));
-        startInfo.ArgumentList.Add("@" + responsePath);
+    }
 
+    private static async Task<(int ExitCode, string Log)> RunProcessAsync(ProcessStartInfo startInfo)
+    {
         using Process process = Process.Start(startInfo)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
@@ -185,10 +209,74 @@ internal sealed class InteropGeneratorRunner : IDisposable
         {
             process.Kill(entireProcessTree: true);
             await completion;
-            Assert.Fail($"Interop generation timed out.\n{await output}\n{await error}");
+            Assert.Fail($"Process timed out.\n{await output}\n{await error}");
         }
 
-        return (process.ExitCode, $"{await output}\n{await error}", Path.Combine(directory, "WinRT.Interop.dll"));
+        return (process.ExitCode, $"{await output}\n{await error}");
+    }
+
+    public string CreateMSBuildProject()
+    {
+        string directory = Directory.CreateDirectory(Path.Combine(Root, "msbuild")).FullName;
+        string outputDirectory = Directory.CreateDirectory(Path.Combine(directory, "output")).FullName;
+        string projectPath = Path.Combine(directory, "Discovery.proj");
+        XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+        string toolsDirectory = Path.GetDirectoryName(Path.GetFullPath(GetAssemblyMetadata("InteropGeneratorAssemblyPath")))!;
+
+        XDocument project = new(new XElement(ns + "Project",
+            new XElement(ns + "PropertyGroup",
+                new XElement(ns + "IntermediateOutputPath", outputDirectory + Path.DirectorySeparatorChar),
+                new XElement(ns + "CsWinRTGenerateInteropAssembly", "true"),
+                new XElement(ns + "CsWinRTGenTasksAssembly", Path.GetFullPath(GetAssemblyMetadata("GeneratorTasksAssemblyPath"))),
+                new XElement(ns + "CsWinRTInteropGenEffectiveToolsDirectory", toolsDirectory),
+                new XElement(ns + "CsWinRTToolsArchitecture", "AnyCPU"),
+                new XElement(ns + "CsWinRTSwapRuntimeReferenceAssembly", "false"),
+                new XElement(ns + "CsWinRTUseWindowsUIXamlProjections", "false"),
+                new XElement(ns + "CsWinRTMarshallingMode", "strict"),
+                new XElement(ns + "CsWinRTGenerateCollectionChangedListVtables", "false"),
+                new XElement(ns + "CsWinRTGeneratorTreatWarningsAsErrors", "true")),
+            new XElement(ns + "ItemGroup",
+                new XElement(ns + "ReferencePathWithRefAssemblies", new XAttribute("Include", string.Join(";", referencePaths))),
+                new XElement(ns + "ReferencePath", new XAttribute("Include", string.Join(";", implementationPaths))),
+                new XElement(ns + "IntermediateAssembly", new XAttribute("Include", applicationPath)),
+                new XElement(ns + "CsWinRTMarshallingEnabledAssembly", new XAttribute("Include", "NetStandardTypes"))),
+            new XElement(ns + "Import", new XAttribute("Project", Path.GetFullPath(GetAssemblyMetadata("CsWinRTTargetsPath")))),
+            new XElement(ns + "PropertyGroup",
+                new XElement(ns + "_CsWinRTSdkProjectionAssemblyPath", sdkProjectionPath)),
+            new[] { "ResolveAssemblyReferences", "FindReferenceAssembliesForReferences", "CoreCompile",
+                "_RunCsWinRTMergedProjectionGenerator", "_RunCsWinRTComponentProjectionGenerator" }
+                .Select(name => new XElement(ns + "Target", new XAttribute("Name", name))),
+            new XElement(ns + "Target",
+                new XAttribute("Name", "Run"),
+                new XAttribute("DependsOnTargets", "_RunCsWinRTInteropGenerator"))));
+
+        project.Save(projectPath);
+
+        return projectPath;
+    }
+
+    public async Task<string> RunMSBuildAsync(string projectPath, bool? analyzeNetStandardAssemblies)
+    {
+        string directory = Path.GetDirectoryName(projectPath)!;
+        string binlog = Path.Combine(directory, $"build-{++msbuildInvocation}.binlog");
+        ProcessStartInfo startInfo = CreateProcessStartInfo();
+        startInfo.ArgumentList.Add("msbuild");
+        startInfo.ArgumentList.Add(projectPath);
+        startInfo.ArgumentList.Add("-t:Run");
+        startInfo.ArgumentList.Add("-nologo");
+        startInfo.ArgumentList.Add("-v:quiet");
+        startInfo.ArgumentList.Add("-bl:" + binlog);
+
+        if (analyzeNetStandardAssemblies is { } analyze)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTAnalyzeNetStandardAssemblies=" + analyze.ToString().ToLowerInvariant());
+        }
+
+        (int exitCode, string log) = await RunProcessAsync(startInfo);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.IsTrue(File.Exists(binlog), "MSBuild must produce its diagnostic log.");
+
+        return Path.Combine(directory, "output", "WinRT.Interop.dll");
     }
 
     public (RuntimeContext Context, ModuleDefinition Module) LoadOutput(string path)
