@@ -282,6 +282,7 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     public void ReturnInterfaceSetBuilder(TypeSignatureEquatableSet.Builder builder)
     {
         builder.Clear();
+
         _interfaceSetBuilders.Add(builder);
     }
 
