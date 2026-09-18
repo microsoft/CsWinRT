@@ -16,9 +16,6 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// </summary>
 internal static class InteropCustomAttributeFactory
 {
-    /// <summary>The importers used to serialize stable type names into each output module's attributes.</summary>
-    private static readonly ConditionalWeakTable<ModuleDefinition, ReferenceImporter> TypeNameImporters = [];
-
     /// <summary>
     /// Creates a type-valued argument using its resolved identity rather than a discovery-order-dependent alias.
     /// </summary>
@@ -28,7 +25,7 @@ internal static class InteropCustomAttributeFactory
     public static CustomAttributeArgument TypeArgument(TypeSignature type, InteropReferences interopReferences)
     {
         ModuleDefinition module = interopReferences.CorLibTypeFactory.CorLibScope.ContextModule!;
-        ReferenceImporter importer = TypeNameImporters.GetValue(module, static module => new AttributeTypeReferenceImporter(module));
+        ReferenceImporter importer = module.DefaultImporter;
 
         return new(interopReferences.Type.ToReferenceTypeSignature(), importer.ImportTypeSignature(type));
     }
@@ -291,20 +288,5 @@ internal static class InteropCustomAttributeFactory
             fixedArguments: [
                 TypeArgument(source, interopReferences),
                 TypeArgument(proxy, interopReferences)]));
-    }
-
-    /// <summary>
-    /// Uses AsmResolver's signature traversal to write resolved type identities in attribute blobs.
-    /// </summary>
-    /// <param name="module">The output module.</param>
-    private sealed class AttributeTypeReferenceImporter(ModuleDefinition module) : ReferenceImporter(module)
-    {
-        /// <inheritdoc/>
-        protected override ITypeDefOrRef ImportType(TypeReference type)
-        {
-            return type.TryResolve(TargetModule.RuntimeContext, out TypeDefinition? definition)
-                ? base.ImportType(definition)
-                : base.ImportType(type);
-        }
     }
 }
