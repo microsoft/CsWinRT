@@ -59,6 +59,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTMarshallingMode Condition="'$(CsWinRTMarshallingMode)' == ''">minimal</CsWinRTMarshallingMode>
 
     <!--
+      Controls whether .NET Standard assemblies participate in interop discovery. Setting this to 'false'
+      skips these assemblies in every marshalling mode, even when explicitly opted in for analysis.
+    -->
+    <CsWinRTAnalyzeNetStandardAssemblies Condition="'$(CsWinRTAnalyzeNetStandardAssemblies)' == ''">true</CsWinRTAnalyzeNetStandardAssemblies>
+
+    <!--
       Controls whether 'cswinrtinteropgen' automatically generates the vtables for the optimized list types that
       'NotifyCollectionChangedEventArgs' stores its changed items in. These types are internal to the framework,
       so they are registered by name, and this can be set to 'false' to opt out of them, should one of them ever
@@ -246,6 +252,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTAnalyzeNetStandardAssemblies)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
@@ -319,6 +326,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
       MarshallingMode="$(CsWinRTMarshallingMode)"
+      AnalyzeNetStandardAssemblies="$(CsWinRTAnalyzeNetStandardAssemblies)"
       MarshallingEnabledAssemblies="@(CsWinRTMarshallingEnabledAssembly)"
       GenerateCollectionChangedListVtables="$(CsWinRTGenerateCollectionChangedListVtables)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"

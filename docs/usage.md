@@ -156,6 +156,7 @@ Below are the most commonly used MSBuild properties. For a full list, refer to t
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet distribution). |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode. |
 | `CsWinRTMarshallingMode` | `minimal` | Controls which assemblies the interop generator analyzes for marshalling code (`all`, `minimal`, or `strict`). See below. |
+| `CsWinRTAnalyzeNetStandardAssemblies` | `true` | Allows .NET Standard assemblies to participate in interop discovery. Set to `false` to skip them, including explicitly opted-in assemblies. |
 | `CsWinRTIncludes` | *(empty)* | Semicolon-separated namespaces to include in the projection. |
 | `CsWinRTExcludes` | `Windows;Microsoft` | Semicolon-separated namespaces to exclude from the projection. |
 | `CsWinRTMessageImportance` | `normal` | Build message verbosity (`normal` or `high`). |
@@ -177,7 +178,15 @@ generated interop assembly small.
 | `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
 | `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
 
-Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit opt-in rules as other libraries. Assemblies targeting .NET Framework are not analyzed.
+Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode, subject to the framework exclusions below. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit opt-in rules as other libraries by default. Set `CsWinRTAnalyzeNetStandardAssemblies` to `false` to skip their discovery in every mode, even if listed in `CsWinRTMarshallingEnabledAssembly`. Assemblies targeting .NET Framework are not analyzed.
+
+```xml
+<PropertyGroup>
+  <CsWinRTAnalyzeNetStandardAssemblies>false</CsWinRTAnalyzeNetStandardAssemblies>
+</PropertyGroup>
+```
+
+Changing this property invalidates the interop generator's property-input cache. It controls assembly discovery, not whether a type referenced by another analyzed assembly can be marshalled.
 
 Interop discovery compares signatures using the application's runtime context, following type forwarding while ignoring assembly versions. References from older libraries, portable libraries, and implementation assemblies that resolve to the same type therefore share a type-map entry, including when used in generic arguments, nested types, or arrays. Genuinely different assembly identities remain distinct. Generated helper names, ordering, and type-valued attribute serialization use resolved identities so output does not depend on which equivalent reference was discovered first.
 

@@ -111,6 +111,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public string MarshallingMode { get; set; } = DefaultMarshallingMode;
 
     /// <summary>
+    /// Gets or sets whether .NET Standard assemblies participate in interop discovery, including explicit opt-ins.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool AnalyzeNetStandardAssemblies { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.
     /// </summary>
     /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
@@ -324,6 +330,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
+        AppendResponseFileCommand(args, "--analyze-net-standard-assemblies", AnalyzeNetStandardAssemblies.ToString());
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
         AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());

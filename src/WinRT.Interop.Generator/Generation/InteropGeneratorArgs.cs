@@ -55,6 +55,12 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [DefaultValue(CsWinRTMarshallingMode.Minimal)]
     public CsWinRTMarshallingMode MarshallingMode { get; init; }
 
+    /// <summary>Gets whether .NET Standard assemblies participate in interop discovery, including explicit opt-ins.</summary>
+    /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--analyze-net-standard-assemblies")]
+    [DefaultValue(true)]
+    public bool AnalyzeNetStandardAssemblies { get; init; } = true;
+
     /// <summary>Gets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.</summary>
     /// <remarks>
     /// Each entry is an assembly name (the <c>.dll</c> extension and any directory are ignored). This lets users
@@ -96,4 +102,3 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
-

@@ -1276,6 +1276,14 @@ internal static class WindowsRuntimeExtensions
         public bool TargetsNetFramework => module.CorLibTypeFactory.CorLibScope?.Name == WellKnownMetadataNames.MSCorLibAssemblyName;
 
         /// <summary>
+        /// Checks whether a <see cref="ModuleDefinition"/> targets .NET Standard.
+        /// </summary>
+        /// <remarks>The corlib check also recognizes assemblies without a target framework attribute.</remarks>
+        public bool TargetsNetStandard =>
+            module.OriginalTargetRuntime.IsNetStandard ||
+            module.CorLibTypeFactory.CorLibScope?.Name == WellKnownMetadataNames.NetStandardAssemblyName;
+
+        /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module references the Windows Runtime assembly.</returns>
