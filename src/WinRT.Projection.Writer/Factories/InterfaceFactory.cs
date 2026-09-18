@@ -90,8 +90,6 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            bool isOverridable = impl.IsOverridable();
-
             // For TypeDef interfaces, check exclusive_to attribute to decide inclusion.
             // For TypeRef interfaces, attempt to resolve via the runtime context.
             bool isExclusive = false;
@@ -108,7 +106,7 @@ internal static class InterfaceFactory
                 }
             }
 
-            if (!(isOverridable || !isExclusive || includeExclusiveInterface))
+            if (!ShouldIncludeInterfaceInInheritance(impl, isExclusive, includeExclusiveInterface))
             {
                 continue;
             }
@@ -133,6 +131,19 @@ internal static class InterfaceFactory
     public static IndentedTextWriterCallback WriteTypeInheritance(ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
     {
         return writer => WriteTypeInheritance(writer, context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
+    }
+
+    /// <summary>
+    /// Gets whether an interface implementation appears in projected inheritance.
+    /// IDIC member emission must follow the same rule as the projected declaration.
+    /// </summary>
+    /// <param name="implementation">The implemented or required interface.</param>
+    /// <param name="isExclusive">Whether the resolved interface is exclusive to a runtime class.</param>
+    /// <param name="includeExclusiveInterface">Whether to include exclusive interfaces unconditionally.</param>
+    /// <returns>Whether the interface appears in the inheritance clause.</returns>
+    internal static bool ShouldIncludeInterfaceInInheritance(InterfaceImplementation implementation, bool isExclusive, bool includeExclusiveInterface)
+    {
+        return implementation.IsOverridable() || !isExclusive || includeExclusiveInterface;
     }
 
     /// <summary>
