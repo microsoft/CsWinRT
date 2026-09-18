@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x86' or '$(Platform)' == 'x64'">
+    <RuntimeIdentifier>win-$(Platform)</RuntimeIdentifier>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="MSTest.Analyzers" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+    <PackageReference Include="MSTest.Engine" />
+    <PackageReference Include="MSTest.SourceGeneration" />
+    <PackageDownload Include="NETStandard.Library" Version="[2.0.3]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
+    <ProjectReference Include="..\..\WinRT.Interop.Generator\WinRT.Interop.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="InteropGeneratorAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
+    <AssemblyMetadata Include="NetStandard20ReferenceDirectory"
+                      Value="$(NuGetPackageRoot)netstandard.library\2.0.3\build\netstandard2.0\ref" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+</Project>

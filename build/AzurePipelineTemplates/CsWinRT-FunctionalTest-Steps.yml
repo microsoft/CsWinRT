@@ -18,6 +18,7 @@ parameters:
     - CCW
     - TypeMarshaling
     - UserDefinedTypeNames
+    - ForwardedTypeIdentities
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

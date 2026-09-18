@@ -53,7 +53,8 @@ internal partial class InteropGenerator
             runtimeContext: module.RuntimeContext!,
             corLibTypeFactory: module.CorLibTypeFactory,
             windowsRuntimeModule: windowsRuntimeModule,
-            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+            typeCanonicalizer: discoveryState.TypeCanonicalizer);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
             windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,

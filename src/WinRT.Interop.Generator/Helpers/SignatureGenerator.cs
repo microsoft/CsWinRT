@@ -113,6 +113,11 @@ internal static partial class SignatureGenerator
         InteropReferences interopReferences,
         out Guid iid)
     {
+        if (type is ITypeDefOrRef namedType)
+        {
+            type = interopReferences.TypeCanonicalizer.CanonicalizeType(namedType);
+        }
+
         // First try to get the IID from the custom-mapped types mapping
         if (WellKnownInterfaceIIDs.TryGetGUID(
             interfaceType: type,

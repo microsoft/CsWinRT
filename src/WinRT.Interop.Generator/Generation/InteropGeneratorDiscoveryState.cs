@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -117,6 +118,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets the runtime context to use for the current invocation.
     /// </summary>
     public required RuntimeContext RuntimeContext { get; init; }
+
+    /// <summary>
+    /// Gets the canonicalizer shared by all discovery and emission paths.
+    /// </summary>
+    public required FrameworkTypeCanonicalizer TypeCanonicalizer { get; init; }
 
     /// <summary>
     /// Gets the set of assembly names (without extension) explicitly opted in for analysis via

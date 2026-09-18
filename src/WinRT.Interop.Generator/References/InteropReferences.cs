@@ -6,6 +6,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 
 #pragma warning disable IDE0032
@@ -34,22 +35,30 @@ internal sealed class InteropReferences
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).</param>
     /// <param name="windowsRuntimeComponentModule">The generated component projection, if available.</param>
+    /// <param name="typeCanonicalizer">The canonicalizer for the application's target framework.</param>
     public InteropReferences(
         RuntimeContext runtimeContext,
         CorLibTypeFactory corLibTypeFactory,
         IResolutionScope windowsRuntimeModule,
-        ModuleDefinition? windowsRuntimeComponentModule)
+        ModuleDefinition? windowsRuntimeComponentModule,
+        FrameworkTypeCanonicalizer typeCanonicalizer)
     {
         RuntimeContext = runtimeContext;
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
         WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
+        TypeCanonicalizer = typeCanonicalizer;
     }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> instance associated with this instance.
     /// </summary>
     public RuntimeContext RuntimeContext { get; }
+
+    /// <summary>
+    /// Gets the canonicalizer for the application's target framework.
+    /// </summary>
+    public FrameworkTypeCanonicalizer TypeCanonicalizer { get; }
 
     /// <summary>
     /// Gets the generated component projection containing the exported authored type metadata.

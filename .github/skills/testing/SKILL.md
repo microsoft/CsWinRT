@@ -76,6 +76,9 @@ public class TestWinRT
 | `DerivedClassAsBaseClass/` | Base class polymorphism, casting |
 | `DynamicInterfaceCasting/` | Dynamic casting, interface queries, CCW interface casting |
 | `Events/` | Event handlers, property changed notifications |
+| `ForwardedTypeIdentities/` | Cross-framework `ReadOnlyDictionary` identities, native QI and ABI callbacks, `IMap.GetView` fallback, and unrelated `IStringable`/`IDisposable` CCWs under CoreCLR/AOT |
+| `ForwardedTypeIdentitiesLibrary/` | Plain netstandard1.3 helper supplying the `System.ObjectModel` identity to the net10.0 forwarded-type regression |
+| `ForwardedTypeIdentitiesNetStandard/` | Plain netstandard2.0 helper supplying `netstandard`-scoped dictionaries and an `IDisposable` callback through explicit interop discovery opt-in |
 | `JsonValueFunctionCalls/` | Windows.Data.Json API calls, static methods, boxed enums |
 | `NonWinRT/` | Compile-time validation for non-WinRT scenarios |
 | `OptInMode/` | Opt-in external type marshalling |
