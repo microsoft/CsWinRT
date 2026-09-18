@@ -285,9 +285,7 @@ internal partial class InteropGenerator
         try
         {
             // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
-            ModuleDefinition winRTInteropModule = new(
-                name: InteropNames.WindowsRuntimeInteropDllNameUtf8,
-                corLib: discoveryState.RuntimeContext.TargetRuntime.GetDefaultCorLib())
+            ModuleDefinition winRTInteropModule = new InteropModuleDefinition(discoveryState.RuntimeContext.TargetRuntime)
             {
                 // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
                 // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
