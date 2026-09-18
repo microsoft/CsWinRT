@@ -22,6 +22,11 @@
         a reference/forwarder projection, using only Windows SDK metadata. The interface must retain
         its implementation even though its owning runtime class stays in the SDK XAML projection.
 
+      * Preinitialization: a Native AOT app roots representative vtables and COM interface entries
+        from the runtime, SDK/XAML and third-party projections, and interop generator. Its MSTAT/map
+        reports must contain the expected table families, but no runtime .cctor for any type with
+        a FixedAddressValueType field.
+
       * Authoring: a Windows Runtime component library is built, validating WinMD
         generation, the reference projection, and the forwarder assembly.
 
@@ -50,8 +55,8 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Authoring', 'Projection',
-    'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as
+    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization',
+    'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as
     its own step (passing a single value), so an individual failure is reported in isolation; local
     builds use the default 'All'.
 
@@ -61,7 +66,7 @@
     full publish pipeline (projection and interop generators, then ILC). The CI runs both as
     separate steps so a failure points at the exact runtime. The 'Projection', 'WindowsSdkProjection',
     and 'WindowsSdkXamlProjection' tests are build-only and therefore CoreCLR-only; they are skipped for
-    'NativeAot'.
+    'NativeAot'. 'Preinitialization' requires 'NativeAot' and is omitted from 'All' on CoreCLR.
 
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
@@ -81,7 +86,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -92,6 +97,10 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
+if ($Test -eq 'Preinitialization' -and $Runtime -ne 'NativeAot') {
+    throw "The Preinitialization smoke test requires '-Runtime NativeAot'."
+}
+
 # Native AOT publishes are always x64: the NuGet publish job that runs the smoke tests only runs
 # on an x64 host.
 $nativeAotRid = 'win-x64'
@@ -100,6 +109,7 @@ $smokeTestsRoot = $PSScriptRoot
 $consumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'Consumption', 'Consumption.csproj')
 $mixedConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'MixedConsumption', 'MixedConsumption.csproj')
 $exclusiveToConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'ExclusiveToConsumption', 'ExclusiveToConsumption.csproj')
+$preinitializationProject = [IO.Path]::Combine($smokeTestsRoot, 'Preinitialization', 'Preinitialization.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
@@ -185,6 +195,42 @@ function Invoke-ConsumptionSmokeTest {
     & $consumptionExe.FullName
     if ($LASTEXITCODE -ne 0) {
         throw "$Name smoke test crashed or failed with exit code $LASTEXITCODE."
+    }
+}
+
+function Invoke-PreinitializationSmokeTest {
+    Write-Host "`n=== Preinitialization smoke test (NativeAot) ===" -ForegroundColor Green
+
+    $projectDirectory = [IO.Path]::GetDirectoryName($preinitializationProject)
+    $objDirectory = [IO.Path]::Combine($projectDirectory, 'obj')
+    $logDirectory = [IO.Path]::Combine($objDirectory, 'smoke-logs')
+    $null = New-Item -ItemType Directory -Path $logDirectory -Force
+    # A VS developer prompt can set Platform=x64 in the environment; keep the managed paths stable.
+    $aotArgs = @('--runtime', $nativeAotRid, '-p:Platform=AnyCPU', '-p:PublishAot=true', '--verbosity', 'minimal') + $commonBuildArgs
+
+    # Do not accept a stale MSTAT when an incremental publish skips ILC.
+    Invoke-Dotnet (@('clean', $preinitializationProject, "-bl:$logDirectory\clean-{}.binlog") + $aotArgs)
+    Invoke-Dotnet (@('publish', $preinitializationProject, "-bl:$logDirectory\publish-{}.binlog") + $aotArgs)
+
+    $mstatFiles = @(Get-ChildItem -LiteralPath ([IO.Path]::Combine($objDirectory, $Configuration)) -Filter 'Preinitialization.mstat' -Recurse |
+        Where-Object { $_.FullName.EndsWith("\$nativeAotRid\native\Preinitialization.mstat", [StringComparison]::OrdinalIgnoreCase) })
+
+    if ($mstatFiles.Count -ne 1) {
+        throw "Expected exactly one Preinitialization.mstat for $Configuration/$nativeAotRid; found $($mstatFiles.Count)."
+    }
+
+    $mstat = $mstatFiles[0]
+    $outputSuffix = [IO.Path]::GetRelativePath($objDirectory, $mstat.Directory.Parent.FullName)
+    $assemblyDirectory = [IO.Path]::Combine($projectDirectory, 'bin', $outputSuffix)
+    $exe = Get-Item -LiteralPath ([IO.Path]::Combine($assemblyDirectory, 'publish', 'Preinitialization.exe'))
+
+    Write-Host "Native binary size: $($exe.Length) bytes. MSTAT: '$($mstat.FullName)'." -ForegroundColor DarkGray
+    & ([IO.Path]::Combine($projectDirectory, 'verify-preinitialization.ps1')) -MstatPath $mstat.FullName -AssemblyDirectory $assemblyDirectory
+    & ([IO.Path]::Combine($projectDirectory, 'test-verifier.ps1')) -MstatPath $mstat.FullName -AssemblyDirectory $assemblyDirectory
+
+    & $exe.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "Preinitialization smoke test failed with exit code $LASTEXITCODE."
     }
 }
 
@@ -312,6 +358,10 @@ if ($Test -in @('All', 'MixedConsumption')) {
 
 if ($Test -in @('All', 'ExclusiveToConsumption')) {
     Invoke-ConsumptionSmokeTest -Name 'ExclusiveToConsumption' -Project $exclusiveToConsumptionProject
+}
+
+if ($Runtime -eq 'NativeAot' -and $Test -in @('All', 'Preinitialization')) {
+    Invoke-PreinitializationSmokeTest
 }
 
 if ($Test -in @('All', 'Authoring')) {

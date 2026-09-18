@@ -137,7 +137,7 @@ steps:
   # The consumption and authoring tests each run twice: once on CoreCLR and once with
   # Native AOT, so a failure points at the exact runtime. The projection, Windows SDK projection, and Windows SDK XAML
   # projection tests are build-only, so they run once on CoreCLR. Native AOT publishes are x64 (this job
-  # only runs on an x64 host).
+  # only runs on an x64 host). Preinitialization runs only with Native AOT and verifies MSTAT.
   - task: UseDotNet@2
     displayName: Use .NET SDK for smoke tests
     inputs:
@@ -222,6 +222,16 @@ steps:
       pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Authoring -Runtime NativeAot
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Preinitialization smoke test (NAOT)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Preinitialization -Runtime NativeAot
       workingDirectory: $(Build.SourcesDirectory)
 
   - task: PowerShell@2
