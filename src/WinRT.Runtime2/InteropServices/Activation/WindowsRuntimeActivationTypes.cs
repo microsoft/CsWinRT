@@ -20,12 +20,10 @@ public static class WindowsRuntimeActivationTypes
     /// <summary>
     /// The derived type is a composed Windows Runtime type.
     /// </summary>
-    [WindowsRuntimeImplementationOnlyMember]
     public readonly ref struct DerivedComposed;
 
     /// <summary>
     /// The derived type is a sealed Windows Runtime type.
     /// </summary>
-    [WindowsRuntimeImplementationOnlyMember]
     public readonly ref struct DerivedSealed;
 }
