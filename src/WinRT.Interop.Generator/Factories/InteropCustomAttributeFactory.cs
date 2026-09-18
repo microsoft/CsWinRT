@@ -29,7 +29,8 @@ internal static class InteropCustomAttributeFactory
     {
         ModuleDefinition module = interopReferences.CorLibTypeFactory.CorLibScope.ContextModule!;
         ReferenceImporter importer = TypeNameImporters.GetValue(module, static module => new AttributeTypeReferenceImporter(module));
-        return new CustomAttributeArgument(interopReferences.Type.ToReferenceTypeSignature(), importer.ImportTypeSignature(type));
+
+        return new(interopReferences.Type.ToReferenceTypeSignature(), importer.ImportTypeSignature(type));
     }
 
     /// <summary>
