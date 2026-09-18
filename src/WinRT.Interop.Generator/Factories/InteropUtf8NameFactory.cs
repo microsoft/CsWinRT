@@ -220,8 +220,8 @@ internal static class InteropUtf8NameFactory
         TypeSignature typeSignature,
         InteropDefinitions interopDefinitions)
     {
-        // Runtime implementation inputs may resolve public types to System.Private.CoreLib instead of System.Runtime.
-        // This only unifies helper names, not the emitted assembly references.
+        // Runtime implementation inputs may resolve public types to 'System.Private.CoreLib' instead of
+        // 'System.Runtime'. This only unifies helper names, not the emitted assembly references.
         return assemblyName switch
         {
             { Value: "System.Runtime" or "System.Private.CoreLib" } => "#corlib"u8,
