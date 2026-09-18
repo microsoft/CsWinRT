@@ -77,8 +77,10 @@ internal partial class ProjectionGenerator
     {
         // Compiler-generated internal helpers are not projected APIs. Selected internal exclusive
         // interfaces are represented by their metadata names even if the compiler stripped them.
+        // Attribute projections are metadata-only and never contribute WinRT type-map keys.
+        // WinUI intentionally also projects some SDK attributes, so those are not runtime-type conflicts.
         IEnumerable<string> types = module.TopLevelTypes
-            .Where(static type => type.IsPublic)
+            .Where(static type => type.IsPublic && type.BaseType?.FullName != "System.Attribute")
             .Select(static type => type.FullName)
             .Concat(idicExclusiveToTypes)
             .Distinct(StringComparer.Ordinal)

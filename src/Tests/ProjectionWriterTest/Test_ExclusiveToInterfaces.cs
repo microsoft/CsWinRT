@@ -20,6 +20,7 @@ using ProjectionWriterTest.Helpers;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.ProjectionWriter;
+using MetadataTypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace ProjectionWriterTest;
 
@@ -644,6 +645,49 @@ public class Test_ExclusiveToInterfaces
             Assert.AreEqual(
                 log.Split('\n').Single(line => line.Contains("CSWINRTPROJECTIONGEN0015", StringComparison.Ordinal)),
                 reversedLog.Split('\n').Single(line => line.Contains("CSWINRTPROJECTIONGEN0015", StringComparison.Ordinal)));
+        });
+    }
+
+    [TestMethod]
+    [DataRow("Windows.UI.Xaml.Markup", "FullXamlMetadataProviderAttribute", "Microsoft.Windows.UI.Xaml")]
+    [DataRow("Windows.UI.Xaml.Markup", "FullXamlMetadataProviderAttribute", "OtherProjection")]
+    [DataRow("Contoso", "SharedMetadataAttribute", "Microsoft.Windows.UI.Xaml")]
+    [DataRow("Contoso", "SharedMetadataAttribute", "OtherProjection")]
+    public void ReferenceProjection_DuplicateMetadataAttributesDoNotConflict(string attributeNamespace, string attributeName, string secondAssemblyName)
+    {
+        WithMetadata(fastAbi: false, (directory, metadataPath) =>
+        {
+            ModuleDefinition metadata = ModuleDefinition.FromFile(metadataPath);
+            metadata.TopLevelTypes.Add(new TypeDefinition(
+                attributeNamespace, attributeName,
+                MetadataTypeAttributes.Public | MetadataTypeAttributes.Sealed | MetadataTypeAttributes.WindowsRuntime,
+                new TypeReference(metadata, metadata.CorLibTypeFactory.CorLibScope, "System", "Attribute")));
+            string attributeMetadataPath = Path.Combine(directory, "WithAttributes.winmd");
+            metadata.Write(attributeMetadataPath);
+            string attributeFullName = $"{attributeNamespace}.{attributeName}";
+
+            string first = GenerateReference(directory, attributeMetadataPath, "Microsoft.WinUI",
+                publicExclusiveTo: true, idicExclusiveTo: true, $"{attributeFullName},Contoso.IWidget3");
+            string second = GenerateReference(directory, attributeMetadataPath, secondAssemblyName,
+                publicExclusiveTo: false, idicExclusiveTo: false, attributeFullName);
+
+            foreach (string reference in new[] { first, second })
+            {
+                TypeDefinition attribute = ModuleDefinition.FromFile(reference).TopLevelTypes.Single(
+                    type => type.FullName == attributeFullName);
+                Assert.IsTrue(attribute.IsPublic);
+                Assert.AreEqual("System.Attribute", attribute.BaseType!.FullName);
+            }
+
+            (int exitCode, string log, string assemblyPath) = RunImplementationGenerator(
+                directory, attributeMetadataPath, first, second);
+            Assert.AreEqual(0, exitCode, log);
+            ModuleDefinition module = ModuleDefinition.FromFile(assemblyPath);
+            TypeDefinition projectedAttribute = module.TopLevelTypes.Single(type => type.FullName == attributeFullName);
+            Assert.AreEqual("System.Attribute", projectedAttribute.BaseType!.FullName);
+            Assert.IsFalse(projectedAttribute.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeTypeAttribute"u8));
+            Assert.IsFalse(module.TopLevelTypes.Any(type => type.FullName == $"ABI.{attributeFullName}Impl"));
+            AssertIdicImplementation(module, "Contoso.IWidget3", enabled: true);
         });
     }
 
