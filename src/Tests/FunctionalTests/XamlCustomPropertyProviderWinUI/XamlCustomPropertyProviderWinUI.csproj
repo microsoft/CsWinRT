@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>$(FunctionalTestsBuildTFMs)</TargetFrameworks>
+    <Platforms>x86;x64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win-$(Platform).pubxml</PublishProfileFullPath>
+    <DefineConstants>$(DefineConstants);TEST_WINUI</DefineConstants>
+    <DefineConstants Condition="'$(CsWinRTEnableXamlCustomPropertyProvider)' == 'false'">$(DefineConstants);TEST_XAML_PROVIDER_DISABLED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\CustomPropertyProvider\XamlTypeBridgeTests.cs" Link="XamlTypeBridgeTests.cs" />
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
+  </ItemGroup>
+</Project>

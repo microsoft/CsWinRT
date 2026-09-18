@@ -49,6 +49,12 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
 
+    /// <summary>Gets whether to emit type-only custom property providers for managed <c>FrameworkElement</c> subclasses.</summary>
+    /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--enable-xaml-custom-property-provider")]
+    [DefaultValue(true)]
+    public bool EnableXamlCustomPropertyProvider { get; init; }
+
     /// <summary>Gets the marshalling mode, controlling which assemblies are analyzed to discover user-defined/CCW/generic types.</summary>
     /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.Minimal"/> when not specified in the response file.</remarks>
     [CommandLineArgumentName("--marshalling-mode")]
@@ -96,4 +102,3 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
-

@@ -624,6 +624,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
     <CsWinRTEnableMarshalingTypeValidation Condition="'$(CsWinRTEnableMarshalingTypeValidation)' == ''">false</CsWinRTEnableMarshalingTypeValidation>
     <CsWinRTEnableMarshalingTypeMetadataSupport Condition="'$(CsWinRTEnableMarshalingTypeMetadataSupport)' == ''">true</CsWinRTEnableMarshalingTypeMetadataSupport>
+    <CsWinRTEnableXamlCustomPropertyProvider Condition="'$(CsWinRTEnableXamlCustomPropertyProvider)' == ''">true</CsWinRTEnableXamlCustomPropertyProvider>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -667,6 +668,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT"
                                     Value="$(CsWinRTEnableMarshalingTypeMetadataSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_XAML_CUSTOM_PROPERTY_PROVIDER switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_XAML_CUSTOM_PROPERTY_PROVIDER"
+                                    Value="$(CsWinRTEnableXamlCustomPropertyProvider)"
                                     Trim="true" />
   </ItemGroup>
 

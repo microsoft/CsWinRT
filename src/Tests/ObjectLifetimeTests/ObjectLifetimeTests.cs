@@ -125,6 +125,38 @@ namespace ObjectLifetimeTests
         }
 
         [TestMethod]
+        public void CustomControlAcceptsTypedStyleAndTemplate()
+        {
+            _asyncQueue.CallFromUIThread(() =>
+            {
+                var control = new TypedStyleControl();
+                var template = (ControlTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load(
+                    "<ControlTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Grid /></ControlTemplate>");
+                var style = new Style { TargetType = typeof(TypedStyleControl) };
+                style.Setters.Add(new Setter(FrameworkElement.WidthProperty, 42.0));
+                style.Setters.Add(new Setter(Control.TemplateProperty, template));
+
+                try
+                {
+                    control.Style = style;
+                    mainCanvas.Children.Add(control);
+                    control.ApplyTemplate();
+                    control.Measure(new Windows.Foundation.Size(100, 100));
+                    control.UpdateLayout();
+                    Assert.IsTrue(VisualTreeHelper.GetChildrenCount(control) > 0);
+                    Assert.AreEqual(42.0, control.Width);
+                    Assert.AreEqual(typeof(TypedStyleControl), control.Style.TargetType);
+                }
+                finally
+                {
+                    mainCanvas.Children.Remove(control);
+                }
+            }).Run();
+        }
+
+        private sealed class TypedStyleControl : Control;
+
+        [TestMethod]
         public void TestInitializeWithWindow()
         {
             _asyncQueue

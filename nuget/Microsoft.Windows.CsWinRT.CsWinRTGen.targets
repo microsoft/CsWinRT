@@ -245,6 +245,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTEnableXamlCustomPropertyProvider)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
@@ -318,6 +319,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      EnableXamlCustomPropertyProvider="$(CsWinRTEnableXamlCustomPropertyProvider)"
       MarshallingMode="$(CsWinRTMarshallingMode)"
       MarshallingEnabledAssemblies="@(CsWinRTMarshallingEnabledAssembly)"
       GenerateCollectionChangedListVtables="$(CsWinRTGenerateCollectionChangedListVtables)"
