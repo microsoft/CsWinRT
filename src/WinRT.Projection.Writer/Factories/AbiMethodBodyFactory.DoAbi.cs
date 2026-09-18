@@ -85,7 +85,7 @@ internal static partial class AbiMethodBodyFactory
             // instead of the generic-instance UnsafeAccessor (V3-M7).
             if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
             {
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt!, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, rt!, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -111,7 +111,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.GetRawName();
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, uOut, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -133,7 +133,7 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
-                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, sza.BaseType);
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -149,7 +149,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSzHoist.BaseType);
-                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, retSzHoist.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "ConvertToUnmanaged",
@@ -294,7 +294,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "ConvertToManaged",
                     returnType: $"{elementProjected.Format()}[]",
                     functionName: $"ConvertToManaged_{raw}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(arrayType.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, arrayType.BaseType),
                     parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine($"var __{raw} = ConvertToManaged_{raw}(null, __{raw}Size, ({elementAbi}*){ptr});");
             }
@@ -345,7 +345,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "CopyToManaged",
                     returnType: "void",
                     functionName: $"CopyToManaged_{raw}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                     parameterList: $"uint length, {dataParamType}, Span<{elementProjected.Format()}> span");
                 writer.WriteLine($"CopyToManaged_{raw}(null, __{raw}Size, {dataCastExpr}, __{raw});");
                 writer.DecreaseIndent();
@@ -369,7 +369,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
-                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
+                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, p.Type, TypedefNameType.ABI);
                     IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.IncreaseIndent();
                     UnsafeAccessorFactory.EmitStaticMethod(
@@ -612,7 +612,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "CopyToUnmanaged",
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{raw}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szFA.BaseType),
                     parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {elementAbi}* data");
                 writer.WriteLine($"CopyToUnmanaged_{raw}(null, __{raw}, __{raw}Size, ({elementAbi}*){ptr});");
                 writer.DecreaseIndent();

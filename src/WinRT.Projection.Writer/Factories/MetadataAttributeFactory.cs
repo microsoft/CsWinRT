@@ -155,10 +155,7 @@ internal static class MetadataAttributeFactory
     {
         if (!context.Settings.ReferenceProjection && context.WindowsRuntimeMetadataTypeEntries is { } entries)
         {
-            string path = context.Cache.GetSourcePath(type);
-            string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-
-            _ = entries.TryAdd(projectedTypeName, stem);
+            _ = entries.TryAdd(projectedTypeName, context.Cache.GetSourceStem(type));
         }
     }
 

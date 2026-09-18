@@ -216,7 +216,7 @@ internal static partial class AbiMethodBodyFactory
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
                 string localName = p.GetParamLocalName(paramNameOverride);
                 string callName = p.GetParamName(paramNameOverride);
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, p.Type, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -736,7 +736,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "CopyToUnmanaged",
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{localName}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                     parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
                 writer.WriteLine($"CopyToUnmanaged_{localName}(null, {callName}, (uint){callName}.Length, {dataCastType}_{localName});");
             }
@@ -910,7 +910,7 @@ internal static partial class AbiMethodBodyFactory
                 accessName: "CopyToManaged",
                 returnType: "void",
                 functionName: $"CopyToManaged_{localName}",
-                interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType),
+                interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szFA.BaseType),
                 parameterList: $"uint length, {elementAbi}* data, Span<{elementProjected.Format()}> span");
             writer.WriteLine($"CopyToManaged_{localName}(null, (uint){names.Span}.Length, ({elementAbi}*)_{localName}, {callName});");
         }
@@ -929,7 +929,7 @@ internal static partial class AbiMethodBodyFactory
             // emits the accessor inside try, right before the assignment).
             if (uOut.IsGenericInstance())
             {
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, uOut, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -1011,7 +1011,7 @@ internal static partial class AbiMethodBodyFactory
             // Element ABI type for the `data` parameter (void* for ref types, ABI struct for
             // complex structs, blittable struct ABI for blittable structs, primitive ABI otherwise).
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
-            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, sza.BaseType);
             UnsafeAccessorFactory.EmitStaticMethod(
                 writer,
                 accessName: "ConvertToManaged",
@@ -1034,7 +1034,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "ConvertToManaged",
                     returnType: $"{elementProjected.Format()}[]",
                     functionName: "ConvertToManaged_retval",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, retSz.BaseType),
                     parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine("return ConvertToManaged_retval(null, __retval_length, __retval_data);");
             }
@@ -1057,7 +1057,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (rt.IsGenericInstance())
                 {
-                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt, TypedefNameType.ABI);
+                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, rt, TypedefNameType.ABI);
                     IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt, false);
                     UnsafeAccessorFactory.EmitStaticMethod(
                         writer,
@@ -1270,7 +1270,7 @@ internal static partial class AbiMethodBodyFactory
                         accessName: "Dispose",
                         returnType: "void",
                         functionName: $"Dispose_{localName}",
-                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                         parameterList: $"uint length, {disposeDataParamType}");
 
                     writer.WriteLine(isMultiline: true, $$"""
@@ -1331,7 +1331,7 @@ internal static partial class AbiMethodBodyFactory
 
                 // Element ABI type: same dispatch as the ConvertToManaged_<name> path.
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
-                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, sza.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "Free",
@@ -1370,7 +1370,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "Free",
                     returnType: "void",
                     functionName: "Free_retval",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, retSz.BaseType),
                     parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine("Free_retval(null, __retval_length, __retval_data);");
             }
