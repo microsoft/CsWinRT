@@ -27,20 +27,25 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     }
 
     /// <summary>
-    /// Gets the singleton <see cref="TypeDescriptorComparer"/> instance.
+    /// Gets a shared comparer that orders type descriptors without resolving them.
     /// </summary>
-    public static TypeDescriptorComparer Instance { get; } = new(null);
+    /// <remarks>
+    /// This instance has no associated <see cref="RuntimeContext"/> and does not follow type forwarding.
+    /// Equivalent types referenced through different assembly scopes can therefore sort differently.
+    /// Use a comparer constructed with a runtime context when ordering resolved type identities.
+    /// </remarks>
+    public static TypeDescriptorComparer Default { get; } = new(null);
 
     /// <summary>
     /// Creates a new comparer for the specified <see cref="ITypeDescriptor"/> type.
     /// </summary>
     /// <typeparam name="T">The <see cref="ITypeDescriptor"/> type to compare.</typeparam>
-    /// <param name="runtimeContext">The context for ordering resolved type identities.</param>
+    /// <param name="runtimeContext">The context for ordering resolved type identities, or <see langword="null"/> to use the context-free <see cref="Default"/> comparer.</param>
     /// <returns>The resulting <see cref="IComparer{T}"/> instance.</returns>
-    public static IComparer<T> Create<T>(RuntimeContext? runtimeContext = null)
+    public static IComparer<T> Create<T>(RuntimeContext? runtimeContext)
         where T : ITypeDescriptor
     {
-        return (IComparer<T>)(IComparer<ITypeDescriptor>)(runtimeContext is null ? Instance : new TypeDescriptorComparer(runtimeContext));
+        return (IComparer<T>)(IComparer<ITypeDescriptor>)(runtimeContext is null ? Default : new TypeDescriptorComparer(runtimeContext));
     }
 
     /// <inheritdoc/>
@@ -64,6 +69,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         // Appends the fully qualified name of a type to a target handler
         static void AppendFullyQualifiedName(ITypeDescriptor type, RuntimeContext? runtimeContext, ref DefaultInterpolatedStringHandler handler)
         {
+            // Resolving the outer type loses generic arguments or array shape, so format those recursively
             if (type is GenericInstanceTypeSignature generic)
             {
                 AppendFullyQualifiedName(generic.GenericType, runtimeContext, ref handler);
@@ -76,6 +82,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
                 }
 
                 handler.AppendLiteral(">");
+
                 return;
             }
 
@@ -83,9 +90,11 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
             {
                 AppendFullyQualifiedName(array.BaseType, runtimeContext, ref handler);
                 handler.AppendLiteral("[]");
+
                 return;
             }
 
+            // Resolve forwarded aliases to the same declaring assembly so reference scope cannot affect ordering
             if (runtimeContext is not null && type.TryResolve(runtimeContext, out TypeDefinition? definition))
             {
                 type = definition;
