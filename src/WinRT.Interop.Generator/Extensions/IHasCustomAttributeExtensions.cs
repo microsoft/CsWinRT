@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -19,9 +18,10 @@ internal static class IHasCustomAttributeExtensions
     /// </summary>
     /// <param name="member">The metadata member.</param>
     /// <param name="attributeType">The attribute type to look for.</param>
+    /// <param name="signatureComparer">The comparer for this invocation.</param>
     /// <param name="attribute">The resulting attribute, if found.</param>
     /// <returns>Whether <paramref name="attribute"/> was successfully retrieved.</returns>
-    public static bool TryGetCustomAttribute(this IHasCustomAttribute member, ITypeDescriptor attributeType, [NotNullWhen(true)] out CustomAttribute? attribute)
+    public static bool TryGetCustomAttribute(this IHasCustomAttribute member, ITypeDescriptor attributeType, SignatureComparer signatureComparer, [NotNullWhen(true)] out CustomAttribute? attribute)
     {
         for (int i = 0; i < member.CustomAttributes.Count; i++)
         {
@@ -34,7 +34,7 @@ internal static class IHasCustomAttributeExtensions
             }
 
             // Check that the attribute type is a match
-            if (SignatureComparer.IgnoreVersion.Equals(currentAttribute.Type, attributeType))
+            if (signatureComparer.Equals(currentAttribute.Type, attributeType))
             {
                 attribute = currentAttribute;
 
@@ -96,9 +96,10 @@ internal static class IHasCustomAttributeExtensions
     /// </summary>
     /// <param name="member">The metadata member.</param>
     /// <param name="attributeType">The attribute type to look for.</param>
+    /// <param name="signatureComparer">The comparer for this invocation.</param>
     /// <returns>Whether <paramref name="member"/> has an attribute with the specified type.</returns>
-    public static bool HasCustomAttribute(this IHasCustomAttribute member, ITypeDescriptor attributeType)
+    public static bool HasCustomAttribute(this IHasCustomAttribute member, ITypeDescriptor attributeType, SignatureComparer signatureComparer)
     {
-        return TryGetCustomAttribute(member, attributeType, out _);
+        return TryGetCustomAttribute(member, attributeType, signatureComparer, out _);
     }
 }

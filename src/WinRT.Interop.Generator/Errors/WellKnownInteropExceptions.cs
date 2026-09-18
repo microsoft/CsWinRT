@@ -903,14 +903,6 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
-    /// A framework type resolves through incompatible target reference declarations.
-    /// </summary>
-    public static WellKnownInteropException AmbiguousFrameworkTypeReference(TypeDefinition type, TypeReference first, TypeReference second)
-    {
-        return Exception(104, $"The framework type '{type}' has multiple declaring identities in the target reference assemblies: '{first.Scope?.GetAssembly()}' and '{second.Scope?.GetAssembly()}'. Canonical interop type identity cannot be selected unambiguously.");
-    }
-
-    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

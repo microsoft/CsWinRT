@@ -6,7 +6,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Factories;
-using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 
 #pragma warning disable IDE0032
@@ -35,19 +34,19 @@ internal sealed class InteropReferences
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).</param>
     /// <param name="windowsRuntimeComponentModule">The generated component projection, if available.</param>
-    /// <param name="typeCanonicalizer">The canonicalizer for the application's target framework.</param>
+    /// <param name="signatureComparer">The resolution-aware, version-agnostic signature comparer.</param>
     public InteropReferences(
         RuntimeContext runtimeContext,
         CorLibTypeFactory corLibTypeFactory,
         IResolutionScope windowsRuntimeModule,
         ModuleDefinition? windowsRuntimeComponentModule,
-        FrameworkTypeCanonicalizer typeCanonicalizer)
+        SignatureComparer signatureComparer)
     {
         RuntimeContext = runtimeContext;
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
         WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
-        TypeCanonicalizer = typeCanonicalizer;
+        SignatureComparer = signatureComparer;
     }
 
     /// <summary>
@@ -56,9 +55,9 @@ internal sealed class InteropReferences
     public RuntimeContext RuntimeContext { get; }
 
     /// <summary>
-    /// Gets the canonicalizer for the application's target framework.
+    /// Gets the comparer shared by this generator invocation.
     /// </summary>
-    public FrameworkTypeCanonicalizer TypeCanonicalizer { get; }
+    public SignatureComparer SignatureComparer { get; }
 
     /// <summary>
     /// Gets the generated component projection containing the exported authored type metadata.
@@ -580,6 +579,7 @@ internal sealed class InteropReferences
     /// that a type failing to resolve stays an error for every other type.
     /// </remarks>
     public TypeSignatureEquatableSet CollectionChangedListTypes => field ??= new TypeSignatureEquatableSet(
+        SignatureComparer,
         SingleItemReadOnlyList.ToReferenceTypeSignature(),
         ReadOnlyList.ToReferenceTypeSignature());
 

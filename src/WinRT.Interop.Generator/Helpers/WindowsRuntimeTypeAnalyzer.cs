@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
@@ -35,7 +34,7 @@ internal static class WindowsRuntimeTypeAnalyzer
         interfaceType = null;
 
         // Use a stable order to break ties between unrelated interfaces
-        foreach (TypeSignature interfaceSignature in interfaceTypes.OrderByFullyQualifiedTypeName())
+        foreach (TypeSignature interfaceSignature in interfaceTypes.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
         {
             // If the current interface is not a Windows Runtime type, just skip it.
             // We can only use Windows Runtime interfaces for the runtime class name.
@@ -49,7 +48,7 @@ internal static class WindowsRuntimeTypeAnalyzer
             // if for instance a type implements the 'IDictionary<string, string>' interface, we
             // want to make sure to find that type signature, and not just 'IEnumerable'.
             if (interfaceType is null ||
-                interfaceType.IsAssignableFrom(interfaceSignature, interopReferences.RuntimeContext, SignatureComparer.IgnoreVersion))
+                interfaceType.IsAssignableFrom(interfaceSignature, interopReferences.RuntimeContext, interopReferences.SignatureComparer))
             {
                 interfaceType = interfaceSignature;
             }
@@ -90,9 +89,9 @@ internal static class WindowsRuntimeTypeAnalyzer
             }
 
             // Make sure the interface type itself is one of the valid ones
-            if (!SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerable1) &&
-                !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IEnumerator1) &&
-                !SignatureComparer.IgnoreVersion.Equals(genericInterfaceType, interopReferences.IReadOnlyList1))
+            if (!interopReferences.SignatureComparer.Equals(genericInterfaceType, interopReferences.IEnumerable1) &&
+                !interopReferences.SignatureComparer.Equals(genericInterfaceType, interopReferences.IEnumerator1) &&
+                !interopReferences.SignatureComparer.Equals(genericInterfaceType, interopReferences.IReadOnlyList1))
             {
                 yield break;
             }
@@ -158,6 +157,6 @@ internal static class WindowsRuntimeTypeAnalyzer
         return EnumerateCovariantInterfaceTypesCore(
             interfaceType: interfaceType,
             interopReferences: interopReferences,
-            visitedTypes: new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion));
+            visitedTypes: new HashSet<TypeSignature>(interopReferences.SignatureComparer));
     }
 }

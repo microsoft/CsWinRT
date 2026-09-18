@@ -8,7 +8,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 
@@ -19,7 +18,8 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <summary>
 /// Global state tracking type for <see cref="InteropGenerator"/>, specifically for the emit phase.
 /// </summary>
-internal sealed class InteropGeneratorEmitState
+/// <param name="signatureComparer">The resolution-aware, version-agnostic signature comparer.</param>
+internal sealed class InteropGeneratorEmitState(SignatureComparer signatureComparer)
 {
     /// <summary>
     /// A map to provide fast lookup for generated types that need to be referenced in different parts of the emit phase.
@@ -39,17 +39,17 @@ internal sealed class InteropGeneratorEmitState
     /// <summary>
     /// A map to allow reusing vtable types for applicable <c>IMapView&lt;K, V&gt;</c> interfaces.
     /// </summary>
-    private readonly ConcurrentDictionary<TypeSignature, TypeDefinition> _mapViewVftblTypes = new(SignatureComparer.IgnoreVersion);
+    private readonly ConcurrentDictionary<TypeSignature, TypeDefinition> _mapViewVftblTypes = new(signatureComparer);
 
     /// <summary>
     /// A map to allow reusing vtable types for applicable <c>IMap&lt;K, V&gt;</c> interfaces.
     /// </summary>
-    private readonly ConcurrentDictionary<(TypeSignature Key, TypeSignature Value), TypeDefinition> _mapVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
+    private readonly ConcurrentDictionary<(TypeSignature Key, TypeSignature Value), TypeDefinition> _mapVftblTypes = new(signatureComparer.MakeValueTupleComparer());
 
     /// <summary>
     /// A map to allow reusing vtable types for applicable <c>IDelegate</c> interfaces.
     /// </summary>
-    private readonly ConcurrentDictionary<(TypeSignature Sender, TypeSignature Args), TypeDefinition> _delegateVftblTypes = new(SignatureComparer.IgnoreVersion.MakeValueTupleComparer());
+    private readonly ConcurrentDictionary<(TypeSignature Sender, TypeSignature Args), TypeDefinition> _delegateVftblTypes = new(signatureComparer.MakeValueTupleComparer());
 
     /// <summary>
     /// Indicates whether the current state is readonly.
@@ -68,7 +68,8 @@ internal sealed class InteropGeneratorEmitState
 
         ConcurrentDictionary<TypeSignature, TypeDefinition> innerLookup = _typeDefinitionLookup.GetOrAdd(
             key: key,
-            valueFactory: static _ => new ConcurrentDictionary<TypeSignature, TypeDefinition>(SignatureComparer.IgnoreVersion));
+            valueFactory: static (_, comparer) => new ConcurrentDictionary<TypeSignature, TypeDefinition>(comparer),
+            factoryArgument: signatureComparer);
 
         if (!innerLookup.TryAdd(typeSignature, typeDefinition))
         {
@@ -105,7 +106,8 @@ internal sealed class InteropGeneratorEmitState
 
         ConcurrentDictionary<TypeSignature, MethodDefinition> innerLookup = _methodDefinitionLookup.GetOrAdd(
             key: key,
-            valueFactory: static _ => new ConcurrentDictionary<TypeSignature, MethodDefinition>(SignatureComparer.IgnoreVersion));
+            valueFactory: static (_, comparer) => new ConcurrentDictionary<TypeSignature, MethodDefinition>(comparer),
+            factoryArgument: signatureComparer);
 
         if (!innerLookup.TryAdd(typeSignature, methodDefinition))
         {

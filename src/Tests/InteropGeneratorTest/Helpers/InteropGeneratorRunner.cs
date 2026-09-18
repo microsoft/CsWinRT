@@ -53,7 +53,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
     private readonly string applicationPath;
     private readonly string sdkProjectionPath;
 
-    public InteropGeneratorRunner(bool useFrameworkImplementations = false, bool ambiguousFrameworkReferences = false)
+    public InteropGeneratorRunner(bool useFrameworkImplementations = false, bool overlappingFrameworkReferences = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -65,7 +65,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
             return path;
         }).ToArray();
 
-        if (ambiguousFrameworkReferences)
+        if (overlappingFrameworkReferences)
         {
             referencePaths = [
                 .. referencePaths,
@@ -134,14 +134,6 @@ internal sealed class InteropGeneratorRunner : IDisposable
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
-    }
-
-    public async Task AssertAmbiguousReferencesFailAsync(bool reverseInputs)
-    {
-        (int exitCode, string log, string outputPath) = await RunAsync($"ambiguous-{reverseInputs}", reverseInputs, 1, "Minimal", false);
-        Assert.AreNotEqual(0, exitCode, "Incompatible reference declarations must not pick an arbitrary first winner.");
-        StringAssert.Contains(log, "CSWINRTINTEROPGEN0104");
-        Assert.IsFalse(File.Exists(outputPath), "Invalid reference identities must not produce an interop assembly.");
     }
 
     private async Task<(int ExitCode, string Log, string OutputPath)> RunAsync(

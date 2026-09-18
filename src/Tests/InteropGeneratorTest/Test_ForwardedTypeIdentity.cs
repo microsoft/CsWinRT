@@ -52,8 +52,9 @@ public sealed class Test_ForwardedTypeIdentity
                     "System.Collections.ObjectModel.ReadOnlyDictionary`2+KeyCollection" or
                     "System.Collections.ObjectModel.ReadOnlyDictionary`2+ValueCollection")
                 {
-                    Assert.AreEqual("System.Runtime", type.Scope!.GetAssembly()!.Name!.ToString(),
-                        $"The .NET 10 reference surface, not a facade or implementation scope, must be emitted for '{type}'.");
+                    Assert.IsTrue(namedType.TryResolve(context, out TypeDefinition? definition));
+                    Assert.AreEqual("System.Private.CoreLib", definition!.DeclaringModule!.Assembly!.Name!.ToString(),
+                        $"The emitted reference must resolve to the framework implementation of '{type}'.");
                 }
             }
         }
@@ -77,14 +78,25 @@ public sealed class Test_ForwardedTypeIdentity
     }
 
     [TestMethod]
-    public async Task ForwardedFrameworkTypes_AreDeterministicAcrossInputOrderAndParallelism()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ForwardedFrameworkTypes_AreDeterministicAcrossInputOrderAndParallelism(bool useFrameworkImplementations)
     {
-        using InteropGeneratorRunner runner = new();
+        using InteropGeneratorRunner runner = new(useFrameworkImplementations);
         byte[] expected = File.ReadAllBytes(await runner.GenerateAsync("serial"));
 
         foreach ((bool reverse, int parallelism) in new[] { (true, 1), (false, -1), (true, 2) })
         {
             byte[] actual = File.ReadAllBytes(await runner.GenerateAsync($"order-{reverse}-dop-{parallelism}", reverse, parallelism));
+
+            if (!expected.SequenceEqual(actual))
+            {
+                string directory = Directory.CreateTempSubdirectory("InteropDeterminismFailure_").FullName;
+                File.WriteAllBytes(Path.Combine(directory, "expected.dll"), expected);
+                File.WriteAllBytes(Path.Combine(directory, "actual.dll"), actual);
+                System.Console.WriteLine($"Non-deterministic assemblies: {directory}");
+            }
+
             CollectionAssert.AreEqual(expected, actual,
                 $"Changing reference/implementation order or parallelism changed output (reverse={reverse}, parallelism={parallelism}).");
         }
@@ -109,18 +121,32 @@ public sealed class Test_ForwardedTypeIdentity
         {
             foreach (TypeSignature type in InteropGeneratorRunner.EnumerateTypes(association.Source))
             {
-                Assert.AreNotEqual("netstandard", type.Scope?.GetAssembly()?.Name?.ToString(),
-                    $"The portable scope must not leak into the generated type maps for '{type}'.");
+                _ = InteropGeneratorRunner.ResolvedTypeKey(type, context);
             }
         }
+
+        AssertUniqueAssociations(associations);
     }
 
     [TestMethod]
-    public async Task IncompatibleFrameworkReferenceDeclarations_ReportAnExplicitError()
+    public async Task OverlappingFrameworkReferenceDeclarations_UseResolvedIdentity()
     {
-        using InteropGeneratorRunner runner = new(useFrameworkImplementations: true, ambiguousFrameworkReferences: true);
-        await runner.AssertAmbiguousReferencesFailAsync(reverseInputs: false);
-        await runner.AssertAmbiguousReferencesFailAsync(reverseInputs: true);
+        using InteropGeneratorRunner runner = new(useFrameworkImplementations: true, overlappingFrameworkReferences: true);
+
+        foreach (bool reverseInputs in new[] { false, true })
+        {
+            string output = await runner.GenerateAsync($"overlapping-{reverseInputs}", reverseInputs);
+            (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(output);
+            AssertUniqueAssociations(ReadAssociations(module, context));
+        }
+    }
+
+    private static void AssertUniqueAssociations(List<Association> associations)
+    {
+        foreach (IGrouping<(string Group, string Source), Association> group in associations.GroupBy(association => (association.Group, association.ResolvedSource)))
+        {
+            Assert.AreEqual(1, group.Count(), $"Duplicate resolved association for {group.Key}.");
+        }
     }
 
     private static List<Association> ReadAssociations(ModuleDefinition module, RuntimeContext context)

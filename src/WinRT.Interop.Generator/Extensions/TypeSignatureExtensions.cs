@@ -118,7 +118,7 @@ internal static class TypeSignatureExtensions
 
                     // Return either the current non-generic interface, or the constructed generic one.
                     // We don't have to check: if the interface is not generic, this will be a no-op.
-                    yield return interopReferences.TypeCanonicalizer.Canonicalize(interfaceSignature.InstantiateGenericTypes(context));
+                    yield return interfaceSignature.InstantiateGenericTypes(context);
 
                     // Also recurse on the base interfaces (no need to instantiate the returned interface type
                     // signatures for base interfaces here: they will be already instantiated when returned).
@@ -139,7 +139,7 @@ internal static class TypeSignatureExtensions
                 // Get the signature for the base type, adding back any generic context.
                 // Note that the base type will always be a reference type, even for
                 // struct types (in that case, the base type will be 'System.ValueType').
-                currentSignature = interopReferences.TypeCanonicalizer.Canonicalize(baseType.ToReferenceTypeSignature().InstantiateGenericTypes(context));
+                currentSignature = baseType.ToReferenceTypeSignature().InstantiateGenericTypes(context);
             }
         }
 
@@ -180,7 +180,7 @@ internal static class TypeSignatureExtensions
                 }
 
                 // Get the signature for the base type, same as in the method above
-                currentSignature = interopReferences.TypeCanonicalizer.Canonicalize(baseType.ToReferenceTypeSignature().InstantiateGenericTypes(context));
+                currentSignature = baseType.ToReferenceTypeSignature().InstantiateGenericTypes(context);
 
                 yield return currentSignature;
             }
