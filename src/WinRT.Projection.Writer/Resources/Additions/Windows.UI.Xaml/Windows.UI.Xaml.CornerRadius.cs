@@ -6,6 +6,7 @@ namespace Windows.UI.Xaml
 #if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.CornerRadius>")]
+    [WindowsRuntimeReferenceType(typeof(CornerRadius?))]
     [ABI.Windows.UI.Xaml.CornerRadiusComWrappersMarshaller]
 #endif
     public struct CornerRadius : IEquatable<CornerRadius>
