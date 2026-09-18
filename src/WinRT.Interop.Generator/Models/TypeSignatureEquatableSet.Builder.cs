@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 
 namespace WindowsRuntime.InteropGenerator.Models;
 
@@ -25,18 +24,20 @@ internal partial class TypeSignatureEquatableSet
         /// <summary>
         /// Creates a new <see cref="Builder"/> instance.
         /// </summary>
-        public Builder()
+        /// <param name="signatureComparer">The comparer for this invocation.</param>
+        public Builder(SignatureComparer signatureComparer)
         {
-            _set = new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion);
+            _set = new HashSet<TypeSignature>(signatureComparer);
         }
 
         /// <summary>
         /// Creates a new <see cref="Builder"/> instance.
         /// </summary>
+        /// <param name="signatureComparer">The comparer for this invocation.</param>
         /// <param name="typeSignatures">The input <see cref="TypeSignature"/>-s to wrap.</param>
-        public Builder(params ReadOnlySpan<TypeSignature> typeSignatures)
+        public Builder(SignatureComparer signatureComparer, params ReadOnlySpan<TypeSignature> typeSignatures)
         {
-            HashSet<TypeSignature> set = new(typeSignatures.Length, SignatureComparer.IgnoreVersion);
+            HashSet<TypeSignature> set = new(typeSignatures.Length, signatureComparer);
 
             foreach (TypeSignature typeSignature in typeSignatures)
             {
@@ -49,10 +50,11 @@ internal partial class TypeSignatureEquatableSet
         /// <summary>
         /// Creates a new <see cref="Builder"/> instance.
         /// </summary>
+        /// <param name="signatureComparer">The comparer for this invocation.</param>
         /// <param name="typeSignatures">The input <see cref="TypeSignature"/>-s to wrap.</param>
-        public Builder(params IEnumerable<TypeSignature> typeSignatures)
+        public Builder(SignatureComparer signatureComparer, params IEnumerable<TypeSignature> typeSignatures)
         {
-            _set = new HashSet<TypeSignature>(typeSignatures, SignatureComparer.IgnoreVersion);
+            _set = new HashSet<TypeSignature>(typeSignatures, signatureComparer);
         }
 
         /// <summary>
@@ -107,7 +109,7 @@ internal partial class TypeSignatureEquatableSet
         /// <returns>The resulting <see cref="TypeSignatureEquatableSet"/> instance.</returns>
         public TypeSignatureEquatableSet ToEquatableSet()
         {
-            return new((IEnumerable<TypeSignature>)_set);
+            return new(new HashSet<TypeSignature>(_set, _set.Comparer));
         }
 
         /// <summary>
@@ -118,7 +120,7 @@ internal partial class TypeSignatureEquatableSet
         {
             HashSet<TypeSignature> set = _set;
 
-            _set = new HashSet<TypeSignature>(SignatureComparer.IgnoreVersion);
+            _set = new HashSet<TypeSignature>(_set.Comparer);
 
             return new(set);
         }

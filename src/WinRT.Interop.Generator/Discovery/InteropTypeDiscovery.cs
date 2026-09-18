@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -21,11 +20,6 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 /// </summary>
 internal static partial class InteropTypeDiscovery
 {
-    /// <summary>
-    /// A pool of <see cref="TypeSignatureEquatableSet.Builder"/> instances that can be reused by discovery logic.
-    /// </summary>
-    private static readonly ConcurrentBag<TypeSignatureEquatableSet.Builder> TypeSignatureBuilderPool = [];
-
     /// <summary>
     /// A pool of <see cref="HashSet{T}"/> instances used to validate duplicate IIDs.
     /// </summary>
@@ -169,10 +163,7 @@ internal static partial class InteropTypeDiscovery
         // discovery logic, we'll also be tracking the additional 'ReadOnlyCollection<T>' type, as that's
         // needed from the 'IListAdapter<T>.GetView' method. That type will itself be analyzed here just
         // like any other user-define type, and so on. So the pool is needed to avoid creating conflicts.
-        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
-        {
-            interfaces = new TypeSignatureEquatableSet.Builder();
-        }
+        TypeSignatureEquatableSet.Builder interfaces = discoveryState.RentInterfaceSetBuilder();
 
         // Since we're reusing the builder for all types, make sure to clear it first
         interfaces.Clear();
@@ -248,7 +239,7 @@ internal static partial class InteropTypeDiscovery
                 // unnecessary binary size increase, since nobody would ever use them from here.
                 // We also have an additional check to include overridable interfaces (see notes above).
                 if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences) ||
-                    (isInterfaceWindowsRuntime && SignatureComparer.IgnoreVersion.Equals(covariantInterfaceSignature, interfaceSignature)))
+                    (isInterfaceWindowsRuntime && interopReferences.SignatureComparer.Equals(covariantInterfaceSignature, interfaceSignature)))
                 {
                     hasAnyProjectedWindowsRuntimeInterfaces = true;
 
@@ -347,7 +338,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Return the builder and set to the pool for reuse
-        TypeSignatureBuilderPool.Add(interfaces);
+        discoveryState.ReturnInterfaceSetBuilder(interfaces);
         IidHashSetPool.Add(iids);
     }
 
@@ -404,10 +395,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Get or create a builder (see additional notes above)
-        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
-        {
-            interfaces = new TypeSignatureEquatableSet.Builder();
-        }
+        TypeSignatureEquatableSet.Builder interfaces = discoveryState.RentInterfaceSetBuilder();
 
         // Make sure to clear the builder first (see additional notes above)
         interfaces.Clear();
@@ -475,7 +463,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Return the builder to the pool for reuse
-        TypeSignatureBuilderPool.Add(interfaces);
+        discoveryState.ReturnInterfaceSetBuilder(interfaces);
     }
 
     /// <summary>

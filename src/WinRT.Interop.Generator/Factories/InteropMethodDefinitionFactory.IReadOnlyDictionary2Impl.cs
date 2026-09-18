@@ -6,7 +6,6 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -78,7 +77,7 @@ internal partial class InteropMethodDefinitionFactory
             // Get the target 'Lookup' method (we can optimize for 'string' types)
             if (keyType.IsTypeOfString())
             {
-                adapterLookupMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
+                adapterLookupMethod = interopReferences.SignatureComparer.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
                     ? interopReferences.IReadOnlyDictionaryAdapterOfStringLookup(valueType)
                     : interopReferences.IDictionaryAdapterOfStringLookup(valueType);
             }
@@ -310,7 +309,7 @@ internal partial class InteropMethodDefinitionFactory
             // We prepare the full instruction, as we need 'callvirt' in some cases.
             if (keyType.IsTypeOfString())
             {
-                MethodSpecification hasKeyMethodSpecification = SignatureComparer.IgnoreVersion.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
+                MethodSpecification hasKeyMethodSpecification = interopReferences.SignatureComparer.Equals(readOnlyDictionaryType.GenericType, interopReferences.IReadOnlyDictionary2)
                     ? interopReferences.IReadOnlyDictionaryAdapterOfStringHasKey(valueType)
                     : interopReferences.IDictionaryAdapterOfStringHasKey(valueType);
 

@@ -70,6 +70,6 @@ internal abstract partial class MethodRewriteInfo : IComparable<MethodRewriteInf
         }
 
         // Lastly, compare by target type (this shouldn't be reached for valid objects)
-        return TypeDescriptorComparer.Instance.Compare(Type, other.Type);
+        return TypeDescriptorComparer.Default.Compare(Type, other.Type);
     }
 }
