@@ -56,7 +56,6 @@ public abstract class WindowsRuntimeAsyncOperationWithProgress<TResult, TProgres
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -113,7 +112,6 @@ public abstract class WindowsRuntimeAsyncOperationWithProgress<TResult, TProgres
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;

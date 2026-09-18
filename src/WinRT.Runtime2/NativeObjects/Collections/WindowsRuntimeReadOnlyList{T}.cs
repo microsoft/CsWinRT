@@ -65,7 +65,6 @@ public abstract class WindowsRuntimeReadOnlyList<
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -99,7 +98,6 @@ public abstract class WindowsRuntimeReadOnlyList<
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

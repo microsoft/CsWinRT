@@ -47,7 +47,6 @@ public sealed class ReadOnlyDictionaryKeyCollection<TKey, TValue> : IEnumerable<
     /// <summary>
     /// The <see cref="IEnumerator{T}"/> implementation for <see cref="ReadOnlyDictionaryKeyCollection{TKey, TValue}"/>.
     /// </summary>
-    [WindowsRuntimeImplementationOnlyMember]
     public sealed class Enumerator : IEnumerator<TKey>
     {
         /// <summary>

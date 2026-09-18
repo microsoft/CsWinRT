@@ -55,7 +55,6 @@ public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMeth
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -105,7 +104,6 @@ public abstract class WindowsRuntimeAsyncOperation<TResult, TIAsyncOperationMeth
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
