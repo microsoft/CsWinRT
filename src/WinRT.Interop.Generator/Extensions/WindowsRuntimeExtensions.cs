@@ -1273,7 +1273,7 @@ internal static class WindowsRuntimeExtensions
         /// .NET Standard modules are supported through resolution-aware signature comparisons.
         /// This does not change the exclusion of .NET Framework assemblies.
         /// </remarks>
-        public bool TargetsLegacyRuntime => module.CorLibTypeFactory.CorLibScope?.Name == WellKnownMetadataNames.MSCorLibAssemblyName;
+        public bool TargetsNetFramework => module.CorLibTypeFactory.CorLibScope?.Name == WellKnownMetadataNames.MSCorLibAssemblyName;
 
         /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.

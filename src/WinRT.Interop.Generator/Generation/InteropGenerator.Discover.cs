@@ -329,7 +329,7 @@ internal partial class InteropGenerator
     {
         // .NET Framework remains unsupported. Resolution-aware comparisons let .NET Standard
         // modules participate in discovery under the normal marshalling-mode rules.
-        if (module.TargetsLegacyRuntime)
+        if (module.TargetsNetFramework)
         {
             return false;
         }
