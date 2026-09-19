@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
@@ -305,6 +306,118 @@ internal partial class InteropGenerator
 
         // Discover all SZ array types
         DiscoverSzArrayTypes(args, discoveryState, module);
+    }
+
+    /// <summary>
+    /// Normalizes equivalent discovered references before emission, without affecting discovery or validation.
+    /// </summary>
+    /// <param name="state">The state containing all loaded modules.</param>
+    private static void NormalizeAssemblyReferences(InteropGeneratorDiscoveryState state)
+    {
+        ModuleDefinition[] modules = [.. state.Modules.Values.Concat([
+            state.WindowsRuntimeSdkProjectionModule,
+            state.WindowsRuntimeSdkXamlProjectionModule,
+            state.WindowsRuntimeProjectionModule,
+            state.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>()];
+
+        Dictionary<AssemblyDescriptor, AssemblyDefinition> assemblies = new(SignatureComparer.IgnoreVersion);
+
+        foreach (ModuleDefinition module in modules.OrderByDescending(static module => module.Assembly?.Version))
+        {
+            if (module.Assembly is { } assembly)
+            {
+                assembly.Attributes &= ~AssemblyAttributes.FullMask;
+                _ = assemblies.TryAdd(assembly, assembly);
+            }
+        }
+
+        foreach (ModuleDefinition module in modules)
+        {
+            foreach (AssemblyReference reference in module.AssemblyReferences)
+            {
+                Normalize(reference);
+            }
+
+            if (module.CorLibTypeFactory.CorLibScope is AssemblyReference corLib)
+            {
+                Normalize(corLib);
+            }
+        }
+
+        HashSet<TypeSignature> visited = new(ReferenceEqualityComparer.Instance);
+        IEnumerable<TypeSignature> types = state.GenericDelegateTypes
+            .Concat(state.IEnumerator1Types)
+            .Concat(state.IEnumerable1Types)
+            .Concat(state.IReadOnlyList1Types)
+            .Concat(state.IList1Types)
+            .Concat(state.IReadOnlyDictionary2Types)
+            .Concat(state.IDictionary2Types)
+            .Concat(state.KeyValuePairTypes)
+            .Concat(state.IMapChangedEventArgs1Types)
+            .Concat(state.IObservableVector1Types)
+            .Concat(state.IObservableMap2Types)
+            .Concat(state.IAsyncActionWithProgress1Types)
+            .Concat(state.IAsyncOperation1Types)
+            .Concat(state.IAsyncOperationWithProgress2Types)
+            .Cast<TypeSignature>()
+            .Concat(state.UserDefinedTypes)
+            .Concat(state.SzArrayAndVtableTypes.Keys)
+            .Concat(state.UserDefinedVtableTypes.SelectMany(static types => types))
+            .Concat(state.SzArrayAndVtableTypes.Values.SelectMany(static types => types));
+
+        foreach (TypeSignature type in types)
+        {
+            NormalizeType(type);
+        }
+
+        void NormalizeType(TypeSignature type)
+        {
+            if (!visited.Add(type))
+            {
+                return;
+            }
+
+            if (type.Scope?.GetAssembly() is AssemblyReference reference)
+            {
+                Normalize(reference);
+            }
+
+            if (type is GenericInstanceTypeSignature generic)
+            {
+                foreach (TypeSignature argument in generic.TypeArguments)
+                {
+                    NormalizeType(argument);
+                }
+            }
+            else if (type is TypeSpecificationSignature specification)
+            {
+                NormalizeType(specification.BaseType);
+            }
+        }
+
+        void Normalize(AssemblyReference reference)
+        {
+            // Never hide a CsWinRT 2.x reference from discovery's compatibility validation.
+            if (reference.Name?.AsSpan().SequenceEqual("WinRT.Runtime"u8) is true && reference.Version.Major < 3)
+            {
+                return;
+            }
+
+            // IgnoreVersion deduplication must not let a parallel worker randomly choose an
+            // older BCL reference (e.g. System.Runtime 6 versus 10) for the emitted signature.
+            if (assemblies.TryGetValue(reference, out AssemblyDefinition? definition))
+            {
+                reference.Version = definition.Version;
+            }
+
+            reference.Attributes &= ~AssemblyAttributes.FullMask;
+
+            if (reference.HasPublicKey)
+            {
+                reference.PublicKeyOrToken = reference.GetPublicKeyToken();
+                reference.HasPublicKey = false;
+            }
+        }
     }
 
     /// <summary>
