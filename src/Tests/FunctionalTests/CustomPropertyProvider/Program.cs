@@ -167,7 +167,7 @@ unsafe
     WindowsRuntimeMarshal.Free(bindableVector);
 }
 
-return XamlTypeBridgeTests.Run();
+return DefaultCustomPropertyProviderTests.Run();
 
 static unsafe void* GetInterface(object value, Guid iid)
 {

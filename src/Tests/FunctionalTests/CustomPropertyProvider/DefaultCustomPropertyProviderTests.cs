@@ -22,7 +22,7 @@ using Windows.UI.Xaml.Data;
 
 [assembly: SupportedOSPlatform("windows10.0.17763.0")]
 
-internal static unsafe partial class XamlTypeBridgeTests
+internal static unsafe partial class DefaultCustomPropertyProviderTests
 {
     private static readonly Guid ProviderIid = new("7C925755-3E48-42B4-8677-76372267033F");
     private static readonly Guid InspectableIid = new("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90");
@@ -33,7 +33,7 @@ internal static unsafe partial class XamlTypeBridgeTests
     {
         try
         {
-#if TEST_XAML_PROVIDER_DISABLED
+#if TEST_DEFAULT_PROVIDER_DISABLED
             bool automaticProvider = false;
 #else
             bool automaticProvider = true;
@@ -47,11 +47,36 @@ internal static unsafe partial class XamlTypeBridgeTests
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<string>)), typeof(GenericControl<string>), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(FrameworkElementProbe)), typeof(FrameworkElementProbe), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedFrameworkElementProbe)), typeof(DerivedFrameworkElementProbe), automaticProvider, supportsPropertyLookup: false);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), hasProvider: false);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(StringableDependencyObject)), typeof(StringableDependencyObject), hasProvider: false);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ApplicationProbe)), typeof(ApplicationProbe), hasProvider: false);
-            CheckProvider(new NonXamlObject(), typeof(NonXamlObject), hasProvider: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), hasProvider: false, hasGeneratedCcw: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(StringableDependencyObject)), typeof(StringableDependencyObject), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ApplicationProbe)), typeof(ApplicationProbe), automaticProvider, supportsPropertyLookup: false);
+            CheckProvider(new NonXamlObject(), typeof(NonXamlObject), automaticProvider, expectedString: "non-XAML", supportsPropertyLookup: false);
+            CheckProvider(new GenericNonXamlObject<int>(), typeof(GenericNonXamlObject<int>), automaticProvider, expectedString: "generic", supportsPropertyLookup: false);
+            CheckProvider(new GenericNonXamlObject<string>(), typeof(GenericNonXamlObject<string>), automaticProvider, expectedString: "generic", supportsPropertyLookup: false);
+            CheckProvider(new NonXamlValue(), typeof(NonXamlValue), automaticProvider, expectedString: "value", supportsPropertyLookup: false);
+            CheckProvider(new object(), typeof(object), hasProvider: false, hasGeneratedCcw: false);
 
+            List<string> list = ["value"];
+            CheckProvider(list, typeof(List<string>), automaticProvider, expectedString: list.ToString(), supportsPropertyLookup: false,
+                expectedRuntimeClassName: "Windows.Foundation.Collections.IVectorView`1<Windows.Foundation.Collections.IIterable`1<Char>>");
+
+            string[] array = ["value"];
+            CheckProvider(array, typeof(string[]), automaticProvider, expectedString: array.ToString(), supportsPropertyLookup: false,
+                expectedRuntimeClassName: "Windows.Foundation.IReferenceArray`1<String>",
+                expectedMetadataTypeName: "Windows.Foundation.IReferenceArray`1<String>");
+
+            KeyValuePair<int, string> pair = new(7, "value");
+            CheckProvider(pair, typeof(KeyValuePair<int, string>), automaticProvider, expectedString: pair.ToString(), supportsPropertyLookup: false,
+                expectedRuntimeClassName: "Windows.Foundation.Collections.IKeyValuePair`2<Int32, String>",
+                expectedMetadataTypeName: "Windows.Foundation.Collections.IKeyValuePair`2<Int32, String>");
+
+            EventHandler<string> handler = static (_, _) => { };
+            CheckProvider(handler, typeof(EventHandler<string>), automaticProvider, expectedString: handler.ToString(), supportsPropertyLookup: false,
+                expectedRuntimeClassName: "Windows.Foundation.IReference`1<Windows.Foundation.EventHandler`1<String>>",
+                expectedMetadataTypeName: "Windows.Foundation.EventHandler`1<String>");
+
+            CheckProvider(new ExplicitNonXamlProvider(), typeof(ExplicitNonXamlProvider), hasProvider: true, hasProperties: true);
+            CheckProvider(new InheritedNonXamlProvider(), typeof(ExplicitNonXamlProvider), hasProvider: true, hasProperties: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ExplicitProviderDependencyObject)), typeof(ExplicitProviderDependencyObject), hasProvider: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(EmptyProviderControl)), typeof(EmptyProviderControl), hasProvider: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ExplicitProviderControl)), typeof(ExplicitProviderControl), hasProvider: true, hasProperties: true);
@@ -63,7 +88,7 @@ internal static unsafe partial class XamlTypeBridgeTests
                 CheckStringRepresentationFailure();
             }
 
-            Console.WriteLine("XAML type bridge checks passed.");
+            Console.WriteLine("Default custom property provider checks passed.");
 
             return 100;
         }
@@ -75,7 +100,16 @@ internal static unsafe partial class XamlTypeBridgeTests
         }
     }
 
-    private static void CheckProvider(object value, Type expectedType, bool hasProvider, bool hasProperties = false, string expectedString = "control", bool supportsPropertyLookup = true)
+    private static void CheckProvider(
+        object value,
+        Type expectedType,
+        bool hasProvider,
+        bool hasProperties = false,
+        string expectedString = "control",
+        bool supportsPropertyLookup = true,
+        bool hasGeneratedCcw = true,
+        string expectedRuntimeClassName = null,
+        string expectedMetadataTypeName = null)
     {
         void* unknown = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
         nint inspectable = 0;
@@ -117,20 +151,20 @@ internal static unsafe partial class XamlTypeBridgeTests
             const string ProviderRuntimeClassName = "Windows.UI.Xaml.Data.ICustomPropertyProvider";
             const string ApplicationRuntimeClassName = "Windows.UI.Xaml.IApplicationOverrides";
 #endif
-            string expectedClassName = value switch
+            string expectedClassName = expectedRuntimeClassName ?? (value switch
             {
                 UIElement => ControlRuntimeClassName,
-                StringableDependencyObject or NonXamlObject => "Windows.Foundation.IStringable",
-                ExplicitProviderDependencyObject => ProviderRuntimeClassName,
+                StringableDependencyObject or NonXamlObject or NonXamlValue => "Windows.Foundation.IStringable",
+                ExplicitProviderDependencyObject or ExplicitNonXamlProvider => ProviderRuntimeClassName,
                 ApplicationProbe => ApplicationRuntimeClassName,
                 _ => "Object"
-            };
+            });
 
             Check(className == expectedClassName, $"The type bridge changed the runtime class name of {value.GetType()}: {className}.");
 
             int hr = Marshal.QueryInterface((nint)unknown, ProviderIid, out provider);
 
-            if (!RuntimeFeature.IsDynamicCodeCompiled && value is UIElement)
+            if (!RuntimeFeature.IsDynamicCodeCompiled && hasGeneratedCcw)
             {
                 object info = GetMarshallingInfo(null, value.GetType());
                 CheckReadOnlyImageMemory(GetVtableEntries(GetVtableInfo(info)), "COM interface entries");
@@ -155,7 +189,8 @@ internal static unsafe partial class XamlTypeBridgeTests
 
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, ABI.System.Type*, int>)providerVtable[9])(provider, &typeName));
 
-            Check((int)typeName.Kind == 2 && HStringMarshaller.ConvertToManaged(typeName.Name) == expectedType.AssemblyQualifiedName,
+            Check((int)typeName.Kind == (expectedMetadataTypeName is null ? 2 : 1) &&
+                HStringMarshaller.ConvertToManaged(typeName.Name) == (expectedMetadataTypeName ?? expectedType.AssemblyQualifiedName),
                 $"Incorrect managed Type for {value.GetType()}.");
 
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, void**, int>)providerVtable[8])(provider, &stringRepresentation));
@@ -307,10 +342,31 @@ internal static unsafe partial class XamlTypeBridgeTests
         public override string ToString() => throw new ArgumentException("Expected test exception.");
     }
 
-    private sealed class NonXamlObject : IStringable
+    private class NonXamlObject : IStringable
     {
         public override string ToString() => "non-XAML";
     }
+
+    private sealed class GenericNonXamlObject<T> : NonXamlObject
+    {
+        public override string ToString() => "generic";
+    }
+
+    private readonly struct NonXamlValue : IStringable
+    {
+        public override string ToString() => "value";
+    }
+
+    [GeneratedCustomPropertyProvider(["Included"], [typeof(int)])]
+    private partial class ExplicitNonXamlProvider
+    {
+        public int Included => 42;
+        public int Excluded => 43;
+        public int this[int index] => index;
+        public override string ToString() => "control";
+    }
+
+    private sealed class InheritedNonXamlProvider : ExplicitNonXamlProvider;
 
     private class FrameworkElementProbe : FrameworkElement
     {

@@ -176,7 +176,8 @@ internal sealed class BuildDeterminismRunner
         int verifiedInitializers = 0;
         foreach (TypeDefinition type in moduleDef.TopLevelTypes)
         {
-            if (type.Namespace?.ToString() != "WindowsRuntime.Interop.UserDefinedTypes")
+            if (type.Namespace?.ToString() != "WindowsRuntime.Interop.UserDefinedTypes" &&
+                type.Namespace?.ToString().StartsWith("ABI.", StringComparison.Ordinal) != true)
             {
                 continue;
             }
