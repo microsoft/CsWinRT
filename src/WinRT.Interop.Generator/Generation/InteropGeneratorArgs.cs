@@ -97,7 +97,7 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--validate-winrt-runtime-dll-version-2-references")]
     public required bool ValidateWinRTRuntimeDllVersion2References { get; init; }
 
-    /// <summary>Gets whether to enable incremental generation (i.e. with a cache file on disk saving the full set of types to generate).</summary>
+    /// <summary>Gets whether to reuse a verified interop assembly when discovery and its emission dependencies are unchanged.</summary>
     [CommandLineArgumentName("--enable-incremental-generation")]
     public required bool EnableIncrementalGeneration { get; init; }
 

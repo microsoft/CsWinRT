@@ -124,6 +124,25 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         xHandler.Clear();
         yHandler.Clear();
 
+        if (result == 0)
+        {
+            // Display names omit the assembly scopes of generic arguments. For example, a type
+            // and a reference through its forwarding assembly can otherwise sort as equal.
+            if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
+            {
+                result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);
+
+                for (int i = 0; result == 0 && i < xGeneric.TypeArguments.Count; i++)
+                {
+                    result = Compare(xGeneric.TypeArguments[i], yGeneric.TypeArguments[i]);
+                }
+            }
+            else if (x is TypeSpecificationSignature xSpecification && y is TypeSpecificationSignature ySpecification)
+            {
+                result = Compare(xSpecification.BaseType, ySpecification.BaseType);
+            }
+        }
+
         return result;
     }
 }
