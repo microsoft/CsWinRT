@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
@@ -29,24 +28,21 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
-    private static void Emit(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
+    /// <param name="module">The initialized output module.</param>
+    /// <param name="windowsRuntimeModule">The Windows Runtime implementation module.</param>
+    /// <param name="fingerprint">The optional emission fingerprint to cache with the output.</param>
+    private static void Emit(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module,
+        ModuleDefinition windowsRuntimeModule,
+        byte[]? fingerprint)
     {
         args.Token.ThrowIfCancellationRequested();
-
-        NormalizeAssemblyReferenceFlags(discoveryState);
 
         // Initialize the emit state, which tracks all state to use during the emit phase specifically.
         // For instance, it enables fast lookups for type definitions referenced in multiple places.
         InteropGeneratorEmitState emitState = new();
-
-        // Define the module to emit
-        ModuleDefinition module = DefineInteropModule(
-            args: args,
-            discoveryState: discoveryState,
-            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
-            windowsRuntimeSdkProjectionModule: out _);
-
-        args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
         InteropReferences interopReferences = new(
@@ -199,39 +195,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit the interop .dll to disk
-        WriteInteropModuleToDisk(args, module);
-    }
-
-    /// <summary>
-    /// Removes processor-architecture flags that are not part of .NET assembly binding.
-    /// </summary>
-    /// <param name="discoveryState">The completed discovery state.</param>
-    private static void NormalizeAssemblyReferenceFlags(InteropGeneratorDiscoveryState discoveryState)
-    {
-        // Implicit imports copy these flags from definitions (e.g. '0x70' in 'System.Runtime'), while
-        // ordinary references omit them. Equivalent discovered signatures must serialize identically.
-        // Only the in-memory metadata is updated, after parallel discovery has completed.
-        foreach (ModuleDefinition inputModule in discoveryState.Modules.Values.Concat([
-            discoveryState.WindowsRuntimeSdkProjectionModule,
-            discoveryState.WindowsRuntimeSdkXamlProjectionModule,
-            discoveryState.WindowsRuntimeProjectionModule,
-            discoveryState.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>())
-        {
-            if (inputModule.Assembly is { } assembly)
-            {
-                assembly.Attributes &= ~AssemblyAttributes.FullMask;
-            }
-
-            foreach (AssemblyReference reference in inputModule.AssemblyReferences)
-            {
-                reference.Attributes &= ~AssemblyAttributes.FullMask;
-            }
-
-            if (inputModule.CorLibTypeFactory.CorLibScope is AssemblyReference corLib)
-            {
-                corLib.Attributes &= ~AssemblyAttributes.FullMask;
-            }
-        }
+        WriteInteropModuleToDisk(args, module, fingerprint);
     }
 
     /// <summary>
@@ -2775,13 +2739,21 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="module">The module to write to disk.</param>
-    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module)
+    /// <param name="fingerprint">The optional emission fingerprint to cache with the output.</param>
+    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module, byte[]? fingerprint)
     {
         string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
 
         try
         {
-            module.Write(winRTInteropAssemblyPath);
+            if (fingerprint is null)
+            {
+                module.Write(winRTInteropAssemblyPath);
+            }
+            else
+            {
+                InteropGenerationCache.Write(args, module, fingerprint);
+            }
         }
         catch (Exception e)
         {

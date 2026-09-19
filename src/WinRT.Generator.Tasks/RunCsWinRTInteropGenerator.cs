@@ -133,7 +133,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool ValidateWinRTRuntimeDllVersion2References { get; set; } = true;
 
     /// <summary>
-    /// Gets whether to enable incremental generation (i.e. with a cache file on disk saving the full set of types to generate).
+    /// Gets whether to reuse a verified interop assembly when discovery and its emission dependencies are unchanged.
     /// </summary>
     public bool EnableIncrementalGeneration { get; set; } = true;
 
