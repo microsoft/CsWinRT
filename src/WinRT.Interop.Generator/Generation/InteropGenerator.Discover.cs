@@ -432,7 +432,8 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+                enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
             // We can share a single builder when processing all types to reduce allocations
             TypeSignatureEquatableSet.Builder interfaces = new();
@@ -489,7 +490,8 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+                enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
             // Enumerate all '[assembly: WindowsRuntimeNativeExposedType(typeof(<TYPE>))]' attributes on the module
             foreach (CustomAttribute attribute in assembly.FindCustomAttributes("WindowsRuntime.InteropServices"u8, "WindowsRuntimeNativeExposedTypeAttribute"u8))
@@ -550,7 +552,8 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+                enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
@@ -591,7 +594,8 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+                enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
@@ -648,7 +652,8 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-                windowsRuntimeComponentModule: componentModule);
+                windowsRuntimeComponentModule: componentModule,
+                enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
             foreach (TypeDefinition type in componentModule.GetAllTypes())
             {

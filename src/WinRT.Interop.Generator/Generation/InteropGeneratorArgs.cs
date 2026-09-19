@@ -49,11 +49,11 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
 
-    /// <summary>Gets whether to emit type-only custom property providers for managed <c>FrameworkElement</c> subclasses.</summary>
+    /// <summary>Gets whether to emit default custom property provider entries for generated managed CCWs.</summary>
     /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
-    [CommandLineArgumentName("--enable-xaml-custom-property-provider")]
+    [CommandLineArgumentName("--enable-default-custom-property-provider-support")]
     [DefaultValue(true)]
-    public bool EnableXamlCustomPropertyProvider { get; init; }
+    public bool EnableDefaultCustomPropertyProviderSupport { get; init; }
 
     /// <summary>Gets the marshalling mode, controlling which assemblies are analyzed to discover user-defined/CCW/generic types.</summary>
     /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.Minimal"/> when not specified in the response file.</remarks>

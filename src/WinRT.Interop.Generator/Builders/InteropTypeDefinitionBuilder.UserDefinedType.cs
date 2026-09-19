@@ -42,7 +42,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="addXamlCustomPropertyProvider">Whether to add the type-only XAML provider.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceEntriesType">The resulting interface entries type.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
@@ -53,7 +52,6 @@ internal partial class InteropTypeDefinitionBuilder
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
-            bool addXamlCustomPropertyProvider,
             bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceEntriesType,
             out TypeDefinition interfaceEntriesImplType)
@@ -64,13 +62,11 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
-            // Keep the optional bridge first, separate from the explicitly implemented interfaces
-            if (addXamlCustomPropertyProvider)
-            {
-                entriesList.Add(InteropInterfaceEntriesResolver.Create(
-                    interopReferences.ICustomPropertyProviderImplget_IID,
-                    interopReferences.ICustomPropertyProviderImplget_Vtable));
-            }
+            // Add the default 'ICustomPropertyProvider' unless it is disabled or explicitly implemented
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences));
 
             // Add all entries for explicitly implemented interfaces
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(

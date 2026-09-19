@@ -104,10 +104,10 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets whether to emit type-only custom property providers for managed <c>FrameworkElement</c> subclasses.
+    /// Gets or sets whether to emit default custom property provider entries for generated managed CCWs.
     /// </summary>
     /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
-    public bool EnableXamlCustomPropertyProvider { get; set; } = true;
+    public bool EnableDefaultCustomPropertyProviderSupport { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
@@ -329,7 +329,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
-        AppendResponseFileCommand(args, "--enable-xaml-custom-property-provider", EnableXamlCustomPropertyProvider.ToString());
+        AppendResponseFileCommand(args, "--enable-default-custom-property-provider-support", EnableDefaultCustomPropertyProviderSupport.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
         AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());

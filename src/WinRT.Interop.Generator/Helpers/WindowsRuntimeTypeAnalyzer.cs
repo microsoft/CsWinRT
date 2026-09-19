@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
-using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
@@ -17,97 +15,6 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 /// </summary>
 internal static class WindowsRuntimeTypeAnalyzer
 {
-    /// <summary>
-    /// Checks whether a type is a managed class derived from a projected XAML <c>FrameworkElement</c>.
-    /// </summary>
-    /// <param name="type">The user-defined type to analyze.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML instead of WinUI projections.</param>
-    /// <returns>Whether the type directly or indirectly derives from a projected <c>FrameworkElement</c>.</returns>
-    public static bool IsManagedFrameworkElementDerivedType(
-        TypeSignature type,
-        InteropReferences interopReferences,
-        bool useWindowsUIXamlProjections)
-    {
-        // Value types cannot derive from 'FrameworkElement'
-        if (type.IsValueType)
-        {
-            return false;
-        }
-
-        // Ignore projected types and types that cannot be resolved
-        if (!type.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? definition) ||
-            definition.IsProjectedWindowsRuntimeType ||
-            definition.IsReferenceProjectionWindowsRuntimeType)
-        {
-            return false;
-        }
-
-        // Select the active XAML namespace
-        ReadOnlySpan<byte> xamlNamespace = useWindowsUIXamlProjections ? "Windows.UI.Xaml"u8 : "Microsoft.UI.Xaml"u8;
-
-        // Walk the base types to find the projected 'FrameworkElement'
-        foreach (TypeSignature baseType in type.EnumerateBaseTypes(interopReferences))
-        {
-            TypeDefinition baseDefinition = baseType.Resolve(interopReferences.RuntimeContext);
-
-            if (baseDefinition is not { Name: { } typeName, Namespace: { } typeNamespace })
-            {
-                continue;
-            }
-
-            if (!typeName.AsSpan().SequenceEqual("FrameworkElement"u8) ||
-                !typeNamespace.AsSpan().SequenceEqual(xamlNamespace))
-            {
-                continue;
-            }
-
-            if (!baseDefinition.IsProjectedWindowsRuntimeType && !baseDefinition.IsReferenceProjectionWindowsRuntimeType)
-            {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Checks whether a managed <c>FrameworkElement</c>-derived type needs the type-only <c>ICustomPropertyProvider</c> bridge.
-    /// </summary>
-    /// <param name="type">The user-defined type to analyze.</param>
-    /// <param name="interfaceTypes">The interfaces already exposed by its CCW.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML instead of WinUI projections.</param>
-    /// <returns>Whether the fallback provider should be added.</returns>
-    public static bool NeedsXamlCustomPropertyProvider(
-        TypeSignature type,
-        TypeSignatureEquatableSet interfaceTypes,
-        InteropReferences interopReferences,
-        bool useWindowsUIXamlProjections)
-    {
-        if (!IsManagedFrameworkElementDerivedType(
-            type: type,
-            interopReferences: interopReferences,
-            useWindowsUIXamlProjections: useWindowsUIXamlProjections))
-        {
-            return false;
-        }
-
-        // Check the IID, not just the managed name, so inherited and custom COM providers also win
-        foreach (TypeSignature interfaceType in interfaceTypes)
-        {
-            if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
-                iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     /// <summary>
     /// Tries to retrieve the most derived Windows Runtime interface type out of a set of interfaces.
     /// </summary>

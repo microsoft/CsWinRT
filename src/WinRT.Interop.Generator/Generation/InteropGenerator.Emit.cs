@@ -15,7 +15,6 @@ using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Fixups;
-using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Rewriters;
@@ -60,7 +59,8 @@ internal partial class InteropGenerator
             windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
             windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
             windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+            enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2548,20 +2548,13 @@ internal partial class InteropGenerator
         // Since we're sharing the marshaller attributes across all identical sets of COM interface entries,
         // we need a temporary map so we can look them up when we need to reference them once we get to
         // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
-        Dictionary<TypeSignature, TypeDefinition> marshallerAttributeMap = new(SignatureComparer.IgnoreVersion);
+        Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
 
-        // A type can implement the same interfaces as a 'FrameworkElement'-derived type without needing its bridge
-        foreach (IGrouping<(TypeSignatureEquatableSet VtableTypes, bool AddXamlCustomPropertyProvider), KeyValuePair<TypeSignature, TypeSignatureEquatableSet>> group in
+        // Share marshallers across types with the same explicitly implemented interfaces
+        foreach (IGrouping<TypeSignatureEquatableSet, KeyValuePair<TypeSignature, TypeSignatureEquatableSet>> group in
             discoveryState.UserDefinedAndVtableTypes
-                .GroupBy(pair => (
-                    VtableTypes: pair.Value,
-                    AddXamlCustomPropertyProvider: args.EnableXamlCustomPropertyProvider && WindowsRuntimeTypeAnalyzer.NeedsXamlCustomPropertyProvider(
-                        type: pair.Key,
-                        interfaceTypes: pair.Value,
-                        interopReferences: interopReferences,
-                        useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections)))
-                .OrderBy(static group => group.Key.VtableTypes)
-                .ThenBy(static group => group.Key.AddXamlCustomPropertyProvider))
+                .GroupBy(static pair => pair.Value)
+                .OrderBy(static group => group.Key))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2577,12 +2570,11 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
-                    vtableTypes: group.Key.VtableTypes,
+                    vtableTypes: group.Key,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    addXamlCustomPropertyProvider: group.Key.AddXamlCustomPropertyProvider,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
@@ -2597,10 +2589,7 @@ internal partial class InteropGenerator
                     out TypeDefinition comWrappersMarshallerType);
 
                 // Track the marshaller attribute for later
-                foreach (KeyValuePair<TypeSignature, TypeSignatureEquatableSet> pair in group)
-                {
-                    marshallerAttributeMap.Add(pair.Key, comWrappersMarshallerType);
-                }
+                marshallerAttributeMap.Add(group.Key, comWrappersMarshallerType);
             }
             catch (Exception e)
             {
@@ -2618,7 +2607,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
-                    comWrappersMarshallerAttributeType: marshallerAttributeMap[typeSignature],
+                    comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,

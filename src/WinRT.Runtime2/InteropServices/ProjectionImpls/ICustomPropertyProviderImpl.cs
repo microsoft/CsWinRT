@@ -10,7 +10,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The type-only <c>ICustomPropertyProvider</c> implementation for managed <c>FrameworkElement</c>-derived objects.
+/// The default, type-only <c>ICustomPropertyProvider</c> implementation for managed objects.
 /// </summary>
 [WindowsRuntimeImplementationOnlyMember]
 public static unsafe class ICustomPropertyProviderImpl
@@ -142,7 +142,7 @@ public static unsafe class ICustomPropertyProviderImpl
     {
         object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
 
-        return new NotSupportedException(
+        return new(
             $"ICustomProperty support used by XAML binding for type '{instance.GetType()}' requires an explicit 'ICustomPropertyProvider' implementation. " +
             "Mark the type with 'WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute' to generate one, or use a wrapper type that provides this support.");
     }
