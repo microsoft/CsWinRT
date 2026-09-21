@@ -232,7 +232,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry Delegate;
         // public ComInterfaceEntry DelegateReference;
         // public ComInterfaceEntry IPropertyValue;
-        // public ComInterfaceEntry ICustomPropertyProvider; // Only when default provider support is enabled
+        // public ComInterfaceEntry ICustomPropertyProvider;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -243,6 +243,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         interfaceEntriesType.Fields.Add(new FieldDefinition("DelegateReference"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
 
+        // The 'ICustomPropertyProvider' slot is only added when default provider support is enabled
         if (enableDefaultCustomPropertyProviderSupport)
         {
             interfaceEntriesType.Fields.Add(new FieldDefinition("ICustomPropertyProvider"u8, FieldAttributes.Public, comInterfaceEntryType));
@@ -795,7 +796,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // The type layout looks like this:
         //
         // public ComInterfaceEntry IKeyValuePair'2;
-        // public ComInterfaceEntry ICustomPropertyProvider; // Only when default provider support is enabled
+        // public ComInterfaceEntry ICustomPropertyProvider;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -804,6 +805,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IUnknown;
         interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair'2"u8, FieldAttributes.Public, comInterfaceEntryType));
 
+        // The 'ICustomPropertyProvider' slot is only added when default provider support is enabled
         if (enableDefaultCustomPropertyProviderSupport)
         {
             interfaceEntriesType.Fields.Add(new FieldDefinition("ICustomPropertyProvider"u8, FieldAttributes.Public, comInterfaceEntryType));
