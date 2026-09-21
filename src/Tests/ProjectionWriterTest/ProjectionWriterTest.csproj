@@ -71,10 +71,6 @@
                       Private="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\..\WinRT.Projection.Writer\Helpers\TypeFilter.cs" Link="Helpers\TypeFilter.cs" />
-  </ItemGroup>
-
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->
   <ItemGroup>
     <AssemblyMetadata Include="ProjectionRefGeneratorAssemblyPath"

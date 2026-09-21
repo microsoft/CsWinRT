@@ -286,10 +286,17 @@ internal static class InteropTypeNameWriter
         // Unmapped type.
         if (typeNs.StartsWith("Windows.", StringComparison.Ordinal) || typeNs == "Windows")
         {
-            return "<#Windows>";
+            // Sharing the 'Windows' namespace root is not enough to be part of the Windows SDK: a component
+            // can ship a contract of its own under it, and that contract is projected into the merged
+            // projection like any other third party one. Its marshallers are therefore named after it, which
+            // is also how the interop generator names them (it resolves the projection each type lands in).
+            // Deciding from the namespace alone asks for '<#Windows>' marshallers that are never generated.
+            if (IsWindowsSdkContractAssembly(type is not null ? GetTypeAssemblyName(type) : null))
+            {
+                return "<#Windows>";
+            }
         }
-
-        if (typeNs.StartsWith("WindowsRuntime", StringComparison.Ordinal))
+        else if (typeNs.StartsWith("WindowsRuntime", StringComparison.Ordinal))
         {
             return "<#CsWinRT>";
         }
@@ -310,6 +317,44 @@ internal static class InteropTypeNameWriter
         }
 
         return "<#Windows>";
+    }
+
+    /// <summary>
+    /// Returns whether an assembly name is one the Windows SDK's own Windows Runtime types are defined in,
+    /// so that they are projected into <c>WinRT.Sdk.Projection.dll</c> and carry the <c>&lt;#Windows&gt;</c> marker.
+    /// </summary>
+    /// <param name="assemblyName">The defining assembly name, if known.</param>
+    /// <returns>Whether the assembly holds Windows SDK types.</returns>
+    /// <remarks>
+    /// The SDK ships its union metadata as <c>Windows</c> and every one of its contracts as
+    /// <c>Windows.&lt;Area&gt;.&lt;Name&gt;Contract</c>. Anything else under the <c>Windows</c> namespace root
+    /// belongs to whoever shipped it, and is projected into the merged projection.
+    /// <para>
+    /// A <c>.winmd</c> authored in C# references the SDK through its managed projection assembly rather than
+    /// through a contract, so those two names count as well. <c>WindowsRuntime.Internal.winmd</c> is built that
+    /// way, and its interop interfaces return SDK types.
+    /// </para>
+    /// <para>
+    /// A type whose assembly cannot be determined is treated as part of the SDK, which keeps the historical
+    /// behaviour for the callers that have no type to resolve.
+    /// </para>
+    /// </remarks>
+    private static bool IsWindowsSdkContractAssembly(string? assemblyName)
+    {
+        if (string.IsNullOrEmpty(assemblyName))
+        {
+            return true;
+        }
+
+        // The managed Windows SDK projection assemblies, named as the projection generator identifies them
+        if (assemblyName is "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml")
+        {
+            return true;
+        }
+
+        return assemblyName == "Windows"
+            || (assemblyName.StartsWith("Windows.", StringComparison.Ordinal) &&
+                assemblyName.EndsWith("Contract", StringComparison.Ordinal));
     }
 
     /// <summary>
