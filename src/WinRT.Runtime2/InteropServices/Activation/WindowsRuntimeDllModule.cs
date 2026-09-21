@@ -21,9 +21,18 @@ namespace WindowsRuntime.InteropServices;
 internal sealed unsafe class WindowsRuntimeDllModule
 {
     /// <summary>
-    /// The base directory for the current application.
+    /// The base directory to load Windows Runtime .dll modules from.
     /// </summary>
-    private static readonly string ApplicationBaseDirectory = AppContext.BaseDirectory;
+    /// <remarks>
+    /// This is normally the application base directory, but a host that loads the runtime itself rather than
+    /// starting from a managed application (such as <c>WinRT.Host.dll</c> activating a component in a native
+    /// process) can leave that empty. Falling back to the directory this assembly was loaded from keeps the
+    /// lookup pinned to where the component and its dependencies were deployed, which is what the load below
+    /// relies on: combining an empty base directory would instead produce a bare file name, and
+    /// <c>LOAD_WITH_ALTERED_SEARCH_PATH</c> is ignored for anything but an absolute path, so the module would
+    /// be resolved against the host process' search order instead of the directory it shipped in.
+    /// </remarks>
+    private static readonly string ApplicationBaseDirectory = GetApplicationBaseDirectory();
 
     /// <summary>
     /// The cache of loaded .dll modules.
@@ -168,10 +177,15 @@ internal sealed unsafe class WindowsRuntimeDllModule
 
         // Explicitly look for module in the same directory as this one, and use altered
         // search path to ensure that any dependencies in the same directory are found.
-        moduleHandle = WindowsRuntimeImports.LoadLibraryExW(
-            lpLibFileNameUtf16: Path.Combine(ApplicationBaseDirectory, fileName),
-            hFile: (HANDLE)null,
-            dwFlags: LOAD_WITH_ALTERED_SEARCH_PATH);
+        // Skipped when there is no directory to look in, as the altered search path only
+        // applies to an absolute path: a bare file name would silently widen the search
+        // to the host process' own search order.
+        moduleHandle = ApplicationBaseDirectory.Length > 0
+            ? WindowsRuntimeImports.LoadLibraryExW(
+                lpLibFileNameUtf16: Path.Combine(ApplicationBaseDirectory, fileName),
+                hFile: (HANDLE)null,
+                dwFlags: LOAD_WITH_ALTERED_SEARCH_PATH)
+            : (HANDLE)null;
 
         // If we failed to load manually, defer to 'NativeLibrary' as a fallback
         if (moduleHandle == (HANDLE)null)
@@ -207,5 +221,32 @@ internal sealed unsafe class WindowsRuntimeDllModule
             (delegate* unmanaged[Stdcall]<HRESULT>)dllCanUnloadNow);
 
         return true;
+    }
+
+    /// <summary>
+    /// Gets the directory to resolve Windows Runtime .dll modules against.
+    /// </summary>
+    /// <returns>The application base directory, or the directory this assembly was loaded from.</returns>
+    /// <remarks>See the remarks on <see cref="ApplicationBaseDirectory"/> for why the fallback exists.</remarks>
+    [UnconditionalSuppressMessage(
+        "SingleFile",
+        "IL3000",
+        Justification = "The empty location a single file app reports is handled below, by leaving the base directory empty so that loads fall back to ordinary probing.")]
+    private static string GetApplicationBaseDirectory()
+    {
+        string baseDirectory = AppContext.BaseDirectory;
+
+        if (!string.IsNullOrEmpty(baseDirectory))
+        {
+            return baseDirectory;
+        }
+
+        // A single file or in memory assembly has no location, in which case there is no directory to offer
+        // and callers fall back to the ordinary probing done by 'NativeLibrary' below.
+        string assemblyLocation = typeof(WindowsRuntimeDllModule).Assembly.Location;
+
+        return string.IsNullOrEmpty(assemblyLocation)
+            ? string.Empty
+            : Path.GetDirectoryName(assemblyLocation) ?? string.Empty;
     }
 }
