@@ -22,12 +22,17 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </list>
 /// In other words, once any rule exists the filter behaves as a whitelist: excludes only carve
 /// exceptions out of includes, they do not by themselves include everything else.
+/// <para>
+/// Exact type excludes sit outside that ordering entirely and always win, because they identify a
+/// type that is known to be projected into a different assembly.
+/// </para>
 /// </remarks>
 internal sealed class TypeFilter
 {
     private readonly List<string> _include;
     private readonly List<string> _exclude;
     private readonly HashSet<string> _includeTypes;
+    private readonly HashSet<string> _excludeTypes;
 
     /// <summary>
     /// Initializes a new <see cref="TypeFilter"/> with the given include and exclude prefix lists.
@@ -35,11 +40,17 @@ internal sealed class TypeFilter
     /// <param name="include">The include prefixes (a type matches if any prefix matches).</param>
     /// <param name="exclude">The exclude prefixes (a type is rejected if any prefix matches and no longer include prefix wins).</param>
     /// <param name="includeTypes">Optional fully qualified type names to include, matched exactly.</param>
-    public TypeFilter(IEnumerable<string> include, IEnumerable<string> exclude, IEnumerable<string>? includeTypes = null)
+    /// <param name="excludeTypes">Optional fully qualified type names to exclude, matched exactly. These win over everything else.</param>
+    public TypeFilter(
+        IEnumerable<string> include,
+        IEnumerable<string> exclude,
+        IEnumerable<string>? includeTypes = null,
+        IEnumerable<string>? excludeTypes = null)
     {
         _include = [.. include.OrderByDescending(s => s.Length)];
         _exclude = [.. exclude.OrderByDescending(s => s.Length)];
         _includeTypes = new HashSet<string>(includeTypes ?? [], StringComparer.Ordinal);
+        _excludeTypes = new HashSet<string>(excludeTypes ?? [], StringComparer.Ordinal);
     }
 
     /// <summary>
@@ -48,6 +59,13 @@ internal sealed class TypeFilter
     /// </summary>
     public bool Includes(string fullName)
     {
+        // An exact type exclude names a type that is known to be projected elsewhere, so it outranks
+        // every prefix rule: the broad namespace includes are precisely what it exists to carve out of.
+        if (_excludeTypes.Contains(fullName))
+        {
+            return false;
+        }
+
         if (_includeTypes.Contains(fullName))
         {
             return !_exclude.Contains(fullName);

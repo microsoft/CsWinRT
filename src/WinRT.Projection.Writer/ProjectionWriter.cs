@@ -59,6 +59,7 @@ public static class ProjectionWriter
             settings.Include.UnionWith(options.Include);
             settings.IncludeTypes.UnionWith(options.IncludeTypes);
             settings.Exclude.UnionWith(options.Exclude);
+            settings.ExcludeTypes.UnionWith(options.ExcludeTypes);
             settings.AdditionExclude.UnionWith(options.AdditionExclude);
             settings.ComponentImplementationAssemblies.UnionWith(options.ComponentImplementationAssemblyPaths);
             settings.ComponentAssemblyNames.UnionWith(options.ComponentAssemblyNames);

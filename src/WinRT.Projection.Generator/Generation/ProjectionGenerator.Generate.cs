@@ -116,6 +116,7 @@ internal partial class ProjectionGenerator
         List<string> includeTypes = [];
         List<string> publicInterfaces = [];
         List<string> excludes = [];
+        List<string> excludeTypes = [];
         List<string> implementableTypes = [];
         List<string> winmdInputs = [];
 
@@ -241,6 +242,25 @@ internal partial class ProjectionGenerator
                 // Skip other projection binaries we may get.
                 if (!isWindowsSdk && isWindowsSdkMode)
                 {
+                    // Sharing the 'Windows' namespace root does not make a contract part of the Windows SDK. The
+                    // SDK projection selects its types by namespace prefix, so a third party contract shipped
+                    // under that root (which is legal, and does happen) is swept in here as well as into the
+                    // merged projection that legitimately owns it, and the two definitions collide.
+                    //
+                    // This reference projection is the authority on which types those are: it declares exactly
+                    // the ones the merged projection will implement. Record them so the SDK projection leaves
+                    // them alone. Nothing else can be affected, because a type only lands here if some other
+                    // reference projection already claims it.
+                    foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
+                    {
+                        if (exportedType.Name?.Value is "<Module>")
+                        {
+                            continue;
+                        }
+
+                        excludeTypes.Add(exportedType.FullName);
+                    }
+
                     continue;
                 }
 
@@ -332,6 +352,7 @@ internal partial class ProjectionGenerator
             PublicExclusiveToTypes = publicInterfaces,
             IdicExclusiveToTypes = publicInterfaces,
             Exclude = excludes,
+            ExcludeTypes = excludeTypes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
             ComponentAssemblyNames = componentAssemblyNames,

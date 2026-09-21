@@ -73,6 +73,12 @@ internal sealed class Settings
     public HashSet<string> Exclude { get; } = [];
 
     /// <summary>
+    /// Gets the fully qualified type names to exclude from the projection, matched exactly.
+    /// These win over every prefix rule; see <see cref="ProjectionWriterOptions.ExcludeTypes"/>.
+    /// </summary>
+    public HashSet<string> ExcludeTypes { get; } = [];
+
+    /// <summary>
     /// Gets the namespace prefixes whose namespace-additions resources should be excluded.
     /// </summary>
     public HashSet<string> AdditionExclude { get; } = [];
@@ -198,8 +204,8 @@ internal sealed class Settings
             throw WellKnownProjectionWriterExceptions.SettingsAlreadyReadOnly();
         }
 
-        Filter = new TypeFilter(Include, Exclude, IncludeTypes);
-        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes);
+        Filter = new TypeFilter(Include, Exclude, IncludeTypes, ExcludeTypes);
+        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes, ExcludeTypes);
         _isReadOnly = true;
     }
 }

@@ -121,6 +121,94 @@ public class Test_TypeFiltering
         });
     }
 
+    [TestMethod]
+    public void ExactTypeExcludes_CarveOutOfANamespaceInclude()
+    {
+        // What the Windows SDK projection now does for a contract that merely shares its namespace root:
+        // the whole root is still included, and the types another reference projection already owns are
+        // named exactly and left out. The names are harvested from that projection's own metadata, which
+        // is why the internal exclusive-to interfaces appear here next to the public runtime classes: a
+        // reference projection declares both, and leaving the interface behind would emit it on its own.
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                Include = ["Contoso"],
+                ExcludeTypes =
+                [
+                    "Contoso.User2",
+                    "Contoso.IUser2",
+                    "Contoso.IUser2Statics",
+                    "Contoso.UserProfile.UserSetupManager",
+                    "Contoso.UserProfile.IUserSetupManager",
+                    "Contoso.UserProfile.IUserSetupManagerStatics"
+                ]
+            });
+
+            string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));
+
+            StringAssert.Contains(source, "class User");
+            Assert.IsFalse(source.Contains("User2", StringComparison.Ordinal));
+
+            string allSources = string.Join(
+                Environment.NewLine,
+                Directory.GetFiles(outputFolder, "*.cs").Select(File.ReadAllText));
+
+            Assert.IsFalse(allSources.Contains("UserSetupManager", StringComparison.Ordinal));
+        });
+    }
+
+    [TestMethod]
+    public void ExactTypeExcludes_LeaveTheBaseResourcesAlone()
+    {
+        // The base resources are emitted verbatim rather than filtered, so a name harvested out of a
+        // reference projection cannot take one of them with it. A reference projection declares the two
+        // interface-entry types, so a harvest does carry their names into the exclusion set.
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                Include = ["Contoso"],
+                ExcludeTypes =
+                [
+                    "WindowsRuntime.InteropServices.ReferenceInterfaceEntries",
+                    "WindowsRuntime.InteropServices.DelegateReferenceInterfaceEntries"
+                ]
+            });
+
+            string entries = File.ReadAllText(Path.Combine(outputFolder, "ReferenceInterfaceEntries.cs"));
+
+            StringAssert.Contains(entries, "struct ReferenceInterfaceEntries");
+            StringAssert.Contains(entries, "struct DelegateReferenceInterfaceEntries");
+        });
+    }
+
+    [TestMethod]
+    public void ExactTypeExcludes_AreInertWhenTheyNameNothingInTheInput()
+    {
+        // The no-op guarantee: an app with no such contract referenced passes an empty (or irrelevant) set,
+        // and the projection has to come out exactly as it did before the exclusion existed.
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                Include = ["Contoso"],
+                ExcludeTypes = ["Fabrikam.Unrelated"]
+            });
+
+            string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));
+
+            StringAssert.Contains(source, "class User");
+            StringAssert.Contains(source, "User2");
+        });
+    }
+
     private static void AssertSelectedTypes(string outputFolder)
     {
         string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));
