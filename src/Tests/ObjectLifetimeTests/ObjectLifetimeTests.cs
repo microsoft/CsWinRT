@@ -130,6 +130,8 @@ namespace ObjectLifetimeTests
         {
             OpaqueBindingPage page = null;
             OpaqueVisibleArea originalArea = null;
+            DebugSettings debugSettings = null;
+            bool wasBindingTracingEnabled = false;
             using var loaded = new ManualResetEvent(false);
             RoutedEventHandler onLoaded = (_, _) => loaded.Set();
 
@@ -138,6 +140,10 @@ namespace ObjectLifetimeTests
                 _asyncQueue
                     .CallFromUIThread(() =>
                     {
+                        debugSettings = Application.Current.DebugSettings;
+                        wasBindingTracingEnabled = debugSettings.IsBindingTracingEnabled;
+                        debugSettings.IsBindingTracingEnabled = true;
+                        debugSettings.BindingFailed += OnBindingFailed;
                         page = new OpaqueBindingPage();
                         page.Loaded += onLoaded;
                         mainCanvas.Children.Add(page);
@@ -146,6 +152,10 @@ namespace ObjectLifetimeTests
                     .WaitForHandle(loaded, "Opaque binding page did not load")
                     .CallFromUIThread(() =>
                     {
+                        originalArea = page.ElementSource.VisibleArea;
+                        Assert.IsNotNull(originalArea);
+                        VerifyBindings("initial", true, 0.25, "resource-initial");
+
                         // Check the actual XAML compiler output, not a hand-authored provider.
                         // In particular, the inherited and read-only members must have DP
                         // descriptors even though neither outer source implements ICPP.
@@ -155,8 +165,8 @@ namespace ObjectLifetimeTests
                         Assert.AreEqual(typeof(OpaqueElementSource), elementType.UnderlyingType);
                         Assert.IsNotNull(elementType.BaseType);
                         Assert.AreEqual(typeof(OpaqueBindingSourceBase), elementType.BaseType.UnderlyingType);
-                        VerifyDependencyProperty(elementType, nameof(OpaqueElementSource.IsOnScreen), typeof(bool), false);
-                        VerifyDependencyProperty(elementType, nameof(OpaqueElementSource.VisibleArea), typeof(OpaqueVisibleArea), false);
+                        VerifyDependencyProperty(elementType.BaseType, nameof(OpaqueElementSource.IsOnScreen), typeof(bool), false);
+                        VerifyDependencyProperty(elementType.BaseType, nameof(OpaqueElementSource.VisibleArea), typeof(OpaqueVisibleArea), false);
 
                         IXamlType resourceType = provider.GetXamlType(typeof(OpaqueResourceSource));
                         Assert.IsNotNull(resourceType);
@@ -167,10 +177,6 @@ namespace ObjectLifetimeTests
                         IXamlMember ratioMember = areaType.GetMember(nameof(OpaqueVisibleArea.VisibleHeightRatio));
                         Assert.IsNotNull(ratioMember);
                         Assert.AreEqual(typeof(double), ratioMember.Type.UnderlyingType);
-
-                        originalArea = page.ElementSource.VisibleArea;
-                        Assert.IsNotNull(originalArea);
-                        VerifyBindings("initial", true, 0.25, "resource-initial");
 
                         page.ElementSource.IsOnScreen = false;
                         originalArea.VisibleHeightRatio = 0.75;
@@ -211,7 +217,17 @@ namespace ObjectLifetimeTests
                         page.Loaded -= onLoaded;
                         mainCanvas.Children.Remove(page);
                     }
+                    if (debugSettings != null)
+                    {
+                        debugSettings.BindingFailed -= OnBindingFailed;
+                        debugSettings.IsBindingTracingEnabled = wasBindingTracingEnabled;
+                    }
                 }).Run();
+            }
+
+            static void OnBindingFailed(object sender, BindingFailedEventArgs args)
+            {
+                Logger.LogMessage("Opaque binding diagnostic: {0}", args.Message);
             }
 
             static void VerifyDependencyProperty(IXamlType owner, string name, Type type, bool isReadOnly)
