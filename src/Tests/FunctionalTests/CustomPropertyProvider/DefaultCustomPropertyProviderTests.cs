@@ -26,6 +26,7 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
 {
     private static readonly Guid ProviderIid = new("7C925755-3E48-42B4-8677-76372267033F");
     private static readonly Guid InspectableIid = new("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90");
+    private static readonly Guid UnknownIid = new("00000000-0000-0000-C000-000000000046");
     private const int E_NOINTERFACE = unchecked((int)0x80004002);
     private const int E_NOTSUPPORTED = unchecked((int)0x80131515);
 
@@ -47,14 +48,19 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(GenericControl<string>)), typeof(GenericControl<string>), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(FrameworkElementProbe)), typeof(FrameworkElementProbe), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedFrameworkElementProbe)), typeof(DerivedFrameworkElementProbe), automaticProvider, supportsPropertyLookup: false);
-            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), hasProvider: false, hasGeneratedCcw: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DependencyObjectProbe)), typeof(DependencyObjectProbe), automaticProvider, supportsPropertyLookup: false, hasGeneratedCcw: false);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(DerivedDependencyObjectProbe)), typeof(DerivedDependencyObjectProbe), automaticProvider, supportsPropertyLookup: false, hasGeneratedCcw: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(StringableDependencyObject)), typeof(StringableDependencyObject), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ApplicationProbe)), typeof(ApplicationProbe), automaticProvider, supportsPropertyLookup: false);
             CheckProvider(new NonXamlObject(), typeof(NonXamlObject), automaticProvider, expectedString: "non-XAML", supportsPropertyLookup: false);
             CheckProvider(new GenericNonXamlObject<int>(), typeof(GenericNonXamlObject<int>), automaticProvider, expectedString: "generic", supportsPropertyLookup: false);
             CheckProvider(new GenericNonXamlObject<string>(), typeof(GenericNonXamlObject<string>), automaticProvider, expectedString: "generic", supportsPropertyLookup: false);
             CheckProvider(new NonXamlValue(), typeof(NonXamlValue), automaticProvider, expectedString: "value", supportsPropertyLookup: false);
-            CheckProvider(new object(), typeof(object), hasProvider: false, hasGeneratedCcw: false);
+            CheckProvider(new PlainObject(), typeof(PlainObject), automaticProvider, expectedString: "plain", supportsPropertyLookup: false, hasGeneratedCcw: false);
+            CheckProvider(new DerivedPlainObject(), typeof(DerivedPlainObject), automaticProvider, expectedString: "plain", supportsPropertyLookup: false, hasGeneratedCcw: false);
+            CheckProvider(new PlainValue(), typeof(PlainValue), automaticProvider, expectedString: "plain value", supportsPropertyLookup: false, hasGeneratedCcw: false);
+            CheckProvider(new object(), typeof(object), automaticProvider, expectedString: "System.Object", supportsPropertyLookup: false, hasGeneratedCcw: false,
+                expectedMetadataTypeName: "Object");
 
             List<string> list = ["value"];
             CheckProvider(list, typeof(List<string>), automaticProvider, expectedString: list.ToString(), supportsPropertyLookup: false,
@@ -78,6 +84,7 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
             CheckProvider(new ExplicitNonXamlProvider(), typeof(ExplicitNonXamlProvider), hasProvider: true, hasProperties: true);
             CheckProvider(new InheritedNonXamlProvider(), typeof(ExplicitNonXamlProvider), hasProvider: true, hasProperties: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ExplicitProviderDependencyObject)), typeof(ExplicitProviderDependencyObject), hasProvider: true);
+            CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(InheritedExplicitProviderDependencyObject)), typeof(ExplicitProviderDependencyObject), hasProvider: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(EmptyProviderControl)), typeof(EmptyProviderControl), hasProvider: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(ExplicitProviderControl)), typeof(ExplicitProviderControl), hasProvider: true, hasProperties: true);
             CheckProvider(RuntimeHelpers.GetUninitializedObject(typeof(InheritedProviderControl)), typeof(ExplicitProviderControl), hasProvider: true, hasProperties: true);
@@ -87,6 +94,8 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
             {
                 CheckStringRepresentationFailure();
             }
+
+            CheckOpaqueObjectLifetime(automaticProvider);
 
             Console.WriteLine("Default custom property provider checks passed.");
 
@@ -114,6 +123,7 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
         void* unknown = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
         nint inspectable = 0;
         nint provider = 0;
+        nint identity = 0;
         Guid* iids = null;
         void* runtimeClassName = null;
         void* stringRepresentation = null;
@@ -137,6 +147,19 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
 
             Check(distinctIids.Contains(ProviderIid) == hasProvider, $"Incorrect GetIids result for {value.GetType()}.");
             Check(distinctIids.Contains(InspectableIid) && distinctIids.Contains(typeof(IStringable).GUID), "Native interface slots were lost.");
+
+            if (!hasGeneratedCcw)
+            {
+                Check(count == (hasProvider ? 7 : 6), "The opaque table must preserve all six existing entries.");
+                Check(distinctIids.IsSupersetOf([
+                    UnknownIid,
+                    InspectableIid,
+                    typeof(IStringable).GUID,
+                    new Guid("00000038-0000-0000-C000-000000000046"),
+                    new Guid("00000003-0000-0000-C000-000000000046"),
+                    new Guid("94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90")]) && iids[count - 1] == UnknownIid,
+                    "The opaque table must retain its native interfaces with IUnknown last.");
+            }
 
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, void**, int>)inspectableVtable[4])(inspectable, &runtimeClassName));
 
@@ -164,9 +187,11 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
 
             int hr = Marshal.QueryInterface((nint)unknown, ProviderIid, out provider);
 
-            if (!RuntimeFeature.IsDynamicCodeCompiled && hasGeneratedCcw)
+            if (!RuntimeFeature.IsDynamicCodeCompiled)
             {
-                object info = GetMarshallingInfo(null, value.GetType());
+                object info = hasGeneratedCcw
+                    ? GetMarshallingInfo(null, value.GetType())
+                    : GetOpaqueMarshallingInfo(null, value);
                 CheckReadOnlyImageMemory(GetVtableEntries(GetVtableInfo(info)), "COM interface entries");
             }
 
@@ -179,6 +204,8 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
 
             Marshal.ThrowExceptionForHR(hr);
             Check(WindowsRuntimeMarshal.TryGetManagedObject((void*)provider, out object roundTrip) && ReferenceEquals(value, roundTrip), "Provider COM identity changed.");
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(provider, UnknownIid, out identity));
+            Check(identity == (nint)unknown, "The provider must share the object's canonical IUnknown.");
 
             void** providerVtable = *(void***)provider;
 
@@ -207,6 +234,7 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
             HStringMarshaller.Free(stringRepresentation);
             HStringMarshaller.Free(runtimeClassName);
             Marshal.FreeCoTaskMem((nint)iids);
+            WindowsRuntimeMarshal.Free((void*)identity);
             WindowsRuntimeMarshal.Free((void*)provider);
             WindowsRuntimeMarshal.Free((void*)inspectable);
             WindowsRuntimeMarshal.Free(unknown);
@@ -279,6 +307,64 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
         }
     }
 
+    private static void CheckOpaqueObjectLifetime(bool hasProvider)
+    {
+        WeakReference<PlainObject> reference = CreateOpaqueObjectReference(hasProvider, out nint native);
+
+        try
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            Check(IsOpaqueObjectAlive(reference, native), "The opaque CCW must retain its managed object while native references exist.");
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free((void*)native);
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            if (!IsOpaqueObjectAlive(reference, 0))
+            {
+                return;
+            }
+        }
+
+        throw new InvalidOperationException("The opaque CCW retained its managed object after its last native reference was released.");
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference<PlainObject> CreateOpaqueObjectReference(bool hasProvider, out nint native)
+    {
+        PlainObject value = new();
+        WeakReference<PlainObject> reference = new(value);
+        void* unknown = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)unknown, hasProvider ? ProviderIid : InspectableIid, out native));
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free(unknown);
+        }
+
+        return reference;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool IsOpaqueObjectAlive(WeakReference<PlainObject> reference, nint native)
+    {
+        return reference.TryGetTarget(out PlainObject target) &&
+            (native == 0 || (WindowsRuntimeMarshal.TryGetManagedObject((void*)native, out object roundTrip) && ReferenceEquals(target, roundTrip)));
+    }
+
     private static void Check(bool condition, string message)
     {
         if (!condition)
@@ -317,6 +403,12 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
     private static extern object GetMarshallingInfo(
         [UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeMarshallingInfo, WinRT.Runtime")] object unused,
         Type type);
+
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "GetOpaqueInfo")]
+    [return: UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeMarshallingInfo, WinRT.Runtime")]
+    private static extern object GetOpaqueMarshallingInfo(
+        [UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeMarshallingInfo, WinRT.Runtime")] object unused,
+        object value);
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "GetVtableInfo")]
     [return: UnsafeAccessorType("WindowsRuntime.InteropServices.WindowsRuntimeVtableInfo, WinRT.Runtime")]
@@ -357,6 +449,20 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
         public override string ToString() => "value";
     }
 
+    private class PlainObject
+    {
+        public int Included => 42;
+        public int this[int index] => index;
+        public override string ToString() => "plain";
+    }
+
+    private sealed class DerivedPlainObject : PlainObject;
+
+    private readonly struct PlainValue
+    {
+        public override string ToString() => "plain value";
+    }
+
     [GeneratedCustomPropertyProvider(["Included"], [typeof(int)])]
     private partial class ExplicitNonXamlProvider
     {
@@ -380,6 +486,8 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
         public override string ToString() => "control";
     }
 
+    private sealed class DerivedDependencyObjectProbe : DependencyObjectProbe;
+
     private sealed class StringableDependencyObject : DependencyObjectProbe, IStringable;
 
     private sealed class ApplicationProbe : Application
@@ -388,7 +496,9 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
     }
 
     [GeneratedCustomPropertyProvider([], [])]
-    private sealed partial class ExplicitProviderDependencyObject : DependencyObjectProbe;
+    private partial class ExplicitProviderDependencyObject : DependencyObjectProbe;
+
+    private sealed class InheritedExplicitProviderDependencyObject : ExplicitProviderDependencyObject;
 
     [GeneratedCustomPropertyProvider([], [])]
     private sealed partial class EmptyProviderControl : UnannotatedControl;
