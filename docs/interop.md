@@ -95,6 +95,14 @@ finally
 }
 ```
 
+Native code can also need a CCW **around a projected native object's managed wrapper**. For example, XAML uses reference tracking to obtain managed collection interfaces when a native collection does not expose the bindable or covariant interfaces it needs. Opt the projected class into CCW generation with an assembly attribute:
+
+```csharp
+[assembly: WindowsRuntimeNativeExposedType(typeof(Windows.UI.Xaml.DependencyObjectCollection))]
+```
+
+This supplies the wrapper's CCW vtables without replacing its RCW marshaller. Ordinary marshalling still unwraps the original native object, and native-to-managed conversion still creates the projected type. Collection adapters can wrap native enumerators when a required bindable or covariant iterator interface is unavailable; ordinary interface marshalling remains strict.
+
 ### Release native pointer
 
 To release a native COM pointer. Unlike `Marshal.Release`, this method is null-safe:
