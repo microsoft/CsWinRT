@@ -8,7 +8,6 @@
     <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win-$(Platform).pubxml</PublishProfileFullPath>
     <IsTrimmable>true</IsTrimmable>
     <CsWinRTUseWindowsUIXamlProjections>true</CsWinRTUseWindowsUIXamlProjections>
-    <CsWinRTWindowsMetadata>sdk+</CsWinRTWindowsMetadata>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 

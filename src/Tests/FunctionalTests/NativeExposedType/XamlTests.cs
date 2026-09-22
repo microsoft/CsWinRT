@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Markup;
 using WindowsRuntime.InteropServices;
 
@@ -17,7 +17,7 @@ internal static class XamlTests
 {
     public static void Run(bool freshOnly)
     {
-        using WindowsXamlManager manager = WindowsXamlManager.InitializeForCurrentThread();
+        using IDisposable manager = InitializeXamlForCurrentThread();
 
         if (freshOnly)
         {
@@ -53,6 +53,27 @@ internal static class XamlTests
         }
 
         CheckNativeResource();
+    }
+
+    private static unsafe IDisposable InitializeXamlForCurrentThread()
+    {
+        // Call IWindowsXamlManagerStatics directly so desktop-only metadata does not have to be
+        // added to the shared UWP reference projection, whose other consumers use the base SDK.
+        Guid iid = new("28258A12-7D82-505B-B210-712B04A58882");
+        void* factory = WindowsRuntimeActivationFactory.GetActivationFactoryUnsafe("Windows.UI.Xaml.Hosting.WindowsXamlManager", in iid);
+        void* manager = null;
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)factory)[6])(factory, &manager));
+
+            return (IDisposable)WindowsRuntimeMarshal.ConvertToManaged(manager);
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free(manager);
+            WindowsRuntimeMarshal.Free(factory);
+        }
     }
 
     private static void CheckNativeResource()
