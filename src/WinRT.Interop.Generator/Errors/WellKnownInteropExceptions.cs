@@ -903,6 +903,26 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Generic member discovery exceeded the maximum traversal depth.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeDiscoveryRecursionLimitExceededWarning(TypeSignature type, ModuleDefinition module, int limit)
+    {
+        return Warning(104,
+            $"Generic member discovery reached the maximum depth of {limit} while processing type '{type}' in module '{module}': " +
+            "its members will not be analyzed further. Marshalling support for types only reachable through those members may be incomplete.");
+    }
+
+    /// <summary>
+    /// Generic member discovery encountered an excessively complex expanded signature.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeDiscoveryComplexityLimitExceededWarning(ModuleDefinition module, int limit)
+    {
+        return Warning(105,
+            $"Generic member discovery encountered a type signature with more than {limit} elements in module '{module}': " +
+            "the expanded signature will not be analyzed further. Marshalling support for types only reachable through that signature may be incomplete.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
