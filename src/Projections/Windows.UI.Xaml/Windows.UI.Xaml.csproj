@@ -5,7 +5,6 @@
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Microsoft.Windows.UI.Xaml</AssemblyName>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CsWinRTWindowsMetadata>sdk+</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
   <ItemGroup>
