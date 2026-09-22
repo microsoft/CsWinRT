@@ -16,7 +16,7 @@ if (args is ["--verify-interop", string interopPath])
 
 if (args.Length > 0 && args[0] == "--interop-incremental")
 {
-    return InteropIncrementalRunner.Run(args[1..]);
+    return InteropIncrementalRunner.Run(args.AsSpan(1));
 }
 
 if (args.Length > 0 && args[0] == "--interop")

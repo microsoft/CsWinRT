@@ -34,7 +34,7 @@ internal static class InteropGenerationCache
     /// <param name="fingerprint">The current emission fingerprint.</param>
     /// <param name="mvid">The same MVID a full generation would use.</param>
     /// <returns>Whether the cached assembly was reused.</returns>
-    public static bool TryReuse(InteropGeneratorArgs args, byte[] fingerprint, Guid mvid)
+    public static bool TryReuse(InteropGeneratorArgs args, ReadOnlySpan<byte> fingerprint, Guid mvid)
     {
         string cachePath = Path.Combine(args.GeneratedAssemblyDirectory, CacheFileName);
         string assemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
@@ -114,7 +114,7 @@ internal static class InteropGenerationCache
     /// <param name="args">The invocation arguments.</param>
     /// <param name="module">The generated module.</param>
     /// <param name="fingerprint">The emission fingerprint associated with this output.</param>
-    public static void Write(InteropGeneratorArgs args, ModuleDefinition module, byte[] fingerprint)
+    public static void Write(InteropGeneratorArgs args, ModuleDefinition module, ReadOnlySpan<byte> fingerprint)
     {
         string assemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
         string cachePath = Path.Combine(args.GeneratedAssemblyDirectory, CacheFileName);
@@ -177,7 +177,7 @@ internal static class InteropGenerationCache
     /// <summary>
     /// Creates the record from an exclusively owned, successfully emitted output.
     /// </summary>
-    private static byte[] CreateRecord(FileStream stream, byte[] fingerprint, CancellationToken token)
+    private static byte[] CreateRecord(FileStream stream, ReadOnlySpan<byte> fingerprint, CancellationToken token)
     {
         stream.Position = 0;
         long mvidOffset;
@@ -216,33 +216,28 @@ internal static class InteropGenerationCache
         using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         byte[] buffer = ArrayPool<byte>.Shared.Rent(65536);
 
-        try
+        stream.Position = 0;
+        long offset = 0;
+        int read;
+
+        while ((read = stream.Read(buffer)) > 0)
         {
-            stream.Position = 0;
-            long offset = 0;
-            int read;
+            token.ThrowIfCancellationRequested();
 
-            while ((read = stream.Read(buffer)) > 0)
+            long start = Math.Max(offset, mvidOffset);
+            long end = Math.Min(offset + read, mvidOffset + 16);
+
+            if (end > start)
             {
-                token.ThrowIfCancellationRequested();
-
-                long start = Math.Max(offset, mvidOffset);
-                long end = Math.Min(offset + read, mvidOffset + 16);
-
-                if (end > start)
-                {
-                    buffer.AsSpan((int)(start - offset), (int)(end - start)).Clear();
-                }
-
-                hash.AppendData(buffer, 0, read);
-                offset += read;
+                buffer.AsSpan((int)(start - offset), (int)(end - start)).Clear();
             }
 
-            _ = hash.GetHashAndReset(destination);
+            hash.AppendData(buffer, 0, read);
+            offset += read;
         }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+
+        _ = hash.GetHashAndReset(destination);
+
+        ArrayPool<byte>.Shared.Return(buffer);
     }
 }
