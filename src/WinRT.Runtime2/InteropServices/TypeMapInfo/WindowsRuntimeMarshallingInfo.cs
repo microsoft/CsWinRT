@@ -161,6 +161,16 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
+    /// Checks whether the cached public type matches a managed type, without resolving it from metadata.
+    /// </summary>
+    /// <param name="managedType">The managed type to compare against the cached public type.</param>
+    /// <returns>Whether the cached public type matches <paramref name="managedType"/>.</returns>
+    public bool IsForType(Type managedType)
+    {
+        return ReferenceEquals(_publicType, managedType);
+    }
+
+    /// <summary>
     /// Gets the public type associated with the current instance (ie. the type that would be used directly by developers).
     /// </summary>
     public Type PublicType
@@ -586,7 +596,11 @@ internal sealed class WindowsRuntimeMarshallingInfo
         {
             // Native-exposed projected types have a separate CCW proxy. Only use it for vtables:
             // replacing the projected type's marshaller would break RCW creation and native unwrapping.
-            if (ProxyTypeMapping.TryGetValue(_metadataProviderType, out Type? proxyType))
+            // Already-resolved proxies, value types, interfaces, and delegates cannot need this lookup.
+            if (ReferenceEquals(_metadataProviderType, _publicType) &&
+                _metadataProviderType.IsClass &&
+                _metadataProviderType.BaseType != typeof(MulticastDelegate) &&
+                ProxyTypeMapping.TryGetValue(_metadataProviderType, out Type? proxyType))
             {
                 WindowsRuntimeMarshallingInfo proxyInfo = TypeToMarshallingInfoTable.GetOrAdd(proxyType, CreateMarshallingInfoCallback)!;
 

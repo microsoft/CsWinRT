@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Windows.Data.Json;
+using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -50,6 +51,7 @@ internal static unsafe class CollectionTests
         CheckIteratorCovariance(array, item);
         CheckBindableList(item);
         CheckReentrantMarshalling();
+        CheckMarshallingKinds();
         CheckProjectedCollection(new JsonArray { item }, [item]);
     }
 
@@ -107,7 +109,15 @@ internal static unsafe class CollectionTests
 
     private static void CheckCollectionIids(void* ccw)
     {
-        void* inspectable = QueryInterface(ccw, in Inspectable);
+        ReadOnlySpan<Guid> interfaces = GetIids(ccw);
+        Check(interfaces.Contains(IterableObject), "GetIids must use the native-exposure proxy.");
+        Check(interfaces.Contains(WellKnownInterfaceIIDs.IID_Windows_UI_Xaml_Interop_IBindableIterable), "The CCW must advertise bindable enumeration.");
+        Check(!interfaces.Contains(WellKnownInterfaceIIDs.IID_Windows_UI_Xaml_Interop_IBindableVector), "The collection must not inherit a previously marshalled List's bindable vtable.");
+    }
+
+    private static Guid[] GetIids(void* instance)
+    {
+        void* inspectable = QueryInterface(instance, in Inspectable);
         Guid* iids = null;
         uint count = 0;
 
@@ -116,9 +126,8 @@ internal static unsafe class CollectionTests
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int>)(*(void***)inspectable)[3])(inspectable, &count, &iids));
 
             ReadOnlySpan<Guid> interfaces = new(iids, checked((int)count));
-            Check(interfaces.Contains(IterableObject), "GetIids must use the native-exposure proxy.");
-            Check(interfaces.Contains(WellKnownInterfaceIIDs.IID_Windows_UI_Xaml_Interop_IBindableIterable), "The CCW must advertise bindable enumeration.");
-            Check(!interfaces.Contains(WellKnownInterfaceIIDs.IID_Windows_UI_Xaml_Interop_IBindableVector), "The collection must not inherit a previously marshalled List's bindable vtable.");
+
+            return interfaces.ToArray();
         }
         finally
         {
@@ -271,6 +280,44 @@ internal static unsafe class CollectionTests
         }
     }
 
+    private static void CheckMarshallingKinds()
+    {
+        object[] values =
+        [
+            new OpaqueObject(),
+            new MarshallingFailureException(),
+            typeof(Point),
+            new Point(1, 2),
+            PropertyType.Int32,
+            (AsyncActionCompletedHandler)((_, _) => { }),
+            (EventHandler<int>)((_, _) => { })
+        ];
+
+        foreach (object value in values)
+        {
+            void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+
+            try
+            {
+                Check(ReferenceEquals(value, WindowsRuntimeMarshal.ConvertToManaged(ccw)), $"A round trip changed the managed {value.GetType()} instance.");
+
+                Guid[] interfaces = GetIids(ccw);
+                Check(interfaces.Length != 0, $"The {value.GetType()} CCW did not advertise any interfaces.");
+
+                foreach (Guid iid in interfaces)
+                {
+                    void* interfacePointer = QueryInterface(ccw, in iid);
+                    WindowsRuntimeMarshal.Free(interfacePointer);
+                }
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ccw);
+                GC.KeepAlive(value);
+            }
+        }
+    }
+
     internal static void Check(bool condition, string message)
     {
         if (!condition)
@@ -288,6 +335,8 @@ internal static unsafe class CollectionTests
 
     internal sealed class ThrowingObject;
 
+    private sealed class OpaqueObject;
+
     [ThrowingMarshaller]
     internal sealed class ThrowingObjectMetadata;
 
@@ -299,6 +348,12 @@ internal static unsafe class CollectionTests
         {
             void* boxed = WindowsRuntimeMarshal.ConvertToUnmanaged(42);
             WindowsRuntimeMarshal.Free(boxed);
+
+            // This statically typed path has no precomputed marshalling info of its own.
+            Guid iid = new("548CEFBD-BC8A-5FA0-8DF2-957440FC8BF4");
+            using WindowsRuntimeObjectReferenceValue scalar = WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged<int>(42, CreateComInterfaceFlags.None, in iid);
+            Check(WindowsRuntimeValueTypeMarshaller.UnboxToManaged<int>(scalar.GetThisPtrUnsafe()) == 42, "Nested explicit-flags marshalling used the outer object's metadata.");
+            CheckMarshallingKinds();
 
             // Simulate a tracker callback while another object's marshaller is still running.
             object item = new();
