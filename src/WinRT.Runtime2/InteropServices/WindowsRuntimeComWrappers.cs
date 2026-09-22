@@ -20,15 +20,15 @@ namespace WindowsRuntime.InteropServices;
 internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 {
     /// <summary>
-    /// The object and its <see cref="WindowsRuntimeMarshallingInfo"/> passed by callers that have already performed a lookup, enabling the <see cref="ComputeVtables"/> fast-path.
+    /// The <see cref="WindowsRuntimeMarshallingInfo"/> passed by callers that have already performed a lookup, enabling the <see cref="ComputeVtables"/> fast-path.
     /// </summary>
     /// <remarks>
     /// This can be set by a thread right before calling the <see cref="ComWrappers.GetOrCreateComInterfaceForObject"/> method,
     /// to pass additional information to the <see cref="ComWrappers"/> instance. The previous value must be restored
-    /// afterwards. The object identity also prevents re-entrant tracker callbacks from using another object's info.
+    /// afterwards. <see cref="ComputeVtables"/> checks the public type to reject unrelated re-entrant tracker callbacks.
     /// </remarks>
     [ThreadStatic]
-    private static (object Instance, WindowsRuntimeMarshallingInfo Info)? MarshallingInfo;
+    private static WindowsRuntimeMarshallingInfo? MarshallingInfo;
 
     /// <summary>
     /// The <see cref="WindowsRuntimeObjectComWrappersCallback"/> instance passed by callers where the target type was statically-visible,
@@ -195,9 +195,9 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <returns>The generated COM interface that can be passed outside the .NET runtime.</returns>
     private static nint GetOrCreateComInterfaceForObject(object instance, WindowsRuntimeMarshallingInfo info)
     {
-        (object Instance, WindowsRuntimeMarshallingInfo Info)? previousMarshallingInfo = MarshallingInfo;
+        WindowsRuntimeMarshallingInfo? previousMarshallingInfo = MarshallingInfo;
 
-        MarshallingInfo = (instance, info);
+        MarshallingInfo = info;
 
         try
         {
@@ -244,21 +244,9 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <seealso cref="ComWrappers.GetOrCreateComInterfaceForObject"/>
     public nint GetOrCreateComInterfaceForObject(object instance, CreateComInterfaceFlags flags, in Guid iid)
     {
-        (object Instance, WindowsRuntimeMarshallingInfo Info)? previousMarshallingInfo = MarshallingInfo;
-
-        MarshallingInfo = null;
-
-        void* thisPtr;
-
-        try
-        {
-            // Marshal the object ('ComputeVtables' will lookup the proxy type to resolve the right vtable for it)
-            thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, flags);
-        }
-        finally
-        {
-            MarshallingInfo = previousMarshallingInfo;
-        }
+        // 'ComputeVtables' validates any caller-supplied metadata against the actual type.
+        // There is no need to save or clear the thread-local state for this direct call.
+        void* thisPtr = (void*)GetOrCreateComInterfaceForObject(instance, flags);
 
         // Do the 'QueryInterface' call for the target interface IID, same as above
         HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in iid, out void* interfacePtr);
@@ -334,13 +322,15 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
     /// <inheritdoc/>
     protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
     {
-        WindowsRuntimeMarshallingInfo? marshallingInfo =
-            MarshallingInfo is { } state && ReferenceEquals(obj, state.Instance) ? state.Info : null;
+        WindowsRuntimeMarshallingInfo? marshallingInfo = MarshallingInfo;
+        Type managedType = obj.GetType();
 
         // Try to get the marshalling info for the input type. If we can't find it, we fallback to the marshalling info
         // for 'object'. This is the shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'.
-        // If we already have one available passed by callers up the stack, we can skip the lookup and just use it.
-        if (marshallingInfo is null && !WindowsRuntimeMarshallingInfo.TryGetInfo(obj.GetType(), out marshallingInfo))
+        // Metadata is type-wide, so a matching public type suffices even for a different instance. An opaque
+        // fallback (e.g. for a derived exception) can miss this fast path and is resolved by the normal lookup.
+        if ((marshallingInfo is null || !marshallingInfo.IsForType(managedType)) &&
+            !WindowsRuntimeMarshallingInfo.TryGetInfo(managedType, out marshallingInfo))
         {
             marshallingInfo = WindowsRuntimeMarshallingInfo.GetOpaqueInfo(obj);
         }
