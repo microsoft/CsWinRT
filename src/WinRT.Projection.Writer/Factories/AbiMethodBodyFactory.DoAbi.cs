@@ -390,7 +390,21 @@ internal static partial class AbiMethodBodyFactory
             {
                 string propName = methodName[4..];
                 writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
-                EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
+
+                // An array valued property projects as 'T[]', not as the 'Span<T>' an array *parameter*
+                // projects to, so the span local cannot be handed over as-is the way the method call path
+                // below does. It also must not be: that span is backed by an inline array or a pooled
+                // buffer that is returned when this method exits, and a property setter hands the value to
+                // an implementation that may keep it. Copy it out to an exact length array.
+                if (ParameterCategoryResolver.Resolve(sig.Parameters[0]).IsArrayInput())
+                {
+                    writer.Write($"__{sig.Parameters[0].GetRawName()}.ToArray()");
+                }
+                else
+                {
+                    EmitDoAbiParamArgConversion(writer, context, sig.Parameters[0]);
+                }
+
                 writer.WriteLine(";");
             }
             else
