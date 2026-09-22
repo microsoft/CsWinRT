@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
@@ -21,6 +22,68 @@ internal static class TypeSignatureExtensions
         /// Gets whether the current type is a (constructed) generic type.
         /// </summary>
         public bool IsGenericType => signature.ElementType is ElementType.GenericInst;
+
+        /// <summary>
+        /// Counts the elements in a type signature, stopping at a specified maximum.
+        /// </summary>
+        /// <param name="maxCount">The positive maximum count to return.</param>
+        /// <returns>The element count, capped at <paramref name="maxCount"/>.</returns>
+        /// <remarks>
+        /// Counts nested type arguments, wrappers, and function pointer return and parameter types without resolving definitions.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="signature"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxCount"/> is not positive.</exception>
+        public int GetSignatureElementCount(int maxCount)
+        {
+            ArgumentNullException.ThrowIfNull(signature);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCount);
+
+            if (maxCount == 1)
+            {
+                return 1;
+            }
+
+            if (signature is TypeSpecificationSignature wrapper)
+            {
+                return 1 + wrapper.BaseType.GetSignatureElementCount(maxCount - 1);
+            }
+
+            int count = 1;
+
+            if (signature is GenericInstanceTypeSignature genericType)
+            {
+                foreach (TypeSignature argument in genericType.TypeArguments)
+                {
+                    count += argument.GetSignatureElementCount(maxCount - count);
+
+                    if (count == maxCount)
+                    {
+                        return count;
+                    }
+                }
+            }
+            else if (signature is FunctionPointerTypeSignature functionPointer)
+            {
+                count += functionPointer.Signature.ReturnType.GetSignatureElementCount(maxCount - count);
+
+                if (count == maxCount)
+                {
+                    return count;
+                }
+
+                foreach (TypeSignature parameter in functionPointer.Signature.ParameterTypes)
+                {
+                    count += parameter.GetSignatureElementCount(maxCount - count);
+
+                    if (count == maxCount)
+                    {
+                        return count;
+                    }
+                }
+            }
+
+            return count;
+        }
 
         /// <summary>
         /// Determines whether the current type is assignable from the provided type.

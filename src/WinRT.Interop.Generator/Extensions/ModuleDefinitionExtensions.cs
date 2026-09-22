@@ -10,6 +10,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
@@ -154,20 +155,22 @@ internal static partial class ModuleDefinitionExtensions
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module)
+    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module, bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance);
+        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, treatWarningsAsErrors);
     }
 
     /// <summary>
     /// Enumerates all SZ array type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module)
+    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module, bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance);
+        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, treatWarningsAsErrors);
     }
 
     /// <summary>
@@ -175,24 +178,58 @@ internal static partial class ModuleDefinitionExtensions
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) type signatures of interest in the module.</returns>
-    public static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(this ModuleDefinition module, ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
+    private static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(
+        this ModuleDefinition module,
+        ITypeSignatureVisitor<IEnumerable<TResult>> visitor,
+        bool treatWarningsAsErrors)
         where TResult : TypeSignature
     {
+        const int MaxDiscoveryDepth = 32;
+        const int MaxSignatureComplexity = 256;
+
         HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
         HashSet<TypeSignature> visitedTypes = new(SignatureComparer.IgnoreVersion);
-        Queue<TypeSignature> pendingTypes = new();
+        Queue<(TypeSignature Type, int Depth)> pendingTypes = new();
+        bool recursionLimitReported = false;
+        bool complexityLimitReported = false;
 
         // Helper to crawl a signature, recursively
-        IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type)
+        IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type, int depth = 0)
         {
+            // 'Node<Pair<T, T>>' grows exponentially before reaching the depth limit.
+            // Bound the work before visiting, hashing, or formatting a newly expanded signature.
+            if (depth > 0 && type is not null && type.GetSignatureElementCount(MaxSignatureComplexity + 1) > MaxSignatureComplexity)
+            {
+                if (!complexityLimitReported)
+                {
+                    complexityLimitReported = true;
+
+                    WellKnownInteropExceptions.GenericTypeDiscoveryComplexityLimitExceededWarning(module, MaxSignatureComplexity).LogOrThrow(treatWarningsAsErrors);
+                }
+
+                yield break;
+            }
+
             // Member discovery needs closed generic contexts even when we are only collecting array signatures
             foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
             {
                 if (genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
                     visitedTypes.Add(genericType))
                 {
-                    pendingTypes.Enqueue(genericType);
+                    // An expanding cycle, such as 'Node<T>' -> 'Node<Node<T>>', never repeats an exact signature.
+                    // Keep the discovered type, but bound further member traversal to avoid unbounded expansion.
+                    if (depth <= MaxDiscoveryDepth)
+                    {
+                        pendingTypes.Enqueue((genericType, depth));
+                    }
+                    else if (!recursionLimitReported)
+                    {
+                        recursionLimitReported = true;
+
+                        WellKnownInteropExceptions.GenericTypeDiscoveryRecursionLimitExceededWarning(genericType, module, MaxDiscoveryDepth).LogOrThrow(treatWarningsAsErrors);
+                    }
                 }
             }
 
@@ -245,7 +282,7 @@ internal static partial class ModuleDefinitionExtensions
             // Keep scanning partially open specifications too, as their members can contain closed types
             if (specification.Signature is TypeSignature signature && visitedTypes.Add(signature))
             {
-                pendingTypes.Enqueue(signature);
+                pendingTypes.Enqueue((signature, 0));
             }
         }
 
@@ -289,8 +326,10 @@ internal static partial class ModuleDefinitionExtensions
         //
         // Closed types discovered after substituting a generic factory's arguments need the same traversal, including
         // ordinary methods and cache initializers, to discover their nested property/indexer descriptors transitively.
-        while (pendingTypes.TryDequeue(out TypeSignature? typeSignature))
+        while (pendingTypes.TryDequeue(out (TypeSignature Type, int Depth) current))
         {
+            TypeSignature typeSignature = current.Type;
+
             if (!typeSignature.TryResolve(module.RuntimeContext, out TypeDefinition? type))
             {
                 continue;
@@ -302,7 +341,7 @@ internal static partial class ModuleDefinitionExtensions
             {
                 foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
                 {
-                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext)))
+                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), current.Depth + 1))
                     {
                         yield return result;
                     }

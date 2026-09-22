@@ -552,7 +552,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
+            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(args.TreatWarningsAsErrors))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -593,7 +593,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
+            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(args.TreatWarningsAsErrors))
             {
                 args.Token.ThrowIfCancellationRequested();
 
