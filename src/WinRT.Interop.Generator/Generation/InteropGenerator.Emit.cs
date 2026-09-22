@@ -30,13 +30,13 @@ internal partial class InteropGenerator
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="module">The initialized output module.</param>
     /// <param name="windowsRuntimeModule">The Windows Runtime implementation module.</param>
-    /// <param name="fingerprint">The optional emission fingerprint to cache with the output.</param>
+    /// <param name="fingerprint">The emission fingerprint to cache with the output, or an empty span to disable caching.</param>
     private static void Emit(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         ModuleDefinition module,
         ModuleDefinition windowsRuntimeModule,
-        byte[]? fingerprint)
+        ReadOnlySpan<byte> fingerprint)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -2739,14 +2739,14 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="module">The module to write to disk.</param>
-    /// <param name="fingerprint">The optional emission fingerprint to cache with the output.</param>
-    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module, byte[]? fingerprint)
+    /// <param name="fingerprint">The emission fingerprint to cache with the output, or an empty span to disable caching.</param>
+    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module, ReadOnlySpan<byte> fingerprint)
     {
         string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
 
         try
         {
-            if (fingerprint is null)
+            if (fingerprint.IsEmpty)
             {
                 module.Write(winRTInteropAssemblyPath);
             }

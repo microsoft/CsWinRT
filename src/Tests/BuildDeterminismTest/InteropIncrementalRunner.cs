@@ -44,7 +44,7 @@ internal static class InteropIncrementalRunner
         "--winrt-component-assembly-path"
     ];
 
-    internal static int Run(string[] args)
+    internal static int Run(ReadOnlySpan<string> args)
     {
         if (args is ["--list-scenarios"])
         {
@@ -625,7 +625,7 @@ internal static class InteropIncrementalRunner
             throw new InvalidDataException("'reference-projection-bytes' requires a reference assembly marked [WindowsRuntimeReferenceAssembly].");
         }
 
-        private static string FindRequiredImplementation(string[] paths, string fileName)
+        private static string FindRequiredImplementation(IEnumerable<string> paths, string fileName)
         {
             string[] matches = paths.Where(path => Path.GetFileName(path).Equals(fileName, StringComparison.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal).ToArray();
