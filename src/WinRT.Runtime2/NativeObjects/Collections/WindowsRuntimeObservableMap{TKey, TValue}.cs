@@ -159,7 +159,7 @@ public abstract class WindowsRuntimeObservableMap<
     IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
     /// <inheritdoc/>
-    public int Count => IReadOnlyDictionaryMethods.Count(NativeObjectReference);
+    public int Count => IReadOnlyDictionaryMethods.Count(IMapObjectReference);
 
     /// <inheritdoc/>
     public bool IsReadOnly => false;
@@ -167,57 +167,57 @@ public abstract class WindowsRuntimeObservableMap<
     /// <inheritdoc/>
     public TValue this[TKey key]
     {
-        get => IDictionaryMethods<TKey, TValue>.Item<TIMapMethods>(NativeObjectReference, key);
-        set => IDictionaryMethods<TKey, TValue>.Item<TIMapMethods>(NativeObjectReference, key, value);
+        get => IDictionaryMethods<TKey, TValue>.Item<TIMapMethods>(IMapObjectReference, key);
+        set => IDictionaryMethods<TKey, TValue>.Item<TIMapMethods>(IMapObjectReference, key, value);
     }
 
     /// <inheritdoc/>
     public void Add(TKey key, TValue value)
     {
-        IDictionaryMethods<TKey, TValue>.Add<TIMapMethods>(NativeObjectReference, key, value);
+        IDictionaryMethods<TKey, TValue>.Add<TIMapMethods>(IMapObjectReference, key, value);
     }
 
     /// <inheritdoc/>
     public bool ContainsKey(TKey key)
     {
-        return IDictionaryMethods<TKey, TValue>.ContainsKey<TIMapMethods>(NativeObjectReference, key);
+        return IDictionaryMethods<TKey, TValue>.ContainsKey<TIMapMethods>(IMapObjectReference, key);
     }
 
     /// <inheritdoc/>
     public bool Remove(TKey key)
     {
-        return IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(NativeObjectReference, key);
+        return IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(IMapObjectReference, key);
     }
 
     /// <inheritdoc/>
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
-        return IDictionaryMethods<TKey, TValue>.TryGetValue<TIMapMethods>(NativeObjectReference, key, out value);
+        return IDictionaryMethods<TKey, TValue>.TryGetValue<TIMapMethods>(IMapObjectReference, key, out value);
     }
 
     /// <inheritdoc/>
     public void Clear()
     {
-        IMapMethods.Clear(NativeObjectReference);
+        IMapMethods.Clear(IMapObjectReference);
     }
 
     /// <inheritdoc/>
     public void Add(KeyValuePair<TKey, TValue> item)
     {
-        IDictionaryMethods<TKey, TValue>.Add<TIMapMethods>(NativeObjectReference, item.Key, item.Value);
+        IDictionaryMethods<TKey, TValue>.Add<TIMapMethods>(IMapObjectReference, item.Key, item.Value);
     }
 
     /// <inheritdoc/>
     public bool Contains(KeyValuePair<TKey, TValue> item)
     {
-        return IDictionaryMethods<TKey, TValue>.Contains<TIMapMethods>(NativeObjectReference, item);
+        return IDictionaryMethods<TKey, TValue>.Contains<TIMapMethods>(IMapObjectReference, item);
     }
 
     /// <inheritdoc/>
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
         IDictionaryMethods<TKey, TValue>.CopyTo<TIIterableMethods>(
-            thisIMapReference: NativeObjectReference,
+            thisIMapReference: IMapObjectReference,
             thisIIterableReference: IIterableObjectReference,
             array: array,
             arrayIndex: arrayIndex);
@@ -226,7 +226,7 @@ public abstract class WindowsRuntimeObservableMap<
     /// <inheritdoc/>
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        return IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(NativeObjectReference, item.Key);
+        return IDictionaryMethods<TKey, TValue>.Remove<TIMapMethods>(IMapObjectReference, item.Key);
     }
 
     /// <inheritdoc/>
