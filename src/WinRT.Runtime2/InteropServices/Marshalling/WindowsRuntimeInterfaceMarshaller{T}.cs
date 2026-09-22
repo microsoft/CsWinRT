@@ -100,7 +100,14 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
     /// <param name="iid">The IID for the interface being marshalled.</param>
     /// <param name="result">The resulting <see cref="WindowsRuntimeObjectReferenceValue"/> for the marshalled interface.</param>
     /// <returns>Whether <paramref name="result"/> was successfully retrieved (otherwise it will be just <see langword="default"/>).</returns>
-    /// <remarks><inheritdoc cref="ConvertToUnmanaged" path="/remarks/node()"/></remarks>
+    /// <remarks>
+    /// <inheritdoc cref="ConvertToUnmanaged" path="/remarks/node()"/>
+    /// <para>
+    /// Unlike <see cref="ConvertToUnmanaged"/>, a native object returning <c>E_NOINTERFACE</c> is a failed attempt,
+    /// allowing collection adapters to wrap enumerators whose managed covariance is not supported by native <c>QueryInterface</c>.
+    /// Other native failures and invalid managed CCW-s still throw.
+    /// </para>
+    /// </remarks>
     internal static bool TryConvertToUnmanagedExact(T? value, scoped in Guid iid, out WindowsRuntimeObjectReferenceValue result)
     {
         if (value is null)
@@ -118,11 +125,18 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             return true;
         }
 
-        // Next, try to unwrap the object, with the same logic as the variant above again. The "try"
-        // semantics of this method only refer to managed object being marshalled, not to unwrapping.
+        // A native iterator can implement 'IEnumerator<T>' through managed covariance without exposing
+        // the corresponding native IID. Let the collection adapter supply that interface in this case.
         if (value is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
         {
             HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
+
+            if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+            {
+                result = default;
+
+                return false;
+            }
 
             if (hresult.Failed)
             {

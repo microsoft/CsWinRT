@@ -584,12 +584,17 @@ internal sealed class WindowsRuntimeMarshallingInfo
         [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe WindowsRuntimeVtableInfo InitializeVtableInfo()
         {
-            // Get the '[WindowsRuntimeComWrappersMarshaller]' attribute from the type, to get custom vtable entries.
-            // This should always find the attribute. The attribute not being present would mean that somehow
-            // our 'ComWrappers' instance tried creating a CCW for a type that had an associated marshalling
-            // info, but not a vtable provider. That is, it could only mean the type is a projected type,
-            // which should never hit this path, or that the generator somehow didn't generate the attribute.
-            // That would be a bug, and it should never happen in practice (and we'd want to crash if it did).
+            // Native-exposed projected types have a separate CCW proxy. Only use it for vtables:
+            // replacing the projected type's marshaller would break RCW creation and native unwrapping.
+            if (ProxyTypeMapping.TryGetValue(_metadataProviderType, out Type? proxyType))
+            {
+                WindowsRuntimeMarshallingInfo proxyInfo = TypeToMarshallingInfoTable.GetOrAdd(proxyType, CreateMarshallingInfoCallback)!;
+
+                return _vtableInfo ??= proxyInfo.GetVtableInfo();
+            }
+
+            // The CCW metadata provider must have a marshaller. Projected types without a native-exposure
+            // proxy will instead have an RCW-only marshaller, which is rejected below.
             WindowsRuntimeComWrappersMarshallerAttribute comWrappersMarshaller = GetComWrappersMarshaller();
 
             // Delegate to the vtable provider to produce the first vtable entries
