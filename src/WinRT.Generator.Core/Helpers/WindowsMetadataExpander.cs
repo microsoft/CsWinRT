@@ -32,6 +32,38 @@ internal static partial class WindowsMetadataExpander
     private static partial Regex SdkVersionRegex { get; }
 
     /// <summary>
+    /// Expands a single Windows metadata token to the resulting set of <c>.winmd</c> <b>files</b>, resolving
+    /// any directory <see cref="Expand{TErr}"/> would have returned into the files inside it.
+    /// </summary>
+    /// <typeparam name="TErr">The per-tool error factory used to construct well-known exceptions.</typeparam>
+    /// <param name="token">The token to expand (path, "local", "sdk", "sdk+", or a version string).</param>
+    /// <returns>A list of concrete <c>.winmd</c> file paths.</returns>
+    /// <remarks>
+    /// This is what a caller that has to <i>act on each file</i> wants, such as packaging a debug repro.
+    /// <see cref="Expand{TErr}"/> leaves directories for the caller to scan, which is fine for the writer
+    /// (it scans them) but not for a caller that treats every result as a file.
+    /// </remarks>
+    public static List<string> ExpandToFiles<TErr>(string token)
+        where TErr : IWindowsMetadataErrorFactory
+    {
+        List<string> result = [];
+
+        foreach (string expanded in Expand<TErr>(token))
+        {
+            if (File.Exists(expanded))
+            {
+                result.Add(expanded);
+            }
+            else if (Directory.Exists(expanded))
+            {
+                result.AddRange(Directory.EnumerateFiles(expanded, "*.winmd", SearchOption.AllDirectories));
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Expands a single Windows metadata token to the resulting set of .winmd file paths
     /// (or directory paths that should be recursively scanned by the caller).
     /// </summary>

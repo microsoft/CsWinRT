@@ -156,11 +156,13 @@ internal static partial class ReferenceProjectionGenerator
         // special tokens like 'local', 'sdk', 'sdk+', or a version like '10.0.26100.0') into the
         // concrete set of .winmd files the writer would actually consume. This ensures the debug
         // repro is fully self-contained and can be replayed without needing the Windows SDK installed.
+        // Directories have to be resolved to the files inside them, since every path here is about to
+        // be copied as a file.
         List<string> expandedInputPaths = [];
 
         foreach (string inputPath in args.InputPaths)
         {
-            expandedInputPaths.AddRange(WindowsMetadataExpander.Expand<WellKnownReferenceProjectionGeneratorExceptions>(inputPath));
+            expandedInputPaths.AddRange(WindowsMetadataExpander.ExpandToFiles<WellKnownReferenceProjectionGeneratorExceptions>(inputPath));
         }
 
         args.Token.ThrowIfCancellationRequested();

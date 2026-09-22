@@ -234,21 +234,8 @@ internal static partial class ProjectionGenerator
         // '10.0.26100.0') to the concrete set of .winmd files the writer would actually consume. This
         // makes the debug repro fully self-contained, even when the original Windows metadata token was
         // a special value that depends on the host environment (e.g. a registered SDK installation).
-        List<string> expandedWindowsMetadataPaths = [];
-
-        foreach (string expanded in WindowsMetadataExpander.Expand<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata))
-        {
-            // The expander may return either individual files or directories; we want individual
-            // files in the bundled repro so the layout is fully self-describing.
-            if (File.Exists(expanded))
-            {
-                expandedWindowsMetadataPaths.Add(expanded);
-            }
-            else if (Directory.Exists(expanded))
-            {
-                expandedWindowsMetadataPaths.AddRange(Directory.EnumerateFiles(expanded, "*.winmd", SearchOption.AllDirectories));
-            }
-        }
+        // Directories are resolved to the files inside them, so the bundled layout is self-describing.
+        List<string> expandedWindowsMetadataPaths = WindowsMetadataExpander.ExpandToFiles<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata);
 
         args.Token.ThrowIfCancellationRequested();
 
