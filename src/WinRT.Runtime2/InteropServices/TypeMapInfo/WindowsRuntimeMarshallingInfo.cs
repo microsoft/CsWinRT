@@ -161,11 +161,16 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
-    /// Checks whether the cached public type matches a managed type, without resolving it from metadata.
+    /// Checks whether an already-cached public type matches a managed type, without triggering lazy initialization.
     /// </summary>
     /// <param name="managedType">The managed type to compare against the cached public type.</param>
-    /// <returns>Whether the cached public type matches <paramref name="managedType"/>.</returns>
-    public bool IsForType(Type managedType)
+    /// <returns><see langword="true"/> only if the public type is already known and matches <paramref name="managedType"/>; otherwise, <see langword="false"/>.</returns>
+    /// <remarks>
+    /// This is a fast-path check, not a definitive type-mismatch test. Metadata-provider lookups can leave
+    /// <see cref="_publicType"/> unresolved, while managed-type lookups supply it eagerly. An unresolved public
+    /// type also returns <see langword="false"/>, so callers must fall back to the normal marshalling-info lookup.
+    /// </remarks>
+    public bool MatchesCachedPublicType(Type managedType)
     {
         return ReferenceEquals(_publicType, managedType);
     }

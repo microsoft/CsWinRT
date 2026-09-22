@@ -327,9 +327,10 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
 
         // Try to get the marshalling info for the input type. If we can't find it, we fallback to the marshalling info
         // for 'object'. This is the shared marshalling mode for all unknown objects, ie. just an opaque 'IInspectable'.
-        // Metadata is type-wide, so a matching public type suffices even for a different instance. An opaque
-        // fallback (e.g. for a derived exception) can miss this fast path and is resolved by the normal lookup.
-        if ((marshallingInfo is null || !marshallingInfo.IsForType(managedType)) &&
+        // Metadata is type-wide, so a matching cached public type suffices even for a different instance.
+        // An unresolved public type or opaque fallback (e.g. for a derived exception) only misses this fast path;
+        // the normal lookup below still resolves the correct info without requiring lazy initialization here.
+        if ((marshallingInfo is null || !marshallingInfo.MatchesCachedPublicType(managedType)) &&
             !WindowsRuntimeMarshallingInfo.TryGetInfo(managedType, out marshallingInfo))
         {
             marshallingInfo = WindowsRuntimeMarshallingInfo.GetOpaqueInfo(obj);
