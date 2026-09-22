@@ -242,25 +242,6 @@ internal partial class ProjectionGenerator
                 // Skip other projection binaries we may get.
                 if (!isWindowsSdk && isWindowsSdkMode)
                 {
-                    // Sharing the 'Windows' namespace root does not make a contract part of the Windows SDK. The
-                    // SDK projection selects its types by namespace prefix, so a third party contract shipped
-                    // under that root (which is legal, and does happen) is swept in here as well as into the
-                    // merged projection that legitimately owns it, and the two definitions collide.
-                    //
-                    // This reference projection is the authority on which types those are: it declares exactly
-                    // the ones the merged projection will implement. Record them so the SDK projection leaves
-                    // them alone. Nothing else can be affected, because a type only lands here if some other
-                    // reference projection already claims it.
-                    foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
-                    {
-                        if (exportedType.Name?.Value is "<Module>")
-                        {
-                            continue;
-                        }
-
-                        excludeTypes.Add(exportedType.FullName);
-                    }
-
                     continue;
                 }
 
@@ -343,6 +324,21 @@ internal partial class ProjectionGenerator
             winmdInputs.Add(winmdPath);
         }
 
+        // Sharing the 'Windows' namespace root does not make a contract part of the Windows SDK. The SDK
+        // projection selects its types by namespace prefix, so a contract shipped under that root by someone
+        // else (which is legal, and does happen for OS internal components) is swept in here as well as into
+        // the merged projection that owns it, and the two public definitions collide.
+        //
+        // The question is where a type is *defined*, not who re-declares it: a reference projection may
+        // deliberately re-expose a Windows SDK type (this is what 'CsWinRTPublicExclusiveToInterfaces' does
+        // for an '[exclusiveto]' interface), and the SDK projection still has to emit that one, or the SDK
+        // types referencing it no longer compile. So classify the input metadata instead, and exclude only
+        // what a non-SDK '.winmd' defines under the 'Windows' root.
+        if (isWindowsSdkMode)
+        {
+            CollectNonSdkWindowsTypes(args.WinMDPaths, resolver, excludeTypes);
+        }
+
         writerOptions = new ProjectionWriterOptions
         {
             InputPaths = winmdInputs,
@@ -360,6 +356,85 @@ internal partial class ProjectionGenerator
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };
+    }
+
+    /// <summary>
+    /// Records the types a non-Windows-SDK input <c>.winmd</c> defines under the <c>Windows</c> namespace root,
+    /// so that the Windows SDK projection (whose filter is that whole root) leaves them to the projection that
+    /// owns them.
+    /// </summary>
+    /// <param name="winmdPaths">The input <c>.winmd</c> paths.</param>
+    /// <param name="resolver">The resolver supplying the metadata reader parameters.</param>
+    /// <param name="excludeTypes">The set to add the fully qualified type names to.</param>
+    /// <remarks>
+    /// Classification is by the metadata's own name, which for a <c>.winmd</c> is its contract: the SDK ships
+    /// its union as <c>Windows</c> and each contract as <c>Windows.&lt;Area&gt;.&lt;Name&gt;Contract</c>. SDK
+    /// metadata is skipped without being opened, so this costs nothing on the common path where every input is
+    /// the SDK's own.
+    /// <para>
+    /// Only the <c>Windows</c> root is considered, because that is the only thing the SDK projection's
+    /// namespace filter can claim. It also leaves <c>WindowsRuntime.Internal</c> alone, which is a non-SDK
+    /// <c>.winmd</c> that the SDK projection is nonetheless meant to project.
+    /// </para>
+    /// </remarks>
+    private static void CollectNonSdkWindowsTypes(
+        IReadOnlyList<string> winmdPaths,
+        PathAssemblyResolver resolver,
+        List<string> excludeTypes)
+    {
+        foreach (string winmdPath in winmdPaths)
+        {
+            if (IsWindowsSdkMetadataName(Path.GetFileNameWithoutExtension(winmdPath)))
+            {
+                continue;
+            }
+
+            ModuleDefinition winmdModule;
+
+            try
+            {
+                winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
+            }
+            catch (Exception)
+            {
+                // An input that cannot be read is not this step's problem to report: the writer opens the same
+                // set straight after and fails with the context needed to act on it.
+                continue;
+            }
+
+            foreach (TypeDefinition type in winmdModule.TopLevelTypes)
+            {
+                if (type.Name?.Value is "<Module>")
+                {
+                    continue;
+                }
+
+                string? typeNamespace = type.Namespace?.Value;
+
+                if (typeNamespace is null)
+                {
+                    continue;
+                }
+
+                // Matched on a segment boundary, so 'WindowsRuntime.Internal' is not treated as the SDK's
+                if (typeNamespace == "Windows" || typeNamespace.StartsWith("Windows.", StringComparison.Ordinal))
+                {
+                    excludeTypes.Add(type.FullName);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a piece of Windows Runtime metadata is the Windows SDK's own.
+    /// </summary>
+    /// <param name="metadataName">The metadata name (i.e. the <c>.winmd</c> file stem).</param>
+    /// <returns>Whether the metadata belongs to the Windows SDK.</returns>
+    private static bool IsWindowsSdkMetadataName(string metadataName)
+    {
+        return metadataName == "Windows"
+            || (metadataName.StartsWith("Windows.", StringComparison.Ordinal) &&
+                metadataName.EndsWith("Contract", StringComparison.Ordinal));
     }
 
     /// <summary>
