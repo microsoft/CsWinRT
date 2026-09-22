@@ -337,6 +337,14 @@ if ErrorLevel 1 (
  echo ERROR: Smoke tests failed
  exit /b !ErrorLevel!
 )
+
+rem Preinitialization is an AOT-only check, so run it separately from the CoreCLR smoke tests.
+call :exec pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "%this_dir%Tests\SmokeTests\run-smoke-tests.ps1" -PackageSource "%cswinrt_bin_dir%" -PackageVersion %cswinrt_version_string% -Configuration %cswinrt_configuration% -Test Preinitialization -Runtime NativeAot
+if ErrorLevel 1 (
+ echo.
+ echo ERROR: Preinitialization smoke test failed
+ exit /b !ErrorLevel!
+)
 goto :eof
 
 :exec
