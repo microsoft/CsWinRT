@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using CustomPropertyProviderLibrary;
 using Windows.UI.Xaml.Data;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 using WindowsRuntime.Xaml;
 
 GenericProperties<int> integer = new();
@@ -167,7 +169,111 @@ unsafe
     WindowsRuntimeMarshal.Free(bindableVector);
 }
 
+if (!CheckNativeProvider(new NongenericDictionary(), "key", "key", 1))
+{
+    return 115;
+}
+
+GenericDictionary<string, long> directDictionary = new(new Dictionary<string, long> { ["key"] = 42 });
+
+if (!CheckNativeProvider(directDictionary, "key", 42L, 1))
+{
+    return 116;
+}
+
+IFirstModel firstModel = new FirstModel();
+ISecondModel secondModel = new SecondModel();
+IReadOnlyDictionary<string, IFirstModel> firstDictionary = new Dictionary<string, IFirstModel> { ["key"] = firstModel };
+IReadOnlyDictionary<string, ISecondModel> secondDictionary = new Dictionary<string, ISecondModel> { ["key"] = secondModel };
+IReadOnlyList<IFirstModel> firstList = new List<IFirstModel> { firstModel };
+IReadOnlyList<ISecondModel> secondList = new List<ISecondModel> { secondModel };
+
+// These closed owners must only be discovered through factories in the referenced assembly.
+ICustomPropertyProvider firstDictionaryProvider = firstDictionary.AsBindable();
+ICustomPropertyProvider secondDictionaryProvider = secondDictionary.AsBindable();
+ICustomPropertyProvider firstListProvider = firstList.AsBindable();
+ICustomPropertyProvider secondListProvider = secondList.AsBindable();
+
+if (!CheckNativeProvider(firstDictionaryProvider, "key", firstModel, 1))
+{
+    return 117;
+}
+
+if (!CheckNativeProvider(secondDictionaryProvider, "key", secondModel, 1))
+{
+    return 118;
+}
+
+if (!CheckNativeProvider(firstListProvider, 0, firstModel, 1))
+{
+    return 119;
+}
+
+if (!CheckNativeProvider(secondListProvider, 0, secondModel, 1))
+{
+    return 120;
+}
+
+ICustomPropertyProvider repeatedProvider = firstDictionary.AsBindable();
+
+if (!ReferenceEquals(firstDictionaryProvider.GetCustomProperty("Count"), repeatedProvider.GetCustomProperty("Count")) ||
+    !ReferenceEquals(firstDictionaryProvider.GetIndexedProperty("Item", typeof(string)), repeatedProvider.GetIndexedProperty("Item", typeof(string))) ||
+    ReferenceEquals(firstDictionaryProvider.GetCustomProperty("Count"), secondDictionaryProvider.GetCustomProperty("Count")) ||
+    ReferenceEquals(firstDictionaryProvider.GetIndexedProperty("Item", typeof(string)), secondDictionaryProvider.GetIndexedProperty("Item", typeof(string))))
+{
+    return 121;
+}
+
 return 100;
+
+static bool CheckNativeProvider(ICustomPropertyProvider provider, object index, object expectedValue, int expectedCount)
+{
+    ICustomProperty count = provider.GetCustomProperty("Count");
+    ICustomProperty indexer = provider.GetIndexedProperty("Item", index.GetType());
+    ICustomProperty nativeCount = GetNativeProperty(provider, "Count");
+    ICustomProperty nativeIndexer = GetNativeProperty(provider, "Item", index.GetType());
+
+    return ReferenceEquals(count, nativeCount) &&
+        ReferenceEquals(indexer, nativeIndexer) &&
+        Equals(count.GetValue(provider), expectedCount) &&
+        Equals(indexer.GetIndexedValue(provider, index), expectedValue) &&
+        Equals(GetNativeValue(nativeCount, provider), expectedCount) &&
+        Equals(GetNativeValue(nativeIndexer, provider, index), expectedValue);
+}
+
+static unsafe ICustomProperty GetNativeProperty(ICustomPropertyProvider provider, string name, Type indexType = null)
+{
+    void* providerPtr = null;
+    void* result = null;
+    void* memberName = null;
+    ABI.System.Type nativeIndexType = default;
+
+    try
+    {
+        providerPtr = GetInterface(provider, new Guid("7C925755-3E48-42B4-8677-76372267033F"));
+        memberName = HStringMarshaller.ConvertToUnmanaged(name);
+        void** vtable = *(void***)providerPtr;
+
+        if (indexType is null)
+        {
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void*, void**, int>)vtable[6])(providerPtr, memberName, &result));
+        }
+        else
+        {
+            nativeIndexType = ABI.System.TypeMarshaller.ConvertToUnmanaged(indexType);
+            Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void*, ABI.System.Type, void**, int>)vtable[7])(providerPtr, memberName, nativeIndexType, &result));
+        }
+
+        return (ICustomProperty)WindowsRuntimeMarshal.ConvertToManaged(result);
+    }
+    finally
+    {
+        ABI.System.TypeMarshaller.Dispose(nativeIndexType);
+        HStringMarshaller.Free(memberName);
+        WindowsRuntimeMarshal.Free(result);
+        WindowsRuntimeMarshal.Free(providerPtr);
+    }
+}
 
 static unsafe void* GetInterface(object value, Guid iid)
 {
@@ -356,3 +462,16 @@ sealed class ConstantProperty<T> : ICustomProperty where T : struct
     public object GetIndexedValue(object target, object index) => throw new NotSupportedException();
     public void SetIndexedValue(object target, object value, object index) => throw new NotSupportedException();
 }
+
+[GeneratedCustomPropertyProvider]
+public sealed partial class NongenericDictionary
+{
+    public string this[string key] => key;
+
+    public int Count => 1;
+}
+
+interface IFirstModel;
+interface ISecondModel;
+sealed class FirstModel : IFirstModel;
+sealed class SecondModel : ISecondModel;

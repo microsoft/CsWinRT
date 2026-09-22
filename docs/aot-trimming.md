@@ -77,6 +77,8 @@ public partial class Box<T>
 
 Property descriptors are cached separately for each closed owner type. For example, `Box<int>` and `Box<string>` expose `Value` as `int` and `string`, respectively, and use separate descriptors. Generic property types, indexer parameter types, and static properties retain the owner's generic context.
 
+Generic providers can also be created through generic factories or extension methods in referenced libraries. Their properties and indexers support native XAML binding without adding direct constructions or `typeof` references to the closed provider types.
+
 ### Requirements
 
 - The type must be a non-abstract, non-static `class` or `struct`
