@@ -31,7 +31,7 @@ internal static class TypeSignatureExtensions
         /// <remarks>
         /// Counts nested type arguments, wrappers, and function pointer return and parameter types without resolving definitions.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="signature"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the input signature is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxCount"/> is not positive.</exception>
         public int GetSignatureElementCount(int maxCount)
         {
