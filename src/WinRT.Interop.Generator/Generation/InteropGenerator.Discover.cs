@@ -548,7 +548,10 @@ internal partial class InteropGenerator
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
                 enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
-            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(discoveryState.SignatureComparer, args.TreatWarningsAsErrors))
+            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(
+                signatureComparer: discoveryState.SignatureComparer,
+                shouldProcessModule: candidate => ShouldProcessModule(args, discoveryState, candidate),
+                treatWarningsAsErrors: args.TreatWarningsAsErrors))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -590,7 +593,10 @@ internal partial class InteropGenerator
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
                 enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
-            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(discoveryState.SignatureComparer, args.TreatWarningsAsErrors))
+            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(
+                signatureComparer: discoveryState.SignatureComparer,
+                shouldProcessModule: candidate => ShouldProcessModule(args, discoveryState, candidate),
+                treatWarningsAsErrors: args.TreatWarningsAsErrors))
             {
                 args.Token.ThrowIfCancellationRequested();
 
