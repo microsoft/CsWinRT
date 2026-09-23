@@ -31,7 +31,7 @@ public class Test_InteropGenericDiscovery
     [TestMethod]
     public void ExpandingGenericReturns_AreBounded()
     {
-        // The root and 32 member hops are expanded; the next discovered type is retained without expanding its members.
+        // The root and 32 member hops are expanded. The next discovered type is retained without expanding its members.
         AssertGeneration(CreateNodeSource("Node<Node<T>>"), 34, expectedWarning: RecursionWarning);
     }
 
@@ -144,6 +144,102 @@ public class Test_InteropGenericDiscovery
         AssertGeneration(CreateNodeSource("Node<Node<T>>"), 0, expectedWarning: RecursionWarning, treatWarningsAsErrors: true);
     }
 
+    [TestMethod]
+    [DataRow("strict", false, false, true)]
+    [DataRow("strict", true, false, false)]
+    [DataRow("strict", false, true, false)]
+    [DataRow("minimal", false, false, false)]
+    [DataRow("all", false, false, false)]
+    public void TransitiveDiscovery_RespectsModulePolicy(string mode, bool directReference, bool optIn, bool succeeds)
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropModulePolicyTest_").FullName;
+
+        try
+        {
+            string dependency = ProjectionWriterRunner.CompileSources(
+                ["namespace Missing; public sealed class Dependency;"],
+                Path.Combine(directory, "Missing.dll"));
+            string library = ProjectionWriterRunner.CompileSources(
+                ["""
+                namespace Foreign;
+
+                public sealed class Outer<T>
+                {
+                    public object Create() => new Inner<T>();
+                }
+
+                public sealed class Inner<T>
+                {
+                    public static readonly object Cached = Cache<T>.Value;
+                    public object Create() => new Missing.Dependency();
+                }
+
+                public static class Cache<T>
+                {
+                    public static readonly object Value = new T[1];
+                }
+                """],
+                Path.Combine(directory, "Foreign.dll"),
+                additionalReferences: [dependency]);
+            string app = ProjectionWriterRunner.CompileSources(
+                [$$"""
+                using Windows.Foundation;
+
+                namespace Recursion;
+
+                public struct Marker;
+
+                public sealed class Node<T> : IStringable
+                {
+                    public override string ToString() => "node";
+                }
+
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = new Node<int>();
+                        _ = new Foreign.{{(directReference ? "Inner" : "Outer")}}<Marker>();
+                    }
+                }
+                """],
+                Path.Combine(directory, "ModulePolicy.dll"),
+                outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [library]);
+
+            // The excluded library's ordinary methods require a runtime-only dependency that is not a generator input.
+            File.Delete(dependency);
+
+            (int exitCode, string log) = RunGenerator(
+                directory,
+                app,
+                additionalReferences: [library],
+                additionalArguments: [
+                    $"--marshalling-mode {mode}",
+                    .. optIn ? new[] { "--marshalling-enabled-assembly-names Foreign" } : []
+                ]);
+
+            if (!succeeds)
+            {
+                Assert.AreNotEqual(0, exitCode, log);
+                StringAssert.Contains(log, "CSWINRTINTEROPGEN0015");
+                StringAssert.Contains(log, "Missing.Dependency");
+                return;
+            }
+
+            Assert.AreEqual(0, exitCode, log);
+            HashSet<string> types = GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"));
+            Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Node`1[[System.Int32,", StringComparison.Ordinal)), log);
+
+            // The one-hop scan of 'Outer<Marker>' reaches 'Inner<Marker>'. Its cache initializers expose 'Marker[]'.
+            Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Marker[],", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [ClassCleanup]
     public static void Cleanup()
     {
@@ -184,33 +280,11 @@ public class Test_InteropGenericDiscovery
 
         try
         {
-            string projection = Path.Combine(SdkFixture.Value, "WinRT.Sdk.Projection.dll");
-            string sdkReference = Path.Combine(SdkFixture.Value, "Microsoft.Windows.SDK.NET.dll");
             string app = ProjectionWriterRunner.CompileSources(
                 [source],
                 Path.Combine(directory, "RecursiveGenerics.dll"),
                 outputKind: OutputKind.ConsoleApplication);
-            string[] references = [projection, .. ProjectionWriterRunner.GetRuntimeReferencePaths()];
-            string responseFile = Path.Combine(directory, "interop.rsp");
-            File.WriteAllLines(responseFile,
-            [
-                $"--reference-assembly-paths {sdkReference},{string.Join(",", references)}",
-                $"--implementation-assembly-paths {app},{string.Join(",", references)}",
-                $"--output-assembly-path {app}",
-                $"--winrt-sdk-projection-assembly-path {projection}",
-                $"--generated-assembly-directory {directory}",
-                "--use-windows-ui-xaml-projections false",
-                "--validate-winrt-runtime-assembly-version true",
-                "--validate-winrt-runtime-dll-version-2-references true",
-                "--enable-incremental-generation false",
-                $"--treat-warnings-as-errors {treatWarningsAsErrors}",
-                "--max-degrees-of-parallelism 1"
-            ]);
-
-            (int exitCode, string log) = ProjectionWriterRunner.Run(
-                ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
-                $"@{responseFile}",
-                timeout: TimeSpan.FromSeconds(30));
+            (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors);
             string interop = Path.Combine(directory, "WinRT.Interop.dll");
 
             if (treatWarningsAsErrors)
@@ -226,7 +300,9 @@ public class Test_InteropGenericDiscovery
             Assert.AreEqual(expectedWarning == RecursionWarning, log.Contains($"warning {RecursionWarning}", StringComparison.Ordinal), log);
             Assert.AreEqual(expectedWarning == ComplexityWarning, log.Contains($"warning {ComplexityWarning}", StringComparison.Ordinal), log);
             Assert.IsTrue(File.Exists(interop), log);
-            HashSet<string> types = GetRecursiveTypeAssociations(interop);
+            string[] types = [.. GetComWrappersTypeAssociations(interop).Where(type =>
+                type.StartsWith("Recursion.Node`1[", StringComparison.Ordinal) ||
+                type.StartsWith("Recursion.Peer`1[", StringComparison.Ordinal))];
             Assert.HasCount(expectedTypes, types, log);
             Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Node`1[[System.Int32,", StringComparison.Ordinal)));
         }
@@ -236,7 +312,40 @@ public class Test_InteropGenericDiscovery
         }
     }
 
-    private static HashSet<string> GetRecursiveTypeAssociations(string path)
+    private static (int ExitCode, string Log) RunGenerator(
+        string directory,
+        string app,
+        bool treatWarningsAsErrors = false,
+        string[]? additionalReferences = null,
+        string[]? additionalArguments = null)
+    {
+        string projection = Path.Combine(SdkFixture.Value, "WinRT.Sdk.Projection.dll");
+        string sdkReference = Path.Combine(SdkFixture.Value, "Microsoft.Windows.SDK.NET.dll");
+        string[] references = [projection, .. ProjectionWriterRunner.GetRuntimeReferencePaths(), .. additionalReferences ?? []];
+        string responseFile = Path.Combine(directory, "interop.rsp");
+        File.WriteAllLines(responseFile,
+        [
+            $"--reference-assembly-paths {sdkReference},{string.Join(",", references)}",
+            $"--implementation-assembly-paths {app},{string.Join(",", references)}",
+            $"--output-assembly-path {app}",
+            $"--winrt-sdk-projection-assembly-path {projection}",
+            $"--generated-assembly-directory {directory}",
+            "--use-windows-ui-xaml-projections false",
+            "--validate-winrt-runtime-assembly-version true",
+            "--validate-winrt-runtime-dll-version-2-references true",
+            "--enable-incremental-generation false",
+            $"--treat-warnings-as-errors {treatWarningsAsErrors}",
+            "--max-degrees-of-parallelism 1",
+            .. additionalArguments ?? []
+        ]);
+
+        return ProjectionWriterRunner.Run(
+            ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
+            $"@{responseFile}",
+            timeout: TimeSpan.FromSeconds(30));
+    }
+
+    private static HashSet<string> GetComWrappersTypeAssociations(string path)
     {
         using FileStream stream = File.OpenRead(path);
         using PEReader pe = new(stream);
@@ -286,11 +395,7 @@ public class Test_InteropGenericDiscovery
             Assert.AreEqual(1, value.ReadUInt16());
             string source = value.ReadSerializedString()!;
 
-            if (source.StartsWith("Recursion.Node`1[", StringComparison.Ordinal) ||
-                source.StartsWith("Recursion.Peer`1[", StringComparison.Ordinal))
-            {
-                Assert.IsTrue(types.Add(source), $"Duplicate CCW association for '{source}'.");
-            }
+            Assert.IsTrue(types.Add(source), $"Duplicate CCW association for '{source}'.");
         }
 
         return types;

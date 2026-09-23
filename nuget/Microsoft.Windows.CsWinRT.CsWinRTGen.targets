@@ -240,7 +240,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="_ComputeRunCsWinRTGeneratorCache" DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory">
 
     <ItemGroup>
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(RuntimeCopyLocalItems)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTInteropGenEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
@@ -293,7 +292,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTInteropGenerator"
     DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator;_RunCsWinRTComponentProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
-    Inputs="@(ReferencePathWithRefAssemblies);@(RuntimeCopyLocalItems);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);@(CsWinRTGeneratorMergedProjectionPath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);@(CsWinRTGeneratorMergedProjectionPath)"
     Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
@@ -302,11 +301,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_InteropReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" Condition="'%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true'" />
       <_InteropReferenceAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
       <_InteropImplementationAssemblyPaths Include="@(ReferencePath)" Condition="'%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true'" />
-
-      <!-- Include runtime-only dependencies and prefer runtime assets over their compile-time counterparts. -->
-      <_InteropRuntimeAssemblyPaths Include="@(RuntimeCopyLocalItems)" Condition="'%(Extension)' == '.dll' and ('%(FileName)' != 'WinRT.Runtime' or '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true')" />
-      <_InteropImplementationAssemblyPaths Remove="@(_InteropRuntimeAssemblyPaths)" MatchOnMetadata="FileName;Extension" MatchOnMetadataOptions="CaseInsensitive" />
-      <_InteropImplementationAssemblyPaths Include="@(_InteropRuntimeAssemblyPaths)" />
       <_InteropImplementationAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
     </ItemGroup>
 

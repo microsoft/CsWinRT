@@ -155,22 +155,30 @@ internal static partial class ModuleDefinitionExtensions
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module, bool treatWarningsAsErrors)
+    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(
+        this ModuleDefinition module,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, treatWarningsAsErrors);
+        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, shouldProcessModule, treatWarningsAsErrors);
     }
 
     /// <summary>
     /// Enumerates all SZ array type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module, bool treatWarningsAsErrors)
+    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(
+        this ModuleDefinition module,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, treatWarningsAsErrors);
+        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, shouldProcessModule, treatWarningsAsErrors);
     }
 
     /// <summary>
@@ -178,11 +186,13 @@ internal static partial class ModuleDefinitionExtensions
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) type signatures of interest in the module.</returns>
     private static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(
         this ModuleDefinition module,
         ITypeSignatureVisitor<IEnumerable<TResult>> visitor,
+        Func<ModuleDefinition, bool> shouldProcessModule,
         bool treatWarningsAsErrors)
         where TResult : TypeSignature
     {
@@ -190,6 +200,7 @@ internal static partial class ModuleDefinitionExtensions
         const int MaxSignatureComplexity = 256;
 
         HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
+        HashSet<TypeSignature> typeSpecifications = new(SignatureComparer.IgnoreVersion);
         HashSet<TypeSignature> visitedTypes = new(SignatureComparer.IgnoreVersion);
         Queue<(TypeSignature Type, int Depth)> pendingTypes = new();
         bool recursionLimitReported = false;
@@ -280,9 +291,14 @@ internal static partial class ModuleDefinitionExtensions
             }
 
             // Keep scanning partially open specifications too, as their members can contain closed types
-            if (specification.Signature is TypeSignature signature && visitedTypes.Add(signature))
+            if (specification.Signature is TypeSignature signature)
             {
-                pendingTypes.Enqueue((signature, 0));
+                _ = typeSpecifications.Add(signature);
+
+                if (visitedTypes.Add(signature))
+                {
+                    pendingTypes.Enqueue((signature, 0));
+                }
             }
         }
 
@@ -336,8 +352,23 @@ internal static partial class ModuleDefinitionExtensions
             }
 
             GenericContext genericContext = new(typeSignature as GenericInstanceTypeSignature, null);
+            IEnumerable<MethodDefinition> methods = type.Methods;
 
-            foreach (MethodDefinition method in type.Methods)
+            // Explicit type specifications provide the caller's generic context for a one-hop member scan.
+            // Further traversal of ordinary methods follows the module's marshalling policy. Static initializers
+            // can reveal concrete cached instances and arrays hidden behind fields declared as 'object' or an interface.
+            if (!typeSpecifications.Contains(typeSignature) &&
+                !(type.DeclaringModule is ModuleDefinition declaringModule && shouldProcessModule(declaringModule)))
+            {
+                if (!type.TryGetStaticConstructor(out MethodDefinition? initializer))
+                {
+                    continue;
+                }
+
+                methods = [initializer];
+            }
+
+            foreach (MethodDefinition method in methods)
             {
                 foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
                 {
