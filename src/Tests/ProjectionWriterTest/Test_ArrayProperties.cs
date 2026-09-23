@@ -17,9 +17,8 @@ public class Test_ArrayProperties
 {
     /// <summary>
     /// An array valued property projects as <c>T[]</c>, unlike an array <i>parameter</i>, which projects as a
-    /// span. The CCW setter therefore cannot pass along the span local the way the method call path does, and
-    /// must not: that span is backed by an inline array or a pooled buffer that is returned when the method
-    /// exits, while a property setter hands the value to an implementation that may keep it.
+    /// span. The setter cannot pass the span local along, and must not: it is backed by an inline array or a
+    /// pooled buffer that is returned when the method exits.
     /// </summary>
     [TestMethod]
     public void ArrayPropertySetter_CopiesOutOfTheSpanLocal()

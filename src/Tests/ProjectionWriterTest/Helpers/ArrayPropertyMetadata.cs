@@ -11,14 +11,8 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace ProjectionWriterTest.Helpers;
 
 /// <summary>
-/// Creates synthetic metadata with array valued properties on an <c>[exclusiveto]</c> interface, so that the
-/// CCW (<c>Do_Abi</c>) side has to marshal an array <i>into</i> a property setter.
+/// Creates synthetic metadata with array valued properties on an <c>[exclusiveto]</c> interface.
 /// </summary>
-/// <remarks>
-/// Array valued <b>properties</b> are the shape that is interesting here. An array <i>parameter</i> projects
-/// as a span, but a property keeps its <c>T[]</c> type, so the setter cannot simply hand over the span local
-/// the way a method call can.
-/// </remarks>
 internal static class ArrayPropertyMetadata
 {
     public static string Create(string directory)
@@ -85,9 +79,7 @@ internal static class ArrayPropertyMetadata
         owner.Interfaces.Add(implementation);
         implementation.CustomAttributes.Add(Attribute("DefaultAttribute"));
 
-        // A read/write property whose type is an array. Both a non-blittable element (which the CCW side has
-        // to copy through a marshaller) and a blittable one (which it reads straight off the ABI buffer) are
-        // covered, since the two take different paths to produce the local.
+        // Covers a non-blittable element and a blittable one, which take different paths to the local
         void AddArrayProperty(string name, TypeSignature elementType)
         {
             TypeSignature arrayType = elementType.MakeSzArrayType();
@@ -102,8 +94,7 @@ internal static class ArrayPropertyMetadata
                 MethodAttributes.NewSlot | MethodAttributes.HideBySig | MethodAttributes.SpecialName,
                 MethodSignature.CreateInstance(module.CorLibTypeFactory.Void, [arrayType]));
 
-            // Real Windows Runtime metadata marks a property setter's value as '[in]', which is what makes it
-            // a read-only input array rather than a buffer the callee fills.
+            // Real metadata marks a setter's value '[in]', making it a read-only input array
             setter.ParameterDefinitions.Add(new ParameterDefinition(1, "value", ParameterAttributes.In));
 
             iface.Methods.Add(getter);

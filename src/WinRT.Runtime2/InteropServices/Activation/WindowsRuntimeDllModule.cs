@@ -177,9 +177,8 @@ internal sealed unsafe class WindowsRuntimeDllModule
 
         // Explicitly look for module in the same directory as this one, and use altered
         // search path to ensure that any dependencies in the same directory are found.
-        // Skipped when there is no directory to look in, as the altered search path only
-        // applies to an absolute path: a bare file name would silently widen the search
-        // to the host process' own search order.
+        // That flag is ignored for a non-absolute path, so with no directory to offer
+        // we skip straight to the default probing below.
         moduleHandle = ApplicationBaseDirectory.Length > 0
             ? WindowsRuntimeImports.LoadLibraryExW(
                 lpLibFileNameUtf16: Path.Combine(ApplicationBaseDirectory, fileName),

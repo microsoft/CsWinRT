@@ -286,11 +286,9 @@ internal static class InteropTypeNameWriter
         // Unmapped type.
         if (typeNs.StartsWith("Windows.", StringComparison.Ordinal) || typeNs == "Windows")
         {
-            // Sharing the 'Windows' namespace root is not enough to be part of the Windows SDK: a component
-            // can ship a contract of its own under it, and that contract is projected into the merged
-            // projection like any other third party one. Its marshallers are therefore named after it, which
-            // is also how the interop generator names them (it resolves the projection each type lands in).
-            // Deciding from the namespace alone asks for '<#Windows>' marshallers that are never generated.
+            // A contract shipped under the 'Windows' root by someone else is projected into the merged
+            // projection, so its marshallers are named after it -- which is how the interop generator names
+            // them too. Going by namespace alone asks for '<#Windows>' marshallers that are never generated.
             if (IsWindowsSdkContractAssembly(type is not null ? GetTypeAssemblyName(type) : null))
             {
                 return "<#Windows>";

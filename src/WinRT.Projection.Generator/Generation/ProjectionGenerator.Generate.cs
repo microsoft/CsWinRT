@@ -324,16 +324,10 @@ internal partial class ProjectionGenerator
             winmdInputs.Add(winmdPath);
         }
 
-        // Sharing the 'Windows' namespace root does not make a contract part of the Windows SDK. The SDK
-        // projection selects its types by namespace prefix, so a contract shipped under that root by someone
-        // else (which is legal, and does happen for OS internal components) is swept in here as well as into
-        // the merged projection that owns it, and the two public definitions collide.
-        //
-        // The question is where a type is *defined*, not who re-declares it: a reference projection may
-        // deliberately re-expose a Windows SDK type (this is what 'CsWinRTPublicExclusiveToInterfaces' does
-        // for an '[exclusiveto]' interface), and the SDK projection still has to emit that one, or the SDK
-        // types referencing it no longer compile. So classify the input metadata instead, and exclude only
-        // what a non-SDK '.winmd' defines under the 'Windows' root.
+        // The SDK projection selects its types by namespace prefix, so a contract shipped under the
+        // 'Windows' root by someone else is swept in here as well as into the merged projection that owns
+        // it. Classify by where a type is defined rather than by who declares it: a reference projection
+        // may deliberately re-expose an SDK type, and that one still has to be emitted.
         if (isWindowsSdkMode)
         {
             CollectNonSdkWindowsTypes(args.WinMDPaths, resolver, excludeTypes);
@@ -366,17 +360,6 @@ internal partial class ProjectionGenerator
     /// <param name="winmdPaths">The input <c>.winmd</c> paths.</param>
     /// <param name="resolver">The resolver supplying the metadata reader parameters.</param>
     /// <param name="excludeTypes">The set to add the fully qualified type names to.</param>
-    /// <remarks>
-    /// Classification is by the metadata's own name, which for a <c>.winmd</c> is its contract: the SDK ships
-    /// its union as <c>Windows</c> and each contract as <c>Windows.&lt;Area&gt;.&lt;Name&gt;Contract</c>. SDK
-    /// metadata is skipped without being opened, so this costs nothing on the common path where every input is
-    /// the SDK's own.
-    /// <para>
-    /// Only the <c>Windows</c> root is considered, because that is the only thing the SDK projection's
-    /// namespace filter can claim. It also leaves <c>WindowsRuntime.Internal</c> alone, which is a non-SDK
-    /// <c>.winmd</c> that the SDK projection is nonetheless meant to project.
-    /// </para>
-    /// </remarks>
     private static void CollectNonSdkWindowsTypes(
         IReadOnlyList<string> winmdPaths,
         PathAssemblyResolver resolver,
@@ -384,6 +367,7 @@ internal partial class ProjectionGenerator
     {
         foreach (string winmdPath in winmdPaths)
         {
+            // Recognized by name, so SDK metadata is never opened
             if (IsWindowsSdkMetadataName(Path.GetFileNameWithoutExtension(winmdPath)))
             {
                 continue;

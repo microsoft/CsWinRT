@@ -49,11 +49,6 @@ public sealed class ProjectionWriterOptions
     /// <remarks>
     /// Unlike <see cref="Exclude"/>, these win over every prefix rule. They name types that are known to be
     /// projected into a different assembly, so the broad namespace includes are exactly what they carve out of.
-    /// <para>
-    /// This is how the Windows SDK projection keeps its hands off a contract that merely shares the
-    /// <c>Windows</c> namespace root without belonging to the SDK: the contract's own reference projection
-    /// already declares those types, and the merged projection supplies their implementation.
-    /// </para>
     /// </remarks>
     public IReadOnlyList<string> ExcludeTypes { get; init; } = [];
 

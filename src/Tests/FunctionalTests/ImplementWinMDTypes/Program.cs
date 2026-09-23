@@ -85,14 +85,12 @@ if (projectedDerived is null)
     return 110;
 }
 
-// Everything above activates in managed code. Native callers instead go through the generated activation
-// entry point ('DllGetActivationFactory' forwards to it), and then call the returned factory through its
-// COM vtable. The checks below take that same path.
+// Everything above activates in managed code. Native callers instead go through the generated
+// activation entry point and call the returned factory through its COM vtable.
 unsafe
 {
-    // A type implemented in C# is activated by the name of the class it implements, and its factory is the
-    // one written above. The activated instance must be indistinguishable from the real thing to a native
-    // caller, so it has to report the implemented runtime class name rather than the implementing type's.
+    // Activated by the name of the class it implements, so it has to report that runtime class
+    // name rather than the implementing type's.
     if (!NativeActivate("TestComponent.Class", out void* classInstance))
     {
         return 111;
@@ -117,9 +115,8 @@ unsafe
     }
 }
 
-// Converting the same implementation again gives back the same projected instance. The wrapper is cached
-// against the COM pointer for the authored object, which is itself cached, so identity holds for as long
-// as the projected instance is alive.
+// Converting the same implementation again gives back the same projected instance, since the
+// wrapper is cached against the authored object's COM pointer.
 if (!ReferenceEquals(projectedClass, (global::TestComponent.Class)myClass))
 {
     return 114;
@@ -145,9 +142,8 @@ if (!ReferenceEquals(projectedComposable, (global::TestComponent.Composable)myCo
     return 117;
 }
 
-// An author can get their own implementation back from a projected instance wrapping it. The conversion is
-// explicit because it can fail (the instance may wrap a native implementation, or a different one), unlike
-// the implicit one above, which only ever has to create a wrapper.
+// An author can get their own implementation back. The conversion is explicit because it can fail:
+// the instance may wrap a native implementation, or a different one.
 if (!ReferenceEquals((MyClass)projectedClass, myClass))
 {
     return 118;
@@ -158,11 +154,9 @@ if (!ReferenceEquals((MyComposable)projectedComposable, myComposable))
     return 119;
 }
 
-// Marshalling an implementation back from native code gives the projected type, not the implementation.
-// This is what a consumer receiving one from an API sees, and it is the same thing they would get for a
-// class implemented natively, or activated out of process. It matters most for an API returning 'object'
-// (no conversion can apply to one, as none can be declared from a base type), which is how the extension
-// and factory APIs that hand out these classes are shaped.
+// Marshalling an implementation back from native code gives the projected type, not the
+// implementation, exactly as it would for a class implemented natively. This matters most for an
+// API returning 'object', which no user-defined conversion can apply to.
 unsafe
 {
     if (!NativeActivate("TestComponent.Class", out void* nativeInstance))

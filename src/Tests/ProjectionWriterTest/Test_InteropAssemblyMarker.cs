@@ -17,11 +17,9 @@ namespace ProjectionWriterTest;
 public class Test_InteropAssemblyMarker
 {
     /// <summary>
-    /// Sharing the <c>Windows</c> namespace root is not enough to belong to the Windows SDK. The SDK ships its
-    /// union metadata as <c>Windows</c> and each of its contracts as <c>Windows.&lt;Area&gt;.&lt;Name&gt;Contract</c>;
-    /// anything else under that root is a third party contract, projected into the merged projection, and its
-    /// marshallers are named after it. Naming those <c>&lt;#Windows&gt;</c> asks at runtime for marshallers that
-    /// were never generated, which fails the first time such a value crosses the ABI.
+    /// Sharing the <c>Windows</c> namespace root is not enough to belong to the Windows SDK, which ships its
+    /// union as <c>Windows</c> and each contract as <c>Windows.&lt;Area&gt;.&lt;Name&gt;Contract</c>. Naming a
+    /// third party contract's marshallers <c>&lt;#Windows&gt;</c> asks for ones that were never generated.
     /// </summary>
     [TestMethod]
     [DataRow("Windows", "Windows.UI", "Color", "<#Windows>")]
@@ -39,11 +37,9 @@ public class Test_InteropAssemblyMarker
     }
 
     /// <summary>
-    /// A <c>.winmd</c> authored in C# references the Windows SDK through its managed projection assembly rather
-    /// than through a contract, so those names have to be recognised as the SDK too. <c>WindowsRuntime.Internal.winmd</c>
-    /// is built that way, and its interop interfaces return SDK types: marking one of those after its assembly
-    /// asks for a <c>&lt;Microsoft-Windows-SDK-NET&gt;</c> marshaller, while the type really lives in the SDK
-    /// projection and the interop generator names it <c>&lt;#Windows&gt;</c>.
+    /// A <c>.winmd</c> authored in C# references the Windows SDK through its managed projection assembly
+    /// rather than a contract, so those names count as the SDK too. <c>WindowsRuntime.Internal.winmd</c> is
+    /// built that way, and its interop interfaces return SDK types.
     /// </summary>
     [TestMethod]
     [DataRow("Microsoft.Windows.SDK.NET", "Windows.Security.Credentials.UI", "UserConsentVerificationResult", "<#Windows>")]

@@ -30,10 +30,8 @@ public class Test_TypeFilter
     [DataRow("Unrelated.User", false)]
     public void PrefixIncludes_KeepExistingSemantics(string name, bool expected)
     {
-        // A rule is matched against the namespace on a segment boundary, so 'Contoso.User' does not claim the
-        // unrelated 'Contoso.UserProfile' namespace (without this, the Windows SDK projection's 'Windows' rule
-        // claims every type under 'WindowsRuntime'). It is still matched as a prefix against the type name
-        // within a namespace, which is why 'Contoso.User2' is included.
+        // Matched on a segment boundary, so 'Contoso.User' does not claim 'Contoso.UserProfile',
+        // but still as a prefix against the type name within a namespace, hence 'Contoso.User2'.
         TypeFilter filter = new(["Contoso.User"], []);
 
         Assert.AreEqual(expected, filter.Includes(name));
@@ -122,9 +120,6 @@ public class Test_TypeFilter
     [DataRow("Windows.UI.Contoso.WidgetQueryResults", false)]
     public void ExactTypeExcludes_CarveOutOfANamespaceInclude(string name, bool expected)
     {
-        // What the Windows SDK projection does for a contract that shares the 'Windows' namespace root
-        // without belonging to the SDK: the contract's own reference projection names the types it owns,
-        // and the SDK projection has to leave exactly those alone while keeping the rest of the root.
         TypeFilter filter = new(
             include: ["Windows"],
             exclude: [],
@@ -137,8 +132,7 @@ public class Test_TypeFilter
     [TestMethod]
     public void ExactTypeExcludes_OutrankAnExactInclude()
     {
-        // The two lists come from different projections claiming the same type. The exclude wins, matching
-        // the prefix rules' behaviour on a tie, so a type is never emitted into two assemblies at once.
+        // The two lists come from different projections claiming the same type, and the exclude wins
         TypeFilter filter = new([], [], ["Contoso.User"], ["Contoso.User"]);
 
         Assert.IsFalse(filter.Includes("Contoso.User"));
@@ -151,9 +145,7 @@ public class Test_TypeFilter
     [DataRow("Windows.UI.WidgetItemView", true)]
     public void ExactTypeExcludes_DoNotMatchPrefixes(string name, bool expected)
     {
-        // Why these are a separate list rather than entries in 'exclude': that one matches by prefix, so
-        // naming a type there would take its '*Factory' and '*Statics' companions with it, which is exactly
-        // how Windows Runtime metadata names the rest of the same contract.
+        // A prefix 'exclude' would take the '*Factory' and '*Statics' companions with it
         TypeFilter filter = new(["Windows"], [], null, ["Windows.UI.Contoso.WidgetItemView"]);
 
         Assert.AreEqual(expected, filter.Includes(name));
@@ -162,8 +154,7 @@ public class Test_TypeFilter
     [TestMethod]
     public void ExcludeTypesOnlyFilter_StillIncludesEverythingElse()
     {
-        // Exact type excludes alone are not a whitelist: unlike a prefix exclude they say nothing about
-        // what else belongs, so an otherwise empty filter keeps including everything.
+        // Unlike a prefix exclude, these say nothing about what else belongs
         TypeFilter filter = new([], [], null, ["Contoso.User"]);
 
         Assert.IsFalse(filter.Includes("Contoso.User"));

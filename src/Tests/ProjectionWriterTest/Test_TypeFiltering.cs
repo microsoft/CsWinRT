@@ -124,11 +124,8 @@ public class Test_TypeFiltering
     [TestMethod]
     public void ExactTypeExcludes_CarveOutOfANamespaceInclude()
     {
-        // What the Windows SDK projection now does for a contract that merely shares its namespace root:
-        // the whole root is still included, and the types another reference projection already owns are
-        // named exactly and left out. The names are harvested from that projection's own metadata, which
-        // is why the internal exclusive-to interfaces appear here next to the public runtime classes: a
-        // reference projection declares both, and leaving the interface behind would emit it on its own.
+        // Harvested from a reference projection's own metadata, which declares the internal
+        // exclusive-to interfaces alongside the public runtime classes
         WithMetadata((inputPath, outputFolder) =>
         {
             ProjectionWriter.Run(new ProjectionWriterOptions
@@ -163,9 +160,8 @@ public class Test_TypeFiltering
     [TestMethod]
     public void ExactTypeExcludes_LeaveTheBaseResourcesAlone()
     {
-        // The base resources are emitted verbatim rather than filtered, so a name harvested out of a
-        // reference projection cannot take one of them with it. A reference projection declares the two
-        // interface-entry types, so a harvest does carry their names into the exclusion set.
+        // The base resources are emitted verbatim rather than filtered, so a harvested name
+        // cannot take one of them with it
         WithMetadata((inputPath, outputFolder) =>
         {
             ProjectionWriter.Run(new ProjectionWriterOptions
@@ -190,8 +186,7 @@ public class Test_TypeFiltering
     [TestMethod]
     public void ExactTypeExcludes_AreInertWhenTheyNameNothingInTheInput()
     {
-        // The no-op guarantee: an app with no such contract referenced passes an empty (or irrelevant) set,
-        // and the projection has to come out exactly as it did before the exclusion existed.
+        // An app referencing no such contract passes an empty set, and must be unaffected
         WithMetadata((inputPath, outputFolder) =>
         {
             ProjectionWriter.Run(new ProjectionWriterOptions
