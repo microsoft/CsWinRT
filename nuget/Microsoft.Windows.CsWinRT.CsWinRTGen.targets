@@ -466,6 +466,23 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
+    Mark the output of a reference projection, so consumers can positively identify one among their resolved project
+    references (eg. '%(ReferencePath.CsWinRTGenerateReferenceProjection)'), rather than inferring it from other metadata such
+    as '%(ReferenceAssembly)' or '%(CsWinRTInputs)' (which is empty for a projection with no '.winmd' inputs of its own).
+
+    This is an item definition rather than metadata set by the targets above, so it applies to the item regardless of which
+    target creates it (either override above, or the default one), and on every route that returns it ('GetTargetPath',
+    'GetTargetPathWithTargetPlatformMoniker', and 'Build'), without running any additional targets. Setting it from a target
+    hooked after those wouldn't work, as a target computes its 'Returns' before its 'AfterTargets' run. The condition sees the
+    final evaluated value for the producing project (and the selected inner build), never the value of the consumer.
+  -->
+  <ItemDefinitionGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
+    <TargetPathWithTargetPlatformMoniker>
+      <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+    </TargetPathWithTargetPlatformMoniker>
+  </ItemDefinitionGroup>
+
+  <!--
     ============================================================
                         _RunCsWinRTMergedProjectionGenerator
 

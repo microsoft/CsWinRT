@@ -16,11 +16,14 @@
       * MixedConsumption: a .NET app combines Windows SDK projections with an authored component
         implementing an SDK interface and taking an SDK type in a constructor. This validates
         component projection generation against SDK forwarders without duplicate type definitions
-        or missing SDK assembly identities.
+        or missing SDK assembly identities. The component's output must not be marked as a reference
+        projection when the app resolves it.
 
       * ExclusiveToConsumption: a .NET app consumes a standalone public exclusive interface through
         a reference/forwarder projection, using only Windows SDK metadata. The interface must retain
         its implementation even though its owning runtime class stays in the SDK XAML projection.
+        The projection's output must be marked as a reference projection when the app resolves it,
+        even though the projection has no '.winmd' inputs of its own.
 
       * Preinitialization: a Native AOT app roots representative vtables and COM interface entries
         from the runtime, SDK/XAML and third-party projections, and interop generator. Its MSTAT/map
@@ -33,7 +36,14 @@
       * Projection: a class library generates a reference projection for a third-party
         component's '.winmd' (reusing the one emitted by the authoring test), validating the
         reference projection generator and the forwarder generator, exactly as a NuGet
-        projection author would. The forwarder is also checked to ship embedded symbols.
+        projection author would. The forwarder is also checked to ship embedded symbols, and the
+        output item returned to consumers of a project reference to be marked as a reference
+        projection (also before building, without compiling anything).
+
+      * ProjectionReferences: a plain class library references the 'Projection' reference projection,
+        and another library only references that one. This validates that the projection's output is
+        marked as a reference projection when resolved directly and transitively, and that the output
+        of a library referencing it is not.
 
       * WindowsSdkProjection: a class library generates the base Windows SDK reference projection
         from the 'Microsoft.Windows.SDK.Contracts' '.winmd' files, exactly as the
@@ -56,17 +66,19 @@
 
 .PARAMETER Test
     Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization',
-    'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All' (the default). The CI runs each test as
-    its own step (passing a single value), so an individual failure is reported in isolation; local
-    builds use the default 'All'.
+    'Authoring', 'Projection', 'ProjectionReferences', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All'
+    (the default). The CI runs each test as its own step (passing a single value), so an individual failure is
+    reported in isolation; local builds use the default 'All'.
 
 .PARAMETER Runtime
     Which runtime to target: 'CoreCLR' (the default) builds and runs on the managed runtime;
     'NativeAot' publishes the project with Native AOT ('PublishAot=true', win-x64), exercising the
     full publish pipeline (projection and interop generators, then ILC). The CI runs both as
-    separate steps so a failure points at the exact runtime. The 'Projection', 'WindowsSdkProjection',
-    and 'WindowsSdkXamlProjection' tests are build-only and therefore CoreCLR-only; they are skipped for
-    'NativeAot'. 'Preinitialization' requires 'NativeAot' and is omitted from 'All' on CoreCLR.
+    separate steps so a failure points at the exact runtime. The 'Projection', 'ProjectionReferences',
+    'WindowsSdkProjection', and 'WindowsSdkXamlProjection' tests are build-only and therefore CoreCLR-only;
+    they are skipped for 'NativeAot'. So are the project reference metadata checks of the consumption tests,
+    which are the same on both runtimes. 'Preinitialization' requires 'NativeAot' and is omitted from 'All'
+    on CoreCLR.
 
 .PARAMETER Configuration
     Build configuration to use (defaults to 'Release').
@@ -86,7 +98,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -112,6 +124,8 @@ $exclusiveToConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'ExclusiveT
 $preinitializationProject = [IO.Path]::Combine($smokeTestsRoot, 'Preinitialization', 'Preinitialization.csproj')
 $authoringProject = [IO.Path]::Combine($smokeTestsRoot, 'Authoring', 'Authoring.csproj')
 $projectionProject = [IO.Path]::Combine($smokeTestsRoot, 'Projection', 'Projection.csproj')
+$projectionLibraryProject = [IO.Path]::Combine($smokeTestsRoot, 'ProjectionLibrary', 'ProjectionLibrary.csproj')
+$projectionLibraryConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'ProjectionLibraryConsumption', 'ProjectionLibraryConsumption.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
 $windowsSdkXamlProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkXamlProjection', 'WindowsSdkXamlProjection.csproj')
 
@@ -134,6 +148,175 @@ function Invoke-Dotnet {
     if ($LASTEXITCODE -ne 0) {
         throw "Command 'dotnet $($Arguments -join ' ')' failed with exit code $LASTEXITCODE."
     }
+}
+
+# Runs 'dotnet msbuild' to query the items and/or target results of a project (via '-getItem' and '-getTargetResult',
+# available since MSBuild 17.8), and returns the JSON output they produce, parsed. The project is restored first, so
+# this also works for projects that haven't been built yet.
+function Invoke-MSBuildQuery {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Project,
+        [Parameter(Mandatory = $true)] [string[]] $Arguments
+    )
+
+    $queryArguments = @(
+        'msbuild', $Project, '-restore', '-nologo'
+        "-p:Configuration=$Configuration"
+        "-p:CsWinRTPackageSource=$resolvedPackageSource"
+        "-p:CsWinRTPackageVersion=$PackageVersion"
+    ) + $Arguments
+
+    Write-Host "> dotnet $($queryArguments -join ' ')" -ForegroundColor DarkGray
+    $output = (& dotnet @queryArguments) -join [Environment]::NewLine
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host $output
+        throw "Command 'dotnet $($queryArguments -join ' ')' failed with exit code $LASTEXITCODE."
+    }
+
+    return $output | ConvertFrom-Json
+}
+
+# Gets the value of a metadata on an item returned by 'Invoke-MSBuildQuery' (or an empty string, if it isn't set).
+function Get-ItemMetadata {
+    param (
+        [Parameter(Mandatory = $true)] $Item,
+        [Parameter(Mandatory = $true)] [string] $Name
+    )
+
+    $property = $Item.PSObject.Properties[$Name]
+
+    return $(if ($null -eq $property -or $null -eq $property.Value) { '' } else { [string] $property.Value })
+}
+
+# Verifies whether an item (the output of a project, or a resolved reference to it) is marked as a reference projection.
+# This is the metadata consumers (eg. the XAML compiler) use to identify one, so it has to be exactly 'true' on the
+# output of a reference projection, and not be set at all on the output of any other project.
+function Assert-ReferenceProjectionMarker {
+    param (
+        [Parameter(Mandatory = $true)] $Item,
+        [Parameter(Mandatory = $true)] [bool] $IsReferenceProjection,
+        [Parameter(Mandatory = $true)] [string] $Description
+    )
+
+    $marker = Get-ItemMetadata -Item $Item -Name 'CsWinRTGenerateReferenceProjection'
+    $expected = if ($IsReferenceProjection) { 'true' } else { '' }
+
+    if ($marker -cne $expected) {
+        throw "Expected $Description to have 'CsWinRTGenerateReferenceProjection' set to '$expected', but it was '$marker'."
+    }
+}
+
+# Returns a snapshot of the '<Name>.dll' files in the intermediate output folder of a project (with their timestamps),
+# to detect whether anything was compiled in between two calls.
+function Get-IntermediateAssemblySnapshot {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Project,
+        [Parameter(Mandatory = $true)] [string] $Name
+    )
+
+    $objDirectory = [IO.Path]::Combine([IO.Path]::GetDirectoryName($Project), 'obj')
+
+    if (-not (Test-Path -LiteralPath $objDirectory)) {
+        return ''
+    }
+
+    return (Get-ChildItem -LiteralPath $objDirectory -Filter "$Name.dll" -Recurse |
+        ForEach-Object { "$($_.FullName)|$($_.LastWriteTimeUtc.Ticks)" } |
+        Sort-Object) -join ';'
+}
+
+# Verifies the output item a reference projection returns to the projects resolving a project reference to it, on both
+# the routes they use: 'GetTargetPath' (managed consumers), and 'GetTargetPathWithTargetPlatformMoniker' (native and
+# cross-target-framework consumers, which call it directly). The item has to be marked as a reference projection, point
+# consumers to the reference assembly to compile against (the output is the forwarder), and carry the '.winmd' inputs.
+function Assert-ReferenceProjectionOutput {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Name,
+        [Parameter(Mandatory = $true)] [string] $Project,
+        [switch] $Built
+    )
+
+    $objDirectory = [IO.Path]::Combine([IO.Path]::GetDirectoryName($Project), 'obj') + [IO.Path]::DirectorySeparatorChar
+
+    foreach ($target in 'GetTargetPath', 'GetTargetPathWithTargetPlatformMoniker') {
+        $result = (Invoke-MSBuildQuery -Project $Project -Arguments @("-t:$target", "-getTargetResult:$target")).TargetResults.$target
+        $items = @($result.Items)
+
+        if ($result.Result -ne 'Success' -or $items.Count -ne 1) {
+            throw "Expected '$target' to succeed and return one item for the $Name projection, but it returned '$($result.Result)' with $($items.Count) item(s)."
+        }
+
+        $item = $items[0]
+        $description = "the item '$target' returns for the $Name projection"
+
+        Assert-ReferenceProjectionMarker -Item $item -IsReferenceProjection $true -Description $description
+
+        $referenceAssembly = Get-ItemMetadata -Item $item -Name 'ReferenceAssembly'
+
+        if ([IO.Path]::GetFileName($referenceAssembly) -ne "$Name.dll" -or
+            -not $referenceAssembly.StartsWith($objDirectory, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Expected $description to have 'ReferenceAssembly' set to the '$Name.dll' reference assembly in '$objDirectory', but it was '$referenceAssembly'."
+        }
+
+        if ($Built -and -not (Test-Path -LiteralPath $referenceAssembly -PathType Leaf)) {
+            throw "The reference assembly '$referenceAssembly' of $description does not exist."
+        }
+
+        if ((Get-ItemMetadata -Item $item -Name 'CsWinRTInputs') -eq '') {
+            throw "Expected $description to have 'CsWinRTInputs' set to the '.winmd' inputs of the projection, but it was empty."
+        }
+    }
+
+    Write-Host "Verified the output of the $Name projection is marked as a reference projection." -ForegroundColor DarkGray
+}
+
+# Verifies the metadata of a project reference among the references a project resolves for the compiler ('ReferencePath',
+# and 'ReferencePathWithRefAssemblies' after swapping in reference assemblies). This is checked both when also building
+# the referenced projects (as a command line build does), and when not (as Visual Studio does, via 'GetTargetPath').
+function Assert-ProjectReferenceMetadata {
+    param (
+        [Parameter(Mandatory = $true)] [string] $Project,
+        [Parameter(Mandatory = $true)] [string] $ReferenceName,
+        [Parameter(Mandatory = $true)] [bool] $IsReferenceProjection,
+        [ValidateSet('Any', 'Empty', 'NonEmpty')] [string] $WinMDInputs = 'Any'
+    )
+
+    $projectName = [IO.Path]::GetFileNameWithoutExtension($Project)
+
+    foreach ($buildProjectReferences in 'true', 'false') {
+        $result = Invoke-MSBuildQuery -Project $Project -Arguments @(
+            '-t:FindReferenceAssembliesForReferences'
+            "-p:BuildProjectReferences=$buildProjectReferences"
+            '-getItem:ReferencePath'
+            '-getItem:ReferencePathWithRefAssemblies'
+        )
+
+        foreach ($itemType in 'ReferencePath', 'ReferencePathWithRefAssemblies') {
+            $items = @($result.Items.$itemType | Where-Object { [IO.Path]::GetFileName($_.Identity) -eq "$ReferenceName.dll" })
+            $description = "the '$ReferenceName.dll' '$itemType' item of '$projectName' (with 'BuildProjectReferences=$buildProjectReferences')"
+
+            if ($items.Count -ne 1) {
+                throw "Expected exactly one '$ReferenceName.dll' '$itemType' item for '$projectName' (with 'BuildProjectReferences=$buildProjectReferences'), but found $($items.Count)."
+            }
+
+            $item = $items[0]
+            $referenceSourceTarget = Get-ItemMetadata -Item $item -Name 'ReferenceSourceTarget'
+
+            if ($referenceSourceTarget -ne 'ProjectReference') {
+                throw "Expected $description to come from a project reference, but 'ReferenceSourceTarget' was '$referenceSourceTarget'."
+            }
+
+            Assert-ReferenceProjectionMarker -Item $item -IsReferenceProjection $IsReferenceProjection -Description $description
+
+            $inputs = Get-ItemMetadata -Item $item -Name 'CsWinRTInputs'
+
+            if (($WinMDInputs -eq 'Empty' -and $inputs -ne '') -or ($WinMDInputs -eq 'NonEmpty' -and $inputs -eq '')) {
+                throw "Expected $description to have $($WinMDInputs.ToLowerInvariant()) 'CsWinRTInputs', but it was '$inputs'."
+            }
+        }
+    }
+
+    Write-Host "Verified the metadata of the '$ReferenceName' project reference of '$projectName'." -ForegroundColor DarkGray
 }
 
 function Assert-WinMDDefinesType {
@@ -301,6 +484,17 @@ function Invoke-ReferenceProjectionSmokeTest {
         return
     }
 
+    # Resolving a project reference only queries the output of the referenced project, so doing that must not compile
+    # anything. Also check the output before building for this reason: on a clean tree, there's no intermediate assembly
+    # yet, and there still mustn't be one after the queries (or if there already is one, it mustn't be recompiled).
+    $intermediateAssemblies = Get-IntermediateAssemblySnapshot -Project $Project -Name $Name
+
+    Assert-ReferenceProjectionOutput -Name $Name -Project $Project
+
+    if ((Get-IntermediateAssemblySnapshot -Project $Project -Name $Name) -ne $intermediateAssemblies) {
+        throw "Querying the output of the $Name projection compiled it (the '$Name.dll' files under 'obj' changed)."
+    }
+
     Invoke-Dotnet (@('build', $Project) + $commonBuildArgs)
 
     $projectDirectory = [IO.Path]::GetDirectoryName($Project)
@@ -322,7 +516,31 @@ function Invoke-ReferenceProjectionSmokeTest {
     # 'cswinrtimplgen'; without that, the whole package reports as having no symbols.
     Assert-HasEmbeddedSymbols -Path $forwarder.FullName
 
+    # Once built, the output returned to consumers must be unchanged, and its reference assembly must now exist
+    Assert-ReferenceProjectionOutput -Name $Name -Project $Project -Built
+
     Write-Host "Verified the $Name projection produced both a forwarder and a reference assembly." -ForegroundColor DarkGray
+}
+
+# Projection references: build a library referencing the 'Projection' reference projection, and a library only referencing
+# that one, and verify the metadata of those project references (CoreCLR only). This is build-time metadata, so there is
+# nothing to publish with Native AOT.
+function Invoke-ProjectionReferencesSmokeTest {
+    Write-Host "`n=== ProjectionReferences smoke test ($Runtime) ===" -ForegroundColor Green
+
+    if ($Runtime -eq 'NativeAot') {
+        Write-Host "Skipping the ProjectionReferences smoke test for Native AOT (it only checks build-time metadata)." -ForegroundColor DarkGray
+        return
+    }
+
+    Invoke-Dotnet (@('build', $projectionLibraryConsumptionProject) + $commonBuildArgs)
+
+    # The reference projection must be marked as such when resolved both directly, and transitively (through the library)
+    Assert-ProjectReferenceMetadata -Project $projectionLibraryProject -ReferenceName 'Projection' -IsReferenceProjection $true -WinMDInputs NonEmpty
+    Assert-ProjectReferenceMetadata -Project $projectionLibraryConsumptionProject -ReferenceName 'Projection' -IsReferenceProjection $true -WinMDInputs NonEmpty
+
+    # A library referencing a reference projection is not a reference projection itself
+    Assert-ProjectReferenceMetadata -Project $projectionLibraryConsumptionProject -ReferenceName 'ProjectionLibrary' -IsReferenceProjection $false
 }
 
 # Verifies that an assembly carries an embedded portable PDB and is marked as reproducible.
@@ -354,10 +572,20 @@ if ($Test -in @('All', 'Consumption')) {
 
 if ($Test -in @('All', 'MixedConsumption')) {
     Invoke-ConsumptionSmokeTest -Name 'MixedConsumption' -Project $mixedConsumptionProject
+
+    # An authored component is not a reference projection (this build-time metadata is the same for both runtimes)
+    if ($Runtime -eq 'CoreCLR') {
+        Assert-ProjectReferenceMetadata -Project $mixedConsumptionProject -ReferenceName 'Authoring' -IsReferenceProjection $false
+    }
 }
 
 if ($Test -in @('All', 'ExclusiveToConsumption')) {
     Invoke-ConsumptionSmokeTest -Name 'ExclusiveToConsumption' -Project $exclusiveToConsumptionProject
+
+    # The projection must be marked as a reference projection even though it has no '.winmd' inputs of its own
+    if ($Runtime -eq 'CoreCLR') {
+        Assert-ProjectReferenceMetadata -Project $exclusiveToConsumptionProject -ReferenceName 'ExclusiveToProjection' -IsReferenceProjection $true -WinMDInputs Empty
+    }
 }
 
 if ($Runtime -eq 'NativeAot' -and $Test -in @('All', 'Preinitialization')) {
@@ -370,6 +598,10 @@ if ($Test -in @('All', 'Authoring')) {
 
 if ($Test -in @('All', 'Projection')) {
     Invoke-ProjectionSmokeTest
+}
+
+if ($Test -in @('All', 'ProjectionReferences')) {
+    Invoke-ProjectionReferencesSmokeTest
 }
 
 if ($Test -in @('All', 'WindowsSdkProjection')) {

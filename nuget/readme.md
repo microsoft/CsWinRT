@@ -30,7 +30,7 @@ C#/WinRT behavior can be customized with these project properties:
 |-|-|-|
 | CsWinRTEnabled | *true \| false | Master switch — enables/disables all CsWinRT processing |
 | CsWinRTGenerateProjection | *true \| false | Generate C# projection sources from `.winmd` metadata |
-| CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
+| CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution). The project's output item is also marked with `CsWinRTGenerateReferenceProjection` metadata set to `true`, so consuming projects can identify it among their resolved project references (e.g. `%(ReferencePath.CsWinRTGenerateReferenceProjection)`) |
 | CsWinRTPublicExclusiveToInterfaces | true \| *false | Make selected `[ExclusiveTo]` interfaces public. App-time implementation generation preserves public interfaces from reference projections on a per-type basis |
 | CsWinRTDynamicallyInterfaceCastableExclusiveTo | true \| *false | Generate dynamic-interface-casting implementations for exclusive interfaces when generating implementation sources directly. Public interfaces in reference projections automatically receive this support at app build time |
 | CsWinRTPackReferenceProjection | *true \| false | When generating a reference projection, adds its reference assembly to the NuGet package under `ref/<tfm>` (the forwarder in `lib/<tfm>` has no API surface to compile against). Set to `false` to lay out the package manually |
