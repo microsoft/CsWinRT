@@ -135,8 +135,8 @@ steps:
   # as 'SucceededWithIssues' and makes it obvious which one failed); a final gate step below turns
   # any such issue into an actual failure. This mirrors the unit test steps in CsWinRT-Test-Steps.yml.
   # The consumption and authoring tests each run twice: once on CoreCLR and once with
-  # Native AOT, so a failure points at the exact runtime. The projection, Windows SDK projection, and Windows SDK XAML
-  # projection tests are build-only, so they run once on CoreCLR. Native AOT publishes are x64 (this job
+  # Native AOT, so a failure points at the exact runtime. The projection, projection references, Windows SDK projection, and
+  # Windows SDK XAML projection tests are build-only, so they run once on CoreCLR. Native AOT publishes are x64 (this job
   # only runs on an x64 host). Preinitialization runs only with Native AOT and verifies MSTAT.
   - task: UseDotNet@2
     displayName: Use .NET SDK for smoke tests
@@ -242,6 +242,16 @@ steps:
       pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Projection -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run ProjectionReferences smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test ProjectionReferences -Runtime CoreCLR
       workingDirectory: $(Build.SourcesDirectory)
 
   - task: PowerShell@2

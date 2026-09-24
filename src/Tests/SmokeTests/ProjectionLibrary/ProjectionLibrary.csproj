@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end smoke test: a plain class library (not a reference projection itself) that references the sibling
+    'Projection' reference projection, exactly as any library consuming a projection would. The 'ProjectionReferences'
+    smoke test uses it to verify the metadata flowing through these project references: the projection's output has to
+    be marked as a reference projection when this library resolves it, and when 'ProjectionLibraryConsumption' resolves
+    it transitively through this library, but this library's own output must not inherit that. Shared configuration
+    (target framework, NuGet sources, and the CsWinRT package reference) lives in the parent 'Directory.Build.props'.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Projection\Projection.csproj" />
+  </ItemGroup>
+</Project>
