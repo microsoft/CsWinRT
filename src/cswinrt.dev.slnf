@@ -43,6 +43,7 @@
       "Tests\\FunctionalTests\\ClassActivation\\ClassActivation.csproj",
       "Tests\\FunctionalTests\\Collections\\Collections.csproj",
       "Tests\\FunctionalTests\\CustomPropertyProvider\\CustomPropertyProvider.csproj",
+      "Tests\\FunctionalTests\\CustomPropertyProviderLibrary\\CustomPropertyProviderLibrary.csproj",
       "Tests\\FunctionalTests\\DerivedClassActivation\\DerivedClassActivation.csproj",
       "Tests\\FunctionalTests\\DerivedClassAsBaseClass\\DerivedClassAsBaseClass.csproj",
       "Tests\\FunctionalTests\\DynamicInterfaceCasting\\DynamicInterfaceCasting.csproj",

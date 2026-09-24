@@ -338,6 +338,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/FunctionalTests/CustomPropertyProviderLibrary/CustomPropertyProviderLibrary.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/FunctionalTests/DerivedClassActivation/DerivedClassActivation.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />

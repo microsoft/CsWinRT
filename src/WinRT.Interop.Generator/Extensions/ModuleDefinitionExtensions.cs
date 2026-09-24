@@ -10,6 +10,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
@@ -154,20 +155,30 @@ internal static partial class ModuleDefinitionExtensions
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module)
+    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(
+        this ModuleDefinition module,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance);
+        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, shouldProcessModule, treatWarningsAsErrors);
     }
 
     /// <summary>
     /// Enumerates all SZ array type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module)
+    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(
+        this ModuleDefinition module,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance);
+        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, shouldProcessModule, treatWarningsAsErrors);
     }
 
     /// <summary>
@@ -175,24 +186,61 @@ internal static partial class ModuleDefinitionExtensions
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) type signatures of interest in the module.</returns>
-    public static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(this ModuleDefinition module, ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
+    private static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(
+        this ModuleDefinition module,
+        ITypeSignatureVisitor<IEnumerable<TResult>> visitor,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        bool treatWarningsAsErrors)
         where TResult : TypeSignature
     {
+        const int MaxDiscoveryDepth = 32;
+        const int MaxSignatureComplexity = 256;
+
         HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
-        HashSet<GenericInstanceTypeSignature> visitedTypeInitializers = new(SignatureComparer.IgnoreVersion);
-        Queue<GenericInstanceTypeSignature> pendingTypeInitializers = new();
+        HashSet<TypeSignature> typeSpecifications = new(SignatureComparer.IgnoreVersion);
+        HashSet<TypeSignature> visitedTypes = new(SignatureComparer.IgnoreVersion);
+        Queue<(TypeSignature Type, int Depth)> pendingTypes = new();
+        bool recursionLimitReported = false;
+        bool complexityLimitReported = false;
 
         // Helper to crawl a signature, recursively
-        IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type)
+        IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type, int depth = 0)
         {
-            // Initializers need their closed context even when we are only collecting array signatures
+            // 'Node<Pair<T, T>>' grows exponentially before reaching the depth limit.
+            // Bound the work before visiting, hashing, or formatting a newly expanded signature.
+            if (depth > 0 && type is not null && type.GetSignatureElementCount(MaxSignatureComplexity + 1) > MaxSignatureComplexity)
+            {
+                if (!complexityLimitReported)
+                {
+                    complexityLimitReported = true;
+
+                    WellKnownInteropExceptions.GenericTypeDiscoveryComplexityLimitExceededWarning(module, MaxSignatureComplexity).LogOrThrow(treatWarningsAsErrors);
+                }
+
+                yield break;
+            }
+
+            // Member discovery needs closed generic contexts even when we are only collecting array signatures
             foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
             {
                 if (genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
-                    visitedTypeInitializers.Add(genericType))
+                    visitedTypes.Add(genericType))
                 {
-                    pendingTypeInitializers.Enqueue(genericType);
+                    // An expanding cycle, such as 'Node<T>' -> 'Node<Node<T>>', never repeats an exact signature.
+                    // Keep the discovered type, but bound further member traversal to avoid unbounded expansion.
+                    if (depth <= MaxDiscoveryDepth)
+                    {
+                        pendingTypes.Enqueue((genericType, depth));
+                    }
+                    else if (!recursionLimitReported)
+                    {
+                        recursionLimitReported = true;
+
+                        WellKnownInteropExceptions.GenericTypeDiscoveryRecursionLimitExceededWarning(genericType, module, MaxDiscoveryDepth).LogOrThrow(treatWarningsAsErrors);
+                    }
                 }
             }
 
@@ -242,36 +290,14 @@ internal static partial class ModuleDefinitionExtensions
                 yield return result;
             }
 
-            // Resolve the type definition to be able to process its methods
-            if (!specification.TryResolve(module.RuntimeContext, out TypeDefinition? type))
+            // Keep scanning partially open specifications too, as their members can contain closed types
+            if (specification.Signature is TypeSignature signature)
             {
-                continue;
-            }
+                _ = typeSpecifications.Add(signature);
 
-            GenericContext genericContext = new(specification.Signature as GenericInstanceTypeSignature, null);
-
-            // Also manually enumerate all methods from the types we have the specification for. The reason for doing this
-            // is that it might allow us to see more constructed types than we can from just the methods table, and the
-            // method specification table. For instance:
-            //
-            // class C<T>
-            // {
-            //     List<T> M() => [];
-            // }
-            //
-            // If we have a 'C<int>' type specification, we can resolve 'C<T>', enumerate its methods, which will give us
-            // the definition for 'M()', and then we'll be able to instantiate its return type with the generic context
-            // from the type specification, so we'll be able to construct 'List<int>'. If we only saw 'C<T>.M()' from the
-            // methods table, we wouldn't have the necessary generic context. And because 'M()' is not itself generic,
-            // it also wouldn't appear in the method specification table. So this is the only way to cover these cases.
-            foreach (MethodDefinition method in type.Methods)
-            {
-                foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
+                if (visitedTypes.Add(signature))
                 {
-                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext)))
-                    {
-                        yield return result;
-                    }
+                    pendingTypes.Enqueue((signature, 0));
                 }
             }
         }
@@ -299,23 +325,57 @@ internal static partial class ModuleDefinitionExtensions
             }
         }
 
-        // A closed cache type may only become visible after substituting a caller's generic arguments.
-        // Follow its initializer transitively, regardless of the declared types of its cached fields.
-        while (pendingTypeInitializers.TryDequeue(out GenericInstanceTypeSignature? typeSignature))
+        // Also manually enumerate all methods from the types we have a generic context for. The reason for doing this
+        // is that it might allow us to see more constructed types than we can from just the methods table, and the
+        // method specification table. For instance:
+        //
+        // class C<T>
+        // {
+        //     List<T> M() => [];
+        // }
+        //
+        // If we have a 'C<int>' type specification, we can resolve 'C<T>', enumerate its methods, which will give us
+        // the definition for 'M()', and then we'll be able to instantiate its return type with the generic context
+        // from the type specification, so we'll be able to construct 'List<int>'. If we only saw 'C<T>.M()' from the
+        // methods table, we wouldn't have the necessary generic context. And because 'M()' is not itself generic,
+        // it also wouldn't appear in the method specification table. So this is the only way to cover these cases.
+        //
+        // Closed types discovered after substituting a generic factory's arguments need the same traversal, including
+        // ordinary methods and cache initializers, to discover their nested property/indexer descriptors transitively.
+        while (pendingTypes.TryDequeue(out (TypeSignature Type, int Depth) current))
         {
-            if (!typeSignature.TryResolve(module.RuntimeContext, out TypeDefinition? type) ||
-                !type.TryGetStaticConstructor(out MethodDefinition? initializer))
+            TypeSignature typeSignature = current.Type;
+
+            if (!typeSignature.TryResolve(module.RuntimeContext, out TypeDefinition? type))
             {
                 continue;
             }
 
-            GenericContext genericContext = new(typeSignature, null);
+            GenericContext genericContext = new(typeSignature as GenericInstanceTypeSignature, null);
+            IEnumerable<MethodDefinition> methods = type.Methods;
 
-            foreach (TypeSignature visibleType in initializer.EnumerateAllVisibleTypes(module.RuntimeContext))
+            // Explicit type specifications provide the caller's generic context for a one-hop member scan.
+            // Further traversal of ordinary methods follows the module's marshalling policy. Static initializers
+            // can reveal concrete cached instances and arrays hidden behind fields declared as 'object' or an interface.
+            if (!typeSpecifications.Contains(typeSignature) &&
+                !(type.DeclaringModule is ModuleDefinition declaringModule && shouldProcessModule(declaringModule)))
             {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext)))
+                if (!type.TryGetStaticConstructor(out MethodDefinition? initializer))
                 {
-                    yield return result;
+                    continue;
+                }
+
+                methods = [initializer];
+            }
+
+            foreach (MethodDefinition method in methods)
+            {
+                foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
+                {
+                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), current.Depth + 1))
+                    {
+                        yield return result;
+                    }
                 }
             }
         }

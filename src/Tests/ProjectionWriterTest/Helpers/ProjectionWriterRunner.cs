@@ -10,6 +10,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -199,8 +201,9 @@ internal static class ProjectionWriterRunner
     /// </summary>
     /// <param name="toolPath">The path of the tool assembly to run.</param>
     /// <param name="argument">The single command line argument to pass.</param>
+    /// <param name="timeout">An optional timeout, after which the tool process is terminated.</param>
     /// <returns>The process exit code and its combined standard output and error.</returns>
-    public static (int ExitCode, string Output) Run(string toolPath, string argument)
+    public static (int ExitCode, string Output) Run(string toolPath, string argument, TimeSpan? timeout = null)
     {
         ProcessStartInfo startInfo = new("dotnet")
         {
@@ -216,12 +219,18 @@ internal static class ProjectionWriterRunner
 
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the projection generator process.");
 
-        string standardOutput = process.StandardOutput.ReadToEnd();
-        string standardError = process.StandardError.ReadToEnd();
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
 
-        process.WaitForExit();
+        if (!process.WaitForExit(timeout ?? Timeout.InfiniteTimeSpan))
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
 
-        return (process.ExitCode, standardOutput + standardError);
+            throw new TimeoutException($"The tool '{toolPath}' exceeded its timeout of '{timeout}'.\n{standardOutput.GetAwaiter().GetResult()}{standardError.GetAwaiter().GetResult()}");
+        }
+
+        return (process.ExitCode, standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult());
     }
 
     /// <summary>
