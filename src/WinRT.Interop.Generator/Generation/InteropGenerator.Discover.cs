@@ -11,7 +11,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
 using ConsoleAppFramework;
-using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Extensions;
 using WindowsRuntime.Generator.References;
@@ -53,6 +52,11 @@ internal partial class InteropGenerator
         // use our assembly resolver, and it will also take care of caching all loaded modules. Every
         // module load will go through this object, rather than using the assembly resolver directly.
         RuntimeContext runtimeContext = new(targetRuntime, pathAssemblyResolver);
+        SignatureComparer signatureComparer = new(runtimeContext, SignatureComparisonFlags.VersionAgnostic);
+
+        // Anchor target-corlib references before any parallel reader can enumerate assembly references
+        ModuleDefinition outputModule = runtimeContext.LoadModule(args.OutputAssemblyPath);
+        CorLibTypeFactory corLibTypeFactory = new(targetRuntime.GetDefaultCorLib().ImportWith(outputModule.DefaultImporter));
 
         // Build the set of assembly names explicitly opted in for analysis via 'CsWinRTMarshallingEnabledAssembly'.
         // Each entry is normalized to its bare assembly name (dropping any directory and the '.dll' extension), so
@@ -66,9 +70,9 @@ internal partial class InteropGenerator
 
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
-        InteropGeneratorDiscoveryState discoveryState = new()
+        InteropGeneratorDiscoveryState discoveryState = new(runtimeContext, signatureComparer)
         {
-            RuntimeContext = runtimeContext,
+            CorLibTypeFactory = corLibTypeFactory,
             MarshallingEnabledAssemblyNames = marshallingEnabledAssemblyNames
         };
 
@@ -315,7 +319,8 @@ internal partial class InteropGenerator
     /// <param name="module">The module to check.</param>
     /// <returns>Whether <paramref name="module"/> should be analyzed for discovery.</returns>
     /// <remarks>
-    /// Modules targeting a legacy or portable runtime are never analyzed. Otherwise, modules that reference the
+    /// Modules targeting .NET Framework are never analyzed, and .NET Standard modules are skipped when
+    /// <see cref="InteropGeneratorArgs.AnalyzeNetStandardAssemblies"/> is disabled. Otherwise, modules that reference the
     /// Windows Runtime assembly were built targeting a Windows TFM (i.e. <c>netX.0-windows10.0.XXXX.0</c>), and
     /// the Windows Runtime assembly itself, are always analyzed, regardless of the marshalling mode. Assemblies
     /// explicitly opted in via <c>CsWinRTMarshallingEnabledAssembly</c> are also always analyzed. Only modules
@@ -323,17 +328,8 @@ internal partial class InteropGenerator
     /// </remarks>
     private static bool ShouldProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
     {
-        // Never analyze modules targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework), even
-        // when opted in. The entire interop generator infrastructure identifies well-known types (including custom-
-        // mapped types such as 'IEnumerable<T>') by comparing against type references scoped to the modern .NET
-        // corlib (e.g. 'System.Runtime'), which is also the corlib the emit phase uses. A legacy-runtime module
-        // declares those same types against a different corlib ('netstandard' or 'mscorlib'), which AsmResolver's
-        // 'SignatureComparer' treats as a distinct scope, so the generator can't match them and marshalling code for
-        // them would fail to generate. Such modules could in principle still use custom-mapped types that need
-        // marshalling, but for simplicity we skip them entirely. This was not an issue before the marshalling mode
-        // was introduced, as only assemblies referencing the Windows Runtime were analyzed, and those always target
-        // a modern .NET runtime.
-        if (module.TargetsLegacyRuntime)
+        // Apply framework exclusions before explicit opt-ins and marshalling-mode filtering
+        if (module.TargetsNetFramework || (!args.AnalyzeNetStandardAssemblies && module.TargetsNetStandard))
         {
             return false;
         }
@@ -433,9 +429,6 @@ internal partial class InteropGenerator
                 windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
-
-            // We can share a single builder when processing all types to reduce allocations
-            TypeSignatureEquatableSet.Builder interfaces = new();
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
@@ -552,7 +545,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
+            foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures(discoveryState.SignatureComparer))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -593,7 +586,7 @@ internal partial class InteropGenerator
                 windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
-            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
+            foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures(discoveryState.SignatureComparer))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -655,7 +648,7 @@ internal partial class InteropGenerator
                 args.Token.ThrowIfCancellationRequested();
 
                 // Ignore types that don't implement 'IActivationFactory'
-                if (!type.Implements(interopReferences.IActivationFactory, SignatureComparer.IgnoreVersion))
+                if (!type.Implements(interopReferences.IActivationFactory, interopReferences.SignatureComparer))
                 {
                     continue;
                 }
@@ -721,6 +714,7 @@ internal partial class InteropGenerator
             // Both types implement 'IList', 'ICollection' and 'IEnumerable'. Only the first and the last are
             // Windows Runtime types ('IBindableVector' and 'IBindableIterable'), so those are the vtable entries.
             TypeSignatureEquatableSet vtableTypes = new TypeSignatureEquatableSet.Builder(
+                interopReferences.SignatureComparer,
                 interopReferences.IList.ToReferenceTypeSignature(),
                 interopReferences.IEnumerable.ToReferenceTypeSignature()).ToEquatableSet();
 
@@ -851,9 +845,10 @@ internal partial class InteropGenerator
         // We don't need to import the 'WinRT.Runtime.dll' module here, as we're reusing the same runtime context everywhere
         return new(
             runtimeContext: module.RuntimeContext,
-            corLibTypeFactory: module.CorLibTypeFactory,
+            corLibTypeFactory: discoveryState.CorLibTypeFactory,
             windowsRuntimeModule: windowsRuntimeAssembly,
-            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+            signatureComparer: discoveryState.SignatureComparer);
     }
 
     /// <summary>

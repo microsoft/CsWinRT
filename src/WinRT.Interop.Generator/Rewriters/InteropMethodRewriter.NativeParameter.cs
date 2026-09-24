@@ -7,7 +7,6 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Collections;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -71,7 +70,7 @@ internal partial class InteropMethodRewriter
             Parameter source = method.Parameters[parameterIndex];
 
             // Validate that the type matches
-            if (!SignatureComparer.IgnoreVersion.Equals(source.ParameterType, parameterType))
+            if (!interopReferences.SignatureComparer.Equals(source.ParameterType, parameterType))
             {
                 throw WellKnownInteropExceptions.MethodRewriteSourceParameterTypeMismatchError(source.ParameterType, parameterType, method);
             }

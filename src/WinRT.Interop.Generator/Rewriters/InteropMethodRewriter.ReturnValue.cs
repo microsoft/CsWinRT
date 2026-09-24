@@ -5,7 +5,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -61,7 +60,7 @@ internal partial class InteropMethodRewriter
             }
 
             // Validate that the ABI type matches
-            if (!SignatureComparer.IgnoreVersion.Equals(source.VariableType, returnType.GetAbiType(interopReferences)))
+            if (!interopReferences.SignatureComparer.Equals(source.VariableType, returnType.GetAbiType(interopReferences)))
             {
                 throw WellKnownInteropExceptions.MethodRewriteSourceLocalTypeMismatchError(source.VariableType, returnType, method);
             }

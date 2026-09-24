@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -52,7 +51,7 @@ internal static class InteropInterfaceEntriesResolver
         bool useWindowsUIXamlProjections)
     {
         // Equivalent sets can have different insertion orders after parallel discovery
-        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName())
+        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
         {
             // Handle generic types first, and then custom-mapped and manually projected types.
             // These require special handling, because their ABI types are in different locations.
@@ -75,7 +74,7 @@ internal static class InteropInterfaceEntriesResolver
             {
                 // If the user explicitly implemented 'IStringable', we skip it here. We want to always emit it
                 // at the end of the list of entries, to have consistent ordering with the built-in interfaces.
-                if (SignatureComparer.IgnoreVersion.Equals(typeSignature, interopReferences.IStringable))
+                if (interopReferences.SignatureComparer.Equals(typeSignature, interopReferences.IStringable))
                 {
                     continue;
                 }

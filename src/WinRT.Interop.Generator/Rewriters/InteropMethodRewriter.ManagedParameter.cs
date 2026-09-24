@@ -6,7 +6,6 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Collections;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -65,7 +64,7 @@ internal static partial class InteropMethodRewriter
             Parameter source = method.Parameters[parameterIndex];
 
             // Validate that the ABI type matches
-            if (!SignatureComparer.IgnoreVersion.Equals(source.ParameterType, parameterType.GetAbiType(interopReferences)))
+            if (!interopReferences.SignatureComparer.Equals(source.ParameterType, parameterType.GetAbiType(interopReferences)))
             {
                 throw WellKnownInteropExceptions.MethodRewriteSourceParameterTypeMismatchError(source.ParameterType, parameterType, method);
             }
@@ -86,7 +85,7 @@ internal static partial class InteropMethodRewriter
                         CilInstruction.CreateLdarg(parameterIndex),
                         new CilInstruction(Call, marshallerType.UnboxToManaged())]);
                 }
-                else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
+                else if (interopReferences.SignatureComparer.Equals(parameterType, interopReferences.ReadOnlySpanChar))
                 {
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdarg(parameterIndex),

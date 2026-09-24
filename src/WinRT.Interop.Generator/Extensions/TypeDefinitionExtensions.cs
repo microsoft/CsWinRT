@@ -8,7 +8,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 
 #pragma warning disable IDE0046
 
@@ -70,9 +69,11 @@ internal static class TypeDefinitionExtensions
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
         public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, RuntimeContext? runtimeContext)
         {
+            SignatureComparer signatureComparer = new(runtimeContext, SignatureComparisonFlags.VersionAgnostic);
+
             foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(runtimeContext))
             {
-                if (currentType.HasCustomAttribute(attributeType))
+                if (currentType.HasCustomAttribute(attributeType, signatureComparer))
                 {
                     return true;
                 }
@@ -337,7 +338,7 @@ internal static class TypeDefinitionExtensions
             }
 
             // Verify the provided signature is valid
-            if (!SignatureComparer.IgnoreVersion.Equals(type, typeSignature.GenericType))
+            if (!new SignatureComparer(runtimeContext, SignatureComparisonFlags.VersionAgnostic).Equals(type, typeSignature.GenericType))
             {
                 throw new ArgumentException("The input type signature does not match the type definition.", nameof(typeSignature));
             }

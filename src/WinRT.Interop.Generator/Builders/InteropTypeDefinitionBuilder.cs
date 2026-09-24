@@ -820,9 +820,7 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeMappedTypeAttribute_ctor,
-                signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: mappedType))));
+                signature: new CustomAttributeSignature(InteropCustomAttributeFactory.TypeArgument(mappedType, interopReferences))));
         }
 
         // Add the '[WindowsRuntimeReferenceType]' attribute with the provided reference type, if available.
@@ -831,9 +829,7 @@ internal static partial class InteropTypeDefinitionBuilder
         {
             proxyType.CustomAttributes.Add(new CustomAttribute(
                 constructor: interopReferences.WindowsRuntimeReferenceTypeAttribute_ctor,
-                signature: new CustomAttributeSignature(new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: referenceType))));
+                signature: new CustomAttributeSignature(InteropCustomAttributeFactory.TypeArgument(referenceType, interopReferences))));
         }
 
         // Add the generated marshaller attribute, if available

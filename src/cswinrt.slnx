@@ -247,6 +247,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/InteropGeneratorTest/InteropGeneratorTest.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
       <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -357,6 +363,24 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/FunctionalTests/Events/Events.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ForwardedTypeIdentities/ForwardedTypeIdentities.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ForwardedTypeIdentitiesLibrary/ForwardedTypeIdentitiesLibrary.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ForwardedTypeIdentitiesNetStandard/ForwardedTypeIdentitiesNetStandard.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
