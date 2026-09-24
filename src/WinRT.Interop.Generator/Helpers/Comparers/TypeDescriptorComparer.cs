@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -80,6 +81,25 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         // If the scratch buffer wasn't enough and an array was rented, return it to the pool
         xHandler.Clear();
         yHandler.Clear();
+
+        if (result == 0)
+        {
+            // Display names omit the assembly scopes of generic arguments. For example, a type
+            // and a reference through its forwarding assembly can otherwise sort as equal.
+            if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
+            {
+                result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);
+
+                for (int i = 0; result == 0 && i < xGeneric.TypeArguments.Count; i++)
+                {
+                    result = Compare(xGeneric.TypeArguments[i], yGeneric.TypeArguments[i]);
+                }
+            }
+            else if (x is TypeSpecificationSignature xSpecification && y is TypeSpecificationSignature ySpecification)
+            {
+                result = Compare(xSpecification.BaseType, ySpecification.BaseType);
+            }
+        }
 
         return result;
     }

@@ -63,6 +63,35 @@ Contains various testing-related projects:
 
 - [`BuildDeterminismTest`](../src/Tests/BuildDeterminismTest): Compares whole-file SHA256 hashes of freshly generated `WinRT.Interop.dll` files across maximum parallelism values `-1`, `1`, and `2`, including repeated runs. By default it performs clean component builds with all-assembly marshalling discovery. To isolate the generator from MSBuild, run `BuildDeterminismTest --interop <generator.exe|generator.dll> <response.rsp>` with fixed inputs. Each invocation uses a fresh process and output directory with incremental generation disabled; failed replay outputs are retained for inspection. Relative paths in the response file are resolved from the current working directory.
 
+  Persistent cache regression coverage is available separately:
+
+  ```text
+  BuildDeterminismTest --interop-incremental <generator.exe|generator.dll> <response.rsp>
+  BuildDeterminismTest --interop-incremental <generator.exe|generator.dll> <response.rsp> --scenario cold,unchanged,method-body
+  BuildDeterminismTest --interop-incremental <generator.exe|generator.dll> <response.rsp> --probe-only
+  BuildDeterminismTest --interop-incremental --list-scenarios
+  ```
+
+  This mode **copies every input binary** into an owned `interop-incremental-<guid>` directory beneath the current working directory, preserving original DLL names and shared paths for reserved projection assemblies. It rewrites all input/output paths, removes `--debug-repro-directory`, and preserves the response file's marshalling and validation settings. Neither caller inputs nor caller outputs are modified. Relative input paths are resolved from the current working directory, just as when invoking the generator directly.
+
+  An AsmResolver-generated managed probe references the input `System.Runtime.dll` and `WinRT.Runtime.dll`, roots `IList<string>`, and explicitly implements `IStringable`. Two tiny support assemblies define identically named managed types; the probe roots exposed generic carriers whose arguments differ only by these assembly scopes, including nested generic and array arguments. This makes mutations and scope-ordering coverage independent of application-specific types. The two runtime implementation paths must be present and unambiguous. Every scenario checks the expected hit/miss log and the **entire output DLL's SHA256**, including its MVID, against a cache-disabled emission of the **same mutated inputs**. Successful enabled misses are followed by a separate-process hit to verify that a usable sidecar was published. Opt-out runs check that sidecars are neither created nor changed.
+
+  For inexpensive exhaustive coverage using a large application's response file, add **`--probe-only`**. This selects inputs **before copying**: only the `Microsoft.Windows.SDK.NET` reference projection (plus `Microsoft.Windows.UI.Xaml` when its private SDK projection is present), framework implementations identified by name and public key token, `WinRT.Runtime`, and the private SDK projections are retained. The generated .NET 10 probe becomes `--output-assembly-path`; application assemblies and custom `WinRT.Projection`/`WinRT.Component` assemblies are excluded. This reduced mode explicitly uses **`Minimal` discovery** and discards assembly opt-ins, so framework binaries remain resolution dependencies rather than introducing the entire BCL's marshalling workload. Other validation/code-generation options remain unchanged. All scenarios and exact hash assertions still run, and `--scenario` can further restrict them. Full application replay remains the default, preserves the original marshalling settings, and should still be used for representative application-scale comparisons.
+
+  | Scenarios | Coverage |
+  |-----------|----------|
+  | `cold`, `unchanged`, `reordered-paths` | Cold generation; five unchanged hits with parallelism `-1, 1, 2, -1, 1`; reversed reference/implementation path lists |
+  | `generic-argument-scopes` | Five forced-fresh emissions and cache hits with parallelism `1, 2, -1, 1, 2` and alternating input order, comparing whole DLLs to catch scope-insensitive sorting of nested generic/array arguments |
+  | `missing-output`, `missing-cache`, `malformed-cache`, `truncated-cache`, `corrupt-dll`, `truncated-dll` | Recovery from absent or damaged cache artifacts, including same-length DLL corruption outside the MVID |
+  | `opt-out-cold`, `opt-out`, `re-enable` | Opt-out with absent/existing caches, and stale-cache rejection after disabled generation replaces the DLL with changed interop code |
+  | `method-body`, `unrelated-type` | Hits after verified actual IL-byte changes or a plain managed type addition, with new input and output MVIDs |
+  | `type-identity`, `assembly-identity`, `assembly-version`, `runtime-class-name`, `interop-usage` | Misses after exposed type/assembly changes, adding a runtime class name marker, or adding another exposed type |
+  | `runtime-bytes`, `framework-bytes`, `projection-bytes`, `reference-projection-bytes` | Full-byte invalidation of runtime, framework, private SDK projection, and reference projection inputs while keeping their MVIDs unchanged |
+
+  All 24 scenarios run by default, with a fixed repetition count; use the comma-separated `--scenario` selector for small batches on expensive repros. `reference-projection-bytes` deterministically selects an assembly carrying `[WindowsRuntimeReferenceAssembly]` and fails clearly if none is available. Optionally append `--baseline-generator <previous-generator.exe|previous-generator.dll>` to compare the unmodified seed output with a cache-disabled emission from a pre-change generator as well. Both managed and Native AOT tools are supported.
+
+  On failure the runner stops, preserving the mutated inputs, response files, complete stdout/stderr logs, output hashes/MVIDs, and DLL/cache files under the named scenario directory. On success it removes only its owned replay directory.
+
 - [`OOPExe`](../src/Tests/OOPExe): An out-of-process executable harness used by the authoring test scenarios.
 
 ## [`src/TestWinRT`](https://github.com/microsoft/TestWinRT/)

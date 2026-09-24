@@ -6,6 +6,11 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using AsmResolver.DotNet;
 
+if (args.Length > 0 && args[0] == "--interop-incremental")
+{
+    return InteropIncrementalRunner.Run(args.AsSpan(1));
+}
+
 if (args.Length > 0 && args[0] == "--interop")
 {
     if (args.Length != 3)
