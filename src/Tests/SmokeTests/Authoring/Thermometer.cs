@@ -1,4 +1,5 @@
 using System;
+using WindowsRuntime.InteropServices;
 
 namespace Authoring;
 
@@ -39,6 +40,8 @@ public interface IThermometer
     int Temperature { get; }
 
     void Reset();
+
+    EventRegistrationToken Replace(EventRegistrationToken token);
 }
 
 public sealed class Thermometer : IThermometer
@@ -74,6 +77,11 @@ public sealed class Thermometer : IThermometer
     public void Reset()
     {
         SetTemperature(0);
+    }
+
+    public EventRegistrationToken Replace(EventRegistrationToken token)
+    {
+        return token;
     }
 
     public void SetTemperature(int value)
