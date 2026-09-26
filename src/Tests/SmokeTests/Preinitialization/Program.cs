@@ -125,6 +125,8 @@ internal sealed class Thermometer : IThermometer
     public int Temperature => 42;
 
     public void Reset() { }
+
+    public EventRegistrationToken Replace(EventRegistrationToken token) => token;
 }
 
 internal sealed class ValueConverter : IValueConverter, INotifyPropertyChanged
