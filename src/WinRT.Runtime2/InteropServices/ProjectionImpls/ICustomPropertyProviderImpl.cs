@@ -60,6 +60,11 @@ public static unsafe class ICustomPropertyProviderImpl
     {
         *property = null;
 
+        if (WindowsRuntimeFeatureSwitches.SuppressCustomPropertyNotSupportedException)
+        {
+            return WellKnownErrorCodes.S_OK;
+        }
+
         try
         {
             throw CreatePropertyBindingNotSupportedException(thisPtr);
@@ -77,6 +82,11 @@ public static unsafe class ICustomPropertyProviderImpl
     private static HRESULT GetIndexedProperty(void* thisPtr, HSTRING name, ABI.System.Type type, void** property)
     {
         *property = null;
+
+        if (WindowsRuntimeFeatureSwitches.SuppressCustomPropertyNotSupportedException)
+        {
+            return WellKnownErrorCodes.S_OK;
+        }
 
         try
         {

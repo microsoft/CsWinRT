@@ -256,11 +256,15 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
 
             if (!supported)
             {
+#if TEST_CUSTOM_PROPERTY_NOT_SUPPORTED_SUPPRESSED
+                Check(hr == 0 && property is null, $"Suppressed property lookup for {name} must return null.");
+#else
                 Check(hr == E_NOTSUPPORTED && property is null, $"Unsupported property lookup for {name} must fail and clear its output.");
                 Exception error = RestrictedErrorInfoExceptionMarshaller.ConvertToManaged(hr);
 
                 Check(error is NotSupportedException && error.Message.Contains("GeneratedCustomPropertyProviderAttribute", StringComparison.Ordinal),
                     "Unsupported property binding must provide actionable restricted error information.");
+#endif
 
                 return;
             }

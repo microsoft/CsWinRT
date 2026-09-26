@@ -6,6 +6,7 @@ parameters:
     - ClassActivation
     - CustomPropertyProvider
     - DefaultCustomPropertyProviderDisabled
+    - DefaultCustomPropertyProviderSuppressed
     - DefaultCustomPropertyProviderWinUI
     - Structs
     - Events

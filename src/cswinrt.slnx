@@ -344,6 +344,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/FunctionalTests/DefaultCustomPropertyProviderSuppressed/DefaultCustomPropertyProviderSuppressed.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/FunctionalTests/DefaultCustomPropertyProviderWinUI/DefaultCustomPropertyProviderWinUI.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
