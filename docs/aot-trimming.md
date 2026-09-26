@@ -36,7 +36,7 @@ Feature switches are set as MSBuild properties in your project file:
 
 Reference projection packages preserve the exact effective selection as generator-owned `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of the public API surface. These entries remain in the reference assembly and are not copied to the forwarder. Applications consume that policy automatically. Missing metadata does not imply IDIC, so older preview projection packages that need dynamic casting must be regenerated. The runtime switch `CsWinRTEnableIDynamicInterfaceCastableSupport` remains the separate, application-wide switch for all dynamic interface casting.
 
-Opting out avoids the selected interface's IDIC shim and type-map association, but does not remove ABI helpers or CCW implementations still needed by public/default/overridable interfaces. In the single-method exclusive-interface regression fixture, opting in adds exactly one shim type, one DIM method, and one assembly type-map association. Final binary size depends on trimming and reachability; this output-shape measurement is not a published-size estimate.
+Opting out avoids the selected interface's IDIC shim and type-map association, but does not remove ABI helpers or CCW implementations still needed by public/default/overridable interfaces. In the single-method exclusive-interface regression fixture, opting in adds exactly one shim type, one DIM method, and one assembly type-map association. Final binary size depends on trimming and reachability.
 
 ## ICustomPropertyProvider support for XAML binding
 
