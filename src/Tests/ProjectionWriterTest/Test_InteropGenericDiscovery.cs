@@ -18,6 +18,7 @@ public class Test_InteropGenericDiscovery
 {
     private const string RecursionWarning = "CSWINRTINTEROPGEN0104";
     private const string ComplexityWarning = "CSWINRTINTEROPGEN0105";
+    private const string ExpansionWarning = "CSWINRTINTEROPGEN0106";
     private static readonly Lazy<string> SdkFixture = new(CreateSdkFixture);
 
     [TestMethod]
@@ -145,6 +146,18 @@ public class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    public void BranchingGenericReturns_WarnAndPreserveExplicitRoots()
+    {
+        AssertBranchingGeneration(treatWarningsAsErrors: false);
+    }
+
+    [TestMethod]
+    public void BranchingGenericReturns_RespectWarningsAsErrors()
+    {
+        AssertBranchingGeneration(treatWarningsAsErrors: true);
+    }
+
+    [TestMethod]
     [DataRow("strict", false, false, true)]
     [DataRow("strict", true, false, false)]
     [DataRow("strict", false, true, false)]
@@ -268,6 +281,69 @@ public class Test_InteropGenericDiscovery
                 private static IStringable Create<T>() => new Node<T>();
             }
             """;
+    }
+
+    private static void AssertBranchingGeneration(bool treatWarningsAsErrors)
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropBranchingDiscoveryTest_").FullName;
+
+        try
+        {
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                using Windows.Foundation;
+
+                namespace Recursion;
+
+                public sealed class A<T>;
+                public sealed class B<T>;
+
+                public sealed class Node<T>
+                {
+                    public Node<A<T>> NextA() => new();
+                    public Node<B<T>> NextB() => new();
+                }
+
+                public sealed class Root<T> : IStringable
+                {
+                    public override string ToString() => "root";
+                }
+
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = new Node<int>();
+                        _ = new Root<long>();
+                    }
+                }
+                """],
+                Path.Combine(directory, "BranchingGenerics.dll"),
+                outputKind: OutputKind.ConsoleApplication);
+            (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors);
+            string interop = Path.Combine(directory, "WinRT.Interop.dll");
+
+            StringAssert.Contains(log, ExpansionWarning);
+            StringAssert.Contains(log, "1024");
+            Assert.IsFalse(log.Contains(RecursionWarning, StringComparison.Ordinal), log);
+            Assert.IsFalse(log.Contains(ComplexityWarning, StringComparison.Ordinal), log);
+
+            if (treatWarningsAsErrors)
+            {
+                Assert.AreNotEqual(0, exitCode, log);
+                Assert.IsFalse(File.Exists(interop), log);
+            }
+            else
+            {
+                Assert.AreEqual(0, exitCode, log);
+                HashSet<string> types = GetComWrappersTypeAssociations(interop);
+                Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Root`1[[System.Int64,", StringComparison.Ordinal)), log);
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     private static void AssertGeneration(

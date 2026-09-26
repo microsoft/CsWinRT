@@ -204,6 +204,7 @@ internal static partial class ModuleDefinitionExtensions
     {
         const int MaxDiscoveryDepth = 32;
         const int MaxSignatureComplexity = 256;
+        const int MaxTransitiveTypes = 1024;
 
         HashSet<TResult> results = new(signatureComparer);
         HashSet<TypeSignature> typeSpecifications = new(signatureComparer);
@@ -211,6 +212,8 @@ internal static partial class ModuleDefinitionExtensions
         Queue<(TypeSignature Type, int Depth)> pendingTypes = new();
         bool recursionLimitReported = false;
         bool complexityLimitReported = false;
+        bool transitiveTypeLimitReported = false;
+        int transitiveTypeCount = 0;
 
         // Helper to crawl a signature, recursively
         IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type, int depth = 0)
@@ -233,13 +236,33 @@ internal static partial class ModuleDefinitionExtensions
             foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
             {
                 if (genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
-                    visitedTypes.Add(genericType))
+                    !visitedTypes.Contains(genericType))
                 {
+                    // Bound the worklist when branching methods create many distinct types below the depth limit
+                    if (depth > 0 && depth <= MaxDiscoveryDepth && transitiveTypeCount == MaxTransitiveTypes)
+                    {
+                        if (!transitiveTypeLimitReported)
+                        {
+                            transitiveTypeLimitReported = true;
+
+                            WellKnownInteropExceptions.GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(module, MaxTransitiveTypes).LogOrThrow(treatWarningsAsErrors);
+                        }
+
+                        continue;
+                    }
+
+                    _ = visitedTypes.Add(genericType);
+
                     // An expanding cycle, such as 'Node<T>' -> 'Node<Node<T>>', never repeats an exact signature.
                     // Keep the discovered type, but bound further member traversal to avoid unbounded expansion.
                     if (depth <= MaxDiscoveryDepth)
                     {
                         pendingTypes.Enqueue((genericType, depth));
+
+                        if (depth > 0)
+                        {
+                            transitiveTypeCount++;
+                        }
                     }
                     else if (!recursionLimitReported)
                     {
