@@ -7,19 +7,29 @@ using WindowsRuntime.InteropServices;
 
 #pragma warning disable CSWINRT3001 // Type or member is obsolete
 
-// The interop generator normally skips projected types when generating CCW marshalling code, as they are backed
-// by native objects and never need to be exposed to native code through a CCW. Opting 'JsonArray' in via the
-// '[WindowsRuntimeNativeExposedType]' attribute forces the interop generator to also emit CCW marshalling code
-// for it, just like it does for any user defined type. This registers a proxy type map association for the type,
-// which the checks below then verify is present (and absent for a projected type that was not opted in).
+// Native code can request a CCW around an RCW to obtain additional managed collection interfaces.
 [assembly: WindowsRuntimeNativeExposedType(typeof(JsonArray))]
 
 namespace NativeExposedType;
 
 internal static class Program
 {
-    private static int Main()
+    [STAThread]
+    private static int Main(string[] args)
     {
+        // XAML modes require an interactive desktop; the default and --rcw-first modes are headless.
+        if (args is ["--xaml-only"])
+        {
+            XamlTests.Run(freshOnly: true);
+
+            return 100;
+        }
+
+        if (args is not ([] or ["--rcw-first"] or ["--xaml"]))
+        {
+            throw new ArgumentException("Supported arguments: --rcw-first, --xaml, --xaml-only.");
+        }
+
         IReadOnlyDictionary<Type, Type> proxyTypeMapping = GetComWrappersProxyTypeMapping();
 
         // 'JsonArray' was explicitly opted into CCW marshalling code generation, so the interop generator must
@@ -35,6 +45,13 @@ internal static class Program
         if (proxyTypeMapping.TryGetValue(typeof(JsonObject), out _))
         {
             return 102;
+        }
+
+        CollectionTests.Run(rcwFirst: args is ["--rcw-first"]);
+
+        if (args is ["--xaml"])
+        {
+            XamlTests.Run(freshOnly: false);
         }
 
         return 100;
