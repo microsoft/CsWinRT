@@ -8,6 +8,9 @@
 
     <!-- This project runs the projection writer end-to-end; it needs no CsWinRT processing itself -->
     <CsWinRTEnabled>false</CsWinRTEnabled>
+
+    <!-- Opt in at build time; normal test runs do not invoke the native compiler. -->
+    <DefineConstants Condition="'$(CSWINRT_TEST_GENERIC_MARSHALLERS_AOT)' == '1'">$(DefineConstants);CSWINRT_GENERIC_MARSHALLERS_AOT</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'x86'">
@@ -80,6 +83,8 @@
     <Compile Include="..\..\WinRT.Projection.Writer\Helpers\TypeFilter.cs" Link="Helpers\TypeFilter.cs" />
     <Compile Remove="Resources\ArrayPropertySetterTests.cs" />
     <EmbeddedResource Include="Resources\ArrayPropertySetterTests.cs" />
+    <Compile Remove="Resources\GenericMarshallerTests.cs" />
+    <EmbeddedResource Include="Resources\GenericMarshallerTests.cs" />
   </ItemGroup>
 
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->

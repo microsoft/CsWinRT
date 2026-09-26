@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -20,12 +21,12 @@ internal static class ArrayElementEncoder
     /// (typeNamespace prefix outside the brackets, and the element inside the brackets uses just the
     /// type name without its namespace because depth=0 in the interop generator's AppendRawTypeName).
     /// </summary>
-    internal static string GetArrayMarshallerInteropPath(TypeSignature elementType)
+    internal static string GetArrayMarshallerInteropPath(ProjectionEmitContext context, TypeSignature elementType)
     {
         // The 'encodedElement' passed in uses the depth>0 form (assembly + hyphenated namespace + name),
         // but inside the array brackets the interop generator uses the depth=0 form (assembly + just name).
         // Re-encode the element with the top-level form for accurate matching.
-        string topLevelElement = EncodeArrayElementName(elementType);
+        string topLevelElement = EncodeArrayElementName(context, elementType);
 
         // Resolve the element's namespace to determine the path prefix.
         string ns = AbiTypeHelpers.GetMappedNamespace(elementType);
@@ -43,14 +44,17 @@ internal static class ArrayElementEncoder
     /// fundamentals use their short C# name; typedefs use just the type name (no namespace) prefixed
     /// with the assembly marker; generic instances include their assembly marker, name, and type arguments.
     /// </summary>
-    private static string EncodeArrayElementName(TypeSignature elementType)
+    private static string EncodeArrayElementName(ProjectionEmitContext context, TypeSignature elementType)
     {
         StringBuilder sb = new();
-        EncodeArrayElementNameInto(sb, elementType);
+        EncodeArrayElementNameInto(sb, context, elementType);
         return sb.ToString();
     }
 
-    private static void EncodeArrayElementNameInto(StringBuilder sb, TypeSignature sig)
+    private static void EncodeArrayElementNameInto(
+        StringBuilder sb,
+        ProjectionEmitContext context,
+        TypeSignature sig)
     {
         // Special case for System.Guid: the depth=0 (top-level array element) form drops the
         // namespace prefix and uses just the assembly marker + type name, so for Guid this
@@ -69,10 +73,10 @@ internal static class ArrayElementEncoder
                 InteropTypeNameWriter.EncodeFundamental(sb, corlib, TypedefNameType.Projected);
                 return;
             case TypeDefOrRefSignature td:
-                EncodeArrayElementForTypeDef(sb, td.Type, generic_args: null);
+                EncodeArrayElementForTypeDef(sb, context, td.Type, generic_args: null);
                 return;
             case GenericInstanceTypeSignature gi:
-                EncodeArrayElementForTypeDef(sb, gi.GenericType, generic_args: gi.TypeArguments);
+                EncodeArrayElementForTypeDef(sb, context, gi.GenericType, generic_args: gi.TypeArguments);
                 return;
             default:
                 _ = sb.Append(sig.FullName);
@@ -80,7 +84,11 @@ internal static class ArrayElementEncoder
         }
     }
 
-    private static void EncodeArrayElementForTypeDef(StringBuilder sb, ITypeDefOrRef type, IList<TypeSignature>? generic_args)
+    private static void EncodeArrayElementForTypeDef(
+        StringBuilder sb,
+        ProjectionEmitContext context,
+        ITypeDefOrRef type,
+        IList<TypeSignature>? generic_args)
     {
         (string typeNs, string typeName) = type.Names();
 
@@ -96,10 +104,7 @@ internal static class ArrayElementEncoder
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');
 
-        // Assembly marker prefix. Pass the type so that third-party (e.g. component-authored)
-        // types resolve to their actual assembly name (e.g. <AuthoringTest>) instead of
-        // defaulting to <#Windows>.
-        _ = sb.Append(InteropTypeNameWriter.GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+        _ = sb.Append(InteropTypeNameWriter.GetInteropAssemblyMarker(context, typeNs, typeName, mapped, type));
 
         // Top-level: just the type name (no namespace).
         _ = sb.Append(typeName);
@@ -115,7 +120,7 @@ internal static class ArrayElementEncoder
                     _ = sb.Append('|');
                 }
 
-                InteropTypeNameWriter.EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
+                InteropTypeNameWriter.EncodeInteropTypeNameInto(sb, context, generic_args[i], TypedefNameType.Projected);
             }
             _ = sb.Append('>');
         }

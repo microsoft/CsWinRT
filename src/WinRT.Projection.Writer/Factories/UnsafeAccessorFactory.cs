@@ -84,7 +84,7 @@ internal static class UnsafeAccessorFactory
     public static void EmitIidAccessor(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         string propName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, gi);
-        string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
+        string interopName = InteropTypeNameWriter.EncodeInteropTypeName(context, gi, TypedefNameType.InteropIID);
 
         writer.WriteLine(isMultiline: true, $$"""
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_{{interopName}}")]
