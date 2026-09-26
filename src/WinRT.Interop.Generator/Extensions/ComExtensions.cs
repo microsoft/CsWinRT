@@ -4,7 +4,6 @@
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -47,7 +46,7 @@ internal static class ComExtensions
                 }
 
                 // Check that the attribute type is a match
-                if (!SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IUnknownDerivedAttribute2))
+                if (!interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IUnknownDerivedAttribute2))
                 {
                     continue;
                 }

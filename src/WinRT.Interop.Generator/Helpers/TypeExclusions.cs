@@ -4,7 +4,6 @@
 using System;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
@@ -46,6 +45,6 @@ internal static class TypeExclusions
         ];
 
         // Check if the input type matches any of our exclusions
-        return excludedTypes.Contains(type, SignatureComparer.IgnoreVersion);
+        return excludedTypes.Contains(type, interopReferences.SignatureComparer);
     }
 }

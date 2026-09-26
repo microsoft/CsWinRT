@@ -52,6 +52,7 @@ internal partial class ModuleDefinitionExtensions
                 }
 
                 Dictionary<(Utf8String?, Utf8String?), HashSet<TypeSignature>> builder = [];
+                SignatureComparer signatureComparer = new(module.RuntimeContext, SignatureComparisonFlags.VersionAgnostic);
 
                 // Enumerate all attributes on the lookup type and extract runtime class to exclusive interface pairs
                 foreach (CustomAttribute attribute in windowsRuntimeExclusiveToInterfacesType.CustomAttributes)
@@ -67,7 +68,7 @@ internal partial class ModuleDefinitionExtensions
 
                     if (!builder.TryGetValue(key, out HashSet<TypeSignature>? set))
                     {
-                        set = new(SignatureComparer.Default);
+                        set = new(signatureComparer);
                         builder[key] = set;
                     }
 
@@ -76,7 +77,7 @@ internal partial class ModuleDefinitionExtensions
 
                 return builder.ToFrozenDictionary(
                     keySelector: kvp => kvp.Key,
-                    elementSelector: kvp => kvp.Value.ToFrozenSet(SignatureComparer.Default));
+                    elementSelector: kvp => kvp.Value.ToFrozenSet(signatureComparer));
             });
     }
 }
