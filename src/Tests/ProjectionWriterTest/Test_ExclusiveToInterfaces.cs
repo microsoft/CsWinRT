@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
@@ -27,14 +28,9 @@ public class Test_ExclusiveToInterfaces
     private const string IdicMetadataKey = "CsWinRT.IdicExclusiveTo.v1";
 
     [TestMethod]
+    [SupportedOSPlatform("windows10.0")]
     public void ReferenceMetadataAttribute_UsesReadOnlyKeyValuePairs()
     {
-        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 3))
-        {
-            Assert.Inconclusive("Windows Runtime metadata attributes require Windows 8.1 or later.");
-            return;
-        }
-
         WindowsRuntimeReferenceAssemblyMetadataAttribute metadata = new("Example", null);
         Assert.AreEqual("Example", metadata.Key);
         Assert.IsNull(metadata.Value);
