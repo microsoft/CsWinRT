@@ -62,6 +62,12 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
+            // Add the default 'ICustomPropertyProvider' unless it is disabled or explicitly implemented
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences));
+
             // Add all entries for explicitly implemented interfaces
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
                 vtableTypes: vtableTypes,

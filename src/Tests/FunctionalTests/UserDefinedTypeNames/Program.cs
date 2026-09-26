@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Windows.ApplicationModel.Background;
 using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 (object Value, bool IsBuffer)[] cases =
 [
@@ -45,6 +46,8 @@ static unsafe bool CheckObject(object value, bool isBuffer)
     nint expected = 0;
     nint unexpected = 0;
     nint callback = 0;
+    nint provider = 0;
+    ABI.System.Type providerType = default;
 
     try
     {
@@ -59,6 +62,14 @@ static unsafe bool CheckObject(object value, bool isBuffer)
         // A wrong marshaller association must not silently expose the other type's interface set.
         if (Marshal.QueryInterface((nint)ccw, unexpectedIid, out unexpected) != unchecked((int)0x80004002) ||
             unexpected != 0)
+        {
+            return false;
+        }
+
+        Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ccw, new Guid("7C925755-3E48-42B4-8677-76372267033F"), out provider));
+        Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, ABI.System.Type*, int>)(*(void***)provider)[9])(provider, &providerType));
+
+        if ((int)providerType.Kind != 2 || HStringMarshaller.ConvertToManaged(providerType.Name) != value.GetType().AssemblyQualifiedName)
         {
             return false;
         }
@@ -100,6 +111,8 @@ static unsafe bool CheckObject(object value, bool isBuffer)
     }
     finally
     {
+        ABI.System.TypeMarshaller.Dispose(providerType);
+        WindowsRuntimeMarshal.Free((void*)provider);
         WindowsRuntimeMarshal.Free((void*)callback);
         WindowsRuntimeMarshal.Free((void*)unexpected);
         WindowsRuntimeMarshal.Free((void*)expected);

@@ -5,6 +5,9 @@ parameters:
     - JsonValueFunctionCalls
     - ClassActivation
     - CustomPropertyProvider
+    - DefaultCustomPropertyProviderDisabled
+    - DefaultCustomPropertyProviderSuppressed
+    - DefaultCustomPropertyProviderWinUI
     - Structs
     - Events
     - DynamicInterfaceCasting

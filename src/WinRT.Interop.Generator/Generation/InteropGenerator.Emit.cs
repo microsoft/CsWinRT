@@ -59,7 +59,8 @@ internal partial class InteropGenerator
             windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
             windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
             windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
-            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
+            enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2549,8 +2550,11 @@ internal partial class InteropGenerator
         // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
         Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
 
-        // We first need to emit all the shared COM interface entries types, as we'll aggressively share them
-        foreach (TypeSignatureEquatableSet vtableTypes in discoveryState.UserDefinedVtableTypes.Order())
+        // Share marshallers across types with the same explicitly implemented interfaces
+        foreach (IGrouping<TypeSignatureEquatableSet, KeyValuePair<TypeSignature, TypeSignatureEquatableSet>> group in
+            discoveryState.UserDefinedAndVtableTypes
+                .GroupBy(static pair => pair.Value)
+                .OrderBy(static group => group.Key))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2559,20 +2563,19 @@ internal partial class InteropGenerator
             try
             {
                 // Get the first user-defined with this vtable set as reference
-                typeSignature = discoveryState.UserDefinedAndVtableTypes
-                    .Where(kvp => kvp.Value.Equals(vtableTypes))
+                typeSignature = group
                     .Select(static kvp => kvp.Key)
                     .OrderByFullyQualifiedTypeName()
                     .First();
 
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
-                    vtableTypes: vtableTypes,
-                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+                    vtableTypes: group.Key,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
+                    useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 
@@ -2586,7 +2589,7 @@ internal partial class InteropGenerator
                     out TypeDefinition comWrappersMarshallerType);
 
                 // Track the marshaller attribute for later
-                marshallerAttributeMap.Add(vtableTypes, comWrappersMarshallerType);
+                marshallerAttributeMap.Add(group.Key, comWrappersMarshallerType);
             }
             catch (Exception e)
             {

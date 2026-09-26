@@ -37,6 +37,40 @@ internal static class InteropInterfaceEntriesResolver
     }
 
     /// <summary>
+    /// Enumerates the default <c>ICustomPropertyProvider</c> entry, unless disabled or explicitly implemented.
+    /// </summary>
+    /// <param name="vtableTypes">The explicitly implemented interfaces, or <see langword="null"/> for types that cannot implement a custom provider.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+        TypeSignatureEquatableSet? vtableTypes,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences)
+    {
+        if (!interopDefinitions.EnableDefaultCustomPropertyProviderSupport)
+        {
+            yield break;
+        }
+
+        // Match the IID so inherited and custom COM implementations of 'ICustomPropertyProvider' take precedence
+        if (vtableTypes is not null)
+        {
+            foreach (TypeSignature interfaceType in vtableTypes)
+            {
+                if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
+                    iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
+                {
+                    yield break;
+                }
+            }
+        }
+
+        yield return Create(
+            interopReferences.ICustomPropertyProviderImplget_IID,
+            interopReferences.ICustomPropertyProviderImplget_Vtable);
+    }
+
+    /// <summary>
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values from a given source set of vtable types.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>

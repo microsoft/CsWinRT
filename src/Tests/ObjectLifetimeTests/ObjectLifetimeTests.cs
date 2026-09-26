@@ -12,6 +12,7 @@ using Microsoft.Windows.System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -123,6 +124,167 @@ namespace ObjectLifetimeTests
 
             o = null;
         }
+
+        [TestMethod]
+        public void OpaqueDependencyObjectBindingsUseXamlMetadata()
+        {
+            OpaqueBindingPage page = null;
+            OpaqueVisibleArea originalArea = null;
+            DebugSettings debugSettings = null;
+            bool wasBindingTracingEnabled = false;
+            using var loaded = new ManualResetEvent(false);
+            RoutedEventHandler onLoaded = (_, _) => loaded.Set();
+
+            try
+            {
+                _asyncQueue
+                    .CallFromUIThread(() =>
+                    {
+                        debugSettings = Application.Current.DebugSettings;
+                        wasBindingTracingEnabled = debugSettings.IsBindingTracingEnabled;
+                        debugSettings.IsBindingTracingEnabled = true;
+                        debugSettings.BindingFailed += OnBindingFailed;
+                        page = new OpaqueBindingPage();
+                        page.Loaded += onLoaded;
+                        mainCanvas.Children.Add(page);
+                        page.UpdateLayout();
+                    })
+                    .WaitForHandle(loaded, "Opaque binding page did not load")
+                    .CallFromUIThread(() =>
+                    {
+                        originalArea = page.ElementSource.VisibleArea;
+                        Assert.IsNotNull(originalArea);
+                        VerifyBindings("initial", true, 0.25, "resource-initial");
+
+                        // Check the actual XAML compiler output, not a hand-authored provider.
+                        // In particular, the inherited and read-only members must have DP
+                        // descriptors even though neither outer source implements ICPP.
+                        var provider = (IXamlMetadataProvider)Application.Current;
+                        IXamlType elementType = provider.GetXamlType(typeof(OpaqueElementSource));
+                        Assert.IsNotNull(elementType);
+                        Assert.AreEqual(typeof(OpaqueElementSource), elementType.UnderlyingType);
+                        Assert.IsNotNull(elementType.BaseType);
+                        Assert.AreEqual(typeof(OpaqueBindingSourceBase), elementType.BaseType.UnderlyingType);
+                        VerifyDependencyProperty(elementType.BaseType, nameof(OpaqueElementSource.IsOnScreen), typeof(bool), false);
+                        VerifyDependencyProperty(elementType.BaseType, nameof(OpaqueElementSource.VisibleArea), typeof(OpaqueVisibleArea), false);
+
+                        IXamlType resourceType = provider.GetXamlType(typeof(OpaqueResourceSource));
+                        Assert.IsNotNull(resourceType);
+                        VerifyDependencyProperty(resourceType, nameof(OpaqueResourceSource.Output), typeof(string), true);
+
+                        IXamlType areaType = provider.GetXamlType(typeof(OpaqueVisibleArea));
+                        Assert.IsNotNull(areaType);
+                        IXamlMember ratioMember = areaType.GetMember(nameof(OpaqueVisibleArea.VisibleHeightRatio));
+                        Assert.IsNotNull(ratioMember);
+                        Assert.AreEqual(typeof(double), ratioMember.Type.UnderlyingType);
+
+                        page.ElementSource.IsOnScreen = false;
+                        originalArea.VisibleHeightRatio = 0.75;
+                        page.ResourceSource.SetOutput("resource-updated");
+                    })
+                    .CallFromUIThread(() =>
+                    {
+                        VerifyBindings("updated", false, 0.75, "resource-updated");
+
+                        // Changing the first path segment must replace the nested source.
+                        page.ElementSource.VisibleArea = new OpaqueVisibleArea { VisibleHeightRatio = 0.5 };
+                        page.ElementSource.IsOnScreen = true;
+                        page.ResourceSource.SetOutput("resource-replaced");
+                    })
+                    .CallFromUIThread(() =>
+                    {
+                        VerifyBindings("replaced", true, 0.5, "resource-replaced");
+                        originalArea.VisibleHeightRatio = 0.125;
+                    })
+                    .CallFromUIThread(() =>
+                    {
+                        VerifyBindings("old nested source detached", true, 0.5, "resource-replaced");
+                        page.ElementSource.VisibleArea.VisibleHeightRatio = 0.875;
+                    })
+                    .CallFromUIThread(() =>
+                    {
+                        VerifyBindings("new nested source updated", true, 0.875, "resource-replaced");
+                    })
+                    .Run();
+            }
+            finally
+            {
+                // Do not run remaining test callbacks if an earlier assertion failed
+                new AsyncQueue(((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.DispatcherQueue).CallFromUIThread(() =>
+                {
+                    if (page != null)
+                    {
+                        page.Loaded -= onLoaded;
+                        mainCanvas.Children.Remove(page);
+                    }
+                    if (debugSettings != null)
+                    {
+                        debugSettings.BindingFailed -= OnBindingFailed;
+                        debugSettings.IsBindingTracingEnabled = wasBindingTracingEnabled;
+                    }
+                }).Run();
+            }
+
+            static void OnBindingFailed(object sender, BindingFailedEventArgs args)
+            {
+                Logger.LogMessage("Opaque binding diagnostic: {0}", args.Message);
+            }
+
+            static void VerifyDependencyProperty(IXamlType owner, string name, Type type, bool isReadOnly)
+            {
+                IXamlMember member = owner.GetMember(name);
+                Assert.IsNotNull(member, $"Generated XAML metadata is missing {owner.FullName}.{name}");
+                Assert.IsTrue(member.IsDependencyProperty, $"{name} must be a dependency property");
+                Assert.AreEqual(type, member.Type.UnderlyingType, $"{name} property type");
+                Assert.AreEqual(isReadOnly, member.IsReadOnly, $"{name} read-only metadata");
+            }
+
+            void VerifyBindings(string phase, bool isOnScreen, double visibleHeightRatio, string output)
+            {
+                // Record every target before asserting, so a failure on one path does not
+                // hide what the other native bindings did in this phase.
+                Logger.LogMessage("Opaque bindings ({0}): IsOnScreen={1}; VisibleArea matches={2}; VisibleHeightRatio={3}; Output={4}",
+                    phase, page.IsOnScreenTarget.Tag ?? "<null>",
+                    ReferenceEquals(page.ElementSource.VisibleArea, page.VisibleAreaTarget.Tag),
+                    page.VisibleHeightRatioTarget.Tag ?? "<null>", page.OutputTarget.Text);
+                Assert.AreEqual<object>(isOnScreen, page.IsOnScreenTarget.Tag, $"{phase}: inherited ElementName DP");
+                Assert.AreSame(page.ElementSource.VisibleArea, page.VisibleAreaTarget.Tag, $"{phase}: first path segment");
+                Assert.AreEqual<object>(visibleHeightRatio, page.VisibleHeightRatioTarget.Tag, $"{phase}: nested path");
+                Assert.AreEqual(output, page.OutputTarget.Text, $"{phase}: read-only StaticResource DP");
+            }
+        }
+
+        [TestMethod]
+        public void CustomControlAcceptsTypedStyleAndTemplate()
+        {
+            _asyncQueue.CallFromUIThread(() =>
+            {
+                var control = new TypedStyleControl();
+                var template = (ControlTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load(
+                    "<ControlTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Grid /></ControlTemplate>");
+                var style = new Style { TargetType = typeof(TypedStyleControl) };
+                style.Setters.Add(new Setter(FrameworkElement.WidthProperty, 42.0));
+                style.Setters.Add(new Setter(Control.TemplateProperty, template));
+
+                try
+                {
+                    control.Style = style;
+                    mainCanvas.Children.Add(control);
+                    control.ApplyTemplate();
+                    control.Measure(new Windows.Foundation.Size(100, 100));
+                    control.UpdateLayout();
+                    Assert.IsTrue(VisualTreeHelper.GetChildrenCount(control) > 0);
+                    Assert.AreEqual(42.0, control.Width);
+                    Assert.AreEqual(typeof(TypedStyleControl), control.Style.TargetType);
+                }
+                finally
+                {
+                    mainCanvas.Children.Remove(control);
+                }
+            }).Run();
+        }
+
+        private sealed class TypedStyleControl : Control;
 
         [TestMethod]
         public void TestInitializeWithWindow()

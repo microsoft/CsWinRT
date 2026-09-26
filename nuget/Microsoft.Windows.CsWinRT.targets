@@ -624,6 +624,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
     <CsWinRTEnableMarshalingTypeValidation Condition="'$(CsWinRTEnableMarshalingTypeValidation)' == ''">false</CsWinRTEnableMarshalingTypeValidation>
     <CsWinRTEnableMarshalingTypeMetadataSupport Condition="'$(CsWinRTEnableMarshalingTypeMetadataSupport)' == ''">true</CsWinRTEnableMarshalingTypeMetadataSupport>
+    <CsWinRTEnableDefaultCustomPropertyProviderSupport Condition="'$(CsWinRTEnableDefaultCustomPropertyProviderSupport)' == ''">true</CsWinRTEnableDefaultCustomPropertyProviderSupport>
+    <CsWinRTSuppressCustomPropertyNotSupportedException Condition="'$(CsWinRTSuppressCustomPropertyNotSupportedException)' == ''">false</CsWinRTSuppressCustomPropertyNotSupportedException>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -667,6 +669,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT"
                                     Value="$(CsWinRTEnableMarshalingTypeMetadataSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_PROPERTY_PROVIDER_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_PROPERTY_PROVIDER_SUPPORT"
+                                    Value="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION"
+                                    Value="$(CsWinRTSuppressCustomPropertyNotSupportedException)"
                                     Trim="true" />
   </ItemGroup>
 

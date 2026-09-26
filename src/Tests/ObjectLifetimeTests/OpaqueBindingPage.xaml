@@ -1,0 +1,42 @@
+<UserControl
+    x:Class="ObjectLifetimeTests.OpaqueBindingPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ObjectLifetimeTests">
+
+    <UserControl.Resources>
+        <local:OpaqueResourceSource x:Key="OutputSource" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- A real, initialized non-FrameworkElement in this XAML name scope. -->
+        <Grid.Tag>
+            <local:OpaqueElementSource x:Name="ElementSourceObject" IsOnScreen="True">
+                <local:OpaqueElementSource.VisibleArea>
+                    <local:OpaqueVisibleArea VisibleHeightRatio="0.25" />
+                </local:OpaqueElementSource.VisibleArea>
+            </local:OpaqueElementSource>
+        </Grid.Tag>
+
+        <!-- These are native Binding paths, not x:Bind or manually set targets. -->
+        <StackPanel>
+            <Border
+                x:Name="IsOnScreenTarget"
+                x:FieldModifier="internal"
+                Tag="{Binding IsOnScreen, ElementName=ElementSourceObject, Mode=OneWay}" />
+            <Border
+                x:Name="VisibleAreaTarget"
+                x:FieldModifier="internal"
+                Tag="{Binding VisibleArea, ElementName=ElementSourceObject, Mode=OneWay}" />
+            <Border
+                x:Name="VisibleHeightRatioTarget"
+                x:FieldModifier="internal"
+                Tag="{Binding VisibleArea.VisibleHeightRatio, ElementName=ElementSourceObject, Mode=OneWay}" />
+            <TextBlock
+                x:Name="OutputTarget"
+                x:FieldModifier="internal"
+                AutomationProperties.AutomationId="OpaqueBindingOutput"
+                Text="{Binding Output, Source={StaticResource OutputSource}, Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

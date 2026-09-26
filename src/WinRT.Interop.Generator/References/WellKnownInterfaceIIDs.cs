@@ -20,6 +20,11 @@ namespace WindowsRuntime.InteropGenerator.References;
 internal static class WellKnownInterfaceIIDs
 {
     /// <summary>
+    /// Gets the IID shared by the UWP XAML and WinUI <c>ICustomPropertyProvider</c> interfaces.
+    /// </summary>
+    public static Guid IID_ICustomPropertyProvider { get; } = new("7C925755-3E48-42B4-8677-76372267033F");
+
+    /// <summary>
     /// Gets the IID for <c>IStringable</c> (96369F54-8EB6-48F0-ABCE-C1B211E627C3).
     /// </summary>
     public static Guid IID_IStringable { get; } = new("96369F54-8EB6-48F0-ABCE-C1B211E627C3");

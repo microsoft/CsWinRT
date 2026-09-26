@@ -39,12 +39,14 @@ internal sealed class InteropDefinitions
     /// <param name="windowsRuntimeSdkXamlProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK XAML types (i.e. <c>WinRT.Sdk.Xaml.Projection.dll</c>).</param>
     /// <param name="windowsRuntimeProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).</param>
     /// <param name="windowsRuntimeComponentModule">The <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).</param>
+    /// <param name="enableDefaultCustomPropertyProviderSupport">Whether generated CCWs should expose the default custom property provider.</param>
     public InteropDefinitions(
         InteropReferences interopReferences,
         ModuleDefinition windowsRuntimeSdkProjectionModule,
         ModuleDefinition? windowsRuntimeSdkXamlProjectionModule,
         ModuleDefinition? windowsRuntimeProjectionModule,
-        ModuleDefinition? windowsRuntimeComponentModule)
+        ModuleDefinition? windowsRuntimeComponentModule,
+        bool enableDefaultCustomPropertyProviderSupport)
     {
         _interopReferences = interopReferences;
         _userDefinedInterfaceEntries = [];
@@ -54,7 +56,13 @@ internal sealed class InteropDefinitions
         WindowsRuntimeSdkXamlProjectionModule = windowsRuntimeSdkXamlProjectionModule;
         WindowsRuntimeProjectionModule = windowsRuntimeProjectionModule;
         WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
+        EnableDefaultCustomPropertyProviderSupport = enableDefaultCustomPropertyProviderSupport;
     }
+
+    /// <summary>
+    /// Gets whether generated CCWs should expose the default custom property provider.
+    /// </summary>
+    public bool EnableDefaultCustomPropertyProviderSupport { get; }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.
@@ -127,7 +135,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences);
+    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences, EnableDefaultCustomPropertyProviderSupport);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IEnumerator1Vftbl</c> type.
@@ -167,7 +175,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences);
+    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences, EnableDefaultCustomPropertyProviderSupport);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IMapChangedEventArgsVftbl</c> type.
