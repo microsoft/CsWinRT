@@ -8,6 +8,7 @@ using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
@@ -23,33 +24,45 @@ internal static class InteropTypeNameWriter
     /// Encodes a TypeSignature using the WinRT.Interop name format. Used as the value of an
     /// <c>UnsafeAccessorType</c> attribute argument.
     /// </summary>
+    /// <param name="context">The active emit context.</param>
     /// <param name="sig">The type signature to encode.</param>
     /// <param name="nameType">Indicates whether to use the projected (no ABI prefix) form or
     /// the ABI-prefixed marshaller form.</param>
-    public static string EncodeInteropTypeName(TypeSignature sig, TypedefNameType nameType)
+    public static string EncodeInteropTypeName(
+        ProjectionEmitContext context,
+        TypeSignature sig,
+        TypedefNameType nameType)
     {
         StringBuilder sb = new();
-        EncodeInteropTypeNameInto(sb, sig, nameType);
+        EncodeInteropTypeNameInto(sb, context, sig, nameType);
         return sb.ToString();
     }
 
     /// <summary>
-    /// Returns the assembly-qualified form of <see cref="EncodeInteropTypeName(TypeSignature, TypedefNameType)"/>,
+    /// Returns the assembly-qualified form of <see cref="EncodeInteropTypeName"/>,
     /// suffixed with <c>", WinRT.Interop"</c>. This is the canonical value passed to
     /// <c>[UnsafeAccessorType]</c> arguments.
     /// </summary>
+    /// <param name="context">The active emit context.</param>
     /// <param name="sig">The type signature to encode.</param>
     /// <param name="nameType">Indicates whether to use the projected (no ABI prefix) form or
     /// the ABI-prefixed marshaller form. Defaults to <see cref="TypedefNameType.ABI"/>.</param>
-    public static string GetInteropAssemblyQualifiedName(TypeSignature sig, TypedefNameType nameType = TypedefNameType.ABI)
+    public static string GetInteropAssemblyQualifiedName(
+        ProjectionEmitContext context,
+        TypeSignature sig,
+        TypedefNameType nameType = TypedefNameType.ABI)
     {
-        return EncodeInteropTypeName(sig, nameType) + ", WinRT.Interop";
+        return EncodeInteropTypeName(context, sig, nameType) + ", WinRT.Interop";
     }
 
     /// <summary>
     /// Encodes an ABI interop type name for <paramref name="sig"/> into <paramref name="sb"/> using the format expected by <c>WindowsRuntime.InteropServices</c> attributes.
     /// </summary>
-    internal static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)
+    internal static void EncodeInteropTypeNameInto(
+        StringBuilder sb,
+        ProjectionEmitContext context,
+        TypeSignature sig,
+        TypedefNameType nameType)
     {
         // Special case for System.Guid: emitted with assembly-qualified form.
         if (sig is TypeDefOrRefSignature gtd
@@ -57,7 +70,7 @@ internal static class InteropTypeNameWriter
             && gtd.Type?.Name?.Value == "Guid")
         {
             _ = nameType == TypedefNameType.Projected
-                ? sb.Append("System-Guid")
+                ? sb.Append("<#corlib>System-Guid")
                 : sb.Append("ABI.System.<<#corlib>Guid>");
             return;
         }
@@ -68,29 +81,29 @@ internal static class InteropTypeNameWriter
                 EncodeFundamental(sb, corlib, nameType);
                 return;
             case TypeDefOrRefSignature td:
-                EncodeForTypeDef(sb, td.Type, nameType, generic_args: null);
+                EncodeForTypeDef(sb, context, td.Type, nameType, generic_args: null);
                 return;
             case GenericInstanceTypeSignature gi:
-                EncodeForTypeDef(sb, gi.GenericType, nameType, generic_args: gi.TypeArguments);
+                EncodeForTypeDef(sb, context, gi.GenericType, nameType, generic_args: gi.TypeArguments);
                 return;
             case SzArrayTypeSignature sz:
                 if (nameType == TypedefNameType.Projected)
                 {
-                    EncodeInteropTypeNameInto(sb, sz.BaseType, TypedefNameType.Projected);
+                    EncodeInteropTypeNameInto(sb, context, sz.BaseType, TypedefNameType.Projected);
                 }
                 else
                 {
                     _ = sb.Append("ABI.System.<");
-                    EncodeInteropTypeNameInto(sb, sz.BaseType, TypedefNameType.Projected);
+                    EncodeInteropTypeNameInto(sb, context, sz.BaseType, TypedefNameType.Projected);
                     _ = sb.Append(">");
                 }
 
                 return;
             case ByReferenceTypeSignature br:
-                EncodeInteropTypeNameInto(sb, br.BaseType, nameType);
+                EncodeInteropTypeNameInto(sb, context, br.BaseType, nameType);
                 return;
             case CustomModifierTypeSignature cm:
-                EncodeInteropTypeNameInto(sb, cm.BaseType, nameType);
+                EncodeInteropTypeNameInto(sb, context, cm.BaseType, nameType);
                 return;
             default:
                 _ = sb.Append(sig.FullName);
@@ -101,7 +114,10 @@ internal static class InteropTypeNameWriter
     /// <summary>
     /// Encodes the interop type name for a fundamental corlib type into <paramref name="sb"/>.
     /// </summary>
-    internal static void EncodeFundamental(StringBuilder sb, CorLibTypeSignature corlib, TypedefNameType nameType)
+    internal static void EncodeFundamental(
+        StringBuilder sb,
+        CorLibTypeSignature corlib,
+        TypedefNameType nameType)
     {
         switch (corlib.ElementType)
         {
@@ -129,7 +145,12 @@ internal static class InteropTypeNameWriter
         _ = sb.Append(corlib.FullName);
     }
 
-    private static void EncodeForTypeDef(StringBuilder sb, ITypeDefOrRef type, TypedefNameType nameType, IList<TypeSignature>? generic_args)
+    private static void EncodeForTypeDef(
+        StringBuilder sb,
+        ProjectionEmitContext context,
+        ITypeDefOrRef type,
+        TypedefNameType nameType,
+        IList<TypeSignature>? generic_args)
     {
         (string typeNs, string typeName) = type.Names();
 
@@ -172,7 +193,7 @@ internal static class InteropTypeNameWriter
                         _ = sb.Append('|');
                     }
 
-                    EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
+                    EncodeInteropTypeNameInto(sb, context, generic_args[i], TypedefNameType.Projected);
                 }
                 _ = sb.Append('>');
             }
@@ -194,14 +215,14 @@ internal static class InteropTypeNameWriter
 
         if (nameType == TypedefNameType.InteropIID)
         {
-            _ = sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+            _ = sb.Append(GetInteropAssemblyMarker(context, typeNs, typeName, mapped, type));
             _ = sb.Append(typeName);
         }
         else if (nameType == TypedefNameType.Projected)
         {
             // Replace namespace separator with - within the generic.
             string nsHyphenated = typeNs.Replace('.', '-');
-            _ = sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+            _ = sb.Append(GetInteropAssemblyMarker(context, typeNs, typeName, mapped, type));
             _ = sb.Append(nsHyphenated);
             _ = sb.Append('-');
             _ = sb.Append(typeName);
@@ -210,7 +231,7 @@ internal static class InteropTypeNameWriter
         {
             _ = sb.Append(typeNs);
             _ = sb.Append('.');
-            _ = sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+            _ = sb.Append(GetInteropAssemblyMarker(context, typeNs, typeName, mapped, type));
             _ = sb.Append(typeName);
         }
 
@@ -224,7 +245,7 @@ internal static class InteropTypeNameWriter
                     _ = sb.Append('|');
                 }
 
-                EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
+                EncodeInteropTypeNameInto(sb, context, generic_args[i], TypedefNameType.Projected);
             }
             _ = sb.Append('>');
         }
@@ -248,7 +269,12 @@ internal static class InteropTypeNameWriter
     /// Returns the assembly marker (e.g. <c>&lt;#corlib&gt;</c>) for a (possibly remapped)
     /// type/namespace.
     /// </summary>
-    internal static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped, ITypeDefOrRef? type = null)
+    internal static string GetInteropAssemblyMarker(
+        ProjectionEmitContext context,
+        string typeNs,
+        string typeName,
+        MappedType? mapped,
+        ITypeDefOrRef type)
     {
         if (mapped is { } m)
         {
@@ -294,19 +320,15 @@ internal static class InteropTypeNameWriter
             return "<#CsWinRT>";
         }
 
-        // For any other type (e.g. user-authored components in third-party .winmd assemblies),
-        // use the actual assembly name from the type's resolution scope..
-        // uses the .winmd file stem (e.g. "AuthoringTest" for AuthoringTest.winmd).
-        if (type is not null)
-        {
-            string? asmName = GetTypeAssemblyName(type);
+        // Resolve through the cache so 'TypeRef'-s use the same source filename (including casing)
+        // as the metadata entry consumed by the interop generator, not the declared assembly name.
+        string? assemblyName = context.Cache.Find(type) is { } definition
+            ? context.Cache.GetSourceStem(definition)
+            : type.Scope?.GetAssembly()?.Name?.Value;
 
-            if (!string.IsNullOrEmpty(asmName))
-            {
-                // Replace '.' with '-' for the assembly tag (e.g. "WinRT.Interop" -> "WinRT-Interop").
-                string hyphenated = asmName.Replace('.', '-');
-                return "<" + hyphenated + ">";
-            }
+        if (!string.IsNullOrEmpty(assemblyName))
+        {
+            return "<" + assemblyName.Replace('.', '-').Replace('`', '\'') + ">";
         }
 
         return "<#Windows>";
@@ -348,13 +370,5 @@ internal static class InteropTypeNameWriter
     private static bool IsMappedTypeInSystemNumericsVectors(string typeNs)
     {
         return typeNs == "System.Numerics";
-    }
-
-    /// <summary>
-    /// Resolves the assembly name (without extension) that defines a given type.
-    /// </summary>
-    private static string? GetTypeAssemblyName(ITypeDefOrRef type)
-    {
-        return type.Scope?.GetAssembly()?.Name?.Value;
     }
 }

@@ -142,7 +142,7 @@ internal static partial class AbiMethodBodyFactory
             }
 
             string eventSourceInteropType = isGenericEvent
-                ? InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtSig, TypedefNameType.EventSource)
+                ? InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, evtSig, TypedefNameType.EventSource)
                 : string.Empty;
 
             // Emit the per-event ConditionalWeakTable static field.
