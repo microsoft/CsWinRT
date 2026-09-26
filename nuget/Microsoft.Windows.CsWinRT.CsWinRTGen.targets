@@ -241,6 +241,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <ItemGroup>
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTInteropGenEffectiveToolsDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
@@ -494,7 +495,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
+    DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"

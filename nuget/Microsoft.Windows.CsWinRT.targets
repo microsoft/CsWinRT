@@ -352,6 +352,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="IdicExclusiveToIncludes=$(CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="IdicExclusiveToExcludes=$(CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExeTFM)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGeneratedFilesDir)" />
@@ -413,6 +415,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         Component="$(CsWinRTComponent)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
+        IdicExclusiveToIncludes="$(CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes)"
+        IdicExclusiveToExcludes="$(CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
         DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
         CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"

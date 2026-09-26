@@ -17,7 +17,7 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// Callers populate the mutable input/include/exclude sets and <c>init</c> properties up
 /// front, then call <see cref="MakeReadOnly"/> exactly once before passing this instance
 /// to <see cref="ProjectionGenerator"/>. <see cref="MakeReadOnly"/> eagerly computes the
-/// derived <see cref="Filter"/> and <see cref="AdditionFilter"/> so subsequent parallel
+/// derived <see cref="Filter"/>, <see cref="AdditionFilter"/>, and <see cref="IdicExclusiveToFilter"/> so subsequent parallel
 /// reads from work items have a stable, non-racy view.
 /// </remarks>
 internal sealed class Settings
@@ -132,9 +132,28 @@ internal sealed class Settings
     public bool IdicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Gets the fully qualified exclusive-to interface names to make dynamically interface castable.
+    /// Gets the namespace or type-name prefixes to select for exclusive-to dynamic interface casting.
+    /// </summary>
+    public HashSet<string> IdicExclusiveToIncludes { get; } = [];
+
+    /// <summary>
+    /// Gets the namespace or type-name prefixes to exclude from exclusive-to dynamic interface casting.
+    /// </summary>
+    public HashSet<string> IdicExclusiveToExcludes { get; } = [];
+
+    /// <summary>
+    /// Gets the fully qualified exclusive-to interface names to select exactly for dynamic interface casting.
     /// </summary>
     public HashSet<string> IdicExclusiveToTypes { get; } = [];
+
+    /// <summary>
+    /// Gets the exclusive-to IDIC selection filter. Only valid after <see cref="MakeReadOnly"/>.
+    /// </summary>
+    public ExclusiveToInterfaceFilter IdicExclusiveToFilter
+    {
+        get => field ?? throw WellKnownProjectionWriterExceptions.SettingsNotReadOnly();
+        private set;
+    }
 
     /// <summary>
     /// Gets whether the exclusive-to interface with the given name should be public.
@@ -150,10 +169,10 @@ internal sealed class Settings
     /// Gets whether the exclusive-to interface with the given name should support dynamic interface casting.
     /// </summary>
     /// <param name="typeName">The fully qualified interface name.</param>
-    /// <returns>Whether the global or per-type dynamic-interface-casting option is enabled.</returns>
+    /// <returns>Whether dynamic interface casting is enabled and the interface passes its selection filters.</returns>
     public bool IsIdicExclusiveTo(string typeName)
     {
-        return IdicExclusiveTo || IdicExclusiveToTypes.Contains(typeName);
+        return IdicExclusiveTo && IdicExclusiveToFilter.Includes(typeName);
     }
 
     /// <summary>
@@ -163,7 +182,7 @@ internal sealed class Settings
 
     /// <summary>
     /// Finalizes the settings: eagerly builds the derived <see cref="Filter"/> and
-    /// <see cref="AdditionFilter"/> from the configured include/exclude sets, then marks
+    /// <see cref="AdditionFilter"/> and <see cref="IdicExclusiveToFilter"/> from the configured include/exclude sets, then marks
     /// the instance as read-only. Must be called exactly once before passing the instance
     /// to <see cref="ProjectionGenerator"/>.
     /// </summary>
@@ -179,6 +198,7 @@ internal sealed class Settings
 
         Filter = new TypeFilter(Include, Exclude, IncludeTypes);
         AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes);
+        IdicExclusiveToFilter = new ExclusiveToInterfaceFilter(IdicExclusiveToIncludes, IdicExclusiveToExcludes, IdicExclusiveToTypes);
         _isReadOnly = true;
     }
 }
