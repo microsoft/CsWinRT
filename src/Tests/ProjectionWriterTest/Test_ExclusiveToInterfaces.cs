@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Versioning;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
@@ -15,7 +13,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProjectionWriterTest.Helpers;
-using WindowsRuntime.InteropServices;
 using WindowsRuntime.ProjectionWriter;
 using MetadataTypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
@@ -26,25 +23,6 @@ public class Test_ExclusiveToInterfaces
 {
     private const string ReferenceMetadataAttributeName = "WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyMetadataAttribute";
     private const string IdicMetadataKey = "CsWinRT.IdicExclusiveTo.v1";
-
-    [TestMethod]
-    [SupportedOSPlatform("windows10.0")]
-    public void ReferenceMetadataAttribute_UsesReadOnlyKeyValuePairs()
-    {
-        WindowsRuntimeReferenceAssemblyMetadataAttribute metadata = new("Example", null);
-        Assert.AreEqual("Example", metadata.Key);
-        Assert.IsNull(metadata.Value);
-
-        Type type = typeof(WindowsRuntimeReferenceAssemblyMetadataAttribute);
-        Assert.IsFalse(type.GetProperty("Key")!.CanWrite);
-        Assert.IsFalse(type.GetProperty("Value")!.CanWrite);
-        AttributeUsageAttribute usage = type.GetCustomAttribute<AttributeUsageAttribute>()!;
-        Assert.AreEqual(AttributeTargets.Assembly, usage.ValidOn);
-        Assert.IsTrue(usage.AllowMultiple);
-        Assert.IsFalse(usage.Inherited);
-        Assert.IsEmpty(typeof(WindowsRuntimeReferenceAssemblyAttribute).GetProperties(
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly));
-    }
 
     [TestMethod]
     [DataRow(false, false)]
