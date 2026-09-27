@@ -688,6 +688,10 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 
 ## Code style and conventions
 
+### Documentation
+
+- Do not manually wrap Markdown prose. Keep each paragraph on a single source line and let the viewer handle visual wrapping.
+
 ### C# projects
 
 - **Language version**: C# 14.0 (`LangVersion` = `14.0` or `preview`)
