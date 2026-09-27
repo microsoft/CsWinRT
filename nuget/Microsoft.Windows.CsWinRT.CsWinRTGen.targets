@@ -305,6 +305,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTInteropGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <PropertyGroup>
+    <_CsWinRTGeneratorDebugReproPath Condition="'$(CsWinRTGeneratorDebugReproDirectory)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorDebugReproDirectory)', 'interop-debug-repro.zip'))</_CsWinRTGeneratorDebugReproPath>
     <_CsWinRTGeneratorLogPath Condition="'$(CsWinRTGeneratorLogDirectory)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorLogDirectory)', 'interop-log.json'))</_CsWinRTGeneratorLogPath>
   </PropertyGroup>
   <Target
@@ -312,7 +313,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator;_RunCsWinRTComponentProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);@(CsWinRTGeneratorMergedProjectionPath)"
-    Outputs="$(_CsWinRTGeneratorInteropAssemblyPath);$(_CsWinRTGeneratorLogPath)"
+    Outputs="$(_CsWinRTGeneratorInteropAssemblyPath);$(_CsWinRTGeneratorLogPath);$(_CsWinRTGeneratorDebugReproPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <!-- Pass the 'WinRT.Runtime' implementation assembly (not the reference assembly) to the generator -->

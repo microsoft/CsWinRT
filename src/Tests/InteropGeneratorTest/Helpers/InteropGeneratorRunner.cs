@@ -308,7 +308,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool? analyzeNetStandardAssemblies,
         string? disabledAssemblyName = null,
         bool? treatWarningsAsErrors = null,
-        string? logDirectory = null)
+        string? logDirectory = null,
+        string? debugReproDirectory = null)
     {
         string directory = Path.GetDirectoryName(projectPath)!;
         string binlog = Path.Combine(directory, $"build-{++msbuildInvocation}.binlog");
@@ -338,6 +339,11 @@ internal sealed class InteropGeneratorRunner : IDisposable
         if (logDirectory is not null)
         {
             startInfo.ArgumentList.Add("-p:CsWinRTGeneratorLogDirectory=" + logDirectory);
+        }
+
+        if (debugReproDirectory is not null)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTGeneratorDebugReproDirectory=" + debugReproDirectory);
         }
 
         (int exitCode, string log) = await RunProcessAsync(startInfo);
