@@ -18,6 +18,13 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// </summary>
 internal sealed class InteropGeneratorEmitInputs
 {
+    /// <summary>
+    /// Creates ordered, canonicalized emit inputs from the completed discovery state.
+    /// </summary>
+    /// <param name="discoveryState">The discovered types and interface sets.</param>
+    /// <param name="interopReferences">References used to identify key-value-pair collection types.</param>
+    /// <param name="module">The output module whose importer resolves forwarded type identities.</param>
+    /// <param name="token">The cancellation token for preparing the emit inputs.</param>
     public InteropGeneratorEmitInputs(
         InteropGeneratorDiscoveryState discoveryState,
         InteropReferences interopReferences,
@@ -94,39 +101,57 @@ internal sealed class InteropGeneratorEmitInputs
         UserDefinedAndVtableTypes = CanonicalizeTypesAndVtables(discoveryState.UserDefinedAndVtableTypes);
     }
 
+    /// <summary>Gets the ordered generic delegate instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> GenericDelegateTypes { get; }
 
+    /// <summary>Gets the ordered <c>IEnumerator&lt;T&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IEnumerator1Types { get; }
 
+    /// <summary>Gets the ordered <c>IEnumerable&lt;T&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IEnumerable1Types { get; }
 
+    /// <summary>Gets the ordered <c>IReadOnlyList&lt;T&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IReadOnlyList1Types { get; }
 
+    /// <summary>Gets the ordered <c>IList&lt;T&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IList1Types { get; }
 
+    /// <summary>Gets the ordered <c>IReadOnlyDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IReadOnlyDictionary2Types { get; }
 
+    /// <summary>Gets the ordered <c>IDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IDictionary2Types { get; }
 
+    /// <summary>Gets the ordered <c>KeyValuePair&lt;TKey, TValue&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> KeyValuePairTypes { get; }
 
+    /// <summary>Gets the ordered <c>IMapChangedEventArgs&lt;TKey&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IMapChangedEventArgs1Types { get; }
 
+    /// <summary>Gets the ordered <c>IObservableVector&lt;T&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IObservableVector1Types { get; }
 
+    /// <summary>Gets the ordered <c>IObservableMap&lt;TKey, TValue&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IObservableMap2Types { get; }
 
+    /// <summary>Gets the ordered <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IAsyncActionWithProgress1Types { get; }
 
+    /// <summary>Gets the ordered <c>IAsyncOperation&lt;TResult&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IAsyncOperation1Types { get; }
 
+    /// <summary>Gets the ordered <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> instantiations.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IAsyncOperationWithProgress2Types { get; }
 
+    /// <summary>Gets the ordered <c>IReadOnlyList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> IReadOnlyCollectionKeyValuePair2Types { get; }
 
+    /// <summary>Gets the ordered <c>IList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
     public ImmutableArray<GenericInstanceTypeSignature> ICollectionKeyValuePair2Types { get; }
 
+    /// <summary>Gets the ordered Windows Runtime SZ arrays and their canonicalized interface sets.</summary>
     public ImmutableArray<(SzArrayTypeSignature Type, TypeSignatureEquatableSet VtableTypes)> SzArrayAndVtableTypes { get; }
 
+    /// <summary>Gets the ordered user-defined types and their shared canonicalized interface sets.</summary>
     public ImmutableArray<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> UserDefinedAndVtableTypes { get; }
 }
