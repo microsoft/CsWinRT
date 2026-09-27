@@ -813,6 +813,7 @@ internal partial class InteropGenerator
         // modules are loaded separately and also need to be recognized by selection diagnostics.
         Dictionary<string, ModuleDefinition> modulesByAssemblyName = new(StringComparer.OrdinalIgnoreCase);
 
+        // Add named modules to the validation lookup, ignoring unavailable optional modules
         void AddModule(ModuleDefinition? module)
         {
             if (module?.Assembly?.Name is { } assemblyName)
