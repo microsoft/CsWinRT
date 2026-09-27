@@ -142,15 +142,19 @@ internal sealed class InteropGeneratorEmitInputs
     /// <summary>Enumerates the ordered <see cref="IReadOnlyList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyCollectionKeyValuePair2Types()
     {
-        return CanonicalizeTypes(_discoveryState.IReadOnlyList1Types
-            .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences)));
+        IEnumerable<GenericInstanceTypeSignature> keyValuePairTypes = _discoveryState.IReadOnlyList1Types
+            .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences));
+
+        return CanonicalizeTypes(keyValuePairTypes);
     }
 
     /// <summary>Enumerates the ordered <see cref="IList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateICollectionKeyValuePair2Types()
     {
-        return CanonicalizeTypes(_discoveryState.IList1Types
-            .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences)));
+        IEnumerable<GenericInstanceTypeSignature> keyValuePairTypes = _discoveryState.IList1Types
+            .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences));
+
+        return CanonicalizeTypes(keyValuePairTypes);
     }
 
     /// <summary>Enumerates the ordered Windows Runtime SZ arrays and their canonicalized interface sets.</summary>
