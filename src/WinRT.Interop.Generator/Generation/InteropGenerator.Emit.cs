@@ -205,6 +205,11 @@ internal partial class InteropGenerator
 
         // Emit the interop .dll to disk
         WriteInteropModuleToDisk(args, module);
+
+        if (args.LogDirectory is not null)
+        {
+            WriteLog(args, discoveryState, module);
+        }
     }
 
     /// <summary>

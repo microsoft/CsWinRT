@@ -256,6 +256,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorLogDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
@@ -303,12 +304,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTInteropGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+  <PropertyGroup>
+    <_CsWinRTGeneratorLogPath Condition="'$(CsWinRTGeneratorLogDirectory)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorLogDirectory)', 'interop-log.json'))</_CsWinRTGeneratorLogPath>
+  </PropertyGroup>
   <Target
     Name="_RunCsWinRTInteropGenerator"
     DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator;_RunCsWinRTComponentProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);@(CsWinRTGeneratorMergedProjectionPath)"
-    Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
+    Outputs="$(_CsWinRTGeneratorInteropAssemblyPath);$(_CsWinRTGeneratorLogPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <!-- Pass the 'WinRT.Runtime' implementation assembly (not the reference assembly) to the generator -->
@@ -330,6 +334,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinRTComponentAssemblyPath="@(CsWinRTGeneratorComponentPath)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
+      LogDirectory="$(CsWinRTGeneratorLogDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
@@ -375,6 +380,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Append to 'FileWrites' so the interop .dll will be removed on clean -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
+      <FileWrites Include="$(_CsWinRTGeneratorLogPath)" Condition="'$(_CsWinRTGeneratorLogPath)' != ''" />
     </ItemGroup>
   </Target>
 

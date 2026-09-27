@@ -33,6 +33,11 @@ internal static partial class InteropGenerator
             log: ConsoleApp.Log,
             token: token);
 
+        if (runner.Args.LogDirectory is { } logDirectory && !Directory.Exists(logDirectory))
+        {
+            throw WellKnownInteropExceptions.LogDirectoryDoesNotExist(logDirectory);
+        }
+
         // Discover the types to process
         InteropGeneratorDiscoveryState discoveryState = runner.RunPhase(
             phaseName: "discovery",

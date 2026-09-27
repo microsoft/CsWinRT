@@ -84,6 +84,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public string? DebugReproDirectory { get; set; }
 
     /// <summary>
+    /// Gets or sets the directory where the interop generator JSON log will be produced.
+    /// </summary>
+    /// <remarks>If not set, no log will be produced.</remarks>
+    public string? LogDirectory { get; set; }
+
+    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtinteropgen' tool is located.
     /// </summary>
     [Required]
@@ -235,6 +241,13 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        if (LogDirectory is not null && !Directory.Exists(LogDirectory))
+        {
+            Log.LogError("Interop generator log directory '{0}' is invalid or does not exist.", LogDirectory);
+
+            return false;
+        }
+
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
@@ -340,6 +353,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileOptionalCommand(args, "--winrt-component-assembly-path", WinRTComponentAssemblyPath?.ItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
+        AppendResponseFileOptionalCommand(args, "--log-directory", LogDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
         AppendResponseFileCommand(args, "--enable-default-custom-property-provider-support", EnableDefaultCustomPropertyProviderSupport.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);

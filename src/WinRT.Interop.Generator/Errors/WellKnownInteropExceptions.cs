@@ -953,6 +953,22 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// The requested interop generator log directory does not exist.
+    /// </summary>
+    public static WellKnownInteropException LogDirectoryDoesNotExist(string path)
+    {
+        return Exception(109, $"The interop generator log directory '{path}' does not exist.");
+    }
+
+    /// <summary>
+    /// Failed to write the interop generator log.
+    /// </summary>
+    public static WellKnownInteropException WriteLogError(string path, Exception exception)
+    {
+        return Exception(110, $"Failed to write the interop generator log to '{path}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
