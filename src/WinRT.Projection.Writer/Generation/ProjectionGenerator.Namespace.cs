@@ -141,6 +141,14 @@ internal sealed partial class ProjectionGenerator
             TypeKind kind = TypeKindResolver.Resolve(type);
             ProjectionFileBuilder.WriteType(writer, context, type, kind);
 
+            if (_settings.ReferenceProjection &&
+                kind == TypeKind.Interface &&
+                type.IsExclusiveTo &&
+                AbiInterfaceIDicFactory.IsEnabled(context, type))
+            {
+                state.IdicExclusiveToTypes.Add(type.FullName);
+            }
+
             if (kind == TypeKind.Class && !type.IsAttributeType)
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);

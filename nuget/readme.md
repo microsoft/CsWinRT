@@ -30,15 +30,18 @@ C#/WinRT behavior can be customized with these project properties:
 |-|-|-|
 | CsWinRTEnabled | *true \| false | Master switch — enables/disables all CsWinRT processing |
 | CsWinRTGenerateProjection | *true \| false | Generate C# projection sources from `.winmd` metadata |
-| CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
-| CsWinRTPublicExclusiveToInterfaces | true \| *false | Make selected `[ExclusiveTo]` interfaces public. App-time implementation generation preserves public interfaces from reference projections on a per-type basis |
-| CsWinRTDynamicallyInterfaceCastableExclusiveTo | true \| *false | Generate dynamic-interface-casting implementations for exclusive interfaces when generating implementation sources directly. Public interfaces in reference projections automatically receive this support at app build time |
+| CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution). The project's output item is also marked with `CsWinRTGenerateReferenceProjection` metadata set to `true`, so consuming projects can identify it among their resolved project references (e.g. `%(ReferencePath.CsWinRTGenerateReferenceProjection)`) |
+| CsWinRTPublicExclusiveToInterfaces | true \| *false | Make projected `[ExclusiveTo]` interfaces public, independently of dynamic interface casting. App-time generation preserves the actual public reference surface |
+| CsWinRTDynamicallyInterfaceCastableExclusiveTo | true \| *false | Opt eligible exclusive interfaces into dynamic interface casting, independently of visibility. Required even when IDIC filters are supplied; reference projections preserve the effective selection for app-time generation |
+| CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes | "" | Semicolon-separated, case-sensitive namespace or type-name prefixes that narrow the IDIC opt-in. Empty selects all eligible exclusives when the boolean is `true` |
+| CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes | "" | Semicolon-separated prefixes excluded from exclusive-interface IDIC. Any matching exclusion wins, even over a longer include; public visibility and required ABI/CCW support are unchanged |
 | CsWinRTPackReferenceProjection | *true \| false | When generating a reference projection, adds its reference assembly to the NuGet package under `ref/<tfm>` (the forwarder in `lib/<tfm>` has no API surface to compile against). Set to `false` to lay out the package manually |
 | CsWinRTPackedWinMD | *(item)* | An item listing the `.winmd` files to add to the NuGet package under `metadata/`, so consumers can pass them back as `CsWinRTInputs` to generate the merged projection. List only the metadata the package owns: `CsWinRTInputs` also contains dependency `.winmd` files that belong to other packages. Requires `CsWinRTPackReferenceProjection` |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
-| CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to always analyze for marshalling code, regardless of `CsWinRTMarshallingMode`. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
+| CsWinRTAnalyzeNetStandardAssemblies | *true \| false | Controls whether .NET Standard assemblies participate in interop discovery. Set to `false` to skip them in every marshalling mode, even when listed in `CsWinRTMarshallingEnabledAssembly`. Changes invalidate the generator's property-input cache |
+| CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to analyze for marshalling code regardless of `CsWinRTMarshallingMode`, subject to framework exclusions and `CsWinRTAnalyzeNetStandardAssemblies`. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
 | CsWinRTGenerateCollectionChangedListVtables | *true \| false | Controls whether the interop generator automatically generates the vtables for the optimized list types that `NotifyCollectionChangedEventArgs` stores its changed items in. These types are internal to the framework, so they are registered by name: set this to `false` to opt out of them, should one ever be renamed or removed in a future .NET version (note: marshalling those objects will then fail at runtime) |
 | CsWinRTUseWindowsUIXamlProjections | true \| *false | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes `DllGetActivationFactory` forward activation calls to all referenced WinRT components, allowing them to be merged into a single executable |
@@ -55,6 +58,10 @@ C#/WinRT behavior can be customized with these project properties:
 **If CsWinRTFilters is not defined, the following effective value is used:
 * -exclude $(CsWinRTExcludes)
 * -include $(CsWinRTIncludes)
+
+The IDIC-exclusive filters are separate from `CsWinRTIncludes` / `CsWinRTExcludes`: they select casting support, not projection APIs. They use prefix matching (no wildcards or regular expressions), trim outer whitespace, ignore empty entries, and deduplicate entries. Valid prefixes with no matches select nothing; invalid syntax produces `CSWINRTPROJECTIONGEN5022`. Filters alone never enable IDIC.
+
+Set these options on the **projection producer**. Its reference assembly records the exact effective IDIC selection in `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of public visibility, and consumers use that metadata without repeating the options. Missing metadata does not enable IDIC; regenerate older preview projection packages that require it. Projected runtime type identities must be globally unique; duplicates are rejected with `CSWINRTPROJECTIONGEN0015`, rather than merging their policies. Metadata-only attribute projections are exempt because they do not contribute interop type-map keys. See [exclusive interface configuration](../docs/usage.md#projecting-standalone-exclusive-interfaces) for examples, precedence, and package propagation.
 
 ## Runtime feature switches
 

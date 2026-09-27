@@ -15,7 +15,6 @@ public static class WindowsRuntimeActivationFactoryCallback
     /// A type containing logic to activate a composed Windows Runtime object.
     /// </summary>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#composable-activation"/>
-    [WindowsRuntimeImplementationOnlyMember]
     public abstract class DerivedComposed
     {
         /// <summary>
@@ -36,7 +35,6 @@ public static class WindowsRuntimeActivationFactoryCallback
     /// A type containing logic to activate a sealed Windows Runtime object.
     /// </summary>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#activation"/>
-    [WindowsRuntimeImplementationOnlyMember]
     public abstract class DerivedSealed
     {
         /// <summary>

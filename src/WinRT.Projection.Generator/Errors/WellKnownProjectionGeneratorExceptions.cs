@@ -125,6 +125,22 @@ internal sealed class WellKnownProjectionGeneratorExceptions : IGeneratorErrorFa
     }
 
     /// <summary>
+    /// A reference projection has malformed Windows Runtime key/value metadata.
+    /// </summary>
+    public static Exception InvalidReferenceAssemblyMetadata(string referencePath)
+    {
+        return Exception(14, $"The reference projection '{referencePath}' has invalid 'WindowsRuntimeReferenceAssemblyMetadataAttribute' metadata. Regenerate the projection with the current CsWinRT version.");
+    }
+
+    /// <summary>
+    /// Multiple reference projections define the same projected type.
+    /// </summary>
+    public static Exception DuplicateProjectedType(string typeName, string firstReferencePath, string secondReferencePath)
+    {
+        return Exception(15, $"Projected type '{typeName}' is defined by both '{firstReferencePath}' and '{secondReferencePath}'. CsWinRT 3.0 requires globally unique projected types; remove the duplicate projection reference.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

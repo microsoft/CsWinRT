@@ -62,6 +62,12 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
+            // Add the default 'ICustomPropertyProvider' unless it is disabled or explicitly implemented
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences));
+
             // Add all entries for explicitly implemented interfaces
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
                 vtableTypes: vtableTypes,
@@ -211,7 +217,7 @@ internal partial class InteropTypeDefinitionBuilder
             // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
             // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
             // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
-            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute) is true)
+            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute, interopReferences.SignatureComparer) is true)
             {
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),

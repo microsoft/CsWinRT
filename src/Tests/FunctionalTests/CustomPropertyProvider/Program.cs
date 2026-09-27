@@ -167,7 +167,7 @@ unsafe
     WindowsRuntimeMarshal.Free(bindableVector);
 }
 
-return 100;
+return DefaultCustomPropertyProviderTests.Run();
 
 static unsafe void* GetInterface(object value, Guid iid)
 {

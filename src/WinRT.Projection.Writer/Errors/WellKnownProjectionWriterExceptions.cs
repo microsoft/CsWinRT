@@ -154,6 +154,14 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5021, "Settings have not been finalized via MakeReadOnly; the derived state is not yet available.");
     }
 
+    /// <summary>
+    /// An exclusive-to IDIC filter is not a namespace or type-name prefix.
+    /// </summary>
+    public static WellKnownProjectionWriterException InvalidIdicExclusiveToFilter(string optionName, string? filter)
+    {
+        return Exception(5022, $"Invalid exclusive-to IDIC filter '{filter ?? "<null>"}' in '{optionName}'. Use case-sensitive namespace or type-name prefixes, without wildcards or regular expressions.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException($"{ErrorPrefix}{id:0000}", message, innerException);

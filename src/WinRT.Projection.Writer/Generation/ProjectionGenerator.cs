@@ -137,7 +137,7 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
 
             if (state.ProjectionFileWritten)
             {
-                WriteBaseStrings();
+                WriteBaseStrings(state);
             }
         }
         catch (AggregateException e)

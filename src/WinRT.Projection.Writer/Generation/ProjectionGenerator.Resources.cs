@@ -3,8 +3,10 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
@@ -21,7 +23,8 @@ internal sealed partial class ProjectionGenerator
     /// Writes the embedded string resources (e.g., ComInteropExtensions.cs, InspectableVftbl.cs)
     /// to the output folder.
     /// </summary>
-    private void WriteBaseStrings()
+    /// <param name="state">The completed projection run state.</param>
+    private void WriteBaseStrings(ProjectionGeneratorRunState state)
     {
         Assembly asm = typeof(ProjectionWriter).Assembly;
         foreach (string resName in asm.GetManifestResourceNames())
@@ -49,6 +52,14 @@ internal sealed partial class ProjectionGenerator
             {
                 int uapContractVersion = _cache.Find("Windows.Graphics.Display.DisplayInformation") is not null ? 15 : 7;
                 content = $"#define UAC_VERSION_{uapContractVersion}\n" + content;
+            }
+
+            if (fileName == "AssemblyAttributes.cs" && _settings.ReferenceProjection && !state.IdicExclusiveToTypes.IsEmpty)
+            {
+                using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+                MetadataAttributeFactory.WriteReferenceAssemblyMetadata(
+                    writerOwner.Writer, state.IdicExclusiveToTypes.Order(StringComparer.Ordinal));
+                content = writerOwner.Writer.ToString() + content;
             }
 
             // Each base resource gets the standard auto-generated file header prepended.

@@ -58,6 +58,14 @@ For types not belonging to any well-known assembly, the implementation also deri
 > [!NOTE]
 > Not all BCL types live in `System.Runtime`. For example, the `System.Numerics` types (`Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector2`, `Vector3`, `Vector4`) are in the `System.Numerics.Vectors` assembly, so their assembly identifier is `System-Numerics-Vectors` (not `#corlib`) after the `.` → `-` substitution. The assembly used is always the one from the type's actual metadata scope, not the namespace.
 
+## Projection accessor contract
+
+The projection writer and interop generator must agree on these names **ordinally**, including the names of IID getters and event-source constructors. The projection writer resolves third-party metadata types through `MetadataCache` and uses `GetSourceStem` for both the centralized metadata entries and accessor markers. The input filename is authoritative, not the WinMD's declared assembly name: `mycomponent.winmd` declaring assembly `MyComponent` produces the marker `<mycomponent>`. Preserve the stem's casing and the CLR type's casing; only apply the character substitutions described above.
+
+`System.Guid` is not a primitive `CorLibTypeSignature`, so it retains its assembly marker. As a generic argument it is encoded as `<#corlib>System-Guid`; as a top-level array element it is `<#corlib>Guid`. The same rule applies recursively inside nested generic arguments and generic array elements.
+
+These strings are embedded into implementation projections, including the precompiled Windows SDK projections. A naming fix in the projection writer therefore requires regenerating those projections when building the package; replacing only the interop generator does not update existing callers.
+
 ## Examples
 
 **Primitive type**
@@ -79,6 +87,11 @@ For types not belonging to any well-known assembly, the implementation also deri
 
 - Type: `System.Collections.Generic.IEnumerable<string>`
 - Mangled name: `ABI.System.Collections.Generic.<#corlib>IEnumerable'1<string>`
+
+**Generic type with a Guid argument**
+
+- Type: `System.Collections.Generic.IReadOnlyDictionary<System.Guid, string>`
+- Mangled name: `ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<<#corlib>System-Guid|string>`
 
 **Nested generic type**
 

@@ -5,7 +5,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -182,12 +181,12 @@ internal static class InteropImplTypeResolver
             { ElementType: ElementType.Char } => "Char16",
             { ElementType: ElementType.Object } => "Inspectable",
             { ElementType: ElementType.String } => "String",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.DateTimeOffset) => "DateTime",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.TimeSpan) => "TimeSpan",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Guid) => "Guid",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Point) => "Point",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Size) => "Size",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Rect) => "Rect",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.DateTimeOffset) => "DateTime",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.TimeSpan) => "TimeSpan",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Guid) => "Guid",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Point) => "Point",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Size) => "Size",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Rect) => "Rect",
             _ => "OtherType"
         };
 

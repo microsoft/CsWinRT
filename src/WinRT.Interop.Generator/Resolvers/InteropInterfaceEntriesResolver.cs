@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -37,6 +36,40 @@ internal static class InteropInterfaceEntriesResolver
     }
 
     /// <summary>
+    /// Enumerates the default <c>ICustomPropertyProvider</c> entry, unless disabled or explicitly implemented.
+    /// </summary>
+    /// <param name="vtableTypes">The explicitly implemented interfaces, or <see langword="null"/> for types that cannot implement a custom provider.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+        TypeSignatureEquatableSet? vtableTypes,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences)
+    {
+        if (!interopDefinitions.EnableDefaultCustomPropertyProviderSupport)
+        {
+            yield break;
+        }
+
+        // Match the IID so inherited and custom COM implementations of 'ICustomPropertyProvider' take precedence
+        if (vtableTypes is not null)
+        {
+            foreach (TypeSignature interfaceType in vtableTypes)
+            {
+                if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
+                    iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
+                {
+                    yield break;
+                }
+            }
+        }
+
+        yield return Create(
+            interopReferences.ICustomPropertyProviderImplget_IID,
+            interopReferences.ICustomPropertyProviderImplget_Vtable);
+    }
+
+    /// <summary>
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values from a given source set of vtable types.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>
@@ -52,7 +85,7 @@ internal static class InteropInterfaceEntriesResolver
         bool useWindowsUIXamlProjections)
     {
         // Equivalent sets can have different insertion orders after parallel discovery
-        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName())
+        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
         {
             // Handle generic types first, and then custom-mapped and manually projected types.
             // These require special handling, because their ABI types are in different locations.
@@ -75,7 +108,7 @@ internal static class InteropInterfaceEntriesResolver
             {
                 // If the user explicitly implemented 'IStringable', we skip it here. We want to always emit it
                 // at the end of the list of entries, to have consistent ordering with the built-in interfaces.
-                if (SignatureComparer.IgnoreVersion.Equals(typeSignature, interopReferences.IStringable))
+                if (interopReferences.SignatureComparer.Equals(typeSignature, interopReferences.IStringable))
                 {
                     continue;
                 }

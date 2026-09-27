@@ -104,11 +104,23 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets whether to emit default custom property provider entries for generated managed CCWs.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool EnableDefaultCustomPropertyProviderSupport { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
     /// user-defined/CCW/generic types (one of <c>"all"</c>, <c>"minimal"</c>, or <c>"strict"</c>).
     /// </summary>
     /// <remarks>If not set, it will default to <c>"minimal"</c> (i.e. analyzing every assembly except those from the BCL).</remarks>
     public string MarshallingMode { get; set; } = DefaultMarshallingMode;
+
+    /// <summary>
+    /// Gets or sets whether .NET Standard assemblies participate in interop discovery, including explicit opt-ins.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool AnalyzeNetStandardAssemblies { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.
@@ -323,7 +335,9 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--enable-default-custom-property-provider-support", EnableDefaultCustomPropertyProviderSupport.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
+        AppendResponseFileCommand(args, "--analyze-net-standard-assemblies", AnalyzeNetStandardAssemblies.ToString());
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
         AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());

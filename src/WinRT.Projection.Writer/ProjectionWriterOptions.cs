@@ -77,13 +77,27 @@ public sealed class ProjectionWriterOptions
     public IReadOnlyList<string> PublicExclusiveToTypes { get; init; } = [];
 
     /// <summary>
-    /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
+    /// Enable dynamic interface casting for exclusive-to interfaces, subject to the IDIC include and exclude filters.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }
 
     /// <summary>
-    /// Fully qualified exclusive-to interface names to make dynamically interface castable,
-    /// independently of <see cref="IdicExclusiveTo"/>.
+    /// Optional case-sensitive namespace or type-name prefixes to select for exclusive-to dynamic interface casting.
+    /// Requires <see cref="IdicExclusiveTo"/>. When empty, all otherwise eligible exclusive interfaces are selected,
+    /// unless <see cref="IdicExclusiveToTypes"/> supplies exact type includes.
+    /// </summary>
+    public IReadOnlyList<string> IdicExclusiveToIncludes { get; init; } = [];
+
+    /// <summary>
+    /// Optional case-sensitive namespace or type-name prefixes to exclude from exclusive-to dynamic interface casting.
+    /// Exclusions always win over includes, regardless of prefix length, and do not affect projection visibility.
+    /// </summary>
+    public IReadOnlyList<string> IdicExclusiveToExcludes { get; init; } = [];
+
+    /// <summary>
+    /// Optional fully qualified exclusive-to interface names to select exactly, in addition to
+    /// <see cref="IdicExclusiveToIncludes"/>. Requires <see cref="IdicExclusiveTo"/>.
+    /// Used to restore the effective selection recorded by reference projections.
     /// </summary>
     public IReadOnlyList<string> IdicExclusiveToTypes { get; init; } = [];
 

@@ -181,6 +181,78 @@ namespace winrt::TestComponentCSharp::implementation
         }
     };
 
+    template <typename K, typename V>
+    struct observable_map : implements<observable_map<K, V>, IObservableMap<K, V>, IMap<K, V>, IIterable<IKeyValuePair<K, V>>>
+    {
+        observable_map(bool allowEventCalls, std::map<K, V> values) :
+            _wrapped(single_threaded_observable_map<K, V>(std::move(values))),
+            _allowEventCalls(allowEventCalls)
+        {
+            _wrapped.MapChanged([this](IObservableMap<K, V> const&, IMapChangedEventArgs<K> const& args)
+            {
+                _mapChanged(*this, args);
+            });
+        }
+
+        V Lookup(K const& key) const
+        {
+            return _wrapped.Lookup(key);
+        }
+
+        uint32_t Size() const
+        {
+            return _wrapped.Size();
+        }
+
+        bool HasKey(K const& key) const
+        {
+            return _wrapped.HasKey(key);
+        }
+
+        IMapView<K, V> GetView() const
+        {
+            return _wrapped.GetView();
+        }
+
+        bool Insert(K const& key, V const& value)
+        {
+            return _wrapped.Insert(key, value);
+        }
+
+        void Remove(K const& key)
+        {
+            _wrapped.Remove(key);
+        }
+
+        void Clear()
+        {
+            _wrapped.Clear();
+        }
+
+        IIterator<IKeyValuePair<K, V>> First() const
+        {
+            return _wrapped.First();
+        }
+
+        event_token MapChanged(MapChangedEventHandler<K, V> const& handler)
+        {
+            // Reject a misrouted Lookup before treating its key as a COM delegate.
+            check_hresult(_allowEventCalls ? S_OK : E_UNEXPECTED);
+            return _mapChanged.add(handler);
+        }
+
+        void MapChanged(event_token const& token)
+        {
+            check_hresult(_allowEventCalls ? S_OK : E_UNEXPECTED);
+            _mapChanged.remove(token);
+        }
+
+    private:
+        IObservableMap<K, V> _wrapped;
+        bool _allowEventCalls;
+        event<MapChangedEventHandler<K, V>> _mapChanged;
+    };
+
     struct data_errors_changed_event_args : implements<data_errors_changed_event_args, IDataErrorsChangedEventArgs>
     {
         data_errors_changed_event_args(winrt::hstring name) :
@@ -1135,6 +1207,16 @@ namespace winrt::TestComponentCSharp::implementation
     IMap<int32_t, int32_t> Class::GetIntToIntDictionary()
     {
         return single_threaded_map<int32_t, int32_t>(std::map<int32_t, int32_t>{ {1, 4}, { 2, 8 }, { 3, 12 } });
+    }
+
+    IObservableMap<hstring, hstring> Class::CreateObservableStringMap(bool allowEventCalls)
+    {
+        return make<observable_map<hstring, hstring>>(allowEventCalls, std::map<hstring, hstring>{ { L"one", L"first" } });
+    }
+
+    IObservableMap<int32_t, int32_t> Class::CreateObservableIntMap(bool allowEventCalls)
+    {
+        return make<observable_map<int32_t, int32_t>>(allowEventCalls, std::map<int32_t, int32_t>{ { 1, 10 } });
     }
 
     IMap<WF::TimeSpan, WF::TimeSpan> Class::GetTimeSpanToTimeSpanDictionary()

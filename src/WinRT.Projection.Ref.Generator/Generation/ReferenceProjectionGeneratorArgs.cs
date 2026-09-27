@@ -53,6 +53,14 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--idic-exclusive-to")]
     public bool IdicExclusiveTo { get; init; }
 
+    /// <summary>Gets the namespace or type-name prefixes to select when exclusive-to IDIC is enabled.</summary>
+    [CommandLineArgumentName("--idic-exclusive-to-includes")]
+    public string[] IdicExclusiveToIncludes { get; init; } = [];
+
+    /// <summary>Gets the namespace or type-name prefixes to exclude from exclusive-to IDIC.</summary>
+    [CommandLineArgumentName("--idic-exclusive-to-excludes")]
+    public string[] IdicExclusiveToExcludes { get; init; } = [];
+
     /// <summary>Gets whether to generate a projection to be used as a reference assembly.</summary>
     [CommandLineArgumentName("--reference-projection")]
     public bool ReferenceProjection { get; init; }
@@ -64,5 +72,4 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
-
 

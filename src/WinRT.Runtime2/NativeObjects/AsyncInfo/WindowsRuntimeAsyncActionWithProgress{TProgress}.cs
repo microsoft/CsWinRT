@@ -55,7 +55,6 @@ public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncAc
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -112,7 +111,6 @@ public abstract class WindowsRuntimeAsyncActionWithProgress<TProgress, TIAsyncAc
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;
