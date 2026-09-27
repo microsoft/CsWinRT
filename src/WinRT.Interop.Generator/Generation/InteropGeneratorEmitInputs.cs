@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using AsmResolver.DotNet;
@@ -13,13 +12,31 @@ using WindowsRuntime.InteropGenerator.References;
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <summary>
-/// Ordered, output-bound signatures for the emit phase. Discovery may retain any of several
-/// forwarded spellings of the same type, so they must be resolved before creating metadata.
+/// Lazily enumerates ordered, output-bound signatures for the emit phase. Discovery may retain
+/// any of several forwarded spellings of the same type, so they must be resolved before creating metadata.
 /// </summary>
 internal sealed class InteropGeneratorEmitInputs
 {
+    /// <summary>The completed discovery state.</summary>
+    private readonly InteropGeneratorDiscoveryState _discoveryState;
+
+    /// <summary>References used to identify key-value-pair collection types.</summary>
+    private readonly InteropReferences _interopReferences;
+
+    /// <summary>The output module's resolution-aware importer.</summary>
+    private readonly ReferenceImporter _importer;
+
+    /// <summary>The runtime context for ordering resolved type identities.</summary>
+    private readonly RuntimeContext _runtimeContext;
+
+    /// <summary>The cancellation token for canonicalizing types.</summary>
+    private readonly CancellationToken _token;
+
+    /// <summary>Canonicalized interface sets shared by discovered set identity.</summary>
+    private readonly Dictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _canonicalVtableSets = new(ReferenceEqualityComparer.Instance);
+
     /// <summary>
-    /// Creates ordered, canonicalized emit inputs from the completed discovery state.
+    /// Creates an output-bound view of the completed discovery state without materializing its signatures.
     /// </summary>
     /// <param name="discoveryState">The discovered types and interface sets.</param>
     /// <param name="interopReferences">References used to identify key-value-pair collection types.</param>
@@ -31,127 +48,171 @@ internal sealed class InteropGeneratorEmitInputs
         ModuleDefinition module,
         CancellationToken token)
     {
-        ReferenceImporter importer = module.DefaultImporter;
-        RuntimeContext runtimeContext = module.RuntimeContext!;
-        Dictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> canonicalVtableSets = new(ReferenceEqualityComparer.Instance);
-
-        ImmutableArray<TSignature> CanonicalizeTypes<TSignature>(IEnumerable<TSignature> signatures)
-            where TSignature : TypeSignature
-        {
-            return signatures
-                .Select(signature =>
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    return (TSignature)importer.ImportTypeSignature(signature);
-                })
-                .OrderByFullyQualifiedTypeName(runtimeContext)
-                .ToImmutableArray();
-        }
-
-        TypeSignatureEquatableSet CanonicalizeVtableSet(TypeSignatureEquatableSet original)
-        {
-            if (!canonicalVtableSets.TryGetValue(original, out TypeSignatureEquatableSet? canonical))
-            {
-                canonical = new(discoveryState.SignatureComparer, original.Select(importer.ImportTypeSignature));
-                canonicalVtableSets.Add(original, canonical);
-            }
-
-            return canonical;
-        }
-
-        ImmutableArray<(TSignature Type, TypeSignatureEquatableSet VtableTypes)> CanonicalizeTypesAndVtables<TSignature>(
-            IReadOnlyDictionary<TSignature, TypeSignatureEquatableSet> types)
-            where TSignature : TypeSignature
-        {
-            return types
-                .Select(pair =>
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    return (
-                        Type: (TSignature)importer.ImportTypeSignature(pair.Key),
-                        VtableTypes: CanonicalizeVtableSet(pair.Value));
-                })
-                .OrderByFullyQualifiedTypeName(static pair => pair.Type, runtimeContext)
-                .ToImmutableArray();
-        }
-
-        GenericDelegateTypes = CanonicalizeTypes(discoveryState.GenericDelegateTypes);
-        IEnumerator1Types = CanonicalizeTypes(discoveryState.IEnumerator1Types);
-        IEnumerable1Types = CanonicalizeTypes(discoveryState.IEnumerable1Types);
-        IReadOnlyList1Types = CanonicalizeTypes(discoveryState.IReadOnlyList1Types);
-        IList1Types = CanonicalizeTypes(discoveryState.IList1Types);
-        IReadOnlyDictionary2Types = CanonicalizeTypes(discoveryState.IReadOnlyDictionary2Types);
-        IDictionary2Types = CanonicalizeTypes(discoveryState.IDictionary2Types);
-        KeyValuePairTypes = CanonicalizeTypes(discoveryState.KeyValuePairTypes);
-        IMapChangedEventArgs1Types = CanonicalizeTypes(discoveryState.IMapChangedEventArgs1Types);
-        IObservableVector1Types = CanonicalizeTypes(discoveryState.IObservableVector1Types);
-        IObservableMap2Types = CanonicalizeTypes(discoveryState.IObservableMap2Types);
-        IAsyncActionWithProgress1Types = CanonicalizeTypes(discoveryState.IAsyncActionWithProgress1Types);
-        IAsyncOperation1Types = CanonicalizeTypes(discoveryState.IAsyncOperation1Types);
-        IAsyncOperationWithProgress2Types = CanonicalizeTypes(discoveryState.IAsyncOperationWithProgress2Types);
-
-        IReadOnlyCollectionKeyValuePair2Types =
-            [.. IReadOnlyList1Types.Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(interopReferences))];
-        ICollectionKeyValuePair2Types =
-            [.. IList1Types.Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(interopReferences))];
-
-        SzArrayAndVtableTypes = CanonicalizeTypesAndVtables(discoveryState.SzArrayAndVtableTypes);
-        UserDefinedAndVtableTypes = CanonicalizeTypesAndVtables(discoveryState.UserDefinedAndVtableTypes);
+        _discoveryState = discoveryState;
+        _interopReferences = interopReferences;
+        _importer = module.DefaultImporter;
+        _runtimeContext = module.RuntimeContext!;
+        _token = token;
     }
 
-    /// <summary>Gets the ordered generic delegate instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> GenericDelegateTypes { get; }
+    /// <summary>Enumerates the ordered generic delegate instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericDelegateTypes()
+    {
+        return CanonicalizeTypes(_discoveryState.GenericDelegateTypes);
+    }
 
-    /// <summary>Gets the ordered <c>IEnumerator&lt;T&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IEnumerator1Types { get; }
+    /// <summary>Enumerates the ordered <c>IEnumerator&lt;T&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIEnumerator1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IEnumerator1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IEnumerable&lt;T&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IEnumerable1Types { get; }
+    /// <summary>Enumerates the ordered <c>IEnumerable&lt;T&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIEnumerable1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IEnumerable1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IReadOnlyList&lt;T&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IReadOnlyList1Types { get; }
+    /// <summary>Enumerates the ordered <c>IReadOnlyList&lt;T&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyList1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IReadOnlyList1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IList&lt;T&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IList1Types { get; }
+    /// <summary>Enumerates the ordered <c>IList&lt;T&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIList1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IList1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IReadOnlyDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IReadOnlyDictionary2Types { get; }
+    /// <summary>Enumerates the ordered <c>IReadOnlyDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyDictionary2Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IReadOnlyDictionary2Types);
+    }
 
-    /// <summary>Gets the ordered <c>IDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IDictionary2Types { get; }
+    /// <summary>Enumerates the ordered <c>IDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIDictionary2Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IDictionary2Types);
+    }
 
-    /// <summary>Gets the ordered <c>KeyValuePair&lt;TKey, TValue&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> KeyValuePairTypes { get; }
+    /// <summary>Enumerates the ordered <c>KeyValuePair&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateKeyValuePairTypes()
+    {
+        return CanonicalizeTypes(_discoveryState.KeyValuePairTypes);
+    }
 
-    /// <summary>Gets the ordered <c>IMapChangedEventArgs&lt;TKey&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IMapChangedEventArgs1Types { get; }
+    /// <summary>Enumerates the ordered <c>IMapChangedEventArgs&lt;TKey&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIMapChangedEventArgs1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IMapChangedEventArgs1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IObservableVector&lt;T&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IObservableVector1Types { get; }
+    /// <summary>Enumerates the ordered <c>IObservableVector&lt;T&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIObservableVector1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IObservableVector1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IObservableMap&lt;TKey, TValue&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IObservableMap2Types { get; }
+    /// <summary>Enumerates the ordered <c>IObservableMap&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIObservableMap2Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IObservableMap2Types);
+    }
 
-    /// <summary>Gets the ordered <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IAsyncActionWithProgress1Types { get; }
+    /// <summary>Enumerates the ordered <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIAsyncActionWithProgress1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IAsyncActionWithProgress1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IAsyncOperation&lt;TResult&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IAsyncOperation1Types { get; }
+    /// <summary>Enumerates the ordered <c>IAsyncOperation&lt;TResult&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIAsyncOperation1Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IAsyncOperation1Types);
+    }
 
-    /// <summary>Gets the ordered <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> instantiations.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IAsyncOperationWithProgress2Types { get; }
+    /// <summary>Enumerates the ordered <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> instantiations.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIAsyncOperationWithProgress2Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IAsyncOperationWithProgress2Types);
+    }
 
-    /// <summary>Gets the ordered <c>IReadOnlyList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> IReadOnlyCollectionKeyValuePair2Types { get; }
+    /// <summary>Enumerates the ordered <c>IReadOnlyList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyCollectionKeyValuePair2Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IReadOnlyList1Types
+            .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences)));
+    }
 
-    /// <summary>Gets the ordered <c>IList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
-    public ImmutableArray<GenericInstanceTypeSignature> ICollectionKeyValuePair2Types { get; }
+    /// <summary>Enumerates the ordered <c>IList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
+    public IEnumerable<GenericInstanceTypeSignature> EnumerateICollectionKeyValuePair2Types()
+    {
+        return CanonicalizeTypes(_discoveryState.IList1Types
+            .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences)));
+    }
 
-    /// <summary>Gets the ordered Windows Runtime SZ arrays and their canonicalized interface sets.</summary>
-    public ImmutableArray<(SzArrayTypeSignature Type, TypeSignatureEquatableSet VtableTypes)> SzArrayAndVtableTypes { get; }
+    /// <summary>Enumerates the ordered Windows Runtime SZ arrays and their canonicalized interface sets.</summary>
+    public IEnumerable<(SzArrayTypeSignature Type, TypeSignatureEquatableSet VtableTypes)> EnumerateSzArrayAndVtableTypes()
+    {
+        return CanonicalizeTypesAndVtables(_discoveryState.SzArrayAndVtableTypes);
+    }
 
-    /// <summary>Gets the ordered user-defined types and their shared canonicalized interface sets.</summary>
-    public ImmutableArray<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> UserDefinedAndVtableTypes { get; }
+    /// <summary>Enumerates the ordered user-defined types and their shared canonicalized interface sets.</summary>
+    public IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> EnumerateUserDefinedAndVtableTypes()
+    {
+        return CanonicalizeTypesAndVtables(_discoveryState.UserDefinedAndVtableTypes);
+    }
+
+    /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>
+    /// <typeparam name="TSignature">The type of signature to enumerate.</typeparam>
+    /// <param name="signatures">The discovered signatures.</param>
+    /// <returns>The canonicalized signatures in stable order.</returns>
+    private IEnumerable<TSignature> CanonicalizeTypes<TSignature>(IEnumerable<TSignature> signatures)
+        where TSignature : TypeSignature
+    {
+        return signatures
+            .Select(signature =>
+            {
+                _token.ThrowIfCancellationRequested();
+
+                return (TSignature)_importer.ImportTypeSignature(signature);
+            })
+            .OrderByFullyQualifiedTypeName(_runtimeContext);
+    }
+
+    /// <summary>Reuses canonicalized interface sets by their original instance identity.</summary>
+    /// <param name="original">The discovered set of interfaces.</param>
+    /// <returns>The shared canonicalized set.</returns>
+    private TypeSignatureEquatableSet CanonicalizeVtableSet(TypeSignatureEquatableSet original)
+    {
+        if (!_canonicalVtableSets.TryGetValue(original, out TypeSignatureEquatableSet? canonical))
+        {
+            canonical = new(_discoveryState.SignatureComparer, original.Select(_importer.ImportTypeSignature));
+            _canonicalVtableSets.Add(original, canonical);
+        }
+
+        return canonical;
+    }
+
+    /// <summary>Resolves aliases in discovered types and their interface sets, then orders the types.</summary>
+    /// <typeparam name="TSignature">The type of signature to enumerate.</typeparam>
+    /// <param name="types">The discovered types and interface sets.</param>
+    /// <returns>The canonicalized types and interface sets in stable order.</returns>
+    private IEnumerable<(TSignature Type, TypeSignatureEquatableSet VtableTypes)> CanonicalizeTypesAndVtables<TSignature>(
+        IReadOnlyDictionary<TSignature, TypeSignatureEquatableSet> types)
+        where TSignature : TypeSignature
+    {
+        return types
+            .Select(pair =>
+            {
+                _token.ThrowIfCancellationRequested();
+
+                return (
+                    Type: (TSignature)_importer.ImportTypeSignature(pair.Key),
+                    VtableTypes: CanonicalizeVtableSet(pair.Value));
+            })
+            .OrderByFullyQualifiedTypeName(static pair => pair.Type, _runtimeContext);
+    }
 }
