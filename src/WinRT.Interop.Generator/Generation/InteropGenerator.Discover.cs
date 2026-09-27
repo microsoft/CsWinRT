@@ -123,6 +123,11 @@ internal partial class InteropGenerator
         return discoveryState;
     }
 
+    /// <summary>
+    /// Normalizes assembly selections to case-insensitive simple names.
+    /// </summary>
+    /// <param name="entries">The configured assembly names or paths.</param>
+    /// <returns>The assembly names without directories or extensions.</returns>
     private static HashSet<string> NormalizeMarshallingAssemblyNames(IEnumerable<string> entries)
     {
         HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
