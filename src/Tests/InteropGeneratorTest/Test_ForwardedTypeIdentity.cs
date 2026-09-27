@@ -177,6 +177,87 @@ public sealed class Test_ForwardedTypeIdentity
     }
 
     [TestMethod]
+    [DataRow("Minimal", false, null)]
+    [DataRow("All", false, null)]
+    [DataRow("Strict", true, null)]
+    [DataRow("Minimal", false, false)]
+    public async Task ExplicitAssemblyExclusions_OverrideModeAndOptIn(
+        string mode, bool optIn, bool? analyzeNetStandardAssemblies)
+    {
+        using InteropGeneratorRunner runner = new();
+        string output = await runner.GenerateAsync(
+            "excluded", marshallingMode: mode, optInNetStandard: optIn,
+            analyzeNetStandardAssemblies: analyzeNetStandardAssemblies,
+            marshallingDisabledAssemblyNames: [@"subdir\NETSTANDARDTYPES.DLL", "WinRT.Sdk.Projection.dll"],
+            treatWarningsAsErrors: !optIn);
+
+        AssertPortableCallbackCount(runner, output, 0);
+    }
+
+    [TestMethod]
+    public async Task AssemblyExclusion_InvalidatesMSBuildCacheOnlyWhenChanged()
+    {
+        using InteropGeneratorRunner runner = new();
+        string project = runner.CreateMSBuildProject();
+        string output = await runner.RunMSBuildAsync(project, null, treatWarningsAsErrors: false);
+        string cache = Path.Combine(Path.GetDirectoryName(output)!, "Discovery.cswinrtgen.cache");
+        string enabledCache = File.ReadAllText(cache);
+        byte[] enabledHash = SHA256.HashData(File.ReadAllBytes(output));
+        AssertPortableCallbackCount(runner, output, 1);
+
+        _ = await runner.RunMSBuildAsync(project, null, disabledAssemblyName: "NetStandardTypes.dll", treatWarningsAsErrors: false);
+        string disabledCache = File.ReadAllText(cache);
+        DateTime disabledWriteTime = File.GetLastWriteTimeUtc(output);
+        Assert.AreNotEqual(enabledCache, disabledCache, "Excluding an assembly must invalidate the property cache.");
+        Assert.IsFalse(enabledHash.SequenceEqual(SHA256.HashData(File.ReadAllBytes(output))));
+        AssertPortableCallbackCount(runner, output, 0);
+
+        _ = await runner.RunMSBuildAsync(project, null, disabledAssemblyName: "NetStandardTypes.dll", treatWarningsAsErrors: false);
+        Assert.AreEqual(disabledCache, File.ReadAllText(cache));
+        Assert.AreEqual(disabledWriteTime, File.GetLastWriteTimeUtc(output), "An unchanged exclusion must remain incremental.");
+
+        _ = await runner.RunMSBuildAsync(project, null, treatWarningsAsErrors: false);
+        Assert.AreEqual(enabledCache, File.ReadAllText(cache));
+        CollectionAssert.AreEqual(enabledHash, SHA256.HashData(File.ReadAllBytes(output)));
+        AssertPortableCallbackCount(runner, output, 1);
+    }
+
+    [TestMethod]
+    public async Task AssemblyExclusion_IsPreservedInDebugRepros()
+    {
+        using InteropGeneratorRunner runner = new();
+        string directory = Directory.CreateDirectory(Path.Combine(runner.Root, "excluded-repro")).FullName;
+        string output = await runner.GenerateAsync(
+            "excluded-debug", marshallingMode: "Minimal", debugReproDirectory: directory,
+            marshallingDisabledAssemblyNames: ["NetStandardTypes.dll"]);
+        string archivePath = Path.Combine(directory, "interop-debug-repro.zip");
+
+        using ZipArchive archive = ZipFile.OpenRead(archivePath);
+        using StreamReader reader = new(archive.GetEntry("cswinrtinteropgen.rsp")!.Open());
+        string response = await reader.ReadToEndAsync();
+        StringAssert.Contains(response, "--marshalling-disabled-assembly-names NetStandardTypes.dll");
+        AssertPortableCallbackCount(runner, output, 0);
+
+        (int exitCode, string log) = await InteropGeneratorRunner.InvokeGeneratorAsync(archivePath);
+        Assert.AreEqual(0, exitCode, log);
+        const string outputPrefix = "Interop code generated -> ";
+        string replayedOutput = log.Split('\n').Single(line => line.StartsWith(outputPrefix, StringComparison.Ordinal))
+            [outputPrefix.Length..].TrimEnd();
+        string replayedDirectory = Path.GetDirectoryName(replayedOutput)!;
+
+        try
+        {
+            string replayedResponse = File.ReadAllText(Path.Combine(replayedDirectory, "cswinrtinteropgen.rsp"));
+            StringAssert.Contains(replayedResponse, "--marshalling-disabled-assembly-names NetStandardTypes.dll");
+            AssertPortableCallbackCount(runner, replayedOutput, 0);
+        }
+        finally
+        {
+            Directory.Delete(replayedDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
     public async Task NetStandardDiscoveryOption_IsPreservedInDebugRepros(bool enabled)

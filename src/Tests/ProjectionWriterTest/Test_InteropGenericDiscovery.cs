@@ -165,6 +165,61 @@ public class Test_InteropGenericDiscovery
     [DataRow("all", false, false, false)]
     public void TransitiveDiscovery_RespectsModulePolicy(string mode, bool directReference, bool optIn, bool succeeds)
     {
+        AssertTransitiveModulePolicy(mode, directReference, optIn, optOut: false, referencesWinRT: false, succeeds: succeeds);
+    }
+
+    [TestMethod]
+    [DataRow("minimal", false, false, false, true)]
+    [DataRow("all", false, false, false, true)]
+    [DataRow("strict", false, true, false, true)]
+    [DataRow("strict", false, false, true, true)]
+    [DataRow("minimal", true, false, false, false)]
+    public void TransitiveDiscovery_ExplicitExclusionSkipsIndirectMembers(
+        string mode, bool directReference, bool optIn, bool referencesWinRT, bool succeeds)
+    {
+        AssertTransitiveModulePolicy(mode, directReference, optIn, optOut: true, referencesWinRT: referencesWinRT, succeeds: succeeds);
+    }
+
+    [TestMethod]
+    public void TransitiveDiscovery_WinRTReferencedModuleIsScannedWithoutExclusion()
+    {
+        AssertTransitiveModulePolicy(
+            "strict", directReference: false, optIn: false, optOut: false, referencesWinRT: true, succeeds: false);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void UnknownExcludedAssembly_RespectsWarningsAsErrors(bool treatWarningsAsErrors)
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropUnknownExclusionTest_").FullName;
+
+        try
+        {
+            string app = ProjectionWriterRunner.CompileSources(
+                [CreateNodeSource("Node<T>")],
+                Path.Combine(directory, "UnknownExclusion.dll"),
+                outputKind: OutputKind.ConsoleApplication);
+            (int exitCode, string log) = RunGenerator(
+                directory,
+                app,
+                treatWarningsAsErrors: treatWarningsAsErrors,
+                additionalArguments: ["--marshalling-disabled-assembly-names MissingAssembly.dll"]);
+
+            Assert.AreEqual(treatWarningsAsErrors, exitCode != 0, log);
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0107");
+            StringAssert.Contains(log, "MissingAssembly.dll");
+            Assert.AreEqual(!treatWarningsAsErrors, File.Exists(Path.Combine(directory, "WinRT.Interop.dll")), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private static void AssertTransitiveModulePolicy(
+        string mode, bool directReference, bool optIn, bool optOut, bool referencesWinRT, bool succeeds)
+    {
         string directory = Directory.CreateTempSubdirectory("InteropModulePolicyTest_").FullName;
 
         try
@@ -172,8 +227,7 @@ public class Test_InteropGenericDiscovery
             string dependency = ProjectionWriterRunner.CompileSources(
                 ["namespace Missing; public sealed class Dependency;"],
                 Path.Combine(directory, "Missing.dll"));
-            string library = ProjectionWriterRunner.CompileSources(
-                ["""
+            string foreignSource = """
                 namespace Foreign;
 
                 public sealed class Outer<T>
@@ -191,7 +245,15 @@ public class Test_InteropGenericDiscovery
                 {
                     public static readonly object Value = new T[1];
                 }
-                """],
+                """ + (referencesWinRT ? """
+
+                public sealed class WinRTCallback : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "callback";
+                }
+                """ : "");
+            string library = ProjectionWriterRunner.CompileSources(
+                [foreignSource],
                 Path.Combine(directory, "Foreign.dll"),
                 additionalReferences: [dependency]);
             string app = ProjectionWriterRunner.CompileSources(
@@ -229,8 +291,14 @@ public class Test_InteropGenericDiscovery
                 additionalReferences: [library],
                 additionalArguments: [
                     $"--marshalling-mode {mode}",
-                    .. optIn ? new[] { "--marshalling-enabled-assembly-names Foreign" } : []
+                    .. optIn ? new[] { "--marshalling-enabled-assembly-names subdir\\FOREIGN.DLL" } : [],
+                    .. optOut ? new[] { "--marshalling-disabled-assembly-names Foreign.dll,WinRT.Sdk.Projection.dll" } : []
                 ]);
+
+            if (optIn && optOut)
+            {
+                StringAssert.Contains(log, "CSWINRTINTEROPGEN0108");
+            }
 
             if (!succeeds)
             {
@@ -245,7 +313,8 @@ public class Test_InteropGenericDiscovery
             Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Node`1[[System.Int32,", StringComparison.Ordinal)), log);
 
             // The one-hop scan of 'Outer<Marker>' reaches 'Inner<Marker>'. Its cache initializers expose 'Marker[]'.
-            Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Marker[],", StringComparison.Ordinal)), log);
+            Assert.AreEqual(!optOut, types.Any(type => type.StartsWith("Recursion.Marker[],", StringComparison.Ordinal)), log);
+            Assert.IsFalse(types.Any(type => type.StartsWith("Foreign.WinRTCallback,", StringComparison.Ordinal)), log);
         }
         finally
         {
