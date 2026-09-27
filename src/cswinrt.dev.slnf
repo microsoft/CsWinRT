@@ -43,6 +43,7 @@
       "Tests\\FunctionalTests\\ClassActivation\\ClassActivation.csproj",
       "Tests\\FunctionalTests\\Collections\\Collections.csproj",
       "Tests\\FunctionalTests\\CustomPropertyProvider\\CustomPropertyProvider.csproj",
+      "Tests\\FunctionalTests\\CustomPropertyProviderLibrary\\CustomPropertyProviderLibrary.csproj",
       "Tests\\FunctionalTests\\DefaultCustomPropertyProviderDisabled\\DefaultCustomPropertyProviderDisabled.csproj",
       "Tests\\FunctionalTests\\DefaultCustomPropertyProviderSuppressed\\DefaultCustomPropertyProviderSuppressed.csproj",
       "Tests\\FunctionalTests\\DefaultCustomPropertyProviderWinUI\\DefaultCustomPropertyProviderWinUI.csproj",
