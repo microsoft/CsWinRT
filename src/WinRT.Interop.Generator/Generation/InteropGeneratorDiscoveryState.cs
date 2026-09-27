@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -20,6 +21,9 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
 {
     /// <summary>Backing field for <see cref="Modules"/>.</summary>
     private readonly ConcurrentDictionary<string, ModuleDefinition> _modules = [];
+
+    /// <summary>Cached module discovery decisions for this invocation.</summary>
+    private readonly ConcurrentDictionary<ModuleDefinition, bool> _moduleProcessingDecisions = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>Backing field for <see cref="WindowsRuntimeSdkProjectionModule"/>.</summary>
     private ModuleDefinition? _windowsRuntimeSdkProjectionModule;
@@ -143,6 +147,19 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// Gets the loaded modules.
     /// </summary>
     public IReadOnlyDictionary<string, ModuleDefinition> Modules => _modules;
+
+    /// <summary>
+    /// Gets or computes whether a module should be analyzed for discovery.
+    /// </summary>
+    /// <param name="module">The module to check.</param>
+    /// <param name="evaluate">The policy to evaluate when the module is not cached.</param>
+    /// <returns>Whether the module should be analyzed.</returns>
+    public bool GetOrAddModuleProcessingDecision(ModuleDefinition module, Func<ModuleDefinition, bool> evaluate)
+    {
+        ThrowIfReadOnly();
+
+        return _moduleProcessingDecisions.GetOrAdd(module, evaluate);
+    }
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Sdk.Projection.dll</c>.
