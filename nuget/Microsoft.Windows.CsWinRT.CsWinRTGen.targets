@@ -64,8 +64,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTAnalyzeNetStandardAssemblies Condition="'$(CsWinRTAnalyzeNetStandardAssemblies)' == ''">true</CsWinRTAnalyzeNetStandardAssemblies>
 
-    <!-- CsWinRTMarshallingDisabledAssembly items explicitly skip assembly discovery in every mode,
-         including for assemblies that reference WinRT or are listed in CsWinRTMarshallingEnabledAssembly. -->
+    <!--
+      CsWinRTMarshallingDisabledAssembly items explicitly skip assembly discovery in every mode,
+      including for assemblies that reference WinRT or are listed in CsWinRTMarshallingEnabledAssembly.
+    -->
 
     <!--
       Controls whether 'cswinrtinteropgen' automatically generates the vtables for the optimized list types that
