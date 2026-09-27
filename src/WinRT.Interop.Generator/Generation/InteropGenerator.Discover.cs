@@ -865,6 +865,7 @@ internal partial class InteropGenerator
             }
         }
 
+        // In 'all' mode, assemblies already analyzed without opt-in need no additional selection
         if (hasRedundantEnabledAssembliesInAllMode)
         {
             WellKnownInteropExceptions.MarshallingEnabledAssembliesRedundantInAllModeMessage().Log(ConsoleApp.Log);
