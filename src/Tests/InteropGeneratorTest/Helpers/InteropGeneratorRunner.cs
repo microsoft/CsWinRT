@@ -50,12 +50,17 @@ internal sealed class InteropGeneratorRunner : IDisposable
         """;
 
     private const string EnumerableAliasSource = """
+        using System.Collections;
         using System.Collections.Generic;
         using Windows.Foundation;
 
-        public static class EnumerableAliasInput
+        public sealed class EnumerableAliasInput : IEnumerable<IStringable>
         {
-            public static IEnumerable<IStringable> Items = new List<IStringable>();
+            public static IEnumerable<IStringable>[] Arrays = [];
+
+            public IEnumerator<IStringable> GetEnumerator() => new List<IStringable>().GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
         """;
 

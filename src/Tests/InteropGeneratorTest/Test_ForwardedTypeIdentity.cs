@@ -111,10 +111,28 @@ public sealed class Test_ForwardedTypeIdentity
         using InteropGeneratorRunner runner = new(useFrameworkImplementations: true, forwardedEnumerableAliases: true);
         string serial = await runner.GenerateAsync("serial");
         (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(serial);
-        Assert.IsTrue(ReadAssociations(module, context).Any(association =>
+        List<Association> associations = ReadAssociations(module, context);
+        Assert.IsTrue(associations.Any(association =>
             association.Source is GenericInstanceTypeSignature { TypeArguments: [TypeSignature { FullName: "Windows.Foundation.IStringable" }] } generic &&
             generic.GenericType.Name == "IEnumerable`1"),
             "The aliased enumerable must actually be emitted.");
+        Association[] implementations = associations.Where(association =>
+            association.Group.EndsWith("WindowsRuntimeComWrappersTypeMapGroup") &&
+            association.Source.FullName == "EnumerableAliasInput").ToArray();
+        Assert.AreEqual(2, implementations.Length, "Both implementing classes must have CCWs.");
+        string[] marshallers = implementations.Select(association =>
+        {
+            Assert.IsTrue(association.Target.TryResolve(context, out TypeDefinition? proxy));
+            return proxy!.CustomAttributes.Single(attribute =>
+                attribute.Constructor?.DeclaringType?.Name?.ToString().EndsWith("ComWrappersMarshallerAttribute", StringComparison.Ordinal) is true)
+                .Constructor!.DeclaringType!.FullName;
+        }).ToArray();
+        Assert.AreEqual(marshallers[0], marshallers[1], "Equivalent interface sets must share a marshaller.");
+        Assert.IsTrue(associations.Any(association =>
+            association.Source is SzArrayTypeSignature { BaseType: GenericInstanceTypeSignature generic } &&
+            generic.GenericType.Name == "IEnumerable`1" &&
+            generic.TypeArguments[0].FullName == "Windows.Foundation.IStringable"),
+            "The array of aliased interfaces must be emitted.");
         byte[] expected = File.ReadAllBytes(serial);
         byte[] actual = File.ReadAllBytes(await runner.GenerateAsync("reversed", reverseInputs: true));
 
