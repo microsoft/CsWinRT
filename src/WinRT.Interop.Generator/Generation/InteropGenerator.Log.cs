@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator.Errors;
@@ -20,9 +21,18 @@ internal partial class InteropGenerator
 {
     private const string LogFileName = "interop-log.json";
 
+    /// <summary>
+    /// Writes the opt-in report after the interop assembly has been emitted, if requested.
+    /// </summary>
+    /// <param name="args">The generator arguments, including the optional log directory.</param>
+    /// <param name="state">The completed discovery state.</param>
+    /// <param name="module">The generated interop module.</param>
     private static void WriteLog(InteropGeneratorArgs args, InteropGeneratorDiscoveryState state, ModuleDefinition module)
     {
-        string directory = args.LogDirectory!;
+        if (args.LogDirectory is not { } directory)
+        {
+            return;
+        }
 
         if (!Directory.Exists(directory))
         {
@@ -32,12 +42,14 @@ internal partial class InteropGenerator
         string path = Path.Combine(directory, LogFileName);
         string temporaryPath = Path.Combine(directory, $"interop-log.{Guid.NewGuid():N}.tmp");
 
+        // Publish only a complete report so a failed write cannot leave an apparently valid incremental output
         try
         {
+            InteropGeneratorLog log = CreateLog(args, state, module);
+
             using (FileStream stream = File.Create(temporaryPath))
-            using (Utf8JsonWriter writer = new(stream, new JsonWriterOptions { Indented = true }))
             {
-                WriteLogContent(writer, args, state, module);
+                JsonSerializer.Serialize(stream, log, InteropGeneratorLogJsonSerializerContext.Default.InteropGeneratorLog);
             }
 
             File.Move(temporaryPath, path, overwrite: true);
@@ -55,115 +67,126 @@ internal partial class InteropGenerator
         }
     }
 
-    private static void WriteLogContent(Utf8JsonWriter writer, InteropGeneratorArgs args, InteropGeneratorDiscoveryState state, ModuleDefinition module)
+    /// <summary>
+    /// Collects the versioned discovery and emitted-code data for serialization.
+    /// </summary>
+    /// <param name="args">The generator arguments.</param>
+    /// <param name="state">The completed discovery state.</param>
+    /// <param name="module">The generated interop module.</param>
+    /// <returns>The complete interop log document.</returns>
+    private static InteropGeneratorLog CreateLog(InteropGeneratorArgs args, InteropGeneratorDiscoveryState state, ModuleDefinition module)
     {
         RuntimeContext context = state.RuntimeContext;
 
-        writer.WriteStartObject();
-        writer.WriteNumber("schema", 1);
-        writer.WriteNumber("assemblySizeBytes", new FileInfo(Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)).Length);
+        // Read the emitted file rather than estimating its size from in-memory metadata
+        long assemblySizeBytes = new FileInfo(Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)).Length;
 
-        writer.WriteStartArray("typeHierarchy");
+        // Include shared helpers and nested types that do not appear in any discovery category
+        InteropGeneratorLog.GeneratedType[] generatedTypes = [.. module.GetAllTypes()
+            .OrderBy(static type => type.FullName, StringComparer.Ordinal)
+            .Select(type =>
+            {
+                args.Token.ThrowIfCancellationRequested();
 
-        foreach ((string type, string baseType) in state.TypeHierarchyEntries.OrderBy(static entry => entry.Key, StringComparer.Ordinal))
-        {
-            args.Token.ThrowIfCancellationRequested();
-            writer.WriteStartObject();
-            writer.WriteString("type", type);
-            writer.WriteString("baseType", baseType);
-            writer.WriteEndObject();
-        }
+                return new InteropGeneratorLog.GeneratedType(
+                    type.FullName,
+                    type.Methods.Count,
+                    type.Fields.Count,
+                    type.Methods.Sum(static method => method.CilMethodBody?.Instructions.Count ?? 0));
+            })];
 
-        writer.WriteEndArray();
+        // Sort hierarchy entries because parallel discovery does not guarantee enumeration order
+        InteropGeneratorLog.TypeHierarchyEntry[] typeHierarchy = [.. state.TypeHierarchyEntries
+            .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
+            .Select(entry =>
+            {
+                args.Token.ThrowIfCancellationRequested();
 
-        writer.WriteStartObject("genericInstantiations");
-        WriteTypeArray(writer, "genericDelegates", state.GenericDelegateTypes, context, args.Token);
-        WriteTypeArray(writer, "enumerators", state.IEnumerator1Types, context, args.Token);
-        WriteTypeArray(writer, "enumerables", state.IEnumerable1Types, context, args.Token);
-        WriteTypeArray(writer, "lists", state.IList1Types, context, args.Token);
-        WriteTypeArray(writer, "readOnlyLists", state.IReadOnlyList1Types, context, args.Token);
-        WriteTypeArray(writer, "dictionaries", state.IDictionary2Types, context, args.Token);
-        WriteTypeArray(writer, "readOnlyDictionaries", state.IReadOnlyDictionary2Types, context, args.Token);
-        WriteTypeArray(writer, "observableVectors", state.IObservableVector1Types, context, args.Token);
-        WriteTypeArray(writer, "observableMaps", state.IObservableMap2Types, context, args.Token);
-        WriteTypeArray(writer, "mapChangedEventArgs", state.IMapChangedEventArgs1Types, context, args.Token);
-        WriteTypeArray(writer, "asyncActionsWithProgress", state.IAsyncActionWithProgress1Types, context, args.Token);
-        WriteTypeArray(writer, "asyncOperations", state.IAsyncOperation1Types, context, args.Token);
-        WriteTypeArray(writer, "asyncOperationsWithProgress", state.IAsyncOperationWithProgress2Types, context, args.Token);
-        WriteTypeArray(writer, "keyValuePairs", state.KeyValuePairTypes, context, args.Token);
-        writer.WriteEndObject();
+                return new InteropGeneratorLog.TypeHierarchyEntry(entry.Key, entry.Value);
+            })];
 
-        WriteInterfaceTypes(writer, "userDefinedTypes", state.UserDefinedAndVtableTypes, context, args.Token);
-        WriteInterfaceTypes(writer, "arrayTypes", state.SzArrayAndVtableTypes, context, args.Token);
+        // These final discovery sets include instantiations added transitively by other types
+        InteropGeneratorLog.GenericInstantiationsInfo genericInstantiations = new(
+            GenericDelegates: GetTypeArray(state.GenericDelegateTypes, context, args.Token),
+            Enumerators: GetTypeArray(state.IEnumerator1Types, context, args.Token),
+            Enumerables: GetTypeArray(state.IEnumerable1Types, context, args.Token),
+            Lists: GetTypeArray(state.IList1Types, context, args.Token),
+            ReadOnlyLists: GetTypeArray(state.IReadOnlyList1Types, context, args.Token),
+            Dictionaries: GetTypeArray(state.IDictionary2Types, context, args.Token),
+            ReadOnlyDictionaries: GetTypeArray(state.IReadOnlyDictionary2Types, context, args.Token),
+            ObservableVectors: GetTypeArray(state.IObservableVector1Types, context, args.Token),
+            ObservableMaps: GetTypeArray(state.IObservableMap2Types, context, args.Token),
+            MapChangedEventArgs: GetTypeArray(state.IMapChangedEventArgs1Types, context, args.Token),
+            AsyncActionsWithProgress: GetTypeArray(state.IAsyncActionWithProgress1Types, context, args.Token),
+            AsyncOperations: GetTypeArray(state.IAsyncOperation1Types, context, args.Token),
+            AsyncOperationsWithProgress: GetTypeArray(state.IAsyncOperationWithProgress2Types, context, args.Token),
+            KeyValuePairs: GetTypeArray(state.KeyValuePairTypes, context, args.Token));
 
-        writer.WriteStartArray("generatedTypes");
-
-        foreach (TypeDefinition type in module.GetAllTypes().OrderBy(static type => type.FullName, StringComparer.Ordinal))
-        {
-            args.Token.ThrowIfCancellationRequested();
-            writer.WriteStartObject();
-            writer.WriteString("name", type.FullName);
-            writer.WriteNumber("methodCount", type.Methods.Count);
-            writer.WriteNumber("fieldCount", type.Fields.Count);
-            writer.WriteNumber("ilInstructionCount", type.Methods.Sum(static method => method.CilMethodBody?.Instructions.Count ?? 0));
-            writer.WriteEndObject();
-        }
-
-        writer.WriteEndArray();
-        writer.WriteEndObject();
+        return new(
+            Schema: 1,
+            AssemblySizeBytes: assemblySizeBytes,
+            TypeHierarchy: typeHierarchy,
+            GenericInstantiations: genericInstantiations,
+            UserDefinedTypes: GetInterfaceTypes(state.UserDefinedAndVtableTypes, context, args.Token),
+            ArrayTypes: GetInterfaceTypes(state.SzArrayAndVtableTypes, context, args.Token),
+            GeneratedTypes: generatedTypes);
     }
 
-    private static void WriteTypeArray(
-        Utf8JsonWriter writer,
-        string name,
+    /// <summary>
+    /// Gets a sorted discovery category of constructed generic types.
+    /// </summary>
+    /// <param name="types">The discovered types in the category.</param>
+    /// <param name="context">The context for resolving type identities.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The assembly-qualified type names.</returns>
+    private static string[] GetTypeArray(
         IEnumerable<GenericInstanceTypeSignature> types,
         RuntimeContext context,
-        System.Threading.CancellationToken token)
+        CancellationToken token)
     {
-        writer.WriteStartArray(name);
-
-        foreach (string type in types.Select(type => GetTypeName(type, context)).Order(StringComparer.Ordinal))
+        // Concurrent discovery has no stable enumeration order; normalize names before sorting
+        return [.. types.Select(type =>
         {
             token.ThrowIfCancellationRequested();
-            writer.WriteStringValue(type);
-        }
 
-        writer.WriteEndArray();
+            return GetTypeName(type, context);
+        }).Order(StringComparer.Ordinal)];
     }
 
-    private static void WriteInterfaceTypes<T>(
-        Utf8JsonWriter writer,
-        string name,
+    /// <summary>
+    /// Gets discovered types alongside the interfaces used for their COM entries.
+    /// </summary>
+    /// <typeparam name="T">The type signature used as the discovery key.</typeparam>
+    /// <param name="types">The discovered types and their interface sets.</param>
+    /// <param name="context">The context for resolving type identities.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The types and their sorted interface names.</returns>
+    private static InteropGeneratorLog.TypeWithInterfaces[] GetInterfaceTypes<T>(
         IReadOnlyDictionary<T, TypeSignatureEquatableSet> types,
         RuntimeContext context,
-        System.Threading.CancellationToken token)
+        CancellationToken token)
         where T : TypeSignature
     {
-        writer.WriteStartArray(name);
-
-        foreach ((string type, TypeSignatureEquatableSet interfaces) in types
-            .Select(pair => (Type: GetTypeName(pair.Key, context), Interfaces: pair.Value))
-            .OrderBy(static pair => pair.Type, StringComparer.Ordinal))
+        // Keep each type's interface list even when multiple types share emitted COM entry helpers
+        return [.. types.Select(pair =>
         {
             token.ThrowIfCancellationRequested();
-            writer.WriteStartObject();
-            writer.WriteString("type", type);
-            writer.WriteStartArray("interfaces");
 
-            foreach (string interfaceName in interfaces.Select(iface => GetTypeName(iface, context)).Order(StringComparer.Ordinal))
-            {
-                writer.WriteStringValue(interfaceName);
-            }
-
-            writer.WriteEndArray();
-            writer.WriteEndObject();
-        }
-
-        writer.WriteEndArray();
+            return new InteropGeneratorLog.TypeWithInterfaces(
+                GetTypeName(pair.Key, context),
+                [.. pair.Value.Select(iface => GetTypeName(iface, context)).Order(StringComparer.Ordinal)]);
+        }).OrderBy(static entry => entry.Type, StringComparer.Ordinal)];
     }
 
+    /// <summary>
+    /// Formats a type with its resolved assembly identity and any generic or array arguments.
+    /// </summary>
+    /// <param name="type">The type to format.</param>
+    /// <param name="context">The context for resolving forwarded type references.</param>
+    /// <returns>A stable, assembly-qualified type name where resolution is available.</returns>
     private static string GetTypeName(ITypeDescriptor type, RuntimeContext context)
     {
+        // Resolving the outer type alone would lose constructed arguments and array shape
         if (type is GenericInstanceTypeSignature generic)
         {
             return $"{GetTypeName(generic.GenericType, context)}<{string.Join(", ", generic.TypeArguments.Select(argument => GetTypeName(argument, context)))}>";
