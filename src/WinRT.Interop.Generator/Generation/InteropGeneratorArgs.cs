@@ -75,6 +75,14 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--marshalling-enabled-assembly-names")]
     public string[] MarshallingEnabledAssemblyNames { get; init; } = [];
 
+    /// <summary>Gets the names of assemblies explicitly excluded from discovery, regardless of the marshalling mode.</summary>
+    /// <remarks>
+    /// Each entry is an assembly name (the <c>.dll</c> extension and any directory are ignored).
+    /// Exclusions take precedence over explicit opt-ins. Defaults to an empty array.
+    /// </remarks>
+    [CommandLineArgumentName("--marshalling-disabled-assembly-names")]
+    public string[] MarshallingDisabledAssemblyNames { get; init; } = [];
+
     /// <summary>Gets whether to automatically generate the vtables for the list types used by <c>NotifyCollectionChangedEventArgs</c>.</summary>
     /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
     [CommandLineArgumentName("--generate-collection-changed-list-vtables")]

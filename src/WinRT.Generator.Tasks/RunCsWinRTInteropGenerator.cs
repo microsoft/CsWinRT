@@ -129,6 +129,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public ITaskItem[]? MarshallingEnabledAssemblies { get; set; }
 
     /// <summary>
+    /// Gets or sets the names of assemblies explicitly excluded from analysis, regardless of the marshalling mode.
+    /// </summary>
+    /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
+    public ITaskItem[]? MarshallingDisabledAssemblies { get; set; }
+
+    /// <summary>
     /// Gets or sets whether to automatically generate the vtables for the list types used by 'NotifyCollectionChangedEventArgs'.
     /// </summary>
     /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
@@ -339,6 +345,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
         AppendResponseFileCommand(args, "--analyze-net-standard-assemblies", AnalyzeNetStandardAssemblies.ToString());
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
+        AppendResponseFileOptionalCommand(args, "--marshalling-disabled-assembly-names", MarshallingDisabledAssemblies);
         AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());
