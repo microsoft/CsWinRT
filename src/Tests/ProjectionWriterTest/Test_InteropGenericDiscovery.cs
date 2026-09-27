@@ -293,7 +293,9 @@ public class Test_InteropGenericDiscovery
                     $"--marshalling-mode {mode}",
                     .. optIn ? new[] { "--marshalling-enabled-assembly-names subdir\\FOREIGN.DLL" } : [],
                     .. optOut ? new[] { "--marshalling-disabled-assembly-names Foreign.dll,WinRT.Sdk.Projection.dll" } : []
-                ]);
+                ],
+                // 'all' also scans every BCL assembly, which can exceed the default limit on loaded CI agents.
+                timeout: mode == "all" ? TimeSpan.FromMinutes(2) : null);
 
             if (optIn && optOut)
             {
@@ -462,7 +464,8 @@ public class Test_InteropGenericDiscovery
         string app,
         bool treatWarningsAsErrors = false,
         string[]? additionalReferences = null,
-        string[]? additionalArguments = null)
+        string[]? additionalArguments = null,
+        TimeSpan? timeout = null)
     {
         string projection = Path.Combine(SdkFixture.Value, "WinRT.Sdk.Projection.dll");
         string sdkReference = Path.Combine(SdkFixture.Value, "Microsoft.Windows.SDK.NET.dll");
@@ -487,7 +490,7 @@ public class Test_InteropGenericDiscovery
         return ProjectionWriterRunner.Run(
             ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
             $"@{responseFile}",
-            timeout: TimeSpan.FromSeconds(30));
+            timeout: timeout ?? TimeSpan.FromSeconds(30));
     }
 
     private static HashSet<string> GetComWrappersTypeAssociations(string path)
