@@ -125,8 +125,9 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             return true;
         }
 
-        // A native iterator can implement 'IEnumerator<T>' through managed covariance without exposing
-        // the corresponding native IID. Let the collection adapter supply that interface in this case.
+        // As in 'ConvertToUnmanaged', first try to unwrap the native interface. Unlike that method,
+        // 'E_NOINTERFACE' means this exact-marshalling attempt failed, so the caller can try another
+        // strategy (e.g. adapting a covariant enumerator) instead of throwing.
         if (value is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } windowsRuntimeObject)
         {
             HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
