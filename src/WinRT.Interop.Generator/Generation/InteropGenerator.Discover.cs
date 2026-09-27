@@ -348,6 +348,7 @@ internal partial class InteropGenerator
                 return false;
             }
 
+            // Explicit assembly exclusions take precedence over opt-ins and marshalling-mode selection
             if (discoveryState.IsMarshallingDisabledModule(module))
             {
                 return false;
