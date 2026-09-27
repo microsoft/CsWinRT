@@ -161,8 +161,9 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// <returns>Whether the module is excluded.</returns>
     public bool IsMarshallingDisabledModule(ModuleDefinition module)
     {
-        return module.Assembly?.Name is { } assemblyName &&
-               MarshallingDisabledAssemblyNames.Contains(assemblyName.Value);
+        return
+            module.Assembly?.Name is { } assemblyName &&
+            MarshallingDisabledAssemblyNames.Contains(assemblyName.Value);
     }
 
     /// <summary>
