@@ -167,7 +167,13 @@ internal static partial class ModuleDefinitionExtensions
         Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, signatureComparer, shouldProcessModule, isMarshallingDisabledModule, treatWarningsAsErrors);
+        return EnumerateTypeSignatures(
+            module: module,
+            visitor: AllGenericTypesVisitor.Instance,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors);
     }
 
     /// <summary>
@@ -186,7 +192,13 @@ internal static partial class ModuleDefinitionExtensions
         Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, signatureComparer, shouldProcessModule, isMarshallingDisabledModule, treatWarningsAsErrors);
+        return EnumerateTypeSignatures(
+            module: module,
+            visitor: AllSzArrayTypesVisitor.Instance,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors);
     }
 
     /// <summary>
