@@ -61,43 +61,43 @@ internal sealed class InteropGeneratorEmitInputs
         return CanonicalizeTypes(_discoveryState.GenericDelegateTypes);
     }
 
-    /// <summary>Enumerates the ordered <c>IEnumerator&lt;T&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="IEnumerator{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIEnumerator1Types()
     {
         return CanonicalizeTypes(_discoveryState.IEnumerator1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IEnumerable&lt;T&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="IEnumerable{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIEnumerable1Types()
     {
         return CanonicalizeTypes(_discoveryState.IEnumerable1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IReadOnlyList&lt;T&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="IReadOnlyList{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyList1Types()
     {
         return CanonicalizeTypes(_discoveryState.IReadOnlyList1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IList&lt;T&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="IList{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIList1Types()
     {
         return CanonicalizeTypes(_discoveryState.IList1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IReadOnlyDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="IReadOnlyDictionary{TKey, TValue}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyDictionary2Types()
     {
         return CanonicalizeTypes(_discoveryState.IReadOnlyDictionary2Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IDictionary&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="IDictionary{TKey, TValue}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIDictionary2Types()
     {
         return CanonicalizeTypes(_discoveryState.IDictionary2Types);
     }
 
-    /// <summary>Enumerates the ordered <c>KeyValuePair&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the ordered <see cref="KeyValuePair{TKey, TValue}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateKeyValuePairTypes()
     {
         return CanonicalizeTypes(_discoveryState.KeyValuePairTypes);
@@ -139,14 +139,14 @@ internal sealed class InteropGeneratorEmitInputs
         return CanonicalizeTypes(_discoveryState.IAsyncOperationWithProgress2Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IReadOnlyList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
+    /// <summary>Enumerates the ordered <see cref="IReadOnlyList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyCollectionKeyValuePair2Types()
     {
         return CanonicalizeTypes(_discoveryState.IReadOnlyList1Types
             .Where(type => type.TypeArguments[0].IsConstructedKeyValuePairType(_interopReferences)));
     }
 
-    /// <summary>Enumerates the ordered <c>IList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</c> instantiations used for collection forwarders.</summary>
+    /// <summary>Enumerates the ordered <see cref="IList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateICollectionKeyValuePair2Types()
     {
         return CanonicalizeTypes(_discoveryState.IList1Types
