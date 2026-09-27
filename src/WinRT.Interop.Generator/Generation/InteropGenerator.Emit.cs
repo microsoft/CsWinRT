@@ -315,6 +315,37 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Resolves discovered aliases before using them to create output metadata.
+    /// The resolution-aware discovery comparer can retain either spelling of a forwarded type.
+    /// </summary>
+    private static IEnumerable<TSignature> CanonicalizeTypes<TSignature>(
+        IEnumerable<TSignature> signatures,
+        ModuleDefinition module)
+        where TSignature : TypeSignature
+    {
+        return signatures
+            .Select(signature => (TSignature)module.DefaultImporter.ImportTypeSignature(signature))
+            .OrderByFullyQualifiedTypeName(module.RuntimeContext);
+    }
+
+    /// <summary>
+    /// Resolves both the discovered types and their implemented interfaces before emitting vtables.
+    /// </summary>
+    private static IEnumerable<(TSignature Type, TypeSignatureEquatableSet VtableTypes)> CanonicalizeTypesAndVtables<TSignature>(
+        IReadOnlyDictionary<TSignature, TypeSignatureEquatableSet> types,
+        SignatureComparer signatureComparer,
+        ModuleDefinition module)
+        where TSignature : TypeSignature
+    {
+        return types
+            .Select(pair => (
+                Type: (TSignature)module.DefaultImporter.ImportTypeSignature(pair.Key),
+                VtableTypes: new TypeSignatureEquatableSet(
+                    signatureComparer, pair.Value.Select(module.DefaultImporter.ImportTypeSignature))))
+            .OrderByFullyQualifiedTypeName(static pair => pair.Type, module.RuntimeContext);
+    }
+
+    /// <summary>
     /// Defines the interop types for generic delegates.
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
@@ -331,7 +362,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.GenericDelegateTypes.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.GenericDelegateTypes, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -503,7 +534,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerator1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IEnumerator1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -636,7 +667,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IEnumerable1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IEnumerable1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -769,7 +800,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IReadOnlyList1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -904,7 +935,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IList1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1048,7 +1079,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyDictionary2Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IReadOnlyDictionary2Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1184,7 +1215,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IDictionary2Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IDictionary2Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1346,7 +1377,7 @@ internal partial class InteropGenerator
         }
 
         // Generate specialized code for all discovered instantiations
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.KeyValuePairTypes.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.KeyValuePairTypes, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1446,7 +1477,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IMapChangedEventArgs1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IMapChangedEventArgs1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1562,7 +1593,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableVector1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IObservableVector1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1695,7 +1726,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IObservableMap2Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IObservableMap2Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1828,7 +1859,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncActionWithProgress1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IAsyncActionWithProgress1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -1944,7 +1975,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperation1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IAsyncOperation1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2060,7 +2091,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IAsyncOperationWithProgress2Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IAsyncOperationWithProgress2Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2176,7 +2207,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IReadOnlyList1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IReadOnlyList1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2237,7 +2268,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (GenericInstanceTypeSignature typeSignature in discoveryState.IList1Types.OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+        foreach (GenericInstanceTypeSignature typeSignature in CanonicalizeTypes(discoveryState.IList1Types, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2298,7 +2329,8 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach ((SzArrayTypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.SzArrayAndVtableTypes.OrderByFullyQualifiedTypeName(static pair => pair.Key, interopDefinitions.RuntimeContext))
+        foreach ((SzArrayTypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in
+            CanonicalizeTypesAndVtables(discoveryState.SzArrayAndVtableTypes, discoveryState.SignatureComparer, module))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2548,11 +2580,13 @@ internal partial class InteropGenerator
         // we need a temporary map so we can look them up when we need to reference them once we get to
         // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
         Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
+        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] userDefinedTypes =
+            [.. CanonicalizeTypesAndVtables(discoveryState.UserDefinedAndVtableTypes, discoveryState.SignatureComparer, module)];
 
         // Share marshallers across types with the same explicitly implemented interfaces
-        foreach (IGrouping<TypeSignatureEquatableSet, KeyValuePair<TypeSignature, TypeSignatureEquatableSet>> group in
-            discoveryState.UserDefinedAndVtableTypes
-                .GroupBy(static pair => pair.Value)
+        foreach (IGrouping<TypeSignatureEquatableSet, (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> group in
+            userDefinedTypes
+                .GroupBy(static pair => pair.VtableTypes)
                 .OrderBy(static group => group.Key))
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2563,7 +2597,7 @@ internal partial class InteropGenerator
             {
                 // Get the first user-defined with this vtable set as reference
                 typeSignature = group
-                    .Select(static kvp => kvp.Key)
+                    .Select(static pair => pair.Type)
                     .OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext)
                     .First();
 
@@ -2597,7 +2631,7 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in discoveryState.UserDefinedAndVtableTypes.OrderByFullyQualifiedTypeName(static pair => pair.Key, interopDefinitions.RuntimeContext))
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in userDefinedTypes)
         {
             args.Token.ThrowIfCancellationRequested();
 

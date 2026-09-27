@@ -106,6 +106,22 @@ public sealed class Test_ForwardedTypeIdentity
     }
 
     [TestMethod]
+    public async Task ForwardedEnumerableAliases_AreDeterministicAcrossSerialInputOrder()
+    {
+        using InteropGeneratorRunner runner = new(useFrameworkImplementations: true, forwardedEnumerableAliases: true);
+        string serial = await runner.GenerateAsync("serial");
+        (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(serial);
+        Assert.IsTrue(ReadAssociations(module, context).Any(association =>
+            association.Source is GenericInstanceTypeSignature { TypeArguments: [TypeSignature { FullName: "Windows.Foundation.IStringable" }] } generic &&
+            generic.GenericType.Name == "IEnumerable`1"),
+            "The aliased enumerable must actually be emitted.");
+        byte[] expected = File.ReadAllBytes(serial);
+        byte[] actual = File.ReadAllBytes(await runner.GenerateAsync("reversed", reverseInputs: true));
+
+        CollectionAssert.AreEqual(expected, actual, "Equivalent framework interface references must not depend on which assembly is discovered first.");
+    }
+
+    [TestMethod]
     [DataRow("Minimal", false, null, 1)]
     [DataRow("Strict", true, null, 1)]
     [DataRow("Strict", false, null, 0)]
