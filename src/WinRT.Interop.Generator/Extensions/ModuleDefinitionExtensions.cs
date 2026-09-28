@@ -233,6 +233,28 @@ internal static partial class ModuleDefinitionExtensions
         bool transitiveTypeLimitReported = false;
         int transitiveTypeCount = 0;
 
+        // Keep budget accounting aligned with the members actually traversed
+        IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
+        {
+            // Explicit type specifications provide the caller's generic context for a one-hop member scan.
+            // Further traversal of ordinary methods follows the module's marshalling policy.
+            if (typeSpecifications.Contains(typeSignature) ||
+                (type.DeclaringModule is ModuleDefinition declaringModule && shouldProcessModule(declaringModule)))
+            {
+                return type.Methods;
+            }
+
+            // Mode-based skips still scan static initializers, but explicit exclusions do not
+            if (type.DeclaringModule is ModuleDefinition excludedModule && isMarshallingDisabledModule(excludedModule))
+            {
+                return [];
+            }
+
+            // Static initializers can reveal concrete cached instances and arrays hidden behind
+            // fields declared as 'object' or an interface.
+            return type.TryGetStaticConstructor(out MethodDefinition? initializer) ? [initializer] : [];
+        }
+
         // Helper to crawl a signature, recursively
         IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type, int depth = 0)
         {
@@ -256,6 +278,16 @@ internal static partial class ModuleDefinitionExtensions
                 if (genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
                     !visitedTypes.Contains(genericType))
                 {
+                    // Types with no eligible members need no worklist entry but are still reported below
+                    if (depth > 0 &&
+                        (!genericType.TryResolve(module.RuntimeContext, out TypeDefinition? resolvedType) ||
+                         !GetMethodsToScan(genericType, resolvedType).Any()))
+                    {
+                        _ = visitedTypes.Add(genericType);
+
+                        continue;
+                    }
+
                     // Bound the worklist when branching methods create many distinct types below the depth limit
                     if (depth > 0 && depth <= MaxDiscoveryDepth && transitiveTypeCount == MaxTransitiveTypes)
                     {
@@ -399,30 +431,8 @@ internal static partial class ModuleDefinitionExtensions
             }
 
             GenericContext genericContext = new(typeSignature as GenericInstanceTypeSignature, null);
-            IEnumerable<MethodDefinition> methods = type.Methods;
 
-            // Explicit type specifications provide the caller's generic context for a one-hop member scan.
-            // Further traversal of ordinary methods follows the module's marshalling policy. Static initializers
-            // can reveal concrete cached instances and arrays hidden behind fields declared as 'object' or an interface.
-            if (!typeSpecifications.Contains(typeSignature) &&
-                !(type.DeclaringModule is ModuleDefinition declaringModule && shouldProcessModule(declaringModule)))
-            {
-                // Mode-based skips retain the historical static-initializer fallback. An explicit
-                // exclusion also suppresses that fallback for indirectly discovered types.
-                if (type.DeclaringModule is ModuleDefinition excludedModule && isMarshallingDisabledModule(excludedModule))
-                {
-                    continue;
-                }
-
-                if (!type.TryGetStaticConstructor(out MethodDefinition? initializer))
-                {
-                    continue;
-                }
-
-                methods = [initializer];
-            }
-
-            foreach (MethodDefinition method in methods)
+            foreach (MethodDefinition method in GetMethodsToScan(typeSignature, type))
             {
                 foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
                 {

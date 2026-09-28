@@ -928,7 +928,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropWarning GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
-            $"Generic member discovery reached the maximum of {limit} transitive type instantiations while processing module '{module}': " +
+            $"Generic member discovery reached the maximum of {limit} transitive type instantiations eligible for member analysis while processing module '{module}': " +
             "additional types will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
     }
 
