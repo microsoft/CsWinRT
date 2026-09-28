@@ -49,13 +49,31 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }
         """;
 
+    private const string EnumerableAliasSource = """
+        using System.Collections;
+        using System.Collections.Generic;
+        using Windows.Foundation;
+
+        public sealed class EnumerableAliasInput : IEnumerable<IStringable>
+        {
+            public static IEnumerable<IStringable>[] Arrays = [];
+
+            public IEnumerator<IStringable> GetEnumerator() => new List<IStringable>().GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+        """;
+
     private readonly string[] referencePaths;
     private readonly string[] implementationPaths;
     private readonly string applicationPath;
     private readonly string sdkProjectionPath;
     private int msbuildInvocation;
 
-    public InteropGeneratorRunner(bool useFrameworkImplementations = false, bool overlappingFrameworkReferences = false)
+    public InteropGeneratorRunner(
+        bool useFrameworkImplementations = false,
+        bool overlappingFrameworkReferences = false,
+        bool forwardedEnumerableAliases = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -115,10 +133,28 @@ internal sealed class InteropGeneratorRunner : IDisposable
             public class Derived : Base { }
             """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)]);
 
+        string[] enumerableAliases = [];
+
+        if (forwardedEnumerableAliases)
+        {
+            MetadataReference[] references = [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)];
+            string coreLib = Compile("CoreLibEnumerable", EnumerableAliasSource, references: references);
+            string facade = Compile("FacadeEnumerable", EnumerableAliasSource, references: references);
+
+            RewriteTypeScope(
+                coreLib, "System.Collections.Generic", "IEnumerable`1",
+                new AssemblyReference(
+                    "System.Private.CoreLib", new Version(10, 0, 0, 0), false,
+                    [0x7C, 0xEC, 0x85, 0xD7, 0xBE, 0xA7, 0x79, 0x8E]));
+
+            enumerableAliases = [coreLib, facade];
+        }
+
         implementationPaths =
         [
             .. useFrameworkImplementations ? GetFrameworkImplementationPaths() : referencePaths,
             runtimePath, sdkReference, current, forwarded, firstDistinct, secondDistinct, standard,
+            .. enumerableAliases,
             .. useFrameworkImplementations ? new[] { implementation } : []
         ];
     }
@@ -382,12 +418,17 @@ internal sealed class InteropGeneratorRunner : IDisposable
 
     private static void RewriteDictionaryScope(string path, AssemblyReference scope)
     {
-        ModuleDefinition module = ModuleDefinition.FromFile(path);
-        TypeReference dictionary = module.EnumerateTableMembers<TypeReference>(TableIndex.TypeRef)
-            .Single(type => type.Namespace == "System.Collections.ObjectModel" && type.Name == "ReadOnlyDictionary`2");
+        RewriteTypeScope(path, "System.Collections.ObjectModel", "ReadOnlyDictionary`2", scope);
+    }
 
-        Assert.AreEqual("System.Runtime", dictionary.Scope!.GetAssembly()!.Name!.ToString());
-        dictionary.Scope = scope;
+    private static void RewriteTypeScope(string path, string typeNamespace, string typeName, AssemblyReference scope)
+    {
+        ModuleDefinition module = ModuleDefinition.FromFile(path);
+        TypeReference typeReference = module.EnumerateTableMembers<TypeReference>(TableIndex.TypeRef)
+            .Single(type => type.Namespace == typeNamespace && type.Name == typeName);
+
+        Assert.AreEqual("System.Runtime", typeReference.Scope!.GetAssembly()!.Name!.ToString());
+        typeReference.Scope = scope;
 
         // Model valid inputs from older reference packs and implementation metadata, not patched generator output.
         using MemoryStream stream = new();
