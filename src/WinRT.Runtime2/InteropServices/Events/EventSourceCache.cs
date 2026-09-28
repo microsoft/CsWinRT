@@ -284,14 +284,12 @@ internal sealed unsafe class EventSourceCache
             {
                 targetToDispose = _target!;
                 _target = target;
-                target = null!;
 
                 _states.Clear();
             }
             else
             {
                 targetToDispose = target;
-                target = null!;
             }
         }
 
