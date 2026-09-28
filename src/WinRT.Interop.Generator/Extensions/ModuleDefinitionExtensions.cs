@@ -233,6 +233,7 @@ internal static partial class ModuleDefinitionExtensions
         bool transitiveTypeLimitReported = false;
         int transitiveTypeCount = 0;
 
+        // Keep budget accounting aligned with the members actually traversed
         IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
         {
             // Explicit type specifications provide the caller's generic context for a one-hop member scan.
