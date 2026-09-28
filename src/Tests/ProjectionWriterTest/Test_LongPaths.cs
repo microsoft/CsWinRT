@@ -6,7 +6,7 @@ using ProjectionWriterTest.Helpers;
 namespace ProjectionWriterTest;
 
 /// <summary>
-/// Tests for projection generation when filesystem paths exceed the legacy Windows MAX_PATH limit.
+/// Tests for projection generation when filesystem paths exceed the Windows MAX_PATH limit.
 /// </summary>
 [TestClass]
 public class Test_LongPaths
