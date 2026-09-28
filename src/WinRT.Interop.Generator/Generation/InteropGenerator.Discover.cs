@@ -335,7 +335,7 @@ internal partial class InteropGenerator
             state.WindowsRuntimeProjectionModule,
             state.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>()];
 
-        Dictionary<AssemblyDescriptor, AssemblyDefinition> assemblies = new(SignatureComparer.IgnoreVersion);
+        Dictionary<AssemblyDescriptor, AssemblyDefinition> assemblies = new(state.SignatureComparer);
 
         foreach (ModuleDefinition module in modules.OrderByDescending(static module => module.Assembly?.Version))
         {
