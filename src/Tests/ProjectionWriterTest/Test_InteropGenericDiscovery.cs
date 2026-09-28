@@ -158,6 +158,80 @@ public class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    public void ManyUnscannedFrameworkGenerics_DoNotExhaustTransitiveBudget()
+    {
+        const int rootCount = 360;
+        string markers = string.Join('\n', Enumerable.Range(0, rootCount).Select(i => $"public sealed class Marker{i};"));
+        string roots = string.Join('\n', Enumerable.Range(0, rootCount).Select(i => $"_ = new Wrapper<Marker{i}>();"));
+        string source = $$"""
+            using System;
+            using Windows.Foundation;
+
+            namespace Recursion;
+
+            public sealed class Wrapper<T>
+            {
+                public Func<T> Create() => throw new NotImplementedException();
+                public Action<T> Notify() => throw new NotImplementedException();
+                public Predicate<T> Filter() => throw new NotImplementedException();
+            }
+
+            public sealed class Root<T> : IStringable
+            {
+                public override string ToString() => "root";
+            }
+
+            public sealed class Factory<T>
+            {
+                public Descriptor<T> Create() => new();
+            }
+
+            public sealed class Descriptor<T> : IStringable
+            {
+                public Final<T> Next() => new();
+                public override string ToString() => "descriptor";
+            }
+
+            public sealed class Final<T> : IStringable
+            {
+                public override string ToString() => "final";
+            }
+
+            {{markers}}
+
+            public static class Program
+            {
+                public static void Main()
+                {
+                    _ = new Root<long>();
+                    {{roots}}
+                    _ = new Factory<long>();
+                }
+            }
+            """;
+        string directory = Directory.CreateTempSubdirectory("InteropFiniteGenericDiscoveryTest_").FullName;
+
+        try
+        {
+            string app = ProjectionWriterRunner.CompileSources(
+                [source],
+                Path.Combine(directory, "FiniteGenerics.dll"),
+                outputKind: OutputKind.ConsoleApplication);
+            (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors: true);
+
+            Assert.AreEqual(0, exitCode, log);
+            Assert.IsFalse(log.Contains(ExpansionWarning, StringComparison.Ordinal), log);
+            HashSet<string> types = GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"));
+            Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Root`1[[System.Int64,", StringComparison.Ordinal)), log);
+            Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Final`1[[System.Int64,", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     [DataRow("strict", false, false, true)]
     [DataRow("strict", true, false, false)]
     [DataRow("strict", false, true, false)]
