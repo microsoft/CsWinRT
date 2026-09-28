@@ -65,6 +65,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTAnalyzeNetStandardAssemblies Condition="'$(CsWinRTAnalyzeNetStandardAssemblies)' == ''">true</CsWinRTAnalyzeNetStandardAssemblies>
 
     <!--
+      CsWinRTMarshallingDisabledAssembly items explicitly skip assembly discovery in every mode,
+      including for assemblies that reference WinRT or are listed in CsWinRTMarshallingEnabledAssembly.
+    -->
+
+    <!--
       Controls whether 'cswinrtinteropgen' automatically generates the vtables for the optimized list types that
       'NotifyCollectionChangedEventArgs' stores its changed items in. These types are internal to the framework,
       so they are registered by name, and this can be set to 'false' to opt out of them, should one of them ever
@@ -256,6 +261,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTAnalyzeNetStandardAssemblies)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingDisabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
@@ -331,6 +337,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       MarshallingMode="$(CsWinRTMarshallingMode)"
       AnalyzeNetStandardAssemblies="$(CsWinRTAnalyzeNetStandardAssemblies)"
       MarshallingEnabledAssemblies="@(CsWinRTMarshallingEnabledAssembly)"
+      MarshallingDisabledAssemblies="@(CsWinRTMarshallingDisabledAssembly)"
       GenerateCollectionChangedListVtables="$(CsWinRTGenerateCollectionChangedListVtables)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       ValidateWinRTRuntimeDllVersion2References="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)"

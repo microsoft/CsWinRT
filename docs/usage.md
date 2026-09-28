@@ -195,6 +195,8 @@ Below are the most commonly used MSBuild properties. For a full list, refer to t
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode. |
 | `CsWinRTMarshallingMode` | `minimal` | Controls which assemblies the interop generator analyzes for marshalling code (`all`, `minimal`, or `strict`). See below. |
 | `CsWinRTAnalyzeNetStandardAssemblies` | `true` | Allows .NET Standard assemblies to participate in interop discovery. Set to `false` to skip them, including explicitly opted-in assemblies. |
+| `CsWinRTMarshallingEnabledAssembly` | *(item)* | Explicitly include named assemblies in discovery, subject to framework exclusions and explicit opt-outs. |
+| `CsWinRTMarshallingDisabledAssembly` | *(item)* | Explicitly exclude named assemblies from discovery in every mode. |
 | `CsWinRTIncludes` | *(empty)* | Semicolon-separated namespaces to include in the projection. |
 | `CsWinRTExcludes` | `Windows;Microsoft` | Semicolon-separated namespaces to exclude from the projection. |
 | `CsWinRTMessageImportance` | `normal` | Build message verbosity (`normal` or `high`). |
@@ -216,7 +218,7 @@ generated interop assembly small.
 | `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
 | `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
 
-Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode, subject to the framework exclusions below. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit opt-in rules as other libraries by default. Set `CsWinRTAnalyzeNetStandardAssemblies` to `false` to skip their discovery in every mode, even if listed in `CsWinRTMarshallingEnabledAssembly`. Assemblies targeting .NET Framework are not analyzed.
+Assemblies that reference the Windows Runtime assembly are analyzed regardless of the mode unless explicitly excluded, subject to the framework exclusions below. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit inclusion/exclusion rules as other libraries by default. Set `CsWinRTAnalyzeNetStandardAssemblies` to `false` to skip their discovery in every mode, even if listed in `CsWinRTMarshallingEnabledAssembly`. Assemblies targeting .NET Framework are not analyzed.
 
 ```xml
 <PropertyGroup>
@@ -230,7 +232,7 @@ Interop discovery compares signatures using the application's runtime context, f
 
 ### Opting in specific assemblies
 
-The `CsWinRTMarshallingEnabledAssembly` item lets you force the interop generator to analyze specific assemblies, regardless of the marshalling mode. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
+The `CsWinRTMarshallingEnabledAssembly` item lets you analyze specific assemblies regardless of the marshalling mode, unless explicitly excluded. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
 
 ```xml
 <PropertyGroup>
@@ -243,7 +245,21 @@ The `CsWinRTMarshallingEnabledAssembly` item lets you force the interop generato
 </ItemGroup>
 ```
 
-Each item is an assembly name (the `.dll` extension is optional). The interop generator reports a warning if an entry doesn't match any referenced assembly, and an informational message if an entry is redundant (e.g. it already targets Windows, or the mode is `all` and thus already analyzes everything).
+Each item is an assembly name (the `.dll` extension is optional; paths and casing are ignored). The interop generator reports a warning if an entry doesn't match any referenced assembly (except in `all` mode, where all opt-ins are redundant), and an informational message if an entry is redundant (e.g. it already targets Windows, or the mode is `all`).
+
+### Excluding specific assemblies
+
+The `CsWinRTMarshallingDisabledAssembly` item skips discovery of named assemblies even if the selected mode would analyze them, they reference the Windows Runtime assembly, or they are also listed in `CsWinRTMarshallingEnabledAssembly`. This can avoid scanning a dependency with many unused generic instantiations:
+
+```xml
+<ItemGroup>
+  <CsWinRTMarshallingDisabledAssembly Include="MyApp.LargeDependency" />
+</ItemGroup>
+```
+
+Like opt-ins, entries match the assembly's simple name, case-insensitively (the directory and `.dll` extension are ignored). An unknown name produces a warning; if the same assembly is both enabled and disabled, the exclusion wins and a warning reports the conflict. Both warnings honor `CsWinRTGeneratorTreatWarningsAsErrors`. Changing these items invalidates the interop generator's property-input cache.
+
+Exclusion skips the assembly's normal type and member scans, plus indirect member expansion in that assembly, including static initializers. It does **not** remove the assembly from type resolution, suppress signatures used directly by analyzed code (including explicit generic type specifications and method calls), or prevent the generator from loading required WinRT projection modules and discovering component activation factories. If excluded code requires marshalling that no analyzed code exposes, **you are responsible for ensuring the necessary interop is generated**; otherwise publishing or runtime marshalling can fail.
 
 ## Author and consume a C#/WinRT component
 

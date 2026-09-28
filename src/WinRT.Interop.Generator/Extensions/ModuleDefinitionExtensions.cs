@@ -157,15 +157,23 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="signatureComparer">The comparer for discovered signatures.</param>
     /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(
         this ModuleDefinition module,
         SignatureComparer signatureComparer,
         Func<ModuleDefinition, bool> shouldProcessModule,
+        Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance, signatureComparer, shouldProcessModule, treatWarningsAsErrors);
+        return EnumerateTypeSignatures(
+            module: module,
+            visitor: AllGenericTypesVisitor.Instance,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors);
     }
 
     /// <summary>
@@ -174,15 +182,23 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <param name="signatureComparer">The comparer for discovered signatures.</param>
     /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(
         this ModuleDefinition module,
         SignatureComparer signatureComparer,
         Func<ModuleDefinition, bool> shouldProcessModule,
+        Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance, signatureComparer, shouldProcessModule, treatWarningsAsErrors);
+        return EnumerateTypeSignatures(
+            module: module,
+            visitor: AllSzArrayTypesVisitor.Instance,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors);
     }
 
     /// <summary>
@@ -192,6 +208,7 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
     /// <param name="signatureComparer">The comparer for discovered signatures.</param>
     /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <returns>All (unique) type signatures of interest in the module.</returns>
     private static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(
@@ -199,6 +216,7 @@ internal static partial class ModuleDefinitionExtensions
         ITypeSignatureVisitor<IEnumerable<TResult>> visitor,
         SignatureComparer signatureComparer,
         Func<ModuleDefinition, bool> shouldProcessModule,
+        Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors)
         where TResult : TypeSignature
     {
@@ -389,6 +407,13 @@ internal static partial class ModuleDefinitionExtensions
             if (!typeSpecifications.Contains(typeSignature) &&
                 !(type.DeclaringModule is ModuleDefinition declaringModule && shouldProcessModule(declaringModule)))
             {
+                // Mode-based skips retain the historical static-initializer fallback. An explicit
+                // exclusion also suppresses that fallback for indirectly discovered types.
+                if (type.DeclaringModule is ModuleDefinition excludedModule && isMarshallingDisabledModule(excludedModule))
+                {
+                    continue;
+                }
+
                 if (!type.TryGetStaticConstructor(out MethodDefinition? initializer))
                 {
                     continue;
