@@ -63,6 +63,7 @@ internal partial class InteropGenerator
             windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule,
             enableDefaultCustomPropertyProviderSupport: args.EnableDefaultCustomPropertyProviderSupport);
 
+        // Prepare the canonicalized discovery inputs for emission
         InteropGeneratorEmitInputs inputs = new(discoveryState, interopReferences, module, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
