@@ -244,7 +244,7 @@ internal static partial class ModuleDefinitionExtensions
                 return type.Methods;
             }
 
-            // Mode-based skips still scan static initializers, but explicit exclusions do not.
+            // Mode-based skips still scan static initializers, but explicit exclusions do not
             if (type.DeclaringModule is ModuleDefinition excludedModule && isMarshallingDisabledModule(excludedModule))
             {
                 return [];
