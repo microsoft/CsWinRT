@@ -619,6 +619,13 @@ internal sealed class InteropGenerationFingerprint
     /// </summary>
     private void AppendDescriptor(ref DefaultInterpolatedStringHandler builder, ITypeDescriptor type)
     {
+        // Discovery compares forwarded references by their resolved identity. Fingerprint the
+        // same identity rather than whichever forwarding scope won a parallel dictionary insert.
+        if (type.TryResolve(_state.RuntimeContext, out TypeDefinition? definition))
+        {
+            type = definition;
+        }
+
         AppendPart(ref builder, type.Namespace);
         AppendPart(ref builder, type.Name);
 
