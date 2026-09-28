@@ -194,6 +194,7 @@ internal sealed class InteropGeneratorEmitInputs
         if (!_canonicalVtableSets.TryGetValue(original, out TypeSignatureEquatableSet? canonical))
         {
             canonical = new(_discoveryState.SignatureComparer, original.Select(_importer.ImportTypeSignature));
+
             _canonicalVtableSets.Add(original, canonical);
         }
 
