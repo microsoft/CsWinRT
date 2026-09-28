@@ -132,10 +132,13 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string marshallingMode = "Minimal",
         bool optInNetStandard = false,
         bool? analyzeNetStandardAssemblies = null,
-        string? debugReproDirectory = null)
+        string? debugReproDirectory = null,
+        string[]? marshallingDisabledAssemblyNames = null,
+        bool treatWarningsAsErrors = true)
     {
         (int exitCode, string log, string outputPath) = await RunAsync(
-            name, reverseInputs, parallelism, marshallingMode, optInNetStandard, analyzeNetStandardAssemblies, debugReproDirectory);
+            name, reverseInputs, parallelism, marshallingMode, optInNetStandard, analyzeNetStandardAssemblies,
+            debugReproDirectory, marshallingDisabledAssemblyNames, treatWarningsAsErrors);
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
@@ -148,7 +151,9 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string marshallingMode,
         bool optInNetStandard,
         bool? analyzeNetStandardAssemblies,
-        string? debugReproDirectory)
+        string? debugReproDirectory,
+        string[]? marshallingDisabledAssemblyNames,
+        bool treatWarningsAsErrors)
     {
         string directory = Directory.CreateDirectory(Path.Combine(Root, name)).FullName;
         string responsePath = Path.Combine(directory, "interop.rsp");
@@ -165,12 +170,13 @@ internal sealed class InteropGeneratorRunner : IDisposable
             --marshalling-mode {marshallingMode}
             {(analyzeNetStandardAssemblies is { } analyze ? $"--analyze-net-standard-assemblies {analyze}" : "")}
             {(optInNetStandard ? "--marshalling-enabled-assembly-names NetStandardTypes" : "")}
+            {(marshallingDisabledAssemblyNames is { Length: > 0 } ? $"--marshalling-disabled-assembly-names {string.Join(",", marshallingDisabledAssemblyNames)}" : "")}
             {(debugReproDirectory is not null ? $"--debug-repro-directory {debugReproDirectory}" : "")}
             --generate-collection-changed-list-vtables False
             --validate-winrt-runtime-assembly-version True
             --validate-winrt-runtime-dll-version-2-references True
             --enable-incremental-generation False
-            --treat-warnings-as-errors True
+            --treat-warnings-as-errors {treatWarningsAsErrors}
             --max-degrees-of-parallelism {parallelism}
             """);
 
@@ -239,7 +245,10 @@ internal sealed class InteropGeneratorRunner : IDisposable
                 new XElement(ns + "ReferencePathWithRefAssemblies", new XAttribute("Include", string.Join(";", referencePaths))),
                 new XElement(ns + "ReferencePath", new XAttribute("Include", string.Join(";", implementationPaths))),
                 new XElement(ns + "IntermediateAssembly", new XAttribute("Include", applicationPath)),
-                new XElement(ns + "CsWinRTMarshallingEnabledAssembly", new XAttribute("Include", "NetStandardTypes"))),
+                new XElement(ns + "CsWinRTMarshallingEnabledAssembly", new XAttribute("Include", "NetStandardTypes")),
+                new XElement(ns + "CsWinRTMarshallingDisabledAssembly",
+                    new XAttribute("Include", "$(TestMarshallingDisabledAssembly)"),
+                    new XAttribute("Condition", "'$(TestMarshallingDisabledAssembly)' != ''"))),
             new XElement(ns + "Import", new XAttribute("Project", Path.GetFullPath(GetAssemblyMetadata("CsWinRTTargetsPath")))),
             new XElement(ns + "PropertyGroup",
                 new XElement(ns + "_CsWinRTSdkProjectionAssemblyPath", sdkProjectionPath)),
@@ -255,7 +264,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         return projectPath;
     }
 
-    public async Task<string> RunMSBuildAsync(string projectPath, bool? analyzeNetStandardAssemblies)
+    public async Task<string> RunMSBuildAsync(
+        string projectPath, bool? analyzeNetStandardAssemblies, string? disabledAssemblyName = null, bool? treatWarningsAsErrors = null)
     {
         string directory = Path.GetDirectoryName(projectPath)!;
         string binlog = Path.Combine(directory, $"build-{++msbuildInvocation}.binlog");
@@ -270,6 +280,16 @@ internal sealed class InteropGeneratorRunner : IDisposable
         if (analyzeNetStandardAssemblies is { } analyze)
         {
             startInfo.ArgumentList.Add("-p:CsWinRTAnalyzeNetStandardAssemblies=" + analyze.ToString().ToLowerInvariant());
+        }
+
+        if (disabledAssemblyName is not null)
+        {
+            startInfo.ArgumentList.Add("-p:TestMarshallingDisabledAssembly=" + disabledAssemblyName);
+        }
+
+        if (treatWarningsAsErrors is { } treatAsErrors)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTGeneratorTreatWarningsAsErrors=" + treatAsErrors.ToString().ToLowerInvariant());
         }
 
         (int exitCode, string log) = await RunProcessAsync(startInfo);

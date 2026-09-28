@@ -144,9 +144,27 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     public required IReadOnlySet<string> MarshallingEnabledAssemblyNames { get; init; }
 
     /// <summary>
+    /// Gets the set of assembly names (without extension) explicitly excluded from analysis via
+    /// <c>CsWinRTMarshallingDisabledAssembly</c>. The set uses a case-insensitive comparer.
+    /// </summary>
+    public required IReadOnlySet<string> MarshallingDisabledAssemblyNames { get; init; }
+
+    /// <summary>
     /// Gets the loaded modules.
     /// </summary>
     public IReadOnlyDictionary<string, ModuleDefinition> Modules => _modules;
+
+    /// <summary>
+    /// Checks whether an assembly is explicitly excluded from discovery.
+    /// </summary>
+    /// <param name="module">The module to check.</param>
+    /// <returns>Whether the module is excluded.</returns>
+    public bool IsMarshallingDisabledModule(ModuleDefinition module)
+    {
+        return
+            module.Assembly?.Name is { } assemblyName &&
+            MarshallingDisabledAssemblyNames.Contains(assemblyName.Value);
+    }
 
     /// <summary>
     /// Gets or computes whether a module should be analyzed for discovery.

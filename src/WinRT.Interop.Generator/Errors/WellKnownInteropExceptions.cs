@@ -864,7 +864,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownGeneratorMessage MarshallingEnabledAssemblyTargetsWindowsMessage(string name)
     {
         return Message(99,
-            $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows and is therefore always analyzed. " +
+            $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows and is analyzed unless explicitly excluded. " +
             $"This entry is redundant and can be removed.");
     }
 
@@ -875,7 +875,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     {
         return Message(100,
             "One or more assemblies were specified via 'CsWinRTMarshallingEnabledAssembly', but the 'CsWinRTMarshallingMode' is set to 'all', " +
-            "which already analyzes every assembly. These entries are redundant and will not affect compilation.");
+            "which already analyzes every non-excluded assembly. These entries are redundant and will not affect compilation.");
     }
 
     /// <summary>
@@ -930,6 +930,26 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
         return Warning(106,
             $"Generic member discovery reached the maximum of {limit} transitive type instantiations while processing module '{module}': " +
             "additional types will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
+    }
+
+    /// <summary>
+    /// An assembly specified via 'CsWinRTMarshallingDisabledAssembly' could not be found among the referenced assemblies.
+    /// </summary>
+    public static WellKnownInteropWarning MarshallingDisabledAssemblyNotFoundWarning(string name)
+    {
+        return Warning(107,
+            $"The assembly '{name}' specified via 'CsWinRTMarshallingDisabledAssembly' could not be found among the referenced assemblies. " +
+            "Ensure the value matches the name of a referenced assembly (the '.dll' extension is optional), or remove the entry.");
+    }
+
+    /// <summary>
+    /// An assembly was both opted in and explicitly excluded from marshalling discovery.
+    /// </summary>
+    public static WellKnownInteropWarning MarshallingAssemblySelectionConflictWarning(string name)
+    {
+        return Warning(108,
+            $"The assembly '{name}' is specified via both 'CsWinRTMarshallingEnabledAssembly' and 'CsWinRTMarshallingDisabledAssembly'. " +
+            "The explicit exclusion takes precedence; remove the opt-in entry if it is not needed.");
     }
 
     /// <summary>
