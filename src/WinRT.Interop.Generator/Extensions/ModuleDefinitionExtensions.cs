@@ -237,8 +237,7 @@ internal static partial class ModuleDefinitionExtensions
         IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
         {
             // Explicit type specifications provide the caller's generic context for a one-hop member scan.
-            // Further traversal of ordinary methods follows the module's marshalling policy. Static initializers
-            // can reveal concrete cached instances and arrays hidden behind fields declared as 'object' or an interface.
+            // Further traversal of ordinary methods follows the module's marshalling policy.
             if (typeSpecifications.Contains(typeSignature) ||
                 (type.DeclaringModule is ModuleDefinition declaringModule && shouldProcessModule(declaringModule)))
             {
@@ -251,6 +250,7 @@ internal static partial class ModuleDefinitionExtensions
                 return [];
             }
 
+            // Static initializers can reveal concrete cached instances and arrays hidden behind fields declared as 'object' or an interface.
             return type.TryGetStaticConstructor(out MethodDefinition? initializer) ? [initializer] : [];
         }
 
