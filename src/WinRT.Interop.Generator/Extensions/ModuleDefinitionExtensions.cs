@@ -250,7 +250,8 @@ internal static partial class ModuleDefinitionExtensions
                 return [];
             }
 
-            // Static initializers can reveal concrete cached instances and arrays hidden behind fields declared as 'object' or an interface.
+            // Static initializers can reveal concrete cached instances and arrays hidden behind
+            // fields declared as 'object' or an interface.
             return type.TryGetStaticConstructor(out MethodDefinition? initializer) ? [initializer] : [];
         }
 
