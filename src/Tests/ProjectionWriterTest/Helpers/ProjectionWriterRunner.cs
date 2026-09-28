@@ -85,8 +85,7 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
-    /// Runs the generator with every path involved in projection generation     exceeding the
-    /// Windows <c>MAX_PATH</c> limit.
+    /// Runs the generator with every path involved in projection generation exceeding the Windows <c>MAX_PATH</c> limit.
     /// </summary>
     /// <param name="useInputDirectory">Whether the input argument is the containing directory rather than the WinMD file itself.</param>
     /// <returns>The paths and process result needed to verify the scenario.</returns>
