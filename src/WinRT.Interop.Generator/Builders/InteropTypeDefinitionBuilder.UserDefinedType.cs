@@ -43,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="orderedVtableTypes">The prepared interface order for this shared set.</param>
         /// <param name="interfaceEntriesType">The resulting interface entries type.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
@@ -53,6 +54,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
+            IReadOnlyList<TypeSignature> orderedVtableTypes,
             out TypeDefinition interfaceEntriesType,
             out TypeDefinition interfaceEntriesImplType)
         {
@@ -74,7 +76,8 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                useWindowsUIXamlProjections: useWindowsUIXamlProjections));
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+                orderedVtableTypes: orderedVtableTypes));
 
             // Add entries for authored struct types, if needed
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateComponentInterfaceEntries(
