@@ -205,6 +205,11 @@ internal partial class InteropGenerator
 
         // Emit the interop .dll to disk
         WriteInteropModuleToDisk(args, module);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Write the optional interop generation report
+        WriteLog(args, discoveryState, module);
     }
 
     /// <summary>

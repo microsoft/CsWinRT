@@ -115,4 +115,8 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
+
+    /// <summary>Gets the directory in which to write a JSON report of the generated interop code, if requested.</summary>
+    [CommandLineArgumentName("--log-directory")]
+    public string? LogDirectory { get; init; }
 }
