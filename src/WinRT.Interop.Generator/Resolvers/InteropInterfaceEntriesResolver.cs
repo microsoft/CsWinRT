@@ -77,15 +77,17 @@ internal static class InteropInterfaceEntriesResolver
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="orderedVtableTypes">The prepared interface order for user-defined types, if available.</param>
     public static IEnumerable<InteropInterfaceEntryInfo> EnumerateMetadataInterfaceEntries(
         TypeSignatureEquatableSet vtableTypes,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         InteropGeneratorEmitState emitState,
-        bool useWindowsUIXamlProjections)
+        bool useWindowsUIXamlProjections,
+        IReadOnlyList<TypeSignature>? orderedVtableTypes = null)
     {
         // Equivalent sets can have different insertion orders after parallel discovery
-        foreach (TypeSignature typeSignature in vtableTypes.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
+        foreach (TypeSignature typeSignature in orderedVtableTypes ?? vtableTypes.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
         {
             // Handle generic types first, and then custom-mapped and manually projected types.
             // These require special handling, because their ABI types are in different locations.

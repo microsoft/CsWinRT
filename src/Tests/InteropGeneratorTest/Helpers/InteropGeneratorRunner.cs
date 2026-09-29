@@ -64,6 +64,15 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }
         """;
 
+    private const string GroupingMemberSource = """
+        public sealed class Shared{0} : {1}
+        {{
+            public void Dispose() {{ }}
+            public IEnumerator<IStringable> GetEnumerator() => ((IEnumerable<IStringable>)Array.Empty<IStringable>()).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }}
+        """;
+
     private readonly string[] referencePaths;
     private readonly string[] implementationPaths;
     private readonly string applicationPath;
@@ -73,7 +82,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
     public InteropGeneratorRunner(
         bool useFrameworkImplementations = false,
         bool overlappingFrameworkReferences = false,
-        bool forwardedEnumerableAliases = false)
+        bool forwardedEnumerableAliases = false,
+        bool ccwGroupingCases = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -150,11 +160,48 @@ internal sealed class InteropGeneratorRunner : IDisposable
             enumerableAliases = [coreLib, facade];
         }
 
+        string[] groupingTypes = [];
+
+        if (ccwGroupingCases)
+        {
+            string source = """
+                using System;
+                using System.Collections;
+                using System.Collections.Generic;
+                using Windows.Foundation;
+
+                namespace GroupingInput;
+
+                """ + string.Join(Environment.NewLine, Enumerable.Range(0, 32)
+                .Select(index => string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    GroupingMemberSource,
+                    index,
+                    index % 2 == 0 ? "IEnumerable<IStringable>, IDisposable" : "IDisposable, IEnumerable<IStringable>")));
+
+            // A separate declaration order still describes the same semantic interface set.
+            source += """
+
+                public sealed class DisposableOnly : System.IDisposable
+                {
+                    public void Dispose() { }
+                }
+
+                public sealed class ExplicitStringable : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "explicit";
+                }
+                """;
+            groupingTypes = [Compile("GroupingTypes", source,
+                references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)])];
+        }
+
         implementationPaths =
         [
             .. useFrameworkImplementations ? GetFrameworkImplementationPaths() : referencePaths,
             runtimePath, sdkReference, current, forwarded, firstDistinct, secondDistinct, standard,
             .. enumerableAliases,
+            .. groupingTypes,
             .. useFrameworkImplementations ? new[] { implementation } : []
         ];
     }
@@ -226,8 +273,31 @@ internal sealed class InteropGeneratorRunner : IDisposable
 
     public static Task<(int ExitCode, string Log)> InvokeGeneratorAsync(string inputPath)
     {
-        ProcessStartInfo startInfo = CreateProcessStartInfo();
-        startInfo.ArgumentList.Add(Path.GetFullPath(GetAssemblyMetadata("InteropGeneratorAssemblyPath")));
+        string generatorPath = Path.GetFullPath(
+            Environment.GetEnvironmentVariable("CSWINRT_TEST_INTEROP_GENERATOR") ??
+            GetAssemblyMetadata("InteropGeneratorAssemblyPath"));
+        string extension = Path.GetExtension(generatorPath);
+        ProcessStartInfo startInfo;
+
+        if (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo = CreateProcessStartInfo();
+            startInfo.ArgumentList.Add(generatorPath);
+        }
+        else if (extension.Equals(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo = new(generatorPath)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+        }
+        else
+        {
+            throw new NotSupportedException($"Expected a .dll or .exe interop generator, but got '{generatorPath}'.");
+        }
+
         startInfo.ArgumentList.Add(Path.GetExtension(inputPath) == ".zip" ? inputPath : "@" + inputPath);
 
         return RunProcessAsync(startInfo);
