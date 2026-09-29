@@ -306,7 +306,30 @@ public class AotOptimizerTests
         Assert.IsFalse(generated.Contains("== \"ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.Int32]\""));
     }
 
-    private static string RunAotOptimizer(string source)
+    [TestMethod]
+    public void DigitPrefixedAssemblyName_UsesValidVtableNamespace()
+    {
+        const string source = """
+            using System.Collections;
+            using System.Collections.Generic;
+            using WinRT;
+
+            namespace _1_HelloWorld;
+
+            [GeneratedWinRTExposedType]
+            internal partial class App : IEnumerable<int>
+            {
+                public IEnumerator<int> GetEnumerator() => throw null;
+                IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source, "1-HelloWorld", validateSyntax: true);
+
+        StringAssert.Contains(generated, "global::WinRT._1_HelloWorldVtableClasses");
+    }
+
+    private static string RunAotOptimizer(string source, string assemblyName = "AotOptimizerTest", bool validateSyntax = false)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));
 
@@ -316,7 +339,7 @@ public class AotOptimizerTests
         };
 
         CSharpCompilation compilation = CSharpCompilation.Create(
-            "AotOptimizerTest",
+            assemblyName,
             new[] { syntaxTree },
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
@@ -328,6 +351,12 @@ public class AotOptimizerTests
             optionsProvider: new ConfigOptionsProvider());
 
         driver = driver.RunGenerators(compilation);
+
+        if (validateSyntax)
+        {
+            Assert.IsFalse(driver.GetRunResult().GeneratedTrees.Any(
+                tree => tree.GetDiagnostics().Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)));
+        }
 
         return string.Join(
             Environment.NewLine,

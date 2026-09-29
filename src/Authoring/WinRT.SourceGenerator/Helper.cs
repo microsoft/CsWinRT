@@ -1386,7 +1386,23 @@ namespace Generator
 
         public static string GetEscapedAssemblyName(string assemblyName)
         {
-            return string.Join(".", assemblyName.Split('.').Select(EscapeAssemblyNameForIdentifier));
+            // Make sure to escape invalid characters for namespace names.
+            // See ECMA 335, II.6.2 and II.5.2/3.
+            if (assemblyName.AsSpan().IndexOfAny("$@`?".AsSpan()) != -1)
+            {
+                char[] buffer = new char[assemblyName.Length];
+
+                for (int i = 0; i < assemblyName.Length; i++)
+                {
+                    buffer[i] = assemblyName[i] is '$' or '@' or '`' or '?'
+                        ? '_'
+                        : assemblyName[i];
+                }
+
+                assemblyName = new string(buffer);
+            }
+
+            return assemblyName;
         }
 
         public static string GetAuthoringMetadataTypeName(string authoringTypeName)
