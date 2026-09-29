@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator;
@@ -2515,16 +2516,21 @@ internal partial class InteropGenerator
         {
             args.Token.ThrowIfCancellationRequested();
 
-            if (!groupsByIdentity.TryGetValue(vtableTypes, out UserDefinedVtableGroup? group))
+            ref UserDefinedVtableGroup? identityGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                groupsByIdentity, vtableTypes, out _);
+
+            if (identityGroup is null)
             {
-                if (!groupsBySet.TryGetValue(vtableTypes, out group))
+                ref UserDefinedVtableGroup? semanticGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    groupsBySet, vtableTypes, out _);
+
+                if (semanticGroup is null)
                 {
-                    group = new(type, vtableTypes, interopReferences.RuntimeContext);
-                    groupsBySet.Add(vtableTypes, group);
-                    groups.Add(group);
+                    semanticGroup = new(type, vtableTypes, interopReferences.RuntimeContext);
+                    groups.Add(semanticGroup);
                 }
 
-                groupsByIdentity.Add(vtableTypes, group);
+                identityGroup = semanticGroup;
             }
         }
 
