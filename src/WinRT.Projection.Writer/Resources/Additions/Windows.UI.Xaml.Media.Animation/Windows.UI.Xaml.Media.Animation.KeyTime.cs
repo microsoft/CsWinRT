@@ -6,6 +6,7 @@ namespace Windows.UI.Xaml.Media.Animation
 #if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Media.Animation.KeyTime>")]
+    [WindowsRuntimeReferenceType(typeof(KeyTime?))]
     [ABI.Windows.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
 #endif
     public struct KeyTime : IEquatable<KeyTime>

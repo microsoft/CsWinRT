@@ -214,8 +214,9 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="enableDefaultCustomPropertyProviderSupport">Whether to include the default custom property provider entry.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences)
+    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences, bool enableDefaultCustomPropertyProviderSupport)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -231,6 +232,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry Delegate;
         // public ComInterfaceEntry DelegateReference;
         // public ComInterfaceEntry IPropertyValue;
+        // public ComInterfaceEntry ICustomPropertyProvider;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -240,6 +242,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         interfaceEntriesType.Fields.Add(new FieldDefinition("Delegate"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("DelegateReference"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        // The 'ICustomPropertyProvider' slot is only added when default provider support is enabled
+        if (enableDefaultCustomPropertyProviderSupport)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition("ICustomPropertyProvider"u8, FieldAttributes.Public, comInterfaceEntryType));
+        }
+
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
@@ -771,8 +780,9 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="enableDefaultCustomPropertyProviderSupport">Whether to include the default custom property provider entry.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences)
+    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences, bool enableDefaultCustomPropertyProviderSupport)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -786,6 +796,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // The type layout looks like this:
         //
         // public ComInterfaceEntry IKeyValuePair'2;
+        // public ComInterfaceEntry ICustomPropertyProvider;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -793,6 +804,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
         interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair'2"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        // The 'ICustomPropertyProvider' slot is only added when default provider support is enabled
+        if (enableDefaultCustomPropertyProviderSupport)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition("ICustomPropertyProvider"u8, FieldAttributes.Public, comInterfaceEntryType));
+        }
+
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));

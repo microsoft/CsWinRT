@@ -12,6 +12,7 @@ using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -282,13 +283,17 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 implTypes: [
-                    (get_IidMethod, keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
+                    InteropInterfaceEntriesResolver.Create(get_IidMethod, keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
+                    .. InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                        vtableTypes: null,
+                        interopDefinitions: interopDefinitions,
+                        interopReferences: interopReferences),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
         }
 
         /// <summary>

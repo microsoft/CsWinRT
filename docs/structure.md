@@ -53,6 +53,8 @@ Contains various testing-related projects:
 
 - [`SmokeTests`](../src/Tests/SmokeTests): Minimal, isolated end-to-end smoke tests that consume the real `Microsoft.Windows.CsWinRT` NuGet package — a consumption app (`Consumption`), an authoring component (`Authoring`), a reference projection for a third-party `.winmd` (`Projection`), and reference projections for the Windows SDK (`WindowsSdkProjection`) and its `Windows.UI.Xaml` surface (`WindowsSdkXamlProjection`) — to verify the produced package works correctly outside the repository build infrastructure.
 
+- [`Preinitialization`](../src/Tests/SmokeTests/Preinitialization): An AOT-only smoke test that checks MSTAT for surviving static constructors on `[FixedAddressValueType]` owners across the runtime, SDK/XAML and third-party projections, and generated interop assembly. It also requires representative table data to remain rooted.
+
 - [`AuthoringTest`](../src/Tests/AuthoringTest): A C#-authored WinRT component (`CsWinRTComponent=true`) covering a broad set of authoring type patterns.  Companion projects exercise consuming authored components — `AuthoringTest2`/`AuthoringTest3`, the `AuthoringConsumptionTest*` C++ consumers, and the WUX (`Windows.UI.Xaml`) and WinUI variants — several of which are still work in progress.
 
 - [`HostTest`](../src/Tests/HostTest): C++ (gtest) tests for `WinRT.Host.dll`, which provides hosting for runtime components written in C#.

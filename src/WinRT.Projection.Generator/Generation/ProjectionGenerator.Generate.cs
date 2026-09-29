@@ -115,6 +115,8 @@ internal partial class ProjectionGenerator
         List<string> includes = [];
         List<string> includeTypes = [];
         List<string> publicInterfaces = [];
+        HashSet<string> idicExclusiveToTypes = new(StringComparer.Ordinal);
+        Dictionary<string, string> projectedTypeOwners = new(StringComparer.Ordinal);
         List<string> excludes = [];
         List<string> excludeTypes = [];
         List<string> implementableTypes = [];
@@ -215,7 +217,7 @@ internal partial class ProjectionGenerator
         // explicitly requested types (everything else already lives in the real projection).
         if (!isComponentMode)
         {
-            foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
+            foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
             {
                 ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
 
@@ -224,6 +226,9 @@ internal partial class ProjectionGenerator
                 {
                     continue;
                 }
+
+                HashSet<string> referenceIdicExclusiveToTypes = ReadIdicExclusiveToTypes(moduleDefinition, referenceAssemblyPath);
+                RegisterProjectedTypes(moduleDefinition, referenceIdicExclusiveToTypes, referenceAssemblyPath, projectedTypeOwners);
 
                 bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
 
@@ -246,6 +251,17 @@ internal partial class ProjectionGenerator
                 }
 
                 _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
+
+                idicExclusiveToTypes.UnionWith(referenceIdicExclusiveToTypes);
+
+                // Internal interfaces may have been stripped from the reference surface. Their
+                // recorded names still require exact projection includes, without making them public.
+                includeTypes.AddRange(referenceIdicExclusiveToTypes);
+
+                // Preserve the actual public surface independently of the recorded IDIC policy.
+                publicInterfaces.AddRange(moduleDefinition.TopLevelTypes
+                    .Where(static type => type.IsPublic && type.IsInterface)
+                    .Select(static type => type.FullName));
 
                 if (moduleDefinition.Assembly is not null)
                 {
@@ -281,14 +297,6 @@ internal partial class ProjectionGenerator
                     if (TryGetImplementableRuntimeClassName(exportedType, out string? runtimeClassName))
                     {
                         implementableTypes.Add(runtimeClassName);
-                    }
-
-                    // A public interface in a reference projection must remain usable for casts
-                    // from native objects. Reference assemblies contain no IDIC implementation
-                    // metadata, so infer this requirement from their public interface surface.
-                    if (exportedType.IsPublic && exportedType.IsInterface)
-                    {
-                        publicInterfaces.Add(exportedType.FullName);
                     }
                 }
             }
@@ -340,7 +348,8 @@ internal partial class ProjectionGenerator
             Include = includes,
             IncludeTypes = includeTypes,
             PublicExclusiveToTypes = publicInterfaces,
-            IdicExclusiveToTypes = publicInterfaces,
+            IdicExclusiveTo = idicExclusiveToTypes.Count > 0,
+            IdicExclusiveToTypes = [.. idicExclusiveToTypes.Order(StringComparer.Ordinal)],
             Exclude = excludes,
             ExcludeTypes = excludeTypes,
             Component = componentMode,

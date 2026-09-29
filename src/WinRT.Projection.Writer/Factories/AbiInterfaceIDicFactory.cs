@@ -21,16 +21,24 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static class AbiInterfaceIDicFactory
 {
     /// <summary>
+    /// Gets whether an interface is eligible and selected for an IDIC implementation and type-map association.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The interface definition.</param>
+    /// <returns>Whether to emit IDIC support.</returns>
+    public static bool IsEnabled(ProjectionEmitContext context, TypeDefinition type)
+    {
+        return type.GenericParameters.Count == 0 &&
+            !type.IsProjectionInternal &&
+            (!type.IsExclusiveTo || context.Settings.IsIdicExclusiveTo(type.FullName));
+    }
+
+    /// <summary>
     /// Emits the IDIC (IDynamicInterfaceCastable) impl class that lets user types implement the projected interface via dynamic dispatch through the projected runtime class instance.
     /// </summary>
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.IsExclusiveTo && !context.Settings.IsIdicExclusiveTo(type.FullName))
-        {
-            return;
-        }
-
-        if (type.GenericParameters.Count > 0)
+        if (!IsEnabled(context, type))
         {
             return;
         }
@@ -72,6 +80,11 @@ internal static class AbiInterfaceIDicFactory
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? required))
+            {
+                continue;
+            }
+
+            if (!InterfaceFactory.ShouldIncludeInterfaceInInheritance(impl, required.IsExclusiveTo, includeExclusiveInterface: false))
             {
                 continue;
             }
@@ -439,7 +452,7 @@ internal static class AbiInterfaceIDicFactory
                         """);
                 }
                 else if (setter is not null
-                    && InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
+                    && InterfaceFactory.TryFindPropertyGetterInterface(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
                 {
                     IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
                     writer.Write($"get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");

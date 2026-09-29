@@ -307,6 +307,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> GetIntToListDictionary();
         Windows::Foundation::Collections::IMap<Windows::Foundation::TimeSpan, Windows::Foundation::TimeSpan> GetTimeSpanToTimeSpanDictionary();
 
+        static Windows::Foundation::Collections::IObservableMap<hstring, hstring> CreateObservableStringMap(bool allowEventCalls);
+        static Windows::Foundation::Collections::IObservableMap<int32_t, int32_t> CreateObservableIntMap(bool allowEventCalls);
+
         // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
         Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ProvideUri> GetNonGenericDelegateVector();

@@ -175,7 +175,7 @@ internal static partial class ConstructorFactory
                 continue;
             }
 
-            string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
+            string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, p.Type, TypedefNameType.ABI);
             IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
             UnsafeAccessorFactory.EmitStaticMethod(
                 writer,
@@ -534,7 +534,7 @@ internal static partial class ConstructorFactory
                     accessName: "CopyToUnmanaged",
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{raw}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                     parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
                 writer.WriteLine($"CopyToUnmanaged_{raw}(null, {pname}, (uint){pname}.Length, ({dataParamType})_{raw});");
             }
@@ -767,7 +767,7 @@ internal static partial class ConstructorFactory
                         accessName: "Dispose",
                         returnType: "void",
                         functionName: $"Dispose_{raw}",
-                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                         parameterList: $"uint length, {disposeDataParamType}");
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""

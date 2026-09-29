@@ -6,6 +6,7 @@ namespace Windows.UI.Xaml.Media.Animation
 #if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Media.Animation.RepeatBehavior>")]
+    [WindowsRuntimeReferenceType(typeof(RepeatBehavior?))]
     [ABI.Windows.UI.Xaml.Media.Animation.RepeatBehaviorComWrappersMarshaller]
 #endif
     public struct RepeatBehavior : IFormattable, IEquatable<RepeatBehavior>

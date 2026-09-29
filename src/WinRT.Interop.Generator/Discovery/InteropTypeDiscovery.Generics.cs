@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -246,11 +245,11 @@ internal partial class InteropTypeDiscovery
         }
 
         // Match all well-known, custom-mapped, generic Windows Runtime interface types
-        if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
+        if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IEnumerator1))
         {
             discoveryState.TrackIEnumerator1Type(typeSignature);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IEnumerable1))
         {
             discoveryState.TrackIEnumerable1Type(typeSignature);
 
@@ -276,7 +275,7 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IList1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IList1))
         {
             discoveryState.TrackIList1Type(typeSignature);
 
@@ -327,7 +326,7 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IReadOnlyList1))
         {
             discoveryState.TrackIReadOnlyList1Type(typeSignature);
 
@@ -355,7 +354,7 @@ internal partial class InteropTypeDiscovery
                     module: module);
             }
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IDictionary2))
         {
             discoveryState.TrackIDictionary2Type(typeSignature);
 
@@ -452,7 +451,7 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IReadOnlyDictionary2))
         {
             discoveryState.TrackIReadOnlyDictionary2Type(typeSignature);
 
@@ -531,7 +530,7 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IObservableVector1))
         {
             discoveryState.TrackIObservableVector1Type(typeSignature);
 
@@ -542,7 +541,7 @@ internal partial class InteropTypeDiscovery
             // special case it. That is, we manually construct it every time we discover a constructed 'IObservableVector<T>'.
             discoveryState.TrackGenericDelegateType(interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IObservableMap2))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IObservableMap2))
         {
             discoveryState.TrackIObservableMap2Type(typeSignature);
 
@@ -558,11 +557,11 @@ internal partial class InteropTypeDiscovery
                 interopReferences: interopReferences,
                 module: module);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IMapChangedEventArgs1))
         {
             discoveryState.TrackIMapChangedEventArgs1Type(typeSignature);
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncActionWithProgress1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IAsyncActionWithProgress1))
         {
             discoveryState.TrackIAsyncActionWithProgress1Type(typeSignature);
 
@@ -571,14 +570,14 @@ internal partial class InteropTypeDiscovery
             discoveryState.TrackGenericDelegateType(interopReferences.AsyncActionProgressHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
             discoveryState.TrackGenericDelegateType(interopReferences.AsyncActionWithProgressCompletedHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperation1))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IAsyncOperation1))
         {
             discoveryState.TrackIAsyncOperation1Type(typeSignature);
 
             // Same handling as above for 'AsyncOperationCompletedHandler<TResult>'
             discoveryState.TrackGenericDelegateType(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([.. typeSignature.TypeArguments]));
         }
-        else if (SignatureComparer.IgnoreVersion.Equals(typeSignature.GenericType, interopReferences.IAsyncOperationWithProgress2))
+        else if (interopReferences.SignatureComparer.Equals(typeSignature.GenericType, interopReferences.IAsyncOperationWithProgress2))
         {
             discoveryState.TrackIAsyncOperationWithProgress2Type(typeSignature);
 

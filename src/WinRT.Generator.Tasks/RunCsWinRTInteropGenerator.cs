@@ -104,6 +104,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets whether to emit default custom property provider entries for generated managed CCWs.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool EnableDefaultCustomPropertyProviderSupport { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
     /// user-defined/CCW/generic types (one of <c>"all"</c>, <c>"minimal"</c>, or <c>"strict"</c>).
     /// </summary>
@@ -111,10 +117,22 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public string MarshallingMode { get; set; } = DefaultMarshallingMode;
 
     /// <summary>
+    /// Gets or sets whether .NET Standard assemblies participate in interop discovery, including explicit opt-ins.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool AnalyzeNetStandardAssemblies { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.
     /// </summary>
     /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
     public ITaskItem[]? MarshallingEnabledAssemblies { get; set; }
+
+    /// <summary>
+    /// Gets or sets the names of assemblies explicitly excluded from analysis, regardless of the marshalling mode.
+    /// </summary>
+    /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
+    public ITaskItem[]? MarshallingDisabledAssemblies { get; set; }
 
     /// <summary>
     /// Gets or sets whether to automatically generate the vtables for the list types used by 'NotifyCollectionChangedEventArgs'.
@@ -323,8 +341,11 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--enable-default-custom-property-provider-support", EnableDefaultCustomPropertyProviderSupport.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
+        AppendResponseFileCommand(args, "--analyze-net-standard-assemblies", AnalyzeNetStandardAssemblies.ToString());
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
+        AppendResponseFileOptionalCommand(args, "--marshalling-disabled-assembly-names", MarshallingDisabledAssemblies);
         AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());

@@ -14,7 +14,7 @@ internal static class ExclusiveToMetadata
 {
     public const string SecondaryInterfaceIid = "326899c0-4412-4e58-9599-99d0a89bca02";
 
-    public static string Create(string directory, bool fastAbi)
+    public static string Create(string directory, bool fastAbi, bool overridable = false)
     {
         ModuleDefinition module = new("Contoso.winmd") { RuntimeVersion = "WindowsRuntime 1.4" };
         _ = new AssemblyDefinition("Contoso", new Version(255, 255, 255, 255))
@@ -58,7 +58,7 @@ internal static class ExclusiveToMetadata
         }
 
         TypeDefinition owner = new("Contoso", "Widget",
-            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.WindowsRuntime,
+            TypeAttributes.Public | TypeAttributes.WindowsRuntime | (overridable ? 0 : TypeAttributes.Sealed),
             module.CorLibTypeFactory.Object.Type);
         module.TopLevelTypes.Add(owner);
 
@@ -106,7 +106,7 @@ internal static class ExclusiveToMetadata
             return method;
         }
 
-        void AddInterface(string name, string iid, string methodName, bool isDefault, bool hasEvent)
+        void AddInterface(string name, string iid, string methodName, bool isDefault, bool hasEvent, bool isOverridable = false)
         {
             TypeDefinition type = new("Contoso", name,
                 TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
@@ -119,6 +119,11 @@ internal static class ExclusiveToMetadata
             if (isDefault)
             {
                 implementation.CustomAttributes.Add(Attribute("DefaultAttribute"));
+            }
+
+            if (isOverridable)
+            {
+                implementation.CustomAttributes.Add(Attribute("OverridableAttribute"));
             }
 
             _ = AddMethod(type, methodName, module.CorLibTypeFactory.Int32);
@@ -138,7 +143,7 @@ internal static class ExclusiveToMetadata
         }
 
         AddInterface("IWidget", "326899c0-4412-4e58-9599-99d0a89bca01", "GetDefaultValue", isDefault: true, hasEvent: true);
-        AddInterface("IWidget2", SecondaryInterfaceIid, "GetValue", isDefault: false, hasEvent: true);
+        AddInterface("IWidget2", SecondaryInterfaceIid, "GetValue", isDefault: false, hasEvent: !overridable, isOverridable: overridable);
         AddInterface("IWidget3", "326899c0-4412-4e58-9599-99d0a89bca03", "GetOtherValue", isDefault: false, hasEvent: false);
 
         string path = Path.Combine(directory, "Contoso.winmd");

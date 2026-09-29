@@ -37,6 +37,7 @@ internal static partial class AbiMethodBodyFactory
 
         bool isGetter = sig.Method.IsGetter;
         bool isSetter = sig.Method.IsSetter;
+        bool isArraySetter = isSetter && sig.Parameters[0].Type is SzArrayTypeSignature;
         bool isAddEvent = sig.Method.IsAdder;
         bool isRemoveEvent = sig.Method.IsRemover;
 
@@ -84,7 +85,7 @@ internal static partial class AbiMethodBodyFactory
             // instead of the generic-instance UnsafeAccessor (V3-M7).
             if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
             {
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt!, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, rt!, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt!, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -110,7 +111,7 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 string raw = p.GetRawName();
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, uOut, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -132,7 +133,7 @@ internal static partial class AbiMethodBodyFactory
                 SzArrayTypeSignature sza = p.Type.AsSzArray()!;
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(sza.BaseType));
 
-                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, sza.BaseType);
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, sza.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -148,7 +149,7 @@ internal static partial class AbiMethodBodyFactory
             {
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
                 string elementAbi = AbiTypeHelpers.GetAbiLocalTypeName(context, retSzHoist.BaseType);
-                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, retSzHoist.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "ConvertToUnmanaged",
@@ -240,7 +241,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                if (!cat.IsArrayInput())
+                if (!cat.IsArrayInput() || isArraySetter)
                 {
                     continue;
                 }
@@ -278,6 +279,26 @@ internal static partial class AbiMethodBodyFactory
                 """);
             writer.IncreaseIndent();
 
+            if (isArraySetter)
+            {
+                ParameterInfo p = sig.Parameters[0];
+                SzArrayTypeSignature arrayType = (SzArrayTypeSignature)p.Type;
+                string raw = p.GetRawName();
+                string ptr = IdentifierEscaping.EscapeIdentifier(raw);
+                IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(arrayType.BaseType));
+                string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, arrayType.BaseType);
+
+                // Properties require an owned array: a setter may retain it after this call returns.
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "ConvertToManaged",
+                    returnType: $"{elementProjected.Format()}[]",
+                    functionName: $"ConvertToManaged_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, arrayType.BaseType),
+                    parameterList: $"uint length, {elementAbi}* data");
+                writer.WriteLine($"var __{raw} = ConvertToManaged_{raw}(null, __{raw}Size, ({elementAbi}*){ptr});");
+            }
+
             // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
             // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
             // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
@@ -285,7 +306,7 @@ internal static partial class AbiMethodBodyFactory
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.PassArray))
             {
 
-                if (p.Type is not SzArrayTypeSignature szArr)
+                if (isArraySetter || p.Type is not SzArrayTypeSignature szArr)
                 {
                     continue;
                 }
@@ -324,7 +345,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "CopyToManaged",
                     returnType: "void",
                     functionName: $"CopyToManaged_{raw}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                     parameterList: $"uint length, {dataParamType}, Span<{elementProjected.Format()}> span");
                 writer.WriteLine($"CopyToManaged_{raw}(null, __{raw}Size, {dataCastExpr}, __{raw});");
                 writer.DecreaseIndent();
@@ -348,7 +369,7 @@ internal static partial class AbiMethodBodyFactory
                 {
                     string rawName = p.GetRawName();
                     string callName = IdentifierEscaping.EscapeIdentifier(rawName);
-                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
+                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, p.Type, TypedefNameType.ABI);
                     IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                     writer.IncreaseIndent();
                     UnsafeAccessorFactory.EmitStaticMethod(
@@ -391,14 +412,9 @@ internal static partial class AbiMethodBodyFactory
                 string propName = methodName[4..];
                 writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
 
-                // An array valued property projects as 'T[]', not as the 'Span<T>' an array *parameter*
-                // projects to, so the span local cannot be handed over as-is the way the method call path
-                // below does. It also must not be: that span is backed by an inline array or a pooled
-                // buffer that is returned when this method exits, and a property setter hands the value to
-                // an implementation that may keep it. Copy it out to an exact length array.
-                if (ParameterCategoryResolver.Resolve(sig.Parameters[0]).IsArrayInput())
+                if (isArraySetter)
                 {
-                    writer.Write($"__{sig.Parameters[0].GetRawName()}.ToArray()");
+                    writer.Write($"__{sig.Parameters[0].GetRawName()}");
                 }
                 else
                 {
@@ -570,7 +586,7 @@ internal static partial class AbiMethodBodyFactory
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.FillArray))
             {
 
-                if (p.Type is not SzArrayTypeSignature szFA)
+                if (isArraySetter || p.Type is not SzArrayTypeSignature szFA)
                 {
                     continue;
                 }
@@ -596,7 +612,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "CopyToUnmanaged",
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{raw}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szFA.BaseType),
                     parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {elementAbi}* data");
                 writer.WriteLine($"CopyToUnmanaged_{raw}(null, __{raw}, __{raw}Size, ({elementAbi}*){ptr});");
                 writer.DecreaseIndent();
@@ -680,7 +696,7 @@ internal static partial class AbiMethodBodyFactory
                 ParameterInfo p = sig.Parameters[i];
                 ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                if (!cat.IsArrayInput())
+                if (!cat.IsArrayInput() || isArraySetter)
                 {
                     continue;
                 }
@@ -711,7 +727,7 @@ internal static partial class AbiMethodBodyFactory
                     ParameterInfo p = sig.Parameters[i];
                     ParameterCategory cat = ParameterCategoryResolver.Resolve(p);
 
-                    if (!cat.IsArrayInput())
+                    if (!cat.IsArrayInput() || isArraySetter)
                     {
                         continue;
                     }

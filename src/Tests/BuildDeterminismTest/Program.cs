@@ -2,9 +2,17 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using AsmResolver.DotNet;
+using AsmResolver.PE.DotNet.Cil;
+
+if (args is ["--verify-interop", string interopPath])
+{
+    _ = BuildDeterminismRunner.HashOutput(interopPath, "verification");
+    return 0;
+}
 
 if (args.Length > 0 && args[0] == "--interop")
 {
@@ -165,7 +173,56 @@ internal sealed class BuildDeterminismRunner
         var moduleDef = ModuleDefinition.FromFile(dllPath);
         Console.WriteLine($"{passLabel} build MVID: {moduleDef.Mvid}");
 
+        int verifiedInitializers = 0;
+        foreach (TypeDefinition type in moduleDef.TopLevelTypes)
+        {
+            if (type.Namespace?.ToString() != "WindowsRuntime.Interop.UserDefinedTypes" &&
+                type.Namespace?.ToString().StartsWith("ABI.", StringComparison.Ordinal) != true)
+            {
+                continue;
+            }
+
+            foreach (MethodDefinition method in type.Methods.Where(method => method.Name == "ComputeVtables"))
+            {
+                if (method.CilMethodBody is not { } marshallerBody ||
+                    marshallerBody.Instructions.Any(IsControlFlowOrFeatureCheck))
+                {
+                    throw new InvalidDataException($"Vtable selection must be resolved at generation time: {type.FullName}");
+                }
+            }
+
+            if (!type.Fields.Any(field => field.Name == "Entries"))
+            {
+                continue;
+            }
+
+            MethodDefinition initializer = type.Methods.Single(method => method.Name == ".cctor");
+            if (initializer.CilMethodBody is not { } body)
+            {
+                throw new InvalidDataException($"Missing interface-entry initializer: {type.FullName}");
+            }
+
+            foreach (CilInstruction instruction in body.Instructions)
+            {
+                if (IsControlFlowOrFeatureCheck(instruction))
+                {
+                    throw new InvalidDataException($"Interface-entry initializer must contain only straight-line assignments: {type.FullName} ({instruction})");
+                }
+            }
+
+            verifiedInitializers++;
+        }
+        Console.WriteLine($"Verified {verifiedInitializers} straight-line interface-entry initializers.");
+
         return hash;
+    }
+
+    private static bool IsControlFlowOrFeatureCheck(CilInstruction instruction)
+    {
+        return instruction.OpCode.OperandType is CilOperandType.InlineBrTarget or CilOperandType.ShortInlineBrTarget or CilOperandType.InlineSwitch ||
+            instruction.OpCode.Code == CilCode.Nop ||
+            (instruction.Operand is IMethodDescriptor method &&
+             method.DeclaringType?.Name == "WindowsRuntimeFeatureSwitches");
     }
 
     /// <summary>

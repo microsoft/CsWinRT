@@ -4,7 +4,9 @@
 using System;
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace ProjectionWriterTest;
 
@@ -73,6 +75,9 @@ public class Test_InteropAssemblyMarker
     /// <summary>
     /// Builds a type reference scoped to the given Windows Runtime contract and asks for its assembly marker.
     /// </summary>
+    /// <remarks>
+    /// The type is deliberately absent from the metadata cache, so the marker is taken from its reference scope.
+    /// </remarks>
     private static string GetMarker(string assemblyName, string typeNamespace, string typeName)
     {
         ModuleDefinition module = new("Test.winmd") { RuntimeVersion = "WindowsRuntime 1.4" };
@@ -84,6 +89,13 @@ public class Test_InteropAssemblyMarker
 
         TypeReference type = new(module, contract, typeNamespace, typeName);
 
-        return InteropTypeNameWriter.GetInteropAssemblyMarker(typeNamespace, typeName, mapped: null, type);
+        Settings settings = new();
+        ProjectionEmitContext context = new(
+            settings,
+            MetadataCache.Load([]),
+            typeNamespace,
+            new ComponentStaticConstructorAnalyzer(ComponentImplementationMetadata.Load(settings.ComponentImplementationAssemblies)));
+
+        return InteropTypeNameWriter.GetInteropAssemblyMarker(context, typeNamespace, typeName, mapped: null, type);
     }
 }

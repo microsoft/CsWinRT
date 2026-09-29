@@ -114,6 +114,9 @@
       <Compile Remove="InteropServices\Marshalers\**\*.cs" />
       <Compile Remove="InteropServices\Marshalling\**\*.cs" />
 
+      <!-- 'EventRegistrationToken' appears in projected method signatures, so it must be available to reference projections -->
+      <Compile Include="InteropServices\Events\EventRegistrationToken.cs" />
+
       <!--
         The 'RestrictedErrorInfoExceptionMarshaller' type is actually public, and it should
         be included in reference assemblies as well. Because it's the only really public

@@ -117,6 +117,8 @@ internal static partial class ReferenceProjectionGenerator
             PublicExclusiveTo = args.PublicExclusiveTo,
             ImplementWinMDTypes = args.ImplementWinMDTypes,
             IdicExclusiveTo = args.IdicExclusiveTo,
+            IdicExclusiveToIncludes = args.IdicExclusiveToIncludes,
+            IdicExclusiveToExcludes = args.IdicExclusiveToExcludes,
             ReferenceProjection = args.ReferenceProjection,
             DebugReproDirectory = null,
             Token = CancellationToken.None
@@ -190,6 +192,8 @@ internal static partial class ReferenceProjectionGenerator
             PublicExclusiveTo = args.PublicExclusiveTo,
             ImplementWinMDTypes = args.ImplementWinMDTypes,
             IdicExclusiveTo = args.IdicExclusiveTo,
+            IdicExclusiveToIncludes = args.IdicExclusiveToIncludes,
+            IdicExclusiveToExcludes = args.IdicExclusiveToExcludes,
             ReferenceProjection = args.ReferenceProjection,
             DebugReproDirectory = args.DebugReproDirectory,
             Token = CancellationToken.None

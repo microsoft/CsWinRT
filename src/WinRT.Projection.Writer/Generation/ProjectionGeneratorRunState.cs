@@ -56,6 +56,11 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentDictionary<string, string> WindowsRuntimeMetadataTypeEntries { get; } = [];
 
     /// <summary>
+    /// Gets the effective exclusive-to IDIC selection to preserve in reference-projection assembly metadata.
+    /// </summary>
+    public ConcurrentBag<string> IdicExclusiveToTypes { get; } = [];
+
+    /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a
     /// projection file" concurrently without a torn read. Use <see cref="ProjectionFileWritten"/>
     /// to query (after the parallel loop completes) and <see cref="MarkProjectionFileWritten"/>

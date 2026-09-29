@@ -59,6 +59,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTMarshallingMode Condition="'$(CsWinRTMarshallingMode)' == ''">minimal</CsWinRTMarshallingMode>
 
     <!--
+      Controls whether .NET Standard assemblies participate in interop discovery. Setting this to 'false'
+      skips these assemblies in every marshalling mode, even when explicitly opted in for analysis.
+    -->
+    <CsWinRTAnalyzeNetStandardAssemblies Condition="'$(CsWinRTAnalyzeNetStandardAssemblies)' == ''">true</CsWinRTAnalyzeNetStandardAssemblies>
+
+    <!--
+      CsWinRTMarshallingDisabledAssembly items explicitly skip assembly discovery in every mode,
+      including for assemblies that reference WinRT or are listed in CsWinRTMarshallingEnabledAssembly.
+    -->
+
+    <!--
       Controls whether 'cswinrtinteropgen' automatically generates the vtables for the optimized list types that
       'NotifyCollectionChangedEventArgs' stores its changed items in. These types are internal to the framework,
       so they are registered by name, and this can be set to 'false' to opt out of them, should one of them ever
@@ -251,12 +262,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <ItemGroup>
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTInteropGenEffectiveToolsDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTAnalyzeNetStandardAssemblies)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingDisabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
@@ -359,8 +374,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      EnableDefaultCustomPropertyProviderSupport="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)"
       MarshallingMode="$(CsWinRTMarshallingMode)"
+      AnalyzeNetStandardAssemblies="$(CsWinRTAnalyzeNetStandardAssemblies)"
       MarshallingEnabledAssemblies="@(CsWinRTMarshallingEnabledAssembly)"
+      MarshallingDisabledAssemblies="@(CsWinRTMarshallingDisabledAssembly)"
       GenerateCollectionChangedListVtables="$(CsWinRTGenerateCollectionChangedListVtables)"
       ValidateWinRTRuntimeAssemblyVersion="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)"
       ValidateWinRTRuntimeDllVersion2References="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)"
@@ -533,6 +551,23 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!--
+    Mark the output of a reference projection, so consumers can positively identify one among their resolved project
+    references (eg. '%(ReferencePath.CsWinRTGenerateReferenceProjection)'), rather than inferring it from other metadata such
+    as '%(ReferenceAssembly)' or '%(CsWinRTInputs)' (which is empty for a projection with no '.winmd' inputs of its own).
+
+    This is an item definition rather than metadata set by the targets above, so it applies to the item regardless of which
+    target creates it (either override above, or the default one), and on every route that returns it ('GetTargetPath',
+    'GetTargetPathWithTargetPlatformMoniker', and 'Build'), without running any additional targets. Setting it from a target
+    hooked after those wouldn't work, as a target computes its 'Returns' before its 'AfterTargets' run. The condition sees the
+    final evaluated value for the producing project (and the selected inner build), never the value of the consumer.
+  -->
+  <ItemDefinitionGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
+    <TargetPathWithTargetPlatformMoniker>
+      <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+    </TargetPathWithTargetPlatformMoniker>
+  </ItemDefinitionGroup>
+
+  <!--
     ============================================================
                         _RunCsWinRTMergedProjectionGenerator
 
@@ -542,7 +577,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
+    DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"

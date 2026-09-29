@@ -64,6 +64,8 @@ public static class ProjectionWriter
             settings.ComponentImplementationAssemblies.UnionWith(options.ComponentImplementationAssemblyPaths);
             settings.ComponentAssemblyNames.UnionWith(options.ComponentAssemblyNames);
             settings.PublicExclusiveToTypes.UnionWith(options.PublicExclusiveToTypes);
+            settings.IdicExclusiveToIncludes.UnionWith(options.IdicExclusiveToIncludes);
+            settings.IdicExclusiveToExcludes.UnionWith(options.IdicExclusiveToExcludes);
             settings.IdicExclusiveToTypes.UnionWith(options.IdicExclusiveToTypes);
 
             settings.MakeReadOnly();
