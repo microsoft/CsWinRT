@@ -4,13 +4,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- Setup common properties for '_RunCsWinRTGenerator' below -->
+
+  <!-- Keep shared generator defaults in one place for all downstream targets -->
   <PropertyGroup>
 
-    <!-- Default property value for CsWinRTGenTasksAssembly -->
+    <!-- Allow SDK and local builds to override the packaged task assembly -->
     <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
 
-    <!-- Disable the tasks from the .NET SDK given we want to use the one from here. -->
+    <!-- Use the package's tasks instead of the .NET SDK's duplicate tasks -->
     <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>
 
     <!--
@@ -36,11 +37,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       own, and it will use that to automatically set the right directory and architecture.
     -->
     <CsWinRTGeneratorInteropAssemblyDirectory Condition="'$(CsWinRTGeneratorInteropAssemblyDirectory)' == ''">$(IntermediateOutputPath)</CsWinRTGeneratorInteropAssemblyDirectory>
+
+    <!-- Validate runtime compatibility and retain the tool's incremental behavior by default -->
     <CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion Condition="'$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion>
     <CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References Condition="'$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References>
     <CsWinRTGeneratorEnableIncrementalGeneration Condition="'$(CsWinRTGeneratorEnableIncrementalGeneration)' == ''">true</CsWinRTGeneratorEnableIncrementalGeneration>
     <CsWinRTGeneratorTreatWarningsAsErrors Condition="'$(CsWinRTGeneratorTreatWarningsAsErrors)' == ''">false</CsWinRTGeneratorTreatWarningsAsErrors>
     <CsWinRTGeneratorMaxDegreesOfParallelism Condition="'$(CsWinRTGeneratorMaxDegreesOfParallelism)' == ''">-1</CsWinRTGeneratorMaxDegreesOfParallelism>
+
+    <!-- Keep tool diagnostics visible in MSBuild while allowing callers to adjust their importance -->
     <CsWinRTGeneratorStandardOutputImportance Condition="'$(CsWinRTGeneratorStandardOutputImportance)' == ''">High</CsWinRTGeneratorStandardOutputImportance>
     <CsWinRTGeneratorStandardErrorImportance Condition="'$(CsWinRTGeneratorStandardErrorImportance)' == ''">High</CsWinRTGeneratorStandardErrorImportance>
     <CsWinRTGeneratorLogStandardErrorAsError Condition="'$(CsWinRTGeneratorLogStandardErrorAsError)' == ''">true</CsWinRTGeneratorLogStandardErrorAsError>
@@ -83,7 +88,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
          the TypeMappingEntryAssembly MSBuild property is available. -->
     <CsWinRTEmitEntryPointInitializer Condition="'$(CsWinRTEmitEntryPointInitializer)' == ''">false</CsWinRTEmitEntryPointInitializer>
 
-    <!-- Derived properties for 'cswinrtinteropgen' tooling -->
+    <!-- Resolve the interop output once for incremental tracking and downstream references -->
     <_CsWinRTGeneratorInteropAssemblyName>WinRT.Interop</_CsWinRTGeneratorInteropAssemblyName>
     <_CsWinRTGeneratorInteropAssemblyFileName>$(_CsWinRTGeneratorInteropAssemblyName).dll</_CsWinRTGeneratorInteropAssemblyFileName>
     <_CsWinRTGeneratorInteropAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorInteropAssemblyDirectory)', '$(_CsWinRTGeneratorInteropAssemblyFileName)'))</_CsWinRTGeneratorInteropAssemblyPath>
@@ -135,6 +140,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTSwapRuntimeReferenceAssembly Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == ''">true</CsWinRTSwapRuntimeReferenceAssembly>
 
+    <!-- Let generated reference projections distinguish their compile-time API surface -->
     <DefineConstants Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(DefineConstants);CSWINRT_REFERENCE_PROJECTION</DefineConstants>    
   </PropertyGroup>
 
@@ -190,7 +196,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                               PackagePath="ref\$(_CsWinRTNuGetShortFolderName)\"
                               CsWinRTPackagedAsset="ref" />
 
-      <!-- The metadata is the same for every target framework, so it is packed once, not per target framework. -->
+      <!-- Pack shared metadata once rather than once per target framework -->
       <TfmSpecificPackageFile Include="@(CsWinRTPackedWinMD)"
                               PackagePath="metadata\"
                               CsWinRTPackagedAsset="metadata" />
@@ -217,7 +223,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="_ResolveCsWinRToolsDirectory" DependsOnTargets="ResolveAssemblyReferences" BeforeTargets="_ComputeRunCsWinRTGeneratorCache">
     
     <PropertyGroup>
-      <!-- Compute the implicit '\tools' path based on the location of this targets file. -->      
+
+      <!-- Resolve the packaged tools relative to this targets file -->
       <_CsWinRTToolsDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools'))</_CsWinRTToolsDirectory>
 
       <CsWinRTInteropGenEffectiveToolsDirectory Condition="'$(CsWinRTInteropGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTInteropGenEffectiveToolsDirectory>
@@ -225,10 +232,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
       <CsWinRTRefGenEffectiveToolsDirectory Condition="'$(CsWinRTRefGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTRefGenEffectiveToolsDirectory>
 
-      <!-- Temporarily setting this due to .NET SDK targets check it. -->
+      <!-- Keep the package tool path in the property checked by the .NET SDK -->
       <CsWinRTToolsDirectory>$(CsWinRTInteropGenEffectiveToolsDirectory)</CsWinRTToolsDirectory>
 
-      <!-- Temporarily setting this due to .NET SDK targets override it to the wrong value. -->
+      <!-- Restore the package's interop output path after the SDK overrides it -->
       <_CsWinRTGeneratorInteropAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorInteropAssemblyDirectory)', '$(_CsWinRTGeneratorInteropAssemblyFileName)'))</_CsWinRTGeneratorInteropAssemblyPath>
 
       <!--
@@ -251,11 +258,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="_ComputeRunCsWinRTGeneratorCache" DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory">
 
     <ItemGroup>
+
+      <!-- Changes to tool selection or artifact locations must invalidate the cached output -->
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTInteropGenEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorLogDirectory)" />
+
+      <!-- Regenerate when discovery settings change even if assembly inputs do not -->
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
@@ -263,6 +275,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingDisabledAssembly)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
+
+      <!-- Invocation settings can change diagnostics or tool behavior without changing assembly inputs -->
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
@@ -278,6 +292,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Output TaskParameter="HashResult" PropertyName="_RunCsWinRTGeneratorInputsCacheHash" />
     </Hash>
 
+    <!-- Keep the cache file's timestamp stable when no property has changed -->
     <WriteLinesToFile
       Lines="$(_RunCsWinRTGeneratorInputsCacheHash)"
       File="$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
@@ -303,12 +318,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTInteropGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+
+  <!-- Missing optional artifacts should rerun the generator just like a missing DLL -->
+  <PropertyGroup>
+    <_CsWinRTGeneratorDebugReproPath Condition="'$(CsWinRTGeneratorDebugReproDirectory)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorDebugReproDirectory)', 'interop-debug-repro.zip'))</_CsWinRTGeneratorDebugReproPath>
+    <_CsWinRTGeneratorLogPath Condition="'$(CsWinRTGeneratorLogDirectory)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorLogDirectory)', 'interop-log.json'))</_CsWinRTGeneratorLogPath>
+  </PropertyGroup>
+
   <Target
     Name="_RunCsWinRTInteropGenerator"
     DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator;_RunCsWinRTComponentProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);@(CsWinRTGeneratorMergedProjectionPath)"
-    Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
+    Outputs="$(_CsWinRTGeneratorInteropAssemblyPath);$(_CsWinRTGeneratorLogPath);$(_CsWinRTGeneratorDebugReproPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <!-- Pass the 'WinRT.Runtime' implementation assembly (not the reference assembly) to the generator -->
@@ -319,7 +341,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_InteropImplementationAssemblyPaths Include="$(CsWinRTRuntimeImplementationAssemblyPath)" Condition="'$(CsWinRTSwapRuntimeReferenceAssembly)' == 'true'" />
     </ItemGroup>
 
-    <!-- Invoke 'cswinrtinteropgen' -->
     <RunCsWinRTInteropGenerator
       ReferenceAssemblyPaths="@(_InteropReferenceAssemblyPaths)"
       ImplementationAssemblyPaths="@(_InteropImplementationAssemblyPaths)"
@@ -330,6 +351,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinRTComponentAssemblyPath="@(CsWinRTGeneratorComponentPath)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
+      LogDirectory="$(CsWinRTGeneratorLogDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
@@ -349,7 +371,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
-    <!-- Set the metadata for the interop .dll item -->
+    <!-- Carry the generated assembly into dependency resolution and output copying -->
     <ItemGroup>
       <CsWinRTGeneratorInteropAssemblyPath Include="$(_CsWinRTGeneratorInteropAssemblyPath)">
         <AssemblyName>$(_CsWinRTGeneratorInteropAssemblyName)</AssemblyName>
@@ -362,7 +384,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </CsWinRTGeneratorInteropAssemblyPath>
     </ItemGroup>
 
-    <!-- Add the interop .dll to the required output groups -->
     <ItemGroup>
 
       <!-- 'ReferencePath' handles adding the interop .dll to '.deps.json', which is needed for '[UnsafeAccessor]' to work -->
@@ -372,9 +393,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
     </ItemGroup>
 
-    <!-- Append to 'FileWrites' so the interop .dll will be removed on clean -->
+    <!-- Clean intermediate artifacts without deleting the user-requested debug repro -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
+      <FileWrites Include="$(_CsWinRTGeneratorLogPath)" Condition="'$(_CsWinRTGeneratorLogPath)' != ''" />
     </ItemGroup>
   </Target>
 
@@ -386,6 +408,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTForwarderImplGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+
   <Target
     Name="_RunCsWinRTForwarderImplGenerator"
     DependsOnTargets="Compile;_ResolveCsWinRToolsDirectory"
@@ -394,7 +417,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Outputs="$(_CsWinRTGeneratorForwarderAssemblyPath)"
     Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
 
-    <!-- If delay signing, don't pass the key given it would be a public key. -->
+    <!-- A delay-signing key contains only the public key, so it cannot sign the forwarder -->
     <PropertyGroup>
         <_AssemblyOriginatorKeyFile>$(AssemblyOriginatorKeyFile)</_AssemblyOriginatorKeyFile>
         <_AssemblyOriginatorKeyFile Condition="'$(DelaySign)' == 'true'"></_AssemblyOriginatorKeyFile>
@@ -402,7 +425,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <MakeDir Directories="$(CsWinRTGeneratorForwarderAssemblyDirectory)" />
       
-    <!-- Invoke 'cswinrtimplgen' -->
     <RunCsWinRTForwarderImplGenerator
       ReferenceAssemblyPaths="@(ReferencePath)"
       OutputAssemblyPath="@(IntermediateAssembly)"
@@ -418,7 +440,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
       <ItemGroup>
-        <!-- Copy reference assembly to ref folder in output. -->
+
+        <!-- Keep the reference assembly available to consumers alongside the forwarder -->
         <_SourceItemsToCopyToOutputDirectory
           Include="@(IntermediateAssembly)"
           TargetPath="ref\$(AssemblyName).dll" />
@@ -430,10 +453,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         -->
         <FileWrites Include="@(IntermediateAssembly)"/>
           
-        <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+        <!-- Both assemblies are intermediate outputs, even though the forwarder replaces the build output -->
         <FileWrites Include="$(_CsWinRTGeneratorForwarderAssemblyPath)"/>
 
-        <!-- Replace the output dll with the forwarder DLL which is in another location. -->
+        <!-- Ship the forwarder in lib while preserving the reference assembly in ref -->
         <IntermediateAssembly Remove="@(IntermediateAssembly)" />
         <IntermediateAssembly Include="$(_CsWinRTGeneratorForwarderAssemblyPath)" />
       </ItemGroup>
@@ -446,6 +469,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
       Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
+
       <!--
           Add the reference assembly to allow it to be used instead of the forwarder in builds.
           Also pass the CsWinRT WinMDs for it to be available for the CsWinRT merged projection
@@ -508,6 +532,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
     DependsOnTargets="FindReferenceAssembliesForReferences;CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
@@ -517,6 +542,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <ItemGroup>
+
+        <!-- Include WinMD metadata forwarded by referenced projects as well as direct inputs -->
         <_ReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
         <_WinMDPathsList Include="@(CsWinRTInputs)" />
         <_WinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_ReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
@@ -681,7 +708,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       DestinationFiles="$(_CsWinRTSdkProjectionAssemblyPath)"
       Condition="'$(_SdkProjectionImplExists)' == 'true'" />
 
-    <!-- If no pre-built impl - generate it using cswinrtprojectiongen -->
+    <!-- Fall back to generation with direct and project-reference WinMDs if no prebuilt SDK impl exists -->
     <ItemGroup Condition="'$(_SdkProjectionImplExists)' != 'true'">
         <_SdkWinMDPathsList Include="@(CsWinRTInputs)" />
         <_SdkReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
@@ -767,7 +794,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       DestinationFiles="$(_CsWinRTSdkXamlAssemblyPath)"
       Condition="'$(_SdkXamlImplExists)' == 'true'" />
 
-    <!-- If no pre-built impl - generate it using cswinrtprojectiongen -->
+    <!-- Fall back to generation with direct and project-reference WinMDs if no prebuilt XAML impl exists -->
     <ItemGroup Condition="'$(_SdkXamlImplExists)' != 'true'">
         <_SdkXamlWinMDPathsList Include="@(CsWinRTInputs)" />
         <_SdkXamlReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />

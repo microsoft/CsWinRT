@@ -170,11 +170,12 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool? analyzeNetStandardAssemblies = null,
         string? debugReproDirectory = null,
         string[]? marshallingDisabledAssemblyNames = null,
-        bool treatWarningsAsErrors = true)
+        bool treatWarningsAsErrors = true,
+        string? logDirectory = null)
     {
         (int exitCode, string log, string outputPath) = await RunAsync(
             name, reverseInputs, parallelism, marshallingMode, optInNetStandard, analyzeNetStandardAssemblies,
-            debugReproDirectory, marshallingDisabledAssemblyNames, treatWarningsAsErrors);
+            debugReproDirectory, marshallingDisabledAssemblyNames, treatWarningsAsErrors, logDirectory);
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
@@ -189,7 +190,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool? analyzeNetStandardAssemblies,
         string? debugReproDirectory,
         string[]? marshallingDisabledAssemblyNames,
-        bool treatWarningsAsErrors)
+        bool treatWarningsAsErrors,
+        string? logDirectory)
     {
         string directory = Directory.CreateDirectory(Path.Combine(Root, name)).FullName;
         string responsePath = Path.Combine(directory, "interop.rsp");
@@ -208,6 +210,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
             {(optInNetStandard ? "--marshalling-enabled-assembly-names NetStandardTypes" : "")}
             {(marshallingDisabledAssemblyNames is { Length: > 0 } ? $"--marshalling-disabled-assembly-names {string.Join(",", marshallingDisabledAssemblyNames)}" : "")}
             {(debugReproDirectory is not null ? $"--debug-repro-directory {debugReproDirectory}" : "")}
+            {(logDirectory is not null ? $"--log-directory {logDirectory}" : "")}
             --generate-collection-changed-list-vtables False
             --validate-winrt-runtime-assembly-version True
             --validate-winrt-runtime-dll-version-2-references True
@@ -301,7 +304,12 @@ internal sealed class InteropGeneratorRunner : IDisposable
     }
 
     public async Task<string> RunMSBuildAsync(
-        string projectPath, bool? analyzeNetStandardAssemblies, string? disabledAssemblyName = null, bool? treatWarningsAsErrors = null)
+        string projectPath,
+        bool? analyzeNetStandardAssemblies,
+        string? disabledAssemblyName = null,
+        bool? treatWarningsAsErrors = null,
+        string? logDirectory = null,
+        string? debugReproDirectory = null)
     {
         string directory = Path.GetDirectoryName(projectPath)!;
         string binlog = Path.Combine(directory, $"build-{++msbuildInvocation}.binlog");
@@ -326,6 +334,16 @@ internal sealed class InteropGeneratorRunner : IDisposable
         if (treatWarningsAsErrors is { } treatAsErrors)
         {
             startInfo.ArgumentList.Add("-p:CsWinRTGeneratorTreatWarningsAsErrors=" + treatAsErrors.ToString().ToLowerInvariant());
+        }
+
+        if (logDirectory is not null)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTGeneratorLogDirectory=" + logDirectory);
+        }
+
+        if (debugReproDirectory is not null)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTGeneratorDebugReproDirectory=" + debugReproDirectory);
         }
 
         (int exitCode, string log) = await RunProcessAsync(startInfo);

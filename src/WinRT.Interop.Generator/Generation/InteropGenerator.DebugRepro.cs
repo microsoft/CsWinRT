@@ -185,6 +185,7 @@ internal partial class InteropGenerator
             TreatWarningsAsErrors = args.TreatWarningsAsErrors,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = null,
+            LogDirectory = args.LogDirectory is null ? null : tempDirectory,
             Token = CancellationToken.None
         });
 
@@ -264,6 +265,7 @@ internal partial class InteropGenerator
             TreatWarningsAsErrors = args.TreatWarningsAsErrors,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = args.DebugReproDirectory,
+            LogDirectory = args.LogDirectory is null ? null : ".",
             Token = CancellationToken.None
         });
 
