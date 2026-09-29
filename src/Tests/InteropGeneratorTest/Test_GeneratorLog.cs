@@ -85,6 +85,38 @@ public sealed class Test_GeneratorLog
     }
 
     [TestMethod]
+    public async Task LogIsRegeneratedWhenInteropCacheWouldHit()
+    {
+        using InteropGeneratorRunner runner = new();
+        string output = await runner.GenerateAsync("cached");
+        string response = Path.Combine(Path.GetDirectoryName(output)!, "interop.rsp");
+        byte[] expected = File.ReadAllBytes(output);
+
+        File.WriteAllText(response, File.ReadAllText(response).Replace(
+            "--enable-incremental-generation False",
+            "--enable-incremental-generation True",
+            StringComparison.Ordinal));
+
+        (int seedExitCode, string seedLog) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, seedExitCode, seedLog);
+        Assert.IsTrue(File.Exists(Path.Combine(Path.GetDirectoryName(output)!, "WinRT.Interop.cache")));
+
+        string directory = Directory.CreateDirectory(Path.Combine(runner.Root, "logs")).FullName;
+        File.AppendAllText(response, Environment.NewLine + "--log-directory " + directory);
+        string logPath = Path.Combine(directory, "interop-log.json");
+
+        for (int i = 0; i < 2; i++)
+        {
+            File.Delete(logPath);
+            (int exitCode, string log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+            Assert.AreEqual(0, exitCode, log);
+            Assert.IsFalse(log.Contains("Reusing cached interop code ->", StringComparison.Ordinal), log);
+            Assert.IsTrue(File.Exists(logPath), "A requested report must be written even when the DLL has a valid cache.");
+            CollectionAssert.AreEqual(expected, File.ReadAllBytes(output));
+        }
+    }
+
+    [TestMethod]
     public async Task LogDirectoryIsPreservedInDebugRepro()
     {
         using InteropGeneratorRunner runner = new();

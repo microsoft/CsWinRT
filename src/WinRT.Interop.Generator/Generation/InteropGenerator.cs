@@ -51,7 +51,8 @@ internal static partial class InteropGenerator
                 return (module, runtime);
             });
 
-        byte[]? fingerprint = runner.Args.EnableIncrementalGeneration
+        // The optional report includes emitted type and IL counts, which cannot be collected on a cache hit.
+        byte[]? fingerprint = runner.Args.EnableIncrementalGeneration && runner.Args.LogDirectory is null
             ? runner.RunPhase(
                 phaseName: "fingerprint",
                 logMessage: "Checking interop generation cache",
