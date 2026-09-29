@@ -210,12 +210,7 @@ metadata, and generator options with `WinRT.Interop.cache` beside the generated 
 The generator build and the contents of the runtime, framework, and projection dependencies are also
 part of the fingerprint, including projection IID data and other implementation details.
 
-When the fingerprint matches and the cached DLL passes a content checksum, emission is skipped.
-Application method-body changes and unrelated managed types therefore need not regenerate marshalling
-code. The cached DLL's MVID is refreshed from the current inputs, preserving byte-for-byte equivalence
-with a fresh generation, including after interop-neutral edits. Its timestamp is updated so MSBuild
-can consider the output up to date. Missing, damaged, or incompatible cache records and outputs cause
-normal generation; the cache record is published only after successful emission and is removed on clean.
+When the fingerprint matches and the cached DLL passes a content checksum, emission is skipped. Application method-body changes and unrelated managed types therefore need not regenerate marshalling code. The cached DLL's MVID is refreshed from the current inputs, preserving byte-for-byte equivalence with a fresh generation, including after interop-neutral edits. Its timestamp is updated so MSBuild can consider the output up to date. Missing, damaged, or incompatible cache records and outputs cause normal generation; the cache record is published only after successful emission and is removed on clean. When `CsWinRTGeneratorLogDirectory` is set, the generator emits normally instead of reusing the cache so its report includes the generated type and IL counts.
 
 To bypass cache reads and writes (without disabling the generator), use:
 
