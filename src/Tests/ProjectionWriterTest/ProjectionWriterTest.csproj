@@ -80,7 +80,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\WinRT.Projection.Writer\Helpers\TypeFilter.cs" Link="Helpers\TypeFilter.cs" />
     <Compile Remove="Resources\ArrayPropertySetterTests.cs" />
     <EmbeddedResource Include="Resources\ArrayPropertySetterTests.cs" />
     <Compile Remove="Resources\GenericMarshallerTests.cs" />
