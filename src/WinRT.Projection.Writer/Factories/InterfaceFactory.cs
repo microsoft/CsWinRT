@@ -275,7 +275,13 @@ internal static class InterfaceFactory
 
             writer.Write($"{newKeyword}{propType} {prop.GetRawName()} {{");
 
-            writer.WriteIf(getter is not null || setter is not null, " get;");
+            // A setter-only property still exposes a getter, which the explicit implementation forwards
+            // to the interface declaring it (see 'AbiInterfaceIDicFactory'). Only declare it if one exists.
+            bool hasForwardableGetter = getter is null
+                && setter is not null
+                && TryFindPropertyGetterInterface(context.Cache, type, prop.GetRawName(), out _);
+
+            writer.WriteIf(getter is not null || hasForwardableGetter, " get;");
 
             writer.WriteIf(setter is not null, " set;");
 
@@ -318,10 +324,81 @@ internal static class InterfaceFactory
         }
 
         HashSet<TypeDefinition> visited = [];
-        return TryFindPropertyInBaseInterfacesRecursive(cache, type, propName, visited, out foundInterface);
+        return TryFindPropertyInBaseInterfacesRecursive(cache, type, propName, type, visited, out foundInterface);
     }
 
-    private static bool TryFindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, HashSet<TypeDefinition> visited, [NotNullWhen(true)] out TypeDefinition? foundInterface)
+    /// <summary>
+    /// Finds the interface declaring the getter of a property whose setter is declared on
+    /// <paramref name="type"/>, so an explicit implementation can forward its get accessor there.
+    /// </summary>
+    /// <remarks>
+    /// Searches base interfaces, then the interfaces of the <c>[exclusiveto]</c> class, then its factory
+    /// and statics interfaces. The latter two matter because versioned interfaces are flat: an
+    /// <c>IFooStatics2</c> adding a setter does not inherit the <c>IFooStatics</c> declaring the getter.
+    /// </remarks>
+    internal static bool TryFindPropertyGetterInterface(MetadataCache cache, TypeDefinition type, string propName, [NotNullWhen(true)] out TypeDefinition? foundInterface)
+    {
+        if (string.IsNullOrEmpty(propName))
+        {
+            foundInterface = null;
+            return false;
+        }
+
+        if (TryFindPropertyInBaseInterfaces(cache, type, propName, out foundInterface))
+        {
+            return true;
+        }
+
+        if (AbiTypeHelpers.GetExclusiveToType(cache, type) is not { } exclusiveToType)
+        {
+            foundInterface = null;
+            return false;
+        }
+
+        HashSet<TypeDefinition> visited = [];
+
+        if (TryFindPropertyInBaseInterfacesRecursive(cache, exclusiveToType, propName, type, visited, out foundInterface))
+        {
+            return true;
+        }
+
+        foreach (KeyValuePair<string, AttributedType> entry in AttributedTypes.Get(exclusiveToType, cache))
+        {
+            if (entry.Value.Type is not { } factoryType || factoryType == type)
+            {
+                continue;
+            }
+
+            if (DeclaresProperty(factoryType, propName))
+            {
+                foundInterface = factoryType;
+                return true;
+            }
+
+            if (TryFindPropertyInBaseInterfacesRecursive(cache, factoryType, propName, type, visited, out foundInterface))
+            {
+                return true;
+            }
+        }
+
+        foundInterface = null;
+        return false;
+    }
+
+    private static bool DeclaresProperty(TypeDefinition type, string propName)
+    {
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            if (prop.GetRawName() == propName)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryFindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, TypeDefinition excludeInterface, HashSet<TypeDefinition> visited, [NotNullWhen(true)] out TypeDefinition? foundInterface)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -335,8 +412,8 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            // Skip the original setter-defining interface itself. Also dedupe via the visited set.
-            if (baseIface == type)
+            // Skip the interface declaring the setter, wherever it is reached from. Also dedupe via the visited set.
+            if (baseIface == excludeInterface)
             {
                 continue;
             }
@@ -346,16 +423,13 @@ internal static class InterfaceFactory
                 continue;
             }
 
-            foreach (PropertyDefinition prop in baseIface.Properties)
+            if (DeclaresProperty(baseIface, propName))
             {
-                if (prop.GetRawName() == propName)
-                {
-                    foundInterface = baseIface;
-                    return true;
-                }
+                foundInterface = baseIface;
+                return true;
             }
 
-            if (TryFindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, visited, out foundInterface))
+            if (TryFindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, excludeInterface, visited, out foundInterface))
             {
                 return true;
             }

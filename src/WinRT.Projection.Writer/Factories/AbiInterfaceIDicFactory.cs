@@ -452,7 +452,7 @@ internal static class AbiInterfaceIDicFactory
                         """);
                 }
                 else if (setter is not null
-                    && InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
+                    && InterfaceFactory.TryFindPropertyGetterInterface(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
                 {
                     IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
                     writer.Write($"get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");
