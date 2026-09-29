@@ -48,6 +48,74 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         return (IComparer<T>)(IComparer<ITypeDescriptor>)(runtimeContext is null ? Default : new TypeDescriptorComparer(runtimeContext));
     }
 
+    /// <summary>
+    /// Gets the same fully qualified name used as the primary ordering key by <see cref="Compare"/>.
+    /// </summary>
+    /// <param name="type">The descriptor to format.</param>
+    /// <returns>The primary ordering key.</returns>
+    public string GetOrderKey(ITypeDescriptor type)
+    {
+        DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
+
+        try
+        {
+            AppendFullyQualifiedName(type, _runtimeContext, ref handler);
+
+            return handler.Text.ToString();
+        }
+        finally
+        {
+            handler.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Appends the resolved identity of a type, including constructed arguments and array shape.
+    /// </summary>
+    private static void AppendFullyQualifiedName(ITypeDescriptor type, RuntimeContext? runtimeContext, ref DefaultInterpolatedStringHandler handler)
+    {
+        // Resolving the outer type loses generic arguments or array shape, so format those recursively
+        if (type is GenericInstanceTypeSignature generic)
+        {
+            AppendFullyQualifiedName(generic.GenericType, runtimeContext, ref handler);
+            handler.AppendLiteral("<");
+
+            foreach (TypeSignature argument in generic.TypeArguments)
+            {
+                AppendFullyQualifiedName(argument, runtimeContext, ref handler);
+                handler.AppendLiteral(";");
+            }
+
+            handler.AppendLiteral(">");
+
+            return;
+        }
+
+        if (type is SzArrayTypeSignature array)
+        {
+            AppendFullyQualifiedName(array.BaseType, runtimeContext, ref handler);
+            handler.AppendLiteral("[]");
+
+            return;
+        }
+
+        // Resolve forwarded aliases to the same declaring assembly so reference scope cannot affect ordering
+        if (runtimeContext is not null && type.TryResolve(runtimeContext, out TypeDefinition? definition))
+        {
+            type = definition;
+        }
+
+        handler.AppendFormatted(type);
+
+        // Definitions use a module scope, while references use an assembly scope.
+        // Compare their assembly identities rather than their different display forms.
+        if (type.Scope?.GetAssembly() is AssemblyDescriptor assembly)
+        {
+            handler.AppendLiteral(", ");
+            handler.AppendFormatted(assembly);
+        }
+    }
+
     /// <inheritdoc/>
     public int Compare(ITypeDescriptor? x, ITypeDescriptor? y)
     {
@@ -64,51 +132,6 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         if (y is null)
         {
             return 1;
-        }
-
-        // Appends the fully qualified name of a type to a target handler
-        static void AppendFullyQualifiedName(ITypeDescriptor type, RuntimeContext? runtimeContext, ref DefaultInterpolatedStringHandler handler)
-        {
-            // Resolving the outer type loses generic arguments or array shape, so format those recursively
-            if (type is GenericInstanceTypeSignature generic)
-            {
-                AppendFullyQualifiedName(generic.GenericType, runtimeContext, ref handler);
-                handler.AppendLiteral("<");
-
-                foreach (TypeSignature argument in generic.TypeArguments)
-                {
-                    AppendFullyQualifiedName(argument, runtimeContext, ref handler);
-                    handler.AppendLiteral(";");
-                }
-
-                handler.AppendLiteral(">");
-
-                return;
-            }
-
-            if (type is SzArrayTypeSignature array)
-            {
-                AppendFullyQualifiedName(array.BaseType, runtimeContext, ref handler);
-                handler.AppendLiteral("[]");
-
-                return;
-            }
-
-            // Resolve forwarded aliases to the same declaring assembly so reference scope cannot affect ordering
-            if (runtimeContext is not null && type.TryResolve(runtimeContext, out TypeDefinition? definition))
-            {
-                type = definition;
-            }
-
-            handler.AppendFormatted(type);
-
-            // Definitions use a module scope, while references use an assembly scope.
-            // Compare their assembly identities rather than their different display forms.
-            if (type.Scope?.GetAssembly() is AssemblyDescriptor assembly)
-            {
-                handler.AppendLiteral(", ");
-                handler.AppendFormatted(assembly);
-            }
         }
 
         DefaultInterpolatedStringHandler xHandler = new(0, 0, null, stackalloc char[256]);

@@ -2504,18 +2504,32 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        // Since we're sharing the marshaller attributes across all identical sets of COM interface entries,
-        // we need a temporary map so we can look them up when we need to reference them once we get to
-        // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
-        Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
         (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] userDefinedTypes =
             [.. inputs.EnumerateUserDefinedAndVtableTypes()];
+        Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsBySet = [];
+        Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsByIdentity = new(ReferenceEqualityComparer.Instance);
+        List<UserDefinedVtableGroup> groups = [];
+
+        // Group by semantic set equality once per canonical set, then reuse its identity for every user type.
+        foreach ((TypeSignature type, TypeSignatureEquatableSet vtableTypes) in userDefinedTypes)
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            if (!groupsByIdentity.TryGetValue(vtableTypes, out UserDefinedVtableGroup? group))
+            {
+                if (!groupsBySet.TryGetValue(vtableTypes, out group))
+                {
+                    group = new(type, vtableTypes, interopReferences.RuntimeContext);
+                    groupsBySet.Add(vtableTypes, group);
+                    groups.Add(group);
+                }
+
+                groupsByIdentity.Add(vtableTypes, group);
+            }
+        }
 
         // Share marshallers across types with the same explicitly implemented interfaces
-        foreach (IGrouping<TypeSignatureEquatableSet, (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> group in
-            userDefinedTypes
-                .GroupBy(static pair => pair.VtableTypes)
-                .OrderBy(static group => group.Key))
+        foreach (UserDefinedVtableGroup group in groups.OrderBy(static group => group.OrderedTypes))
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2524,16 +2538,17 @@ internal partial class InteropGenerator
             try
             {
                 // Get the first user-defined with this vtable set as reference
-                typeSignature = group.First().Type;
+                typeSignature = group.Representative;
 
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
-                    vtableTypes: group.Key,
+                    vtableTypes: group.VtableTypes,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+                    orderedVtableTypes: group.OrderedTypes.Types,
                     interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 
@@ -2546,8 +2561,7 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
-                // Track the marshaller attribute for later
-                marshallerAttributeMap.Add(group.Key, comWrappersMarshallerType);
+                group.MarshallerAttributeType = comWrappersMarshallerType;
             }
             catch (Exception e)
             {
@@ -2565,7 +2579,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
-                    comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
+                    comWrappersMarshallerAttributeType: groupsByIdentity[vtableTypes].MarshallerAttributeType!,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -2583,6 +2597,17 @@ internal partial class InteropGenerator
                 WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
+    }
+
+    private sealed class UserDefinedVtableGroup(TypeSignature representative, TypeSignatureEquatableSet vtableTypes, RuntimeContext runtimeContext)
+    {
+        public TypeSignature Representative { get; } = representative;
+
+        public TypeSignatureEquatableSet VtableTypes { get; } = vtableTypes;
+
+        public OrderedVtableTypes OrderedTypes { get; } = new(vtableTypes, runtimeContext);
+
+        public TypeDefinition? MarshallerAttributeType { get; set; }
     }
 
     /// <summary>

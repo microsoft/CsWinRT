@@ -27,6 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\WinRT.Interop.Generator\Models\TypeSignatureEquatableSet.cs" Link="Helpers\TypeSignatureEquatableSet.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\Comparers\TypeDescriptorComparer.cs" Link="Helpers\TypeDescriptorComparer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Generation\OrderedVtableTypes.cs" Link="Helpers\OrderedVtableTypes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"

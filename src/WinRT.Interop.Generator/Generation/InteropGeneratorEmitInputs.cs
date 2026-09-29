@@ -1,19 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <summary>
-/// Lazily enumerates ordered, output-bound signatures for the emit phase. Discovery may retain
+/// Provides ordered, output-bound signatures for the emit phase. Discovery may retain
 /// any of several forwarded spellings of the same type, so they must be resolved before creating metadata.
+/// User-defined types are materialized before ordering to retain their resolved sort keys.
 /// </summary>
 internal sealed class InteropGeneratorEmitInputs
 {
@@ -166,7 +169,25 @@ internal sealed class InteropGeneratorEmitInputs
     /// <summary>Enumerates the ordered user-defined types and their shared canonicalized interface sets.</summary>
     public IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> EnumerateUserDefinedAndVtableTypes()
     {
-        return CanonicalizeTypesAndVtables(_discoveryState.UserDefinedAndVtableTypes);
+        // Complete all imports before resolving and retaining ordering keys, just as the original
+        // OrderBy materialized every canonicalized type before comparing them.
+        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] imported =
+            [.. _discoveryState.UserDefinedAndVtableTypes.Select(pair =>
+            {
+                _token.ThrowIfCancellationRequested();
+
+                return (
+                    Type: _importer.ImportTypeSignature(pair.Key),
+                    VtableTypes: CanonicalizeVtableSet(pair.Value));
+            })];
+
+        TypeDescriptorComparer comparer = new(_runtimeContext);
+
+        return imported
+            .Select(pair => (pair.Type, pair.VtableTypes, Key: comparer.GetOrderKey(pair.Type)))
+            .OrderBy(static pair => pair.Key, StringComparer.Ordinal)
+            .ThenBy(static pair => pair.Type, comparer)
+            .Select(static pair => (pair.Type, pair.VtableTypes));
     }
 
     /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>
