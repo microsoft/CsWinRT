@@ -81,6 +81,18 @@ public class EventSourceCacheTests
         }
 
         Class classInstance = (Class)holder["instance"];
+
+        // The handlers must still be registered after the original wrapper is collected, otherwise
+        // the checks below would pass even if the unsubscriptions had never reached the native object.
+        classInstance.RaiseIntChanged();
+        classInstance.RaiseBoolChanged();
+
+        Assert.IsTrue(intEventCalled);
+        Assert.IsTrue(boolEventCalled);
+
+        intEventCalled = false;
+        boolEventCalled = false;
+
         classInstance.IntPropertyChanged -= onIntPropertyChanged;
         classInstance.BoolPropertyChanged -= onBoolPropertyChanged;
         classInstance.RaiseIntChanged();
