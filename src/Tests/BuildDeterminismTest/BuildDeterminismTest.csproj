@@ -17,6 +17,8 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="InteropDeterminismRunner.cs" />
+    <Compile Include="InteropIncrementalRunner.cs" />
+    <Compile Include="InteropIncrementalProbe.cs" />
   </ItemGroup>
 
   <ItemGroup>
