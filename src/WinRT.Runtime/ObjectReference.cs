@@ -131,6 +131,19 @@ namespace WinRT
         }
 
         protected IObjectReference(IntPtr thisPtr)
+            : this(thisPtr, addBasePressure: true)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IObjectReference"/> instance for the specified COM pointer.
+        /// </summary>
+        /// <param name="thisPtr">The COM pointer to wrap.</param>
+        /// <param name="addBasePressure">
+        /// Whether to immediately report the base GC memory pressure for this instance. When <see langword="false"/>,
+        /// callers can later call <see cref="AddBasePressure"/> if the instance ends up being retained.
+        /// </param>
+        private protected IObjectReference(IntPtr thisPtr, bool addBasePressure)
         {
             if (thisPtr == IntPtr.Zero)
             {
@@ -138,7 +151,10 @@ namespace WinRT
             }
             _thisPtr = thisPtr;
 
-            AddBasePressure();
+            if (addBasePressure)
+            {
+                AddBasePressure();
+            }
         }
 
         /// <summary>
@@ -528,7 +544,12 @@ namespace WinRT
         }
 
         private protected ObjectReference(IntPtr thisPtr, T vftblT) :
-            base(thisPtr)
+            this(thisPtr, vftblT, addBasePressure: true)
+        {
+        }
+
+        private protected ObjectReference(IntPtr thisPtr, T vftblT, bool addBasePressure) :
+            base(thisPtr, addBasePressure)
         {
             _vftbl = vftblT;
         }
@@ -644,6 +665,19 @@ namespace WinRT
 
         public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT, Guid iid)
         {
+            return FromAbi(thisPtr, vftblT, iid, addBasePressure: true);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ObjectReference{T}"/> instance for a COM pointer, adding a reference to it.
+        /// </summary>
+        /// <param name="thisPtr">The COM pointer to wrap.</param>
+        /// <param name="vftblT">The vtable for <paramref name="thisPtr"/>.</param>
+        /// <param name="iid">The IID of the interface <paramref name="thisPtr"/> points to.</param>
+        /// <param name="addBasePressure">Whether to immediately report the base GC memory pressure for the resulting instance.</param>
+        /// <returns>The resulting <see cref="ObjectReference{T}"/> instance.</returns>
+        internal static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT, Guid iid, bool addBasePressure)
+        {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
@@ -652,7 +686,7 @@ namespace WinRT
             Marshal.AddRef(thisPtr);
             if (ComWrappersSupport.IsFreeThreaded(thisPtr))
             {
-                var obj = new ObjectReference<T>(thisPtr, vftblT);
+                var obj = new ObjectReference<T>(thisPtr, vftblT, addBasePressure);
                 return obj;
             }
             else
@@ -662,7 +696,8 @@ namespace WinRT
                     vftblT,
                     Context.GetContextCallback(),
                     Context.GetContextToken(),
-                    iid);
+                    iid,
+                    addBasePressure);
                 return obj;
             }
         }
@@ -684,12 +719,24 @@ namespace WinRT
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, Guid iid)
         {
+            return FromAbi(thisPtr, iid, addBasePressure: true);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ObjectReference{T}"/> instance for a COM pointer, adding a reference to it.
+        /// </summary>
+        /// <param name="thisPtr">The COM pointer to wrap.</param>
+        /// <param name="iid">The IID of the interface <paramref name="thisPtr"/> points to.</param>
+        /// <param name="addBasePressure">Whether to immediately report the base GC memory pressure for the resulting instance.</param>
+        /// <returns>The resulting <see cref="ObjectReference{T}"/> instance.</returns>
+        internal static ObjectReference<T> FromAbi(IntPtr thisPtr, Guid iid, bool addBasePressure)
+        {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
             var vftblT = GetVtable(thisPtr);
-            return FromAbi(thisPtr, vftblT, iid);
+            return FromAbi(thisPtr, vftblT, iid, addBasePressure);
         }
 
         private static unsafe T GetVtable(IntPtr thisPtr)
@@ -844,17 +891,21 @@ namespace WinRT
             _contextToken = contextToken;
         }
 
-#if NET
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "This constructor is setting the '_iid' field directly.")]
-#endif
         internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
-            : this(thisPtr, vftblT, contextCallbackPtr, contextToken)
+            : this(thisPtr, vftblT, contextCallbackPtr, contextToken, iid, addBasePressure: true)
+        {
+        }
+
+        internal ObjectReferenceWithContext(IntPtr thisPtr, T vftblT, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid, bool addBasePressure)
+            : base(thisPtr, vftblT, addBasePressure)
         {
             if (iid == default)
             {
                 ObjectReferenceWithContextHelper.ThrowArgumentExceptionForEmptyIid();
             }
 
+            _contextCallbackPtr = contextCallbackPtr;
+            _contextToken = contextToken;
             _iid = iid;
         }
 

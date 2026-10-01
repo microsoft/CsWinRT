@@ -636,7 +636,10 @@ namespace WinRT
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
-                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr, IID.IID_IInspectable, false);
+                    // This reference is usually only used to create the RCW, as projected runtime classes query for their default
+                    // interface and keep that reference instead. So we don't report base GC memory pressure for it upfront. If the
+                    // reference ends up being retained, the pressure is added below, otherwise the reference is disposed right away.
+                    var inspectableObjRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr, IID.IID_IInspectable, addBasePressure: false);
                     ComWrappersHelper.Init(inspectableObjRef);
 
                     IInspectable inspectable = new(inspectableObjRef);
@@ -644,7 +647,9 @@ namespace WinRT
                     if (ComWrappersSupport.CreateRCWType != null
                         && ComWrappersSupport.CreateRCWType.IsSealed)
                     {
-                        return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
+                        return ReleaseOrRetainInspectableObjectReference(
+                            ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable),
+                            inspectableObjRef);
                     }
 
                     Type runtimeClassType = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
@@ -652,10 +657,14 @@ namespace WinRT
                     {
                         // If the external IInspectable has not implemented GetRuntimeClassName,
                         // we use the Inspectable wrapper directly.
+                        inspectableObjRef.AddBasePressure();
+
                         return inspectable;
                     }
 
-                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable);
+                    return ReleaseOrRetainInspectableObjectReference(
+                        ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable),
+                        inspectableObjRef);
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref weakReferenceIID, out ptr) == 0)
                 {
@@ -678,6 +687,32 @@ namespace WinRT
             {
                 MarshalExtensions.ReleaseIfNotNull(ptr);
             }
+        }
+
+        /// <summary>
+        /// Releases the transient <c>IInspectable</c> object reference used to create an RCW if the RCW doesn't retain it,
+        /// or reports its base GC memory pressure otherwise (as it would've been done when creating it).
+        /// </summary>
+        /// <param name="rcw">The RCW that was created from <paramref name="inspectableObjRef"/>.</param>
+        /// <param name="inspectableObjRef">The transient <c>IInspectable</c> object reference, created without base GC memory pressure.</param>
+        /// <returns>The input <paramref name="rcw"/> instance.</returns>
+        private static object ReleaseOrRetainInspectableObjectReference(object rcw, IObjectReference inspectableObjRef)
+        {
+            // Projected runtime classes use their own reference for their default interface (which they query for
+            // in their constructor), and never retain the input reference. In that case, we can dispose it right
+            // away rather than leaving it to the finalizer. In all other cases, the reference might be retained
+            // (eg. 'SingleInterfaceOptimizedObject' or custom RCW factories), so we keep the existing behavior.
+            if (rcw is IWinRTObject { HasUnwrappableNativeObject: true, NativeObject: { } nativeObject } &&
+                !ReferenceEquals(nativeObject, inspectableObjRef))
+            {
+                inspectableObjRef.Dispose();
+            }
+            else
+            {
+                inspectableObjRef.AddBasePressure();
+            }
+
+            return rcw;
         }
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
