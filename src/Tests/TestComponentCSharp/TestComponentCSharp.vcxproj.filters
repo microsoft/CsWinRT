@@ -24,6 +24,7 @@
     <ClCompile Include="WinRT.Class.cpp" />
     <ClCompile Include="ClassWithExplicitIUnknown.cpp" />
     <ClCompile Include="NonUniqueClass.cpp" />
+    <ClCompile Include="ObjectEventArgs.cpp" />
     <ClCompile Include="CustomIterableTest.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -42,6 +43,7 @@
     <ClInclude Include="WinRT.Class.h" />
     <ClInclude Include="ClassWithExplicitIUnknown.h" />
     <ClInclude Include="NonUniqueClass.h" />
+    <ClInclude Include="ObjectEventArgs.h" />
     <ClInclude Include="CustomIterableTest.h" />
   </ItemGroup>
   <ItemGroup>

@@ -153,6 +153,14 @@ namespace TestComponentCSharp
         static ISingleton Instance;
     }
 
+    // A simple runtime class used as the args of 'Class.StaticObjectEvent', with no [GCPressure] (like most event args)
+    [default_interface]
+    runtimeclass ObjectEventArgs
+    {
+        ObjectEventArgs(Int32 index);
+        Int32 Value{ get; };
+    }
+
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     [createfromstring("TestComponentCSharp.Class.CreateFromString")]
     runtimeclass Class :
@@ -181,6 +189,9 @@ namespace TestComponentCSharp
         static event Windows.Foundation.EventHandler<Int32> StaticIntPropertyChanged;
         static String StaticStringProperty;
         static event Windows.Foundation.TypedEventHandler<Class, String> StaticStringPropertyChanged;
+        // Raised 'count' times, each time with a null sender and a new 'ObjectEventArgs' instance (like 'CompositionTarget.Rendering')
+        static event Windows.Foundation.EventHandler<Object> StaticObjectEvent;
+        static void RaiseStaticObjectEvent(Int32 count);
         static void StaticGetString();
         static void StaticSetString(ProvideString provideString);
         static Int32 StaticReadWriteProperty{ get; };

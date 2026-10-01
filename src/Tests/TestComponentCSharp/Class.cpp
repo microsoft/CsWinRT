@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "Class.h"
 #include "Class.g.cpp"
+#include "ObjectEventArgs.h"
 
 using namespace std::chrono;
 
@@ -20,6 +21,7 @@ namespace winrt::TestComponentCSharp::implementation
         static winrt::event<EventHandler<int32_t>> _intChanged {};
         static winrt::hstring _string;
         static winrt::event<TypedEventHandler<TestComponentCSharp::Class, hstring>> _stringChanged {};
+        static winrt::event<EventHandler<winrt::Windows::Foundation::IInspectable>> _objectEvent {};
         static int _readWrite{};
     }
 
@@ -288,6 +290,21 @@ namespace winrt::TestComponentCSharp::implementation
     void Class::StaticStringPropertyChanged(winrt::event_token const& token) noexcept
     {
         statics::_stringChanged.remove(token);
+    }
+    winrt::event_token Class::StaticObjectEvent(EventHandler<winrt::Windows::Foundation::IInspectable> const& handler)
+    {
+        return statics::_objectEvent.add(handler);
+    }
+    void Class::StaticObjectEvent(winrt::event_token const& token) noexcept
+    {
+        statics::_objectEvent.remove(token);
+    }
+    void Class::RaiseStaticObjectEvent(int32_t count)
+    {
+        for (int32_t i = 0; i < count; i++)
+        {
+            statics::_objectEvent(nullptr, winrt::make<ObjectEventArgs>(i));
+        }
     }
     void Class::StaticGetString()
     {

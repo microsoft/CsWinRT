@@ -107,6 +107,9 @@ namespace winrt::TestComponentCSharp::implementation
         static void StaticStringProperty(hstring const& value);
         static winrt::event_token StaticStringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler);
         static void StaticStringPropertyChanged(winrt::event_token const& token) noexcept;
+        static winrt::event_token StaticObjectEvent(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
+        static void StaticObjectEvent(winrt::event_token const& token) noexcept;
+        static void RaiseStaticObjectEvent(int32_t count);
         static void StaticGetString();
         static void StaticSetString(TestComponentCSharp::ProvideString const& provideString);
         static int32_t StaticReadWriteProperty();

@@ -96,6 +96,7 @@
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="NonUniqueClass.h" />
+    <ClInclude Include="ObjectEventArgs.h" />
     <ClInclude Include="ComImports.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="WarningClass.h" />
@@ -119,6 +120,7 @@
     </ClCompile>
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="NonUniqueClass.cpp" />
+    <ClCompile Include="ObjectEventArgs.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
     <ClCompile Include="Singleton.cpp" />

@@ -3350,6 +3350,51 @@ namespace UnitTest
             return (weakClassInstance, weakEventHandlerClass);
         }
 
+        // Validates RCWs created for event args of a static event (like 'CompositionTarget.Rendering'), which is the
+        // scenario where the transient 'IInspectable' object reference used to create the RCW is disposed right away.
+        [Fact]
+        public void TestStaticEventWithNewObjectArgs()
+        {
+            const int count = 64;
+            var receivedArgs = new List<ObjectEventArgs>();
+            void Class_StaticObjectEvent(object sender, object e)
+            {
+                Assert.Null(sender);
+                var args = Assert.IsType<ObjectEventArgs>(e);
+                Assert.Equal(receivedArgs.Count, args.Value);
+                receivedArgs.Add(args);
+            }
+
+            Class.StaticObjectEvent += Class_StaticObjectEvent;
+            Class.RaiseStaticObjectEvent(count);
+            Class.StaticObjectEvent -= Class_StaticObjectEvent;
+
+            Assert.Equal(count, receivedArgs.Count);
+
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+
+            // The RCWs should still be usable after the handler returned and any finalizers ran
+            for (int i = 0; i < count; i++)
+            {
+                Assert.Equal(i, receivedArgs[i].Value);
+            }
+
+            // Each raise should have produced a distinct RCW
+            for (int i = 1; i < count; i++)
+            {
+                Assert.NotSame(receivedArgs[i - 1], receivedArgs[i]);
+            }
+
+            // No more events after unsubscribing
+            Class.RaiseStaticObjectEvent(1);
+            Assert.Equal(count, receivedArgs.Count);
+
+            receivedArgs.Clear();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+        }
+
         // Ensure that event subscription state is properly cached to enable later unsubscribes
         [Fact]
         public void TestEventSourceCaching()
