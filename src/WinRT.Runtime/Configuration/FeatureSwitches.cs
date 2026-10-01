@@ -72,6 +72,11 @@ namespace WinRT
         private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
 
         /// <summary>
+        /// The configuration property name for <see cref="EnableBaseGCPressure"/>.
+        /// </summary>
+        private const string EnableBaseGCPressurePropertyName = "CSWINRT_ENABLE_BASE_GC_PRESSURE";
+
+        /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
         private static int _enableDynamicObjectsSupport;
@@ -120,6 +125,11 @@ namespace WinRT
         /// The backing field for <see cref="SuppressCustomPropertyNotSupportedException"/>.
         /// </summary>
         private static int _suppressCustomPropertyNotSupportedException;
+
+        /// <summary>
+        /// The backing field for <see cref="EnableBaseGCPressure"/>.
+        /// </summary>
+        private static int _enableBaseGCPressure;
 
         /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -210,6 +220,20 @@ namespace WinRT
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, ref _suppressCustomPropertyNotSupportedException, false);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether each <see cref="IObjectReference"/> should report a fixed base amount of native memory pressure
+        /// to the GC for as long as it is alive (defaults to <see langword="true"/>).
+        /// </summary>
+        /// <remarks>
+        /// This only controls the base memory pressure reported by <see cref="IObjectReference"/>. It does not affect the memory pressure
+        /// reported by generated projections for runtime classes annotated with <c>[GCPressure]</c>.
+        /// </remarks>
+        public static bool EnableBaseGCPressure
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(EnableBaseGCPressurePropertyName, ref _enableBaseGCPressure, true);
         }
 
         /// <summary>

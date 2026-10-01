@@ -32,6 +32,11 @@ namespace WinRT
         private IntPtr _referenceTrackerPtr;
         private int _disposedFlags;
 
+        /// <summary>
+        /// Indicates whether the base GC memory pressure was reported for this instance (and must be removed on dispose).
+        /// </summary>
+        private bool _hasBasePressure;
+
         public IntPtr ThisPtr
         {
             get
@@ -133,6 +138,16 @@ namespace WinRT
             }
             _thisPtr = thisPtr;
 
+            AddBasePressure();
+        }
+
+        /// <summary>
+        /// Reports the base GC memory pressure for this instance, if it hasn't been reported already
+        /// and base GC memory pressure is enabled (see <see cref="FeatureSwitches.EnableBaseGCPressure"/>).
+        /// </summary>
+        /// <remarks>This method is not thread safe, and should only be called before the instance is published.</remarks>
+        internal void AddBasePressure()
+        {
             // We are holding onto a native object or one of its interfaces.
             // This causes for there to be native memory being held onto by
             // this that the .NET GC isn't aware of.  So we use memory pressure
@@ -141,8 +156,15 @@ namespace WinRT
             // approach of having each IObjectReference represent some basic native memory
             // pressure rather than tracking all the IObjectReferences that are connected
             // to the same object and only releasing the memory pressure once all of them
-            // have been finalized.
-            GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
+            // have been finalized. Apps can opt out of this base memory pressure via the
+            // 'CSWINRT_ENABLE_BASE_GC_PRESSURE' feature switch. This doesn't affect the
+            // memory pressure reported by projected runtime classes with '[GCPressure]'.
+            if (FeatureSwitches.EnableBaseGCPressure && !_hasBasePressure)
+            {
+                _hasBasePressure = true;
+
+                GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
+            }
         }
 
         ~IObjectReference()
@@ -386,8 +408,11 @@ namespace WinRT
 
                 DisposeTrackerSource();
 
-                // Remove the same memory pressure added in the constructor (see notes there)
-                GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
+                // Remove the same memory pressure added in the constructor, if any (see notes in 'AddBasePressure')
+                if (_hasBasePressure)
+                {
+                    GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
+                }
 
                 Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
             }
