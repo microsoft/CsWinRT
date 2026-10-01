@@ -16,6 +16,7 @@ parameters:
     - DerivedClassActivation
     - DerivedClassAsBaseClass
     - CCW
+    - GCPressure
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:
