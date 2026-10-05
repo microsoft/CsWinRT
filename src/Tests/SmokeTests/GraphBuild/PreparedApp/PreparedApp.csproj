@@ -1,0 +1,64 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <GraphBuildMarkupPath Condition="'$(GraphBuildMarkupPath)' == ''">$(MSBuildProjectDirectory)\View.xaml</GraphBuildMarkupPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(GraphBuildExtraSource)" Condition="'$(GraphBuildExtraSource)' != ''" />
+    <ProjectReference Include="..\ExtraReference\ExtraReference.csproj" Condition="'$(GraphBuildExtraReference)' == 'true'" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- Model XAML's PrepareResources contract without requiring an installed XAML compiler. -->
+  <PropertyGroup>
+    <PrepareResourcesDependsOn>$(PrepareResourcesDependsOn);GenerateMarkup</PrepareResourcesDependsOn>
+  </PropertyGroup>
+
+  <Target Name="RecordTargetPathQuery" BeforeTargets="GetTargetPathWithTargetPlatformMoniker">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)queries.txt" Lines="target-path" />
+  </Target>
+
+  <Target Name="GenerateMarkup"
+          Inputs="$(GraphBuildMarkupPath)"
+          Outputs="$(IntermediateOutputPath)Markup.g.cs">
+    <XmlPeek XmlInputPath="$(GraphBuildMarkupPath)" Query="/View/@Value">
+      <Output TaskParameter="Result" PropertyName="_MarkupValue" />
+    </XmlPeek>
+    <WriteLinesToFile File="$(IntermediateOutputPath)Markup.g.cs"
+                      Lines="partial class View { public partial int Value { get =&gt; $(_MarkupValue)%3B } }"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)Markup.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)Markup.g.cs" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)preparation.txt" Lines="resources" />
+  </Target>
+
+  <!-- CoreCompile alone also misses preparation belonging to the surrounding Compile pipeline. -->
+  <Target Name="GenerateCompileInputs" BeforeTargets="BeforeCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)CompileInputs.g.cs"
+                      Lines="partial class View { public partial int CompileInput { get =&gt; 7%3B } }"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)CompileInputs.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)CompileInputs.g.cs" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)preparation.txt" Lines="compile-inputs" />
+  </Target>
+
+  <Target Name="RecordCompilation" AfterTargets="CoreCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)preparation.txt" Lines="compiled" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)queries.txt" Lines="compiled" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)preparation.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)queries.txt" />
+    </ItemGroup>
+  </Target>
+</Project>
