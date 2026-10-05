@@ -142,7 +142,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!-- Let generated reference projections distinguish their compile-time API surface -->
     <DefineConstants Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(DefineConstants);CSWINRT_REFERENCE_PROJECTION</DefineConstants>
-
   </PropertyGroup>
 
   <!--
@@ -204,7 +203,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <!-- Compile is reached through the normal Build pipeline, after resource and compiler-input preparation. -->
+  <!-- Compile is reached through the normal Build pipeline, after resource and compiler-input preparation -->
   <Target Name="_CsWinRTGenerateAssemblies"
           AfterTargets="Compile"
           DependsOnTargets="_RunCsWinRTInteropGenerator;_RunCsWinRTForwarderImplGenerator"
@@ -214,7 +213,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <!-- NoBuild publish/pack must register runtime assets and forwarders without running Compile again. -->
+  <!-- NoBuild publish/pack must register runtime assets and forwarders without running Compile again -->
   <Target Name="_CsWinRTGenerateNoBuildAssemblies"
           BeforeTargets="_ComputeResolvedCopyLocalPublishAssets;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems;BuiltProjectOutputGroup"
           DependsOnTargets="_PreventProjectReferencesFromBuilding;_RunCsWinRTInteropGenerator;_RunCsWinRTForwarderImplGenerator"
@@ -224,7 +223,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <!-- Explicit artifact production uses Build's full extensibility contract, never a protocol-query hook. -->
+  <!-- Explicit artifact production uses Build's full extensibility contract, never a protocol-query hook -->
   <Target Name="CsWinRTGenerateArtifacts" DependsOnTargets="Build" />
 
   <Target Name="_CsWinRTResolveGeneratorInputs"

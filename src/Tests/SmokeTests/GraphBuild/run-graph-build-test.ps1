@@ -179,7 +179,7 @@ foreach ($nodes in 1, 4) {
         if (Test-Path -LiteralPath (Join-Path $appObj $name)) { throw "Clean left '$name' behind." }
     }
 
-    # Cold copy-item protocols are metadata-only, like target-path protocols.
+    # Cold copy-item protocols are metadata-only, like target-path protocols
     Invoke-GraphMSBuild $app 'copy-only' @('-t:GetCopyToOutputDirectoryItems')
     if (Test-Path -LiteralPath $compiledAssembly) { throw 'A cold copy-item query compiled the application.' }
 

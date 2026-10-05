@@ -13,7 +13,7 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
-  <!-- Model XAML's PrepareResources contract without requiring an installed XAML compiler. -->
+  <!-- Model XAML's PrepareResources contract without requiring an installed XAML compiler -->
   <PropertyGroup>
     <PrepareResourcesDependsOn>$(PrepareResourcesDependsOn);GenerateMarkup</PrepareResourcesDependsOn>
   </PropertyGroup>
@@ -40,7 +40,7 @@
     <WriteLinesToFile File="$(IntermediateOutputPath)preparation.txt" Lines="resources" />
   </Target>
 
-  <!-- CoreCompile alone also misses preparation belonging to the surrounding Compile pipeline. -->
+  <!-- CoreCompile alone also misses preparation belonging to the surrounding Compile pipeline -->
   <Target Name="GenerateCompileInputs" BeforeTargets="BeforeCompile">
     <WriteLinesToFile File="$(IntermediateOutputPath)CompileInputs.g.cs"
                       Lines="partial class View { public partial int CompileInput { get =&gt; 7%3B } }"
