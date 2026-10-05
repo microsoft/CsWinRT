@@ -271,8 +271,13 @@ internal static class AbiImplementableClassFactory
 
         // Identify the Windows Runtime class this base stands for. The CCW of a type deriving from it
         // reports that class name (not the deriving type's own name), and the CsWinRT build tools use
-        // this marker to recognize the generated bases.
-        writer.WriteLine($"[WindowsRuntimeImplementableClass(typeof({projectedType}))]");
+        // this marker to recognize the generated bases. They only read it from reference assemblies,
+        // so the implementation projection omits it.
+        if (context.Settings.ReferenceProjection)
+        {
+            writer.WriteLine($"[WindowsRuntimeImplementableClass(typeof({projectedType}))]");
+        }
+
         writer.WriteLine($"public abstract class {nameStripped}{inheritance}");
 
         using (writer.WriteBlock())

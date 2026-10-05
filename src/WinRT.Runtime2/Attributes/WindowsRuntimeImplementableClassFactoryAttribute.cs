@@ -14,7 +14,7 @@ namespace WindowsRuntime;
 /// </summary>
 /// <remarks>
 /// <para>
-/// CsWinRT emits this on the abstract factory base classes it generates when a projection is built with
+/// CsWinRT emits this on the abstract factory base classes it generates into a reference projection built with
 /// <c>CsWinRTImplementWinMDTypes</c>. The named class is what activation requests are keyed by.
 /// </para>
 /// <para>

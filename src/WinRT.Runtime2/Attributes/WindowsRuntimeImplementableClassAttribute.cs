@@ -14,7 +14,7 @@ namespace WindowsRuntime;
 /// </summary>
 /// <remarks>
 /// <para>
-/// CsWinRT emits this attribute on the abstract base classes it generates when a projection is built with
+/// CsWinRT emits this attribute on the abstract base classes it generates into a reference projection built with
 /// <c>CsWinRTImplementWinMDTypes</c>. A type deriving from such a base is an implementation of the referenced
 /// Windows Runtime class, so its COM Callable Wrapper reports that class name rather than the name of the
 /// deriving type. CsWinRT tooling also uses this attribute to recognize the generated bases.

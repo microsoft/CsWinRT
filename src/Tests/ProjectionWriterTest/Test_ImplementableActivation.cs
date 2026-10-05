@@ -103,14 +103,25 @@ public class Test_ImplementableActivation
     }
 
     /// <summary>
-    /// The build tools only read the factory marker from reference assemblies, so the implementation omits it.
+    /// The build tools only read the markers on the generated bases from reference assemblies, so the
+    /// implementation omits them.
     /// </summary>
     [TestMethod]
-    public void ImplementationProjection_OmitsFactoryMarker()
+    public void ImplementationProjection_OmitsMarkers()
     {
-        ClassDeclarationSyntax factory = GetFactoryBase(ActivationMetadata.NoConstructor);
+        Assert.IsEmpty(GetAbiClass(ActivationMetadata.NoConstructor).AttributeLists);
+        Assert.IsEmpty(GetFactoryBase(ActivationMetadata.NoConstructor).AttributeLists);
+    }
 
-        Assert.IsEmpty(factory.AttributeLists);
+    [TestMethod]
+    public void ReferenceProjection_HasMarkers()
+    {
+        StringAssert.Contains(
+            GetAbiClass(ActivationMetadata.NoConstructor, referenceProjection: true).AttributeLists.ToString(),
+            $"WindowsRuntimeImplementableClass(typeof(global::Contoso.{ActivationMetadata.NoConstructor}))");
+        StringAssert.Contains(
+            GetFactoryBase(ActivationMetadata.NoConstructor, referenceProjection: true).AttributeLists.ToString(),
+            $"WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.{ActivationMetadata.NoConstructor})");
     }
 
     [TestMethod]
@@ -222,22 +233,27 @@ public class Test_ImplementableActivation
 
     private static ClassDeclarationSyntax GetFactoryBase(string className, bool referenceProjection = false)
     {
+        return GetAbiClass($"{className}ActivationFactory", referenceProjection);
+    }
+
+    private static ClassDeclarationSyntax GetAbiClass(string name, bool referenceProjection = false)
+    {
         string directory = Directory.CreateTempSubdirectory("ProjectionActivationTest_").FullName;
 
         try
         {
             string output = Generate(directory, referenceProjection);
-            string factoryName = $"{className}ActivationFactory";
 
-            ClassDeclarationSyntax[] factories = Directory.GetFiles(output, "*.cs")
+            ClassDeclarationSyntax[] classes = Directory.GetFiles(output, "*.cs")
                 .Select(path => CSharpSyntaxTree.ParseText(File.ReadAllText(path)).GetRoot())
                 .SelectMany(static root => root.DescendantNodes().OfType<ClassDeclarationSyntax>())
-                .Where(type => type.Identifier.ValueText == factoryName)
+                .Where(type => type.Identifier.ValueText == name &&
+                               type.Parent is BaseNamespaceDeclarationSyntax { Name: var ns } && ns.ToString() == "ABI.Contoso")
                 .ToArray();
 
-            Assert.HasCount(1, factories, $"Expected exactly one '{factoryName}'.");
+            Assert.HasCount(1, classes, $"Expected exactly one 'ABI.Contoso.{name}'.");
 
-            return factories[0];
+            return classes[0];
         }
         finally
         {
