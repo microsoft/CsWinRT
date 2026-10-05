@@ -55,8 +55,6 @@ Contains various testing-related projects:
 
 - [`GraphBuild`](../src/Tests/SmokeTests/GraphBuild): A real-package scheduling regression with an application referenced by a consumer. Generated partial properties model XAML's `PrepareResources` contract and the surrounding `Compile` preparation, without requiring an installed XAML compiler. It checks cold/warm target-path and cold copy-item queries, single-node and parallel graph builds, incremental markup/code/reference changes, missing-output regeneration, clean, NoBuild publish without recompilation, design-time compilation, and explicit artifact generation. Run it with `run-smoke-tests.ps1 -Test GraphBuild -Runtime CoreCLR`.
 
-The `Projection` smoke test also packs a reference projection with `--no-build`, checking that neither it nor its authored project reference is recompiled, and that the package contains the forwarder under `lib` and the compiler's reference assembly under `ref`.
-
 - [`Preinitialization`](../src/Tests/SmokeTests/Preinitialization): An AOT-only smoke test that checks MSTAT for surviving static constructors on `[FixedAddressValueType]` owners across the runtime, SDK/XAML and third-party projections, and generated interop assembly. It also requires representative table data to remain rooted.
 
 - [`AuthoringTest`](../src/Tests/AuthoringTest): A C#-authored WinRT component (`CsWinRTComponent=true`) covering a broad set of authoring type patterns.  Companion projects exercise consuming authored components — `AuthoringTest2`/`AuthoringTest3`, the `AuthoringConsumptionTest*` C++ consumers, and the WUX (`Windows.UI.Xaml`) and WinUI variants — several of which are still work in progress.
