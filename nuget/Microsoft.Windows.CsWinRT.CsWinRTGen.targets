@@ -226,9 +226,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Explicit artifact production uses Build's full extensibility contract, never a protocol-query hook -->
   <Target Name="CsWinRTGenerateArtifacts" DependsOnTargets="Build" />
 
+  <!-- Resolve references, Windows metadata, and generator cache inputs without invoking compilation -->
   <Target Name="_CsWinRTResolveGeneratorInputs"
           DependsOnTargets="FindReferenceAssembliesForReferences;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ComputeRunCsWinRTGeneratorCache" />
 
+  <!-- Fail early when required compiled assemblies or component metadata are missing -->
   <Target Name="_CsWinRTValidateGeneratorInputs">
     <Error Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and !Exists('@(IntermediateAssembly)')"
            Text="CsWinRT artifact generation requires an existing compiled assembly. Build the project or invoke CsWinRTGenerateArtifacts first." />
