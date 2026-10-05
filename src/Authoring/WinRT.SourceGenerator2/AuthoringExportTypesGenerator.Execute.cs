@@ -276,7 +276,7 @@ public partial class AuthoringExportTypesGenerator
             // 'ActivateInstance', so implementing the factory amounts to constructing the implementation.
             foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
             {
-                if (factory.GeneratedForImplementationTypeName is not string implementationTypeName)
+                if (factory is not { GeneratedForImplementationTypeName: string implementationTypeName, ImplementableBaseTypeName: string implementableBaseTypeName })
                 {
                     continue;
                 }
@@ -294,7 +294,7 @@ public partial class AuthoringExportTypesGenerator
                     internal sealed class {{GetGeneratedActivationFactoryTypeName(factory)}} : global::{{factory.FactoryBaseTypeName}}
                     {
                         /// <inheritdoc/>
-                        public override object ActivateInstance()
+                        public override global::{{implementableBaseTypeName}} ActivateInstance()
                         {
                             return new global::{{implementationTypeName}}();
                         }

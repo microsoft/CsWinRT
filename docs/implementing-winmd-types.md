@@ -37,7 +37,7 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 [WindowsRuntimeActivationFactory(typeof(MyWidget))]
 public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetActivationFactory, IWidgetInterop
 {
-    public override object ActivateInstance() => new MyWidget();
+    public override ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
 }
 ```
 
@@ -46,11 +46,18 @@ it, so an instance can be passed anywhere the projected type is expected (see
 [Passing implementations around](#passing-implementations-around)). Any additional (non-exclusive) Windows
 Runtime interfaces declared on the factory are added to its vtable as well.
 
+### Constructors
+
+Constructing the class without arguments is always `ActivateInstance`, and every constructor (with or without
+arguments) returns the generated base rather than the projected class, so the compiler checks that it constructs
+an implementation. The factory base converts the result to the projected class the Windows Runtime factory
+interface returns. Statics are declared exactly as the interface has them, since they can return any instance.
+
 ### When the factory can be omitted
 
 Declaring the factory is only necessary when it has something to say. If the class can only be activated
-through the parameterless `IActivationFactory.ActivateInstance` — no factory methods, statics or composable
-interfaces — a factory can do nothing but construct the implementation, so CsWinRT generates one:
+through the parameterless `IActivationFactory.ActivateInstance` — no factory methods with arguments, and no
+statics — a factory can do nothing but construct the implementation, so CsWinRT generates one:
 
 ```csharp
 // No factory needed: 'Widget' has default activation only
@@ -63,6 +70,23 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 This requires an accessible parameterless constructor, and only one implementation of that runtime class in
 the project. A generic type is never activatable, so it never gets one. Declaring the factory anyway always
 takes precedence, which is what to do when it needs to carry extra interop interfaces on its vtable.
+
+### Unsealed classes
+
+In metadata, an unsealed class is only activatable through its composable factory, even for a parameterless
+constructor, and one with no constructor at all still gets an empty composable factory. A caller that activates
+by class name (`RoActivateInstance`) goes through `IActivationFactory` instead, so it could not activate such a
+class. Implemented in C#, the class cannot be composed anyway (a native type deriving from it gets
+`NotSupportedException`), so it also gets plain default activation through `IActivationFactory`:
+
+| Constructors in metadata | Default activation | Factory needed? |
+| --- | --- | --- |
+| None | Added, through `ActivateInstance` | No, unless the class also has statics |
+| A public parameterless constructor | Added, through `ActivateInstance`, which the composable constructor also calls | No, if it is the only constructor and there are no statics |
+| Only ones taking arguments, or only protected ones | Not added: the class is not meant to be activated without them | Yes |
+
+Where a factory is still needed, `ActivateInstance` is implemented alongside the other constructors and the
+statics, exactly as for a sealed class.
 
 ## Passing implementations around
 

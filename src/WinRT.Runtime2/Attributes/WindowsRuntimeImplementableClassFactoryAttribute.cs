@@ -53,12 +53,12 @@ public sealed class WindowsRuntimeImplementableClassFactoryAttribute : Attribute
     public Type RuntimeClassType { get; }
 
     /// <summary>
-    /// Gets whether the only way to activate the class is the parameterless <c>IActivationFactory.ActivateInstance</c>,
-    /// i.e. the class declares no factory, statics or composable interfaces.
+    /// Gets whether <c>ActivateInstance</c> is the only abstract member of the annotated base class, i.e. the class
+    /// has no constructors taking arguments and no statics.
     /// </summary>
     /// <remarks>
-    /// CsWinRT can supply the factory for such a class on the author's behalf, as implementing it amounts to
-    /// constructing the implementation type. Any other shape has members only the author can implement.
+    /// CsWinRT generates the factory for such a class, as implementing <c>ActivateInstance</c> amounts to
+    /// constructing the implementation type.
     /// </remarks>
     public bool HasDefaultActivationOnly { get; init; }
 }

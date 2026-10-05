@@ -226,7 +226,8 @@ public partial class AuthoringExportTypesGenerator
                     RuntimeClassName: runtimeClassName,
                     FactoryTypeName: $"{factoryNamespace}.{implementation.ToDisplayString().Replace('.', '_')}ActivationFactory",
                     FactoryBaseTypeName: factoryBase.ToDisplayString(),
-                    GeneratedForImplementationTypeName: implementation.ToDisplayString());
+                    GeneratedForImplementationTypeName: implementation.ToDisplayString(),
+                    ImplementableBaseTypeName: implementableBase.ToDisplayString());
             }
         }
 
@@ -238,8 +239,8 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="implementableFactoryAttributeSymbol">The marker attribute on generated factory bases.</param>
         /// <returns>
         /// The generated factory base, or <see langword="null"/> if the class has none, or if activating it takes
-        /// more than the parameterless <c>ActivateInstance</c> (i.e. it has factory, statics or composable
-        /// interfaces, whose members only the author can implement).
+        /// more than a parameterless constructor (i.e. it has factory methods with arguments, or statics, whose
+        /// members only the author can implement).
         /// </returns>
         private static INamedTypeSymbol? GetGeneratedFactoryBase(
             Compilation compilation,

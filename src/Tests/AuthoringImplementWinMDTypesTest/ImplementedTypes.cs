@@ -35,12 +35,12 @@ public class ImplementedComposable : global::ABI.TestComponent.Composable
 /// <summary>
 /// The activation factory for <see cref="ImplementedComposable"/>. The Windows Runtime factory methods
 /// take an outer and an inner (raw COM aggregation); that is generated onto the base, leaving only the
-/// creation hooks to implement.
+/// construction itself to implement.
 /// </summary>
 [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(ImplementedComposable))]
 public sealed class ImplementedComposableFactory : global::ABI.TestComponent.ComposableActivationFactory
 {
-    protected override global::ABI.TestComponent.Composable CreateInstance() => new ImplementedComposable();
+    public override global::ABI.TestComponent.Composable ActivateInstance() => new ImplementedComposable();
 
     protected override global::ABI.TestComponent.Composable CreateWithValue(int init) => new ImplementedComposable { Value = init };
 

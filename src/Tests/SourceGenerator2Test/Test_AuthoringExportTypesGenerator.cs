@@ -40,7 +40,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
 
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
@@ -56,7 +58,7 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeActivationFactory(typeof(MyWidget))]
                 public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
                 {
-                    public override object ActivateInstance() => new MyWidget();
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
                 }
             }
             """;
@@ -245,7 +247,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
 
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
@@ -258,7 +262,7 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeActivationFactory(typeof(MyWidget))]
                 public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
                 {
-                    public override object ActivateInstance() => new MyWidget();
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
                 }
             }
             """;
@@ -298,7 +302,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
 
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
@@ -373,7 +379,7 @@ public class Test_AuthoringExportTypesGenerator
             internal sealed class MyApp_MyWidgetActivationFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
             {
                 /// <inheritdoc/>
-                public override object ActivateInstance()
+                public override global::ABI.Contoso.Widgets.Widget ActivateInstance()
                 {
                     return new global::MyApp.MyWidget();
                 }
@@ -408,7 +414,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
 
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
@@ -424,7 +432,7 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeActivationFactory(typeof(MyWidget))]
                 public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
                 {
-                    public override object ActivateInstance() => new MyWidget();
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
                 }
             }
             """;
@@ -501,7 +509,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
 
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
@@ -545,7 +555,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
 
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
@@ -586,7 +598,9 @@ public class Test_AuthoringExportTypesGenerator
                 [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
-                    public abstract object ActivateInstance();
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
                     public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
                 }
             }
@@ -609,6 +623,68 @@ public class Test_AuthoringExportTypesGenerator
             """;
 
         CSharpGeneratorTest<AuthoringExportTypesGenerator>.VerifyNoSource(source, "ManagedExports.g.cs");
+    }
+
+    [TestMethod]
+    public void UnsealedClass_WithParameterlessConstructor_GeneratesActivationFactory()
+    {
+        // The composable constructor forwards to 'ActivateInstance' too, so it is still the one member to implement
+        const string source = """
+            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
+
+            namespace Contoso.Widgets
+            {
+                public class Widget;
+            }
+
+            namespace ABI.Contoso.Widgets
+            {
+                public interface IWidgetFactory
+                {
+                    global::Contoso.Widgets.Widget CreateInstance(object baseInterface, out object innerInterface);
+                }
+
+                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
+                public abstract class Widget
+                {
+                    public abstract void DoStuff();
+                }
+
+                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
+                public abstract class WidgetActivationFactory : IActivationFactory, IWidgetFactory
+                {
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    global::Contoso.Widgets.Widget IWidgetFactory.CreateInstance(object baseInterface, out object innerInterface)
+                    {
+                        Widget instance = ActivateInstance();
+
+                        innerInterface = instance;
+
+                        return null!;
+                    }
+
+                    public abstract Widget ActivateInstance();
+
+                    public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
+                }
+            }
+
+            namespace MyApp
+            {
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        string managedExports = GetManagedExports(source, isCsWinRTComponent: false);
+
+        StringAssert.Contains(managedExports, "internal sealed class MyApp_MyWidgetActivationFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory");
+        StringAssert.Contains(managedExports, "public override global::ABI.Contoso.Widgets.Widget ActivateInstance()");
+        StringAssert.Contains(managedExports, "return new global::MyApp.MyWidget();");
     }
 
     /// <summary>

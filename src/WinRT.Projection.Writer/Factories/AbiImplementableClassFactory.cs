@@ -369,12 +369,25 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     public static void WriteImplementableFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out HashSet<TypeDefinition> composableInterfaces, out bool hasDefaultActivation);
+        CollectFactoryInterfaces(
+            context,
+            type,
+            out List<TypeDefinition> factoryInterfaces,
+            out HashSet<TypeDefinition> composableInterfaces,
+            out HashSet<TypeDefinition> publicComposableInterfaces,
+            out HashSet<TypeDefinition> activatableInterfaces,
+            out bool hasDefaultActivation);
 
         if (factoryInterfaces.Count == 0 && !hasDefaultActivation)
         {
             return;
         }
+
+        bool hasComposableDefaultActivation = TryGetComposableDefaultActivation(
+            composableInterfaces,
+            publicComposableInterfaces,
+            out MethodDefinition? parameterlessConstructor,
+            out bool isOnlyConstructor);
 
         string nameStripped = type.GetStrippedName();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(type.GetRawNamespace(), nameStripped);
@@ -385,7 +398,7 @@ internal static class AbiImplementableClassFactory
         List<string> bases = [];
         HashSet<TypeDefinition> declared = [];
 
-        if (hasDefaultActivation)
+        if (hasDefaultActivation || hasComposableDefaultActivation)
         {
             bases.Add("global::WindowsRuntime.InteropServices.IActivationFactory");
         }
@@ -401,11 +414,18 @@ internal static class AbiImplementableClassFactory
 
         writer.WriteLine();
 
-        // Record whether the class can only be activated through the parameterless 'IActivationFactory', which is
-        // the one shape CsWinRT can supply a factory for without the author writing any members.
-        string factoryShape = factoryInterfaces.Count == 0 ? ", HasDefaultActivationOnly = true" : "";
+        // Record whether the class can only be activated without arguments, which is the one shape CsWinRT can supply
+        // a factory for without the author writing any members. Composable factories do not count against that when
+        // all they declare is the constructor default activation uses. Only the build tools read the marker, and only
+        // from reference assemblies, so the implementation projection omits it.
+        if (context.Settings.ReferenceProjection)
+        {
+            bool hasOtherFactoryInterfaces = factoryInterfaces.Exists(iface => !composableInterfaces.Contains(iface));
+            bool hasDefaultActivationOnly = !hasOtherFactoryInterfaces && (composableInterfaces.Count == 0 || (hasComposableDefaultActivation && isOnlyConstructor));
+            string factoryShape = hasDefaultActivationOnly ? ", HasDefaultActivationOnly = true" : "";
 
-        writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}){factoryShape})]");
+            writer.WriteLine($"[WindowsRuntimeImplementableClassFactory(typeof({projectedType}){factoryShape})]");
+        }
 
         string factoryName = GetFactoryClassName(nameStripped);
 
@@ -418,10 +438,20 @@ internal static class AbiImplementableClassFactory
             HashSet<TypeDefinition> writtenInterfaces = [];
             Dictionary<string, PropertyInfo> properties = [];
 
-            if (hasDefaultActivation)
+            // 'ActivateInstance' returns the implementation's base, so the compiler checks what it constructs, and
+            // supplies the 'object' that 'IActivationFactory' expects. A parameterless composable constructor calls
+            // it as well (see 'EmitComposableFactoryMembers').
+            if (hasDefaultActivation || hasComposableDefaultActivation)
             {
                 writer.WriteLine();
-                writer.WriteLine("public abstract object ActivateInstance();");
+                writer.WriteLine(isMultiline: true, $$"""
+                    object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()
+                    {
+                        return ActivateInstance();
+                    }
+
+                    public abstract {{nameStripped}} ActivateInstance();
+                    """);
             }
 
             foreach (TypeDefinition iface in factoryInterfaces)
@@ -435,7 +465,11 @@ internal static class AbiImplementableClassFactory
                 // not something an author should implement, so it is generated here and forwards to a hook.
                 if (composableInterfaces.Contains(iface))
                 {
-                    EmitComposableFactoryMembers(writer, context, iface, nameStripped, projectedType, writtenMethods);
+                    EmitComposableFactoryMembers(writer, context, iface, nameStripped, projectedType, hasComposableDefaultActivation ? parameterlessConstructor : null, writtenMethods);
+                }
+                else if (activatableInterfaces.Contains(iface))
+                {
+                    EmitActivatableFactoryMembers(writer, context, iface, type, nameStripped, projectedType, writtenMethods);
                 }
                 else
                 {
@@ -479,7 +513,7 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     private static bool HasFactoryInterfaces(ProjectionEmitContext context, TypeDefinition type)
     {
-        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out _, out bool hasDefaultActivation);
+        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out _, out _, out _, out bool hasDefaultActivation);
 
         return factoryInterfaces.Count > 0 || hasDefaultActivation;
     }
@@ -491,16 +525,22 @@ internal static class AbiImplementableClassFactory
     /// <param name="type">The runtime class to inspect.</param>
     /// <param name="factoryInterfaces">The collected factory interfaces.</param>
     /// <param name="composableInterfaces">The subset of <paramref name="factoryInterfaces"/> that are <c>[Composable]</c>.</param>
+    /// <param name="publicComposableInterfaces">The subset of <paramref name="composableInterfaces"/> whose constructors are public.</param>
+    /// <param name="activatableInterfaces">The subset of <paramref name="factoryInterfaces"/> that are <c>[Activatable]</c>, i.e. constructors of a sealed class.</param>
     /// <param name="hasDefaultActivation">Whether the class supports default (parameterless) activation.</param>
     private static void CollectFactoryInterfaces(
         ProjectionEmitContext context,
         TypeDefinition type,
         out List<TypeDefinition> factoryInterfaces,
         out HashSet<TypeDefinition> composableInterfaces,
+        out HashSet<TypeDefinition> publicComposableInterfaces,
+        out HashSet<TypeDefinition> activatableInterfaces,
         out bool hasDefaultActivation)
     {
         factoryInterfaces = [];
         composableInterfaces = [];
+        publicComposableInterfaces = [];
+        activatableInterfaces = [];
         hasDefaultActivation = false;
 
         foreach (KeyValuePair<string, AttributedType> entry in AttributedTypes.Get(type, context.Cache))
@@ -521,12 +561,85 @@ internal static class AbiImplementableClassFactory
             {
                 factoryInterfaces.Add(attributedType.Type);
 
+                if (attributedType.Activatable)
+                {
+                    _ = activatableInterfaces.Add(attributedType.Type);
+                }
+
                 if (attributedType.Composable)
                 {
                     _ = composableInterfaces.Add(attributedType.Type);
+
+                    if (attributedType.Visible)
+                    {
+                        _ = publicComposableInterfaces.Add(attributedType.Type);
+                    }
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Determines whether an unsealed runtime class can also be given default (parameterless) activation.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// An unsealed class is only activatable through its composable factory, even for a parameterless constructor,
+    /// and a class with no constructor at all still gets an empty one. A caller that activates by class name
+    /// (<c>RoActivateInstance</c>) goes through <c>IActivationFactory</c> instead, so it cannot activate such a
+    /// class at all. Implemented in C#, the class cannot be composed anyway (see <see cref="EmitComposableFactoryMembers"/>),
+    /// so it is given the plain default activation those callers rely on.
+    /// </para>
+    /// <para>
+    /// That only needs no constructor, or a public parameterless one to back it: a class whose constructors all
+    /// take arguments, or are only visible to derived types, is not meant to be activated without them.
+    /// </para>
+    /// </remarks>
+    /// <param name="composableInterfaces">The class's <c>[Composable]</c> factory interfaces.</param>
+    /// <param name="publicComposableInterfaces">The subset of <paramref name="composableInterfaces"/> whose constructors are public.</param>
+    /// <param name="parameterlessConstructor">The public parameterless composable constructor, if the class declares one.</param>
+    /// <param name="isOnlyConstructor">Whether that constructor (or the lack of one) is all the composable factories declare.</param>
+    /// <returns>Whether the class should be given default activation.</returns>
+    private static bool TryGetComposableDefaultActivation(
+        HashSet<TypeDefinition> composableInterfaces,
+        HashSet<TypeDefinition> publicComposableInterfaces,
+        out MethodDefinition? parameterlessConstructor,
+        out bool isOnlyConstructor)
+    {
+        parameterlessConstructor = null;
+        isOnlyConstructor = false;
+
+        if (composableInterfaces.Count == 0)
+        {
+            return false;
+        }
+
+        int constructorCount = 0;
+
+        foreach (TypeDefinition iface in composableInterfaces)
+        {
+            foreach (MethodDefinition method in iface.GetNonSpecialMethods())
+            {
+                constructorCount++;
+
+                // The trailing two parameters are always the outer and the inner, so these are all it takes
+                if (parameterlessConstructor is null &&
+                    publicComposableInterfaces.Contains(iface) &&
+                    method.Signature?.ParameterTypes.Count == 2)
+                {
+                    parameterlessConstructor = method;
+                }
+            }
+        }
+
+        if (constructorCount > 0 && parameterlessConstructor is null)
+        {
+            return false;
+        }
+
+        isOnlyConstructor = constructorCount <= 1;
+
+        return true;
     }
 
     /// <summary>
@@ -546,6 +659,10 @@ internal static class AbiImplementableClassFactory
     /// activation passes a <see langword="null"/> outer and the caller ignores the inner, so returning the
     /// instance for both is correct, and matches C++/WinRT.
     /// </para>
+    /// <para>
+    /// The constructor backing default activation (if any) calls <c>ActivateInstance</c>, so both ways to activate
+    /// the class without arguments share one implementation.
+    /// </para>
     /// </remarks>
     private static void EmitComposableFactoryMembers(
         IndentedTextWriter writer,
@@ -553,6 +670,7 @@ internal static class AbiImplementableClassFactory
         TypeDefinition ifaceType,
         string nameStripped,
         string projectedType,
+        MethodDefinition? defaultActivationConstructor,
         HashSet<string> writtenMethods)
     {
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
@@ -599,6 +717,8 @@ internal static class AbiImplementableClassFactory
 
             IndentedTextWriterCallback parameters = MethodFactory.WriteParameterList(context, sig);
             string displayName = projectedType.Replace("global::", "");
+            bool isDefaultActivation = method == defaultActivationConstructor;
+            string hookName = isDefaultActivation ? "ActivateInstance" : name;
 
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
@@ -611,7 +731,7 @@ internal static class AbiImplementableClassFactory
                             "Only activating '{{displayName}}' directly is.");
                     }
 
-                    {{nameStripped}} instance = {{name}}({{WriteUserArguments}});
+                    {{nameStripped}} instance = {{hookName}}({{WriteUserArguments}});
 
                     {{innerParameter}} = instance;
 
@@ -619,8 +739,66 @@ internal static class AbiImplementableClassFactory
                 }
                 """);
 
+            if (!isDefaultActivation)
+            {
+                writer.WriteLine();
+                writer.WriteLine($"protected abstract {nameStripped} {name}({WriteUserParameters});");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Emits the members of an <c>[Activatable]</c> factory interface, i.e. the constructors of a sealed class.
+    /// </summary>
+    /// <remarks>
+    /// Each constructor is declared returning the implementation's base rather than the projected class, so the
+    /// compiler checks it constructs the implementation, as for composable constructors. The conversion to the
+    /// projected class the interface returns is generated here.
+    /// </remarks>
+    private static void EmitActivatableFactoryMembers(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        TypeDefinition ifaceType,
+        TypeDefinition type,
+        string nameStripped,
+        string projectedType,
+        HashSet<string> writtenMethods)
+    {
+        string interfaceName = TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format();
+
+        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        {
+            string name = method.GetRawName();
+            MethodSignatureInfo sig = new(method);
+
+            if (!writtenMethods.Add(sig.GetDedupeKey(name)))
+            {
+                continue;
+            }
+
+            IndentedTextWriterCallback parameters = MethodFactory.WriteParameterList(context, sig);
+            IndentedTextWriterCallback arguments = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+
             writer.WriteLine();
-            writer.WriteLine($"protected abstract {nameStripped} {name}({WriteUserParameters});");
+
+            // Constructors always return their class, but anything else is declared as the interface has it
+            if (sig.ReturnType?.FullName != type.FullName)
+            {
+                IndentedTextWriterCallback returnType = MethodFactory.WriteProjectionReturnType(context, sig);
+
+                writer.WriteLine($"public abstract {returnType} {name}({parameters});");
+
+                continue;
+            }
+
+            writer.WriteLine(isMultiline: true, $$"""
+                {{projectedType}} {{interfaceName}}.{{name}}({{parameters}})
+                {
+                    return {{name}}({{arguments}});
+                }
+
+                public abstract {{nameStripped}} {{name}}({{parameters}});
+                """);
         }
     }
 

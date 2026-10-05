@@ -14,8 +14,13 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// The fully qualified name of the implementation type to activate, when CsWinRT is supplying the factory itself;
 /// <see langword="null"/> when the author declared the factory.
 /// </param>
+/// <param name="ImplementableBaseTypeName">
+/// The fully qualified name of the generated class base that implementation extends, which is what the generated
+/// factory's <c>ActivateInstance</c> returns; <see langword="null"/> when the author declared the factory.
+/// </param>
 internal record AuthoringActivationFactoryInfo(
     string RuntimeClassName,
     string FactoryTypeName,
     string FactoryBaseTypeName,
-    string? GeneratedForImplementationTypeName = null);
+    string? GeneratedForImplementationTypeName = null,
+    string? ImplementableBaseTypeName = null);

@@ -59,7 +59,7 @@ if (projectedComposable is null)
 // The composable factory hands out authored instances through the generated plumbing
 MyComposableFactory composableFactory = new();
 
-if (composableFactory.Create() is not MyComposable { Value: 0 })
+if (composableFactory.ActivateInstance() is not MyComposable { Value: 0 })
 {
     return 107;
 }
@@ -112,6 +112,30 @@ unsafe
     if (ABI.ImplementWinMDTypes.ManagedExports.GetActivationFactory("TestComponent.NotImplemented".AsSpan()) is not null)
     {
         return 113;
+    }
+
+    // An unsealed class is only activatable through its composable factory in metadata, which a caller
+    // activating it by class name does not use. Implemented here, its public parameterless constructor also
+    // backs default activation through 'IActivationFactory' ('MyComposableFactory' for 'Composable', and a
+    // generated factory for 'Derived').
+    foreach (string composableClassName in (string[])["TestComponent.Composable", "TestComponent.Derived"])
+    {
+        if (!NativeActivate(composableClassName, out void* composableInstance))
+        {
+            return 124;
+        }
+
+        try
+        {
+            if (!IsRuntimeClassName(composableInstance, composableClassName))
+            {
+                return 125;
+            }
+        }
+        finally
+        {
+            Release(composableInstance);
+        }
     }
 }
 
@@ -317,18 +341,15 @@ namespace ImplementWinMDTypes
     /// </summary>
     /// <remarks>
     /// The Windows Runtime factory methods take an outer and an inner (raw COM aggregation). That is
-    /// generated onto the base, leaving only the creation hooks to implement here.
+    /// generated onto the base, leaving only the construction itself to implement here.
     /// </remarks>
     [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyComposable))]
     public sealed class MyComposableFactory : global::ABI.TestComponent.ComposableActivationFactory
     {
-        /// <summary>Exposes the protected creation hooks so the checks above can call them.</summary>
-        public global::ABI.TestComponent.Composable Create() => CreateInstance();
-
-        /// <inheritdoc cref="Create()"/>
+        /// <summary>Exposes the protected creation hook so the checks above can call it.</summary>
         public global::ABI.TestComponent.Composable Create(int init) => CreateWithValue(init);
 
-        protected override global::ABI.TestComponent.Composable CreateInstance() => new MyComposable();
+        public override global::ABI.TestComponent.Composable ActivateInstance() => new MyComposable();
 
         protected override global::ABI.TestComponent.Composable CreateWithValue(int init) => new MyComposable { Value = init };
 
@@ -358,14 +379,5 @@ namespace ImplementWinMDTypes
         public override int Three() => 3;
 
         public override int Four() => 4;
-    }
-
-    /// <summary>
-    /// The activation factory for <see cref="MyDerived"/>.
-    /// </summary>
-    [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyDerived))]
-    public sealed class MyDerivedFactory : global::ABI.TestComponent.DerivedActivationFactory
-    {
-        protected override global::ABI.TestComponent.Derived CreateInstance() => new MyDerived();
     }
 }
