@@ -46,6 +46,10 @@
         marked as a reference projection when resolved directly and transitively, and that the output
         of a library referencing it is not.
 
+      * GraphBuild: a consumer references an app requiring resource and compile-input generation.
+        Cold output-path queries must not compile it. Single-node and parallel graph builds,
+        incremental changes, clean, NoBuild publish and explicit generation use the real tools.
+
       * WindowsSdkProjection: a class library generates the base Windows SDK reference projection
         from the 'Microsoft.Windows.SDK.Contracts' '.winmd' files, exactly as the
         'Microsoft.Windows.SDK.NET.Ref' projection package is produced. This validates that the full
@@ -71,7 +75,7 @@
 
 .PARAMETER Test
     Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization',
-    'Authoring', 'Projection', 'ProjectionReferences', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All'
+    'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All'
     (the default). The CI runs each test as its own step (passing a single value), so an individual failure is
     reported in isolation; local builds use the default 'All'.
 
@@ -104,7 +108,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -117,6 +121,10 @@ $ErrorActionPreference = 'Stop'
 
 if ($Test -eq 'Preinitialization' -and $Runtime -ne 'NativeAot') {
     throw "The Preinitialization smoke test requires '-Runtime NativeAot'."
+}
+
+if ($Test -eq 'GraphBuild' -and $Runtime -ne 'CoreCLR') {
+    throw "The GraphBuild scheduling smoke test requires '-Runtime CoreCLR'."
 }
 
 # Native AOT publishes are always x64: the NuGet publish job that runs the smoke tests only runs
@@ -150,6 +158,12 @@ $commonBuildArgs = @(
 function Invoke-Dotnet {
     param ([string[]] $Arguments)
 
+    if (-not ($Arguments -match '^-bl:')) {
+        $logDirectory = Join-Path $smokeTestsRoot 'obj\smoke-logs'
+        $null = New-Item -ItemType Directory -Path $logDirectory -Force
+        $Arguments += "-bl:$logDirectory\{}.binlog"
+    }
+
     Write-Host "> dotnet $($Arguments -join ' ')" -ForegroundColor DarkGray
     & dotnet @Arguments
     if ($LASTEXITCODE -ne 0) {
@@ -168,10 +182,13 @@ function Invoke-MSBuildQuery {
 
     $queryArguments = @(
         'msbuild', $Project, '-restore', '-nologo'
+        "-bl:$smokeTestsRoot\obj\smoke-logs\query-{}.binlog"
         "-p:Configuration=$Configuration"
         "-p:CsWinRTPackageSource=$resolvedPackageSource"
         "-p:CsWinRTPackageVersion=$PackageVersion"
     ) + $Arguments
+
+    $null = New-Item -ItemType Directory -Path (Join-Path $smokeTestsRoot 'obj\smoke-logs') -Force
 
     Write-Host "> dotnet $($queryArguments -join ' ')" -ForegroundColor DarkGray
     $output = (& dotnet @queryArguments) -join [Environment]::NewLine
@@ -455,6 +472,41 @@ function Invoke-ProjectionSmokeTest {
     Write-Host "`n=== Projection smoke test ($Runtime) ===" -ForegroundColor Green
 
     Invoke-ReferenceProjectionSmokeTest -Name 'Projection' -Project $projectionProject
+
+    if ($Runtime -eq 'CoreCLR') {
+        $paths = (Invoke-MSBuildQuery -Project $projectionProject -Arguments @('-getProperty:TargetPath,_CsWinRTRefAssemblyPath')).Properties
+        $projectionSnapshot = Get-IntermediateAssemblySnapshot -Project $projectionProject -Name 'Projection'
+        $authoringSnapshot = Get-IntermediateAssemblySnapshot -Project $authoringProject -Name 'Authoring'
+        $packDirectory = Join-Path $smokeTestsRoot "obj\projection-pack-$([Guid]::NewGuid().ToString('N'))"
+        Invoke-Dotnet (@('pack', $projectionProject, '--no-build', '--no-restore', '--output', $packDirectory) + $commonBuildArgs)
+
+        if ((Get-IntermediateAssemblySnapshot -Project $projectionProject -Name 'Projection') -ne $projectionSnapshot -or
+            (Get-IntermediateAssemblySnapshot -Project $authoringProject -Name 'Authoring') -ne $authoringSnapshot) {
+            throw 'NoBuild packing recompiled the projection or its authored project reference.'
+        }
+
+        $packages = @(Get-ChildItem -LiteralPath $packDirectory -Filter '*.nupkg')
+        if ($packages.Count -ne 1) { throw "Expected one projection package in '$packDirectory'." }
+        $archive = [IO.Compression.ZipFile]::OpenRead($packages[0].FullName)
+        try {
+            foreach ($asset in @(
+                @{ Prefix = 'lib/'; Path = $paths.TargetPath }
+                @{ Prefix = 'ref/'; Path = $paths._CsWinRTRefAssemblyPath }
+            )) {
+                $entries = @($archive.Entries | Where-Object { $_.FullName.StartsWith($asset.Prefix) -and $_.Name -eq 'Projection.dll' })
+                if ($entries.Count -ne 1) { throw "Expected one Projection.dll under '$($asset.Prefix)'." }
+                $stream = $entries[0].Open()
+                try { $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)) }
+                finally { $stream.Dispose() }
+                if ($hash -ne (Get-FileHash -LiteralPath $asset.Path -Algorithm SHA256).Hash) {
+                    throw "The packed '$($entries[0].FullName)' did not match its expected forwarder/reference assembly."
+                }
+            }
+        }
+        finally { $archive.Dispose() }
+
+        Write-Host 'Verified NoBuild packing preserves forwarder/ref assets without building project references.' -ForegroundColor DarkGray
+    }
 }
 
 # Windows SDK projection: build the base Windows SDK reference projection, exactly as the
@@ -887,6 +939,10 @@ if ($Test -in @('All', 'Projection')) {
 
 if ($Test -in @('All', 'ProjectionReferences')) {
     Invoke-ProjectionReferencesSmokeTest
+}
+
+if ($Runtime -eq 'CoreCLR' -and $Test -in @('All', 'GraphBuild')) {
+    & (Join-Path $smokeTestsRoot 'GraphBuild\run-graph-build-test.ps1') -PackageSource $resolvedPackageSource -PackageVersion $PackageVersion -Configuration $Configuration
 }
 
 if ($Test -in @('All', 'WindowsSdkProjection')) {

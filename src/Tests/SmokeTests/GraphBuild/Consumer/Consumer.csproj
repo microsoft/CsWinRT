@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\PreparedApp\PreparedApp.csproj" />
+  </ItemGroup>
+</Project>
