@@ -9,18 +9,6 @@
     <Copy SourceFiles="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll"
           DestinationFiles="$(OutDir)WinRT.Host.dll"
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
-
-    <!--
-      'test.cpp' runs AuthoringTestExe from this folder, so its assembly must be copied here next to its apphost.
-      Reference copy-local normally does that, but VS 2022 (17.x) MSBuild rejects the reference with MSB3851
-      (it targets 'Windows, Version=10.0.26100.1', this project 10.0.26100.0) and skips it. Newer MSBuild versions are unaffected.
-    -->
-    <ItemGroup>
-      <_AuthoringTestExeAssembly Include="@(_ResolvedProjectReferencePaths)" Condition="'%(Filename)' == 'AuthoringTestExe'" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_AuthoringTestExeAssembly)"
-          DestinationFolder="$(OutDir)"
-          SkipUnchangedFiles="true" />
   </Target>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
