@@ -198,6 +198,37 @@ TEST(AuthoredGenerics, EnumAndDelegateArguments)
     EXPECT_EQ(callbacks.GetAt(0)(21), 42);
 }
 
+#ifdef CSWINRT_JIT_HOSTED
+
+// A referenced CsWinRT executable is hosted from this folder too, where the only 'WinRT.*' set is the one
+// merged for this consumer. 'AuthoringTestExe' marshals types no component here uses, so it only succeeds
+// (exit code 100) if that merged set was generated with the executable as an input.
+
+TEST(ReferencedExecutable, RunsOnMergedSet)
+{
+    wchar_t modulePath[MAX_PATH];
+    ASSERT_NE(GetModuleFileNameW(nullptr, modulePath, MAX_PATH), 0u);
+
+    std::wstring exePath{ modulePath };
+    exePath = exePath.substr(0, exePath.find_last_of(L'\\') + 1) + L"AuthoringTestExe.exe";
+
+    STARTUPINFOW startupInfo{ sizeof(startupInfo) };
+    PROCESS_INFORMATION processInfo{};
+
+    ASSERT_TRUE(CreateProcessW(exePath.c_str(), nullptr, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo));
+
+    DWORD exitCode = 0;
+    EXPECT_EQ(WaitForSingleObject(processInfo.hProcess, 60000), WAIT_OBJECT_0);
+    EXPECT_TRUE(GetExitCodeProcess(processInfo.hProcess, &exitCode));
+
+    CloseHandle(processInfo.hThread);
+    CloseHandle(processInfo.hProcess);
+
+    EXPECT_EQ(exitCode, 100u);
+}
+
+#endif
+
 int main(int argc, char** argv)
 {
     init_apartment();

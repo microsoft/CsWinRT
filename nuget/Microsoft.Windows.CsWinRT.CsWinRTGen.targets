@@ -755,6 +755,32 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!--
     ============================================================
+                 _CsWinRTExposeExecutableToNativeConsumers
+
+    Flags the output of a CsWinRT executable for native (C++) consumers, just like a component
+    flags its own (see 'Microsoft.Windows.CsWinRT.Authoring.targets'). A native project referencing
+    executables and components hosts all of them from one folder, so the native consumer targets
+    use this to include the executable in the single merged 'WinRT.*' set they generate for it.
+    The executable still generates its own set, which it uses when it is run from its own output.
+    ============================================================
+  -->
+  <Target
+    Name="_CsWinRTExposeExecutableToNativeConsumers"
+    AfterTargets="GetTargetPathWithTargetPlatformMoniker"
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTComponent)' != 'true' and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'WinExe')">
+
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker>
+        <CsWinRTExecutable>true</CsWinRTExecutable>
+        <CsWinRTComponentTargetFramework>$(TargetFramework)</CsWinRTComponentTargetFramework>
+        <CsWinRTComponentWindowsSdkPackageVersion>$(WindowsSdkPackageVersion)</CsWinRTComponentWindowsSdkPackageVersion>
+        <CsWinRTComponentUseWindowsUIXamlProjections>$(CsWinRTUseWindowsUIXamlProjections)</CsWinRTComponentUseWindowsUIXamlProjections>
+      </TargetPathWithTargetPlatformMoniker>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
                  _RunCsWinRTSdkProjectionGenerator
 
     Produces 'WinRT.Sdk.Projection.dll' containing the Windows SDK

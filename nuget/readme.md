@@ -113,6 +113,13 @@ Component references are picked up from two sources, treated as equivalent input
   `CsWinRTComponent=true` automatically expose this metadata.
 * `@(CsWinRTNativeComponent)` items contributed by component-package targets files (see below).
 
+`<ProjectReference>` items to managed executables using CsWinRT are included in the aggregator as well. Each
+referenced project is copied to the consumer's output directory, so all of them are hosted from that one folder,
+and the merged bundle there has to cover every one of them. An executable still generates its own `WinRT.*`
+set for its own output, and uses the merged one when it is run from the consumer's output directory instead.
+This only applies to project references built normally (with JIT): a published (e.g. trimmed, ReadyToRun or
+Native AOT) executable carries its own self-contained set, and should be deployed in its own folder.
+
 Consumer-side properties:
 
 | Property | Description |

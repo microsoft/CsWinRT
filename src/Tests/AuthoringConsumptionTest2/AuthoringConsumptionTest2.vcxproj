@@ -93,6 +93,10 @@
     <ProjectReference Include="..\AuthoringImplementWinMDTypesTest\AuthoringImplementWinMDTypesTest.csproj">
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
+    <!-- A CsWinRT executable, hosted from the same folder as the components (see 'test.cpp') -->
+    <ProjectReference Include="..\AuthoringTestExe\AuthoringTestExe.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
   <!-- Release|x64 builds the merged AOT host (.AOT.csproj sibling, slnx top-level). Build the
        component csprojs with RuntimeIdentifier propagated so their .winmd files land at the
@@ -154,6 +158,12 @@
     <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="AuthoringConsumptionTest2.exe.manifest" />
     <Manifest Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'" Include="AuthoringConsumptionTest2.AOT.exe.manifest" />
   </ItemGroup>
+  <!-- Tests that only apply to the JIT-hosted configurations (the managed projects are hosted from this folder) -->
+  <ItemDefinitionGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
+    <ClCompile>
+      <PreprocessorDefinitions>CSWINRT_JIT_HOSTED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Project="..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
   <ImportGroup Label="ExtensionTargets">

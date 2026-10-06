@@ -166,6 +166,7 @@
     <Project Path="Tests/AuthoringConsumptionTest2/AuthoringConsumptionTest2.vcxproj" Id="8a4b1f2a-9c2e-4d3a-bf68-2a4f5b7c8d9e">
       <BuildDependency Project="Tests/AuthoringTest3/AuthoringTest3.csproj" />
       <BuildDependency Project="Tests/AuthoringTest2/AuthoringTest2.csproj" />
+      <BuildDependency Project="Tests/AuthoringTestExe/AuthoringTestExe.csproj" />
       <BuildDependency Project="Tests/AuthoringConsumptionTest2.AOT/AuthoringConsumptionTest2.AOT.csproj" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
@@ -205,6 +206,12 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringTest3/AuthoringTest3.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringTestExe/AuthoringTestExe.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />

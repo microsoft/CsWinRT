@@ -24,6 +24,7 @@
       "Tests\\AuthoringTest\\AuthoringTest.csproj",
       "Tests\\AuthoringTest2\\AuthoringTest2.csproj",
       "Tests\\AuthoringTest3\\AuthoringTest3.csproj",
+      "Tests\\AuthoringTestExe\\AuthoringTestExe.csproj",
       "Tests\\AuthoringWinUITest\\AuthoringWinUITest (Package)\\AuthoringWinUITest (Package).wapproj",
       "Tests\\AuthoringWinUITest\\AuthoringWinUITest\\AuthoringWinUITest.vcxproj",
       "Tests\\AuthoringWuxConsumptionTest\\AuthoringWuxConsumptionTest.vcxproj",

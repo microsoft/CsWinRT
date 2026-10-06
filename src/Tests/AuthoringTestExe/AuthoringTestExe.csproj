@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A CsWinRT executable referenced by a native consumer ('AuthoringConsumptionTest2') alongside components.
+    The native consumer hosts all of them from one folder, so its merged 'WinRT.*' set has to cover this
+    executable too: running it from there (see 'test.cpp') only works if it does.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>
