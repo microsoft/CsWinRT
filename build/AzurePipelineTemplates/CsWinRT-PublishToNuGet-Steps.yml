@@ -165,6 +165,16 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
 
   - task: PowerShell@2
+    displayName: Run GraphBuild smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test GraphBuild -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
     displayName: Run MixedConsumption smoke test (CoreCLR)
     continueOnError: true
     inputs:

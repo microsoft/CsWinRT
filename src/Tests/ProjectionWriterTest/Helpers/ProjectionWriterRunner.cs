@@ -85,6 +85,65 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
+    /// Runs the generator with every path involved in projection generation exceeding the Windows <c>MAX_PATH</c> limit.
+    /// </summary>
+    /// <param name="useInputDirectory">Whether the input argument is the containing directory rather than the WinMD file itself.</param>
+    /// <returns>The paths and process result needed to verify the scenario.</returns>
+    internal static LongPathRunResult RunLongPathScenario(bool useInputDirectory)
+    {
+        string executablePath = Path.ChangeExtension(GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath"), ".exe");
+        string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterLongPathTest_{Guid.NewGuid():N}");
+        string expectedOutputPath;
+
+        do
+        {
+            workingDirectory = Path.Combine(workingDirectory, "segment123456789");
+            expectedOutputPath = Path.Combine(workingDirectory, "output", "Windows.Foundation.Collections.cs");
+        }
+        while (Path.Combine(workingDirectory, "projection.rsp").Length <= 260 ||
+               Path.Combine(workingDirectory, "input").Length <= 260 ||
+               Path.Combine(workingDirectory, "input", "Windows.Foundation.FoundationContract.winmd").Length <= 260 ||
+               expectedOutputPath.Length <= 260);
+
+        string inputDirectory = Path.Combine(workingDirectory, "input");
+        string outputDirectory = Path.Combine(workingDirectory, "output");
+
+        _ = Directory.CreateDirectory(inputDirectory);
+        _ = Directory.CreateDirectory(outputDirectory);
+
+        try
+        {
+            string inputWinmdPath = Path.Combine(inputDirectory, "Windows.Foundation.FoundationContract.winmd");
+            string responseFilePath = Path.Combine(workingDirectory, "projection.rsp");
+            string inputPath = useInputDirectory ? inputDirectory : inputWinmdPath;
+
+            File.Copy(FindWindowsFoundationWinmd(), inputWinmdPath);
+            File.WriteAllLines(responseFilePath,
+            [
+                $"--input-paths {inputPath}",
+                $"--output-directory {outputDirectory}",
+                "--target-framework net10.0",
+                "--include-namespaces Windows.Foundation.Collections",
+                "--reference-projection true"
+            ]);
+
+            (int exitCode, string output) = RunExecutable(executablePath, $"@{responseFilePath}");
+
+            return new(
+                ResponseFilePathLength: responseFilePath.Length,
+                InputPathLength: inputPath.Length,
+                OutputPathLength: expectedOutputPath.Length,
+                ExitCode: exitCode,
+                Output: output,
+                OutputExists: File.Exists(expectedOutputPath));
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    /// <summary>
     /// Generates a projection for the requested mode and returns all generated sources, concatenated.
     /// </summary>
     /// <remarks>
@@ -234,6 +293,36 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
+    /// Runs the projection generator executable directly so its application manifest is exercised.
+    /// </summary>
+    private static (int ExitCode, string Output) RunExecutable(string executablePath, string argument)
+    {
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException("The projection generator executable was not found.", executablePath);
+        }
+
+        ProcessStartInfo startInfo = new(executablePath)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        startInfo.ArgumentList.Add(argument);
+
+        using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the projection generator executable.");
+
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
+
+        process.WaitForExit();
+
+        return (process.ExitCode, standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult());
+    }
+
+    /// <summary>
     /// Resolves a required tool or input file path from assembly metadata.
     /// </summary>
     /// <param name="metadataName">The assembly metadata key containing the path.</param>
@@ -251,6 +340,25 @@ internal static class ProjectionWriterRunner
         Assert.IsTrue(File.Exists(fullPath), $"The file specified by '{metadataName}' was not found at '{fullPath}'.");
 
         return fullPath;
+    }
+
+    /// <summary>
+    /// Finds the installed Windows Foundation contract used as the explicit long-path WinMD input.
+    /// </summary>
+    private static string FindWindowsFoundationWinmd()
+    {
+        string referencesDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Windows Kits",
+            "10",
+            "References");
+
+        string? winmdPath = Directory
+            .EnumerateFiles(referencesDirectory, "Windows.Foundation.FoundationContract.winmd", SearchOption.AllDirectories)
+            .OrderByDescending(static path => path, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+
+        return winmdPath ?? throw new FileNotFoundException($"No Windows Foundation contract was found under '{referencesDirectory}'.");
     }
 
     /// <summary>
@@ -288,4 +396,15 @@ internal static class ProjectionWriterRunner
             // Best effort cleanup; a leftover temp directory must not fail the test
         }
     }
+
+    /// <summary>
+    /// Captures the observable result of a long-path generator invocation.
+    /// </summary>
+    internal sealed record LongPathRunResult(
+        int ResponseFilePathLength,
+        int InputPathLength,
+        int OutputPathLength,
+        int ExitCode,
+        string Output,
+        bool OutputExists);
 }

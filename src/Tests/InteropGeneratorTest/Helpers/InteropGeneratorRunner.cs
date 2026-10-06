@@ -291,7 +291,10 @@ internal sealed class InteropGeneratorRunner : IDisposable
             new XElement(ns + "Import", new XAttribute("Project", Path.GetFullPath(GetAssemblyMetadata("CsWinRTTargetsPath")))),
             new XElement(ns + "PropertyGroup",
                 new XElement(ns + "_CsWinRTSdkProjectionAssemblyPath", sdkProjectionPath)),
+
+            // Inputs are already compiled and resolved; stub preparation outside the interop producer
             new[] { "ResolveAssemblyReferences", "FindReferenceAssembliesForReferences", "CoreCompile",
+                "CsWinRTRemoveWinMDReferences", "CsWinRTResolveWindowsMetadata",
                 "_RunCsWinRTMergedProjectionGenerator", "_RunCsWinRTComponentProjectionGenerator" }
                 .Select(name => new XElement(ns + "Target", new XAttribute("Name", name))),
             new XElement(ns + "Target",

@@ -1,0 +1,9 @@
+<Project>
+  <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <GraphBuildTestDirectory Condition="'$(GraphBuildTestDirectory)' == ''">$(MSBuildThisFileDirectory)obj\local\</GraphBuildTestDirectory>
+    <BaseIntermediateOutputPath>$(GraphBuildTestDirectory)$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(GraphBuildTestDirectory)$(MSBuildProjectName)\bin\</BaseOutputPath>
+  </PropertyGroup>
+</Project>
