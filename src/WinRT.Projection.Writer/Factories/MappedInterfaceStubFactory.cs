@@ -165,9 +165,10 @@ internal static class MappedInterfaceStubFactory
         // See 'EmitDisposable' for why the body is stubbed in a reference projection.
         if (context.Settings.ReferenceProjection)
         {
+            IndentedTextWriterCallback propertyNameType = ReferenceStringTypeWriter.WriteType(referenceProjection: true);
             writer.WriteLine();
-            writer.WriteLine(isMultiline: true, """
-                public global::System.Collections.IEnumerable GetErrors(string propertyName) => throw null;
+            writer.WriteLine(isMultiline: true, $$"""
+                public global::System.Collections.IEnumerable GetErrors({{propertyNameType}} propertyName) => throw null;
                 public bool HasErrors {get => throw null; }
                 public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
                 {
@@ -478,9 +479,9 @@ internal static class MappedInterfaceStubFactory
     /// <summary>
     /// Writes a projected type name to a scratch buffer and returns the string.
     /// </summary>
-    private static string WriteTypeNameToString(ProjectionEmitContext context, TypeSemantics arg, TypedefNameType nameType, bool forceQualified)
+    private static string WriteTypeNameToString(ProjectionEmitContext context, TypeSemantics arg, TypedefNameType nameType, bool forceQualified, bool annotateStrings = true)
     {
-        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified).Format();
+        string result = TypedefNameWriter.WriteTypeName(context, arg, nameType, forceQualified, annotateStrings).Format();
         return result;
     }
 
@@ -490,7 +491,7 @@ internal static class MappedInterfaceStubFactory
     /// </summary>
     private static string EncodeArgIdentifier(ProjectionEmitContext context, TypeSemantics arg)
     {
-        string projected = WriteTypeNameToString(context, arg, TypedefNameType.Projected, false);
+        string projected = WriteTypeNameToString(context, arg, TypedefNameType.Projected, false, annotateStrings: false);
         return IidExpressionGenerator.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
 

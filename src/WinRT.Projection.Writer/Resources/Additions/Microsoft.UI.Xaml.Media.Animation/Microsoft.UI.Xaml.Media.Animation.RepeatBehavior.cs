@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Microsoft.UI.Xaml.Media.Animation
 {
@@ -73,17 +74,17 @@ namespace Microsoft.UI.Xaml.Media.Animation
             return InternalToString(null, null);
         }
 
-        public readonly string ToString(IFormatProvider formatProvider)
+        public readonly string ToString(IFormatProvider? formatProvider)
         {
             return InternalToString(null, formatProvider);
         }
 
-        readonly string IFormattable.ToString(string format, IFormatProvider formatProvider)
+        readonly string IFormattable.ToString(string? format, IFormatProvider? formatProvider)
         {
             return InternalToString(format, formatProvider);
         }
 
-        internal readonly string InternalToString(string format, IFormatProvider formatProvider)
+        internal readonly string InternalToString(string? format, IFormatProvider? formatProvider)
         {
             switch (Type)
             {
@@ -107,7 +108,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
             }
         }
 
-        public readonly override bool Equals(object value)
+        public readonly override bool Equals(object? value)
         {
             if (value is RepeatBehavior behavior)
             {
@@ -168,3 +169,5 @@ namespace Microsoft.UI.Xaml.Media.Animation
         }
     }
 }
+
+#nullable restore

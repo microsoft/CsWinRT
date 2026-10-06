@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Microsoft.UI.Xaml
 {
@@ -55,7 +56,7 @@ namespace Microsoft.UI.Xaml
         private readonly string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             char listSeparator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
@@ -86,7 +87,7 @@ namespace Microsoft.UI.Xaml
             }
         }
 
-        public readonly override bool Equals(object obj)
+        public readonly override bool Equals(object? obj)
         {
             if (obj is CornerRadius cornerRadius)
             {
@@ -116,3 +117,5 @@ namespace Microsoft.UI.Xaml
         }
     }
 }
+
+#nullable restore

@@ -189,7 +189,7 @@ internal static class InterfaceFactory
                 writer.WriteIf(i > 0, ", ");
 
                 // Pass forceWriteNamespace=false so type args also respect the current namespace.
-                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
+                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false, annotateStrings: true);
             }
             writer.Write(">");
         }

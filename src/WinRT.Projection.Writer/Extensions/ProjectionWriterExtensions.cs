@@ -20,7 +20,7 @@ internal static class ProjectionWriterExtensions
         /// canonical <c>using</c> imports + suppression pragmas) at the top of every emitted
         /// <c>.cs</c> file.
         /// </summary>
-        /// <param name="context">The active emit context (currently unused, but reserved for future per-namespace customization).</param>
+        /// <param name="context">The active emit context.</param>
         public void WriteFileHeader(ProjectionEmitContext context)
         {
             writer.WriteLine(isMultiline: true, $$"""
@@ -57,6 +57,8 @@ internal static class ProjectionWriterExtensions
                 #pragma warning disable CSWINRT3005 // "'...' is for evaluation purposes only" (experimental Windows Runtime APIs are projected as '[Experimental]', but generated code still has to reference them)
                 
                 """);
+
+            writer.WriteLineIf(context.Settings.ReferenceProjection, "#nullable disable annotations");
         }
 
         /// <summary>

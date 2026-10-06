@@ -293,7 +293,7 @@ internal sealed partial class ProjectionGenerator
 
                 using StreamReader reader = new(stream);
                 string content = reader.ReadToEnd();
-                writer.Write(content);
+                writer.WriteLine(content);
             }
         }
 

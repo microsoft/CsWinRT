@@ -1,3 +1,5 @@
+#nullable enable
+
 #if UAC_VERSION_15
 #define UAC_VERSION_14
 #endif
@@ -65,7 +67,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
             public static CoreDragDropManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IDragDropManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -99,7 +101,7 @@ namespace Windows.Graphics.Printing
         /// The accessor for <c>__uuidof(IAsyncOperation&lt;bool&gt;)</c>.
         /// </summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<bool>")]
-        private static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object? _);
 #endif
 
         extension(PrintManager)
@@ -114,7 +116,7 @@ namespace Windows.Graphics.Printing
             public static PrintManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IPrintManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -133,7 +135,7 @@ namespace Windows.Graphics.Printing
             public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(
                     thisReference: objectReference,
@@ -174,7 +176,7 @@ namespace Windows.Media
             public static SystemMediaTransportControls GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.ISystemMediaTransportControlsInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -215,7 +217,7 @@ namespace Windows.Media.PlayTo
             public static PlayToManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IPlayToManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -233,7 +235,7 @@ namespace Windows.Media.PlayTo
             public static void ShowPlayToUIForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 global::ABI.WindowsRuntime.Internal.IPlayToManagerInteropMethods.ShowPlayToUIForWindow(
                     thisReference: objectReference,
@@ -266,7 +268,7 @@ namespace Windows.Security.Credentials.UI
         /// The accessor for <c>__uuidof(IAsyncOperation&lt;UserConsentVerificationResult&gt;)</c>.
         /// </summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Credentials-UI-UserConsentVerificationResult>")]
-        private static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object? _);
 #endif
 
         extension(UserConsentVerifier)
@@ -282,7 +284,7 @@ namespace Windows.Security.Credentials.UI
             public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(nint appWindow, string message)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(
                     thisReference: objectReference,
@@ -318,7 +320,7 @@ namespace Windows.Security.Authentication.Web.Core
         /// The accessor for <c>__uuidof(IAsyncOperation&lt;WebTokenRequestResult&gt;)</c>.
         /// </summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Authentication-Web-Core-WebTokenRequestResult>")]
-        private static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object? _);
 #endif
 
         extension(WebAuthenticationCoreManager)
@@ -328,13 +330,13 @@ namespace Windows.Security.Authentication.Web.Core
             /// </summary>
             /// <param name="appWindow">The handle to the window to be used as the owner for the window prompting the user for credentials, in case such a window becomes necessary (an <c>HWND</c>).</param>
             /// <param name="request">The web token request.</param>
-            /// <returns>An asynchronous operation with the <see cref="WebTokenRequestResult"/> for the request.</returns>
+            /// <returns>A non-null asynchronous operation whose result may be <see langword="null"/>.</returns>
             /// <exception cref="Exception">Thrown if the token request failed.</exception>
             /// <see href="https://learn.microsoft.com/windows/win32/api/webauthenticationcoremanagerinterop/nf-webauthenticationcoremanagerinterop-iwebauthenticationcoremanagerinterop-requesttokenforwindowasync"/>
-            public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(nint appWindow, WebTokenRequest request)
+            public static IAsyncOperation<WebTokenRequestResult?> RequestTokenForWindowAsync(nint appWindow, WebTokenRequest request)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(
                     thisReference: objectReference,
@@ -350,13 +352,13 @@ namespace Windows.Security.Authentication.Web.Core
             /// <param name="appWindow">The handle to the window to be used as the owner for the window prompting the user for credentials, in case such a window becomes necessary (an <c>HWND</c>).</param>
             /// <param name="request">The web token request.</param>
             /// <param name="webAccount">The web account for the request.</param>
-            /// <returns>An asynchronous operation with the <see cref="WebTokenRequestResult"/> for the request.</returns>
+            /// <returns>A non-null asynchronous operation whose result may be <see langword="null"/>.</returns>
             /// <exception cref="Exception">Thrown if the token request failed.</exception>
             /// <see href="https://learn.microsoft.com/windows/win32/api/webauthenticationcoremanagerinterop/nf-webauthenticationcoremanagerinterop-iwebauthenticationcoremanagerinterop-requesttokenwithwebaccountforwindowasync"/>
-            public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(nint appWindow, WebTokenRequest request, WebAccount webAccount)
+            public static IAsyncOperation<WebTokenRequestResult?> RequestTokenWithWebAccountForWindowAsync(nint appWindow, WebTokenRequest request, WebAccount webAccount)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(
                     thisReference: objectReference,
@@ -401,7 +403,7 @@ namespace Windows.UI.ApplicationSettings
             public static AccountsSettingsPane GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IAccountsSettingsPaneInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -420,7 +422,7 @@ namespace Windows.UI.ApplicationSettings
             public static IAsyncAction ShowManageAccountsForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IAccountsSettingsPaneInteropMethods.ShowManageAccountsForWindowAsync(
                     thisReference: objectReference,
@@ -439,7 +441,7 @@ namespace Windows.UI.ApplicationSettings
             public static IAsyncAction ShowAddAccountForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IAccountsSettingsPaneInteropMethods.ShowAddAccountForWindowAsync(
                     thisReference: objectReference,
@@ -480,7 +482,7 @@ namespace Windows.UI.Input
             public static RadialControllerConfiguration GetForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IRadialControllerConfigurationInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -518,7 +520,7 @@ namespace Windows.UI.Input
             public static RadialController CreateForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IRadialControllerInteropMethods.CreateForWindow(
                     thisReference: objectReference,
@@ -558,7 +560,7 @@ namespace Windows.UI.Input.Core
             public static RadialControllerIndependentInputSource CreateForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IRadialControllerIndependentInputSourceInteropMethods.CreateForWindow(
                     thisReference: objectReference,
@@ -599,7 +601,7 @@ namespace Windows.UI.Input.Spatial
             public static SpatialInteractionManager GetForWindow(nint window)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.ISpatialInteractionManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -640,7 +642,7 @@ namespace Windows.UI.ViewManagement
             public static InputPane GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IInputPaneInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -678,7 +680,7 @@ namespace Windows.UI.ViewManagement
             public static UIViewSettings GetForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IUIViewSettingsInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -720,7 +722,7 @@ namespace Windows.Graphics.Display
             public static DisplayInformation GetForWindow(nint window)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IDisplayInformationStaticsInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -739,7 +741,7 @@ namespace Windows.Graphics.Display
             public static DisplayInformation GetForMonitor(nint monitor)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IDisplayInformationStaticsInteropMethods.GetForMonitor(
                     thisReference: objectReference,
@@ -780,7 +782,7 @@ namespace Windows.ApplicationModel.DataTransfer
             public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 return global::ABI.WindowsRuntime.Internal.IDataTransferManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
@@ -797,7 +799,7 @@ namespace Windows.ApplicationModel.DataTransfer
             public static void ShowShareUIForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
-                throw null;
+                throw null!;
 #else
                 global::ABI.WindowsRuntime.Internal.IDataTransferManagerInteropMethods.ShowShareUIForWindow(
                     thisReference: objectReference,
@@ -899,3 +901,5 @@ namespace ABI.WindowsRuntime.Internal
     }
 #endif
 }
+
+#nullable restore

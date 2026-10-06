@@ -23,7 +23,7 @@ namespace Microsoft.UI.Dispatching
         public DispatcherQueueSynchronizationContext(global::Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             _innerContext = new WindowsRuntime.InteropServices.DispatcherQueueSynchronizationContext(dispatcherQueue);
 #endif
@@ -44,7 +44,7 @@ namespace Microsoft.UI.Dispatching
         public override void Post(global::System.Threading.SendOrPostCallback d, object? state)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             _innerContext.Post(d, state);
 #endif
@@ -54,7 +54,7 @@ namespace Microsoft.UI.Dispatching
         public override void Send(global::System.Threading.SendOrPostCallback d, object? state)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             _innerContext.Send(d, state);
 #endif
@@ -64,7 +64,7 @@ namespace Microsoft.UI.Dispatching
         public override global::System.Threading.SynchronizationContext CreateCopy()
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             return new DispatcherQueueSynchronizationContext(_innerContext);
 #endif

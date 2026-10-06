@@ -30,7 +30,7 @@ namespace Windows.Storage
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
@@ -87,7 +87,7 @@ namespace Windows.Storage
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
@@ -137,7 +137,7 @@ namespace Windows.Storage
             CreationCollisionOption creationCollisionOption)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
@@ -217,7 +217,7 @@ namespace Windows.Storage
             FileOptions options = FileOptions.None)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
@@ -264,7 +264,7 @@ namespace Windows.Storage
             FileOptions options = FileOptions.None)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentNullException.ThrowIfNull(relativePath);
@@ -285,7 +285,7 @@ namespace Windows.Storage
         private static async Task<Stream> OpenStreamForWriteWithOffsetAsync(IStorageFile windowsRuntimeFile, long offset)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             Debug.Assert(windowsRuntimeFile is not null);
             Debug.Assert(offset >= 0);

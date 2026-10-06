@@ -193,12 +193,20 @@ internal static class TypedefNameWriter
     /// <param name="semantics">The semantic representation of the type.</param>
     /// <param name="nameType">The kind of name to emit.</param>
     /// <param name="forceWriteNamespace">When <see langword="true"/>, always prepend the <c>global::</c>-qualified namespace prefix.</param>
-    public static void WriteTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
+    /// <param name="annotateStrings">Whether this is a signature rather than a plain type name used to construct identifiers.</param>
+    public static void WriteTypeName(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false, bool annotateStrings = false)
     {
         switch (semantics)
         {
             case TypeSemantics.Fundamental f:
-                WriteFundamentalType(writer, f.Type);
+                if (annotateStrings && f.Type == FundamentalType.String)
+                {
+                    ReferenceStringTypeWriter.WriteType(writer, context.Settings.ReferenceProjection);
+                }
+                else
+                {
+                    WriteFundamentalType(writer, f.Type);
+                }
                 break;
             case TypeSemantics.ObjectType:
                 writer.Write("object");
@@ -221,7 +229,7 @@ internal static class TypedefNameWriter
                     writer.WriteIf(i > 0, ", ");
 
                     // Generic args ALWAYS use Projected, regardless of parent's nameType.
-                    WriteTypeName(writer, context, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
+                    WriteTypeName(writer, context, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace, annotateStrings);
                 }
                 writer.Write(">");
                 break;
@@ -239,7 +247,7 @@ internal static class TypedefNameWriter
                         gir.GenericArgs is [{ } innerArg] &&
                         ProjectsToReferenceType(innerArg))
                     {
-                        WriteTypeName(writer, context, innerArg, nameType, forceWriteNamespace);
+                        WriteTypeName(writer, context, innerArg, nameType, forceWriteNamespace, annotateStrings);
                         break;
                     }
 
@@ -274,7 +282,7 @@ internal static class TypedefNameWriter
                     {
                         writer.WriteIf(i > 0, ", ");
 
-                        WriteTypeName(writer, context, gir.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
+                        WriteTypeName(writer, context, gir.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace, annotateStrings);
                     }
                     writer.Write(">");
                 }
@@ -326,7 +334,7 @@ internal static class TypedefNameWriter
     /// <param name="semantics">The semantic representation of the type.</param>
     public static void WriteProjectionType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
-        WriteTypeName(writer, context, semantics, TypedefNameType.Projected, false);
+        WriteTypeName(writer, context, semantics, TypedefNameType.Projected, false, annotateStrings: true);
     }
 
     /// <summary>
@@ -360,11 +368,11 @@ internal static class TypedefNameWriter
         return false;
     }
 
-    /// <inheritdoc cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>
+    /// <inheritdoc cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool, bool)"/>
     /// <returns>A callback that writes the type name to the writer it's appended to.</returns>
-    public static IndentedTextWriterCallback WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType, bool forceWriteNamespace)
+    public static IndentedTextWriterCallback WriteTypeName(ProjectionEmitContext context, TypeSemantics semantics, TypedefNameType nameType, bool forceWriteNamespace, bool annotateStrings = false)
     {
-        return writer => WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace);
+        return writer => WriteTypeName(writer, context, semantics, nameType, forceWriteNamespace, annotateStrings);
     }
 
     /// <inheritdoc cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>
@@ -437,6 +445,6 @@ internal static class TypedefNameWriter
 
         // The outer EventHandler still gets 'global::System.' from being in a different namespace,
         // but type args in the same namespace stay unqualified.
-        WriteTypeName(writer, context, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false);
+        WriteTypeName(writer, context, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false, annotateStrings: true);
     }
 }

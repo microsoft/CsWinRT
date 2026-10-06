@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Windows.UI.Xaml
 {
@@ -54,7 +55,7 @@ namespace Windows.UI.Xaml
                     || gl1.Value != gl2.Value;
         }
 
-        public readonly override bool Equals(object oCompare)
+        public readonly override bool Equals(object? oCompare)
         {
             if (oCompare is GridLength gridLength)
             {
@@ -92,3 +93,5 @@ namespace Windows.UI.Xaml
         }
     }
 }
+
+#nullable restore

@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Windows.UI.Xaml.Media.Animation
 {
@@ -40,7 +41,7 @@ namespace Windows.UI.Xaml.Media.Animation
             return KeyTime.Equals(this, value);
         }
 
-        public readonly override bool Equals(object value)
+        public readonly override bool Equals(object? value)
         {
             return value is KeyTime keyTime && this == keyTime;
         }
@@ -61,3 +62,5 @@ namespace Windows.UI.Xaml.Media.Animation
         }
     }
 }
+
+#nullable restore

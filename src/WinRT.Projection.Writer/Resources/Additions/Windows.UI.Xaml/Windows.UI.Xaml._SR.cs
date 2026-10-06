@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable enable
+
 namespace Windows.UI.Xaml
 {
     static class SR
@@ -15,3 +17,5 @@ namespace Windows.UI.Xaml
         public static string PlatformNotSupported_WindowsRuntime = "Windows Runtime (WinRT) is not supported on this platform.";
     }
 }
+
+#nullable restore

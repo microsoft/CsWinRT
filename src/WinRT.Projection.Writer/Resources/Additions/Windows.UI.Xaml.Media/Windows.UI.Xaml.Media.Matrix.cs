@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Windows.UI.Xaml.Media
 {
@@ -30,22 +31,22 @@ namespace Windows.UI.Xaml.Media
             return ConvertToString(null /* format string */, null /* format provider */);
         }
 
-        public readonly string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider? provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, provider);
         }
 
-        readonly string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string? format, IFormatProvider? provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        private readonly string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string? format, IFormatProvider? provider)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             if (IsIdentity)
             {
@@ -97,3 +98,5 @@ namespace Windows.UI.Xaml.Media
         }
     }
 }
+
+#nullable restore

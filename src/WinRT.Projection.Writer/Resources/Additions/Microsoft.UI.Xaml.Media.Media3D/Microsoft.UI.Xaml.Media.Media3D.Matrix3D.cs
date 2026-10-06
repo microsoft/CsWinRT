@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Microsoft.UI.Xaml.Media.Media3D
 {
@@ -218,22 +219,22 @@ namespace Microsoft.UI.Xaml.Media.Media3D
             return ConvertToString(null /* format string */, null /* format provider */);
         }
 
-        public readonly string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider? provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null /* format string */, provider);
         }
 
-        readonly string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string? format, IFormatProvider? provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        private readonly string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string? format, IFormatProvider? provider)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             if (IsIdentity)
             {
@@ -299,7 +300,7 @@ namespace Microsoft.UI.Xaml.Media.Media3D
                    M44.GetHashCode();
         }
 
-        public readonly override bool Equals(object o)
+        public readonly override bool Equals(object? o)
         {
             return o is Matrix3D matrix && Equals(this, matrix);
         }
@@ -529,3 +530,5 @@ namespace Microsoft.UI.Xaml.Media.Media3D
         private const double DBL_EPSILON_RELATIVE_1 = 1.1102230246251567e-016; /* smallest such that 1.0+DBL_EPSILON != 1.0 */
     }
 }
+
+#nullable restore

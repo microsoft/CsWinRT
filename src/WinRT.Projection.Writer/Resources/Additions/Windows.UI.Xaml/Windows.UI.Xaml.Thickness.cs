@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Windows.UI.Xaml
 {
@@ -18,7 +19,7 @@ namespace Windows.UI.Xaml
         private readonly string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             char listSeparator = global::WindowsRuntime.InteropServices.TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
@@ -50,3 +51,5 @@ namespace Windows.UI.Xaml
         }
     }
 }
+
+#nullable restore

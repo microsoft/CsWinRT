@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Microsoft.UI.Xaml.Controls.Primitives
 {
@@ -17,3 +18,5 @@ namespace Microsoft.UI.Xaml.Controls.Primitives
         }
     }
 }
+
+#nullable restore

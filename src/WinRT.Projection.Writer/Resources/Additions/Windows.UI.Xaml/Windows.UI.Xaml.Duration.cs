@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Windows.UI.Xaml
 {
@@ -213,7 +214,7 @@ namespace Windows.UI.Xaml
             return this + duration;
         }
 
-        public readonly override bool Equals(object value)
+        public readonly override bool Equals(object? value)
         {
             return value is Duration duration && Equals(duration);
         }
@@ -276,3 +277,5 @@ namespace Windows.UI.Xaml
         }
     }
 }
+
+#nullable restore

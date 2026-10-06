@@ -1,3 +1,4 @@
+#nullable enable
 
 namespace Windows.UI
 {
@@ -17,22 +18,22 @@ namespace Windows.UI
             return ConvertToString(null, null);
         }
 
-        public readonly string ToString(IFormatProvider provider)
+        public readonly string ToString(IFormatProvider? provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null, provider);
         }
 
-        readonly string IFormattable.ToString(string format, IFormatProvider provider)
+        readonly string IFormattable.ToString(string? format, IFormatProvider? provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        private readonly string ConvertToString(string format, IFormatProvider provider)
+        private readonly string ConvertToString(string? format, IFormatProvider? provider)
         {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+            throw null!;
 #else
             if (format == null)
             {
@@ -44,6 +45,7 @@ namespace Windows.UI
                 handler.AppendFormatted(B, "X2");
                 return handler.ToStringAndClear();
             }
+
             else
             {
                 // Helper to get the numeric list separator for a given culture.
@@ -67,3 +69,5 @@ namespace Windows.UI
         }
     }
 }
+
+#nullable restore

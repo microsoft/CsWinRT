@@ -307,7 +307,7 @@ internal static class ComponentFactory
         string evtName = evt.GetRawName();
         string evtType = evt.EventType is null
             ? string.Empty
-            : TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, false).Format();
+            : TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, false, annotateStrings: true).Format();
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -340,7 +340,7 @@ internal static class ComponentFactory
         }
 
         TypeSemantics semantics = TypeSemanticsFactory.Get(returnType);
-        TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true, annotateStrings: true);
     }
 
     private static string GetFactoryPropertyType(ProjectionEmitContext context, PropertyDefinition prop)
@@ -353,7 +353,7 @@ internal static class ComponentFactory
         }
 
         TypeSemantics semantics = TypeSemanticsFactory.Get(sig);
-        return TypedefNameWriter.WriteTypeName(context, semantics, TypedefNameType.Projected, true).Format();
+        return TypedefNameWriter.WriteTypeName(context, semantics, TypedefNameType.Projected, true, annotateStrings: true).Format();
     }
 
     /// <inheritdoc cref="WriteFactoryMethodParameters(IndentedTextWriter, ProjectionEmitContext, MethodDefinition, bool)"/>
@@ -386,7 +386,7 @@ internal static class ComponentFactory
 
             if (includeTypes)
             {
-                IndentedTextWriterCallback projectedType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(sig.ParameterTypes[i]), TypedefNameType.Projected, true);
+                IndentedTextWriterCallback projectedType = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(sig.ParameterTypes[i]), TypedefNameType.Projected, true, annotateStrings: true);
                 writer.Write($"{projectedType} {paramName}");
             }
             else

@@ -123,7 +123,7 @@ internal static partial class ClassMembersFactory
             {
                 writer.WriteIf(i > 0, ", ");
 
-                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true, annotateStrings: true);
             }
             writer.Write(">");
         }
