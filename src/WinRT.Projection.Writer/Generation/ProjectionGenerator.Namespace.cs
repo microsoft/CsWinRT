@@ -300,7 +300,14 @@ internal sealed partial class ProjectionGenerator
         // Output to file
         string filename = ns + ".cs";
         string fullPath = Path.Combine(_settings.OutputFolder, filename);
-        writer.FlushToFile(fullPath);
+        if (_settings.ReferenceProjection)
+        {
+            File.WriteAllText(fullPath, StringNullability.Annotate(writer.ToString()));
+        }
+        else
+        {
+            writer.FlushToFile(fullPath);
+        }
         return true;
     }
 

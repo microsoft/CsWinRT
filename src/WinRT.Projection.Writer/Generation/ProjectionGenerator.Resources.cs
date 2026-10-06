@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
@@ -66,7 +67,9 @@ internal sealed partial class ProjectionGenerator
             string header = MetadataAttributeFactory.GetFileHeader();
 
             string outPath = Path.Combine(_settings.OutputFolder, fileName);
-            File.WriteAllText(outPath, header + content);
+            File.WriteAllText(outPath, _settings.ReferenceProjection
+                ? header + "#nullable disable annotations\n" + StringNullability.Annotate(content)
+                : header + content);
         }
     }
 }

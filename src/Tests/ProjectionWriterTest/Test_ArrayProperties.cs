@@ -39,7 +39,7 @@ public class Test_ArrayProperties
             if (referenceProjection)
             {
                 StringAssert.Contains(source, "int[] Values");
-                StringAssert.Contains(source, "string[] Names");
+                StringAssert.Contains(source, "string\n#nullable disable annotations\n[] Names");
                 return;
             }
 
