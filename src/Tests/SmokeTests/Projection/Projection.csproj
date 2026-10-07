@@ -25,7 +25,6 @@
       assembly under 'ref' rather than to the forwarder a project reference would give.
     -->
     <IsPackable>true</IsPackable>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackProjectionAssets</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,28 +42,14 @@
       at a deterministic, sibling output path.
     -->
     <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\Authoring\bin\$(Configuration)\$(TargetFramework)\Authoring.winmd" />
+
+    <!--
+      Lay the package out the way a real Windows Runtime projection package is laid out. The reference assembly
+      is packed under 'ref' by default ('CsWinRTPackReferenceProjection'), this metadata goes under 'metadata',
+      and the targets file hands that metadata back to a consumer, as a projection package's targets do.
+      The 'ComponentUsingProjection' smoke test relies on this layout, so 'run-smoke-tests.ps1' asserts on it.
+    -->
+    <CsWinRTPackedWinMD Include="@(CsWinRTInputs)" />
+    <None Include="Projection.targets" Pack="true" PackagePath="buildTransitive\$(TargetFramework)\" />
   </ItemGroup>
-
-  <!--
-    Lay the package out the way a real Windows Runtime projection package is laid out. None of this is
-    automatic: the build replaces '@(IntermediateAssembly)' with the forwarder, so the SDK packs only that
-    (as 'lib'), and the reference assembly, the metadata and the targets that feed it back to a consumer
-    all have to be placed explicitly.
-
-    Getting this layout right is the point of the 'ComponentUsingProjection' smoke test, which is why
-    'run-smoke-tests.ps1' asserts on it rather than trusting it.
-  -->
-  <Target Name="_PackProjectionAssets" DependsOnTargets="Build" Returns="@(TfmSpecificPackageFile)">
-    <ItemGroup>
-
-      <!-- The reference assembly a consumer compiles against -->
-      <TfmSpecificPackageFile Include="$(TargetDir)ref\$(AssemblyName).dll" PackagePath="ref\$(TargetFramework)\" />
-
-      <!-- The metadata the consumer's projection generator regenerates the implementation from -->
-      <TfmSpecificPackageFile Include="@(CsWinRTInputs)" PackagePath="metadata\" />
-
-      <!-- Contributes that metadata to the consuming project, as a projection package's targets do -->
-      <TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)Projection.targets" PackagePath="buildTransitive\$(TargetFramework)\" />
-    </ItemGroup>
-  </Target>
 </Project>
