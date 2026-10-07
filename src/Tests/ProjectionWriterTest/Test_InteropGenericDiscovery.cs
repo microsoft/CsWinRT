@@ -292,6 +292,7 @@ public class Test_InteropGenericDiscovery
             string library = ProjectionWriterRunner.CompileSources(
                 ["""
                 using System.Collections.Generic;
+                using System.Collections;
                 using Compiler;
                 using Windows.Foundation;
 
@@ -302,6 +303,12 @@ public class Test_InteropGenericDiscovery
                     private readonly HashSet<Symbol> symbols = new(SymbolEqualityComparer.Default);
 
                     public object CreateFromGenericMethod() => Factory.Create<int>();
+                }
+
+                public sealed class CompilerEnumerable : IEnumerable<Symbol>
+                {
+                    public IEnumerator<Symbol> GetEnumerator() => throw new System.NotImplementedException();
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
                 }
 
                 public sealed class ViewModel : IStringable
@@ -327,6 +334,9 @@ public class Test_InteropGenericDiscovery
             (int exitCode, string log) = RunGenerator(directory, app, additionalReferences: [library]);
 
             Assert.AreEqual(0, exitCode, log);
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0050");
+            StringAssert.Contains(log, "System.Collections.Generic.IEnumerable`1<Compiler.Symbol>");
+            StringAssert.Contains(log, "Mixed.CompilerEnumerable");
             StringAssert.Contains(log, "CSWINRTINTEROPGEN0065");
             Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
                 .Any(type => type.StartsWith("Mixed.ViewModel,", StringComparison.Ordinal)), log);
