@@ -55,7 +55,7 @@ internal static class IMethodDefOrRefExtensions
                 }
 
                 // Cached generic instances can be visible only through field accesses, without locals or allocations
-                foreach (TypeSignature fieldType in definition.EnumerateFieldAccessTypes(runtimeContext))
+                foreach (TypeSignature fieldType in definition.EnumerateFieldAccessTypes())
                 {
                     yield return fieldType;
                 }

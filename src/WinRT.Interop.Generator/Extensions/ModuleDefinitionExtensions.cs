@@ -392,7 +392,7 @@ internal static partial class ModuleDefinitionExtensions
         foreach (MethodSpecification specification in module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
             GenericContext genericContext = new(
-                type: specification.DeclaringType?.ToTypeSignature(module.RuntimeContext) as GenericInstanceTypeSignature,
+                type: (specification.DeclaringType as TypeSpecification)?.Signature as GenericInstanceTypeSignature,
                 method: specification.Signature);
 
             foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes(module.RuntimeContext))

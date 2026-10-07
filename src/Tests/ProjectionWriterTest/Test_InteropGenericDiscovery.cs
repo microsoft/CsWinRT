@@ -262,6 +262,82 @@ public class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    public void MixedAssembly_UnresolvedPrivateImplementationDependencyDoesNotBlockRuntimeTypes()
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropMixedAssemblyTest_").FullName;
+
+        try
+        {
+            string dependency = ProjectionWriterRunner.CompileSources(
+                ["""
+                using System.Collections.Generic;
+
+                namespace Compiler;
+
+                public sealed class Symbol;
+
+                public sealed class SymbolEqualityComparer : IEqualityComparer<Symbol>
+                {
+                    public static readonly SymbolEqualityComparer Default = new();
+                    public bool Equals(Symbol? x, Symbol? y) => ReferenceEquals(x, y);
+                    public int GetHashCode(Symbol obj) => obj.GetHashCode();
+                }
+
+                public static class Factory
+                {
+                    public static T Create<T>() => default!;
+                }
+                """],
+                Path.Combine(directory, "Compiler.dll"));
+            string library = ProjectionWriterRunner.CompileSources(
+                ["""
+                using System.Collections.Generic;
+                using Compiler;
+                using Windows.Foundation;
+
+                namespace Mixed;
+
+                public sealed class Generator
+                {
+                    private readonly HashSet<Symbol> symbols = new(SymbolEqualityComparer.Default);
+
+                    public object CreateFromGenericMethod() => Factory.Create<int>();
+                }
+
+                public sealed class ViewModel : IStringable
+                {
+                    public override string ToString() => "view model";
+                }
+                """],
+                Path.Combine(directory, "Mixed.dll"),
+                additionalReferences: [dependency]);
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Program
+                {
+                    public static void Main() => _ = new Mixed.ViewModel();
+                }
+                """],
+                Path.Combine(directory, "MixedApp.dll"),
+                outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [library, dependency]);
+
+            File.Delete(dependency);
+
+            (int exitCode, string log) = RunGenerator(directory, app, additionalReferences: [library]);
+
+            Assert.AreEqual(0, exitCode, log);
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0065");
+            Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
+                .Any(type => type.StartsWith("Mixed.ViewModel,", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public void UnknownExcludedAssembly_RespectsWarningsAsErrors(bool treatWarningsAsErrors)
