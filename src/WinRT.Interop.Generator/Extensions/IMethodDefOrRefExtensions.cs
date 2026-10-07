@@ -45,13 +45,30 @@ internal static class IMethodDefOrRefExtensions
                 // Look for all 'newobj' instructions and gather the object types
                 foreach (ITypeDefOrRef objectType in definition.EnumerateNewobjTypes())
                 {
-                    yield return objectType.ToTypeSignature(runtimeContext);
+                    // Only type specifications can carry constructed generic arguments. Resolving
+                    // ordinary declaring types cannot contribute any signatures to generic discovery.
+                    if (objectType is TypeSpecification { Signature: { } objectTypeSignature })
+                    {
+                        yield return objectTypeSignature;
+                    }
                 }
 
                 // Look for all 'newarr' instructions and gather the array types
                 foreach (ITypeDefOrRef elementType in definition.EnumerateNewarrElementTypes())
                 {
-                    yield return elementType.ToTypeSignature(runtimeContext).MakeSzArrayType();
+                    TypeSignature? elementTypeSignature = elementType switch
+                    {
+                        TypeSpecification { Signature: { } arrayElementSignature } => arrayElementSignature,
+                        TypeDefinition typeDefinition => typeDefinition.ToTypeSignature(typeDefinition.IsValueType),
+                        _ when elementType.TryResolve(runtimeContext, out TypeDefinition? typeDefinition) =>
+                            elementType.ToTypeSignature(typeDefinition.IsValueType),
+                        _ => null
+                    };
+
+                    if (elementTypeSignature is not null)
+                    {
+                        yield return elementTypeSignature.MakeSzArrayType();
+                    }
                 }
 
                 // Cached generic instances can be visible only through field accesses, without locals or allocations

@@ -276,6 +276,12 @@ public class Test_InteropGenericDiscovery
 
                 public sealed class Symbol;
 
+                public readonly struct LinePositionSpan
+                {
+                    public LinePositionSpan(int value) => Value = value;
+                    public int Value { get; }
+                }
+
                 public sealed class SymbolEqualityComparer : IEqualityComparer<Symbol>
                 {
                     public static readonly SymbolEqualityComparer Default = new();
@@ -303,6 +309,8 @@ public class Test_InteropGenericDiscovery
                     private readonly HashSet<Symbol> symbols = new(SymbolEqualityComparer.Default);
 
                     public object CreateFromGenericMethod() => Factory.Create<int>();
+                    public object CreateCompilerValue() => new LinePositionSpan(0);
+                    public object CreateCompilerValues() => new LinePositionSpan[1];
                 }
 
                 public sealed class CompilerEnumerable : IEnumerable<Symbol>
@@ -388,6 +396,8 @@ public class Test_InteropGenericDiscovery
                 ["namespace Missing; public sealed class Dependency;"],
                 Path.Combine(directory, "Missing.dll"));
             string foreignSource = """
+                using System.Collections.Generic;
+
                 namespace Foreign;
 
                 public sealed class Outer<T>
@@ -398,7 +408,7 @@ public class Test_InteropGenericDiscovery
                 public sealed class Inner<T>
                 {
                     public static readonly object Cached = Cache<T>.Value;
-                    public object Create() => new Missing.Dependency();
+                    public List<Missing.Dependency> Create() => [];
                 }
 
                 public static class Cache<T>
@@ -454,6 +464,7 @@ public class Test_InteropGenericDiscovery
                     .. optIn ? new[] { "--marshalling-enabled-assembly-names subdir\\FOREIGN.DLL" } : [],
                     .. optOut ? new[] { "--marshalling-disabled-assembly-names Foreign.dll,WinRT.Sdk.Projection.dll" } : []
                 ],
+                treatWarningsAsErrors: !succeeds,
                 // 'all' also scans every BCL assembly, which can exceed the default limit on loaded CI agents.
                 timeout: mode == "all" ? TimeSpan.FromMinutes(2) : null);
 
@@ -465,12 +476,13 @@ public class Test_InteropGenericDiscovery
             if (!succeeds)
             {
                 Assert.AreNotEqual(0, exitCode, log);
-                StringAssert.Contains(log, "CSWINRTINTEROPGEN0015");
+                StringAssert.Contains(log, "CSWINRTINTEROPGEN0065");
                 StringAssert.Contains(log, "Missing.Dependency");
                 return;
             }
 
             Assert.AreEqual(0, exitCode, log);
+            Assert.IsFalse(log.Contains("Missing.Dependency", StringComparison.Ordinal), log);
             HashSet<string> types = GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"));
             Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Node`1[[System.Int32,", StringComparison.Ordinal)), log);
 
