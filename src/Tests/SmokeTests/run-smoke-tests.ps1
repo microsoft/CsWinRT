@@ -50,6 +50,10 @@
         Cold output-path queries must not compile it. Single-node and parallel graph builds,
         incremental changes, clean, NoBuild publish and explicit generation use the real tools.
 
+      * PrivateAssets: a packaged runtime/tooling library has a private compiler dependency that is
+        available to its build but does not flow to its consumer. Interop discovery must process the
+        runtime library without requiring the private dependency in the application graph.
+
       * WindowsSdkProjection: a class library generates the base Windows SDK reference projection
         from the 'Microsoft.Windows.SDK.Contracts' '.winmd' files, exactly as the
         'Microsoft.Windows.SDK.NET.Ref' projection package is produced. This validates that the full
@@ -75,7 +79,8 @@
 
 .PARAMETER Test
     Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization',
-    'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', or 'All'
+    'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'PrivateAssets', 'WindowsSdkProjection',
+    'WindowsSdkXamlProjection', or 'All'
     (the default). The CI runs each test as its own step (passing a single value), so an individual failure is
     reported in isolation; local builds use the default 'All'.
 
@@ -108,7 +113,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
+    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'PrivateAssets', 'WindowsSdkProjection', 'WindowsSdkXamlProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -127,6 +132,10 @@ if ($Test -eq 'GraphBuild' -and $Runtime -ne 'CoreCLR') {
     throw "The GraphBuild scheduling smoke test requires '-Runtime CoreCLR'."
 }
 
+if ($Test -eq 'PrivateAssets' -and $Runtime -ne 'CoreCLR') {
+    throw "The PrivateAssets smoke test requires '-Runtime CoreCLR'."
+}
+
 # Native AOT publishes are always x64: the NuGet publish job that runs the smoke tests only runs
 # on an x64 host.
 $nativeAotRid = 'win-x64'
@@ -143,6 +152,9 @@ $projectionLibraryProject = [IO.Path]::Combine($smokeTestsRoot, 'ProjectionLibra
 $projectionLibraryConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'ProjectionLibraryConsumption', 'ProjectionLibraryConsumption.csproj')
 $windowsSdkProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkProjection', 'WindowsSdkProjection.csproj')
 $windowsSdkXamlProjectionProject = [IO.Path]::Combine($smokeTestsRoot, 'WindowsSdkXamlProjection', 'WindowsSdkXamlProjection.csproj')
+$privateAssetsDependencyProject = [IO.Path]::Combine($smokeTestsRoot, 'PrivateAssetsDependency', 'PrivateAssetsDependency.csproj')
+$privateAssetsLibraryProject = [IO.Path]::Combine($smokeTestsRoot, 'PrivateAssetsLibrary', 'PrivateAssetsLibrary.csproj')
+$privateAssetsConsumptionProject = [IO.Path]::Combine($smokeTestsRoot, 'PrivateAssetsConsumption', 'PrivateAssetsConsumption.csproj')
 
 # Resolve the package source to an absolute path (NuGet rejects relative '--source' values).
 $resolvedPackageSource = (Resolve-Path -Path $PackageSource).Path
@@ -464,6 +476,91 @@ function Invoke-AuthoringSmokeTest {
     }
 
     Assert-WinMDDefinesType -Path $authoringWinMD.FullName -Namespace 'Authoring' -TypeName 'Greeter'
+}
+
+# PrivateAssets: pack a compiler-host dependency and a mixed runtime/tooling library that consumes it
+# privately, then build a consumer from an isolated package cache. The compiler dependency must remain
+# available to the producer but absent from the consumer graph while interop discovery analyzes the library.
+function Invoke-PrivateAssetsSmokeTest {
+    Write-Host "`n=== PrivateAssets smoke test ($Runtime) ===" -ForegroundColor Green
+
+    $runId = [Guid]::NewGuid().ToString('N').Substring(0, 8)
+    $runRoot = Join-Path $smokeTestsRoot "obj\pa-$runId"
+    $feed = Join-Path $runRoot 'feed'
+    $producerPackages = Join-Path $runRoot 'p'
+    $consumerPackages = Join-Path $runRoot 'c'
+    $consumerOutput = Join-Path $runRoot 'bin'
+    $consumerIntermediate = Join-Path $runRoot 'obj'
+    $version = "1.0.0-smoke.$runId"
+    $dependencyId = 'CsWinRT.SmokeTests.PrivateAssetsDependency'
+    $libraryId = 'CsWinRT.SmokeTests.PrivateAssetsLibrary'
+
+    New-Item -ItemType Directory -Path $feed -Force | Out-Null
+    Write-Host "PrivateAssets artifacts: '$runRoot'." -ForegroundColor DarkGray
+
+    $producerArgs = @(
+        "-p:PackageVersion=$version"
+        "-p:RestorePackagesPath=$producerPackages"
+    )
+    Invoke-Dotnet (@('pack', $privateAssetsDependencyProject, '--output', $feed) + $commonBuildArgs + $producerArgs)
+    Invoke-Dotnet (@(
+        'pack', $privateAssetsLibraryProject, '--output', $feed
+        "-p:PrivateAssetsPackageSource=$feed"
+        "-p:PrivateAssetsPackageVersion=$version"
+    ) + $commonBuildArgs + $producerArgs)
+
+    $dependencyPackage = Join-Path $feed "$dependencyId.$version.nupkg"
+    $libraryPackage = Join-Path $feed "$libraryId.$version.nupkg"
+    if (-not (Test-Path -LiteralPath $dependencyPackage -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $libraryPackage -PathType Leaf)) {
+        throw "PrivateAssets smoke-test packages were not produced in '$feed'."
+    }
+
+    $archive = [IO.Compression.ZipFile]::OpenRead($libraryPackage)
+    try {
+        $nuspecs = @($archive.Entries | Where-Object { $_.FullName.EndsWith('.nuspec', [StringComparison]::OrdinalIgnoreCase) })
+        if ($nuspecs.Count -ne 1) {
+            throw "Expected exactly one nuspec in '$libraryPackage'."
+        }
+        $nuspec = $nuspecs[0]
+        $reader = [IO.StreamReader]::new($nuspec.Open())
+        try { $nuspecText = $reader.ReadToEnd() }
+        finally { $reader.Dispose() }
+    }
+    finally { $archive.Dispose() }
+
+    if ($nuspecText.Contains($dependencyId, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "The private compiler dependency flowed into '$libraryPackage'."
+    }
+
+    Invoke-Dotnet (@(
+        'build', $privateAssetsConsumptionProject
+        "-p:PrivateAssetsPackageSource=$feed"
+        "-p:PrivateAssetsPackageVersion=$version"
+        "-p:RestorePackagesPath=$consumerPackages"
+        "-p:OutputPath=$consumerOutput\"
+        "-p:BaseIntermediateOutputPath=$consumerIntermediate\"
+    ) + $commonBuildArgs)
+
+    $assetsPath = Join-Path $consumerIntermediate 'project.assets.json'
+    if (-not (Test-Path -LiteralPath $assetsPath -PathType Leaf)) {
+        throw "The PrivateAssets consumer did not produce '$assetsPath'."
+    }
+    if ((Get-Content -LiteralPath $assetsPath -Raw).Contains($dependencyId, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "The private compiler dependency flowed into the consumer restore graph."
+    }
+    if (Test-Path -LiteralPath (Join-Path $consumerOutput 'PrivateAssetsDependency.dll')) {
+        throw "The private compiler dependency was copied to the consumer output."
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $consumerOutput 'WinRT.Interop.dll') -PathType Leaf)) {
+        throw "Interop generation did not produce 'WinRT.Interop.dll' for the PrivateAssets consumer."
+    }
+
+    $exe = Join-Path $consumerOutput 'PrivateAssetsConsumption.exe'
+    & $exe
+    if ($LASTEXITCODE -ne 0) {
+        throw "The PrivateAssets consumer failed with exit code $LASTEXITCODE."
+    }
 }
 
 # Projection: build a reference projection for a third-party component's '.winmd' (CoreCLR only). This
@@ -943,6 +1040,10 @@ if ($Test -in @('All', 'ProjectionReferences')) {
 
 if ($Runtime -eq 'CoreCLR' -and $Test -in @('All', 'GraphBuild')) {
     & (Join-Path $smokeTestsRoot 'GraphBuild\run-graph-build-test.ps1') -PackageSource $resolvedPackageSource -PackageVersion $PackageVersion -Configuration $Configuration
+}
+
+if ($Runtime -eq 'CoreCLR' -and $Test -in @('All', 'PrivateAssets')) {
+    Invoke-PrivateAssetsSmokeTest
 }
 
 if ($Test -in @('All', 'WindowsSdkProjection')) {
