@@ -5,7 +5,7 @@ using PrivateAssetsCompiler;
 
 namespace PrivateAssetsLibrary;
 
-public sealed class GeneratorLike
+internal sealed class GeneratorLike
 {
     private readonly HashSet<Symbol> symbols = new(SymbolEqualityComparer.Default);
 
@@ -18,7 +18,7 @@ public sealed class GeneratorLike
     public KeyValuePair<string, Symbol>[] CreateCompilerPairs() => [];
 }
 
-public sealed class CompilerEnumerable : IEnumerable<Symbol>
+internal sealed class CompilerEnumerable : IEnumerable<Symbol>
 {
     public IEnumerator<Symbol> GetEnumerator() => throw new NotImplementedException();
 
