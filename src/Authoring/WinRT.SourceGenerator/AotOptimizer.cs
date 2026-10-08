@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
@@ -1191,6 +1191,7 @@ namespace Generator
                     node is AssignmentExpressionSyntax ||
                     node is VariableDeclarationSyntax ||
                     node is PropertyDeclarationSyntax ||
+                    (node is MethodDeclarationSyntax methodDeclaration && methodDeclaration.ExpressionBody != null) ||
                     node is ReturnStatementSyntax ||
                     node is CollectionExpressionSyntax;
         }
@@ -1367,6 +1368,15 @@ namespace Generator
                     }
                 }
             }
+            else if (context.Node is MethodDeclarationSyntax { ExpressionBody: not null } methodDeclaration)
+            {
+                var methodReturnSymbol = context.SemanticModel.GetSymbolInfo(methodDeclaration.ReturnType).Symbol as ITypeSymbol
+                    ?? context.SemanticModel.GetDeclaredSymbol(methodDeclaration)?.ReturnType;
+                if (methodReturnSymbol is not null)
+                {
+                    AddVtableAttributesForExpression(methodDeclaration.ExpressionBody.Expression, methodReturnSymbol);
+                }
+            }
 #if ROSLYN_4_12_0_OR_GREATER
             else if (context.Node is CollectionExpressionSyntax collectionExpression)
             {
@@ -1401,9 +1411,9 @@ namespace Generator
 
             return vtableAttributes.ToImmutableArray();
 
-            // Looks through parenthesized, cast, conditional (ternary) and switch expressions to reach the concrete
+            // Looks through parenthesized, cast, conditional (ternary), switch, coalesce, and null-suppressed expressions to reach the concrete
             // leaf expressions that actually flow into the given target, gathering vtable information for each of them.
-            // This is required because eg. the type of a conditional or switch expression is just the common type of
+            // This is required because eg. the type of a conditional, switch, or coalesce expression is just the common type of
             // all of its branches (usually 'object' or an interface), which hides the concrete types that are the ones
             // being boxed or cast and thus needing CCW vtable entries.
             void AddVtableAttributesForExpression(ExpressionSyntax expression, ITypeSymbol convertedToTypeSymbol, bool isGeneratedBindableCustomPropertyClass = false)
@@ -1413,12 +1423,19 @@ namespace Generator
                     case ParenthesizedExpressionSyntax parenthesizedExpression:
                         AddVtableAttributesForExpression(parenthesizedExpression.Expression, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
                         break;
+                    case PostfixUnaryExpressionSyntax postfixUnaryExpression when postfixUnaryExpression.IsKind(SyntaxKind.SuppressNullableWarningExpression):
+                        AddVtableAttributesForExpression(postfixUnaryExpression.Operand, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        break;
                     // The cast target type can itself be a concrete type being boxed or cast (eg. '(List<int>)value'), so
                     // process it directly, but also look through to the operand to catch the concrete type being cast to
                     // something more general (eg. '(object)new List<string>()'), which the cast type alone would hide.
                     case CastExpressionSyntax castExpression:
                         AddVtableAttributesForType(context.SemanticModel.GetTypeInfo(castExpression), convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
                         AddVtableAttributesForExpression(castExpression.Expression, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        break;
+                    case BinaryExpressionSyntax binaryExpression when binaryExpression.IsKind(SyntaxKind.CoalesceExpression):
+                        AddVtableAttributesForExpression(binaryExpression.Left, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
+                        AddVtableAttributesForExpression(binaryExpression.Right, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
                         break;
                     case ConditionalExpressionSyntax conditionalExpression:
                         AddVtableAttributesForExpression(conditionalExpression.WhenTrue, convertedToTypeSymbol, isGeneratedBindableCustomPropertyClass);
