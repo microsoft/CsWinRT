@@ -326,6 +326,19 @@ namespace WinRT.SourceGenerator
                                 }
                             }
                         }
+                        else if (context.Node is MethodDeclarationSyntax methodDeclaration && methodDeclaration.ExpressionBody is not null)
+                        {
+                            var returnSymbol = context.SemanticModel.GetTypeInfo(methodDeclaration.ExpressionBody.Expression);
+                            var methodReturnSymbol = context.SemanticModel.GetSymbolInfo(methodDeclaration.ReturnType).Symbol;
+                            if (methodReturnSymbol is ITypeSymbol typeSymbol)
+                            {
+                                if (IsTypeOnLookupTable(returnSymbol, typeSymbol, out var implementsOnlyCustomMappedInterface))
+                                {
+                                    ReportEnableUnsafeDiagnostic(context.ReportDiagnostic, returnSymbol.Type, methodDeclaration.GetLocation(), !implementsOnlyCustomMappedInterface);
+                                    return;
+                                }
+                            }
+                        }
 
                         bool IsTypeOnLookupTable(Microsoft.CodeAnalysis.TypeInfo instantiatedType, ITypeSymbol convertedToTypeSymbol, out bool implementsOnlyCustomMappedInterface)
                         {
@@ -418,7 +431,7 @@ namespace WinRT.SourceGenerator
                             implementsOnlyCustomMappedInterface = false;
                             return false;
                         }
-                    }, SyntaxKind.InvocationExpression, SyntaxKind.VariableDeclaration, SyntaxKind.PropertyDeclaration, SyntaxKind.ReturnStatement, SyntaxKind.SimpleAssignmentExpression);
+                    }, SyntaxKind.InvocationExpression, SyntaxKind.VariableDeclaration, SyntaxKind.PropertyDeclaration, SyntaxKind.ReturnStatement, SyntaxKind.MethodDeclaration, SyntaxKind.SimpleAssignmentExpression);
 
                     void ReportEnableUnsafeDiagnostic(Action<Diagnostic> reportDiagnostic, ISymbol symbol, Location location, bool implementsWinRTInterfaces)
                     {
