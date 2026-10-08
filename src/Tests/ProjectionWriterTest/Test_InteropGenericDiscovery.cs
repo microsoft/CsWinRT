@@ -311,6 +311,7 @@ public class Test_InteropGenericDiscovery
                     public object CreateFromGenericMethod() => Factory.Create<int>();
                     public object CreateCompilerValue() => new LinePositionSpan(0);
                     public object CreateCompilerValues() => new LinePositionSpan[1];
+                    public KeyValuePair<string, Symbol>[] CreateCompilerPairs() => [];
                 }
 
                 public sealed class CompilerEnumerable : IEnumerable<Symbol>
@@ -346,6 +347,8 @@ public class Test_InteropGenericDiscovery
             StringAssert.Contains(log, "System.Collections.Generic.IEnumerable`1<Compiler.Symbol>");
             StringAssert.Contains(log, "Mixed.CompilerEnumerable");
             StringAssert.Contains(log, "CSWINRTINTEROPGEN0065");
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0066");
+            StringAssert.Contains(log, "System.Collections.Generic.KeyValuePair`2<System.String, Compiler.Symbol>[]");
             Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
                 .Any(type => type.StartsWith("Mixed.ViewModel,", StringComparison.Ordinal)), log);
         }
