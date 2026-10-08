@@ -268,6 +268,7 @@ public class Test_InteropGenericDiscovery
 
         try
         {
+            string compilerHostDirectory = Directory.CreateDirectory(Path.Combine(directory, "compiler-host")).FullName;
             string dependency = ProjectionWriterRunner.CompileSources(
                 ["""
                 using System.Collections.Generic;
@@ -294,7 +295,7 @@ public class Test_InteropGenericDiscovery
                     public static T Create<T>() => default!;
                 }
                 """],
-                Path.Combine(directory, "Compiler.dll"));
+                Path.Combine(compilerHostDirectory, "Compiler.dll"));
             string library = ProjectionWriterRunner.CompileSources(
                 ["""
                 using System.Collections.Generic;
@@ -338,10 +339,9 @@ public class Test_InteropGenericDiscovery
                 outputKind: OutputKind.ConsoleApplication,
                 additionalReferences: [library, dependency]);
 
-            File.Delete(dependency);
-
             (int exitCode, string log) = RunGenerator(directory, app, additionalReferences: [library]);
 
+            Assert.IsTrue(File.Exists(dependency), "The private dependency must remain available to its compiler host.");
             Assert.AreEqual(0, exitCode, log);
             StringAssert.Contains(log, "CSWINRTINTEROPGEN0050");
             StringAssert.Contains(log, "System.Collections.Generic.IEnumerable`1<Compiler.Symbol>");
