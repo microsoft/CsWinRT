@@ -114,7 +114,10 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::check_hresult(::Microsoft::WRL::MakeAndInitialize<WrlAsyncAddition>(
             &operation, lhs + rhs, reinterpret_cast<WrlCompletedHandler*>(winrt::get_abi(observer))));
 
-        // The test's completion controller must not keep the native operation or its handler alive.
+        // Model the lost completion callbacks seen with PackageManager deployment operations. Here the caller's
+        // RCW owns the native operation's lifetime: collecting it while the task is pending destroys the operation
+        // and drops its completion handler. A strong ComPtr captured by this controller would preserve the operation
+        // independently of the RCW and mask the bug. Keep only a weak reference, resolving it when the test requests completion.
         ::Microsoft::WRL::WeakRef weak;
         winrt::check_hresult(operation.AsWeak(&weak));
         complete = [weak](int32_t hr)
