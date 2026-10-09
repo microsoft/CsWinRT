@@ -24,6 +24,7 @@ function Invoke-GraphMSBuild {
 
     $script:commandNumber++
     $log = Join-Path $profileRoot "$script:commandNumber-$Name.binlog"
+    $queryResult = Join-Path $profileRoot "$script:commandNumber-$Name.json"
     $args = @(
         'msbuild', $Project, '-nologo', '-v:quiet', '-nr:false', "-bl:$log"
         "-p:Configuration=$Configuration", '-p:Platform=AnyCPU'
@@ -34,6 +35,7 @@ function Invoke-GraphMSBuild {
         "-p:GraphBuildExtraReference=$extraReference"
         '-p:FindInvalidProjectReferences=true', '-p:RestoreUseStaticGraphEvaluation=true'
     ) + $Arguments
+    if ($Query) { $args += "-getResultOutputFile:$queryResult" }
 
     $output = (& dotnet @args 2>&1) -join [Environment]::NewLine
     $exitCode = $LASTEXITCODE
@@ -49,10 +51,11 @@ function Invoke-GraphMSBuild {
         return
     }
     if ($Query) {
-        $jsonStart = [regex]::Match($output, '(?m)^\{')
-        if (-not $jsonStart.Success) { throw "$Name returned no MSBuild query result: $output" }
-        if ($jsonStart.Index -gt 0) { Write-Host $output.Substring(0, $jsonStart.Index).TrimEnd() }
-        return $output.Substring($jsonStart.Index) | ConvertFrom-Json
+        if ($output) { Write-Host $output }
+        if (-not (Test-Path -LiteralPath $queryResult -PathType Leaf)) {
+            throw "$Name returned no MSBuild query result."
+        }
+        return Get-Content -LiteralPath $queryResult -Raw | ConvertFrom-Json
     }
     if ($output) { Write-Host $output }
 }

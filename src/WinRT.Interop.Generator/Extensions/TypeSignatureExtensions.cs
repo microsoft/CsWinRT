@@ -114,9 +114,17 @@ internal static class TypeSignatureExtensions
                 return false;
             }
 
-            // Recurse on all type arguments as well
-            if (signature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            // Recurse through wrappers such as arrays, pointers, and byref-s
+            if (signature is TypeSpecificationSignature typeSpecificationSignature)
             {
+                if (!typeSpecificationSignature.BaseType.IsFullyResolvable(runtimeContext, out _))
+                {
+                    return false;
+                }
+            }
+            else if (signature is GenericInstanceTypeSignature genericInstanceTypeSignature)
+            {
+                // Recurse on all type arguments as well
                 foreach (TypeSignature typeArgument in genericInstanceTypeSignature.TypeArguments)
                 {
                     if (!typeArgument.IsFullyResolvable(runtimeContext, out _))

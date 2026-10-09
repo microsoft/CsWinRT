@@ -21,6 +21,9 @@
       project sets them itself, exactly as a real component author would.
     -->
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!-- Plain producer packages opt out: they model a third-party library and its private compiler dependency. -->
+    <CsWinRTSmokeTestPackageReference Condition="'$(CsWinRTSmokeTestPackageReference)' == ''">true</CsWinRTSmokeTestPackageReference>
   </PropertyGroup>
 
   <!--
@@ -49,7 +52,7 @@
     <RestoreSources>$(CsWinRTPackageSource);$(CsWinRTDependenciesSource)</RestoreSources>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(CsWinRTSmokeTestPackageReference)' == 'true'">
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(CsWinRTPackageVersion)" />
   </ItemGroup>
 </Project>

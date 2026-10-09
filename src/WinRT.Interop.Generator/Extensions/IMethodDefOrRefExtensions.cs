@@ -45,13 +45,32 @@ internal static class IMethodDefOrRefExtensions
                 // Look for all 'newobj' instructions and gather the object types
                 foreach (ITypeDefOrRef objectType in definition.EnumerateNewobjTypes())
                 {
-                    yield return objectType.ToTypeSignature(runtimeContext);
+                    // Here we're mostly just interested in discovering constructed generics being
+                    // instantiated, which don't need resolution (since they're encoded as type
+                    // specifications). If we just have a type reference that can't be resolved,
+                    // we just skip it, rather than throwing. This is needed to avoid failing
+                    // generation entirely in cases where a package shipped a reference somewhere
+                    // to a private asset that's not being referenced by the consuming project.
+                    if (objectType.TryGetTypeSignature(
+                        context: runtimeContext,
+                        throwOnResolutionFailure: false,
+                        typeSignature: out TypeSignature? objectTypeSignature))
+                    {
+                        yield return objectTypeSignature;
+                    }
                 }
 
                 // Look for all 'newarr' instructions and gather the array types
                 foreach (ITypeDefOrRef elementType in definition.EnumerateNewarrElementTypes())
                 {
-                    yield return elementType.ToTypeSignature(runtimeContext).MakeSzArrayType();
+                    // Gracefully handle resolution failures (see notes above)
+                    if (elementType.TryGetTypeSignature(
+                        context: runtimeContext,
+                        throwOnResolutionFailure: false,
+                        typeSignature: out TypeSignature? elementTypeSignature))
+                    {
+                        yield return elementTypeSignature.MakeSzArrayType();
+                    }
                 }
 
                 // Cached generic instances can be visible only through field accesses, without locals or allocations

@@ -391,8 +391,17 @@ internal static partial class ModuleDefinitionExtensions
         // This will correctly detect that constructed 'List<int>' on the constructed return for the 'M<int>()' invocation.
         foreach (MethodSpecification specification in module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
+            TypeSignature? declaringTypeSignature = null;
+
+            // Try to get the signature from the method specification, without trying to resolve
+            // type definitions. Only type specifications can encode constructed generics anyway.
+            _ = specification.DeclaringType?.TryGetTypeSignature(
+                context: module.RuntimeContext,
+                throwOnResolutionFailure: false,
+                typeSignature: out declaringTypeSignature);
+
             GenericContext genericContext = new(
-                type: specification.DeclaringType?.ToTypeSignature(module.RuntimeContext) as GenericInstanceTypeSignature,
+                type: declaringTypeSignature as GenericInstanceTypeSignature,
                 method: specification.Signature);
 
             foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes(module.RuntimeContext))

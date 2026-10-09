@@ -255,10 +255,16 @@ internal static class MethodDefinitionExtensions
                     continue;
                 }
 
-                if (field.DeclaringType is ITypeDefOrRef declaringType)
+                // A constructed generic declaring type is encoded as a type specification and can
+                // contribute closed type arguments. Ordinary declaring types cannot contribute any
+                // generic or array signatures, and resolving them would make unrelated private
+                // dependencies a prerequisite for discovery. This is analogous logic as what
+                // we use when discovering 'newobj' instantiations when scanning method bodies.
+                if (field.DeclaringType?.TryGetTypeSignature(
+                    context: runtimeContext,
+                    throwOnResolutionFailure: false,
+                    typeSignature: out TypeSignature? declaringTypeSignature) is true)
                 {
-                    TypeSignature declaringTypeSignature = declaringType.ToTypeSignature(runtimeContext);
-
                     yield return declaringTypeSignature;
 
                     // Field parameters belong to the declaring type, not the accessing method's type
