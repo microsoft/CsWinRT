@@ -1273,14 +1273,20 @@ namespace winrt::TestComponentCSharp::implementation
         return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync);
     }
 
-    void Class::CompleteWrlAsync(int32_t hr)
+    IAsyncOperationWithProgress<uint32_t, uint32_t> Class::WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs,
+        AsyncOperationWithProgressCompletedHandler<uint32_t, uint32_t> const& observer)
+    {
+        return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync, observer);
+    }
+
+    bool Class::TryCompleteWrlAsync(int32_t hr)
     {
         if (!_completeWrlAsync)
         {
             winrt::throw_hresult(E_ILLEGAL_METHOD_CALL);
         }
         auto complete = std::move(_completeWrlAsync);
-        complete(hr);
+        return complete(hr);
     }
 
     Point Class::PointProperty()

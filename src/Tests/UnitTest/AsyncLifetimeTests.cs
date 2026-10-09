@@ -42,7 +42,7 @@ namespace UnitTest
             }
             else if (kind == 4)
             {
-                instance.CompleteWrlAsync(status == AsyncStatus.Error ? E_FAIL : 0);
+                Assert.True(instance.TryCompleteWrlAsync(status == AsyncStatus.Error ? E_FAIL : 0));
             }
             else
             {
@@ -85,6 +85,52 @@ namespace UnitTest
             }, 5000), "The completed task must release its WinRT operation.");
             GC.KeepAlive(task);
             GC.KeepAlive(instance);
+        }
+
+        [Theory]
+        [InlineData(AsyncStatus.Completed, false)]
+        [InlineData(AsyncStatus.Error, false)]
+        [InlineData(AsyncStatus.Completed, true)]
+        [InlineData(AsyncStatus.Error, true)]
+        public void WrlCompletionHandlerCalledAfterCollection(AsyncStatus status, bool cancellable)
+        {
+            var instance = new Class();
+            using var cancellation = new CancellationTokenSource();
+            var called = new TaskCompletionSource<AsyncStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int callbackCount = 0;
+            var task = StartObservedWrlAddition(instance, (_, completedStatus) =>
+            {
+                Interlocked.Increment(ref callbackCount);
+                called.TrySetResult(completedStatus);
+            }, cancellable ? cancellation.Token : CancellationToken.None);
+
+            Collect();
+            Assert.False(task.IsCompleted);
+            Assert.Equal(0, callbackCount);
+
+            const int E_FAIL = unchecked((int)0x80004005);
+            _ = instance.TryCompleteWrlAsync(status == AsyncStatus.Error ? E_FAIL : 0);
+            Assert.True(called.Task.Wait(5000), "The WRL completion handler was not called after collection.");
+            Assert.Equal(status, called.Task.Result);
+            Assert.Equal(1, callbackCount);
+            if (status == AsyncStatus.Completed)
+            {
+                Assert.True(task.Wait(5000));
+                Assert.Equal(50u, task.Result);
+            }
+            else
+            {
+                var error = Assert.Throws<AggregateException>(() => task.Wait(5000));
+                Assert.Equal(E_FAIL, error.InnerException.HResult);
+            }
+            GC.KeepAlive(instance);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Task<uint> StartObservedWrlAddition(Class instance,
+            AsyncOperationWithProgressCompletedHandler<uint, uint> observer, CancellationToken token)
+        {
+            return instance.WrlAddAsyncWithProgress(42, 8, observer).AsTask(token);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

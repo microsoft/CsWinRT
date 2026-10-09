@@ -6,5 +6,6 @@
 namespace winrt::TestComponentCSharp::implementation
 {
     Windows::Foundation::IAsyncOperationWithProgress<uint32_t, uint32_t> CreateWrlAsyncAddition(
-        uint32_t lhs, uint32_t rhs, std::function<void(int32_t)>& complete);
+        uint32_t lhs, uint32_t rhs, std::function<bool(int32_t)>& complete,
+        Windows::Foundation::AsyncOperationWithProgressCompletedHandler<uint32_t, uint32_t> const& observer = nullptr);
 }
