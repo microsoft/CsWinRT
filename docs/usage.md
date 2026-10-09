@@ -197,9 +197,32 @@ Below are the most commonly used MSBuild properties. For a full list, refer to t
 | `CsWinRTAnalyzeNetStandardAssemblies` | `true` | Allows .NET Standard assemblies to participate in interop discovery. Set to `false` to skip them, including explicitly opted-in assemblies. |
 | `CsWinRTMarshallingEnabledAssembly` | *(item)* | Explicitly include named assemblies in discovery, subject to framework exclusions and explicit opt-outs. |
 | `CsWinRTMarshallingDisabledAssembly` | *(item)* | Explicitly exclude named assemblies from discovery in every mode. |
+| `CsWinRTGeneratorEnableIncrementalGeneration` | `true` | Reuse a previously generated interop assembly when its emission inputs are unchanged. Set to `false` to always emit. |
 | `CsWinRTIncludes` | *(empty)* | Semicolon-separated namespaces to include in the projection. |
 | `CsWinRTExcludes` | `Windows;Microsoft` | Semicolon-separated namespaces to exclude from the projection. |
 | `CsWinRTMessageImportance` | `normal` | Build message verbosity (`normal` or `high`). |
+
+### Incremental interop generation
+
+The interop generator always runs discovery and input validation. It then compares a deterministic
+fingerprint of the discovered types, interface sets, type hierarchy, assembly identities, relevant type
+metadata, and generator options with `WinRT.Interop.cache` beside the generated `WinRT.Interop.dll`.
+The generator build and the contents of the runtime, framework, and projection dependencies are also
+part of the fingerprint, including projection IID data and other implementation details.
+
+When the fingerprint matches and the cached DLL passes a content checksum, emission is skipped. Application method-body changes and unrelated managed types therefore need not regenerate marshalling code. The cached DLL's MVID is refreshed from the current inputs, preserving byte-for-byte equivalence with a fresh generation, including after interop-neutral edits. Its timestamp is updated so MSBuild can consider the output up to date. Missing, damaged, or incompatible cache records and outputs cause normal generation; the cache record is published only after successful emission and is removed on clean. When `CsWinRTGeneratorLogDirectory` is set, the generator emits normally instead of reusing the cache so its report includes the generated type and IL counts.
+
+To bypass cache reads and writes (without disabling the generator), use:
+
+```xml
+<PropertyGroup>
+  <CsWinRTGeneratorEnableIncrementalGeneration>false</CsWinRTGeneratorEnableIncrementalGeneration>
+</PropertyGroup>
+```
+
+Direct tool invocations use `--enable-incremental-generation False` in the response file.
+Replaying a debug-repro ZIP creates a new extraction directory each time; use a fixed, extracted
+response file and output directory when measuring incremental generation.
 
 ### Marshalling mode
 

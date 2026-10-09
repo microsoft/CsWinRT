@@ -41,6 +41,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Validate runtime compatibility and retain the tool's incremental behavior by default -->
     <CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion Condition="'$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion>
     <CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References Condition="'$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References>
+    <!-- Reuse interop emission after discovery when its semantic inputs have not changed. Set false to force emission. -->
     <CsWinRTGeneratorEnableIncrementalGeneration Condition="'$(CsWinRTGeneratorEnableIncrementalGeneration)' == ''">true</CsWinRTGeneratorEnableIncrementalGeneration>
     <CsWinRTGeneratorTreatWarningsAsErrors Condition="'$(CsWinRTGeneratorTreatWarningsAsErrors)' == ''">false</CsWinRTGeneratorTreatWarningsAsErrors>
     <CsWinRTGeneratorMaxDegreesOfParallelism Condition="'$(CsWinRTGeneratorMaxDegreesOfParallelism)' == ''">-1</CsWinRTGeneratorMaxDegreesOfParallelism>
@@ -431,6 +432,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
       <FileWrites Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
       <FileWrites Include="$(_CsWinRTGeneratorLogPath)" Condition="'$(_CsWinRTGeneratorLogPath)' != ''" />
+      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorInteropAssemblyPath)', '.cache'))"/>
     </ItemGroup>
   </Target>
 
