@@ -325,7 +325,7 @@ internal static partial class ImplGenerator
     /// <summary>
     /// Collects the full names of the non-public interfaces implemented by the abstract base classes that CsWinRT
     /// generates for authoring Windows Runtime types declared in existing metadata (a projection built with
-    /// <c>CsWinRTImplementWinMDTypes</c>). Those bases carry <c>[WindowsRuntimeImplementableClass]</c>.
+    /// <c>CsWinRTImplementWinMDTypes</c>). The reference projection records those bases in its assembly metadata.
     /// </summary>
     /// <param name="inputModule">The input module.</param>
     /// <returns>The full names of the non-public interfaces to forward. Empty for a regular projection.</returns>
@@ -371,15 +371,13 @@ internal static partial class ImplGenerator
 
     /// <summary>
     /// Checks whether a type is one of the abstract base classes CsWinRT generates for authoring Windows Runtime
-    /// types declared in existing metadata, i.e. one marked <c>[WindowsRuntimeImplementableClass]</c>.
+    /// types declared in existing metadata, as recorded in the assembly metadata of the reference projection.
     /// </summary>
     /// <param name="type">The type to inspect.</param>
     /// <returns>Whether the type is a generated implementable base class.</returns>
     private static bool IsImplementableBaseClass(TypeDefinition type)
     {
-        return type is { IsPublic: true, IsAbstract: true, IsClass: true }
-            && (type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeImplementableClassAttribute"u8)
-                || type.HasCustomAttribute("WindowsRuntime"u8, "WindowsRuntimeImplementableClassFactoryAttribute"u8));
+        return type is { IsPublic: true, IsAbstract: true, IsClass: true } && ImplementableClassMetadata.IsImplementableBase(type);
     }
 
     /// <summary>

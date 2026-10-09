@@ -61,6 +61,12 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentBag<string> IdicExclusiveToTypes { get; } = [];
 
     /// <summary>
+    /// Gets the (key, Windows Runtime class name) entries describing the implementable bases a reference projection
+    /// declares, to preserve in its assembly metadata (see <see cref="Factories.AbiImplementableClassFactory"/>).
+    /// </summary>
+    public ConcurrentBag<KeyValuePair<string, string>> ImplementableClassEntries { get; } = [];
+
+    /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a
     /// projection file" concurrently without a torn read. Use <see cref="ProjectionFileWritten"/>
     /// to query (after the parallel loop completes) and <see cref="MarkProjectionFileWritten"/>

@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProjectionWriterTest.Helpers;
@@ -103,25 +104,31 @@ public class Test_ImplementableActivation
     }
 
     /// <summary>
-    /// The build tools only read the markers on the generated bases from reference assemblies, so the
-    /// implementation omits them.
+    /// The generated bases carry no markers: the reference projection records them in assembly metadata instead.
     /// </summary>
     [TestMethod]
-    public void ImplementationProjection_OmitsMarkers()
+    [DataRow(false)]
+    [DataRow(true)]
+    public void GeneratedBases_HaveNoAttributes(bool referenceProjection)
     {
-        Assert.IsEmpty(GetAbiClass(ActivationMetadata.NoConstructor).AttributeLists);
-        Assert.IsEmpty(GetFactoryBase(ActivationMetadata.NoConstructor).AttributeLists);
+        Assert.IsEmpty(GetAbiClass(ActivationMetadata.NoConstructor, referenceProjection).AttributeLists);
+        Assert.IsEmpty(GetFactoryBase(ActivationMetadata.NoConstructor, referenceProjection).AttributeLists);
     }
 
     [TestMethod]
-    public void ReferenceProjection_HasMarkers()
+    public void ReferenceProjection_RecordsImplementableClasses()
     {
-        StringAssert.Contains(
-            GetAbiClass(ActivationMetadata.NoConstructor, referenceProjection: true).AttributeLists.ToString(),
-            $"WindowsRuntimeImplementableClass(typeof(global::Contoso.{ActivationMetadata.NoConstructor}))");
-        StringAssert.Contains(
-            GetFactoryBase(ActivationMetadata.NoConstructor, referenceProjection: true).AttributeLists.ToString(),
-            $"WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.{ActivationMetadata.NoConstructor})");
+        string className = $"Contoso.{ActivationMetadata.NoConstructor}";
+        (string Key, string Value)[] entries = GetReferenceMetadata();
+
+        CollectionAssert.Contains(entries, ("CsWinRT.ImplementableClass.v1", className));
+        CollectionAssert.Contains(entries, ("CsWinRT.ImplementableClassFactory.v1", className));
+    }
+
+    [TestMethod]
+    public void ImplementationProjection_DoesNotRecordImplementableClasses()
+    {
+        Assert.IsFalse(GetReferenceMetadata(referenceProjection: false).Any(static entry => entry.Key.StartsWith("CsWinRT.ImplementableClass", StringComparison.Ordinal)));
     }
 
     [TestMethod]
@@ -283,12 +290,32 @@ public class Test_ImplementableActivation
     }
 
     /// <summary>
-    /// Reads the factory marker from the reference projection, the only one carrying it.
+    /// Reads the default-activation-only entry from the reference projection, the only one carrying it.
     /// </summary>
     private static bool HasDefaultActivationOnly(string className)
     {
-        return GetFactoryBase(className, referenceProjection: true).AttributeLists
-            .SelectMany(static list => list.Attributes)
-            .Any(static attribute => attribute.ToString().Contains("HasDefaultActivationOnly = true", StringComparison.Ordinal));
+        return GetReferenceMetadata().Contains(("CsWinRT.ImplementableClassDefaultActivationOnly.v1", $"Contoso.{className}"));
+    }
+
+    /// <summary>
+    /// Reads the <c>[WindowsRuntimeReferenceAssemblyMetadata]</c> entries a projection records.
+    /// </summary>
+    private static (string Key, string Value)[] GetReferenceMetadata(bool referenceProjection = true)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionActivationTest_").FullName;
+
+        try
+        {
+            string output = Generate(directory, referenceProjection);
+
+            return Directory.GetFiles(output, "*.cs")
+                .SelectMany(path => Regex.Matches(File.ReadAllText(path), @"WindowsRuntimeReferenceAssemblyMetadata(?:Attribute)?\(""([^""]*)"", ""([^""]*)""\)"))
+                .Select(static match => (match.Groups[1].Value, match.Groups[2].Value))
+                .ToArray();
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 }

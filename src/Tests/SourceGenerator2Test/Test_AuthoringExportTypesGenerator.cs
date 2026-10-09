@@ -23,6 +23,9 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 // The projected runtime class, from the '.winmd'
@@ -31,13 +34,11 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -126,6 +127,8 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.WidgetUtils")]
+
             namespace Contoso.Widgets
             {
                 public static class WidgetUtils;
@@ -133,7 +136,6 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.WidgetUtils))]
                 public abstract class WidgetUtilsActivationFactory
                 {
                     public abstract int Compute();
@@ -237,6 +239,8 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public sealed class Widget;
@@ -244,7 +248,6 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -286,6 +289,10 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public sealed class Widget;
@@ -293,13 +300,11 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -398,6 +403,10 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public sealed class Widget;
@@ -405,13 +414,11 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -451,6 +458,9 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public sealed class Widget;
@@ -458,13 +468,11 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class WidgetActivationFactory
                 {
                     protected abstract Widget CreateInstance(int value);
@@ -493,6 +501,10 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public sealed class Widget;
@@ -500,13 +512,11 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -539,6 +549,10 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public sealed class Widget;
@@ -546,13 +560,11 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -588,14 +600,16 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets { public sealed class Widget; }
 
             namespace ABI.Contoso.Widgets
             {
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget { public abstract void DoStuff(); }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -633,6 +647,10 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
+
             namespace Contoso.Widgets
             {
                 public class Widget;
@@ -645,13 +663,11 @@ public class Test_AuthoringExportTypesGenerator
                     global::Contoso.Widgets.Widget CreateInstance(object baseInterface, out object innerInterface);
                 }
 
-                [WindowsRuntimeImplementableClass(typeof(global::Contoso.Widgets.Widget))]
                 public abstract class Widget
                 {
                     public abstract void DoStuff();
                 }
 
-                [WindowsRuntimeImplementableClassFactory(typeof(global::Contoso.Widgets.Widget), HasDefaultActivationOnly = true)]
                 public abstract class WidgetActivationFactory : IActivationFactory, IWidgetFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();

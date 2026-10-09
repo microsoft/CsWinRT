@@ -233,7 +233,7 @@ internal partial class InteropTypeDefinitionBuilder
                     out proxyType);
             }
             else if (userDefinedTypeDefinition is not null &&
-                     userDefinedTypeDefinition.TryGetImplementedRuntimeClassType(interopReferences, out TypeSignature? implementedRuntimeClassType))
+                     userDefinedTypeDefinition.TryGetImplementedRuntimeClassName(interopReferences, out string? implementedRuntimeClassName))
             {
                 // The type implements a Windows Runtime class declared in existing metadata (it derives from one of
                 // the abstract base classes CsWinRT generates for that purpose). Its runtime class name must be that
@@ -243,7 +243,7 @@ internal partial class InteropTypeDefinitionBuilder
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
                     name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
                     mappedMetadata: null,
-                    runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(implementedRuntimeClassType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
+                    runtimeClassName: implementedRuntimeClassName,
                     metadataTypeName: null,
                     mappedType: null,
                     referenceType: null,

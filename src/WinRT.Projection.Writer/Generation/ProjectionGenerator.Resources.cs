@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Writers;
 
@@ -55,11 +57,19 @@ internal sealed partial class ProjectionGenerator
                 content = $"#define UAC_VERSION_{uapContractVersion}\n" + content;
             }
 
-            if (fileName == "AssemblyAttributes.cs" && _settings.ReferenceProjection && !state.IdicExclusiveToTypes.IsEmpty)
+            if (fileName == "AssemblyAttributes.cs" && _settings.ReferenceProjection &&
+                (!state.IdicExclusiveToTypes.IsEmpty || !state.ImplementableClassEntries.IsEmpty))
             {
+                IEnumerable<KeyValuePair<string, string>> idicEntries = state.IdicExclusiveToTypes
+                    .Order(StringComparer.Ordinal)
+                    .Select(static name => new KeyValuePair<string, string>(WindowsRuntimeReferenceAssemblyMetadata.IdicExclusiveTo, name));
+
+                IEnumerable<KeyValuePair<string, string>> implementableEntries = state.ImplementableClassEntries
+                    .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
+                    .ThenBy(static entry => entry.Value, StringComparer.Ordinal);
+
                 using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-                MetadataAttributeFactory.WriteReferenceAssemblyMetadata(
-                    writerOwner.Writer, state.IdicExclusiveToTypes.Order(StringComparer.Ordinal));
+                MetadataAttributeFactory.WriteReferenceAssemblyMetadata(writerOwner.Writer, idicEntries.Concat(implementableEntries));
                 content = writerOwner.Writer.ToString() + content;
             }
 

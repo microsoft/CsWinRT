@@ -81,13 +81,13 @@ public partial class AuthoringExportTypesGenerator
         public static EquatableArray<AuthoringActivationFactoryInfo> GetActivationFactories(Compilation compilation, CancellationToken token)
         {
             INamedTypeSymbol? attributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAttribute");
-            INamedTypeSymbol? implementableAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeImplementableClassAttribute");
-            INamedTypeSymbol? implementableFactoryAttributeSymbol = compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeImplementableClassFactoryAttribute");
 
-            if (attributeSymbol is null || implementableAttributeSymbol is null || implementableFactoryAttributeSymbol is null)
+            if (attributeSymbol is null)
             {
                 return ImmutableArray<AuthoringActivationFactoryInfo>.Empty;
             }
+
+            ImplementableClassLookup implementableClasses = new();
 
             ImmutableArray<AuthoringActivationFactoryInfo>.Builder builder = ImmutableArray.CreateBuilder<AuthoringActivationFactoryInfo>();
 
@@ -109,27 +109,20 @@ public partial class AuthoringExportTypesGenerator
                 if (type.TryGetAttributeWithType(attributeSymbol, out AttributeData? attributeData))
                 {
                     // '[WindowsRuntimeActivationFactory(typeof(<runtime class impl>))]'
-                    if (attributeData.ConstructorArguments is not [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol runtimeClassType }])
+                    if (attributeData.ConstructorArguments is not [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol }])
                     {
                         continue;
                     }
-
-                    // Prefer the factory's own generated base, so statics-only runtime classes (which have no
-                    // instance type for the attribute to point at) still resolve correctly.
-                    INamedTypeSymbol? factoryBase = GetImplementableBase(type, implementableFactoryAttributeSymbol);
-
-                    INamedTypeSymbol? implementedClass =
-                        GetImplementedRuntimeClass(factoryBase, implementableFactoryAttributeSymbol) ??
-                        GetImplementedRuntimeClass(GetImplementableBase(runtimeClassType, implementableAttributeSymbol), implementableAttributeSymbol);
 
                     // The factory must extend a generated factory base: that is what supplies the conversion to a
-                    // COM Callable Wrapper, which cannot be done from this compilation.
-                    if (implementedClass is null || factoryBase is null)
+                    // COM Callable Wrapper, which cannot be done from this compilation. The class it activates is
+                    // read from that base, so statics-only runtime classes (which have no instance base) resolve too.
+                    INamedTypeSymbol? factoryBase = GetImplementableBase(type, implementableClasses.GetFactoryRuntimeClassName);
+
+                    if (factoryBase is null || implementableClasses.GetFactoryRuntimeClassName(factoryBase) is not string runtimeClassName)
                     {
                         continue;
                     }
-
-                    string runtimeClassName = implementedClass.ToDisplayString();
 
                     _ = declaredRuntimeClasses.Add(runtimeClassName);
 
@@ -141,7 +134,7 @@ public partial class AuthoringExportTypesGenerator
                     continue;
                 }
 
-                INamedTypeSymbol? implementableBase = GetImplementableBase(type, implementableAttributeSymbol);
+                INamedTypeSymbol? implementableBase = GetImplementableBase(type, implementableClasses.GetInstanceRuntimeClassName);
 
                 // A generic type cannot be a Windows Runtime class, so there is nothing to activate for it (and
                 // naming a factory after it would not even produce valid code).
@@ -150,14 +143,14 @@ public partial class AuthoringExportTypesGenerator
                     continue;
                 }
 
-                if (GetImplementedRuntimeClass(implementableBase, implementableAttributeSymbol) is INamedTypeSymbol implementedRuntimeClass)
+                if (implementableBase is not null && implementableClasses.GetInstanceRuntimeClassName(implementableBase) is string implementedRuntimeClassName)
                 {
-                    implementations.Add((type, implementableBase!, implementedRuntimeClass.ToDisplayString()));
+                    implementations.Add((type, implementableBase, implementedRuntimeClassName));
                 }
             }
 
             foreach (AuthoringActivationFactoryInfo generated in GetGeneratedActivationFactories(
-                compilation, implementations, declaredRuntimeClasses, implementableFactoryAttributeSymbol, token))
+                compilation, implementations, declaredRuntimeClasses, implementableClasses, token))
             {
                 builder.Add(generated);
             }
@@ -172,14 +165,14 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="compilation">The <see cref="Compilation"/> instance to use.</param>
         /// <param name="implementations">The candidate implementations, with the generated base each extends.</param>
         /// <param name="declaredRuntimeClasses">The runtime classes the author already declared a factory for.</param>
-        /// <param name="implementableFactoryAttributeSymbol">The marker attribute on generated factory bases.</param>
+        /// <param name="implementableClasses">The lookup for the generated bases.</param>
         /// <param name="token">The <see cref="CancellationToken"/> instance to use.</param>
         /// <returns>The activation factories to generate.</returns>
         private static IEnumerable<AuthoringActivationFactoryInfo> GetGeneratedActivationFactories(
             Compilation compilation,
             List<(INamedTypeSymbol Implementation, INamedTypeSymbol ImplementableBase, string RuntimeClassName)> implementations,
             HashSet<string> declaredRuntimeClasses,
-            INamedTypeSymbol implementableFactoryAttributeSymbol,
+            ImplementableClassLookup implementableClasses,
             CancellationToken token)
         {
             string factoryNamespace = $"ABI.{compilation.Assembly.Name.EscapeIdentifierName()}";
@@ -203,7 +196,7 @@ public partial class AuthoringExportTypesGenerator
 
                 (INamedTypeSymbol implementation, INamedTypeSymbol implementableBase, string runtimeClassName) = group.First();
 
-                if (GetGeneratedFactoryBase(compilation, implementableBase, implementableFactoryAttributeSymbol) is not INamedTypeSymbol factoryBase)
+                if (GetGeneratedFactoryBase(compilation, implementableBase, implementableClasses) is not INamedTypeSymbol factoryBase)
                 {
                     continue;
                 }
@@ -236,7 +229,7 @@ public partial class AuthoringExportTypesGenerator
         /// </summary>
         /// <param name="compilation">The <see cref="Compilation"/> instance to use.</param>
         /// <param name="implementableBase">The generated abstract base class the implementation extends.</param>
-        /// <param name="implementableFactoryAttributeSymbol">The marker attribute on generated factory bases.</param>
+        /// <param name="implementableClasses">The lookup for the generated bases.</param>
         /// <returns>
         /// The generated factory base, or <see langword="null"/> if the class has none, or if activating it takes
         /// more than a parameterless constructor (i.e. it has factory methods with arguments, or statics, whose
@@ -245,14 +238,13 @@ public partial class AuthoringExportTypesGenerator
         private static INamedTypeSymbol? GetGeneratedFactoryBase(
             Compilation compilation,
             INamedTypeSymbol implementableBase,
-            INamedTypeSymbol implementableFactoryAttributeSymbol)
+            ImplementableClassLookup implementableClasses)
         {
             // The factory base sits next to the class base it activates, under a reserved name
             string factoryBaseName = $"{implementableBase.ContainingNamespace.ToDisplayString()}.{implementableBase.Name}ActivationFactory";
 
             return compilation.GetTypeByMetadataName(factoryBaseName) is INamedTypeSymbol factoryBase &&
-                   factoryBase.TryGetAttributeWithType(implementableFactoryAttributeSymbol, out AttributeData? attributeData) &&
-                   attributeData.NamedArguments.Any(static argument => argument is { Key: "HasDefaultActivationOnly", Value.Value: true })
+                   implementableClasses.HasDefaultActivationOnly(factoryBase)
                 ? factoryBase
                 : null;
         }
@@ -276,37 +268,22 @@ public partial class AuthoringExportTypesGenerator
         }
 
         /// <summary>
-        /// Finds the generated abstract base class that a type derives from, identified by a marker attribute.
+        /// Finds the nearest generated abstract base class that a type derives from.
         /// </summary>
         /// <param name="type">The type whose base classes to inspect.</param>
-        /// <param name="markerAttributeSymbol">The marker attribute identifying the generated base.</param>
+        /// <param name="getRuntimeClassName">Gets the Windows Runtime class a type is a generated base of the wanted kind for, if any.</param>
         /// <returns>The generated base class, or <see langword="null"/> if there is none.</returns>
-        private static INamedTypeSymbol? GetImplementableBase(INamedTypeSymbol? type, INamedTypeSymbol markerAttributeSymbol)
+        private static INamedTypeSymbol? GetImplementableBase(INamedTypeSymbol? type, Func<INamedTypeSymbol, string?> getRuntimeClassName)
         {
             for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
             {
-                if (current.TryGetAttributeWithType(markerAttributeSymbol, out _))
+                if (getRuntimeClassName(current) is not null)
                 {
                     return current;
                 }
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Reads the Windows Runtime class recorded on a generated abstract base class.
-        /// </summary>
-        /// <param name="implementableBase">The generated base class, if any.</param>
-        /// <param name="markerAttributeSymbol">The marker attribute carrying the class.</param>
-        /// <returns>The projected Windows Runtime class type, or <see langword="null"/> if there is none.</returns>
-        private static INamedTypeSymbol? GetImplementedRuntimeClass(INamedTypeSymbol? implementableBase, INamedTypeSymbol markerAttributeSymbol)
-        {
-            return implementableBase is not null &&
-                   implementableBase.TryGetAttributeWithType(markerAttributeSymbol, out AttributeData? attributeData) &&
-                   attributeData.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol runtimeClassType }]
-                ? runtimeClassType
-                : null;
         }
 
         /// <summary>
@@ -358,6 +335,157 @@ public partial class AuthoringExportTypesGenerator
                 {
                     yield return deeplyNestedType;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Reads the implementable bases that referenced reference projections built with <c>CsWinRTImplementWinMDTypes</c>
+        /// declare, from their <c>[WindowsRuntimeReferenceAssemblyMetadata]</c> entries.
+        /// </summary>
+        /// <remarks>
+        /// The bases carry no marker: each reference projection records the Windows Runtime classes they stand for, and
+        /// each base has a well-known name derived from its class (<c>ABI.&lt;Namespace&gt;.&lt;Class&gt;</c> for the
+        /// instance base and <c>ABI.&lt;Namespace&gt;.&lt;Class&gt;ActivationFactory</c> for the activation factory
+        /// base). The keys and names must match the ones the projection writer emits.
+        /// </remarks>
+        private sealed class ImplementableClassLookup
+        {
+            /// <summary>
+            /// The fully qualified name of the key/value metadata attribute.
+            /// </summary>
+            private const string MetadataAttributeName = "WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyMetadataAttribute";
+
+            /// <summary>
+            /// The key for a Windows Runtime class whose instance base the reference projection declares.
+            /// </summary>
+            private const string ImplementableClassKey = "CsWinRT.ImplementableClass.v1";
+
+            /// <summary>
+            /// The key for a Windows Runtime class whose activation factory base the reference projection declares.
+            /// </summary>
+            private const string ImplementableClassFactoryKey = "CsWinRT.ImplementableClassFactory.v1";
+
+            /// <summary>
+            /// The key for a Windows Runtime class whose activation factory base only declares <c>ActivateInstance</c>.
+            /// </summary>
+            private const string ImplementableClassDefaultActivationOnlyKey = "CsWinRT.ImplementableClassDefaultActivationOnly.v1";
+
+            /// <summary>
+            /// The implementable bases declared by each assembly inspected so far.
+            /// </summary>
+            private readonly Dictionary<IAssemblySymbol, AssemblyInfo> _assemblies = new(SymbolEqualityComparer.Default);
+
+            /// <summary>
+            /// Gets the Windows Runtime class a type is the generated instance base for.
+            /// </summary>
+            /// <param name="type">The type to inspect.</param>
+            /// <returns>The fully qualified Windows Runtime class name, or <see langword="null"/> if <paramref name="type"/> is not an instance base.</returns>
+            public string? GetInstanceRuntimeClassName(INamedTypeSymbol type)
+            {
+                return TryGetFullName(type, out string? fullName) && GetAssemblyInfo(type.ContainingAssembly).InstanceBases.TryGetValue(fullName, out string? runtimeClassName)
+                    ? runtimeClassName
+                    : null;
+            }
+
+            /// <summary>
+            /// Gets the Windows Runtime class a type is the generated activation factory base for.
+            /// </summary>
+            /// <param name="type">The type to inspect.</param>
+            /// <returns>The fully qualified Windows Runtime class name, or <see langword="null"/> if <paramref name="type"/> is not an activation factory base.</returns>
+            public string? GetFactoryRuntimeClassName(INamedTypeSymbol type)
+            {
+                return TryGetFullName(type, out string? fullName) && GetAssemblyInfo(type.ContainingAssembly).FactoryBases.TryGetValue(fullName, out string? runtimeClassName)
+                    ? runtimeClassName
+                    : null;
+            }
+
+            /// <summary>
+            /// Gets whether a generated activation factory base only declares <c>ActivateInstance</c>, i.e. its class has
+            /// no constructors taking arguments and no statics, so CsWinRT can implement the factory itself.
+            /// </summary>
+            /// <param name="factoryBase">The activation factory base to inspect.</param>
+            /// <returns>Whether <paramref name="factoryBase"/> only declares <c>ActivateInstance</c>.</returns>
+            public bool HasDefaultActivationOnly(INamedTypeSymbol factoryBase)
+            {
+                return GetFactoryRuntimeClassName(factoryBase) is string runtimeClassName &&
+                       GetAssemblyInfo(factoryBase.ContainingAssembly).DefaultActivationOnly.Contains(runtimeClassName);
+            }
+
+            /// <summary>
+            /// Gets the full metadata name of a top-level type in a named namespace (where all generated bases live).
+            /// </summary>
+            private static bool TryGetFullName(INamedTypeSymbol type, [NotNullWhen(true)] out string? fullName)
+            {
+                if (type.ContainingType is not null || type.ContainingNamespace is not { IsGlobalNamespace: false } containingNamespace || type.ContainingAssembly is null)
+                {
+                    fullName = null;
+
+                    return false;
+                }
+
+                fullName = $"{containingNamespace.ToDisplayString()}.{type.MetadataName}";
+
+                return true;
+            }
+
+            /// <summary>
+            /// Gets the implementable bases declared by an assembly, reading them on first use.
+            /// </summary>
+            private AssemblyInfo GetAssemblyInfo(IAssemblySymbol assembly)
+            {
+                if (_assemblies.TryGetValue(assembly, out AssemblyInfo? info))
+                {
+                    return info;
+                }
+
+                info = new AssemblyInfo();
+
+                foreach (AttributeData attribute in assembly.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() != MetadataAttributeName ||
+                        attribute.ConstructorArguments is not [{ Value: string key }, { Value: string runtimeClassName }])
+                    {
+                        continue;
+                    }
+
+                    if (key == ImplementableClassKey)
+                    {
+                        info.InstanceBases[$"ABI.{runtimeClassName}"] = runtimeClassName;
+                    }
+                    else if (key == ImplementableClassFactoryKey)
+                    {
+                        info.FactoryBases[$"ABI.{runtimeClassName}ActivationFactory"] = runtimeClassName;
+                    }
+                    else if (key == ImplementableClassDefaultActivationOnlyKey)
+                    {
+                        _ = info.DefaultActivationOnly.Add(runtimeClassName);
+                    }
+                }
+
+                _assemblies.Add(assembly, info);
+
+                return info;
+            }
+
+            /// <summary>
+            /// The implementable bases declared by an assembly.
+            /// </summary>
+            private sealed class AssemblyInfo
+            {
+                /// <summary>
+                /// Gets the full names of the instance bases, mapped to the Windows Runtime class each stands for.
+                /// </summary>
+                public Dictionary<string, string> InstanceBases { get; } = new(StringComparer.Ordinal);
+
+                /// <summary>
+                /// Gets the full names of the activation factory bases, mapped to the Windows Runtime class each activates.
+                /// </summary>
+                public Dictionary<string, string> FactoryBases { get; } = new(StringComparer.Ordinal);
+
+                /// <summary>
+                /// Gets the Windows Runtime classes whose activation factory base only declares <c>ActivateInstance</c>.
+                /// </summary>
+                public HashSet<string> DefaultActivationOnly { get; } = new(StringComparer.Ordinal);
             }
         }
     }

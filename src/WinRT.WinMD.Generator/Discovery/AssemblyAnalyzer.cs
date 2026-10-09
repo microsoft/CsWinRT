@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using AsmResolver;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.Helpers;
 
 namespace WindowsRuntime.WinMDGenerator.Discovery;
 
@@ -101,14 +102,9 @@ internal sealed class AssemblyAnalyzer
                 return false;
             }
 
-            foreach (CustomAttribute attribute in current.CustomAttributes)
+            if (ImplementableClassMetadata.IsImplementableBase(current))
             {
-                if (attribute.Constructor?.DeclaringType?.FullName is
-                    "WindowsRuntime.WindowsRuntimeImplementableClassAttribute" or
-                    "WindowsRuntime.WindowsRuntimeImplementableClassFactoryAttribute")
-                {
-                    return true;
-                }
+                return true;
             }
 
             baseType = current.BaseType;

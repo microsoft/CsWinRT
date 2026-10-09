@@ -3,12 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionGenerator.Errors;
@@ -287,18 +285,13 @@ internal partial class ProjectionGenerator
                     // Reference assemblies describe exact type identities, not namespace prefixes
                     includeTypes.Add(exportedType.FullName);
                     hasTypesToProject = true;
-
-                    // An authoring reference assembly carries abstract 'ABI.<Ns>.<Class>' base classes with
-                    // no implementation. Record the runtime class each one stands for, so the projection
-                    // being generated here supplies their real implementation. This is the same contract as
-                    // any other reference projection: metadata at compile time, implementation at publish.
-                    // The class is read from the marker attribute rather than the base class name: a statics
-                    // only runtime class has no instance base, so only its factory base carries the name.
-                    if (TryGetImplementableRuntimeClassName(exportedType, out string? runtimeClassName))
-                    {
-                        implementableTypes.Add(runtimeClassName);
-                    }
                 }
+
+                // An authoring reference assembly carries abstract 'ABI.<Ns>.<Class>' base classes with no
+                // implementation. Record the runtime class each one stands for (from its assembly metadata), so
+                // the projection being generated here supplies their real implementation. This is the same
+                // contract as any other reference projection: metadata at compile time, implementation at publish.
+                implementableTypes.AddRange(ReadImplementableClassNames(moduleDefinition, referenceAssemblyPath));
             }
         }
 
@@ -523,36 +516,6 @@ internal partial class ProjectionGenerator
     private static bool IsComponentAssembly(ModuleDefinition moduleDefinition)
     {
         return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComponentAssemblyAttribute"u8);
-    }
-
-    /// <summary>
-    /// Tries to read the Windows Runtime class that a generated abstract base class stands for, from the
-    /// <c>[WindowsRuntimeImplementableClass]</c> or <c>[WindowsRuntimeImplementableClassFactory]</c> marker.
-    /// </summary>
-    /// <param name="type">The exported type to inspect.</param>
-    /// <param name="runtimeClassName">The full name of the Windows Runtime class, if the marker is present.</param>
-    /// <returns><c>true</c> if <paramref name="type"/> is a generated abstract base class; otherwise, <c>false</c>.</returns>
-    private static bool TryGetImplementableRuntimeClassName(TypeDefinition type, [NotNullWhen(true)] out string? runtimeClassName)
-    {
-        foreach (CustomAttribute attribute in type.CustomAttributes)
-        {
-            if (attribute.Constructor?.DeclaringType is not { Namespace.Value: "WindowsRuntime" } attributeType ||
-                attributeType.Name?.Value is not ("WindowsRuntimeImplementableClassAttribute" or "WindowsRuntimeImplementableClassFactoryAttribute"))
-            {
-                continue;
-            }
-
-            if (attribute.Signature is { FixedArguments: [{ Element: TypeSignature classType }] })
-            {
-                runtimeClassName = classType.FullName;
-
-                return true;
-            }
-        }
-
-        runtimeClassName = null;
-
-        return false;
     }
 
     /// <summary>

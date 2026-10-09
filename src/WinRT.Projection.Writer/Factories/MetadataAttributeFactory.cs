@@ -80,20 +80,21 @@ internal static class MetadataAttributeFactory
     }
 
     /// <summary>
-    /// Writes reference-only key/value metadata for the effective exclusive-to IDIC selection.
+    /// Writes reference-only key/value metadata, such as the effective exclusive-to IDIC selection and the
+    /// implementable bases the reference projection declares.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
-    /// <param name="idicExclusiveToTypes">The selected metadata type names, in ordinal order.</param>
-    public static void WriteReferenceAssemblyMetadata(IndentedTextWriter writer, IEnumerable<string> idicExclusiveToTypes)
+    /// <param name="entries">The (key, value) entries, in a deterministic order.</param>
+    public static void WriteReferenceAssemblyMetadata(IndentedTextWriter writer, IEnumerable<KeyValuePair<string, string>> entries)
     {
         writer.WriteLine(isMultiline: true, """
             #if CSWINRT_REFERENCE_PROJECTION
             #pragma warning disable CSWINRT3004
             """);
 
-        foreach (string typeName in idicExclusiveToTypes)
+        foreach ((string key, string value) in entries)
         {
-            writer.WriteLine($"""[assembly: global::{WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName}("{WindowsRuntimeReferenceAssemblyMetadata.IdicExclusiveTo}", "{typeName}")]""");
+            writer.WriteLine($"""[assembly: global::{WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName}("{key}", "{value}")]""");
         }
 
         writer.WriteLine(isMultiline: true, """

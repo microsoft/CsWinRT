@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
-#endif
+#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
 
 namespace WindowsRuntime;
 
@@ -26,16 +23,9 @@ namespace WindowsRuntime;
 /// Wrapper's interface entries, which only include Windows Runtime interfaces.
 /// </para>
 /// <para>
-/// This interface is not meant to be used directly. Like <see cref="WindowsRuntimeImplementableClassAttribute"/>,
-/// it is not stripped from the <c>WinRT.Runtime.dll</c> reference assembly, because the reference projections
-/// that carry these base classes are compiled against it.
+/// Only the generated implementation projection declares it, which is what implementations derive from at runtime.
+/// Reference projections leave it out, as nothing compiled against them needs it.
 /// </para>
 /// </remarks>
-#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
-[Obsolete(
-    WindowsRuntimeConstants.WindowsRuntimeImplementableClassObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.WindowsRuntimeImplementableClassObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-#endif
+[WindowsRuntimeImplementationOnlyMember]
 public interface IWindowsRuntimeImplementableClass;

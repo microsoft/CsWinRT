@@ -8,6 +8,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
@@ -778,69 +779,23 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
-        /// Tries to get the projected Windows Runtime class that a generated implementable base class stands for.
+        /// Tries to get the Windows Runtime class that a type implements by deriving from one of the abstract base
+        /// classes CsWinRT generates for authoring Windows Runtime types declared in existing metadata.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="runtimeClassType">The projected Windows Runtime class type, if the type is an implementable base.</param>
-        /// <returns>Whether the type is a generated implementable base class for a runtime class.</returns>
-        /// <remarks>
-        /// These are the abstract base classes CsWinRT generates when a projection is built with
-        /// <c>CsWinRTImplementWinMDTypes</c>, so that Windows Runtime types declared in existing metadata can be
-        /// implemented (authored) in C#. They carry <c>[WindowsRuntimeImplementableClass(typeof(&lt;class&gt;))]</c>.
-        /// Factory bases are deliberately excluded: an activation factory is not an instance of the class it
-        /// activates, so it must not take on that class's identity.
-        /// </remarks>
-        public bool TryGetImplementableRuntimeClassType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
-        {
-            return type.TryGetImplementableRuntimeClassType(interopReferences.WindowsRuntimeImplementableClassAttribute, interopReferences.SignatureComparer, out runtimeClassType);
-        }
-
-        /// <summary>
-        /// Tries to read the projected Windows Runtime class type from a given marker attribute on a type.
-        /// </summary>
-        /// <param name="attributeType">The marker attribute type to look for.</param>
-        /// <param name="comparer">The comparer to match the marker attribute type with.</param>
-        /// <param name="runtimeClassType">The projected Windows Runtime class type, if the marker is present.</param>
-        /// <returns>Whether the marker was present.</returns>
-        private bool TryGetImplementableRuntimeClassType(TypeReference attributeType, SignatureComparer comparer, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
-        {
-            foreach (CustomAttribute attribute in type.CustomAttributes)
-            {
-                // Match '[<attribute>(typeof(<CLASS_TYPE>))]'
-                if (!comparer.Equals(attribute.Constructor?.DeclaringType, attributeType))
-                {
-                    continue;
-                }
-
-                if (attribute.Signature is { FixedArguments: [{ Element: TypeSignature classType }] })
-                {
-                    runtimeClassType = classType;
-
-                    return true;
-                }
-            }
-
-            runtimeClassType = null;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Tries to get the projected Windows Runtime class that a type implements by deriving from one of the
-        /// abstract base classes CsWinRT generates for authoring Windows Runtime types declared in existing metadata.
-        /// </summary>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="runtimeClassType">The projected Windows Runtime class type being implemented, if any.</param>
+        /// <param name="runtimeClassName">The fully qualified name of the Windows Runtime class being implemented, if any.</param>
         /// <returns>Whether the type implements a Windows Runtime class declared in existing metadata.</returns>
         /// <remarks>
-        /// The nearest base carrying the marker wins, so a type deriving from a generated base for a derived runtime
-        /// class reports that derived class rather than one of its ancestors.
+        /// The bases are generated when a projection is built with <c>CsWinRTImplementWinMDTypes</c>, and the reference
+        /// projection records the class each one stands for in its assembly metadata. The nearest such base wins, so a
+        /// type deriving from a generated base for a derived runtime class reports that derived class rather than one of
+        /// its ancestors. Activation factory bases are never matched (see <see cref="ImplementableClassMetadata"/>).
         /// </remarks>
-        public bool TryGetImplementedRuntimeClassType(InteropReferences interopReferences, [NotNullWhen(true)] out TypeSignature? runtimeClassType)
+        public bool TryGetImplementedRuntimeClassName(InteropReferences interopReferences, [NotNullWhen(true)] out string? runtimeClassName)
         {
             for (TypeDefinition? current = type; current is not null;)
             {
-                if (current.TryGetImplementableRuntimeClassType(interopReferences, out runtimeClassType))
+                if (ImplementableClassMetadata.TryGetImplementableClassName(current, out runtimeClassName))
                 {
                     return true;
                 }
@@ -848,7 +803,7 @@ internal static class WindowsRuntimeExtensions
                 current = current.BaseType?.Resolve(interopReferences.RuntimeContext);
             }
 
-            runtimeClassType = null;
+            runtimeClassName = null;
 
             return false;
         }
