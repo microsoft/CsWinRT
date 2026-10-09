@@ -80,11 +80,12 @@ public static class Shim
     /// Finds the type holding the component's managed <c>GetActivationFactory</c> method.
     /// </summary>
     /// <remarks>
-    /// The component assembly points at it with <c>[WindowsRuntimeComponentAssemblyExportsType]</c>, which is
-    /// the authoritative answer. The name is otherwise only derivable by convention from the assembly name, and
-    /// that does not survive a name needing escaping to form a namespace: assembly <c>Contoso.Widgets</c> holds
-    /// its exports in <c>ABI.Contoso_Widgets</c>, not <c>ABI.Contoso.Widgets</c>. The convention is still tried
-    /// as a fallback, for components built before the attribute was emitted.
+    /// A component assembly points at it with <c>[WindowsRuntimeComponentAssemblyExportsType]</c>, which is
+    /// the authoritative answer: the name derived from the assembly name does not survive a name needing
+    /// escaping to form a namespace (assembly <c>Contoso.Widgets</c> holds its exports in <c>ABI.Contoso_Widgets</c>,
+    /// not <c>ABI.Contoso.Widgets</c>). Without the attribute, the type is found by that naming convention. This is
+    /// how the merged <c>WinRT.Component.dll</c> that native consumers host is resolved (to its dispatcher
+    /// <c>ABI.WinRT.Component.ManagedExports</c>), as it does not carry the attribute.
     /// </remarks>
     private static Type GetManagedExportsType(Assembly assembly, string targetAssembly)
     {
