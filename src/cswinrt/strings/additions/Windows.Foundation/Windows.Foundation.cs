@@ -309,9 +309,11 @@ namespace System
                 throw new ArgumentNullException(nameof(asyncInfo));
             }
 
-            // Keep the WinRT operation alive while the task is pending, even without a cancellation registration.
-            // Otherwise its finalization can disconnect the completion handler and leave the task incomplete.
-            // A continuation releases this reference on completion without retaining it in Task.AsyncState.
+            // The operation's completion delegate targets this bridge, not its RCW, and the returned task does not
+            // itself retain either. Without another root (such as a live cancellation registration), GC can release
+            // the RCW's native references before completion. Some operations, including PackageManager deployments,
+            // then stop delivering completion callbacks, leaving the task pending. Retain the RCW through a pending
+            // continuation so completion releases it, rather than keeping it in Task.AsyncState for the task's lifetime.
             Task.ContinueWith(static (_, state) => GC.KeepAlive(state), asyncInfo,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
