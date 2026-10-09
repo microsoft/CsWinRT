@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "Class.h"
 #include "Class.g.cpp"
+#include "WrlAsyncOperation.h"
 
 using namespace std::chrono;
 
@@ -1267,6 +1268,21 @@ namespace winrt::TestComponentCSharp::implementation
         co_return lhs + rhs;
     }
 
+    IAsyncOperationWithProgress<uint32_t, uint32_t> Class::WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs)
+    {
+        return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync);
+    }
+
+    void Class::CompleteWrlAsync(int32_t hr)
+    {
+        if (!_completeWrlAsync)
+        {
+            winrt::throw_hresult(E_ILLEGAL_METHOD_CALL);
+        }
+        auto complete = std::move(_completeWrlAsync);
+        complete(hr);
+    }
+
     Point Class::PointProperty()
     {
         return _point;
@@ -2148,4 +2164,3 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<bad_runtime_classname>();
     }
 }
-

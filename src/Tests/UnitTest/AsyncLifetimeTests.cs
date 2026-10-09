@@ -15,14 +15,17 @@ namespace UnitTest
         [InlineData(1, AsyncStatus.Completed)]
         [InlineData(2, AsyncStatus.Completed)]
         [InlineData(3, AsyncStatus.Completed)]
+        [InlineData(4, AsyncStatus.Completed)]
         [InlineData(0, AsyncStatus.Error)]
         [InlineData(1, AsyncStatus.Error)]
         [InlineData(2, AsyncStatus.Error)]
         [InlineData(3, AsyncStatus.Error)]
+        [InlineData(4, AsyncStatus.Error)]
         [InlineData(0, AsyncStatus.Canceled)]
         [InlineData(1, AsyncStatus.Canceled)]
         [InlineData(2, AsyncStatus.Canceled)]
         [InlineData(3, AsyncStatus.Canceled)]
+        [InlineData(4, AsyncStatus.Canceled)]
         public void PendingTaskKeepsAsyncInfoAlive(int kind, AsyncStatus status)
         {
             var instance = new Class();
@@ -37,6 +40,10 @@ namespace UnitTest
             {
                 Cancel(operation);
             }
+            else if (kind == 4)
+            {
+                instance.CompleteWrlAsync(status == AsyncStatus.Error ? E_FAIL : 0);
+            }
             else
             {
                 instance.CompleteAsync(status == AsyncStatus.Error ? E_FAIL : 0);
@@ -49,6 +56,10 @@ namespace UnitTest
                 if (task is Task<int> result)
                 {
                     Assert.Equal(50, result.Result);
+                }
+                else if (task is Task<uint> unsignedResult)
+                {
+                    Assert.Equal(50u, unsignedResult.Result);
                 }
             }
             else
@@ -99,6 +110,9 @@ namespace UnitTest
                 case 3:
                     var operationWithProgress = instance.AddAsyncWithProgress(42, 8);
                     return (operationWithProgress.AsTask(), new WeakReference(operationWithProgress));
+                case 4:
+                    var wrlOperation = instance.WrlAddAsyncWithProgress(42, 8);
+                    return (wrlOperation.AsTask(), new WeakReference(wrlOperation));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind));
             }
