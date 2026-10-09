@@ -204,7 +204,7 @@ internal static partial class InteropTypeDiscovery
         {
             // Make sure we can resolve the interface type fully, which we should always be able to do.
             // This can really only fail for some constructed generics, for invalid type arguments.
-            if (!interfaceSignature.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
+            if (!interfaceSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
             {
                 WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -407,7 +407,7 @@ internal static partial class InteropTypeDiscovery
         {
             // Validate that we can resolve the interface. In this case we should be pretty confident
             // that this won't possibly fail, since we expect to only see well-known interfaces here.
-            if (!interfaceSignature.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
+            if (!interfaceSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
             {
                 WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 

@@ -262,6 +262,103 @@ public class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    public void MixedAssembly_UnresolvedPrivateImplementationDependencyDoesNotBlockRuntimeTypes()
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropMixedAssemblyTest_").FullName;
+
+        try
+        {
+            string compilerHostDirectory = Directory.CreateDirectory(Path.Combine(directory, "compiler-host")).FullName;
+            string dependency = ProjectionWriterRunner.CompileSources(
+                ["""
+                using System.Collections.Generic;
+
+                namespace Compiler;
+
+                public sealed class Symbol;
+
+                public readonly struct LinePositionSpan
+                {
+                    public LinePositionSpan(int value) => Value = value;
+                    public int Value { get; }
+                }
+
+                public sealed class SymbolEqualityComparer : IEqualityComparer<Symbol>
+                {
+                    public static readonly SymbolEqualityComparer Default = new();
+                    public bool Equals(Symbol? x, Symbol? y) => ReferenceEquals(x, y);
+                    public int GetHashCode(Symbol obj) => obj.GetHashCode();
+                }
+
+                public static class Factory
+                {
+                    public static T Create<T>() => default!;
+                }
+                """],
+                Path.Combine(compilerHostDirectory, "Compiler.dll"));
+            string library = ProjectionWriterRunner.CompileSources(
+                ["""
+                using System.Collections.Generic;
+                using System.Collections;
+                using Compiler;
+                using Windows.Foundation;
+
+                namespace Mixed;
+
+                public sealed class Generator
+                {
+                    private readonly HashSet<Symbol> symbols = new(SymbolEqualityComparer.Default);
+
+                    public object CreateFromGenericMethod() => Factory.Create<int>();
+                    public object CreateCompilerValue() => new LinePositionSpan(0);
+                    public object CreateCompilerValues() => new LinePositionSpan[1];
+                    public KeyValuePair<string, Symbol>[] CreateCompilerPairs() => [];
+                }
+
+                public sealed class CompilerEnumerable : IEnumerable<Symbol>
+                {
+                    public IEnumerator<Symbol> GetEnumerator() => throw new System.NotImplementedException();
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+
+                public sealed class ViewModel : IStringable
+                {
+                    public override string ToString() => "view model";
+                }
+                """],
+                Path.Combine(directory, "Mixed.dll"),
+                additionalReferences: [dependency]);
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Program
+                {
+                    public static void Main() => _ = new Mixed.ViewModel();
+                }
+                """],
+                Path.Combine(directory, "MixedApp.dll"),
+                outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [library, dependency]);
+
+            (int exitCode, string log) = RunGenerator(directory, app, additionalReferences: [library]);
+
+            Assert.IsTrue(File.Exists(dependency), "The private dependency must remain available to its compiler host.");
+            Assert.AreEqual(0, exitCode, log);
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0050");
+            StringAssert.Contains(log, "System.Collections.Generic.IEnumerable`1<Compiler.Symbol>");
+            StringAssert.Contains(log, "Mixed.CompilerEnumerable");
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0065");
+            StringAssert.Contains(log, "CSWINRTINTEROPGEN0066");
+            StringAssert.Contains(log, "System.Collections.Generic.KeyValuePair`2<System.String, Compiler.Symbol>[]");
+            Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
+                .Any(type => type.StartsWith("Mixed.ViewModel,", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public void UnknownExcludedAssembly_RespectsWarningsAsErrors(bool treatWarningsAsErrors)
@@ -302,6 +399,8 @@ public class Test_InteropGenericDiscovery
                 ["namespace Missing; public sealed class Dependency;"],
                 Path.Combine(directory, "Missing.dll"));
             string foreignSource = """
+                using System.Collections.Generic;
+
                 namespace Foreign;
 
                 public sealed class Outer<T>
@@ -312,7 +411,7 @@ public class Test_InteropGenericDiscovery
                 public sealed class Inner<T>
                 {
                     public static readonly object Cached = Cache<T>.Value;
-                    public object Create() => new Missing.Dependency();
+                    public List<Missing.Dependency> Create() => [];
                 }
 
                 public static class Cache<T>
@@ -368,6 +467,7 @@ public class Test_InteropGenericDiscovery
                     .. optIn ? new[] { "--marshalling-enabled-assembly-names subdir\\FOREIGN.DLL" } : [],
                     .. optOut ? new[] { "--marshalling-disabled-assembly-names Foreign.dll,WinRT.Sdk.Projection.dll" } : []
                 ],
+                treatWarningsAsErrors: !succeeds,
                 // 'all' also scans every BCL assembly, which can exceed the default limit on loaded CI agents.
                 timeout: mode == "all" ? TimeSpan.FromMinutes(2) : null);
 
@@ -379,12 +479,13 @@ public class Test_InteropGenericDiscovery
             if (!succeeds)
             {
                 Assert.AreNotEqual(0, exitCode, log);
-                StringAssert.Contains(log, "CSWINRTINTEROPGEN0015");
+                StringAssert.Contains(log, "CSWINRTINTEROPGEN0065");
                 StringAssert.Contains(log, "Missing.Dependency");
                 return;
             }
 
             Assert.AreEqual(0, exitCode, log);
+            Assert.IsFalse(log.Contains("Missing.Dependency", StringComparison.Ordinal), log);
             HashSet<string> types = GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"));
             Assert.IsTrue(types.Any(type => type.StartsWith("Recursion.Node`1[[System.Int32,", StringComparison.Ordinal)), log);
 

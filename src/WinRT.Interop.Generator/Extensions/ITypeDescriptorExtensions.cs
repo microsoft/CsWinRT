@@ -34,6 +34,58 @@ internal static class ITypeDescriptorExtensions
                 ? signature.IsFullyResolvable(runtimeContext, out definition)
                 : descriptor.TryResolve(runtimeContext, out definition);
         }
+
+        /// <summary>
+        /// Atttempts to retrieve a <see cref="TypeSignature"/> from <paramref name="type"/>.
+        /// </summary>
+        /// <param name="context">The runtime context used to locate the type's assembly.</param>
+        /// <param name="throwOnResolutionFailure">Whether to throw if <paramref name="type"/> has to be resolved and the operation fails.</param>
+        /// <param name="typeSignature">The retrieved <see cref="TypeSignature"/> when this returns <see langword="true"/>, otherwise <see langword="null"/>.</param>
+        /// <returns><see langword="true"/> if a <see cref="TypeSignature"/> was successfully retrieved, otherwise <see langword="false"/>.</returns>
+        public bool TryGetTypeSignature(
+            RuntimeContext? context,
+            bool throwOnResolutionFailure,
+            [NotNullWhen(true)] out TypeSignature? typeSignature)
+        {
+            // Type specifications encode constructed generic types, and they contain
+            // the constructed signature without the need to ever resolve types.
+            if (descriptor is TypeSpecification { Signature: { } signature })
+            {
+                typeSignature = signature;
+
+                return true;
+            }
+
+            // If we already have a type definition, just return the signature from it directly.
+            // We don't need to further resolve it, so possible unresolved base types don't matter.
+            if (descriptor is TypeDefinition definition)
+            {
+                typeSignature = definition.ToTypeSignature(definition.IsValueType);
+
+                return true;
+            }
+
+            // If we should throw on resolution failure, just delegate to the built-in helper.
+            // This will throw the most appropriate exception as well on resolution failures.
+            if (throwOnResolutionFailure)
+            {
+                typeSignature = descriptor.ToTypeSignature(context);
+
+                return true;
+            }
+
+            // Otherwise, try to resolve and create the signature manually if we succeeded
+            if (descriptor.TryResolve(context, out TypeDefinition? resolvedDefinition))
+            {
+                typeSignature = resolvedDefinition.ToTypeSignature(resolvedDefinition.IsValueType);
+
+                return true;
+            }
+
+            typeSignature = null;
+
+            return false;
+        }
     }
 
     extension<T>(IEnumerable<T> descriptors)
