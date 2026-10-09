@@ -238,8 +238,9 @@ internal static class MethodDefinitionExtensions
         /// <summary>
         /// Enumerates the declaring types and value types of fields accessed by a method.
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>The types visible through field accesses.</returns>
-        public IEnumerable<TypeSignature> EnumerateFieldAccessTypes()
+        public IEnumerable<TypeSignature> EnumerateFieldAccessTypes(RuntimeContext? runtimeContext)
         {
             if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
             {
@@ -257,8 +258,12 @@ internal static class MethodDefinitionExtensions
                 // A constructed generic declaring type is encoded as a type specification and can
                 // contribute closed type arguments. Ordinary declaring types cannot contribute any
                 // generic or array signatures, and resolving them would make unrelated private
-                // dependencies a prerequisite for discovery.
-                if (field.DeclaringType is TypeSpecification { Signature: { } declaringTypeSignature })
+                // dependencies a prerequisite for discovery. This is analogous logic as what
+                // we use when discovering 'newobj' instantiations when scanning method bodies.
+                if (field.DeclaringType?.TryGetTypeSignature(
+                    context: runtimeContext,
+                    throwOnResolutionFailure: false,
+                    typeSignature: out TypeSignature? declaringTypeSignature) is true)
                 {
                     yield return declaringTypeSignature;
 

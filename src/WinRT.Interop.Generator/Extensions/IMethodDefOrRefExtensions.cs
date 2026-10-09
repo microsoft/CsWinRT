@@ -45,9 +45,16 @@ internal static class IMethodDefOrRefExtensions
                 // Look for all 'newobj' instructions and gather the object types
                 foreach (ITypeDefOrRef objectType in definition.EnumerateNewobjTypes())
                 {
-                    // Only type specifications can carry constructed generic arguments. Resolving
-                    // ordinary declaring types cannot contribute any signatures to generic discovery.
-                    if (objectType is TypeSpecification { Signature: { } objectTypeSignature })
+                    // Here we're mostly just interested in discovering constructed generics being
+                    // instantiated, which don't need resolution (since they're encoded as type
+                    // specifications). If we just have a type reference that can't be resolved,
+                    // we just skip it, rather than throwing. This is needed to avoid failing
+                    // generation entirely in cases where a package shipped a reference somewhere
+                    // to a private asset that's not being referenced by the consuming project.
+                    if (objectType.TryGetTypeSignature(
+                        context: runtimeContext,
+                        throwOnResolutionFailure: false,
+                        typeSignature: out TypeSignature? objectTypeSignature))
                     {
                         yield return objectTypeSignature;
                     }
@@ -56,23 +63,18 @@ internal static class IMethodDefOrRefExtensions
                 // Look for all 'newarr' instructions and gather the array types
                 foreach (ITypeDefOrRef elementType in definition.EnumerateNewarrElementTypes())
                 {
-                    TypeSignature? elementTypeSignature = elementType switch
-                    {
-                        TypeSpecification { Signature: { } arrayElementSignature } => arrayElementSignature,
-                        TypeDefinition typeDefinition => typeDefinition.ToTypeSignature(typeDefinition.IsValueType),
-                        _ when elementType.TryResolve(runtimeContext, out TypeDefinition? typeDefinition) =>
-                            elementType.ToTypeSignature(typeDefinition.IsValueType),
-                        _ => null
-                    };
-
-                    if (elementTypeSignature is not null)
+                    // Gracefully handle resolution failures (see notes above)
+                    if (elementType.TryGetTypeSignature(
+                        context: runtimeContext,
+                        throwOnResolutionFailure: false,
+                        typeSignature: out TypeSignature? elementTypeSignature))
                     {
                         yield return elementTypeSignature.MakeSzArrayType();
                     }
                 }
 
                 // Cached generic instances can be visible only through field accesses, without locals or allocations
-                foreach (TypeSignature fieldType in definition.EnumerateFieldAccessTypes())
+                foreach (TypeSignature fieldType in definition.EnumerateFieldAccessTypes(runtimeContext))
                 {
                     yield return fieldType;
                 }
