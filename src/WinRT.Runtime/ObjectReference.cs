@@ -634,6 +634,42 @@ namespace WinRT
             }
         }
 
+        /// <summary>
+        /// Creates an <see cref="ObjectReference{T}"/> for a COM pointer, taking ownership of it.
+        /// </summary>
+        /// <param name="thisPtr">The COM pointer (set to <see cref="IntPtr.Zero"/> on success).</param>
+        /// <param name="iid">The IID of the interface <paramref name="thisPtr"/> points to.</param>
+        /// <param name="addBasePressure">Whether to report base GC memory pressure for the result.</param>
+        /// <returns>The resulting <see cref="ObjectReference{T}"/> instance.</returns>
+        internal static ObjectReference<T> Attach(ref IntPtr thisPtr, Guid iid, bool addBasePressure)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            T vftblT = GetVtable(thisPtr);
+
+            if (ComWrappersSupport.IsFreeThreaded(thisPtr))
+            {
+                var obj = new ObjectReference<T>(thisPtr, vftblT, addBasePressure);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+            else
+            {
+                var obj = new ObjectReferenceWithContext<T>(
+                    thisPtr,
+                    vftblT,
+                    Context.GetContextCallback(),
+                    Context.GetContextToken(),
+                    iid,
+                    addBasePressure);
+                thisPtr = IntPtr.Zero;
+                return obj;
+            }
+        }
+
 #if NET
         [RequiresUnreferencedCode(AttributeMessages.GenericRequiresUnreferencedCodeMessage)]
         [Obsolete(AttributeMessages.GenericDeprecatedMessage)]

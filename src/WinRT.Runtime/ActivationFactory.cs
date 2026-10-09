@@ -111,7 +111,8 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, IID.IID_IActivationFactory);
+                        // Activation factories are process-lifetime singletons, so memory pressure for them doesn't help the GC
+                        var objRef = ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, IID.IID_IActivationFactory, addBasePressure: false);
                         return (objRef, hr);
                     }
                     else
@@ -170,7 +171,8 @@ namespace WinRT
                     int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &iid, &instancePtr);
                     if (hr == 0)
                     {
-                        var objRef = ObjectReference<I>.Attach(ref instancePtr, iid);
+                        // Activation factories are process-lifetime singletons, so memory pressure for them doesn't help the GC
+                        var objRef = ObjectReference<I>.Attach(ref instancePtr, iid, addBasePressure: false);
                         return (objRef, hr);
                     }
                     else
@@ -195,6 +197,10 @@ namespace WinRT
     /// <summary>
     /// Provides support for activating WinRT types.
     /// </summary>
+    /// <remarks>
+    /// Activation factories are process-lifetime singletons, so their object references don't report base GC memory pressure,
+    /// as it can't help the GC reclaim any native memory.
+    /// </remarks>
 #if EMBED
     internal
 #else
@@ -355,13 +361,35 @@ namespace WinRT
                         using (activationFactory)
                         {
 #if NET
-                            return activationFactory.As<IUnknownVftbl>(iid);
+                            return AsWithoutBasePressure<IUnknownVftbl>(activationFactory, iid);
 #else
-                            return activationFactory.As<I>(iid);
+                            return AsWithoutBasePressure<I>(activationFactory, iid);
 #endif
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Queries an activation factory for an interface, without base GC memory pressure for the result.
+        /// </summary>
+        /// <typeparam name="T">The vtable type for the result.</typeparam>
+        /// <param name="activationFactory">The activation factory to query.</param>
+        /// <param name="iid">The IID of the interface to query for.</param>
+        /// <returns>The resulting object reference.</returns>
+        private static ObjectReference<T> AsWithoutBasePressure<T>(ObjectReference<IUnknownVftbl> activationFactory, Guid iid)
+        {
+            // Equivalent to 'As<T>(iid)', as activation factories are never aggregated nor tracked
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(activationFactory.ThisPtr, ref iid, out IntPtr ptr));
+
+            try
+            {
+                return ObjectReference<T>.Attach(ref ptr, iid, addBasePressure: false);
+            }
+            finally
+            {
+                MarshalExtensions.ReleaseIfNotNull(ptr);
             }
         }
 
@@ -412,7 +440,7 @@ namespace WinRT
                     instancePtr = activationHandler(typeName, iid);
                     if (instancePtr != IntPtr.Zero)
                     {
-                        return ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, iid);
+                        return ObjectReference<IUnknownVftbl>.Attach(ref instancePtr, iid, addBasePressure: false);
                     }
                 }
                 finally
