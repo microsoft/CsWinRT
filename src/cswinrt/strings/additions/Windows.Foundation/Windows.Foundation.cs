@@ -309,6 +309,12 @@ namespace System
                 throw new ArgumentNullException(nameof(asyncInfo));
             }
 
+            // Keep the WinRT operation alive while the task is pending, even without a cancellation registration.
+            // Otherwise its finalization can disconnect the completion handler and leave the task incomplete.
+            // A continuation releases this reference on completion without retaining it in Task.AsyncState.
+            Task.ContinueWith(static (_, state) => GC.KeepAlive(state), asyncInfo,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
             this._ct = cancellationToken;
             if (this._ct.CanBeCanceled)
             {
