@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TestComponentCSharp;
@@ -8,7 +9,7 @@ using Xunit;
 
 namespace UnitTest
 {
-    public class AsyncLifetimeTests
+    public partial class AsyncLifetimeTests
     {
         [Theory]
         [InlineData(0, AsyncStatus.Completed)]
@@ -124,6 +125,175 @@ namespace UnitTest
                 Assert.Equal(E_FAIL, error.InnerException.HResult);
             }
             GC.KeepAlive(instance);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void WrlOperationCanceledThroughToken(bool alreadyCanceled)
+        {
+            var instance = new Class();
+            using var cancellation = new CancellationTokenSource();
+            if (alreadyCanceled)
+            {
+                cancellation.Cancel();
+            }
+            var called = new TaskCompletionSource<AsyncStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int callbackCount = 0;
+            var (task, operation) = StartCancellableWrlAddition(instance, (_, status) =>
+            {
+                Interlocked.Increment(ref callbackCount);
+                called.TrySetResult(status);
+            }, cancellation.Token);
+
+            if (!alreadyCanceled)
+            {
+                Collect();
+                Assert.False(task.IsCompleted);
+                Assert.Equal(0, callbackCount);
+                cancellation.Cancel();
+            }
+
+            Assert.True(called.Task.Wait(5000), "The WRL cancellation completion handler was not called.");
+            Assert.Equal(AsyncStatus.Canceled, called.Task.Result);
+            Assert.Equal(1, callbackCount);
+            var error = Assert.Throws<TaskCanceledException>(() => task.GetAwaiter().GetResult());
+            Assert.Equal(cancellation.Token, error.CancellationToken);
+            Assert.True(SpinWait.SpinUntil(() =>
+            {
+                Collect();
+                return !operation.IsAlive;
+            }, 5000), "The canceled task must release its WinRT operation.");
+            GC.KeepAlive(task);
+            GC.KeepAlive(instance);
+        }
+
+        [Theory]
+        [InlineData(false, 0)]
+        [InlineData(true, 0)]
+        [InlineData(false, unchecked((int)0x80010108))]
+        [InlineData(true, unchecked((int)0x80010108))]
+        [InlineData(false, unchecked((int)0x800706BA))]
+        [InlineData(true, unchecked((int)0x800706BA))]
+        [InlineData(false, unchecked((int)0x89020001))]
+        [InlineData(true, unchecked((int)0x89020001))]
+        [InlineData(false, unchecked((int)0x80004005))]
+        [InlineData(true, unchecked((int)0x80004005))]
+        public void CancellationCompletesTaskWithoutNativeCompletion(bool alreadyCanceled, int cancelError)
+        {
+            using var cancellation = new CancellationTokenSource();
+            if (alreadyCanceled)
+            {
+                cancellation.Cancel();
+            }
+            var nativeError = cancelError == 0 ? null : new COMException("Test cancellation failure.", cancelError);
+            var action = new CancellationOnlyAsyncAction(nativeError);
+            var task = action.AsTask(cancellation.Token);
+            if (!alreadyCanceled)
+            {
+                Assert.False(task.IsCompleted);
+                if (cancelError == unchecked((int)0x80004005))
+                {
+                    var error = Assert.Throws<AggregateException>(() => cancellation.Cancel());
+                    Assert.Same(nativeError, Assert.Single(error.InnerExceptions));
+                }
+                else
+                {
+                    cancellation.Cancel();
+                }
+            }
+            Assert.Equal(1, action.CancelCalls);
+            Assert.True(task.IsCanceled);
+            var canceled = Assert.Throws<TaskCanceledException>(() => task.GetAwaiter().GetResult());
+            Assert.Equal(cancellation.Token, canceled.CancellationToken);
+        }
+
+        [Fact]
+        public void CompletionUnregistersCancellation()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var action = new CancellationOnlyAsyncAction(null);
+            var task = action.AsTask(cancellation.Token);
+            action.Complete();
+            Assert.True(task.Wait(5000));
+            cancellation.Cancel();
+            Assert.Equal(0, action.CancelCalls);
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+        }
+
+        [Fact]
+        public void CancellationRacingWithCompletion()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                using var cancellation = new CancellationTokenSource();
+                using var ready = new ManualResetEventSlim();
+                var action = new CancellationOnlyAsyncAction(null);
+                var task = action.AsTask(cancellation.Token);
+                var cancel = Task.Run(() =>
+                {
+                    ready.Wait();
+                    cancellation.Cancel();
+                });
+                var complete = Task.Run(() =>
+                {
+                    ready.Wait();
+                    action.Complete();
+                });
+                ready.Set();
+                Assert.True(Task.WhenAll(cancel, complete).Wait(5000));
+                Assert.True(task.IsCompleted);
+                if (task.IsCanceled)
+                {
+                    var error = Assert.Throws<TaskCanceledException>(() => task.GetAwaiter().GetResult());
+                    Assert.Equal(cancellation.Token, error.CancellationToken);
+                }
+                else
+                {
+                    Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+                }
+            }
+        }
+
+        private sealed partial class CancellationOnlyAsyncAction : IAsyncAction
+        {
+            private readonly Exception _cancelError;
+            private int _cancelCalls;
+            private int _status = (int)AsyncStatus.Started;
+
+            public CancellationOnlyAsyncAction(Exception cancelError) => _cancelError = cancelError;
+            public int CancelCalls => Volatile.Read(ref _cancelCalls);
+            public uint Id => 1;
+            public AsyncStatus Status => (AsyncStatus)Volatile.Read(ref _status);
+            public Exception ErrorCode => null;
+            public AsyncActionCompletedHandler Completed { get; set; }
+
+            // Cancellation intentionally does not invoke Completed, even when it succeeds.
+            public void Cancel()
+            {
+                Interlocked.Increment(ref _cancelCalls);
+                if (_cancelError != null)
+                {
+                    throw _cancelError;
+                }
+            }
+
+            public void Complete()
+            {
+                Volatile.Write(ref _status, (int)AsyncStatus.Completed);
+                Completed(this, AsyncStatus.Completed);
+            }
+
+            public void Close() => throw new InvalidOperationException("The test action must not be closed by AsTask.");
+            public void GetResults() => throw new InvalidOperationException("The test action has no results.");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static (Task<uint> Task, WeakReference Operation) StartCancellableWrlAddition(Class instance,
+            AsyncOperationWithProgressCompletedHandler<uint, uint> observer, CancellationToken token)
+        {
+            var operation = instance.WrlAddAsyncWithProgress(42, 8, observer);
+            return (operation.AsTask(token), new WeakReference(operation));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
