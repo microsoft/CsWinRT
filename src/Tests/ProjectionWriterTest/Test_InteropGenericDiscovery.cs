@@ -14,7 +14,7 @@ using WindowsRuntime.ProjectionWriter;
 namespace ProjectionWriterTest;
 
 [TestClass]
-public partial class Test_InteropGenericDiscovery
+public class Test_InteropGenericDiscovery
 {
     private const string RecursionWarning = "CSWINRTINTEROPGEN0104";
     private const string ComplexityWarning = "CSWINRTINTEROPGEN0105";
@@ -669,8 +669,7 @@ public partial class Test_InteropGenericDiscovery
             timeout: timeout ?? TimeSpan.FromSeconds(30));
     }
 
-    private static HashSet<string> GetComWrappersTypeAssociations(
-        string path, string groupName = "WindowsRuntimeComWrappersTypeMapGroup")
+    private static HashSet<string> GetComWrappersTypeAssociations(string path)
     {
         using FileStream stream = File.OpenRead(path);
         using PEReader pe = new(stream);
@@ -711,7 +710,7 @@ public partial class Test_InteropGenericDiscovery
             Assert.AreEqual(0x12, signature.ReadByte());
             TypeReference group = reader.GetTypeReference((TypeReferenceHandle)signature.ReadTypeHandle());
 
-            if (reader.GetString(group.Name) != groupName)
+            if (reader.GetString(group.Name) != "WindowsRuntimeComWrappersTypeMapGroup")
             {
                 continue;
             }
@@ -720,7 +719,7 @@ public partial class Test_InteropGenericDiscovery
             Assert.AreEqual(1, value.ReadUInt16());
             string source = value.ReadSerializedString()!;
 
-            Assert.IsTrue(types.Add(source), $"Duplicate '{groupName}' association for '{source}'.");
+            Assert.IsTrue(types.Add(source), $"Duplicate CCW association for '{source}'.");
         }
 
         return types;
