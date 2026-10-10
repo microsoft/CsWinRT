@@ -64,7 +64,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
     private readonly HashSet<TypeSignature> _visitedTypes;
 
     /// <summary>The FIFO worklist of type or method contexts awaiting member discovery.</summary>
-    private readonly Queue<(TypeSignature? Type, MethodDefinition? Method, GenericContext Context, int Depth)> _pendingMembers;
+    private readonly Queue<PendingMember> _pendingMembers;
 
     /// <summary>Argument contexts grouped by resolved method definition identity, not by method signature.</summary>
     private readonly Dictionary<MethodDefinition, HashSet<IList<TypeSignature>>> _visitedMethods;
@@ -193,7 +193,11 @@ internal sealed class TypeSignatureDiscovery<TResult>
 
                 if (_visitedTypes.Add(signature))
                 {
-                    _pendingMembers.Enqueue((signature, null, default, 0));
+                    _pendingMembers.Enqueue(new PendingMember(
+                        type: signature,
+                        method: null,
+                        context: default,
+                        depth: 0));
                 }
             }
         }
@@ -229,7 +233,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
         // A 'C<int>' TypeSpec lets us discover 'List<int>' from 'M()', unlike the open method definition.
         // Closed types discovered through generic factories need the same traversal, including ordinary
         // methods and cache initializers, to expose nested property/indexer descriptors transitively.
-        while (_pendingMembers.TryDequeue(out (TypeSignature? Type, MethodDefinition? Method, GenericContext Context, int Depth) current))
+        while (_pendingMembers.TryDequeue(out PendingMember current))
         {
             _token.ThrowIfCancellationRequested();
 
@@ -326,7 +330,11 @@ internal sealed class TypeSignatureDiscovery<TResult>
                 // discovered type beyond the depth limit, but do not expand its members.
                 if (depth <= MaxDiscoveryDepth)
                 {
-                    _pendingMembers.Enqueue((genericType, null, default, depth));
+                    _pendingMembers.Enqueue(new PendingMember(
+                        type: genericType,
+                        method: null,
+                        context: default,
+                        depth: depth));
                 }
                 else if (!_recursionLimitReported)
                 {
@@ -460,7 +468,11 @@ internal sealed class TypeSignatureDiscovery<TResult>
 
         if (depth <= MaxDiscoveryDepth)
         {
-            _pendingMembers.Enqueue((null, definition, genericContext, depth));
+            _pendingMembers.Enqueue(new PendingMember(
+                type: null,
+                method: definition,
+                context: genericContext,
+                depth: depth));
         }
         else if (!_recursionLimitReported)
         {
@@ -590,5 +602,31 @@ internal sealed class TypeSignatureDiscovery<TResult>
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// A type or method context awaiting member discovery.
+    /// </summary>
+    /// <param name="type">The type context to expand, or <see langword="null"/> for a method body.</param>
+    /// <param name="method">The method body to scan, or <see langword="null"/> for a type context.</param>
+    /// <param name="context">The substituted method context, or the default value for type expansion.</param>
+    /// <param name="depth">The expansion depth, or zero for an explicit metadata root.</param>
+    private readonly struct PendingMember(
+        TypeSignature? type,
+        MethodDefinition? method,
+        GenericContext context,
+        int depth)
+    {
+        /// <summary>The type context to expand, or <see langword="null"/> for a method body.</summary>
+        public TypeSignature? Type { get; } = type;
+
+        /// <summary>The method body to scan, or <see langword="null"/> for a type context.</summary>
+        public MethodDefinition? Method { get; } = method;
+
+        /// <summary>The substituted method context; type contexts are composed when dequeued.</summary>
+        public GenericContext Context { get; } = context;
+
+        /// <summary>The expansion depth, with zero reserved for explicit metadata roots.</summary>
+        public int Depth { get; } = depth;
     }
 }
