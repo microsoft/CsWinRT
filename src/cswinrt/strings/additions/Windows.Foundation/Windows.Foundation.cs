@@ -299,7 +299,7 @@ namespace System
         private const int JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
 
         private readonly CancellationToken _ct;
-        private readonly CancellationTokenRegistration _asyncInfoRegistration;
+        private IAsyncInfo _asyncInfo;
         private readonly CancellationTokenRegistration _registration;
 
         internal AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
@@ -309,52 +309,34 @@ namespace System
                 throw new ArgumentNullException(nameof(asyncInfo));
             }
 
-            // The operation's completion delegate targets this bridge, not its RCW, and the returned task does not
-            // itself retain either. Without another root (such as a live cancellation registration), GC can release
+            _asyncInfo = asyncInfo;
+
+            // The operation's completion delegate targets this bridge, and the returned task does not itself retain
+            // the bridge. Without another root (such as a live cancellation registration), GC can release
             // the RCW's native references before completion. Some operations, including PackageManager deployments,
-            // then stop delivering completion callbacks, leaving the task pending. Retain the RCW through a pending
-            // continuation so completion releases it, rather than keeping it in Task.AsyncState for the task's lifetime.
-            Task.ContinueWith(static (_, state) => GC.KeepAlive(state), asyncInfo,
+            // then stop delivering completion callbacks, leaving the task pending. Retain the bridge through a pending
+            // continuation, clearing its RCW reference on all task-completion paths, including cancellation without a
+            // native completion callback. This avoids retaining the RCW in Task.AsyncState for the task's lifetime.
+            Task.ContinueWith(static (_, state) =>
+            {
+                Interlocked.Exchange(ref ((AsyncInfoToTaskBridge<TResult, TProgress>)state)._asyncInfo, null);
+            }, this,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
             this._ct = cancellationToken;
             if (this._ct.CanBeCanceled)
             {
-#if NET
-                _registration = this._ct.Register(static (b, ct) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(ct), this);
-#else
-                _registration = this._ct.Register((b) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(this._ct), this);
-#endif
                 // Handle Exception from Cancel() if the token is already canceled.
                 try
                 {
-                    _asyncInfoRegistration = this._ct.Register(static ai =>
-                    {
-                        IAsyncInfo asyncInfo = (IAsyncInfo)ai;
-
-                        try
-                        {
-                            asyncInfo.Cancel();
-                        }
-                        catch (Exception e) when (
-                            e is COMException comException &&
-                            comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
-                        {
-                            // In the event of the async action/operation failing because it belonged to some COM server
-                            // that was disconnected, handle the failure gracefully and do nothing here. We don't want to
-                            // crash the entire process because of this. In this case, the task being returned to the
-                            // callers will already be marked as canceled, so this way they can properly handle things.
-                            // If they then tried to call any other methods on another object from the same COM server,
-                            // that would likely also fail in the same way, but once again at least they'll be able to
-                            // handle that as needed.
-                        }
-                    }, asyncInfo);
+                    _registration = this._ct.Register(static state =>
+                        ((AsyncInfoToTaskBridge<TResult, TProgress>)state).Cancel(), this);
                 }
                 catch (Exception ex)
                 {
-                    if (!base.Task.IsFaulted)
+                    // An already-canceled token invokes Cancel during registration; its finally completes the task.
+                    if (!base.Task.IsCompleted)
                     {
-                        Debug.Fail($"Expected base task to already be faulted but found it in state {base.Task.Status}");
                         base.TrySetException(ex);
                     }
                 }
@@ -366,6 +348,27 @@ namespace System
                 this.Cleanup();
             }
         }
+
+        private void Cancel()
+        {
+            try
+            {
+                // Completion may have released the source before this cancellation callback starts.
+                Volatile.Read(ref _asyncInfo)?.Cancel();
+            }
+            catch (Exception e) when (
+                e is COMException comException &&
+                comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
+            {
+                // A disconnected server cannot deliver completion; the task is canceled in the finally block.
+            }
+            finally
+            {
+                // Cancel the task even if native cancellation throws and CTS.Cancel(true) stops invoking callbacks.
+                base.TrySetCanceled(_ct);
+            }
+        }
+
         internal void CompleteFromAsyncAction(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
         {
             Complete(asyncInfo, null, asyncStatus);
@@ -472,7 +475,6 @@ namespace System
         private void Cleanup()
         {
             _registration.Dispose();
-            _asyncInfoRegistration.Dispose();
         }
     }
 }

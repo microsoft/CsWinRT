@@ -209,6 +209,22 @@ namespace UnitTest
         }
 
         [Fact]
+        public void CancellationStopsOnFirstExceptionStillCancelsTask()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var nativeError = new COMException("Test cancellation failure.", unchecked((int)0x80004005));
+            var action = new CancellationOnlyAsyncAction(nativeError);
+            var task = action.AsTask(cancellation.Token);
+
+            var error = Assert.Throws<COMException>(() => cancellation.Cancel(throwOnFirstException: true));
+            Assert.Same(nativeError, error);
+            Assert.Equal(1, action.CancelCalls);
+            Assert.True(task.IsCanceled);
+            var canceled = Assert.Throws<TaskCanceledException>(() => task.GetAwaiter().GetResult());
+            Assert.Equal(cancellation.Token, canceled.CancellationToken);
+        }
+
+        [Fact]
         public void CompletionUnregistersCancellation()
         {
             using var cancellation = new CancellationTokenSource();
