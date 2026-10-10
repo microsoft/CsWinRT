@@ -1,4 +1,6 @@
 #include "pch.h"
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.Streams.h>
 #include "AsyncSignal.h"
 #include "Class.h"
 #include "Class.g.cpp"
@@ -1161,6 +1163,31 @@ namespace winrt::TestComponentCSharp::implementation
     IVectorView<int32_t> Class::GetIntVector()
     {
         return winrt::single_threaded_vector_view(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+    }
+
+    Windows::Foundation::IInspectable Class::GetInputStreamOptionsVector()
+    {
+        // Keep the closed vector types out of the managed projection's signatures.
+        return winrt::single_threaded_vector(std::vector{
+            Windows::Storage::Streams::InputStreamOptions::None,
+            Windows::Storage::Streams::InputStreamOptions::Partial,
+            Windows::Storage::Streams::InputStreamOptions::ReadAhead });
+    }
+
+    Windows::Foundation::IInspectable Class::GetFileAccessModeVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            Windows::Storage::FileAccessMode::Read,
+            Windows::Storage::FileAccessMode::ReadWrite,
+            Windows::Storage::FileAccessMode::Read });
+    }
+
+    Windows::Foundation::IInspectable Class::GetCreationCollisionOptionVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            Windows::Storage::CreationCollisionOption::GenerateUniqueName,
+            Windows::Storage::CreationCollisionOption::ReplaceExisting,
+            Windows::Storage::CreationCollisionOption::FailIfExists });
     }
 
     IVectorView<bool> Class::GetBoolVector()

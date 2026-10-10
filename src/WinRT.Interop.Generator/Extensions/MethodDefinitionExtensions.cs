@@ -236,6 +236,49 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
+        /// Enumerates type specifications used as instruction operands, including casts, boxing, and type tokens.
+        /// </summary>
+        /// <returns>The type signatures encoded by the operands.</returns>
+        public IEnumerable<TypeSignature> EnumerateTypeOperandTypes()
+        {
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                // 'newarr' contributes an array, not just its element. Ordinary type references cannot
+                // contribute generic or array signatures and need not resolve private dependencies.
+                if (instruction.OpCode != Newarr &&
+                    instruction.Operand is TypeSpecification { Signature: { } signature })
+                {
+                    yield return signature;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enumerates methods referenced by instructions, including calls and delegate targets.
+        /// </summary>
+        /// <returns>The referenced methods.</returns>
+        public IEnumerable<IMethodDescriptor> EnumerateMethodOperands()
+        {
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                if (instruction.Operand is IMethodDescriptor descriptor)
+                {
+                    yield return descriptor;
+                }
+            }
+        }
+
+        /// <summary>
         /// Enumerates the declaring types and value types of fields accessed by a method.
         /// </summary>
         /// <param name="runtimeContext">The context to assume when resolving types.</param>

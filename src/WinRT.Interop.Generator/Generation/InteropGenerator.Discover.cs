@@ -577,7 +577,8 @@ internal partial class InteropGenerator
                 signatureComparer: discoveryState.SignatureComparer,
                 shouldProcessModule: candidate => ShouldProcessModule(args, discoveryState, candidate),
                 isMarshallingDisabledModule: discoveryState.IsMarshallingDisabledModule,
-                treatWarningsAsErrors: args.TreatWarningsAsErrors))
+                treatWarningsAsErrors: args.TreatWarningsAsErrors,
+                token: args.Token))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -623,7 +624,8 @@ internal partial class InteropGenerator
                 signatureComparer: discoveryState.SignatureComparer,
                 shouldProcessModule: candidate => ShouldProcessModule(args, discoveryState, candidate),
                 isMarshallingDisabledModule: discoveryState.IsMarshallingDisabledModule,
-                treatWarningsAsErrors: args.TreatWarningsAsErrors))
+                treatWarningsAsErrors: args.TreatWarningsAsErrors,
+                token: args.Token))
             {
                 args.Token.ThrowIfCancellationRequested();
 
