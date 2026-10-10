@@ -261,8 +261,48 @@ internal sealed partial class ProjectionGenerator
 
                 TypeKind kind = TypeKindResolver.Resolve(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
+
+                // Also emit the abstract base classes that let this runtime class be implemented in C#, if
+                // the projection being generated supports that (either because it was asked to, or because a
+                // referenced authoring projection declares the type and needs its implementation supplied).
+                if (kind == TypeKind.Class && AbiImplementableClassFactory.ShouldEmit(context, type))
+                {
+                    AbiImplementableClassFactory.WriteImplementableBases(writer, context, type, state.ImplementableClasses);
+                }
             }
             writer.WriteEndAbiNamespace(context);
+        }
+        else if (_settings.ImplementWinMDTypes)
+        {
+            // A reference projection has no ABI implementation types, but it still declares the abstract
+            // base classes that let its runtime classes be implemented in C#. Their bodies are supplied
+            // when an application is built, exactly like the rest of the projection.
+            bool wroteAbiNamespace = false;
+
+            foreach (TypeDefinition type in members.Types)
+            {
+                if (type.IsGeneric ||
+                    !_settings.Filter.Includes(type.FullName) ||
+                    TypeKindResolver.Resolve(type) != TypeKind.Class ||
+                    !AbiImplementableClassFactory.ShouldEmit(context, type))
+                {
+                    continue;
+                }
+
+                if (!wroteAbiNamespace)
+                {
+                    writer.WriteBeginAbiNamespace(context);
+
+                    wroteAbiNamespace = true;
+                }
+
+                AbiImplementableClassFactory.WriteImplementableBases(writer, context, type, state.ImplementableClasses);
+            }
+
+            if (wroteAbiNamespace)
+            {
+                writer.WriteEndAbiNamespace(context);
+            }
         }
 
         // Phase 4: Custom additions to namespaces

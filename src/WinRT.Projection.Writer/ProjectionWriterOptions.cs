@@ -44,6 +44,15 @@ public sealed class ProjectionWriterOptions
     public IReadOnlyList<string> Exclude { get; init; } = [];
 
     /// <summary>
+    /// Optional list of fully qualified type names to exclude from the projection, matched exactly.
+    /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="Exclude"/>, these win over every prefix rule. They name types that are known to be
+    /// projected into a different assembly, so the broad namespace includes are exactly what they carve out of.
+    /// </remarks>
+    public IReadOnlyList<string> ExcludeTypes { get; init; } = [];
+
+    /// <summary>
     /// Optional list of namespace prefixes to exclude from the projection additions.
     /// </summary>
     public IReadOnlyList<string> AdditionExclude { get; init; } = [];
@@ -67,6 +76,17 @@ public sealed class ProjectionWriterOptions
     public IReadOnlyList<string> ComponentImplementationAssemblyPaths { get; init; } = [];
 
     /// <summary>
+    /// The simple names of the authored Windows Runtime component assemblies being projected. Only
+    /// meaningful in <see cref="Component"/> mode.
+    /// </summary>
+    /// <remarks>
+    /// Every one of these gets an activation entry point, even when it contributes no activatable
+    /// classes. Components forward to that entry point unconditionally, so it has to exist for the
+    /// forward to resolve and report "not activatable here" rather than failing.
+    /// </remarks>
+    public IReadOnlyList<string> ComponentAssemblyNames { get; init; } = [];
+
+    /// <summary>
     /// Make exclusive-to interfaces public in the projection (default is internal).
     /// </summary>
     public bool PublicExclusiveTo { get; init; }
@@ -75,6 +95,26 @@ public sealed class ProjectionWriterOptions
     /// Fully qualified exclusive-to interface names to make public, independently of <see cref="PublicExclusiveTo"/>.
     /// </summary>
     public IReadOnlyList<string> PublicExclusiveToTypes { get; init; } = [];
+
+    /// <summary>
+    /// Additionally emit, for every runtime class the projection covers, the abstract
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;ActivationFactory</c> base
+    /// classes that let it be implemented (authored) in C#, along with the exclusive-to interfaces they
+    /// implement. Every member the Windows Runtime type requires is declared <c>abstract</c>, so the compiler
+    /// enforces a complete implementation.
+    /// <para>
+    /// In a reference projection the bases carry no implementation; it is supplied when an application is
+    /// built, exactly like the rest of the projection.
+    /// </para>
+    /// </summary>
+    public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
+    /// The full names of the runtime classes whose authoring surface must be emitted even when
+    /// <see cref="ImplementWinMDTypes"/> is not set. This is how an application supplies the implementation
+    /// behind the abstract base classes declared by the reference projections it consumes.
+    /// </summary>
+    public IReadOnlyList<string> ImplementableTypes { get; init; } = [];
 
     /// <summary>
     /// Enable dynamic interface casting for exclusive-to interfaces, subject to the IDIC include and exclude filters.

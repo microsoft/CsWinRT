@@ -35,6 +35,11 @@ internal static class WellKnownAttributeNames
     public const string OverridableAttribute = "OverridableAttribute";
 
     /// <summary>
+    /// The <c>[ProtectedAttribute]</c> attribute type name (marks an interface only derived classes can use).
+    /// </summary>
+    public const string ProtectedAttribute = "ProtectedAttribute";
+
+    /// <summary>
     /// The <c>[ExclusiveToAttribute]</c> attribute type name (marks an interface as exclusive to a class).
     /// </summary>
     public const string ExclusiveToAttribute = "ExclusiveToAttribute";

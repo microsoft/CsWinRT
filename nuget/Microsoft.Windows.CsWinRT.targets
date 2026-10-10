@@ -351,6 +351,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTComponent)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTImplementWinMDTypes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="IdicExclusiveToIncludes=$(CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="IdicExclusiveToExcludes=$(CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes)" />
@@ -360,6 +361,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTRefGenEffectiveToolsDirectory)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(_CsWinRTRunProjectionRefGenerator)" />
+
+      <!--
+        The set of metadata inputs. The target's Inputs above already covers their contents, but a timestamp
+        check compares the newest input against the output, so it can never observe a removal (or an addition
+        that is older than the last output). Hashing the set turns that into a change it can see.
+      -->
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="@(CsWinRTInputs)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTInteropMetadata)" />
     </ItemGroup>
 
     <Hash ItemsToHash="@(_CsWinRTProjectionRefGenInputsCacheToHash)">
@@ -414,6 +423,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
+        ImplementWinMDTypes="$(CsWinRTImplementWinMDTypes)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
         IdicExclusiveToIncludes="$(CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes)"
         IdicExclusiveToExcludes="$(CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes)"
@@ -438,6 +448,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
+
+  <!--
+    Note: 'CsWinRTImplementWinMDTypes' turns a projection project into an *authoring* projection. Instead of
+    projecting the Windows Runtime types in its inputs, it emits the abstract 'ABI.<Ns>.<Class>' base classes
+    (and their exclusive-to interfaces) that let those types be implemented in C#. Use it together with
+    'CsWinRTGenerateReferenceProjection', so the result is a reference assembly carrying no implementation;
+    that implementation is regenerated into 'WinRT.Projection.dll' when an application is built.
+  -->
 
   <!--
     ============================================================

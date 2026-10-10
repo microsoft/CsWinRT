@@ -5,6 +5,8 @@
 #undef GetCurrentTime
 
 #include <Windows.h>
+#include <hstring.h>
+#include <roapi.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 

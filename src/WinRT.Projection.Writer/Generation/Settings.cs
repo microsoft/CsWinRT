@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -72,6 +73,12 @@ internal sealed class Settings
     public HashSet<string> Exclude { get; } = [];
 
     /// <summary>
+    /// Gets the fully qualified type names to exclude from the projection, matched exactly.
+    /// These win over every prefix rule; see <see cref="ProjectionWriterOptions.ExcludeTypes"/>.
+    /// </summary>
+    public HashSet<string> ExcludeTypes { get; } = [];
+
+    /// <summary>
     /// Gets the namespace prefixes whose namespace-additions resources should be excluded.
     /// </summary>
     public HashSet<string> AdditionExclude { get; } = [];
@@ -117,6 +124,13 @@ internal sealed class Settings
     public HashSet<string> ComponentImplementationAssemblies { get; } = [];
 
     /// <summary>
+    /// Gets the simple names of the authored Windows Runtime component assemblies being projected. Each one
+    /// gets an activation entry point even when it contributes no activatable classes, because components
+    /// forward to that entry point unconditionally.
+    /// </summary>
+    public HashSet<string> ComponentAssemblyNames { get; } = [];
+
+    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }
@@ -125,6 +139,19 @@ internal sealed class Settings
     /// Gets the fully qualified exclusive-to interface names to emit as public.
     /// </summary>
     public HashSet<string> PublicExclusiveToTypes { get; } = [];
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the projection additionally emits the abstract
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;ActivationFactory</c> base classes
+    /// (and the exclusive-to interfaces they implement) that let its runtime classes be implemented in C#.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
+    /// Gets the full names of the runtime classes whose authoring surface must additionally be emitted into
+    /// an otherwise normal projection (see the option of the same name on <see cref="ProjectionWriterOptions"/>).
+    /// </summary>
+    public FrozenSet<string> ImplementableTypes { get; init; } = [];
 
     /// <summary>
     /// Gets or sets a value indicating whether the IDIC pattern is applied to <c>[ExclusiveTo]</c> interfaces.
@@ -196,8 +223,8 @@ internal sealed class Settings
             throw WellKnownProjectionWriterExceptions.SettingsAlreadyReadOnly();
         }
 
-        Filter = new TypeFilter(Include, Exclude, IncludeTypes);
-        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes);
+        Filter = new TypeFilter(Include, Exclude, IncludeTypes, ExcludeTypes);
+        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes, ExcludeTypes);
         IdicExclusiveToFilter = new ExclusiveToInterfaceFilter(IdicExclusiveToIncludes, IdicExclusiveToExcludes, IdicExclusiveToTypes);
         _isReadOnly = true;
     }

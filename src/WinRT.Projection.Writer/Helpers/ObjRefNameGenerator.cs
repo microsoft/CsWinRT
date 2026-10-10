@@ -52,7 +52,7 @@ internal static class ObjRefNameGenerator
     }
 
     /// <summary>
-    /// Like <see cref="InterfaceFactory.WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// Like <see cref="InterfaceFactory.WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef, bool)"/>
     /// but always emits a fully qualified name with <c>global::</c> prefix on every type
     /// (even same-namespace ones). Used for objref name computation where uniqueness across
     /// namespaces matters.

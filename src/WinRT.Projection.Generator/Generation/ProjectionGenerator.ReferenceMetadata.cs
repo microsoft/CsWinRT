@@ -19,6 +19,23 @@ internal partial class ProjectionGenerator
     /// </summary>
     private static HashSet<string> ReadIdicExclusiveToTypes(ModuleDefinition module, string referencePath)
     {
+        return ReadReferenceAssemblyMetadataValues(module, referencePath, WindowsRuntimeReferenceAssemblyMetadata.IdicExclusiveTo);
+    }
+
+    /// <summary>
+    /// Reads the Windows Runtime classes a reference projection declares implementable bases for (built with
+    /// <c>CsWinRTImplementWinMDTypes</c>).
+    /// </summary>
+    private static HashSet<string> ReadImplementableClassNames(ModuleDefinition module, string referencePath)
+    {
+        return ReadReferenceAssemblyMetadataValues(module, referencePath, WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass);
+    }
+
+    /// <summary>
+    /// Reads all values recorded under a given key in the producer's reference assembly metadata.
+    /// </summary>
+    private static HashSet<string> ReadReferenceAssemblyMetadataValues(ModuleDefinition module, string referencePath, string metadataKey)
+    {
         HashSet<string> types = new(StringComparer.Ordinal);
         foreach (CustomAttribute attribute in module.Assembly!.CustomAttributes)
         {
@@ -35,7 +52,7 @@ internal partial class ProjectionGenerator
                 throw WellKnownProjectionGeneratorExceptions.InvalidReferenceAssemblyMetadata(referencePath);
             }
 
-            if (key != WindowsRuntimeReferenceAssemblyMetadata.IdicExclusiveTo)
+            if (key != metadataKey)
             {
                 continue;
             }

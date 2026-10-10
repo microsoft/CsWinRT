@@ -39,6 +39,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTPackedWinMD | *(item)* | An item listing the `.winmd` files to add to the NuGet package under `metadata/`, so consumers can pass them back as `CsWinRTInputs` to generate the merged projection. List only the metadata the package owns: `CsWinRTInputs` also contains dependency `.winmd` files that belong to other packages. Requires `CsWinRTPackReferenceProjection` |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
+| CsWinRTImplementWinMDTypes | true \| *false | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C#. See the [documentation on implementing Windows Runtime types defined in an existing .winmd](../docs/implementing-winmd-types.md) |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
 | CsWinRTAnalyzeNetStandardAssemblies | *true \| false | Controls whether .NET Standard assemblies participate in interop discovery. Set to `false` to skip them in every marshalling mode, even when listed in `CsWinRTMarshallingEnabledAssembly`. Changes invalidate the generator's property-input cache |
 | CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to analyze for marshalling code regardless of `CsWinRTMarshallingMode`, subject to framework exclusions, `CsWinRTAnalyzeNetStandardAssemblies`, and explicit exclusions. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
@@ -111,6 +112,13 @@ Component references are picked up from two sources, treated as equivalent input
 * `<ProjectReference>` items whose `CsWinRTComponent` metadata is `true`. Components built with
   `CsWinRTComponent=true` automatically expose this metadata.
 * `@(CsWinRTNativeComponent)` items contributed by component-package targets files (see below).
+
+`<ProjectReference>` items to managed executables using CsWinRT are included in the aggregator as well. Each
+referenced project is copied to the consumer's output directory, so all of them are hosted from that one folder,
+and the merged bundle there has to cover every one of them. An executable still generates its own `WinRT.*`
+set for its own output, and uses the merged one when it is run from the consumer's output directory instead.
+This only applies to project references built normally (with JIT): a published (e.g. trimmed, ReadyToRun or
+Native AOT) executable carries its own self-contained set, and should be deployed in its own folder.
 
 Consumer-side properties:
 

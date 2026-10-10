@@ -23,8 +23,9 @@ public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
             return null;
         }
 
-        // Unwrap CCWs we recognize (same as with opaque objects)
-        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject))
+        // Unwrap CCWs we recognize (same as with opaque objects), except for implementations of Windows
+        // Runtime classes, which callers expect to receive as the projected type they implement
+        if (WindowsRuntimeObjectMarshaller.TryGetManagedObjectForProjection(value, out object? managedObject))
         {
             return managedObject;
         }

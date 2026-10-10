@@ -26,10 +26,12 @@ public class Test_TypeFilter
     [TestMethod]
     [DataRow("Contoso.User", true)]
     [DataRow("Contoso.User2", true)]
-    [DataRow("Contoso.UserProfile.UserSetupManager", true)]
+    [DataRow("Contoso.UserProfile.UserSetupManager", false)]
     [DataRow("Unrelated.User", false)]
     public void PrefixIncludes_KeepExistingSemantics(string name, bool expected)
     {
+        // Matched on a segment boundary, so 'Contoso.User' does not claim 'Contoso.UserProfile',
+        // but still as a prefix against the type name within a namespace, hence 'Contoso.User2'.
         TypeFilter filter = new(["Contoso.User"], []);
 
         Assert.AreEqual(expected, filter.Includes(name));
@@ -109,5 +111,54 @@ public class Test_TypeFilter
         Assert.IsFalse(filter.Includes("Windows.Foundation.Uri"));
         Assert.IsFalse(filter.Includes("Contoso.User"));
         Assert.IsFalse(filter.IncludesNamespace("Contoso"));
+    }
+
+    [TestMethod]
+    [DataRow("Windows.Foundation.Uri", true)]
+    [DataRow("Windows.UI.Color", true)]
+    [DataRow("Windows.UI.Contoso.WidgetItemView", false)]
+    [DataRow("Windows.UI.Contoso.WidgetQueryResults", false)]
+    public void ExactTypeExcludes_CarveOutOfANamespaceInclude(string name, bool expected)
+    {
+        TypeFilter filter = new(
+            include: ["Windows"],
+            exclude: [],
+            includeTypes: null,
+            excludeTypes: ["Windows.UI.Contoso.WidgetItemView", "Windows.UI.Contoso.WidgetQueryResults"]);
+
+        Assert.AreEqual(expected, filter.Includes(name));
+    }
+
+    [TestMethod]
+    public void ExactTypeExcludes_OutrankAnExactInclude()
+    {
+        // The two lists come from different projections claiming the same type, and the exclude wins
+        TypeFilter filter = new([], [], ["Contoso.User"], ["Contoso.User"]);
+
+        Assert.IsFalse(filter.Includes("Contoso.User"));
+    }
+
+    [TestMethod]
+    [DataRow("Windows.UI.Contoso.WidgetItemView", false)]
+    [DataRow("Windows.UI.Contoso.WidgetItemView2", true)]
+    [DataRow("Windows.UI.Contoso.WidgetItemViewFactory", true)]
+    [DataRow("Windows.UI.WidgetItemView", true)]
+    public void ExactTypeExcludes_DoNotMatchPrefixes(string name, bool expected)
+    {
+        // A prefix 'exclude' would take the '*Factory' and '*Statics' companions with it
+        TypeFilter filter = new(["Windows"], [], null, ["Windows.UI.Contoso.WidgetItemView"]);
+
+        Assert.AreEqual(expected, filter.Includes(name));
+    }
+
+    [TestMethod]
+    public void ExcludeTypesOnlyFilter_StillIncludesEverythingElse()
+    {
+        // Unlike a prefix exclude, these say nothing about what else belongs
+        TypeFilter filter = new([], [], null, ["Contoso.User"]);
+
+        Assert.IsFalse(filter.Includes("Contoso.User"));
+        Assert.IsTrue(filter.Includes("Contoso.Other"));
+        Assert.IsTrue(filter.IncludesNamespace("Contoso"));
     }
 }

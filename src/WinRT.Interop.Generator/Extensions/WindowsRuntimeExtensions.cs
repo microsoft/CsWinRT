@@ -8,6 +8,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
@@ -778,6 +779,36 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Tries to get the Windows Runtime class that a type implements by deriving from one of the abstract base
+        /// classes CsWinRT generates for authoring Windows Runtime types declared in existing metadata.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="runtimeClassName">The fully qualified name of the Windows Runtime class being implemented, if any.</param>
+        /// <returns>Whether the type implements a Windows Runtime class declared in existing metadata.</returns>
+        /// <remarks>
+        /// The bases are generated when a projection is built with <c>CsWinRTImplementWinMDTypes</c>, and the reference
+        /// projection records the class each one stands for in its assembly metadata. The nearest such base wins, so a
+        /// type deriving from a generated base for a derived runtime class reports that derived class rather than one of
+        /// its ancestors. Activation factory bases are never matched (see <see cref="ImplementableClassMetadata"/>).
+        /// </remarks>
+        public bool TryGetImplementedRuntimeClassName(InteropReferences interopReferences, [NotNullWhen(true)] out string? runtimeClassName)
+        {
+            for (TypeDefinition? current = type; current is not null;)
+            {
+                if (ImplementableClassMetadata.TryGetImplementableClassName(current, out runtimeClassName))
+                {
+                    return true;
+                }
+
+                current = current.BaseType?.Resolve(interopReferences.RuntimeContext);
+            }
+
+            runtimeClassName = null;
+
+            return false;
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a type that can be constructed (i.e. instantiated).
         /// </summary>
         public bool IsConstructibleType => type is { IsInterface: false, IsAbstract: false };
@@ -886,6 +917,7 @@ internal static class WindowsRuntimeExtensions
                 type.BaseType is { } baseType &&
                 interopReferences.SignatureComparer.Equals(baseType, interopReferences.Attribute);
         }
+
     }
 
     extension(TypeSignature signature)

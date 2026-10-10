@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    An authoring projection for the 'TestComponent' metadata: the same types the 'Test' projection
+    exposes for consumption, but also carrying the abstract 'ABI.TestComponent.*' bases that let them
+    be implemented in C#. Consumed by the 'ImplementWinMDTypes' functional test.
+
+    'TestComponent' covers the shapes that matter in one place: default activation ('Class'), a
+    composable class ('Composable'), a composable class deriving from another ('Derived'), and a
+    statics-only class ('TestRunner', which gets a factory base but no instance base).
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+    <CsWinRTImplementWinMDTypes>true</CsWinRTImplementWinMDTypes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
+    <ProjectReference Include="..\Windows\Windows.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CsWinRTIncludes>TestComponent;</CsWinRTIncludes>
+  </PropertyGroup>
+
+</Project>

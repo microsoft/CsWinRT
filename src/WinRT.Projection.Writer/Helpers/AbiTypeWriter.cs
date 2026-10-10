@@ -180,14 +180,25 @@ internal static class AbiTypeWriter
                 // void* (it's a runtime class/interface/delegate).
                 if (r.IsValueType)
                 {
-                    writer.Write(GlobalPrefix);
+                    // A custom-mapped type is projected as its .NET counterpart, so the mapping has to be
+                    // applied here too: the Windows Runtime name does not exist in the projection.
+                    string unresolvedNs = rns;
+                    string unresolvedName = rname;
 
-                    if (!string.IsNullOrEmpty(rns))
+                    if (MappedTypes.Get(rns, rname) is { MappedName.Length: > 0 } unresolvedMapped)
                     {
-                        writer.Write($"{rns}.");
+                        unresolvedNs = unresolvedMapped.MappedNamespace;
+                        unresolvedName = unresolvedMapped.MappedName;
                     }
 
-                    writer.Write(IdentifierEscaping.StripBackticks(rname));
+                    writer.Write(GlobalPrefix);
+
+                    if (!string.IsNullOrEmpty(unresolvedNs))
+                    {
+                        writer.Write($"{unresolvedNs}.");
+                    }
+
+                    writer.Write(IdentifierEscaping.StripBackticks(unresolvedName));
                     break;
                 }
 

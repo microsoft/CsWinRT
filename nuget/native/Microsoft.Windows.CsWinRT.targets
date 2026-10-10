@@ -10,6 +10,9 @@ Walks both sources of CsWinRT component references attached to the consuming vcx
   - @(CsWinRTNativeComponent) items contributed by component-package targets files
     (each item's Identity is the path to a managed component .dll).
 
+ProjectReferences to CsWinRT executables (CsWinRTExecutable metadata) are included too: every
+referenced project is hosted from the consumer's output directory, so the merged set has to cover them.
+
 Synthesizes a temporary aggregator csproj that references every detected component, builds it
 with CsWinRTBuildForNativeConsumer=true so the cswinrt projection / interop pipeline runs once
 across the union of all referenced components (a single deduplicated WinRT.Interop.dll plus
@@ -68,27 +71,38 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
                                      Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
 
+      <!--
+        CsWinRT executable csprojs from <ProjectReference> (CsWinRTExecutable=true metadata). They are hosted from
+        the same folder as the components, so they are merged into the same 'WinRT.*' set, which has to cover them.
+      -->
+      <_CsWinRTExecutableProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
+                                      Condition="'%(_ResolvedProjectReferencePaths.CsWinRTExecutable)' == 'true'" />
+
+      <!-- Every project reference whose metadata configures the aggregator below -->
+      <_CsWinRTAggregatedProjectReferencePaths Include="@(_ResolvedProjectReferencePaths)"
+                                               Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' or '%(_ResolvedProjectReferencePaths.CsWinRTExecutable)' == 'true'" />
+
       <!-- Distinct list of TFM values supplied by either ref source. Used for validation below. -->
-      <_CsWinRTComponentTargetFrameworkValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)"
-                                              Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)' != ''" />
+      <_CsWinRTComponentTargetFrameworkValues Include="%(_CsWinRTAggregatedProjectReferencePaths.CsWinRTComponentTargetFramework)"
+                                              Condition="'%(_CsWinRTAggregatedProjectReferencePaths.CsWinRTComponentTargetFramework)' != ''" />
       <_CsWinRTComponentTargetFrameworkValues Include="%(CsWinRTNativeComponent.CsWinRTComponentTargetFramework)"
                                               Condition="'%(CsWinRTNativeComponent.CsWinRTComponentTargetFramework)' != ''" />
 
       <!-- Optional WindowsSdkPackageVersion contributed by either ref source. -->
-      <_CsWinRTComponentSdkPackageVersionValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)"
-                                                Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
+      <_CsWinRTComponentSdkPackageVersionValues Include="%(_CsWinRTAggregatedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)"
+                                                Condition="'%(_CsWinRTAggregatedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
       <_CsWinRTComponentSdkPackageVersionValues Include="%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)"
                                                 Condition="'%(CsWinRTNativeComponent.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
 
       <!-- Optional UWP XAML (Windows.UI.Xaml) projection flag contributed by either ref source. -->
-      <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(_ResolvedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)"
-                                                          Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
+      <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(_CsWinRTAggregatedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)"
+                                                          Condition="'%(_CsWinRTAggregatedProjectReferencePaths.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
       <_CsWinRTComponentUseWindowsUIXamlProjectionsValues Include="%(CsWinRTNativeComponent.CsWinRTComponentUseWindowsUIXamlProjections)"
                                                           Condition="'%(CsWinRTNativeComponent.CsWinRTComponentUseWindowsUIXamlProjections)' != ''" />
     </ItemGroup>
 
     <PropertyGroup>
-      <_CsWinRTHasComponentReferences Condition="'@(_CsWinRTComponentProjectPaths)' != '' or '@(CsWinRTNativeComponent)' != ''">true</_CsWinRTHasComponentReferences>
+      <_CsWinRTHasComponentReferences Condition="'@(_CsWinRTComponentProjectPaths)' != '' or '@(_CsWinRTExecutableProjectPaths)' != '' or '@(CsWinRTNativeComponent)' != ''">true</_CsWinRTHasComponentReferences>
 
       <!-- Distinct TFM values, semicolon-joined for downstream validation. -->
       <_CsWinRTDistinctComponentTargetFrameworks>@(_CsWinRTComponentTargetFrameworkValues->Distinct(), ';')</_CsWinRTDistinctComponentTargetFrameworks>
@@ -118,8 +132,7 @@ Properties consumers may set on the vcxproj:
 
     <!-- Inputs for incremental gating: any change to the targets file or any component artifact re-runs the aggregator. -->
     <ItemGroup>
-      <_CsWinRTAggregatorInputs Include="@(_ResolvedProjectReferencePaths)"
-                                Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
+      <_CsWinRTAggregatorInputs Include="@(_CsWinRTAggregatedProjectReferencePaths)" />
       <_CsWinRTAggregatorInputs Include="@(CsWinRTNativeComponent)" />
       <_CsWinRTAggregatorInputs Include="$(MSBuildThisFileFullPath)" />
     </ItemGroup>
@@ -149,7 +162,7 @@ Properties consumers may set on the vcxproj:
           DependsOnTargets="_DetectCsWinRTNativeComponentReferences"
           AfterTargets="Link"
           Inputs="@(_CsWinRTAggregatorInputs)"
-          Outputs="$(OutDir)WinRT.Component.dll"
+          Outputs="$(OutDir)WinRT.Interop.dll"
           Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
 
     <!-- _CsWinRTHasComponentReferences is set in _DetectCsWinRTNativeComponentReferences (DependsOnTargets above). -->
@@ -159,7 +172,7 @@ Properties consumers may set on the vcxproj:
 
     <Message Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Importance="$(CsWinRTMessageImportance)"
-             Text="CsWinRT: aggregating components into $(OutDir)WinRT.Component.dll: @(_CsWinRTComponentProjectPaths);@(CsWinRTNativeComponent)" />
+             Text="CsWinRT: aggregating into $(OutDir): @(_CsWinRTComponentProjectPaths);@(_CsWinRTExecutableProjectPaths);@(CsWinRTNativeComponent)" />
 
     <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTTempProjectDir>$(_CsWinRTNativeConsumerIntermediateDir)</_CsWinRTTempProjectDir>
@@ -200,11 +213,16 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
+      <!-- Referenced executables may be self-contained, which the aggregator (consuming their assembly only) is not. -->
+      <_CsWinRTTempProjectLines Include="    &lt;ValidateExecutableReferencesMatchSelfContained&gt;false&lt;/ValidateExecutableReferencesMatchSelfContained&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <!-- Project-supplied components flow as ProjectReferences. -->
       <_CsWinRTTempProjectLines Condition="'@(_CsWinRTComponentProjectPaths)' != ''"
                                 Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
+      <!-- So do executables, so the interop and projection generators also see everything they use. -->
+      <_CsWinRTTempProjectLines Condition="'@(_CsWinRTExecutableProjectPaths)' != ''"
+                                Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTExecutableProjectPaths.Identity)&quot; /&gt;" />
       <!-- Package-supplied components flow as <Reference HintPath=...> with CsWinRTComponent=true metadata so they go through the same Authoring pipeline. -->
       <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
                                 Include="    &lt;Reference Include=&quot;%(CsWinRTNativeComponent.Filename)&quot;&gt;" />

@@ -18,6 +18,7 @@ parameters:
     - CCW
     - NativeExposedType
     - TypeMarshaling
+    - ImplementWinMDTypes
     - UserDefinedTypeNames
     - ForwardedTypeIdentities
 

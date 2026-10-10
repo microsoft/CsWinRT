@@ -1,8 +1,8 @@
 #include "pch.h"
 
 using namespace winrt;
-using namespace Windows::Foundation;
-using namespace Windows::Foundation::Collections;
+using namespace winrt::Windows::Foundation;
+using namespace winrt::Windows::Foundation::Collections;
 
 // Activation tests across two CsWinRT components aggregated into one merged AOT host.
 
@@ -57,6 +57,32 @@ TEST(MultiComponent, GenericMapFromComponent2)
     EXPECT_EQ(counts.Lookup(L"alpha"), 1);
     EXPECT_EQ(counts.Lookup(L"beta"), 2);
     EXPECT_EQ(counts.Lookup(L"gamma"), 3);
+}
+
+// A class implemented from existing metadata is absent from the implementing component's '.winmd', so it
+// reaches the host purely through the generated activation entry points. It is activated by the name of
+// the class it implements, and has to report that name rather than the implementing type's. The raw ABI
+// is used because the projected type belongs to 'TestComponent', not to either component here.
+
+TEST(MultiComponent, ImplementedWinMDTypeActivatesAndReportsImplementedClassName)
+{
+    winrt::hstring className{ L"TestComponent.Class" };
+    winrt::guid iid = winrt::guid_of<winrt::Windows::Foundation::IActivationFactory>();
+
+    winrt::Windows::Foundation::IActivationFactory factory{ nullptr };
+
+    HRESULT hr = RoGetActivationFactory(
+        static_cast<HSTRING>(winrt::get_abi(className)),
+        reinterpret_cast<GUID const&>(iid),
+        winrt::put_abi(factory));
+
+    ASSERT_EQ(hr, S_OK);
+    ASSERT_TRUE(factory != nullptr);
+
+    auto instance = factory.ActivateInstance<winrt::Windows::Foundation::IInspectable>();
+
+    ASSERT_TRUE(instance != nullptr);
+    EXPECT_EQ(winrt::get_class_name(instance), winrt::hstring{ L"TestComponent.Class" });
 }
 
 TEST(ManagedHelpers, PrivateEventDeliversValue)
@@ -171,6 +197,37 @@ TEST(AuthoredGenerics, EnumAndDelegateArguments)
     ASSERT_EQ(callbacks.Size(), 1u);
     EXPECT_EQ(callbacks.GetAt(0)(21), 42);
 }
+
+#ifdef CSWINRT_JIT_HOSTED
+
+// A referenced CsWinRT executable is hosted from this folder too, where the only 'WinRT.*' set is the one
+// merged for this consumer. 'AuthoringTestExe' marshals types no component here uses, so it only succeeds
+// (exit code 100) if that merged set was generated with the executable as an input.
+
+TEST(ReferencedExecutable, RunsOnMergedSet)
+{
+    wchar_t modulePath[MAX_PATH];
+    ASSERT_NE(GetModuleFileNameW(nullptr, modulePath, MAX_PATH), 0u);
+
+    std::wstring exePath{ modulePath };
+    exePath = exePath.substr(0, exePath.find_last_of(L'\\') + 1) + L"AuthoringTestExe.exe";
+
+    STARTUPINFOW startupInfo{ sizeof(startupInfo) };
+    PROCESS_INFORMATION processInfo{};
+
+    ASSERT_TRUE(CreateProcessW(exePath.c_str(), nullptr, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo));
+
+    DWORD exitCode = 0;
+    EXPECT_EQ(WaitForSingleObject(processInfo.hProcess, 60000), WAIT_OBJECT_0);
+    EXPECT_TRUE(GetExitCodeProcess(processInfo.hProcess, &exitCode));
+
+    CloseHandle(processInfo.hThread);
+    CloseHandle(processInfo.hProcess);
+
+    EXPECT_EQ(exitCode, 100u);
+}
+
+#endif
 
 int main(int argc, char** argv)
 {

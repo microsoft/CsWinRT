@@ -38,6 +38,13 @@ internal sealed partial class ProjectionGenerator
             return (componentActivatable, componentByModule);
         }
 
+        // Seed an entry for every component, so one that contributes no activatable classes still gets an
+        // activation entry point. Components forward to it unconditionally, so it has to exist.
+        foreach (string componentAssemblyName in _settings.ComponentAssemblyNames)
+        {
+            componentByModule[componentAssemblyName] = new(SignatureComparer.IgnoreVersion);
+        }
+
         foreach ((_, NamespaceMembers members) in _cache.Namespaces)
         {
             foreach (TypeDefinition type in members.Classes)

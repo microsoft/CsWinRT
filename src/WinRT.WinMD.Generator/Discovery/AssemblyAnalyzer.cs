@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using AsmResolver;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.Helpers;
 
 namespace WindowsRuntime.WinMDGenerator.Discovery;
 
@@ -62,6 +63,14 @@ internal sealed class AssemblyAnalyzer
                 continue;
             }
 
+            // Skip types implementing a Windows Runtime class declared in existing metadata. They provide the
+            // implementation for a type that is already declared elsewhere, so declaring them here would emit a
+            // second, conflicting definition of it.
+            if (ImplementsExistingRuntimeClass(type))
+            {
+                continue;
+            }
+
             // We include classes, interfaces, structs, enums, and delegates
             if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || type.IsDelegate)
             {
@@ -70,5 +79,37 @@ internal sealed class AssemblyAnalyzer
         }
 
         return publicTypes;
+    }
+
+    /// <summary>
+    /// Checks whether a type implements a Windows Runtime class declared in existing metadata, which it does by
+    /// deriving from one of the abstract base classes CsWinRT generates for that purpose.
+    /// </summary>
+    /// <param name="type">The <see cref="TypeDefinition"/> to inspect.</param>
+    /// <returns>Whether <paramref name="type"/> implements a class declared in existing metadata.</returns>
+    private bool ImplementsExistingRuntimeClass(TypeDefinition type)
+    {
+        RuntimeContext? runtimeContext = _inputModule.RuntimeContext;
+
+        for (ITypeDefOrRef? baseType = type.BaseType; baseType is not null;)
+        {
+            // A base type the generator has no reference for cannot be one of the bases CsWinRT generates,
+            // so stop walking rather than failing. Every chain ends at a type from the framework itself
+            // ('System.Object', or 'System.Enum' and friends for value types), and those are not necessarily
+            // resolvable from the references this generator was given.
+            if (!baseType.TryResolve(runtimeContext, out TypeDefinition? current))
+            {
+                return false;
+            }
+
+            if (ImplementableClassMetadata.IsImplementableBase(current))
+            {
+                return true;
+            }
+
+            baseType = current.BaseType;
+        }
+
+        return false;
     }
 }

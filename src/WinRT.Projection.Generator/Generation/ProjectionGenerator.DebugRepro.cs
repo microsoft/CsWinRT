@@ -205,10 +205,21 @@ internal static partial class ProjectionGenerator
             return;
         }
 
+        // The same tool produces the Windows SDK, UWP XAML, merged and component projections, and they all
+        // capture into the same directory, so the archive has to say which invocation it came from or they
+        // overwrite one another. The merged one keeps its original name.
+        string archiveFileName = args.AssemblyName switch
+        {
+            "WinRT.Sdk.Projection" => "sdk-projection-debug-repro.zip",
+            "WinRT.Sdk.Xaml.Projection" => "sdk-xaml-projection-debug-repro.zip",
+            "WinRT.Component" => "component-projection-debug-repro.zip",
+            _ => "projection-debug-repro.zip"
+        };
+
         (string tempDirectory, string zipPath) = DebugReproPacker.BeginSave<WellKnownProjectionGeneratorExceptions>(
             args.DebugReproDirectory,
             toolName: "cswinrtprojectiongen",
-            archiveFileName: "projection-debug-repro.zip");
+            archiveFileName: archiveFileName);
 
         string referenceDirectory = Path.Combine(tempDirectory, ReferenceSubfolder);
         string winmdDirectory = Path.Combine(tempDirectory, WinMDSubfolder);
@@ -234,21 +245,8 @@ internal static partial class ProjectionGenerator
         // '10.0.26100.0') to the concrete set of .winmd files the writer would actually consume. This
         // makes the debug repro fully self-contained, even when the original Windows metadata token was
         // a special value that depends on the host environment (e.g. a registered SDK installation).
-        List<string> expandedWindowsMetadataPaths = [];
-
-        foreach (string expanded in WindowsMetadataExpander.Expand<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata))
-        {
-            // The expander may return either individual files or directories; we want individual
-            // files in the bundled repro so the layout is fully self-describing.
-            if (File.Exists(expanded))
-            {
-                expandedWindowsMetadataPaths.Add(expanded);
-            }
-            else if (Directory.Exists(expanded))
-            {
-                expandedWindowsMetadataPaths.AddRange(Directory.EnumerateFiles(expanded, "*.winmd", SearchOption.AllDirectories));
-            }
-        }
+        // Directories are resolved to the files inside them, so the bundled layout is self-describing.
+        List<string> expandedWindowsMetadataPaths = WindowsMetadataExpander.ExpandToFiles<WellKnownProjectionGeneratorExceptions>(args.WindowsMetadata);
 
         args.Token.ThrowIfCancellationRequested();
 

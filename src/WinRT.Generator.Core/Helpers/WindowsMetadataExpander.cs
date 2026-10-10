@@ -19,11 +19,44 @@ namespace WindowsRuntime.Generator.Helpers;
 internal static partial class WindowsMetadataExpander
 {
     /// <summary>
+    /// The name of the extension SDK that declares the Windows Runtime contracts a desktop app can use,
+    /// beyond the ones that make up the UAP platform.
+    /// </summary>
+    private const string WindowsDesktopSdkName = "WindowsDesktop";
+
+    /// <summary>
     /// Matches an SDK version string like <c>"10.0.26100.0"</c> or <c>"10.0.26100.0+"</c>
-    /// (the trailing <c>+</c> indicates that extension SDKs should also be included).
+    /// (the trailing <c>+</c> indicates that the remaining extension SDKs should also be included).
     /// </summary>
     [GeneratedRegex(@"^(\d+\.\d+\.\d+\.\d+)\+?$")]
     private static partial Regex SdkVersionRegex { get; }
+
+    /// <summary>
+    /// Expands a single Windows metadata token to the resulting set of <c>.winmd</c> <b>files</b>, resolving
+    /// any directory <see cref="Expand{TErr}"/> would have returned into the files inside it.
+    /// </summary>
+    /// <typeparam name="TErr">The per-tool error factory used to construct well-known exceptions.</typeparam>
+    /// <param name="token">The token to expand (path, "local", "sdk", "sdk+", or a version string).</param>
+    /// <returns>A list of concrete <c>.winmd</c> file paths.</returns>
+    public static List<string> ExpandToFiles<TErr>(string token)
+        where TErr : IWindowsMetadataErrorFactory
+    {
+        List<string> result = [];
+
+        foreach (string expanded in Expand<TErr>(token))
+        {
+            if (File.Exists(expanded))
+            {
+                result.Add(expanded);
+            }
+            else if (Directory.Exists(expanded))
+            {
+                result.AddRange(Directory.EnumerateFiles(expanded, "*.winmd", SearchOption.AllDirectories));
+            }
+        }
+
+        return result;
+    }
 
     /// <summary>
     /// Expands a single Windows metadata token to the resulting set of .winmd file paths
@@ -95,6 +128,19 @@ internal static partial class WindowsMetadataExpander
             string platformXml = Path.Combine(sdkPath, "Platforms", "UAP", sdkVersion, "Platform.xml");
             AddFilesFromPlatformXml<TErr>(result, sdkVersion, platformXml, sdkPath);
 
+            // 'Platform.xml' only describes the contracts that make up the UAP platform, which is a strict
+            // subset of the contracts the SDK ships (for '10.0.26100.0' it declares 33 of 93). The rest are
+            // declared by the 'WindowsDesktop' extension SDK, which is the surface a desktop app targets and
+            // which the Windows SDK reference projection is built from, so it is always required.
+            string windowsDesktopManifest = Path.Combine(sdkPath, "Extension SDKs", WindowsDesktopSdkName, sdkVersion, "SDKManifest.xml");
+
+            if (File.Exists(windowsDesktopManifest))
+            {
+                AddFilesFromPlatformXml<TErr>(result, sdkVersion, windowsDesktopManifest, sdkPath);
+            }
+
+            // A trailing '+' opts into the remaining extension SDKs (e.g. 'WindowsMobile' and
+            // 'WindowsTeam'), on top of the platform and 'WindowsDesktop' contracts read above.
             if (includeExtensions)
             {
                 string extensionSdks = Path.Combine(sdkPath, "Extension SDKs");
@@ -103,6 +149,12 @@ internal static partial class WindowsMetadataExpander
                 {
                     foreach (string item in Directory.EnumerateDirectories(extensionSdks))
                     {
+                        // Skip the one already read above, so its contracts are not listed twice
+                        if (string.Equals(Path.GetFileName(item), WindowsDesktopSdkName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
                         string xml = Path.Combine(item, sdkVersion, "SDKManifest.xml");
 
                         if (File.Exists(xml))
