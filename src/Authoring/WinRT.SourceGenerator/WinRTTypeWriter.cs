@@ -1279,7 +1279,10 @@ namespace Generator
         {
             Logger.Log("typed constant kind: " + constant.Kind);
             Logger.Log("typed constant type: " + constant.Type);
-            Logger.Log("typed constant value: " + constant.Value);
+            if (constant.Kind != TypedConstantKind.Array)
+            {
+                Logger.Log("typed constant value: " + constant.Value);
+            }
 
             switch (constant.Kind)
             {
