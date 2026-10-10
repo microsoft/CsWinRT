@@ -41,7 +41,8 @@ internal static class ImplementableClassMetadata
     {
         runtimeClassName = null;
 
-        return type.DeclaringModule is ModuleDefinition module &&
+        return IsBaseShape(type) &&
+            type.DeclaringModule is ModuleDefinition module &&
             GetModuleInfo(module).InstanceBases.TryGetValue(type.FullName, out runtimeClassName);
     }
 
@@ -52,7 +53,7 @@ internal static class ImplementableClassMetadata
     /// <returns>Whether <paramref name="type"/> is a generated base.</returns>
     public static bool IsImplementableBase(TypeDefinition type)
     {
-        if (type.DeclaringModule is not ModuleDefinition module)
+        if (!IsBaseShape(type) || type.DeclaringModule is not ModuleDefinition module)
         {
             return false;
         }
@@ -82,18 +83,26 @@ internal static class ImplementableClassMetadata
                     continue;
                 }
 
+                // A class may only have one of the two bases, but checking the type asked about is enough: a name
+                // that is not a base names no type at all, since the bases are all the reference projection declares
+                // in the 'ABI' namespace.
                 if (key == WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass)
                 {
                     instanceBases[WindowsRuntimeReferenceAssemblyMetadata.GetImplementableClassBaseTypeName(value)] = value;
-                }
-                else if (key == WindowsRuntimeReferenceAssemblyMetadata.ImplementableClassFactory)
-                {
                     _ = factoryBases.Add(WindowsRuntimeReferenceAssemblyMetadata.GetImplementableClassFactoryBaseTypeName(value));
                 }
             }
 
             return new ModuleInfo(instanceBases.ToFrozenDictionary(StringComparer.Ordinal), factoryBases.ToFrozenSet(StringComparer.Ordinal));
         });
+    }
+
+    /// <summary>
+    /// Checks whether a type has the shape of a generated base (an abstract, non-static class).
+    /// </summary>
+    private static bool IsBaseShape(TypeDefinition type)
+    {
+        return type is { IsClass: true, IsAbstract: true, IsSealed: false };
     }
 
     /// <summary>

@@ -61,10 +61,10 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentBag<string> IdicExclusiveToTypes { get; } = [];
 
     /// <summary>
-    /// Gets the (key, Windows Runtime class name) entries describing the implementable bases a reference projection
-    /// declares, to preserve in its assembly metadata (see <see cref="Factories.AbiImplementableClassFactory"/>).
+    /// Gets the Windows Runtime classes a reference projection declares implementable bases for, to preserve in its
+    /// assembly metadata (see <see cref="Factories.AbiImplementableClassFactory.WriteImplementableBases"/>).
     /// </summary>
-    public ConcurrentBag<KeyValuePair<string, string>> ImplementableClassEntries { get; } = [];
+    public ConcurrentBag<string> ImplementableClasses { get; } = [];
 
     /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a

@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator.References;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -220,14 +219,37 @@ internal static class AbiImplementableClassFactory
     }
 
     /// <summary>
+    /// Emits the abstract bases that let a runtime class be implemented in C#: an instance base (unless the class is
+    /// static) and an activation factory base (if the class is activatable or has statics).
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class to emit the bases for (see <see cref="ShouldEmit"/>).</param>
+    /// <param name="implementableClasses">Receives the class, for a reference projection to record in its assembly metadata.</param>
+    /// <remarks>
+    /// The record is all the CsWinRT build tools need: each base has a well-known name derived from the class, and
+    /// the bases are the only types a reference projection declares in the <c>ABI</c> namespace, so they can be
+    /// found by name. Recording it as assembly metadata keeps it off the bases' public surface.
+    /// </remarks>
+    public static void WriteImplementableBases(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, ConcurrentBag<string> implementableClasses)
+    {
+        if (context.Settings.ReferenceProjection)
+        {
+            implementableClasses.Add(type.FullName);
+        }
+
+        WriteImplementableClass(writer, context, type);
+        WriteImplementableFactoryClass(writer, context, type);
+    }
+
+    /// <summary>
     /// Emits <c>public abstract class &lt;Name&gt;</c> with one <c>abstract</c> member per projected
     /// instance member, plus an <c>implicit operator</c> to the projected type.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The runtime class to emit the base for.</param>
-    /// <param name="metadataEntries">Receives the reference assembly metadata entries describing the emitted base.</param>
-    public static void WriteImplementableClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, ConcurrentBag<KeyValuePair<string, string>> metadataEntries)
+    private static void WriteImplementableClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Static runtime classes have no instances, so there is nothing to implement beyond their factory.
         if (type.IsStatic)
@@ -275,15 +297,6 @@ internal static class AbiImplementableClassFactory
         }
 
         string inheritance = bases.Count > 0 ? " : " + string.Join(", ", bases) : string.Empty;
-
-        // Identify the Windows Runtime class this base stands for. The CCW of a type deriving from it reports
-        // that class name (not the deriving type's own name), and the CsWinRT build tools use this to recognize
-        // the generated bases. They only read it from reference assemblies, where it is recorded as assembly
-        // metadata rather than on the base, so it stays off the public surface.
-        if (context.Settings.ReferenceProjection)
-        {
-            metadataEntries.Add(new(WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass, type.FullName));
-        }
 
         writer.WriteLine($"public abstract class {nameStripped}{inheritance}");
 
@@ -382,8 +395,7 @@ internal static class AbiImplementableClassFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The runtime class to emit the factory base for.</param>
-    /// <param name="metadataEntries">Receives the reference assembly metadata entries describing the emitted base.</param>
-    public static void WriteImplementableFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, ConcurrentBag<KeyValuePair<string, string>> metadataEntries)
+    private static void WriteImplementableFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         CollectFactoryInterfaces(
             context,
@@ -402,8 +414,7 @@ internal static class AbiImplementableClassFactory
         bool hasComposableDefaultActivation = TryGetComposableDefaultActivation(
             composableInterfaces,
             publicComposableInterfaces,
-            out MethodDefinition? parameterlessConstructor,
-            out bool isOnlyConstructor);
+            out MethodDefinition? parameterlessConstructor);
 
         string nameStripped = type.GetStrippedName();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(type.GetRawNamespace(), nameStripped);
@@ -429,23 +440,6 @@ internal static class AbiImplementableClassFactory
         }
 
         writer.WriteLine();
-
-        // Record the class this factory base activates, and whether it can only be activated without arguments, which
-        // is the one shape CsWinRT can supply a factory for without the author writing any members. Composable factories
-        // do not count against that when all they declare is the constructor default activation uses. Only the build
-        // tools read this, and only from reference assemblies, so the implementation projection omits it.
-        if (context.Settings.ReferenceProjection)
-        {
-            bool hasOtherFactoryInterfaces = factoryInterfaces.Exists(iface => !composableInterfaces.Contains(iface));
-            bool hasDefaultActivationOnly = !hasOtherFactoryInterfaces && (composableInterfaces.Count == 0 || (hasComposableDefaultActivation && isOnlyConstructor));
-
-            metadataEntries.Add(new(WindowsRuntimeReferenceAssemblyMetadata.ImplementableClassFactory, type.FullName));
-
-            if (hasDefaultActivationOnly)
-            {
-                metadataEntries.Add(new(WindowsRuntimeReferenceAssemblyMetadata.ImplementableClassDefaultActivationOnly, type.FullName));
-            }
-        }
 
         string factoryName = GetFactoryClassName(nameStripped);
 
@@ -618,16 +612,13 @@ internal static class AbiImplementableClassFactory
     /// <param name="composableInterfaces">The class's <c>[Composable]</c> factory interfaces.</param>
     /// <param name="publicComposableInterfaces">The subset of <paramref name="composableInterfaces"/> whose constructors are public.</param>
     /// <param name="parameterlessConstructor">The public parameterless composable constructor, if the class declares one.</param>
-    /// <param name="isOnlyConstructor">Whether that constructor (or the lack of one) is all the composable factories declare.</param>
     /// <returns>Whether the class should be given default activation.</returns>
     private static bool TryGetComposableDefaultActivation(
         HashSet<TypeDefinition> composableInterfaces,
         HashSet<TypeDefinition> publicComposableInterfaces,
-        out MethodDefinition? parameterlessConstructor,
-        out bool isOnlyConstructor)
+        out MethodDefinition? parameterlessConstructor)
     {
         parameterlessConstructor = null;
-        isOnlyConstructor = false;
 
         if (composableInterfaces.Count == 0)
         {
@@ -656,8 +647,6 @@ internal static class AbiImplementableClassFactory
         {
             return false;
         }
-
-        isOnlyConstructor = constructorCount <= 1;
 
         return true;
     }

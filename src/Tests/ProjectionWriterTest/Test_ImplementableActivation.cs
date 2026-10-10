@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProjectionWriterTest.Helpers;
@@ -104,25 +105,16 @@ public class Test_ImplementableActivation
     }
 
     /// <summary>
-    /// The generated bases carry no markers: the reference projection records them in assembly metadata instead.
+    /// Each class is recorded once: the build tools find its bases by name.
     /// </summary>
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void GeneratedBases_HaveNoAttributes(bool referenceProjection)
+    public void ReferenceProjection_RecordsImplementableClassesOnce()
     {
-        Assert.IsEmpty(GetAbiClass(ActivationMetadata.NoConstructor, referenceProjection).AttributeLists);
-        Assert.IsEmpty(GetFactoryBase(ActivationMetadata.NoConstructor, referenceProjection).AttributeLists);
-    }
-
-    [TestMethod]
-    public void ReferenceProjection_RecordsImplementableClasses()
-    {
-        string className = $"Contoso.{ActivationMetadata.NoConstructor}";
         (string Key, string Value)[] entries = GetReferenceMetadata();
 
-        CollectionAssert.Contains(entries, ("CsWinRT.ImplementableClass.v1", className));
-        CollectionAssert.Contains(entries, ("CsWinRT.ImplementableClassFactory.v1", className));
+        CollectionAssert.Contains(entries, ("CsWinRT.ImplementableClass.v1", $"Contoso.{ActivationMetadata.NoConstructor}"));
+        CollectionAssert.AllItemsAreUnique(entries);
+        Assert.IsTrue(entries.All(static entry => entry.Key is "CsWinRT.ImplementableClass.v1"));
     }
 
     [TestMethod]
@@ -290,11 +282,16 @@ public class Test_ImplementableActivation
     }
 
     /// <summary>
-    /// Reads the default-activation-only entry from the reference projection, the only one carrying it.
+    /// Checks whether <c>ActivateInstance()</c> is the only member left to implement on the factory base, which is
+    /// how the source generator decides it can supply the factory itself.
     /// </summary>
     private static bool HasDefaultActivationOnly(string className)
     {
-        return GetReferenceMetadata().Contains(("CsWinRT.ImplementableClassDefaultActivationOnly.v1", $"Contoso.{className}"));
+        MemberDeclarationSyntax[] abstractMembers = GetFactoryBase(className, referenceProjection: true).Members
+            .Where(static member => member.Modifiers.Any(SyntaxKind.AbstractKeyword))
+            .ToArray();
+
+        return abstractMembers is [MethodDeclarationSyntax { Identifier.ValueText: "ActivateInstance", ParameterList.Parameters.Count: 0 }];
     }
 
     /// <summary>

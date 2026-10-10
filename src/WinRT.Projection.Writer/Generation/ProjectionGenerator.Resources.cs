@@ -58,15 +58,15 @@ internal sealed partial class ProjectionGenerator
             }
 
             if (fileName == "AssemblyAttributes.cs" && _settings.ReferenceProjection &&
-                (!state.IdicExclusiveToTypes.IsEmpty || !state.ImplementableClassEntries.IsEmpty))
+                (!state.IdicExclusiveToTypes.IsEmpty || !state.ImplementableClasses.IsEmpty))
             {
                 IEnumerable<KeyValuePair<string, string>> idicEntries = state.IdicExclusiveToTypes
                     .Order(StringComparer.Ordinal)
                     .Select(static name => new KeyValuePair<string, string>(WindowsRuntimeReferenceAssemblyMetadata.IdicExclusiveTo, name));
 
-                IEnumerable<KeyValuePair<string, string>> implementableEntries = state.ImplementableClassEntries
-                    .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
-                    .ThenBy(static entry => entry.Value, StringComparer.Ordinal);
+                IEnumerable<KeyValuePair<string, string>> implementableEntries = state.ImplementableClasses
+                    .Order(StringComparer.Ordinal)
+                    .Select(static name => new KeyValuePair<string, string>(WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass, name));
 
                 using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
                 MetadataAttributeFactory.WriteReferenceAssemblyMetadata(writerOwner.Writer, idicEntries.Concat(implementableEntries));

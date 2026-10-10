@@ -20,24 +20,15 @@ internal static class WindowsRuntimeReferenceAssemblyMetadata
     public const string IdicExclusiveTo = "CsWinRT.IdicExclusiveTo.v1";
 
     /// <summary>
-    /// The key for one fully qualified Windows Runtime class name whose instance base (see
-    /// <see cref="GetImplementableClassBaseTypeName"/>) the reference projection declares, so the class
-    /// can be implemented in C# (<c>CsWinRTImplementWinMDTypes</c>).
+    /// The key for one fully qualified Windows Runtime class name that the reference projection declares
+    /// generated bases for, so the class can be implemented in C# (<c>CsWinRTImplementWinMDTypes</c>).
     /// </summary>
+    /// <remarks>
+    /// The bases are found by name (see <see cref="GetImplementableClassBaseTypeName"/> and
+    /// <see cref="GetImplementableClassFactoryBaseTypeName"/>). A class can have either or both: a static class
+    /// only has a factory base, and a class with no activation and no statics only has an instance base.
+    /// </remarks>
     public const string ImplementableClass = "CsWinRT.ImplementableClass.v1";
-
-    /// <summary>
-    /// The key for one fully qualified Windows Runtime class name whose activation factory base (see
-    /// <see cref="GetImplementableClassFactoryBaseTypeName"/>) the reference projection declares.
-    /// </summary>
-    public const string ImplementableClassFactory = "CsWinRT.ImplementableClassFactory.v1";
-
-    /// <summary>
-    /// The key for one fully qualified Windows Runtime class name whose activation factory base only declares
-    /// <c>ActivateInstance</c> (no constructors taking arguments, and no statics), which CsWinRT can implement
-    /// itself. Only ever recorded alongside <see cref="ImplementableClassFactory"/>.
-    /// </summary>
-    public const string ImplementableClassDefaultActivationOnly = "CsWinRT.ImplementableClassDefaultActivationOnly.v1";
 
     /// <summary>
     /// Gets the full name of the instance base generated for an implementable Windows Runtime class.

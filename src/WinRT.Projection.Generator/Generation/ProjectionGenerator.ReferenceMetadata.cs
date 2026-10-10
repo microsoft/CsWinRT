@@ -24,15 +24,11 @@ internal partial class ProjectionGenerator
 
     /// <summary>
     /// Reads the Windows Runtime classes a reference projection declares implementable bases for (built with
-    /// <c>CsWinRTImplementWinMDTypes</c>), from either an instance base or an activation factory base.
+    /// <c>CsWinRTImplementWinMDTypes</c>).
     /// </summary>
     private static HashSet<string> ReadImplementableClassNames(ModuleDefinition module, string referencePath)
     {
-        HashSet<string> types = ReadReferenceAssemblyMetadataValues(module, referencePath, WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass);
-
-        types.UnionWith(ReadReferenceAssemblyMetadataValues(module, referencePath, WindowsRuntimeReferenceAssemblyMetadata.ImplementableClassFactory));
-
-        return types;
+        return ReadReferenceAssemblyMetadataValues(module, referencePath, WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass);
     }
 
     /// <summary>

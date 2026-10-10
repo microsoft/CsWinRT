@@ -267,8 +267,7 @@ internal sealed partial class ProjectionGenerator
                 // referenced authoring projection declares the type and needs its implementation supplied).
                 if (kind == TypeKind.Class && AbiImplementableClassFactory.ShouldEmit(context, type))
                 {
-                    AbiImplementableClassFactory.WriteImplementableClass(writer, context, type, state.ImplementableClassEntries);
-                    AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type, state.ImplementableClassEntries);
+                    AbiImplementableClassFactory.WriteImplementableBases(writer, context, type, state.ImplementableClasses);
                 }
             }
             writer.WriteEndAbiNamespace(context);
@@ -297,8 +296,7 @@ internal sealed partial class ProjectionGenerator
                     wroteAbiNamespace = true;
                 }
 
-                AbiImplementableClassFactory.WriteImplementableClass(writer, context, type, state.ImplementableClassEntries);
-                AbiImplementableClassFactory.WriteImplementableFactoryClass(writer, context, type, state.ImplementableClassEntries);
+                AbiImplementableClassFactory.WriteImplementableBases(writer, context, type, state.ImplementableClasses);
             }
 
             if (wroteAbiNamespace)

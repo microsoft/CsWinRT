@@ -24,7 +24,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -127,7 +126,7 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.WidgetUtils")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.WidgetUtils")]
 
             namespace Contoso.Widgets
             {
@@ -231,7 +230,8 @@ public class Test_AuthoringExportTypesGenerator
     }
 
     [TestMethod]
-    public void ImplementableClass_IsNotMarkedAsComponentAssembly()    {
+    public void ImplementableClass_IsNotMarkedAsComponentAssembly()
+    {
         // A project that only implements types declared in existing metadata produces no '.winmd' of its own,
         // so it must not be marked with '[WindowsRuntimeComponentAssembly]': that marker tells the tooling the
         // assembly's Windows Runtime types are projected into a generated 'WinRT.Component.dll'.
@@ -239,7 +239,7 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
 
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -290,8 +290,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -404,8 +402,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -459,7 +455,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -502,8 +497,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -550,8 +543,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
@@ -601,8 +592,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets { public sealed class Widget; }
 
@@ -648,8 +637,6 @@ public class Test_AuthoringExportTypesGenerator
             using WindowsRuntime.InteropServices;
 
             [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassFactory.v1", "Contoso.Widgets.Widget")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClassDefaultActivationOnly.v1", "Contoso.Widgets.Widget")]
 
             namespace Contoso.Widgets
             {
