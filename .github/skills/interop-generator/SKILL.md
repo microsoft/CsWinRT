@@ -333,6 +333,8 @@ Processes reference assemblies to build a map of projected Windows Runtime class
 
 The core of discovery — finds all constructed generic types used anywhere in the application. Located in `InteropTypeDiscovery.Generics.cs`.
 
+`ModuleDefinitionExtensions.EnumerateTypeSignatures` supplies the shared generic and SZ-array discovery sources: fields, method signatures and locals, allocations and field accesses, type operands (including casts, boxing, and `ldtoken`), TypeSpecs, and MethodSpec arguments. Its member worklist composes declaring-type and method contexts through nested generic calls and delegate targets. Referenced signatures remain visible without following dependency bodies; further body expansion follows the assembly marshalling policy, while explicit metadata roots retain their one-hop member scan. Exact contexts are deduplicated, cancellation is checked during traversal, and expanding contexts use the existing depth (32), signature complexity (256), and transitive type-or-method instantiation (1024) limits and `CSWINRTINTEROPGEN0104`–`0106` diagnostics.
+
 **Algorithm:**
 1. Validate the type is fully constructed (via `IsConstructedGenericTypeVisitor`)
 2. Check exclusion list
