@@ -14,7 +14,7 @@ using WindowsRuntime.ProjectionWriter;
 namespace ProjectionWriterTest;
 
 [TestClass]
-public class Test_InteropGenericDiscovery
+public partial class Test_InteropGenericDiscovery
 {
     private const string RecursionWarning = "CSWINRTINTEROPGEN0104";
     private const string ComplexityWarning = "CSWINRTINTEROPGEN0105";
@@ -74,7 +74,7 @@ public class Test_InteropGenericDiscovery
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public void RecursiveGenericMethodCalls_Terminate(bool indirect)
+    public void ExpandingGenericMethodCalls_AreBounded(bool indirect)
     {
         string source = $$"""
             using Windows.Foundation;
@@ -104,7 +104,8 @@ public class Test_InteropGenericDiscovery
             }
             """;
 
-        AssertGeneration(source, 1);
+        // The root body and 32 callee bodies each allocate one additional nested 'Node' type.
+        AssertGeneration(source, 33, expectedWarning: RecursionWarning);
     }
 
     [TestMethod]
@@ -668,7 +669,8 @@ public class Test_InteropGenericDiscovery
             timeout: timeout ?? TimeSpan.FromSeconds(30));
     }
 
-    private static HashSet<string> GetComWrappersTypeAssociations(string path)
+    private static HashSet<string> GetComWrappersTypeAssociations(
+        string path, string groupName = "WindowsRuntimeComWrappersTypeMapGroup")
     {
         using FileStream stream = File.OpenRead(path);
         using PEReader pe = new(stream);
@@ -709,7 +711,7 @@ public class Test_InteropGenericDiscovery
             Assert.AreEqual(0x12, signature.ReadByte());
             TypeReference group = reader.GetTypeReference((TypeReferenceHandle)signature.ReadTypeHandle());
 
-            if (reader.GetString(group.Name) != "WindowsRuntimeComWrappersTypeMapGroup")
+            if (reader.GetString(group.Name) != groupName)
             {
                 continue;
             }
@@ -718,7 +720,7 @@ public class Test_InteropGenericDiscovery
             Assert.AreEqual(1, value.ReadUInt16());
             string source = value.ReadSerializedString()!;
 
-            Assert.IsTrue(types.Add(source), $"Duplicate CCW association for '{source}'.");
+            Assert.IsTrue(types.Add(source), $"Duplicate '{groupName}' association for '{source}'.");
         }
 
         return types;

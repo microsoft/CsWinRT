@@ -913,6 +913,16 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Generic method discovery exceeded the maximum traversal depth.
+    /// </summary>
+    public static WellKnownInteropWarning GenericMethodDiscoveryRecursionLimitExceededWarning(MethodDefinition method, ModuleDefinition module, int limit)
+    {
+        return Warning(104,
+            $"Generic member discovery reached the maximum depth of {limit} while processing method '{method}' in module '{module}': " +
+            "its body will not be analyzed further. Marshalling support for types only reachable through that body may be incomplete.");
+    }
+
+    /// <summary>
     /// Generic member discovery encountered an excessively complex expanded signature.
     /// </summary>
     public static WellKnownInteropWarning GenericTypeDiscoveryComplexityLimitExceededWarning(ModuleDefinition module, int limit)
@@ -923,13 +933,13 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
-    /// Generic member discovery exceeded the number of transitive type instantiations to analyze.
+    /// Generic member discovery exceeded the number of transitive type or method instantiations to analyze.
     /// </summary>
     public static WellKnownInteropWarning GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
-            $"Generic member discovery reached the maximum of {limit} transitive type instantiations eligible for member analysis while processing module '{module}': " +
-            "additional types will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
+            $"Generic member discovery reached the maximum of {limit} transitive type or method instantiations eligible for member analysis while processing module '{module}': " +
+            "additional instantiations will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
     }
 
     /// <summary>

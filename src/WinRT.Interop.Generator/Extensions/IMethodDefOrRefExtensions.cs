@@ -78,6 +78,11 @@ internal static class IMethodDefOrRefExtensions
                 {
                     yield return fieldType;
                 }
+
+                foreach (TypeSignature operandType in definition.EnumerateTypeOperandTypes())
+                {
+                    yield return operandType;
+                }
             }
         }
     }
