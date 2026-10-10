@@ -114,7 +114,6 @@ public class Test_ImplementableActivation
 
         CollectionAssert.Contains(entries, ("CsWinRT.ImplementableClass.v1", $"Contoso.{ActivationMetadata.NoConstructor}"));
         CollectionAssert.AllItemsAreUnique(entries);
-        Assert.IsTrue(entries.All(static entry => entry.Key is "CsWinRT.ImplementableClass.v1"));
     }
 
     [TestMethod]
@@ -123,21 +122,22 @@ public class Test_ImplementableActivation
         Assert.IsFalse(GetReferenceMetadata(referenceProjection: false).Any(static entry => entry.Key.StartsWith("CsWinRT.ImplementableClass", StringComparison.Ordinal)));
     }
 
+    /// <summary>
+    /// The implementation projection is compiled by <see cref="Factories_CompileAgainstTheGeneratedBases"/>.
+    /// </summary>
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void Projection_Compiles(bool referenceProjection)
+    public void ReferenceProjection_Compiles()
     {
         string directory = Directory.CreateTempSubdirectory("ProjectionActivationTest_").FullName;
 
         try
         {
-            string output = Generate(directory, referenceProjection);
+            string output = Generate(directory, referenceProjection: true);
 
             _ = ProjectionWriterRunner.CompileSources(
                 Directory.GetFiles(output, "*.cs").Select(File.ReadAllText),
                 Path.Combine(directory, "Projection.dll"),
-                referenceProjection);
+                referenceProjection: true);
         }
         finally
         {

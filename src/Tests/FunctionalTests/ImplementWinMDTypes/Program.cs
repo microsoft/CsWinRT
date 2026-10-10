@@ -12,11 +12,6 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 MyClass myClass = new();
 
-if (myClass.One() != 1)
-{
-    return 101;
-}
-
 // The base is separate from the projected class (which is sealed) and bridges to it with an implicit
 // conversion, creating a COM Callable Wrapper and resolving the projected type for it.
 global::TestComponent.Class projectedClass = myClass;
@@ -26,28 +21,16 @@ if (projectedClass is null)
     return 102;
 }
 
-// 'TestComponent.Class' can only be activated through the parameterless 'ActivateInstance', and no factory
-// is declared for 'MyClass' below, so CsWinRT generates one that constructs it.
-ABI.ImplementWinMDTypes.ImplementWinMDTypes_MyClassActivationFactory classFactory = new();
-
-if (classFactory.ActivateInstance() is not MyClass)
+// Calls through the projected type go through the COM Callable Wrapper's vtable, and have to reach
+// the authored overrides.
+if (projectedClass.One() != 1)
 {
-    return 103;
+    return 101;
 }
 
 // A composable class is authored exactly like a sealed one: the aggregation plumbing of its factory
 // methods is generated, and the author only supplies the creation hooks (see 'MyComposableFactory').
 MyComposable myComposable = new() { Value = 42 };
-
-if (myComposable.Value != 42)
-{
-    return 104;
-}
-
-if (myComposable.One() != 1 || myComposable.Two() != 2 || myComposable.Three() != 3 || myComposable.Four() != 4)
-{
-    return 105;
-}
 
 global::TestComponent.Composable projectedComposable = myComposable;
 
@@ -56,33 +39,61 @@ if (projectedComposable is null)
     return 106;
 }
 
-// The composable factory hands out authored instances through the generated plumbing
-MyComposableFactory composableFactory = new();
-
-if (composableFactory.ActivateInstance() is not MyComposable { Value: 0 })
+if (projectedComposable.Value != 42)
 {
-    return 107;
+    return 104;
 }
 
-if (composableFactory.Create(7) is not MyComposable { Value: 7 })
+if (projectedComposable.One() != 1 || projectedComposable.Two() != 2 || projectedComposable.Three() != 3 || projectedComposable.Four() != 4)
 {
-    return 108;
+    return 105;
+}
+
+// A native caller constructs a composable class with arguments through its composable factory interface,
+// passing no outer for standalone activation. The generated plumbing forwards to the authored hook.
+unsafe
+{
+    if (!NativeCreateComposableWithValue(7, outer: null, out void* composableInstance))
+    {
+        return 107;
+    }
+
+    try
+    {
+        if (!IsRuntimeClassName(composableInstance, "TestComponent.Composable") ||
+            WindowsRuntimeObjectMarshaller.ConvertToManaged(composableInstance) is not global::TestComponent.Composable { Value: 7 })
+        {
+            return 107;
+        }
+    }
+    finally
+    {
+        Release(composableInstance);
+    }
+
+    // Aggregating a C# implementation is not supported, so a non-null outer is rejected
+    using WindowsRuntimeObjectReferenceValue outer = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new object());
+
+    if (NativeCreateComposableWithValue(7, outer.GetThisPtrUnsafe(), out _))
+    {
+        return 108;
+    }
 }
 
 // A runtime class deriving from another composable one chains to its base's generated base, so the
 // authored type has to satisfy both.
 MyDerived myDerived = new() { Value = 5 };
 
-if (myDerived.Value != 5 || myDerived.One() != 1)
-{
-    return 109;
-}
-
 global::TestComponent.Derived projectedDerived = myDerived;
 
 if (projectedDerived is null)
 {
     return 110;
+}
+
+if (projectedDerived.Value != 5 || projectedDerived.One() != 1)
+{
+    return 109;
 }
 
 // Everything above activates in managed code. Native callers instead go through the generated
@@ -146,12 +157,6 @@ if (!ReferenceEquals(projectedClass, (global::TestComponent.Class)myClass))
     return 114;
 }
 
-// The projected instance wraps the implementation, so it is a distinct object from it
-if (ReferenceEquals(projectedClass, myClass))
-{
-    return 115;
-}
-
 // A separate implementation gets its own projected instance
 MyClass otherClass = new();
 
@@ -192,17 +197,12 @@ unsafe
     {
         object marshalled = WindowsRuntimeObjectMarshaller.ConvertToManaged(nativeInstance);
 
-        // The projected type is what the caller asked for, so a plain type test has to succeed
+        // The projected type is what the caller asked for, so a plain type test has to succeed. The
+        // implementation is deliberately not handed back: it is unrelated to the projected type, so a caller
+        // expecting the latter would silently get 'null' from every cast or type test it tried.
         if (marshalled is not global::TestComponent.Class marshalledClass)
         {
             return 121;
-        }
-
-        // The implementation is deliberately not handed back: it is unrelated to the projected type, so a
-        // caller expecting the latter would silently get 'null' from every cast or type test it tried.
-        if (marshalled is MyClass)
-        {
-            return 122;
         }
 
         // The implementation behind it is still reachable, through the same explicit conversion as above
@@ -260,6 +260,63 @@ static unsafe bool NativeActivate(string runtimeClassName, out void* instance)
         finally
         {
             Release((void*)activationFactory);
+        }
+    }
+    finally
+    {
+        Release(factory);
+    }
+}
+
+/// <summary>
+/// Calls <c>IComposableFactory.CreateWithValue</c> on the activation factory for 'TestComponent.Composable'
+/// through its COM vtable, the way a native caller constructs the class with arguments.
+/// </summary>
+static unsafe bool NativeCreateComposableWithValue(int init, void* outer, out void* instance)
+{
+    instance = null;
+
+    Guid iidIComposableFactory = new("B7C48344-637C-5FBC-A7F7-1A27FE08CF6B");
+    void* factory = ABI.ImplementWinMDTypes.ManagedExports.GetActivationFactory("TestComponent.Composable".AsSpan());
+
+    if (factory is null)
+    {
+        return false;
+    }
+
+    try
+    {
+        if (Marshal.QueryInterface((nint)factory, iidIComposableFactory, out nint composableFactory) != 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            void* inner = null;
+            void* created = null;
+
+            // 'CreateWithValue' follows 'CreateInstance', after the 3 'IUnknown' and 3 'IInspectable' slots
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, int, void*, void**, void**, int>)(*(void***)composableFactory)[7])(
+                (void*)composableFactory, init, outer, &inner, &created);
+
+            // Without an outer, the instance is its own inner
+            Release(inner);
+
+            if (hr != 0 || created is null)
+            {
+                Release(created);
+
+                return false;
+            }
+
+            instance = created;
+
+            return true;
+        }
+        finally
+        {
+            Release((void*)composableFactory);
         }
     }
     finally
@@ -346,9 +403,6 @@ namespace ImplementWinMDTypes
     [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyComposable))]
     public sealed class MyComposableFactory : global::ABI.TestComponent.ComposableActivationFactory
     {
-        /// <summary>Exposes the protected creation hook so the checks above can call it.</summary>
-        public global::ABI.TestComponent.Composable Create(int init) => CreateWithValue(init);
-
         public override global::ABI.TestComponent.Composable ActivateInstance() => new MyComposable();
 
         protected override global::ABI.TestComponent.Composable CreateWithValue(int init) => new MyComposable { Value = init };

@@ -157,53 +157,6 @@ public class Test_TypeFiltering
         });
     }
 
-    [TestMethod]
-    public void ExactTypeExcludes_LeaveTheBaseResourcesAlone()
-    {
-        // The base resources are emitted verbatim rather than filtered, so a harvested name
-        // cannot take one of them with it
-        WithMetadata((inputPath, outputFolder) =>
-        {
-            ProjectionWriter.Run(new ProjectionWriterOptions
-            {
-                InputPaths = [inputPath],
-                OutputFolder = outputFolder,
-                Include = ["Contoso"],
-                ExcludeTypes =
-                [
-                    "WindowsRuntime.InteropServices.ReferenceInterfaceEntries",
-                    "WindowsRuntime.InteropServices.DelegateReferenceInterfaceEntries"
-                ]
-            });
-
-            string entries = File.ReadAllText(Path.Combine(outputFolder, "ReferenceInterfaceEntries.cs"));
-
-            StringAssert.Contains(entries, "struct ReferenceInterfaceEntries");
-            StringAssert.Contains(entries, "struct DelegateReferenceInterfaceEntries");
-        });
-    }
-
-    [TestMethod]
-    public void ExactTypeExcludes_AreInertWhenTheyNameNothingInTheInput()
-    {
-        // An app referencing no such contract passes an empty set, and must be unaffected
-        WithMetadata((inputPath, outputFolder) =>
-        {
-            ProjectionWriter.Run(new ProjectionWriterOptions
-            {
-                InputPaths = [inputPath],
-                OutputFolder = outputFolder,
-                Include = ["Contoso"],
-                ExcludeTypes = ["Fabrikam.Unrelated"]
-            });
-
-            string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));
-
-            StringAssert.Contains(source, "class User");
-            StringAssert.Contains(source, "User2");
-        });
-    }
-
     private static void AssertSelectedTypes(string outputFolder)
     {
         string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));

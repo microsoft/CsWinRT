@@ -19,6 +19,8 @@ public class Test_AuthoringExportTypesGenerator
     [TestMethod]
     public void ImplementableClass_DispatchesOnWindowsRuntimeClassName()
     {
+        // The author declares the factory, so it is used rather than a generated one: it may add interop
+        // interfaces to its vtable that cannot be inferred from here.
         const string source = """
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
@@ -390,60 +392,6 @@ public class Test_AuthoringExportTypesGenerator
             """;
 
         CSharpGeneratorTest<AuthoringExportTypesGenerator>.VerifySources(source, ("ManagedExports.g.cs", result));
-    }
-
-    [TestMethod]
-    public void ImplementableClass_WithDeclaredFactory_DoesNotGenerateActivationFactory()
-    {
-        // An author who declares the factory may be adding interop interfaces to its vtable that cannot be
-        // inferred from here, so their factory is used rather than a generated one.
-        const string source = """
-            using WindowsRuntime;
-            using WindowsRuntime.InteropServices;
-
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
-
-            namespace Contoso.Widgets
-            {
-                public sealed class Widget;
-            }
-
-            namespace ABI.Contoso.Widgets
-            {
-                public abstract class Widget
-                {
-                    public abstract void DoStuff();
-                }
-
-                public abstract class WidgetActivationFactory : IActivationFactory
-                {
-                    object IActivationFactory.ActivateInstance() => ActivateInstance();
-
-                    public abstract Widget ActivateInstance();
-
-                    public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
-                }
-            }
-
-            namespace MyApp
-            {
-                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
-                {
-                    public override void DoStuff() { }
-                }
-
-                [WindowsRuntimeActivationFactory(typeof(MyWidget))]
-                public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
-                {
-                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
-                }
-            }
-            """;
-
-        string managedExports = GetManagedExports(source, isCsWinRTComponent: false);
-
-        Assert.IsTrue(managedExports.Contains("global::MyApp.MyWidgetFactory _activationFactory_Contoso_Widgets_Widget"));
-        Assert.IsFalse(managedExports.Contains("MyApp_MyWidgetActivationFactory"));
     }
 
     [TestMethod]
