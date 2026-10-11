@@ -60,6 +60,10 @@ internal static partial class ConstructorFactory
                 """);
         }
 
+        // A class can be activated through several composable factories (e.g. one per contract version), but the
+        // base-chaining constructors belong to the class itself, so they are emitted once after all of them.
+        bool hasComposableFactory = false;
+
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, context.Cache))
         {
             AttributedType factory = kv.Value;
@@ -75,10 +79,17 @@ internal static partial class ConstructorFactory
             {
                 WriteFactoryConstructors(writer, context, factory.Type, classType);
             }
-            else if (factory.Composable)
+            else if (factory.Composable && factory.Type is not null)
             {
                 WriteComposableConstructors(writer, context, factory.Type, classType, factory.Visible ? "public" : "protected");
+
+                hasComposableFactory = true;
             }
+        }
+
+        if (hasComposableFactory)
+        {
+            WriteComposableBaseConstructors(writer, context, classType);
         }
     }
 
