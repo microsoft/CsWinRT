@@ -267,9 +267,9 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
-        /// Enumerates methods referenced by instructions, including calls and delegate targets.
+        /// Enumerates operands of method instructions and member-token loads.
         /// </summary>
-        /// <returns>The referenced methods.</returns>
+        /// <returns>The referenced method descriptors or field-token member references.</returns>
         public IEnumerable<IMethodDescriptor> EnumerateMethodOperands()
         {
             if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
@@ -279,6 +279,19 @@ internal static class MethodDefinitionExtensions
 
             foreach (CilInstruction instruction in instructions)
             {
+                // Only inspect invocations, method-pointer loads, and member tokens
+                if (instruction.OpCode.Code is not (
+                    CilCode.Call or
+                    CilCode.Callvirt or
+                    CilCode.Newobj or
+                    CilCode.Jmp or
+                    CilCode.Ldftn or
+                    CilCode.Ldvirtftn or
+                    CilCode.Ldtoken))
+                {
+                    continue;
+                }
+
                 if (instruction.Operand is IMethodDescriptor descriptor)
                 {
                     yield return descriptor;
