@@ -160,6 +160,9 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <param name="token">The cancellation token for discovery.</param>
+    /// <param name="dispatchIndex">The invocation's complete dispatch metadata index.</param>
+    /// <param name="dispatchContexts">The write-only cross-module context registry.</param>
+    /// <param name="additionalDispatchContexts">Whether to complete the registry rather than scan module roots.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(
         this ModuleDefinition module,
@@ -167,7 +170,10 @@ internal static partial class ModuleDefinitionExtensions
         Func<ModuleDefinition, bool> shouldProcessModule,
         Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors,
-        CancellationToken token)
+        CancellationToken token,
+        MethodDispatchIndex dispatchIndex,
+        DispatchContextRegistry dispatchContexts,
+        bool additionalDispatchContexts)
     {
         return TypeSignatureDiscovery<GenericInstanceTypeSignature>.Enumerate(
             module: module,
@@ -176,7 +182,10 @@ internal static partial class ModuleDefinitionExtensions
             shouldProcessModule: shouldProcessModule,
             isMarshallingDisabledModule: isMarshallingDisabledModule,
             treatWarningsAsErrors: treatWarningsAsErrors,
-            token: token);
+            token: token,
+            dispatchIndex: dispatchIndex,
+            dispatchContexts: dispatchContexts,
+            additionalDispatchContexts: additionalDispatchContexts);
     }
 
     /// <summary>
@@ -188,6 +197,9 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <param name="token">The cancellation token for discovery.</param>
+    /// <param name="dispatchIndex">The invocation's complete dispatch metadata index.</param>
+    /// <param name="dispatchContexts">The write-only cross-module context registry.</param>
+    /// <param name="additionalDispatchContexts">Whether to complete the registry rather than scan module roots.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(
         this ModuleDefinition module,
@@ -195,7 +207,10 @@ internal static partial class ModuleDefinitionExtensions
         Func<ModuleDefinition, bool> shouldProcessModule,
         Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors,
-        CancellationToken token)
+        CancellationToken token,
+        MethodDispatchIndex dispatchIndex,
+        DispatchContextRegistry dispatchContexts,
+        bool additionalDispatchContexts)
     {
         return TypeSignatureDiscovery<SzArrayTypeSignature>.Enumerate(
             module: module,
@@ -204,7 +219,10 @@ internal static partial class ModuleDefinitionExtensions
             shouldProcessModule: shouldProcessModule,
             isMarshallingDisabledModule: isMarshallingDisabledModule,
             treatWarningsAsErrors: treatWarningsAsErrors,
-            token: token);
+            token: token,
+            dispatchIndex: dispatchIndex,
+            dispatchContexts: dispatchContexts,
+            additionalDispatchContexts: additionalDispatchContexts);
     }
 
     /// <summary>

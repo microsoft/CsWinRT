@@ -85,6 +85,8 @@
     <EmbeddedResource Include="Resources\ArrayPropertySetterTests.cs" />
     <Compile Remove="Resources\GenericMarshallerTests.cs" />
     <EmbeddedResource Include="Resources\GenericMarshallerTests.cs" />
+    <Compile Remove="Resources\DispatchContextTests.cs" />
+    <EmbeddedResource Include="Resources\DispatchContextTests.cs" />
   </ItemGroup>
 
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->

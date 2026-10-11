@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Models;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -269,16 +270,29 @@ internal static class MethodDefinitionExtensions
         /// <summary>
         /// Enumerates operands of method instructions and member-token loads.
         /// </summary>
-        /// <returns>The referenced method descriptors or field-token member references.</returns>
-        public IEnumerable<IMethodDescriptor> EnumerateMethodOperands()
+        /// <returns>The referenced methods with their dispatch opcodes and receiver constraints.</returns>
+        public IEnumerable<MethodOperand> EnumerateMethodOperands()
         {
             if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
             {
                 yield break;
             }
 
+            ITypeDefOrRef? constraint = null;
+
             foreach (CilInstruction instruction in instructions)
             {
+                if (instruction.OpCode.Code == CilCode.Constrained)
+                {
+                    constraint = instruction.Operand as ITypeDefOrRef;
+                    continue;
+                }
+
+                if (instruction.OpCode.OpCodeType == CilOpCodeType.Prefix)
+                {
+                    continue;
+                }
+
                 // Only inspect invocations, method-pointer loads, and member tokens
                 if (instruction.OpCode.Code is not (
                     CilCode.Call or
@@ -289,13 +303,17 @@ internal static class MethodDefinitionExtensions
                     CilCode.Ldvirtftn or
                     CilCode.Ldtoken))
                 {
+                    constraint = null;
                     continue;
                 }
 
                 if (instruction.Operand is IMethodDescriptor descriptor)
                 {
-                    yield return descriptor;
+                    yield return new MethodOperand(descriptor,
+                        instruction.OpCode.Code is CilCode.Callvirt or CilCode.Ldvirtftn, constraint);
                 }
+
+                constraint = null;
             }
         }
 

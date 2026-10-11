@@ -264,7 +264,15 @@ internal static class ProjectionWriterRunner
     /// <returns>The process exit code and its combined standard output and error.</returns>
     public static (int ExitCode, string Output) Run(string toolPath, string argument, TimeSpan? timeout = null)
     {
-        ProcessStartInfo startInfo = new("dotnet")
+        return RunCommand("dotnet", ["exec", toolPath, argument], timeout);
+    }
+
+    /// <summary>
+    /// Runs a tool, native consumer, or publishing command with bounded, redirected output.
+    /// </summary>
+    public static (int ExitCode, string Output) RunCommand(string command, IEnumerable<string> arguments, TimeSpan? timeout = null)
+    {
+        ProcessStartInfo startInfo = new(command)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -272,9 +280,10 @@ internal static class ProjectionWriterRunner
             CreateNoWindow = true,
         };
 
-        startInfo.ArgumentList.Add("exec");
-        startInfo.ArgumentList.Add(toolPath);
-        startInfo.ArgumentList.Add(argument);
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
 
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the projection generator process.");
 
@@ -286,7 +295,7 @@ internal static class ProjectionWriterRunner
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
 
-            throw new TimeoutException($"The tool '{toolPath}' exceeded its timeout of '{timeout}'.\n{standardOutput.GetAwaiter().GetResult()}{standardError.GetAwaiter().GetResult()}");
+            throw new TimeoutException($"The command '{command}' exceeded its timeout of '{timeout}'.\n{standardOutput.GetAwaiter().GetResult()}{standardError.GetAwaiter().GetResult()}");
         }
 
         return (process.ExitCode, standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult());

@@ -9,6 +9,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
+using WindowsRuntime.InteropGenerator.Discovery;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -130,6 +131,15 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// Gets the comparer shared by discovery and emission.
     /// </summary>
     public SignatureComparer SignatureComparer { get; } = signatureComparer;
+
+    /// <summary>The read-only dispatch metadata index created after loading all input modules.</summary>
+    public MethodDispatchIndex? DispatchIndex { get; set; }
+
+    /// <summary>Cross-module dispatch contexts collected by the generic discovery enumerations.</summary>
+    public DispatchContextRegistry GenericDispatchContexts { get; } = new();
+
+    /// <summary>Cross-module dispatch contexts collected by the SZ-array discovery enumerations.</summary>
+    public DispatchContextRegistry SzArrayDispatchContexts { get; } = new();
 
     /// <summary>
     /// Gets the corlib references for the application's target framework.

@@ -14,7 +14,7 @@ using WindowsRuntime.ProjectionWriter;
 namespace ProjectionWriterTest;
 
 [TestClass]
-public class Test_InteropGenericDiscovery
+public partial class Test_InteropGenericDiscovery
 {
     private const string RecursionWarning = "CSWINRTINTEROPGEN0104";
     private const string ComplexityWarning = "CSWINRTINTEROPGEN0105";
@@ -641,7 +641,8 @@ public class Test_InteropGenericDiscovery
         bool treatWarningsAsErrors = false,
         string[]? additionalReferences = null,
         string[]? additionalArguments = null,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null,
+        int maxDegreesOfParallelism = 1)
     {
         string projection = Path.Combine(SdkFixture.Value, "WinRT.Sdk.Projection.dll");
         string sdkReference = Path.Combine(SdkFixture.Value, "Microsoft.Windows.SDK.NET.dll");
@@ -659,17 +660,18 @@ public class Test_InteropGenericDiscovery
             "--validate-winrt-runtime-dll-version-2-references true",
             "--enable-incremental-generation false",
             $"--treat-warnings-as-errors {treatWarningsAsErrors}",
-            "--max-degrees-of-parallelism 1",
+            $"--max-degrees-of-parallelism {maxDegreesOfParallelism}",
             .. additionalArguments ?? []
         ]);
 
         return ProjectionWriterRunner.Run(
-            ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
+            Environment.GetEnvironmentVariable("CSWINRT_TEST_INTEROP_GENERATOR")
+                ?? ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
             $"@{responseFile}",
             timeout: timeout ?? TimeSpan.FromSeconds(30));
     }
 
-    private static HashSet<string> GetComWrappersTypeAssociations(string path)
+    private static HashSet<string> GetComWrappersTypeAssociations(string path, string groupName = "WindowsRuntimeComWrappersTypeMapGroup")
     {
         using FileStream stream = File.OpenRead(path);
         using PEReader pe = new(stream);
@@ -710,7 +712,7 @@ public class Test_InteropGenericDiscovery
             Assert.AreEqual(0x12, signature.ReadByte());
             TypeReference group = reader.GetTypeReference((TypeReferenceHandle)signature.ReadTypeHandle());
 
-            if (reader.GetString(group.Name) != "WindowsRuntimeComWrappersTypeMapGroup")
+            if (reader.GetString(group.Name) != groupName)
             {
                 continue;
             }
@@ -732,6 +734,7 @@ public class Test_InteropGenericDiscovery
         try
         {
             string metadata = ArrayPropertyMetadata.Create(directory, exclusiveTo: true, includeArrayProperties: false);
+            DispatchMetadata.AddElementEnum(metadata);
 
             foreach (bool referenceProjection in new[] { false, true })
             {
