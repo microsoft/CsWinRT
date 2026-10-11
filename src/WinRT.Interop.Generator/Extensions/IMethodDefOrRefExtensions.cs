@@ -79,9 +79,18 @@ internal static class IMethodDefOrRefExtensions
                     yield return fieldType;
                 }
 
-                foreach (TypeSignature operandType in definition.EnumerateTypeOperandTypes())
+                // Generic casts and type tests can be the only use of 'IList<T>', without locals or allocations.
+                // Collect their operands so discovery can instantiate them with the caller's generic context.
+                foreach (ITypeDefOrRef operandType in definition.EnumerateCastAndTypeTokenOperandTypes())
                 {
-                    yield return operandType;
+                    // Gracefully handle resolution failures (see notes above)
+                    if (operandType.TryGetTypeSignature(
+                        context: runtimeContext,
+                        throwOnResolutionFailure: false,
+                        typeSignature: out TypeSignature? operandTypeSignature))
+                    {
+                        yield return operandTypeSignature;
+                    }
                 }
             }
         }

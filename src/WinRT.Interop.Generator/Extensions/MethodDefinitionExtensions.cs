@@ -236,10 +236,10 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
-        /// Enumerates type specifications used as instruction operands, including casts, boxing, and type tokens.
+        /// Enumerates operand types used by casts, type tests, boxing, unboxing, and type tokens.
         /// </summary>
-        /// <returns>The type signatures encoded by the operands.</returns>
-        public IEnumerable<TypeSignature> EnumerateTypeOperandTypes()
+        /// <returns>The types referenced by the operands.</returns>
+        public IEnumerable<ITypeDefOrRef> EnumerateCastAndTypeTokenOperandTypes()
         {
             if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
             {
@@ -248,12 +248,20 @@ internal static class MethodDefinitionExtensions
 
             foreach (CilInstruction instruction in instructions)
             {
-                // 'newarr' contributes an array, not just its element. Ordinary type references cannot
-                // contribute generic or array signatures and need not resolve private dependencies.
-                if (instruction.OpCode != Newarr &&
-                    instruction.Operand is TypeSpecification { Signature: { } signature })
+                // Only inspect operations that can expose types absent from signatures, locals, and allocations
+                if (instruction.OpCode.Code is not (
+                    CilCode.Castclass or
+                    CilCode.Isinst or
+                    CilCode.Box or
+                    CilCode.Unbox_Any or
+                    CilCode.Ldtoken))
                 {
-                    yield return signature;
+                    continue;
+                }
+
+                if (instruction.Operand is ITypeDefOrRef operandType)
+                {
+                    yield return operandType;
                 }
             }
         }
