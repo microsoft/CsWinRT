@@ -107,10 +107,10 @@ internal sealed class TypeSignatureDiscovery<TResult>
         _isMarshallingDisabledModule = isMarshallingDisabledModule;
         _treatWarningsAsErrors = treatWarningsAsErrors;
         _token = token;
-        _results = new(signatureComparer);
-        _typeSpecifications = new(signatureComparer);
-        _visitedTypes = new(signatureComparer);
-        _pendingMembers = new();
+        _results = new HashSet<TResult>(signatureComparer);
+        _typeSpecifications = new HashSet<TypeSignature>(signatureComparer);
+        _visitedTypes = new HashSet<TypeSignature>(signatureComparer);
+        _pendingMembers = new Queue<PendingMember>();
         _visitedMethods = [];
     }
 
@@ -257,6 +257,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
 
             GenericContext genericContext = new(typeSignature as GenericInstanceTypeSignature, null);
 
+            // The type's arguments can close member signatures that are open in the method table
             foreach (MethodDefinition method in GetMethodsToScan(typeSignature, type))
             {
                 foreach (TResult result in EnumerateMethodBodyTypes(method, genericContext, current.Depth + 1, current.Depth + 1))
@@ -367,12 +368,15 @@ internal sealed class TypeSignatureDiscovery<TResult>
         // type and method arguments first, then use the composed context for its signature and body.
         TypeSignature? declaringType = (method.DeclaringType as TypeSpecification)?.Signature?.InstantiateGenericTypes(callerContext);
         GenericInstanceMethodSignature? methodArguments = specification?.Signature is { } signature
-            ? new GenericInstanceMethodSignature(signature.Attributes,
-                [.. signature.TypeArguments.Select(argument => argument.InstantiateGenericTypes(callerContext))])
+            ? new GenericInstanceMethodSignature(
+                attributes: signature.Attributes,
+                typeArguments: [.. signature.TypeArguments.Select(argument => argument.InstantiateGenericTypes(callerContext))])
             : null;
 
         // Bound the aggregate context before any argument is visited or hashed, not just each argument separately
         int complexity = declaringType?.GetSignatureElementCount(MaxSignatureComplexity + 1) ?? 0;
+
+        // Many individually small arguments can still exceed the shared complexity budget
         foreach (TypeSignature argument in methodArguments?.TypeArguments ?? [])
         {
             complexity += argument.GetSignatureElementCount(MaxSignatureComplexity + 1);
@@ -390,6 +394,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
 
         GenericContext genericContext = new(declaringType as GenericInstanceTypeSignature, methodArguments);
 
+        // Method arguments can require marshalling even when the callee's signature omits them
         foreach (TypeSignature argument in methodArguments?.TypeArguments ?? [])
         {
             foreach (TResult result in EnumerateTypeSignatures(argument, depth))
@@ -398,6 +403,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             }
         }
 
+        // Closed declaring types provide contexts for otherwise non-generic member discovery
         foreach (TResult result in EnumerateTypeSignatures(declaringType, depth))
         {
             yield return result;
@@ -406,6 +412,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
         // Referenced signatures remain visible even when module policy prevents following the body
         if (method.Signature is MethodSignature methodSignature)
         {
+            // The reference signature remains usable even when the callee cannot be resolved
             foreach (TypeSignature visibleType in new[] { methodSignature.ReturnType }.Concat(methodSignature.ParameterTypes))
             {
                 foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth))
@@ -446,8 +453,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
 
         IList<TypeSignature> arguments = [
             .. (declaringType as GenericInstanceTypeSignature)?.TypeArguments ?? [],
-            .. methodArguments.TypeArguments
-        ];
+            .. methodArguments.TypeArguments];
 
         // Partially open contexts can still reveal closed types; skip only wholly unbound argument lists
         if (depth > 0 && arguments.All(static argument => argument is GenericParameterSignature))
@@ -458,6 +464,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
         if (!_visitedMethods.TryGetValue(definition, out HashSet<IList<TypeSignature>>? contexts))
         {
             contexts = new HashSet<IList<TypeSignature>>(_signatureComparer);
+
             _visitedMethods.Add(definition, contexts);
         }
 
