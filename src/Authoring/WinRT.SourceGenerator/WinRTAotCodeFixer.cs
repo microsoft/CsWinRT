@@ -326,12 +326,12 @@ namespace WinRT.SourceGenerator
                                 }
                             }
                         }
-                        else if (context.Node is MethodDeclarationSyntax methodDeclaration && methodDeclaration.ExpressionBody is not null)
+                        else if (context.Node is MethodDeclarationSyntax { ExpressionBody: not null } methodDeclaration)
                         {
-                            var returnSymbol = context.SemanticModel.GetTypeInfo(methodDeclaration.ExpressionBody.Expression);
                             var methodReturnSymbol = context.SemanticModel.GetSymbolInfo(methodDeclaration.ReturnType).Symbol;
                             if (methodReturnSymbol is ITypeSymbol typeSymbol)
                             {
+                                var returnSymbol = context.SemanticModel.GetTypeInfo(methodDeclaration.ExpressionBody.Expression);
                                 if (IsTypeOnLookupTable(returnSymbol, typeSymbol, out var implementsOnlyCustomMappedInterface))
                                 {
                                     ReportEnableUnsafeDiagnostic(context.ReportDiagnostic, returnSymbol.Type, methodDeclaration.GetLocation(), !implementsOnlyCustomMappedInterface);

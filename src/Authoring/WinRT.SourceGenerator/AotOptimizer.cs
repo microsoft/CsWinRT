@@ -1191,7 +1191,7 @@ namespace Generator
                     node is AssignmentExpressionSyntax ||
                     node is VariableDeclarationSyntax ||
                     node is PropertyDeclarationSyntax ||
-                    (node is MethodDeclarationSyntax methodDeclaration && methodDeclaration.ExpressionBody != null) ||
+                    node is MethodDeclarationSyntax { ExpressionBody: not null } ||
                     node is ReturnStatementSyntax ||
                     node is CollectionExpressionSyntax;
         }
