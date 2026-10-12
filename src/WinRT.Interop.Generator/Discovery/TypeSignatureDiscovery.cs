@@ -57,7 +57,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <summary>The signatures already reported to the consumer.</summary>
     private readonly HashSet<TResult> _results;
 
-    /// <summary>Explicit TypeSpec roots, whose members remain eligible for a one-hop scan regardless of module policy.</summary>
+    /// <summary>Explicit 'TypeSpec' roots, whose members remain eligible for a one-hop scan regardless of module policy.</summary>
     private readonly HashSet<TypeSignature> _typeSpecifications;
 
     /// <summary>Type contexts already considered for member expansion, distinct from reported results.</summary>
@@ -151,12 +151,12 @@ internal sealed class TypeSignatureDiscovery<TResult>
     }
 
     /// <summary>
-    /// Visits metadata roots in field, method, TypeSpec, and MethodSpec order, queuing their member contexts.
+    /// Visits metadata roots in field, method, 'TypeSpec', and 'MethodSpec' order, queuing their member contexts.
     /// </summary>
     /// <returns>The signatures visible from metadata roots.</returns>
     private IEnumerable<TResult> EnumerateRoots()
     {
-        // Field definitions can have type signatures inline, without them appearing in the TypeSpec table
+        // Field definitions can have type signatures inline, without them appearing in the 'TypeSpec' table
         foreach (FieldDefinition field in _module.EnumerateTableMembers<FieldDefinition>(TableIndex.Field))
         {
             foreach (TResult result in EnumerateTypeSignatures(field.Signature?.FieldType))
@@ -178,7 +178,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             }
         }
 
-        // TypeSpecs contain signatures referenced by metadata tokens, including base types and implemented interfaces
+        // 'TypeSpec'-s contain signatures referenced by metadata tokens, including base types and implemented interfaces
         foreach (TypeSpecification specification in _module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
         {
             foreach (TResult result in EnumerateTypeSignatures(specification.Signature))
@@ -202,7 +202,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             }
         }
 
-        // MethodSpecs supply arguments for generic calls and delegate targets. For example:
+        // 'MethodSpec'-s supply arguments for generic calls and delegate targets. For example:
         //
         // static List<T> M<T>() => [];
         // static object N() => M<int>();
@@ -223,14 +223,14 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <returns>The signatures visible from instantiated members.</returns>
     private IEnumerable<TResult> EnumeratePendingMembers()
     {
-        // A type context can close an ordinary method that has no MethodSpec of its own:
+        // A type context can close an ordinary method that has no 'MethodSpec' of its own:
         //
         // class C<T>
         // {
         //     List<T> M() => [];
         // }
         //
-        // A 'C<int>' TypeSpec lets us discover 'List<int>' from 'M()', unlike the open method definition.
+        // A 'C<int>' 'TypeSpec' lets us discover 'List<int>' from 'M()', unlike the open method definition.
         // Closed types discovered through generic factories need the same traversal, including ordinary
         // methods and cache initializers, to expose nested property/indexer descriptors transitively.
         while (_pendingMembers.TryDequeue(out PendingMember current))
@@ -352,7 +352,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="descriptor">The referenced method or method specification.</param>
     /// <param name="callerContext">The caller's declaring-type and method arguments.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit MethodSpec root.</param>
+    /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
     /// <returns>The signatures visible after substituting the callee's context.</returns>
     private IEnumerable<TResult> EnumerateMethodTypes(IMethodDescriptor descriptor, GenericContext callerContext, int depth)
     {
@@ -431,9 +431,9 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="method">The method to resolve.</param>
     /// <param name="declaringType">The declaring type with the caller's arguments substituted.</param>
-    /// <param name="methodArguments">The substituted method arguments, if this is a MethodSpec.</param>
+    /// <param name="methodArguments">The substituted method arguments, if this is a 'MethodSpec'.</param>
     /// <param name="genericContext">The composed context to use when scanning the body.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit MethodSpec root.</param>
+    /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
     private void EnqueueMethodBody(
         IMethodDefOrRef method,
         TypeSignature? declaringType,
@@ -442,7 +442,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
         int depth)
     {
         // Ordinary methods on constructed declaring types are already covered by the type worklist.
-        // Only explicit MethodSpec roots retain the one-hop body scan of skipped modules.
+        // Only explicit 'MethodSpec' roots retain the one-hop body scan of skipped modules.
         if (methodArguments is null ||
             !method.TryResolve(_module.RuntimeContext, out MethodDefinition? definition) ||
             definition.CilMethodBody is null ||
