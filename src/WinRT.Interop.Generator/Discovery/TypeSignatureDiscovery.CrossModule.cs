@@ -151,6 +151,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
         foreach ((TypeSignature receiver, int depth) in receivers)
         {
+            // Use the shallowest demand from an origin that lacked this receiver; local pairs were already joined
             int dispatchDepth = int.MaxValue;
 
             foreach ((int origin, int originDepth) in entry.Depths)

@@ -4,7 +4,6 @@
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
@@ -20,6 +19,7 @@ internal sealed partial class MethodDispatchIndex
     /// <returns>Whether the relationship is compatible with the observed contexts.</returns>
     public bool TryBind(Target target, TypeSignature declarationType, TypeSignature? receiverType, out TypeSignature bodyType)
     {
+        // Seed the writable inference state without modifying the observed receiver's shared metadata
         TypeSignature?[] bindings = new TypeSignature?[target.Receiver.GenericParameters.Count];
 
         if (receiverType is GenericInstanceTypeSignature receiver)
@@ -32,8 +32,11 @@ internal sealed partial class MethodDispatchIndex
 
         bool matches;
 
-        if (target.DeclarationType is GenericInstanceTypeSignature pattern && declarationType is GenericInstanceTypeSignature actual &&
-            _comparer.Equals(pattern.GenericType, actual.GenericType) && pattern.TypeArguments.Count == actual.TypeArguments.Count)
+        // Match the same generic declaration and arity before applying per-parameter variance rules
+        if (target.DeclarationType is GenericInstanceTypeSignature pattern &&
+            declarationType is GenericInstanceTypeSignature actual &&
+            _comparer.Equals(pattern.GenericType, actual.GenericType) &&
+            pattern.TypeArguments.Count == actual.TypeArguments.Count)
         {
             matches = true;
             _ = pattern.GenericType.TryResolve(_runtimeContext, out TypeDefinition? definition);
@@ -41,8 +44,7 @@ internal sealed partial class MethodDispatchIndex
             for (int i = 0; i < pattern.TypeArguments.Count; i++)
             {
                 // Keep actual receiver bindings when variant interface arguments cannot be unified
-                if (definition?.GenericParameters[i].Attributes is { } attributes &&
-                    (attributes & GenericParameterAttributes.VarianceMask) != 0)
+                if (definition?.GenericParameters[i].IsVariant == true)
                 {
                     TypeSignature?[] candidateBindings = (TypeSignature?[])bindings.Clone();
 
@@ -62,6 +64,8 @@ internal sealed partial class MethodDispatchIndex
             matches = TryUnify(target.DeclarationType, declarationType, bindings);
         }
 
+        // Reconstruct the receiver context to substitute the implementation's declaring type
+        // Keep unbound receiver parameters open rather than inventing type arguments
         GenericInstanceTypeSignature? receiverContext = bindings.Length == 0 ? null : new GenericInstanceTypeSignature(
             genericType: target.Receiver,
             isValueType: target.Receiver.IsValueType,
@@ -93,7 +97,9 @@ internal sealed partial class MethodDispatchIndex
             type: constraint as GenericInstanceTypeSignature,
             method: null);
 
-        return GetHierarchy(definition).FirstOrDefault(entry => ReferenceEquals(entry.Definition, target.Receiver))
+        // Project the constraint onto the implementation receiver, including inherited type arguments
+        return GetHierarchy(definition)
+            .FirstOrDefault(entry => ReferenceEquals(entry.Definition, target.Receiver))
             ?.Signature.InstantiateGenericTypes(context);
     }
 
@@ -106,7 +112,9 @@ internal sealed partial class MethodDispatchIndex
     /// <returns>Whether the signatures can share a receiver context.</returns>
     private bool TryUnify(TypeSignature pattern, TypeSignature actual, TypeSignature?[] bindings)
     {
-        if (pattern is GenericParameterSignature { ParameterType: GenericParameterType.Type } parameter && parameter.Index < bindings.Length)
+        // Bind each receiver parameter once and require repeated occurrences to match the same actual type
+        if (pattern is GenericParameterSignature { ParameterType: GenericParameterType.Type } parameter &&
+            parameter.Index < bindings.Length)
         {
             if (bindings[parameter.Index] is TypeSignature binding)
             {
@@ -118,6 +126,7 @@ internal sealed partial class MethodDispatchIndex
             return true;
         }
 
+        // Unify matching signature shapes recursively, preserving array dimensions and custom modifiers
         return (pattern, actual) switch
         {
             (GenericInstanceTypeSignature left, GenericInstanceTypeSignature right) =>

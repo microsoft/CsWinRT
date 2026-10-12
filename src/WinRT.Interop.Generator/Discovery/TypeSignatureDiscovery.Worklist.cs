@@ -245,6 +245,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     {
         bool visited = contexts.TryGetValue(arguments, out int priorDepth);
 
+        // Exclude covered work before diagnostics or budget charges; a shorter replay reuses its reservation
         return
             (!visited || priorDepth > depth) &&
             _primary?.IsMethodCovered(method, arguments, depth) is not true &&

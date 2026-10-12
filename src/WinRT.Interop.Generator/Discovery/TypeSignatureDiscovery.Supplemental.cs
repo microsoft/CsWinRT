@@ -212,6 +212,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             RegisterDispatch(observation.Operand, observation.Context, observation.Depth);
         }
 
+        // Shorter paths can recover depth-limited scans, but must not retry primary budget-rejected methods
         if (primary._recursionLimitReported)
         {
             foreach ((TypeSignature type, int depth) in primary._shallowerTypes)

@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
@@ -16,9 +17,6 @@ internal sealed partial class MethodDispatchIndex
 
     /// <summary>Whether a definition's metadata hierarchy contains any generic virtual declaration.</summary>
     private readonly Dictionary<TypeDefinition, bool> _hasGenericDispatch = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Prevents cache writes once the completed index is shared by parallel enumerations.</summary>
-    private readonly bool _isReadOnly;
 
     /// <summary>
     /// Checks dispatch relevance using definition relationships only, without composing type signatures.
@@ -36,6 +34,7 @@ internal sealed partial class MethodDispatchIndex
         HashSet<TypeDefinition> visited = new(ReferenceEqualityComparer.Instance);
         pending.Push(type);
 
+        // Dispatch relevance depends on reachable definitions, not their particular generic instantiations
         while (pending.TryPop(out TypeDefinition? current))
         {
             _token.ThrowIfCancellationRequested();
@@ -76,6 +75,7 @@ internal sealed partial class MethodDispatchIndex
             }
         }
 
+        // With no reachable generic slot, every definition inspected in this graph is irrelevant
         foreach (TypeDefinition definition in visited)
         {
             _hasGenericDispatch[definition] = false;
@@ -85,25 +85,53 @@ internal sealed partial class MethodDispatchIndex
     }
 
     /// <summary>
-    /// Retrieves the cached, substitution-aware base and interface hierarchy.
+    /// Retrieves a substitution-aware hierarchy without modifying the completed index.
     /// </summary>
     /// <param name="type">The type definition.</param>
     /// <returns>The metadata hierarchy in depth-first order.</returns>
     private HierarchyType[] GetHierarchy(TypeDefinition type)
     {
+        return _hierarchies.TryGetValue(type, out HierarchyType[]? hierarchy)
+            ? hierarchy
+            : CreateHierarchy(type, _runtimeContext, _comparer, _token);
+    }
+
+    /// <summary>
+    /// Gets or caches a hierarchy during constructor-only indexing.
+    /// </summary>
+    /// <param name="type">The type definition.</param>
+    /// <returns>The metadata hierarchy in depth-first order.</returns>
+    private HierarchyType[] GetOrAddHierarchy(TypeDefinition type)
+    {
         if (!_hierarchies.TryGetValue(type, out HierarchyType[]? hierarchy))
         {
-            List<HierarchyType> entries = [];
-            CollectHierarchy(GetIdentitySignature(type), entries, new HashSet<TypeDefinition>(ReferenceEqualityComparer.Instance));
-            hierarchy = [.. entries];
-
-            if (!_isReadOnly)
-            {
-                _hierarchies.Add(type, hierarchy);
-            }
+            hierarchy = CreateHierarchy(type, _runtimeContext, _comparer, _token);
+            _hierarchies.Add(type, hierarchy);
         }
 
         return hierarchy;
+    }
+
+    /// <summary>
+    /// Builds a hierarchy using only the supplied resolution context and traversal-local state.
+    /// </summary>
+    /// <param name="type">The type definition.</param>
+    /// <param name="runtimeContext">The metadata resolution context.</param>
+    /// <param name="comparer">The resolution-aware signature comparer.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The metadata hierarchy in depth-first order.</returns>
+    private static HierarchyType[] CreateHierarchy(
+        TypeDefinition type,
+        RuntimeContext runtimeContext,
+        SignatureComparer comparer,
+        CancellationToken token)
+    {
+        List<HierarchyType> entries = [];
+        HashSet<TypeDefinition> path = new(ReferenceEqualityComparer.Instance);
+
+        CollectHierarchy(GetIdentitySignature(type), entries, path, runtimeContext, comparer, token);
+
+        return [.. entries];
     }
 
     /// <summary>
@@ -112,16 +140,27 @@ internal sealed partial class MethodDispatchIndex
     /// <param name="signature">The current type template.</param>
     /// <param name="entries">The resulting hierarchy.</param>
     /// <param name="path">The definitions currently on the path.</param>
-    private void CollectHierarchy(TypeSignature signature, List<HierarchyType> entries, HashSet<TypeDefinition> path)
+    /// <param name="runtimeContext">The metadata resolution context.</param>
+    /// <param name="comparer">The resolution-aware signature comparer.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static void CollectHierarchy(
+        TypeSignature signature,
+        List<HierarchyType> entries,
+        HashSet<TypeDefinition> path,
+        RuntimeContext runtimeContext,
+        SignatureComparer comparer,
+        CancellationToken token)
     {
-        _token.ThrowIfCancellationRequested();
+        token.ThrowIfCancellationRequested();
 
-        if (!signature.TryResolve(_runtimeContext, out TypeDefinition? definition) || !path.Add(definition))
+        // Stop metadata cycles by definition identity even when recursive edges keep changing type arguments
+        if (!signature.TryResolve(runtimeContext, out TypeDefinition? definition) || !path.Add(definition))
         {
             return;
         }
 
-        if (!entries.Any(entry => ReferenceEquals(entry.Definition, definition) && _comparer.Equals(entry.Signature, signature)))
+        // Different constructed ancestors remain distinct; only identical definition/context pairs collapse
+        if (!entries.Any(entry => ReferenceEquals(entry.Definition, definition) && comparer.Equals(entry.Signature, signature)))
         {
             entries.Add(new HierarchyType(
                 Definition: definition,
@@ -131,16 +170,16 @@ internal sealed partial class MethodDispatchIndex
                 type: signature as GenericInstanceTypeSignature,
                 method: null);
 
-            if (definition.BaseType?.TryGetTypeSignature(_runtimeContext, false, out TypeSignature? baseType) is true)
+            if (definition.BaseType?.TryGetTypeSignature(runtimeContext, false, out TypeSignature? baseType) is true)
             {
-                CollectHierarchy(baseType.InstantiateGenericTypes(context), entries, path);
+                CollectHierarchy(baseType.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token);
             }
 
             foreach (InterfaceImplementation implementation in definition.Interfaces)
             {
-                if (implementation.Interface?.TryGetTypeSignature(_runtimeContext, false, out TypeSignature? iface) is true)
+                if (implementation.Interface?.TryGetTypeSignature(runtimeContext, false, out TypeSignature? iface) is true)
                 {
-                    CollectHierarchy(iface.InstantiateGenericTypes(context), entries, path);
+                    CollectHierarchy(iface.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token);
                 }
             }
         }
@@ -155,6 +194,7 @@ internal sealed partial class MethodDispatchIndex
     /// <returns>The identity type signature.</returns>
     private static TypeSignature GetIdentitySignature(TypeDefinition type)
     {
+        // Positional placeholders keep the hierarchy in receiver parameters, including enclosing-type parameters
         return type.GenericParameters.Count == 0
             ? type.ToTypeSignature()
             : new GenericInstanceTypeSignature(

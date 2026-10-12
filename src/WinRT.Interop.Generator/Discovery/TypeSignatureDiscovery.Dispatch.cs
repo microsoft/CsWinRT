@@ -53,6 +53,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     {
         _token.ThrowIfCancellationRequested();
 
+        // Primary traversal only records observations; dispatch expansion belongs to the supplemental allowance
         if (!_isSupplemental)
         {
             RecordDispatchObservation(operand, callerContext, depth);
@@ -60,6 +61,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             return;
         }
 
+        // Generic virtual slots and constrained static dispatch can contribute additional implementation bodies
         if (_transitiveTypeLimitReported ||
             (!operand.IsVirtual && operand.Constraint is null) ||
             operand.Descriptor is not MethodSpecification { Method: { } method, Signature: { } signature } ||
@@ -91,6 +93,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 return;
             }
 
+            // An unsealed reference constraint still permits derived receivers, so it must not narrow dispatch
             if (!definition.IsStatic && constraint.TryResolve(_module.RuntimeContext, out TypeDefinition? receiver) &&
                 !receiver.IsValueType && !receiver.IsSealed)
             {

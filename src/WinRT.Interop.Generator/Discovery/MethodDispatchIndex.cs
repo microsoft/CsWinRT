@@ -87,8 +87,6 @@ internal sealed partial class MethodDispatchIndex
                 _receiverHierarchies.Add(type, receivers);
             }
         }
-
-        _isReadOnly = true;
     }
 
     /// <summary>
@@ -176,7 +174,7 @@ internal sealed partial class MethodDispatchIndex
             return;
         }
 
-        HierarchyType[] hierarchy = GetHierarchy(type);
+        HierarchyType[] hierarchy = GetOrAddHierarchy(type);
 
         // Interfaces can be implemented explicitly, by an inherited method, or by a default body
         foreach (HierarchyType iface in hierarchy.Where(static entry => entry.Definition.IsInterface))
@@ -202,6 +200,7 @@ internal sealed partial class MethodDispatchIndex
                 continue;
             }
 
+            // Compare candidate bodies against the interface signature expressed in receiver parameters
             MethodSignature signature = declaration.Signature.InstantiateGenericTypes(new GenericContext(
                 type: iface.Signature as GenericInstanceTypeSignature,
                 method: null));
@@ -229,6 +228,7 @@ internal sealed partial class MethodDispatchIndex
     {
         foreach (MethodImplementation implementation in owner.Definition.MethodImplementations)
         {
+            // Explicit metadata identifies the exact slot and body, allowing renamed members and covariant returns
             if (implementation.Declaration?.TryResolve(_runtimeContext, out MethodDefinition? slot) is true &&
                 ReferenceEquals(slot, declaration) &&
                 implementation.Body?.TryResolve(_runtimeContext, out MethodDefinition? body) is true &&
@@ -267,6 +267,7 @@ internal sealed partial class MethodDispatchIndex
     {
         foreach (MethodDefinition body in owner.Definition.Methods)
         {
+            // Other interface bodies require an explicit MethodImpl; only this declaration supplies its default body
             if (owner.Definition.IsInterface)
             {
                 if (ReferenceEquals(body, declaration) && !body.IsAbstract)
@@ -281,6 +282,7 @@ internal sealed partial class MethodDispatchIndex
                 continue;
             }
 
+            // Match public class implementations after substituting inherited receiver arguments
             if (body.IsPublic && body.IsStatic == declaration.IsStatic &&
                 body.Name == declaration.Name &&
                 body.Signature is { GenericParameterCount: > 0 } bodySignature &&
@@ -322,6 +324,7 @@ internal sealed partial class MethodDispatchIndex
             type: declaringType as GenericInstanceTypeSignature,
             method: null);
 
+        // Follow explicit remaps before looking for implicit base slots with matching signatures
         foreach (MethodImplementation implementation in method.DeclaringType!.MethodImplementations)
         {
             if (implementation.Body?.TryResolve(_runtimeContext, out MethodDefinition? body) is true &&
@@ -338,11 +341,12 @@ internal sealed partial class MethodDispatchIndex
             }
         }
 
+        // Reused instance slots inherit the nearest matching base declaration; new or static slots do not
         if (!method.IsNewSlot && !method.IsStatic)
         {
             MethodSignature signature = method.Signature!.InstantiateGenericTypes(context);
 
-            foreach (HierarchyType ancestor in GetHierarchy(method.DeclaringType).Skip(1).Where(static entry => !entry.Definition.IsInterface))
+            foreach (HierarchyType ancestor in GetOrAddHierarchy(method.DeclaringType).Skip(1).Where(static entry => !entry.Definition.IsInterface))
             {
                 TypeSignature ancestorType = ancestor.Signature.InstantiateGenericTypes(context);
                 MethodDefinition? declaration = ancestor.Definition.Methods.FirstOrDefault(candidate =>
@@ -386,6 +390,7 @@ internal sealed partial class MethodDispatchIndex
             _targets.Add(declaration, targets);
         }
 
+        // Assign an ordinal only to distinct receiver/body/slot bindings so cutoff ordering stays stable
         if (!targets.Any(existing => ReferenceEquals(existing.Receiver, target.Receiver) &&
             ReferenceEquals(existing.Method, target.Method) &&
             _comparer.Equals(existing.DeclarationType, target.DeclarationType) &&
@@ -408,7 +413,7 @@ internal sealed partial class MethodDispatchIndex
     /// <param name="DeclarationType">The slot's declaring type in receiver parameters.</param>
     /// <param name="Method">The body definition.</param>
     /// <param name="BodyType">The body's declaring type in receiver parameters.</param>
-    internal sealed record Target(
+    public sealed record Target(
         TypeDefinition Receiver,
         TypeSignature DeclarationType,
         MethodDefinition Method,
