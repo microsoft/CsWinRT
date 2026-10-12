@@ -44,9 +44,9 @@ internal sealed class Settings
     public bool Verbose { get; init; }
 
     /// <summary>
-    /// Optional callback invoked for each verbose progress message. When <see langword="null"/>,
-    /// verbose messages are forwarded to <see cref="Console.Out"/>. Has no effect unless
-    /// <see cref="Verbose"/> is also set.
+    /// Optional callback invoked for each progress or informational message. When <see langword="null"/>,
+    /// messages are forwarded to <see cref="Console.Out"/>. Verbose progress messages are only logged
+    /// when <see cref="Verbose"/> is also set.
     /// </summary>
     public Action<string>? Logger { get; init; }
 

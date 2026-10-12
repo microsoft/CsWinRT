@@ -17,6 +17,8 @@ The projection then carries, in addition to its usual projected types, an abstra
 
 This is purely additive: consumers that only *use* the projection are unaffected, and there is no second package to produce or reference.
 
+A few runtime classes cannot get bases, because C# cannot express the members they require. For instance, two interfaces requiring members that differ only in their return type, a property that hides an inherited one of a different type, or several instantiations of the same generic interface. These classes are still projected and usable as normal; they just cannot be implemented in C#. Each one is reported in the build output, with the reason.
+
 ## Implementing the types
 
 Reference the projection and extend the generated base:

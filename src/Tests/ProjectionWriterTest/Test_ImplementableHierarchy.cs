@@ -181,6 +181,57 @@ public class Test_ImplementableHierarchy
         Assert.IsFalse(GetAbiClassNames(referenceProjection).Any(static name => name.StartsWith(ImplementableHierarchyMetadata.CreateCollision, System.StringComparison.Ordinal)));
     }
 
+    /// <summary>
+    /// A class that gets no bases is reported once, with the reason, so it is not dropped silently.
+    /// </summary>
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void SkippedClasses_AreLoggedOnce(bool referenceProjection)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionHierarchyTest_").FullName;
+        System.Collections.Concurrent.ConcurrentQueue<string> messages = new();
+
+        try
+        {
+            _ = Generate(directory, referenceProjection, messages.Enqueue);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+
+        string[] skipped = [.. messages.Where(static message => message.StartsWith("No implementable base generated for ", System.StringComparison.Ordinal))];
+
+        Assert.HasCount(3, skipped, string.Join(System.Environment.NewLine, messages));
+        Assert.ContainsSingle(skipped.Where(static message => message.Contains($"'Contoso.{ImplementableHierarchyMetadata.OtherIterableDerived}': it implements multiple instantiations", System.StringComparison.Ordinal)));
+        Assert.ContainsSingle(skipped.Where(static message => message.Contains($"'Contoso.{ImplementableHierarchyMetadata.CreateCollision}': some of its members", System.StringComparison.Ordinal)));
+        Assert.ContainsSingle(skipped.Where(static message => message.Contains($"'Contoso.{ImplementableHierarchyMetadata.SettableCountDerived}': some of its members", System.StringComparison.Ordinal)));
+    }
+
+    /// <summary>
+    /// The non-generic mapped interfaces are declared in their .NET form, like the generic ones, with the members
+    /// that have no Windows Runtime counterpart given the same fixed values as on the projected class.
+    /// </summary>
+    [TestMethod]
+    public void NonGenericMappedInterfaces_AreDeclaredInTheirNetForm()
+    {
+        string list = GetAbiClass(ImplementableHierarchyMetadata.BindableList).ToString();
+
+        StringAssert.Contains(list, "global::System.Collections.IList");
+        StringAssert.Contains(list, "public abstract object this[int index] { get; set; }");
+        StringAssert.Contains(list, "public abstract int Add(object value);");
+        StringAssert.Contains(list, "public abstract global::System.Collections.IEnumerator GetEnumerator();");
+        StringAssert.Contains(list, "public virtual object SyncRoot => this;");
+
+        StringAssert.Contains(GetAbiClass(ImplementableHierarchyMetadata.BindableIterator).ToString(), "public abstract object Current { get; }");
+
+        string errors = GetAbiClass(ImplementableHierarchyMetadata.DataErrors).ToString();
+
+        StringAssert.Contains(errors, "global::System.ComponentModel.INotifyDataErrorInfo");
+        StringAssert.Contains(errors, "public abstract event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged;");
+    }
+
     [TestMethod]
     public void ReferenceProjection_Compiles()
     {
@@ -265,6 +316,57 @@ public class Test_ImplementableHierarchy
                         public override void DisposeDerivedMethod() { }
                     }
 
+                    public sealed class MyBindableList : ABI.Contoso.BindableListWidget
+                    {
+                        public override void BindableListWidgetMethod() { }
+
+                        public override object this[int index] { get => null!; set { } }
+
+                        public override int Count => 0;
+
+                        public override bool IsReadOnly => false;
+
+                        public override int Add(object value) => 0;
+
+                        public override void Clear() { }
+
+                        public override bool Contains(object value) => false;
+
+                        public override int IndexOf(object value) => -1;
+
+                        public override void Insert(int index, object value) { }
+
+                        public override void Remove(object value) { }
+
+                        public override void RemoveAt(int index) { }
+
+                        public override void CopyTo(System.Array array, int index) { }
+
+                        public override System.Collections.IEnumerator GetEnumerator() => null!;
+                    }
+
+                    public sealed class MyBindableIterator : ABI.Contoso.BindableIteratorWidget
+                    {
+                        public override void BindableIteratorWidgetMethod() { }
+
+                        public override object Current => null!;
+
+                        public override bool MoveNext() => false;
+
+                        public override void Reset() { }
+                    }
+
+                    public sealed class MyDataErrors : ABI.Contoso.DataErrorsWidget
+                    {
+                        public override void DataErrorsWidgetMethod() { }
+
+                        public override bool HasErrors => false;
+
+                        public override System.Collections.IEnumerable GetErrors(string propertyName) => null!;
+
+                        public override event System.EventHandler<System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged { add { } remove { } }
+                    }
+
                     public static class Usage
                     {
                         public static void Use(MyIterator iterator, MyIterable iterable)
@@ -285,6 +387,14 @@ public class Test_ImplementableHierarchy
                         private static void TakeClosable(Contoso.ClosableBase value) { }
 
                         private static void TakeIntIterable(Contoso.IntIterableBase value) { }
+
+                        public static void UseMapped(MyBindableList list, MyBindableIterator iterator, MyDataErrors errors)
+                        {
+                            System.Collections.IList nonGenericList = list;
+                            System.Collections.IEnumerator nonGenericIterator = iterator;
+                            System.ComponentModel.INotifyDataErrorInfo dataErrorInfo = errors;
+                            Contoso.BindableListWidget projected = list;
+                        }
                     }
                 }
                 """;
@@ -352,7 +462,7 @@ public class Test_ImplementableHierarchy
                 !type.Modifiers.Any(SyntaxKind.StaticKeyword))];
     }
 
-    private static string Generate(string directory, bool referenceProjection)
+    private static string Generate(string directory, bool referenceProjection, System.Action<string>? logger = null)
     {
         string output = Path.Combine(directory, referenceProjection ? "reference" : "generated");
 
@@ -362,7 +472,8 @@ public class Test_ImplementableHierarchy
             OutputFolder = output,
             Include = ["Contoso"],
             ImplementWinMDTypes = true,
-            ReferenceProjection = referenceProjection
+            ReferenceProjection = referenceProjection,
+            Logger = logger ?? (static _ => { })
         });
 
         return output;

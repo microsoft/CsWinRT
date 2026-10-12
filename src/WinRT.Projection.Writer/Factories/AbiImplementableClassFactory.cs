@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -26,6 +27,11 @@ internal static class AbiImplementableClassFactory
     /// The cached results of <see cref="HasMemberConflicts"/>, for each runtime class.
     /// </summary>
     private static readonly ConditionalWeakTable<TypeDefinition, object> MemberConflictsCache = [];
+
+    /// <summary>
+    /// The cached results of <see cref="GetSkipReason"/>, for each runtime class.
+    /// </summary>
+    private static readonly ConditionalWeakTable<TypeDefinition, StrongBox<string?>> SkipReasonCache = [];
 
     /// <summary>
     /// The cached result for a runtime class whose members conflict.
@@ -98,25 +104,64 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
-        // A custom-mapped interface is projected as its .NET counterpart, whose members the input metadata
-        // does not describe. Those are declared from a known .NET shape, so only interfaces without one skip.
-        if (ImplementsUnsupportedMappedInterface(context, type))
+        // Static runtime classes have no instances, so they only get a factory base, and only if they actually
+        // declare any statics. A static class without any has nothing to implement, so it is not worth reporting.
+        if (type.IsStatic && !HasFactoryInterfaces(context, type))
         {
             return false;
+        }
+
+        if (SkipReasonCache.TryGetValue(type, out StrongBox<string?>? cachedReason))
+        {
+            return cachedReason.Value is null;
+        }
+
+        // The reason is computed outside of the cache, as computing it can recurse into the base class (which
+        // 'ConditionalWeakTable.GetValue' does not support). Only the thread that adds it logs it, so a skipped
+        // class is reported exactly once even though this is called repeatedly and in parallel.
+        StrongBox<string?> reason = new(GetSkipReason(context, type));
+
+        if (!SkipReasonCache.TryAdd(type, reason))
+        {
+            return !SkipReasonCache.TryGetValue(type, out cachedReason) || cachedReason.Value is null;
+        }
+
+        if (reason.Value is not null)
+        {
+            (context.Settings.Logger ?? Console.Out.WriteLine)(
+                $"No implementable base generated for '{type.FullName}': {reason.Value}. It can still be used through its projection, but cannot be implemented in C#.");
+        }
+
+        return reason.Value is null;
+    }
+
+    /// <summary>
+    /// Returns why no abstract implementable base class can be generated for <paramref name="type"/>, if any.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class to inspect.</param>
+    /// <returns>The reason no base can be generated, or <see langword="null"/> if one can.</returns>
+    private static string? GetSkipReason(ProjectionEmitContext context, TypeDefinition type)
+    {
+        // A custom-mapped interface is projected as its .NET counterpart, whose members the input metadata
+        // does not describe. Those are declared from a known .NET shape, so only interfaces without one skip.
+        if (FindUnsupportedMappedInterface(context, type) is { } mappedInterface)
+        {
+            return $"it implements the custom-mapped interface '{mappedInterface.FullName}', whose .NET members cannot be generated";
         }
 
         // Members of different instantiations of the same generic interface differ only in their types (e.g. the
         // 'GetEnumerator()' of 'IEnumerable<int>' and 'IEnumerable<string>'), so C# cannot declare both 'abstract'.
         if (HasConflictingGenericInstantiations(context, type))
         {
-            return false;
+            return "it implements multiple instantiations of the same generic interface";
         }
 
         // The factory base's name is reserved (see 'GetFactoryClassName'), so a runtime class cannot get one
         // if a real Windows Runtime class in the same namespace already has that name.
         if (IsFactoryClassNameTaken(context, type))
         {
-            return false;
+            return $"the name of its factory base, '{GetFactoryClassName(IdentifierEscaping.StripBackticks(type.Names().Name))}', is already used by a runtime class";
         }
 
         // Two interfaces can require members C# cannot declare side by side, which only shows when the members are
@@ -125,23 +170,30 @@ internal static class AbiImplementableClassFactory
         // 'Style'), as redeclaring it would hide the inherited member and leave it impossible to implement.
         if (HasMemberConflicts(context, type))
         {
-            return false;
+            return "some of its members (or of its base classes or factory) conflict and cannot be declared together in C#";
         }
 
-        // Static runtime classes have no instances, so they only get a factory base (and only if
-        // they actually declare any statics). All other runtime classes always get an instance base:
-        // it is separate from the (possibly sealed) projected class and bridges to it via an implicit
-        // operator, so it applies to both sealed and unsealed runtime classes.
+        // All other runtime classes always get an instance base: it is separate from the (possibly sealed) projected
+        // class and bridges to it via an implicit operator, so it applies to both sealed and unsealed runtime classes.
         if (type.IsStatic)
         {
-            return HasFactoryInterfaces(context, type);
+            return null;
         }
 
         // The base is chained to by name, so it has to be emitted as well. It is not when it is excluded
         // from this projection (e.g. a base class from another '.winmd'), or when it is itself skipped by
         // one of the checks above. Emitting anyway would reference a class that does not exist.
-        return GetImplementableBaseType(context, type) is not { } baseType ||
-               (context.Settings.Filter.Includes(baseType.FullName) && ShouldEmit(context, baseType));
+        if (GetImplementableBaseType(context, type) is not { } baseType)
+        {
+            return null;
+        }
+
+        if (!context.Settings.Filter.Includes(baseType.FullName))
+        {
+            return $"its base class '{baseType.FullName}' is not part of this projection";
+        }
+
+        return ShouldEmit(context, baseType) ? null : $"its base class '{baseType.FullName}' has no implementable base";
     }
 
     /// <summary>
@@ -202,10 +254,10 @@ internal static class AbiImplementableClassFactory
     }
 
     /// <summary>
-    /// Returns whether a type implements, directly or transitively, any interface that is custom-mapped to a
-    /// .NET interface that no known abstract member shape exists for.
+    /// Returns the first interface a type implements, directly or transitively, that is custom-mapped to a
+    /// .NET interface that no known abstract member shape exists for, if any.
     /// </summary>
-    private static bool ImplementsUnsupportedMappedInterface(ProjectionEmitContext context, TypeDefinition type)
+    private static TypeDefinition? FindUnsupportedMappedInterface(ProjectionEmitContext context, TypeDefinition type)
     {
         Dictionary<string, TypeDefinition> closure = [];
 
@@ -215,11 +267,11 @@ internal static class AbiImplementableClassFactory
         {
             if (IsCustomMappedInterface(interfaceType) && !MappedInterfaceAbstractMemberFactory.IsSupported(interfaceType.Name ?? ""))
             {
-                return true;
+                return interfaceType;
             }
         }
 
-        return false;
+        return null;
     }
 
     /// <summary>

@@ -45,7 +45,11 @@ internal static class MappedInterfaceAbstractMemberFactory
             "IMap`2" or
             "IMapView`2" or
             "IVector`1" or
-            "IVectorView`1";
+            "IVectorView`1" or
+            "IBindableIterable" or
+            "IBindableIterator" or
+            "IBindableVector" or
+            "INotifyDataErrorInfo";
     }
 
     /// <summary>
@@ -96,7 +100,64 @@ internal static class MappedInterfaceAbstractMemberFactory
             case "IVectorView`1" when args.Count == 1:
                 WriteReadOnlyList(writer, members, args[0]);
                 break;
+            case "IBindableIterable":
+                WriteMethod(writer, members, "global::System.Collections.IEnumerator", "GetEnumerator", "");
+                break;
+            case "IBindableIterator":
+                WriteNonGenericEnumerator(writer, members);
+                break;
+            case "IBindableVector":
+                WriteNonGenericList(writer, members);
+                break;
+            case "INotifyDataErrorInfo":
+                WriteNotifyDataErrorInfo(writer, members);
+                break;
         }
+    }
+
+    /// <summary>Emits the non-generic <c>IEnumerator</c> members.</summary>
+    private static void WriteNonGenericEnumerator(IndentedTextWriter writer, ImplementableMemberSet members)
+    {
+        WriteProperty(writer, members, "object", "Current", hasSetter: false);
+        WriteMethod(writer, members, "bool", "MoveNext", "");
+        WriteMethod(writer, members, "void", "Reset", "");
+    }
+
+    /// <summary>Emits the non-generic <c>IList</c> members (<c>GetEnumerator</c> comes from <c>IBindableIterable</c>).</summary>
+    private static void WriteNonGenericList(IndentedTextWriter writer, ImplementableMemberSet members)
+    {
+        WriteIndexer(writer, members, "object", "int", "index", hasSetter: true, indexerName: "NonGenericListItem");
+        WriteProperty(writer, members, "int", "Count", hasSetter: false);
+        WriteProperty(writer, members, "bool", "IsReadOnly", hasSetter: false);
+        WriteMethod(writer, members, "int", "Add", "object value");
+        WriteMethod(writer, members, "void", "Clear", "");
+        WriteMethod(writer, members, "bool", "Contains", "object value");
+        WriteMethod(writer, members, "int", "IndexOf", "object value");
+        WriteMethod(writer, members, "void", "Insert", "int index, object value");
+        WriteMethod(writer, members, "void", "Remove", "object value");
+        WriteMethod(writer, members, "void", "RemoveAt", "int index");
+        WriteMethod(writer, members, "void", "CopyTo", "global::System.Array array, int index");
+
+        // These have no Windows Runtime counterpart, so a native caller can never reach them. They get the same
+        // fixed values as on the projected class rather than being left for the author to implement.
+        WriteFixedProperty(writer, members, "bool", "IsFixedSize", "false");
+        WriteFixedProperty(writer, members, "bool", "IsSynchronized", "false");
+        WriteFixedProperty(writer, members, "object", "SyncRoot", "this");
+    }
+
+    /// <summary>Emits the <c>INotifyDataErrorInfo</c> members.</summary>
+    private static void WriteNotifyDataErrorInfo(IndentedTextWriter writer, ImplementableMemberSet members)
+    {
+        WriteProperty(writer, members, "bool", "HasErrors", hasSetter: false);
+        WriteMethod(writer, members, "global::System.Collections.IEnumerable", "GetErrors", "string propertyName");
+
+        if (!ShouldDeclare(members, members.ResolveEvent("ErrorsChanged", "global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>", isProtected: false)))
+        {
+            return;
+        }
+
+        writer.WriteLine();
+        writer.WriteLine("public abstract event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged;");
     }
 
     /// <summary>Emits the <c>IEnumerable&lt;T&gt;</c> members.</summary>
@@ -226,6 +287,18 @@ internal static class MappedInterfaceAbstractMemberFactory
 
         writer.WriteLine();
         writer.WriteLine($"public abstract {type} {name} {{ get;{(hasSetter ? " set;" : "")} }}");
+    }
+
+    /// <summary>Emits a single <c>public virtual</c> read-only property returning a fixed value, if not already declared.</summary>
+    private static void WriteFixedProperty(IndentedTextWriter writer, ImplementableMemberSet members, string type, string name, string value)
+    {
+        if (!ShouldDeclare(members, members.ResolveProperty(name, type, hasGetter: true, hasSetter: false, isProtected: false)))
+        {
+            return;
+        }
+
+        writer.WriteLine();
+        writer.WriteLine($"public virtual {type} {name} => {value};");
     }
 
     /// <summary>Emits a single <c>public abstract</c> indexer, if not already declared.</summary>

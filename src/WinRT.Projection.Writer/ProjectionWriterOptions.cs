@@ -152,9 +152,9 @@ public sealed class ProjectionWriterOptions
     public bool Verbose { get; init; }
 
     /// <summary>
-    /// Optional logger callback invoked for each verbose progress message (only used when
-    /// <see cref="Verbose"/> is <see langword="true"/>). Defaults to <see langword="null"/>,
-    /// in which case verbose messages are forwarded to <see cref="Console.Out"/>.
+    /// Optional logger callback invoked for each progress or informational message. Verbose progress messages are
+    /// only logged when <see cref="Verbose"/> is <see langword="true"/>. Defaults to <see langword="null"/>,
+    /// in which case messages are forwarded to <see cref="Console.Out"/>.
     /// </summary>
     public Action<string>? Logger { get; init; }
 

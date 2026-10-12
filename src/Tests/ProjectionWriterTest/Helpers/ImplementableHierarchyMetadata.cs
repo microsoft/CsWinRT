@@ -61,6 +61,15 @@ internal static class ImplementableHierarchyMetadata
     /// <summary>A sealed class with a constructor <c>Create(int)</c> and a static <c>Create(int)</c>.</summary>
     public const string CreateCollision = "CreateCollisionWidget";
 
+    /// <summary>A sealed class implementing <c>IBindableVector</c> (and so <c>IBindableIterable</c>).</summary>
+    public const string BindableList = "BindableListWidget";
+
+    /// <summary>A sealed class implementing <c>IBindableIterator</c>.</summary>
+    public const string BindableIterator = "BindableIteratorWidget";
+
+    /// <summary>A sealed class implementing <c>INotifyDataErrorInfo</c>.</summary>
+    public const string DataErrors = "DataErrorsWidget";
+
     public static string Create(string directory)
     {
         ModuleDefinition module = new("Contoso.winmd") { RuntimeVersion = "WindowsRuntime 1.4" };
@@ -347,6 +356,36 @@ internal static class ImplementableHierarchyMetadata
         _ = AddMethod(createStatics, "Create", createCollision.ToTypeSignature(), module.CorLibTypeFactory.Int32);
         createCollision.CustomAttributes.Add(Attribute("ActivatableAttribute", new CustomAttributeArgument(systemType, createFactory.ToTypeSignature()), version));
         createCollision.CustomAttributes.Add(Attribute("StaticAttribute", new CustomAttributeArgument(systemType, createStatics.ToTypeSignature()), version));
+
+        // The non-generic mapped interfaces are declared in WinUI's metadata, so they are declared here under the same names
+        // (their members do not matter, as a custom-mapped interface is declared in its .NET form)
+        TypeDefinition AddMappedInterface(string ns, string name, params TypeDefinition[] baseInterfaces)
+        {
+            TypeDefinition iface = new(ns, name, TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
+
+            module.TopLevelTypes.Add(iface);
+            AddGuid(iface, new Guid(seed++, 0x3b12, 0x4c9d, 0x8e, 0x21, 0x6a, 0x54, 0xf0, 0xc3, 0x7d, 0x02));
+
+            foreach (TypeDefinition baseInterface in baseInterfaces)
+            {
+                iface.Interfaces.Add(new InterfaceImplementation(baseInterface));
+            }
+
+            return iface;
+        }
+
+        TypeDefinition bindableIterable = AddMappedInterface("Microsoft.UI.Xaml.Interop", "IBindableIterable");
+        TypeDefinition bindableIterator = AddMappedInterface("Microsoft.UI.Xaml.Interop", "IBindableIterator");
+        TypeDefinition bindableVector = AddMappedInterface("Microsoft.UI.Xaml.Interop", "IBindableVector", bindableIterable);
+        TypeDefinition dataErrorInfo = AddMappedInterface("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo");
+
+        // MIDL lists 'IBindableIterable' alongside 'IBindableVector', as it does 'IIterable<T>' alongside 'IVector<T>'
+        TypeDefinition bindableList = AddSealedClass(BindableList);
+        bindableList.Interfaces.Add(new InterfaceImplementation(bindableVector));
+        bindableList.Interfaces.Add(new InterfaceImplementation(bindableIterable));
+
+        AddSealedClass(BindableIterator).Interfaces.Add(new InterfaceImplementation(bindableIterator));
+        AddSealedClass(DataErrors).Interfaces.Add(new InterfaceImplementation(dataErrorInfo));
 
         string path = Path.Combine(directory, "Contoso.winmd");
 
