@@ -210,7 +210,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
         // Substitution reveals 'List<int>' even when it appears nowhere else in the caller's metadata.
         foreach (MethodSpecification specification in _module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
-            foreach (TResult result in EnumerateMethodTypes(specification, default, 0))
+            foreach (TResult result in EnumerateMethodTypes(specification, default, depth: 0))
             {
                 yield return result;
             }
@@ -240,7 +240,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             if (current.Method is MethodDefinition currentMethod)
             {
                 // A method item's context was already counted at its own depth; only its callees advance it
-                foreach (TResult result in EnumerateMethodBodyTypes(currentMethod, current.Context, current.Depth, current.Depth + 1))
+                foreach (TResult result in EnumerateMethodBodyTypes(currentMethod, current.Context, typeDepth: current.Depth, methodDepth: current.Depth + 1))
                 {
                     yield return result;
                 }
@@ -260,7 +260,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             // The type's arguments can close member signatures that are open in the method table
             foreach (MethodDefinition method in GetMethodsToScan(typeSignature, type))
             {
-                foreach (TResult result in EnumerateMethodBodyTypes(method, genericContext, current.Depth + 1, current.Depth + 1))
+                foreach (TResult result in EnumerateMethodBodyTypes(method, genericContext, typeDepth: current.Depth + 1, methodDepth: current.Depth + 1))
                 {
                     yield return result;
                 }
@@ -280,12 +280,12 @@ internal sealed class TypeSignatureDiscovery<TResult>
 
         // 'Node<Pair<T, T>>' grows exponentially before reaching the depth limit.
         // Bound the work before visiting, hashing, or formatting a newly expanded signature.
-        if (!IsSignatureWithinComplexityLimit(type, depth))
+        if (!IsSignatureWithinComplexityLimit(type, depth: depth))
         {
             yield break;
         }
 
-        EnqueueGenericTypes(type, depth);
+        EnqueueGenericTypes(type, depth: depth);
 
         foreach (TResult result in type?.AcceptVisitor(_visitor) ?? [])
         {
@@ -320,7 +320,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
                 }
 
                 // Bound the worklist when branching methods create many distinct types below the depth limit
-                if (!TryReserveTransitiveInstantiation(depth))
+                if (!TryReserveTransitiveInstantiation(depth: depth))
                 {
                     continue;
                 }
@@ -381,13 +381,13 @@ internal sealed class TypeSignatureDiscovery<TResult>
         {
             complexity += argument.GetSignatureElementCount(MaxSignatureComplexity + 1);
 
-            if (!IsComplexityWithinLimit(complexity, depth))
+            if (!IsComplexityWithinLimit(complexity, depth: depth))
             {
                 yield break;
             }
         }
 
-        if (!IsComplexityWithinLimit(complexity, depth))
+        if (!IsComplexityWithinLimit(complexity, depth: depth))
         {
             yield break;
         }
@@ -397,14 +397,14 @@ internal sealed class TypeSignatureDiscovery<TResult>
         // Method arguments can require marshalling even when the callee's signature omits them
         foreach (TypeSignature argument in methodArguments?.TypeArguments ?? [])
         {
-            foreach (TResult result in EnumerateTypeSignatures(argument, depth))
+            foreach (TResult result in EnumerateTypeSignatures(argument, depth: depth))
             {
                 yield return result;
             }
         }
 
         // Closed declaring types provide contexts for otherwise non-generic member discovery
-        foreach (TResult result in EnumerateTypeSignatures(declaringType, depth))
+        foreach (TResult result in EnumerateTypeSignatures(declaringType, depth: depth))
         {
             yield return result;
         }
@@ -415,7 +415,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             // The reference signature remains usable even when the callee cannot be resolved
             foreach (TypeSignature visibleType in new[] { methodSignature.ReturnType }.Concat(methodSignature.ParameterTypes))
             {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth))
+                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: depth))
                 {
                     yield return result;
                 }
@@ -423,7 +423,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
         }
 
         // Queue the body after reporting its signatures, so their type contexts keep their place in the FIFO
-        EnqueueMethodBody(method, declaringType, methodArguments, genericContext, depth);
+        EnqueueMethodBody(method, declaringType, methodArguments, genericContext, depth: depth);
     }
 
     /// <summary>
@@ -468,7 +468,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             _visitedMethods.Add(definition, contexts);
         }
 
-        if (!contexts.Add(arguments) || !TryReserveTransitiveInstantiation(depth))
+        if (!contexts.Add(arguments) || !TryReserveTransitiveInstantiation(depth: depth))
         {
             return;
         }
@@ -501,7 +501,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
     {
         foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(_module.RuntimeContext))
         {
-            foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), typeDepth))
+            foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: typeDepth))
             {
                 yield return result;
             }
@@ -512,7 +512,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             // Non-generic calls cannot provide new substitutions. Do not crawl their dependency bodies
             if (descriptor is MethodSpecification || descriptor.DeclaringType is TypeSpecification)
             {
-                foreach (TResult result in EnumerateMethodTypes(descriptor, genericContext, methodDepth))
+                foreach (TResult result in EnumerateMethodTypes(descriptor, genericContext, depth: methodDepth))
                 {
                     yield return result;
                 }
@@ -585,7 +585,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <returns>Whether the signature may be visited.</returns>
     private bool IsSignatureWithinComplexityLimit(TypeSignature? type, int depth)
     {
-        return IsComplexityWithinLimit(type?.GetSignatureElementCount(MaxSignatureComplexity + 1) ?? 0, depth);
+        return IsComplexityWithinLimit(type?.GetSignatureElementCount(MaxSignatureComplexity + 1) ?? 0, depth: depth);
     }
 
     /// <summary>
