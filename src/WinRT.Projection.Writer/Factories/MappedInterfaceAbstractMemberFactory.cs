@@ -120,7 +120,7 @@ internal static class MappedInterfaceAbstractMemberFactory
         if (writtenMembers.Add("explicit:IEnumerator.Current"))
         {
             writer.WriteLine();
-            writer.WriteLine("object? global::System.Collections.IEnumerator.Current => Current;");
+            writer.WriteLine("object global::System.Collections.IEnumerator.Current => Current;");
         }
     }
 

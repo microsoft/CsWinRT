@@ -154,8 +154,15 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>The resulting managed object, or <see langword="null"/> if <paramref name="value"/> is <see langword="null"/>.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not a recognized managed CCW and does not implement <c>IInspectable</c>.</exception>
     /// <remarks>
+    /// <para>
     /// Native objects must implement <c>IInspectable</c>, which is queried before creating or retrieving an RCW.
     /// This method does not take ownership of the input pointer: the caller remains responsible for releasing it.
+    /// </para>
+    /// <para>
+    /// A CCW for a C# implementation of a Windows Runtime class declared in existing metadata is not unwrapped: it
+    /// produces the projected type for that class instead, exactly like every other marshalling path does. Use
+    /// <see cref="TryGetManagedObject"/> to retrieve the implementation itself.
+    /// </para>
     /// </remarks>
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
     public static object? ConvertToManaged(void* value)
@@ -169,7 +176,7 @@ public static unsafe class WindowsRuntimeMarshal
         }
 
         // Unwrap recognized managed CCWs before requiring 'IInspectable', which they might not implement
-        if (TryGetManagedObject(value, out object? managedObject))
+        if (WindowsRuntimeImplementationMarshal.TryGetManagedObjectForProjection(value, out object? managedObject))
         {
             return managedObject;
         }

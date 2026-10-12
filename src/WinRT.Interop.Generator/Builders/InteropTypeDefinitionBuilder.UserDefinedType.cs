@@ -232,8 +232,7 @@ internal partial class InteropTypeDefinitionBuilder
                     module: module,
                     out proxyType);
             }
-            else if (userDefinedTypeDefinition is not null &&
-                     userDefinedTypeDefinition.TryGetImplementedRuntimeClassName(interopReferences, out string? implementedRuntimeClassName))
+            else if (userDefinedTypeDefinition?.TryGetImplementedRuntimeClassName(interopReferences, out string? implementedRuntimeClassName) is true)
             {
                 // The type implements a Windows Runtime class declared in existing metadata (it derives from one of
                 // the abstract base classes CsWinRT generates for that purpose). Its runtime class name must be that

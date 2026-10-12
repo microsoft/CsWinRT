@@ -210,6 +210,18 @@ unsafe
         {
             return 123;
         }
+
+        // The public marshalling API behaves the same way, while the explicit unwrapping API still
+        // retrieves the implementation itself.
+        if (WindowsRuntimeMarshal.ConvertToManaged(nativeInstance) is not global::TestComponent.Class)
+        {
+            return 126;
+        }
+
+        if (!WindowsRuntimeMarshal.TryGetManagedObject(nativeInstance, out object unwrapped) || unwrapped is not MyClass)
+        {
+            return 127;
+        }
     }
     finally
     {

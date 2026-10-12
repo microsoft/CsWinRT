@@ -917,7 +917,6 @@ internal static class WindowsRuntimeExtensions
                 type.BaseType is { } baseType &&
                 interopReferences.SignatureComparer.Equals(baseType, interopReferences.Attribute);
         }
-
     }
 
     extension(TypeSignature signature)

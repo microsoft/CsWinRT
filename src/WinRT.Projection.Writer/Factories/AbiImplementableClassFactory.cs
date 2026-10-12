@@ -293,7 +293,7 @@ internal static class AbiImplementableClassFactory
         // against the implementation projection, so a reference projection leaves the interface out.
         if (baseType is null && !context.Settings.ReferenceProjection)
         {
-            bases.Add("global::WindowsRuntime.IWindowsRuntimeImplementableClass");
+            bases.Add("global::WindowsRuntime.InteropServices.IWindowsRuntimeImplementableClass");
         }
 
         string inheritance = bases.Count > 0 ? " : " + string.Join(", ", bases) : string.Empty;
@@ -331,7 +331,7 @@ internal static class AbiImplementableClassFactory
             if (context.Settings.ReferenceProjection)
             {
                 writer.WriteLine(isMultiline: true, $$"""
-                    public static implicit operator {{projectedType}}?({{nameStripped}}? value)
+                    public static implicit operator {{projectedType}}({{nameStripped}} value)
                     {
                         throw null;
                     }
@@ -340,7 +340,7 @@ internal static class AbiImplementableClassFactory
             else
             {
                 writer.WriteLine(isMultiline: true, $$"""
-                    public static unsafe implicit operator {{projectedType}}?({{nameStripped}}? value)
+                    public static unsafe implicit operator {{projectedType}}({{nameStripped}} value)
                     {
                         if (value is null)
                         {
@@ -349,7 +349,7 @@ internal static class AbiImplementableClassFactory
 
                         using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
 
-                        return ({{projectedType}})WindowsRuntimeObjectMarshaller.ConvertToManagedUnsafe(objectReferenceValue.GetThisPtrUnsafe())!;
+                        return ({{projectedType}})WindowsRuntimeImplementationMarshal.WrapToManaged(objectReferenceValue.GetThisPtrUnsafe());
                     }
                     """);
             }
@@ -364,7 +364,7 @@ internal static class AbiImplementableClassFactory
             if (context.Settings.ReferenceProjection)
             {
                 writer.WriteLine(isMultiline: true, $$"""
-                    public static explicit operator {{nameStripped}}?({{projectedType}}? value)
+                    public static explicit operator {{nameStripped}}({{projectedType}} value)
                     {
                         throw null;
                     }
@@ -373,14 +373,14 @@ internal static class AbiImplementableClassFactory
             else
             {
                 writer.WriteLine(isMultiline: true, $$"""
-                    public static explicit operator {{nameStripped}}?({{projectedType}}? value)
+                    public static explicit operator {{nameStripped}}({{projectedType}} value)
                     {
                         if (value is null)
                         {
                             return null;
                         }
 
-                        return ({{nameStripped}})WindowsRuntimeObjectMarshaller.ConvertToImplementation(value, typeof({{nameStripped}}));
+                        return ({{nameStripped}})WindowsRuntimeImplementationMarshal.ConvertToImplementation(value, typeof({{nameStripped}}));
                     }
                     """);
             }

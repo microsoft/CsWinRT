@@ -3,7 +3,7 @@
 
 #define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Marks the abstract base classes that CsWinRT generates to let a Windows Runtime class declared in existing

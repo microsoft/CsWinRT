@@ -49,7 +49,7 @@ internal partial class ProjectionGenerator
                 using Stream stream = File.OpenRead(file);
 
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(
-                    SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256),
+                    text: SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256),
                     path: "/_/" + Path.GetFileName(file)));
             }
 

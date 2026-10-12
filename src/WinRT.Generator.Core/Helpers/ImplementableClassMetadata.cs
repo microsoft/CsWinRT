@@ -41,7 +41,8 @@ internal static class ImplementableClassMetadata
     {
         runtimeClassName = null;
 
-        return IsBaseShape(type) &&
+        return
+            IsBaseShape(type) &&
             type.DeclaringModule is ModuleDefinition module &&
             GetModuleInfo(module).InstanceBases.TryGetValue(type.FullName, out runtimeClassName);
     }
@@ -89,11 +90,12 @@ internal static class ImplementableClassMetadata
                 if (key == WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass)
                 {
                     instanceBases[WindowsRuntimeReferenceAssemblyMetadata.GetImplementableClassBaseTypeName(value)] = value;
+
                     _ = factoryBases.Add(WindowsRuntimeReferenceAssemblyMetadata.GetImplementableClassFactoryBaseTypeName(value));
                 }
             }
 
-            return new ModuleInfo(instanceBases.ToFrozenDictionary(StringComparer.Ordinal), factoryBases.ToFrozenSet(StringComparer.Ordinal));
+            return new(instanceBases.ToFrozenDictionary(StringComparer.Ordinal), factoryBases.ToFrozenSet(StringComparer.Ordinal));
         });
     }
 
