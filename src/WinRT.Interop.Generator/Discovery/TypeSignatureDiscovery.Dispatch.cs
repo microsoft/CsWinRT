@@ -47,6 +47,12 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     {
         _token.ThrowIfCancellationRequested();
 
+        if (!_isSupplemental)
+        {
+            RecordDispatchObservation(operand, callerContext, depth);
+            return;
+        }
+
         if (_transitiveTypeLimitReported ||
             (!operand.IsVirtual && operand.Constraint is null) ||
             operand.Descriptor is not MethodSpecification { Method: { } method, Signature: { } signature } ||
@@ -194,9 +200,15 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 _receiverCandidates[candidate] = depth;
                 foreach (TypeSignature receiver in _dispatchIndex.GetReceiverContexts(candidate))
                 {
-                    if (IsSignatureWithinComplexityLimit(receiver, depth))
+                    if ((_isSupplemental && IsSignatureWithinComplexityLimit(receiver, depth)) ||
+                        (!_isSupplemental && (depth == 0 || receiver.GetSignatureElementCount(MaxSignatureComplexity + 1) <= MaxSignatureComplexity)))
                     {
                         RegisterReceiver(receiver, depth);
+                    }
+                    else if (!_isSupplemental && _complexReceiver is null)
+                    {
+                        _complexReceiver = receiver;
+                        _complexReceiverDepth = depth;
                     }
                 }
             }
@@ -227,6 +239,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         }
 
         contexts[signature] = depth;
+        if (!_isSupplemental)
+        {
+            return;
+        }
+
         _dispatchContexts?.Receivers.Add(new DispatchContextRegistry.Receiver(signature, depth, _origin, _publicationSequence++));
 
         if (_receiverDemands.TryGetValue(definition, out List<DispatchContextRegistry.Demand>? demands))

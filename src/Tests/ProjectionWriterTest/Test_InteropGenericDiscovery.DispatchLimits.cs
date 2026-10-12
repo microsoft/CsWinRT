@@ -67,7 +67,7 @@ public partial class Test_InteropGenericDiscovery
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public void GenericDispatch_FanoutSharesExistingBudgetAndPreservesRoots(bool treatWarningsAsErrors)
+    public void GenericDispatch_FanoutUsesSupplementalBudgetAndPreservesRoots(bool treatWarningsAsErrors)
     {
         string implementations = string.Join('\n', Enumerable.Range(0, 1030).Select(index => $$"""
             public struct Marker{{index}};
