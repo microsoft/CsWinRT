@@ -554,27 +554,53 @@ internal static class AbiImplementableClassFactory
         {
             using IndentedTextWriterOwner discardedWriterOwner = IndentedTextWriterPool.GetOrCreate();
 
-            ImplementableMemberSet factoryMembers = new();
+            // Inside the 'ABI' namespace every projected type name is fully qualified, whereas outside it a type from the current
+            // namespace is not. The members are compared by their spelling, and this can run either before or after the 'ABI'
+            // namespace is opened (and the result is cached), so it always resolves them as they are written inside it.
+            bool wasInAbiNamespace = context.InAbiNamespace;
 
-            EmitFactoryMembers(discardedWriterOwner.Writer, context, type, factoryMembers);
+            context.InAbiNamespace = true;
 
-            if (factoryMembers.HasConflict)
+            try
             {
-                return ConflictsFound;
+                return ResolveMemberConflicts(discardedWriterOwner.Writer, context, type);
             }
-
-            if (type.IsStatic)
+            finally
             {
-                return NoConflictsFound;
+                context.InAbiNamespace = wasInAbiNamespace;
             }
-
-            ImplementableMemberSet members = new();
-
-            SeedInheritedMembers(context, type, members);
-            EmitClassMembers(discardedWriterOwner.Writer, context, type, members);
-
-            return members.HasConflict ? ConflictsFound : NoConflictsFound;
         }) == ConflictsFound;
+    }
+
+    /// <summary>
+    /// Resolves every member the bases of <paramref name="type"/> have to declare, returning whether any of them conflict.
+    /// </summary>
+    /// <param name="writer">The (discarded) writer to emit the members to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class to inspect.</param>
+    /// <returns><see cref="ConflictsFound"/> or <see cref="NoConflictsFound"/>.</returns>
+    private static object ResolveMemberConflicts(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        ImplementableMemberSet factoryMembers = new();
+
+        EmitFactoryMembers(writer, context, type, factoryMembers);
+
+        if (factoryMembers.HasConflict)
+        {
+            return ConflictsFound;
+        }
+
+        if (type.IsStatic)
+        {
+            return NoConflictsFound;
+        }
+
+        ImplementableMemberSet members = new();
+
+        SeedInheritedMembers(context, type, members);
+        EmitClassMembers(writer, context, type, members);
+
+        return members.HasConflict ? ConflictsFound : NoConflictsFound;
     }
 
     /// <summary>

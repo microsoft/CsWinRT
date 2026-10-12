@@ -70,6 +70,15 @@ internal static class ImplementableHierarchyMetadata
     /// <summary>A sealed class implementing <c>INotifyDataErrorInfo</c>.</summary>
     public const string DataErrors = "DataErrorsWidget";
 
+    /// <summary>
+    /// A class deriving from <see cref="CurrentBase"/> and implementing <c>IIterator&lt;AaPoint&gt;</c>, whose <c>Current</c> the
+    /// inherited one satisfies. Named to sort first, so its base is the first one checked in the namespace.
+    /// </summary>
+    public const string CurrentDerived = "AaCurrentDerived";
+
+    /// <summary>An unsealed class with an interface declaring <c>AaPoint Current { get; }</c>, for a struct in the same namespace.</summary>
+    public const string CurrentBase = "ZzCurrentBase";
+
     public static string Create(string directory)
     {
         ModuleDefinition module = new("Contoso.winmd") { RuntimeVersion = "WindowsRuntime 1.4" };
@@ -386,6 +395,20 @@ internal static class ImplementableHierarchyMetadata
 
         AddSealedClass(BindableIterator).Interfaces.Add(new InterfaceImplementation(bindableIterator));
         AddSealedClass(DataErrors).Interfaces.Add(new InterfaceImplementation(dataErrorInfo));
+
+        TypeDefinition point = new("Contoso", "AaPoint", TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            new TypeReference(module, corlib, "System", "ValueType"));
+
+        point.Fields.Add(new FieldDefinition("X", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(point);
+
+        TypeDefinition currentBase = AddClass(CurrentBase, objectType.Type);
+        TypeDefinition currentSource = AddExclusiveInterface("ICurrentSource", currentBase);
+
+        AddProperty(currentSource, "Current", point.ToTypeSignature(true), hasSetter: false);
+        currentBase.Interfaces.Add(new InterfaceImplementation(currentSource));
+
+        AddClass(CurrentDerived, currentBase).Interfaces.Add(new InterfaceImplementation(Instantiate(iterator, point.ToTypeSignature(true))));
 
         string path = Path.Combine(directory, "Contoso.winmd");
 

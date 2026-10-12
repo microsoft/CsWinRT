@@ -232,6 +232,18 @@ public class Test_ImplementableHierarchy
         StringAssert.Contains(errors, "public abstract event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged;");
     }
 
+    /// <summary>
+    /// Members are compared by how their types are spelled, so the result must not depend on whether the namespace's first base
+    /// is checked before the <c>ABI</c> namespace is opened (where a type from the same namespace is not fully qualified).
+    /// </summary>
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void InheritedMemberOfSameNamespaceType_SatisfiesMappedMember(bool referenceProjection)
+    {
+        Assert.Contains(ImplementableHierarchyMetadata.CurrentDerived, GetAbiClassNames(referenceProjection));
+    }
+
     [TestMethod]
     public void ReferenceProjection_Compiles()
     {
@@ -365,6 +377,21 @@ public class Test_ImplementableHierarchy
                         public override System.Collections.IEnumerable GetErrors(string propertyName) => null!;
 
                         public override event System.EventHandler<System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged { add { } remove { } }
+                    }
+
+                    public sealed class MyCurrentDerived : ABI.Contoso.AaCurrentDerived
+                    {
+                        public override void ZzCurrentBaseMethod() { }
+
+                        public override Contoso.AaPoint Current => default;
+
+                        public override void AaCurrentDerivedMethod() { }
+
+                        public override bool MoveNext() => false;
+
+                        public override void Reset() { }
+
+                        public override void Dispose() { }
                     }
 
                     public static class Usage
