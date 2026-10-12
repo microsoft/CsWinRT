@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
@@ -21,6 +22,21 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiImplementableClassFactory
 {
+    /// <summary>
+    /// The cached results of <see cref="HasMemberConflicts"/>, for each runtime class.
+    /// </summary>
+    private static readonly ConditionalWeakTable<TypeDefinition, object> MemberConflictsCache = [];
+
+    /// <summary>
+    /// The cached result for a runtime class whose members conflict.
+    /// </summary>
+    private static readonly object ConflictsFound = new();
+
+    /// <summary>
+    /// The cached result for a runtime class whose members do not conflict.
+    /// </summary>
+    private static readonly object NoConflictsFound = new();
+
     /// <summary>
     /// Returns whether an <c>[exclusiveto]</c> interface belongs to a runtime class that can be implemented
     /// (authored) in C#, and so needs its projection emitted even though it stays <c>internal</c>.
@@ -89,14 +105,6 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
-        // Redeclaring a property already declared 'abstract' by a base would hide it, leaving the inherited
-        // member impossible to implement. C# cannot express both (e.g. 'MapControl.Style' of type 'MapStyle'
-        // alongside the inherited 'FrameworkElement.Style' of type 'Style').
-        if (HasConflictingBaseProperty(context, type))
-        {
-            return false;
-        }
-
         // Members of different instantiations of the same generic interface differ only in their types (e.g. the
         // 'GetEnumerator()' of 'IEnumerable<int>' and 'IEnumerable<string>'), so C# cannot declare both 'abstract'.
         if (HasConflictingGenericInstantiations(context, type))
@@ -107,6 +115,15 @@ internal static class AbiImplementableClassFactory
         // The factory base's name is reserved (see 'GetFactoryClassName'), so a runtime class cannot get one
         // if a real Windows Runtime class in the same namespace already has that name.
         if (IsFactoryClassNameTaken(context, type))
+        {
+            return false;
+        }
+
+        // Two interfaces can require members C# cannot declare side by side, which only shows when the members are
+        // resolved. For instance, methods differing only in their return type, or a property an inherited one cannot
+        // satisfy (e.g. 'MapControl.Style' of type 'MapStyle' alongside the inherited 'FrameworkElement.Style' of type
+        // 'Style'), as redeclaring it would hide the inherited member and leave it impossible to implement.
+        if (HasMemberConflicts(context, type))
         {
             return false;
         }
@@ -148,55 +165,6 @@ internal static class AbiImplementableClassFactory
     private static string GetFactoryClassName(string nameStripped)
     {
         return $"{nameStripped}ActivationFactory";
-    }
-
-    /// <summary>
-    /// Returns whether a type declares a property whose name is also declared by an interface a base
-    /// implementable class already covers, which C# cannot express (see the caller for details).
-    /// </summary>
-    private static bool HasConflictingBaseProperty(ProjectionEmitContext context, TypeDefinition type)
-    {
-        if (GetImplementableBaseType(context, type) is not TypeDefinition baseType)
-        {
-            return false;
-        }
-
-        Dictionary<string, TypeDefinition> baseClosure = [];
-
-        CollectInterfaceClosure(context, baseType, baseClosure);
-
-        HashSet<string> baseProperties = [];
-
-        foreach (TypeDefinition baseInterface in baseClosure.Values)
-        {
-            foreach (PropertyDefinition baseProperty in baseInterface.Properties)
-            {
-                _ = baseProperties.Add(baseProperty.GetRawName());
-            }
-        }
-
-        Dictionary<string, TypeDefinition> closure = [];
-
-        CollectInterfaceClosure(context, type, closure);
-
-        foreach ((string interfaceKey, TypeDefinition interfaceType) in closure)
-        {
-            // Interfaces the base already covers contribute the base's own declarations, not new ones.
-            if (baseClosure.ContainsKey(interfaceKey))
-            {
-                continue;
-            }
-
-            foreach (PropertyDefinition property in interfaceType.Properties)
-            {
-                if (baseProperties.Contains(property.GetRawName()))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -338,33 +306,10 @@ internal static class AbiImplementableClassFactory
 
         using (writer.WriteBlock())
         {
-            HashSet<string> writtenMethods = [];
-            HashSet<string> writtenEvents = [];
+            ImplementableMemberSet members = new();
 
-            // Seed the member sets with what the bases already declare. Skipping their interfaces is not
-            // enough: a new interface can declare a member with the same signature as one a base already
-            // declared 'abstract', and redeclaring it here would hide the inherited member. The bases' members
-            // are collected by replaying their emission, so they are keyed exactly as they are declared (e.g. a
-            // custom-mapped 'IClosable' declares 'Dispose()', not the 'Close()' its metadata describes).
-            if (baseType is not null)
-            {
-                using IndentedTextWriterOwner discardedWriterOwner = IndentedTextWriterPool.GetOrCreate();
-
-                Dictionary<string, PropertyInfo> baseProperties = [];
-                HashSet<string> baseInterfaces = [];
-
-                for (TypeDefinition? current = baseType; current is not null; current = GetImplementableBaseType(context, current))
-                {
-                    WriteInterfaceMembersRecursive(discardedWriterOwner.Writer, context, current, null, writtenMethods, baseProperties, writtenEvents, baseInterfaces);
-                }
-            }
-
-            HashSet<string> writtenInterfaces = [.. baseClosure.Keys];
-            Dictionary<string, PropertyInfo> properties = [];
-
-            WriteInterfaceMembersRecursive(writer, context, type, null, writtenMethods, properties, writtenEvents, writtenInterfaces);
-
-            EmitMergedProperties(writer, properties, writtenMethods);
+            SeedInheritedMembers(context, type, members);
+            EmitClassMembers(writer, context, type, members);
 
             // The conversion wraps the authored object: it creates a COM Callable Wrapper for it and then
             // resolves the projected type for that. It has to wrap rather than unwrap, since the authored
@@ -449,7 +394,135 @@ internal static class AbiImplementableClassFactory
                     }
                     """);
             }
+
+            // The same applies in reverse: the conversion from each projected ancestor is inherited from the base for that
+            // ancestor, and competes with the conversion from this projected class, making a cast from the ancestor to an
+            // implementation ambiguous. The conversion from the ancestor is declared here too, checking for this base.
+            for (TypeDefinition? ancestor = baseType; ancestor is not null; ancestor = GetImplementableBaseType(context, ancestor))
+            {
+                string ancestorProjectedType = TypedefNameWriter.BuildGlobalQualifiedName(ancestor.GetRawNamespace(), ancestor.GetStrippedName());
+
+                writer.WriteLine();
+
+                if (context.Settings.ReferenceProjection)
+                {
+                    writer.WriteLine(isMultiline: true, $$"""
+                        public static explicit operator {{nameStripped}}({{ancestorProjectedType}} value)
+                        {
+                            throw null;
+                        }
+                        """);
+                }
+                else
+                {
+                    writer.WriteLine(isMultiline: true, $$"""
+                        public static explicit operator {{nameStripped}}({{ancestorProjectedType}} value)
+                        {
+                            if (value is null)
+                            {
+                                return null;
+                            }
+
+                            return ({{nameStripped}})WindowsRuntimeImplementationMarshal.ConvertToImplementation(value, typeof({{nameStripped}}));
+                        }
+                        """);
+                }
+            }
         }
+    }
+
+    /// <summary>
+    /// Records the members declared by the bases of the base classes of <paramref name="type"/>, by replaying their emission.
+    /// </summary>
+    /// <remarks>
+    /// Skipping the interfaces the bases implement is not enough: a new interface can require a member with the same signature
+    /// as one a base already declares, and redeclaring it would hide the inherited member. Replaying the emission keys the
+    /// members exactly as they are declared (e.g. a custom-mapped <c>IClosable</c> declares <c>Dispose()</c>, not the
+    /// <c>Close()</c> its metadata describes), and records whether each one is <see langword="protected"/>.
+    /// </remarks>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class whose inherited members to record.</param>
+    /// <param name="members">The member set to record them into.</param>
+    private static void SeedInheritedMembers(ProjectionEmitContext context, TypeDefinition type, ImplementableMemberSet members)
+    {
+        List<TypeDefinition> ancestors = [];
+
+        for (TypeDefinition? ancestor = GetImplementableBaseType(context, type); ancestor is not null; ancestor = GetImplementableBaseType(context, ancestor))
+        {
+            ancestors.Add(ancestor);
+        }
+
+        if (ancestors.Count == 0)
+        {
+            return;
+        }
+
+        using IndentedTextWriterOwner discardedWriterOwner = IndentedTextWriterPool.GetOrCreate();
+
+        // Replay from the root, which is the order in which the bases were emitted
+        for (int i = ancestors.Count - 1; i >= 0; i--)
+        {
+            EmitClassMembers(discardedWriterOwner.Writer, context, ancestors[i], members);
+        }
+    }
+
+    /// <summary>
+    /// Emits the <c>abstract</c> members of the instance base of <paramref name="type"/>, for the interfaces it does not inherit.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class to emit the members for.</param>
+    /// <param name="members">The members declared so far, including inherited ones.</param>
+    private static void EmitClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, ImplementableMemberSet members)
+    {
+        Dictionary<string, TypeDefinition> baseClosure = [];
+
+        if (GetImplementableBaseType(context, type) is TypeDefinition baseType)
+        {
+            CollectInterfaceClosure(context, baseType, baseClosure);
+        }
+
+        HashSet<string> writtenInterfaces = [.. baseClosure.Keys];
+        Dictionary<string, PropertyInfo> properties = [];
+
+        WriteInterfaceMembersRecursive(writer, context, type, null, members, properties, writtenInterfaces);
+
+        EmitMergedProperties(writer, properties, members);
+    }
+
+    /// <summary>
+    /// Returns whether the members the bases of <paramref name="type"/> have to declare conflict with each other.
+    /// </summary>
+    /// <remarks>
+    /// The result is cached, as this resolves every member of the class and its base classes.
+    /// </remarks>
+    private static bool HasMemberConflicts(ProjectionEmitContext context, TypeDefinition type)
+    {
+        return MemberConflictsCache.GetValue(type, type =>
+        {
+            using IndentedTextWriterOwner discardedWriterOwner = IndentedTextWriterPool.GetOrCreate();
+
+            ImplementableMemberSet factoryMembers = new();
+
+            EmitFactoryMembers(discardedWriterOwner.Writer, context, type, factoryMembers);
+
+            if (factoryMembers.HasConflict)
+            {
+                return ConflictsFound;
+            }
+
+            if (type.IsStatic)
+            {
+                return NoConflictsFound;
+            }
+
+            ImplementableMemberSet members = new();
+
+            SeedInheritedMembers(context, type, members);
+            EmitClassMembers(discardedWriterOwner.Writer, context, type, members);
+
+            return members.HasConflict ? ConflictsFound : NoConflictsFound;
+        }) == ConflictsFound;
     }
 
     /// <summary>
@@ -462,27 +535,14 @@ internal static class AbiImplementableClassFactory
     /// <param name="type">The runtime class to emit the factory base for.</param>
     private static void WriteImplementableFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        CollectFactoryInterfaces(
-            context,
-            type,
-            out List<TypeDefinition> factoryInterfaces,
-            out HashSet<TypeDefinition> composableInterfaces,
-            out HashSet<TypeDefinition> publicComposableInterfaces,
-            out HashSet<TypeDefinition> activatableInterfaces,
-            out bool hasDefaultActivation);
+        CollectFactoryInterfaces(context, type, out List<TypeDefinition> factoryInterfaces, out _, out _, out _, out bool hasDefaultActivation);
 
         if (factoryInterfaces.Count == 0 && !hasDefaultActivation)
         {
             return;
         }
 
-        bool hasComposableDefaultActivation = TryGetComposableDefaultActivation(
-            composableInterfaces,
-            publicComposableInterfaces,
-            out MethodDefinition? parameterlessConstructor);
-
         string nameStripped = type.GetStrippedName();
-        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(type.GetRawNamespace(), nameStripped);
 
         // Inheritance list: 'IActivationFactory', then the factory/statics interfaces (and any of their base interfaces).
         // Every activation factory implements 'IActivationFactory', even for a class without default activation (e.g. a
@@ -507,62 +567,7 @@ internal static class AbiImplementableClassFactory
 
         using (writer.WriteBlock())
         {
-            HashSet<string> writtenMethods = [];
-            HashSet<string> writtenEvents = [];
-            HashSet<string> writtenInterfaces = [];
-            Dictionary<string, PropertyInfo> properties = [];
-
-            // 'ActivateInstance' returns the implementation's base, so the compiler checks what it constructs, and
-            // supplies the 'object' that 'IActivationFactory' expects. A parameterless composable constructor calls
-            // it as well (see 'EmitComposableFactoryMembers').
-            if (hasDefaultActivation || hasComposableDefaultActivation)
-            {
-                writer.WriteLine();
-                writer.WriteLine(isMultiline: true, $$"""
-                    object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()
-                    {
-                        return ActivateInstance();
-                    }
-
-                    public abstract {{nameStripped}} ActivateInstance();
-                    """);
-            }
-            else
-            {
-                // Without default activation there is nothing to construct, so this fails with 'E_NOTIMPL'
-                writer.WriteLine();
-                writer.WriteLine(isMultiline: true, """
-                    object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()
-                    {
-                        throw new global::System.NotImplementedException();
-                    }
-                    """);
-            }
-
-            foreach (TypeDefinition iface in factoryInterfaces)
-            {
-                if (!writtenInterfaces.Add(GetInterfaceKey(iface, null)))
-                {
-                    continue;
-                }
-
-                // A composable factory method carries the raw COM aggregation contract. That is infrastructure,
-                // not something an author should implement, so it is generated here and forwards to a hook.
-                if (composableInterfaces.Contains(iface))
-                {
-                    EmitComposableFactoryMembers(writer, context, iface, nameStripped, projectedType, hasComposableDefaultActivation ? parameterlessConstructor : null, writtenMethods);
-                }
-                else if (activatableInterfaces.Contains(iface))
-                {
-                    EmitActivatableFactoryMembers(writer, context, iface, type, nameStripped, projectedType, writtenMethods);
-                }
-                else
-                {
-                    EmitInterfaceMembers(writer, context, iface, null, isProtectedSurface: false, writtenMethods, properties, writtenEvents, writtenInterfaces);
-                }
-            }
-
-            EmitMergedProperties(writer, properties, writtenMethods);
+            EmitFactoryMembers(writer, context, type, new ImplementableMemberSet());
 
             // The activation entry point generated into the component's own assembly needs to hand out a CCW
             // for the factory, but it is compiled against the runtime reference assembly, where the
@@ -593,6 +598,89 @@ internal static class AbiImplementableClassFactory
                     """);
             }
         }
+    }
+
+    /// <summary>
+    /// Emits the members of the activation factory base of <paramref name="type"/>.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The runtime class to emit the factory members for.</param>
+    /// <param name="members">The member set to record the members into.</param>
+    private static void EmitFactoryMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, ImplementableMemberSet members)
+    {
+        CollectFactoryInterfaces(
+            context,
+            type,
+            out List<TypeDefinition> factoryInterfaces,
+            out HashSet<TypeDefinition> composableInterfaces,
+            out HashSet<TypeDefinition> publicComposableInterfaces,
+            out HashSet<TypeDefinition> activatableInterfaces,
+            out bool hasDefaultActivation);
+
+        bool hasComposableDefaultActivation = TryGetComposableDefaultActivation(
+            composableInterfaces,
+            publicComposableInterfaces,
+            out MethodDefinition? parameterlessConstructor);
+
+        string nameStripped = type.GetStrippedName();
+        string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(type.GetRawNamespace(), nameStripped);
+        HashSet<string> writtenInterfaces = [];
+        Dictionary<string, PropertyInfo> properties = [];
+
+        // 'ActivateInstance' returns the implementation's base, so the compiler checks what it constructs, and
+        // supplies the 'object' that 'IActivationFactory' expects. A parameterless composable constructor calls
+        // it as well (see 'EmitComposableFactoryMembers').
+        if (hasDefaultActivation || hasComposableDefaultActivation)
+        {
+            _ = members.ResolveMethod("ActivateInstance", "", nameStripped, isProtected: false);
+
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()
+                {
+                    return ActivateInstance();
+                }
+
+                public abstract {{nameStripped}} ActivateInstance();
+                """);
+        }
+        else
+        {
+            // Without default activation there is nothing to construct, so this fails with 'E_NOTIMPL'
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, """
+                object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()
+                {
+                    throw new global::System.NotImplementedException();
+                }
+                """);
+        }
+
+        foreach (TypeDefinition iface in factoryInterfaces)
+        {
+            if (!writtenInterfaces.Add(GetInterfaceKey(iface, null)))
+            {
+                continue;
+            }
+
+            // A composable factory method carries the raw COM aggregation contract. That is infrastructure,
+            // not something an author should implement, so it is generated here and forwards to a hook.
+            if (composableInterfaces.Contains(iface))
+            {
+                EmitComposableFactoryMembers(writer, context, iface, nameStripped, projectedType, hasComposableDefaultActivation ? parameterlessConstructor : null, members);
+            }
+            else if (activatableInterfaces.Contains(iface))
+            {
+                EmitActivatableFactoryMembers(writer, context, iface, type, nameStripped, projectedType, members);
+            }
+            else
+            {
+                EmitInterfaceMembers(writer, context, iface, null, isProtectedSurface: false, members, properties, writtenInterfaces);
+            }
+        }
+
+        EmitMergedProperties(writer, properties, members);
     }
 
     /// <summary>
@@ -635,6 +723,12 @@ internal static class AbiImplementableClassFactory
             AttributedType attributedType = entry.Value;
 
             if (!attributedType.Activatable && !attributedType.Statics && !attributedType.Composable)
+            {
+                continue;
+            }
+
+            // A removed factory interface is not projected, so it is not part of the factory either
+            if (attributedType.Type is { IsRemoved: true })
             {
                 continue;
             }
@@ -753,17 +847,20 @@ internal static class AbiImplementableClassFactory
         string nameStripped,
         string projectedType,
         MethodDefinition? defaultActivationConstructor,
-        HashSet<string> writtenMethods)
+        ImplementableMemberSet members)
     {
+        string interfaceName = TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format();
+
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
-            string name = method.GetRawName();
-            MethodSignatureInfo sig = new(method);
-
-            if (!writtenMethods.Add(sig.GetDedupeKey(name)))
+            // A removed constructor is not projected, so it is not part of the factory either
+            if (method.IsRemoved)
             {
                 continue;
             }
+
+            string name = method.GetRawName();
+            MethodSignatureInfo sig = new(method);
 
             // The trailing two parameters are always the outer and the inner (see the remarks above)
             if (sig.Parameters.Count < 2)
@@ -787,11 +884,12 @@ internal static class AbiImplementableClassFactory
                 }
             }
 
+            // Forwarded with their modifiers (e.g. 'out'), which the hook declares as well
             void WriteUserArguments(IndentedTextWriter writer)
             {
                 for (int i = 0; i < userParameterCount; i++)
                 {
-                    IndentedTextWriterCallback argument = IdentifierEscaping.WriteEscapedIdentifier(sig.Parameters[i].GetRawName());
+                    IndentedTextWriterCallback argument = ClassMembersFactory.WriteParameterNameWithModifier(context, sig.Parameters[i]);
 
                     writer.Write($"{(i > 0 ? ", " : "")}{argument}");
                 }
@@ -802,9 +900,20 @@ internal static class AbiImplementableClassFactory
             bool isDefaultActivation = method == defaultActivationConstructor;
             string hookName = isDefaultActivation ? "ActivateInstance" : name;
 
+            // The hook (already declared for default activation) may be shared with a constructor of another factory interface
+            ImplementableMemberResolution resolution = isDefaultActivation
+                ? ImplementableMemberResolution.Implemented
+                : members.ResolveMethod(name, IndentedTextWriterCallbackFormat(WriteUserParameters), nameStripped, isProtected: true);
+
+            if (resolution is ImplementableMemberResolution.Conflict ||
+                !members.TryAddExplicitImplementation($"{interfaceName}.{name}({parameters.Format()})"))
+            {
+                continue;
+            }
+
             writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
-                {{projectedType}} {{TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format()}}.{{name}}({{parameters}})
+                {{projectedType}} {{interfaceName}}.{{name}}({{parameters}})
                 {
                     if ({{outerParameter}} is not null)
                     {
@@ -821,12 +930,24 @@ internal static class AbiImplementableClassFactory
                 }
                 """);
 
-            if (!isDefaultActivation)
+            if (resolution is ImplementableMemberResolution.Declare)
             {
                 writer.WriteLine();
                 writer.WriteLine($"protected abstract {nameStripped} {name}({WriteUserParameters});");
             }
         }
+    }
+
+    /// <summary>
+    /// Formats the output of a writer callback as a string.
+    /// </summary>
+    private static string IndentedTextWriterCallbackFormat(IndentedTextWriterCallback callback)
+    {
+        using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
+
+        callback(writerOwner.Writer);
+
+        return writerOwner.Writer.ToString();
     }
 
     /// <summary>
@@ -844,96 +965,134 @@ internal static class AbiImplementableClassFactory
         TypeDefinition type,
         string nameStripped,
         string projectedType,
-        HashSet<string> writtenMethods)
+        ImplementableMemberSet members)
     {
         string interfaceName = TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format();
 
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
-            string name = method.GetRawName();
-            MethodSignatureInfo sig = new(method);
-
-            if (!writtenMethods.Add(sig.GetDedupeKey(name)))
+            // A removed constructor is not projected, so it is not part of the factory either
+            if (method.IsRemoved)
             {
                 continue;
             }
 
-            IndentedTextWriterCallback parameters = MethodFactory.WriteParameterList(context, sig);
-            IndentedTextWriterCallback arguments = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
-
-            writer.WriteLine();
+            string name = method.GetRawName();
+            MethodSignatureInfo sig = new(method);
+            string parameters = MethodFactory.WriteParameterList(context, sig).Format();
 
             // Constructors always return their class, but anything else is declared as the interface has it
             if (sig.ReturnType?.FullName != type.FullName)
             {
-                IndentedTextWriterCallback returnType = MethodFactory.WriteProjectionReturnType(context, sig);
+                string returnType = MethodFactory.WriteProjectionReturnType(context, sig).Format();
 
-                writer.WriteLine($"public abstract {returnType} {name}({parameters});");
+                if (members.ResolveMethod(name, parameters, returnType, isProtected: false) is ImplementableMemberResolution.Declare)
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($"public abstract {returnType} {name}({parameters});");
+                }
 
                 continue;
             }
 
+            // The hook may be shared with a constructor of another factory interface
+            ImplementableMemberResolution resolution = members.ResolveMethod(name, parameters, nameStripped, isProtected: false);
+
+            if (resolution is ImplementableMemberResolution.Conflict ||
+                !members.TryAddExplicitImplementation($"{interfaceName}.{name}({parameters})"))
+            {
+                continue;
+            }
+
+            IndentedTextWriterCallback arguments = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+
+            writer.WriteLine();
             writer.WriteLine(isMultiline: true, $$"""
                 {{projectedType}} {{interfaceName}}.{{name}}({{parameters}})
                 {
                     return {{name}}({{arguments}});
                 }
-
-                public abstract {{nameStripped}} {{name}}({{parameters}});
                 """);
+
+            if (resolution is ImplementableMemberResolution.Declare)
+            {
+                writer.WriteLine();
+                writer.WriteLine($"public abstract {nameStripped} {name}({parameters});");
+            }
         }
     }
 
     /// <summary>
     /// Emits the merged <c>abstract</c> properties collected during the interface walk.
     /// </summary>
+    /// <remarks>
+    /// A property can combine accessors required by several interfaces (e.g. a getter from one and a setter from another), so
+    /// it is only resolved once all of them have been walked. An existing property (e.g. from a custom-mapped interface's .NET
+    /// shape, or an inherited one) satisfies it as long as it has the same type and every accessor it requires.
+    /// </remarks>
     /// <param name="writer">The writer.</param>
     /// <param name="properties">The properties collected during the walk.</param>
-    /// <param name="writtenMembers">Signature keys of members already written, so a property is not declared twice when a mapped interface's .NET shape already supplied it.</param>
-    private static void EmitMergedProperties(IndentedTextWriter writer, Dictionary<string, PropertyInfo> properties, HashSet<string> writtenMembers)
+    /// <param name="members">The members declared so far.</param>
+    private static void EmitMergedProperties(IndentedTextWriter writer, Dictionary<string, PropertyInfo> properties, ImplementableMemberSet members)
     {
-        foreach (KeyValuePair<string, PropertyInfo> kvp in properties)
+        foreach ((string name, PropertyInfo info) in properties)
         {
-            // A property of the same name may already have been declared from a mapped interface's .NET
-            // shape (e.g. 'Count', or 'Item' for an indexer), and that declaration is the one that
-            // satisfies the interface.
-            if (writtenMembers.Contains($"P:{kvp.Key}"))
+            // The interfaces disagree on the type of the property, which C# cannot declare
+            if (info.HasConflict)
             {
-                continue;
-            }
-
-            PropertyInfo info = kvp.Value;
-            string accessors = (info.HasGetter, info.HasSetter) switch
-            {
-                (true, true) => "{ get; set; }",
-                (true, false) => "{ get; }",
-                _ => "{ set; }"
-            };
-
-            writer.WriteLine();
-
-            if (!info.IsProtectedSurface)
-            {
-                writer.WriteLine($"public abstract {info.TypeText} {kvp.Key} {accessors}");
+                members.MarkConflict();
 
                 continue;
             }
 
-            string forwarders = (info.HasGetter, info.HasSetter) switch
-            {
-                (true, true) => $"get => {kvp.Key}; set => {kvp.Key} = value;",
-                (true, false) => $"get => {kvp.Key};",
-                _ => $"set => {kvp.Key} = value;"
-            };
+            ImplementableMemberResolution resolution = members.ResolveProperty(name, info.TypeText, info.HasGetter, info.HasSetter, info.IsProtectedSurface);
 
-            writer.WriteLine($"protected abstract {info.TypeText} {kvp.Key} {accessors}");
-            writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                {{info.TypeText}} {{info.InterfaceName}}.{{kvp.Key}}
+            if (resolution is ImplementableMemberResolution.Declare)
+            {
+                string accessors = (info.HasGetter, info.HasSetter) switch
                 {
-                    {{forwarders}}
+                    (true, true) => "{ get; set; }",
+                    (true, false) => "{ get; }",
+                    _ => "{ set; }"
+                };
+
+                writer.WriteLine();
+                writer.WriteLine($"{(info.IsProtectedSurface ? "protected" : "public")} abstract {info.TypeText} {name} {accessors}");
+            }
+
+            // A protected property cannot implement an interface property implicitly, so each interface gets an explicit
+            // implementation forwarding to it, with the accessors that interface declares.
+            bool isProtected =
+                resolution is ImplementableMemberResolution.Forward ||
+                (resolution is ImplementableMemberResolution.Declare && info.IsProtectedSurface);
+
+            if (!isProtected)
+            {
+                continue;
+            }
+
+            foreach (PropertySource source in info.Sources)
+            {
+                if (!members.TryAddExplicitImplementation($"{source.InterfaceName}.{name}"))
+                {
+                    continue;
                 }
-                """);
+
+                string forwarders = (source.HasGetter, source.HasSetter) switch
+                {
+                    (true, true) => $"get => {name}; set => {name} = value;",
+                    (true, false) => $"get => {name};",
+                    _ => $"set => {name} = value;"
+                };
+
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, $$"""
+                    {{info.TypeText}} {{source.InterfaceName}}.{{name}}
+                    {
+                        {{forwarders}}
+                    }
+                    """);
+            }
         }
     }
 
@@ -946,9 +1105,8 @@ internal static class AbiImplementableClassFactory
         ProjectionEmitContext context,
         TypeDefinition declaringType,
         GenericInstanceTypeSignature? currentInstance,
-        HashSet<string> writtenMethods,
+        ImplementableMemberSet members,
         IDictionary<string, PropertyInfo> properties,
-        HashSet<string> writtenEvents,
         HashSet<string> writtenInterfaces)
     {
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
@@ -975,7 +1133,7 @@ internal static class AbiImplementableClassFactory
             // members entirely, and would satisfy nothing).
             if (IsCustomMappedInterface(ifaceType))
             {
-                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, nextInstance, ifaceType.Name ?? "", writtenMethods);
+                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, nextInstance, ifaceType.Name ?? "", members);
 
                 continue;
             }
@@ -985,7 +1143,7 @@ internal static class AbiImplementableClassFactory
             // implementable base has to match, or an authored type would expose them publicly.
             bool isProtectedSurface = impl.IsOverridable() || impl.HasWindowsFoundationMetadataAttribute(References.WellKnownAttributeNames.ProtectedAttribute);
 
-            EmitInterfaceMembers(writer, context, ifaceType, nextInstance, isProtectedSurface, writtenMethods, properties, writtenEvents, writtenInterfaces);
+            EmitInterfaceMembers(writer, context, ifaceType, nextInstance, isProtectedSurface, members, properties, writtenInterfaces);
         }
     }
 
@@ -1005,98 +1163,118 @@ internal static class AbiImplementableClassFactory
         TypeDefinition ifaceType,
         GenericInstanceTypeSignature? nextInstance,
         bool isProtectedSurface,
-        HashSet<string> writtenMethods,
+        ImplementableMemberSet members,
         IDictionary<string, PropertyInfo> properties,
-        HashSet<string> writtenEvents,
         HashSet<string> writtenInterfaces)
     {
         GenericContext? memberContext = nextInstance is not null ? new GenericContext(nextInstance, null) : null;
 
-        // The explicit interface implementations below need the interface named as it is declared on the base
-        string interfaceName = isProtectedSurface ? FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? ifaceType) : string.Empty;
+        // Explicit interface implementations need the interface named as it is declared on the base
+        string interfaceName = FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? ifaceType);
 
         foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
         {
+            // A removed member is not part of the projected interface, so there is nothing to implement
+            if (method.IsRemoved)
+            {
+                continue;
+            }
+
             string name = method.GetRawName();
             MethodSignatureInfo sig = new(method, memberContext);
+            string ret = MethodFactory.WriteProjectionReturnType(context, sig).Format();
+            string parms = MethodFactory.WriteParameterList(context, sig).Format();
 
-            if (!writtenMethods.Add(sig.GetDedupeKey(name)))
+            ImplementableMemberResolution resolution = members.ResolveMethod(name, parms, ret, isProtectedSurface);
+
+            if (resolution is ImplementableMemberResolution.Declare)
             {
-                continue;
+                writer.WriteLine();
+                writer.WriteLine($"{(isProtectedSurface ? "protected" : "public")} abstract {ret} {name}({parms});");
             }
 
-            IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
-            IndentedTextWriterCallback parms = MethodFactory.WriteParameterList(context, sig);
+            // A protected method cannot implement an interface method implicitly, so it needs an explicit implementation
+            bool needsForwarder =
+                resolution is ImplementableMemberResolution.Forward ||
+                (resolution is ImplementableMemberResolution.Declare && isProtectedSurface);
 
-            writer.WriteLine();
-
-            if (!isProtectedSurface)
+            if (needsForwarder && members.TryAddExplicitImplementation($"{interfaceName}.{ImplementableMemberSet.GetMethodKey(name, parms)}"))
             {
-                writer.WriteLine($"public abstract {ret} {name}({parms});");
+                IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
 
-                continue;
+                writer.WriteLine();
+                writer.WriteLine($"{ret} {interfaceName}.{name}({parms}) => {name}({args});");
             }
-
-            IndentedTextWriterCallback args = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
-
-            writer.WriteLine($"protected abstract {ret} {name}({parms});");
-            writer.WriteLine();
-            writer.WriteLine($"{ret} {interfaceName}.{name}({parms}) => {name}({args});");
         }
 
         // Properties (merged after the walk)
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
-            string name = prop.GetRawName();
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
+
+            // MIDL places '[Deprecated]' on the accessor (the getter for read/write properties), not on the property
+            if ((getter ?? setter) is { IsRemoved: true })
+            {
+                continue;
+            }
+
+            string name = prop.GetRawName();
+            string typeText = InterfaceFactory.WritePropType(context, prop, memberContext);
 
             if (!properties.TryGetValue(name, out PropertyInfo? info))
             {
                 info = new PropertyInfo
                 {
-                    TypeText = InterfaceFactory.WritePropType(context, prop, memberContext),
-                    IsProtectedSurface = isProtectedSurface,
-                    InterfaceName = interfaceName
+                    TypeText = typeText,
+                    IsProtectedSurface = isProtectedSurface
                 };
                 properties[name] = info;
             }
 
+            info.HasConflict |= info.TypeText != typeText;
             info.HasGetter |= getter is not null;
             info.HasSetter |= setter is not null;
+            info.Sources.Add(new PropertySource(interfaceName, getter is not null, setter is not null));
         }
 
         foreach (EventDefinition evt in ifaceType.Events)
         {
+            // MIDL places '[Deprecated]' on the 'add' accessor, not on the event
+            if (evt.AddMethod is { IsRemoved: true })
+            {
+                continue;
+            }
+
             string name = evt.GetRawName();
+            string eventType = TypedefNameWriter.WriteEventType(context, evt, nextInstance).Format();
 
-            if (!writtenEvents.Add(name))
+            ImplementableMemberResolution resolution = members.ResolveEvent(name, eventType, isProtectedSurface);
+
+            if (resolution is ImplementableMemberResolution.Declare)
             {
-                continue;
+                writer.WriteLine();
+                writer.WriteLine($"{(isProtectedSurface ? "protected" : "public")} abstract event {eventType} {name};");
             }
 
-            IndentedTextWriterCallback eventType = TypedefNameWriter.WriteEventType(context, evt, nextInstance);
+            // A protected event cannot implement an interface event implicitly, so it needs an explicit implementation
+            bool needsForwarder =
+                resolution is ImplementableMemberResolution.Forward ||
+                (resolution is ImplementableMemberResolution.Declare && isProtectedSurface);
 
-            writer.WriteLine();
-
-            if (!isProtectedSurface)
+            if (needsForwarder && members.TryAddExplicitImplementation($"{interfaceName}.{name}"))
             {
-                writer.WriteLine($"public abstract event {eventType} {name};");
-
-                continue;
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, $$"""
+                    event {{eventType}} {{interfaceName}}.{{name}}
+                    {
+                        add => {{name}} += value;
+                        remove => {{name}} -= value;
+                    }
+                    """);
             }
-
-            writer.WriteLine($"protected abstract event {eventType} {name};");
-            writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                event {{eventType}} {{interfaceName}}.{{name}}
-                {
-                    add => {{name}} += value;
-                    remove => {{name}} -= value;
-                }
-                """);
         }
 
-        WriteInterfaceMembersRecursive(writer, context, ifaceType, nextInstance, writtenMethods, properties, writtenEvents, writtenInterfaces);
+        WriteInterfaceMembersRecursive(writer, context, ifaceType, nextInstance, members, properties, writtenInterfaces);
     }
 
     /// <summary>
@@ -1277,18 +1455,31 @@ internal static class AbiImplementableClassFactory
         public required string TypeText { get; init; }
 
         /// <summary>
-        /// Whether the declaring interface is <c>[Overridable]</c> or <c>[Protected]</c>, so the property is
-        /// declared <c>protected abstract</c> with an explicit interface implementation.
+        /// Whether the first interface declaring the property is <c>[Overridable]</c> or <c>[Protected]</c>, so the property is
+        /// declared <c>protected abstract</c>, with explicit interface implementations forwarding to it.
         /// </summary>
         public bool IsProtectedSurface { get; init; }
-
-        /// <summary>
-        /// The declaring interface, for the explicit interface implementation (only when <see cref="IsProtectedSurface"/>).
-        /// </summary>
-        public string InterfaceName { get; init; } = string.Empty;
 
         public bool HasGetter { get; set; }
 
         public bool HasSetter { get; set; }
+
+        /// <summary>
+        /// Whether the interfaces declaring the property disagree on its type.
+        /// </summary>
+        public bool HasConflict { get; set; }
+
+        /// <summary>
+        /// The interfaces declaring the property, with the accessors each one declares.
+        /// </summary>
+        public List<PropertySource> Sources { get; } = [];
     }
+
+    /// <summary>
+    /// An interface declaring a merged property, with the accessors it declares.
+    /// </summary>
+    /// <param name="InterfaceName">The interface, named as it is declared on the base.</param>
+    /// <param name="HasGetter">Whether the interface declares a getter.</param>
+    /// <param name="HasSetter">Whether the interface declares a setter.</param>
+    private sealed record PropertySource(string InterfaceName, bool HasGetter, bool HasSetter);
 }

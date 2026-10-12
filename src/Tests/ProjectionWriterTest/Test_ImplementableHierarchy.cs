@@ -99,6 +99,88 @@ public class Test_ImplementableHierarchy
         Assert.IsFalse(names.Any(static name => name.StartsWith(ImplementableHierarchyMetadata.Removed, System.StringComparison.Ordinal)));
     }
 
+    /// <summary>
+    /// An ordinary interface method with the signature of a member the base declares for a custom-mapped interface is
+    /// satisfied by that member, rather than redeclared.
+    /// </summary>
+    [TestMethod]
+    public void OrdinaryMemberMatchingInheritedMappedMember_IsNotRedeclared()
+    {
+        Assert.IsFalse(GetMethodNames(GetAbiClass(ImplementableHierarchyMetadata.DisposeDerived)).Contains("Dispose"));
+    }
+
+    /// <summary>
+    /// A protected member cannot implement an interface member implicitly, so every interface requiring it gets an explicit
+    /// implementation forwarding to it, including interfaces sharing it and public interfaces of derived classes.
+    /// </summary>
+    [TestMethod]
+    public void ProtectedMembers_AreForwardedForEveryInterface()
+    {
+        string baseText = GetAbiClass(ImplementableHierarchyMetadata.ProtectedBase).ToString();
+
+        StringAssert.Contains(baseText, "protected abstract void Hook();");
+        StringAssert.Contains(baseText, "void global::Contoso.IProtectedHooks.Hook() => Hook();");
+        StringAssert.Contains(baseText, "void global::Contoso.IProtectedHooks2.Hook() => Hook();");
+        StringAssert.Contains(baseText, "protected abstract int Level { get; set; }");
+        StringAssert.Contains(baseText, "int global::Contoso.IProtectedHooks2.Level");
+        StringAssert.Contains(baseText, "event global::System.EventHandler<object> global::Contoso.IProtectedHooks2.Changed");
+
+        string derivedText = GetAbiClass(ImplementableHierarchyMetadata.PublicHookDerived).ToString();
+
+        Assert.IsFalse(GetMethodNames(GetAbiClass(ImplementableHierarchyMetadata.PublicHookDerived)).Contains("Hook"));
+        StringAssert.Contains(derivedText, "void global::Contoso.IPublicHooks.Hook() => Hook();");
+        StringAssert.Contains(derivedText, "int global::Contoso.IPublicHooks.Level");
+        StringAssert.Contains(derivedText, "event global::System.EventHandler<object> global::Contoso.IPublicHooks.Changed");
+    }
+
+    /// <summary>
+    /// A removed member of a protected interface is not part of the projected interface, so it gets no hook or explicit implementation.
+    /// </summary>
+    [TestMethod]
+    public void RemovedProtectedMember_IsNotImplemented()
+    {
+        Assert.IsFalse(GetAbiClass(ImplementableHierarchyMetadata.ProtectedBase).ToString().Contains("Gone", System.StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// An inherited property cannot gain the setter a new interface requires, which C# cannot express, so the class gets no base.
+    /// </summary>
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void InheritedPropertyMissingAccessor_GetsNoBase(bool referenceProjection)
+    {
+        string[] names = GetAbiClassNames(referenceProjection);
+
+        Assert.IsFalse(names.Contains(ImplementableHierarchyMetadata.SettableCountDerived));
+        Assert.IsTrue(names.Contains(ImplementableHierarchyMetadata.VectorBase));
+    }
+
+    /// <summary>
+    /// A removed factory interface is not projected, so the factory base neither implements it nor declares its members.
+    /// </summary>
+    [TestMethod]
+    public void RemovedFactoryInterface_IsNotImplemented()
+    {
+        string text = GetAbiClass($"{ImplementableHierarchyMetadata.RemovedFactory}ActivationFactory").ToString();
+
+        Assert.IsFalse(text.Contains($"I{ImplementableHierarchyMetadata.RemovedFactory}Factory", System.StringComparison.Ordinal));
+        Assert.IsFalse(text.Contains("CreateWithValue", System.StringComparison.Ordinal));
+        StringAssert.Contains(text, $"public abstract {ImplementableHierarchyMetadata.RemovedFactory} ActivateInstance();");
+    }
+
+    /// <summary>
+    /// A constructor and a static method with the same name and parameters need hooks returning different types, which C# cannot
+    /// declare side by side, so the class gets no bases.
+    /// </summary>
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ConstructorAndStaticWithSameSignature_GetNoBases(bool referenceProjection)
+    {
+        Assert.IsFalse(GetAbiClassNames(referenceProjection).Any(static name => name.StartsWith(ImplementableHierarchyMetadata.CreateCollision, System.StringComparison.Ordinal)));
+    }
+
     [TestMethod]
     public void ReferenceProjection_Compiles()
     {
@@ -161,6 +243,28 @@ public class Test_ImplementableHierarchy
                         public override void SameIterableDerivedMethod() { }
                     }
 
+                    public sealed class MyPublicHook : ABI.Contoso.PublicHookDerived
+                    {
+                        protected override void Hook() { }
+
+                        protected override int Level { get; set; }
+
+                        protected override event System.EventHandler<object> Changed { add { } remove { } }
+
+                        public override void ProtectedBaseMethod() { }
+
+                        public override void PublicHookDerivedMethod() { }
+                    }
+
+                    public sealed class MyDisposer : ABI.Contoso.DisposeDerived
+                    {
+                        public override void ClosableBaseMethod() { }
+
+                        public override void Dispose() { }
+
+                        public override void DisposeDerivedMethod() { }
+                    }
+
                     public static class Usage
                     {
                         public static void Use(MyIterator iterator, MyIterable iterable)
@@ -171,6 +275,11 @@ public class Test_ImplementableHierarchy
 
                             TakeClosable(iterator);
                             TakeIntIterable(iterable);
+
+                            // Back from a projected ancestor, to the implementation and to each base
+                            MyIterator fromAncestor = (MyIterator)closable;
+                            ABI.Contoso.IteratorDerived derivedBase = (ABI.Contoso.IteratorDerived)closable;
+                            ABI.Contoso.ClosableBase closableBase = (ABI.Contoso.ClosableBase)closable;
                         }
 
                         private static void TakeClosable(Contoso.ClosableBase value) { }

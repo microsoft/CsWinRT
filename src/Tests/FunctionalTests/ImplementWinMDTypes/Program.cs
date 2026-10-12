@@ -104,6 +104,12 @@ if (!ReferenceEquals(projectedDerivedBase, projectedDerived))
     return 132;
 }
 
+// And back from the projected base class, to the same implementation
+if (!ReferenceEquals((MyDerived)projectedDerivedBase, myDerived))
+{
+    return 133;
+}
+
 // Everything above activates in managed code. Native callers instead go through the generated
 // activation entry point and call the returned factory through its COM vtable.
 unsafe

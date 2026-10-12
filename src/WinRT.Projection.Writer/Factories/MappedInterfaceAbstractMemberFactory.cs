@@ -55,13 +55,13 @@ internal static class MappedInterfaceAbstractMemberFactory
     /// <param name="context">The active emit context.</param>
     /// <param name="instance">The (possibly substituted) generic instance signature, or <see langword="null"/> if non-generic.</param>
     /// <param name="ifaceName">The Windows Runtime interface name (e.g. <c>"IMap`2"</c>).</param>
-    /// <param name="writtenMembers">Signature keys of members already written, so overlapping interfaces (e.g. <c>IMap`2</c> and <c>IIterable`1</c>, which both surface <c>GetEnumerator</c>) each contribute their members only once.</param>
+    /// <param name="members">The members declared so far, so overlapping interfaces (e.g. <c>IMap`2</c> and <c>IIterable`1</c>, which both surface <c>GetEnumerator</c>) each contribute their members only once.</param>
     public static void WriteAbstractMembers(
         IndentedTextWriter writer,
         ProjectionEmitContext context,
         GenericInstanceTypeSignature? instance,
         string ifaceName,
-        HashSet<string> writtenMembers)
+        ImplementableMemberSet members)
     {
         List<string> args = [];
 
@@ -76,48 +76,48 @@ internal static class MappedInterfaceAbstractMemberFactory
         switch (ifaceName)
         {
             case "IClosable":
-                WriteMethod(writer, writtenMembers, "void", "Dispose", "");
+                WriteMethod(writer, members, "void", "Dispose", "");
                 break;
             case "IIterable`1" when args.Count == 1:
-                WriteEnumerable(writer, writtenMembers, args[0]);
+                WriteEnumerable(writer, members, args[0]);
                 break;
             case "IIterator`1" when args.Count == 1:
-                WriteEnumerator(writer, writtenMembers, args[0]);
+                WriteEnumerator(writer, members, args[0]);
                 break;
             case "IMap`2" when args.Count == 2:
-                WriteDictionary(writer, writtenMembers, args[0], args[1]);
+                WriteDictionary(writer, members, args[0], args[1]);
                 break;
             case "IMapView`2" when args.Count == 2:
-                WriteReadOnlyDictionary(writer, writtenMembers, args[0], args[1]);
+                WriteReadOnlyDictionary(writer, members, args[0], args[1]);
                 break;
             case "IVector`1" when args.Count == 1:
-                WriteList(writer, writtenMembers, args[0]);
+                WriteList(writer, members, args[0]);
                 break;
             case "IVectorView`1" when args.Count == 1:
-                WriteReadOnlyList(writer, writtenMembers, args[0]);
+                WriteReadOnlyList(writer, members, args[0]);
                 break;
         }
     }
 
     /// <summary>Emits the <c>IEnumerable&lt;T&gt;</c> members.</summary>
-    private static void WriteEnumerable(IndentedTextWriter writer, HashSet<string> writtenMembers, string t)
+    private static void WriteEnumerable(IndentedTextWriter writer, ImplementableMemberSet members, string t)
     {
-        WriteMethod(writer, writtenMembers, $"global::System.Collections.Generic.IEnumerator<{t}>", "GetEnumerator", "");
+        WriteMethod(writer, members, $"global::System.Collections.Generic.IEnumerator<{t}>", "GetEnumerator", "");
 
-        WriteNonGenericGetEnumerator(writer, writtenMembers);
+        WriteNonGenericGetEnumerator(writer, members);
     }
 
     /// <summary>Emits the <c>IEnumerator&lt;T&gt;</c> members.</summary>
-    private static void WriteEnumerator(IndentedTextWriter writer, HashSet<string> writtenMembers, string t)
+    private static void WriteEnumerator(IndentedTextWriter writer, ImplementableMemberSet members, string t)
     {
-        WriteProperty(writer, writtenMembers, t, "Current", hasSetter: false);
-        WriteMethod(writer, writtenMembers, "bool", "MoveNext", "");
-        WriteMethod(writer, writtenMembers, "void", "Reset", "");
-        WriteMethod(writer, writtenMembers, "void", "Dispose", "");
+        WriteProperty(writer, members, t, "Current", hasSetter: false);
+        WriteMethod(writer, members, "bool", "MoveNext", "");
+        WriteMethod(writer, members, "void", "Reset", "");
+        WriteMethod(writer, members, "void", "Dispose", "");
 
         // An explicit interface implementation cannot be abstract, so the non-generic member forwards
         // to the generic one that the author implements.
-        if (writtenMembers.Add("explicit:IEnumerator.Current"))
+        if (members.TryAddExplicitImplementation("IEnumerator.Current"))
         {
             writer.WriteLine();
             writer.WriteLine("object global::System.Collections.IEnumerator.Current => Current;");
@@ -125,77 +125,77 @@ internal static class MappedInterfaceAbstractMemberFactory
     }
 
     /// <summary>Emits the <c>IDictionary&lt;K, V&gt;</c> members.</summary>
-    private static void WriteDictionary(IndentedTextWriter writer, HashSet<string> writtenMembers, string k, string v)
+    private static void WriteDictionary(IndentedTextWriter writer, ImplementableMemberSet members, string k, string v)
     {
         string pair = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
 
-        WriteIndexer(writer, writtenMembers, v, k, "key", hasSetter: true);
-        WriteProperty(writer, writtenMembers, $"global::System.Collections.Generic.ICollection<{k}>", "Keys", hasSetter: false);
-        WriteProperty(writer, writtenMembers, $"global::System.Collections.Generic.ICollection<{v}>", "Values", hasSetter: false);
-        WriteProperty(writer, writtenMembers, "int", "Count", hasSetter: false);
-        WriteProperty(writer, writtenMembers, "bool", "IsReadOnly", hasSetter: false);
-        WriteMethod(writer, writtenMembers, "void", "Add", $"{k} key, {v} value");
-        WriteMethod(writer, writtenMembers, "void", "Add", $"{pair} item");
-        WriteMethod(writer, writtenMembers, "void", "Clear", "");
-        WriteMethod(writer, writtenMembers, "bool", "Contains", $"{pair} item");
-        WriteMethod(writer, writtenMembers, "bool", "ContainsKey", $"{k} key");
-        WriteMethod(writer, writtenMembers, "void", "CopyTo", $"{pair}[] array, int arrayIndex");
-        WriteMethod(writer, writtenMembers, "bool", "Remove", $"{k} key");
-        WriteMethod(writer, writtenMembers, "bool", "Remove", $"{pair} item");
-        WriteMethod(writer, writtenMembers, "bool", "TryGetValue", $"{k} key, out {v} value");
+        WriteIndexer(writer, members, v, k, "key", hasSetter: true);
+        WriteProperty(writer, members, $"global::System.Collections.Generic.ICollection<{k}>", "Keys", hasSetter: false);
+        WriteProperty(writer, members, $"global::System.Collections.Generic.ICollection<{v}>", "Values", hasSetter: false);
+        WriteProperty(writer, members, "int", "Count", hasSetter: false);
+        WriteProperty(writer, members, "bool", "IsReadOnly", hasSetter: false);
+        WriteMethod(writer, members, "void", "Add", $"{k} key, {v} value");
+        WriteMethod(writer, members, "void", "Add", $"{pair} item");
+        WriteMethod(writer, members, "void", "Clear", "");
+        WriteMethod(writer, members, "bool", "Contains", $"{pair} item");
+        WriteMethod(writer, members, "bool", "ContainsKey", $"{k} key");
+        WriteMethod(writer, members, "void", "CopyTo", $"{pair}[] array, int arrayIndex");
+        WriteMethod(writer, members, "bool", "Remove", $"{k} key");
+        WriteMethod(writer, members, "bool", "Remove", $"{pair} item");
+        WriteMethod(writer, members, "bool", "TryGetValue", $"{k} key, out {v} value");
 
-        WriteEnumerable(writer, writtenMembers, pair);
+        WriteEnumerable(writer, members, pair);
     }
 
     /// <summary>Emits the <c>IReadOnlyDictionary&lt;K, V&gt;</c> members.</summary>
-    private static void WriteReadOnlyDictionary(IndentedTextWriter writer, HashSet<string> writtenMembers, string k, string v)
+    private static void WriteReadOnlyDictionary(IndentedTextWriter writer, ImplementableMemberSet members, string k, string v)
     {
         string pair = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
 
-        WriteIndexer(writer, writtenMembers, v, k, "key", hasSetter: false);
-        WriteProperty(writer, writtenMembers, $"global::System.Collections.Generic.IEnumerable<{k}>", "Keys", hasSetter: false);
-        WriteProperty(writer, writtenMembers, $"global::System.Collections.Generic.IEnumerable<{v}>", "Values", hasSetter: false);
-        WriteProperty(writer, writtenMembers, "int", "Count", hasSetter: false);
-        WriteMethod(writer, writtenMembers, "bool", "ContainsKey", $"{k} key");
-        WriteMethod(writer, writtenMembers, "bool", "TryGetValue", $"{k} key, out {v} value");
+        WriteIndexer(writer, members, v, k, "key", hasSetter: false);
+        WriteProperty(writer, members, $"global::System.Collections.Generic.IEnumerable<{k}>", "Keys", hasSetter: false);
+        WriteProperty(writer, members, $"global::System.Collections.Generic.IEnumerable<{v}>", "Values", hasSetter: false);
+        WriteProperty(writer, members, "int", "Count", hasSetter: false);
+        WriteMethod(writer, members, "bool", "ContainsKey", $"{k} key");
+        WriteMethod(writer, members, "bool", "TryGetValue", $"{k} key, out {v} value");
 
-        WriteEnumerable(writer, writtenMembers, pair);
+        WriteEnumerable(writer, members, pair);
     }
 
     /// <summary>Emits the <c>IList&lt;T&gt;</c> members.</summary>
-    private static void WriteList(IndentedTextWriter writer, HashSet<string> writtenMembers, string t)
+    private static void WriteList(IndentedTextWriter writer, ImplementableMemberSet members, string t)
     {
-        WriteIndexer(writer, writtenMembers, t, "int", "index", hasSetter: true, indexerName: "ListItem");
-        WriteProperty(writer, writtenMembers, "int", "Count", hasSetter: false);
-        WriteProperty(writer, writtenMembers, "bool", "IsReadOnly", hasSetter: false);
-        WriteMethod(writer, writtenMembers, "void", "Add", $"{t} item");
-        WriteMethod(writer, writtenMembers, "void", "Clear", "");
-        WriteMethod(writer, writtenMembers, "bool", "Contains", $"{t} item");
-        WriteMethod(writer, writtenMembers, "void", "CopyTo", $"{t}[] array, int arrayIndex");
-        WriteMethod(writer, writtenMembers, "int", "IndexOf", $"{t} item");
-        WriteMethod(writer, writtenMembers, "void", "Insert", $"int index, {t} item");
-        WriteMethod(writer, writtenMembers, "bool", "Remove", $"{t} item");
-        WriteMethod(writer, writtenMembers, "void", "RemoveAt", "int index");
+        WriteIndexer(writer, members, t, "int", "index", hasSetter: true, indexerName: "ListItem");
+        WriteProperty(writer, members, "int", "Count", hasSetter: false);
+        WriteProperty(writer, members, "bool", "IsReadOnly", hasSetter: false);
+        WriteMethod(writer, members, "void", "Add", $"{t} item");
+        WriteMethod(writer, members, "void", "Clear", "");
+        WriteMethod(writer, members, "bool", "Contains", $"{t} item");
+        WriteMethod(writer, members, "void", "CopyTo", $"{t}[] array, int arrayIndex");
+        WriteMethod(writer, members, "int", "IndexOf", $"{t} item");
+        WriteMethod(writer, members, "void", "Insert", $"int index, {t} item");
+        WriteMethod(writer, members, "bool", "Remove", $"{t} item");
+        WriteMethod(writer, members, "void", "RemoveAt", "int index");
 
-        WriteEnumerable(writer, writtenMembers, t);
+        WriteEnumerable(writer, members, t);
     }
 
     /// <summary>Emits the <c>IReadOnlyList&lt;T&gt;</c> members.</summary>
-    private static void WriteReadOnlyList(IndentedTextWriter writer, HashSet<string> writtenMembers, string t)
+    private static void WriteReadOnlyList(IndentedTextWriter writer, ImplementableMemberSet members, string t)
     {
-        WriteIndexer(writer, writtenMembers, t, "int", "index", hasSetter: false, indexerName: "ReadOnlyListItem");
-        WriteProperty(writer, writtenMembers, "int", "Count", hasSetter: false);
+        WriteIndexer(writer, members, t, "int", "index", hasSetter: false, indexerName: "ReadOnlyListItem");
+        WriteProperty(writer, members, "int", "Count", hasSetter: false);
 
-        WriteEnumerable(writer, writtenMembers, t);
+        WriteEnumerable(writer, members, t);
     }
 
     /// <summary>
     /// Emits the non-generic <c>IEnumerable.GetEnumerator</c> forwarder, which cannot be <c>abstract</c>
     /// because it is an explicit interface implementation.
     /// </summary>
-    private static void WriteNonGenericGetEnumerator(IndentedTextWriter writer, HashSet<string> writtenMembers)
+    private static void WriteNonGenericGetEnumerator(IndentedTextWriter writer, ImplementableMemberSet members)
     {
-        if (!writtenMembers.Add("explicit:IEnumerable.GetEnumerator"))
+        if (!members.TryAddExplicitImplementation("IEnumerable.GetEnumerator"))
         {
             return;
         }
@@ -204,10 +204,10 @@ internal static class MappedInterfaceAbstractMemberFactory
         writer.WriteLine("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();");
     }
 
-    /// <summary>Emits a single <c>public abstract</c> method, if not already written.</summary>
-    private static void WriteMethod(IndentedTextWriter writer, HashSet<string> writtenMembers, string returnType, string name, string parameters)
+    /// <summary>Emits a single <c>public abstract</c> method, if not already declared.</summary>
+    private static void WriteMethod(IndentedTextWriter writer, ImplementableMemberSet members, string returnType, string name, string parameters)
     {
-        if (!writtenMembers.Add($"M:{name}({parameters})"))
+        if (!ShouldDeclare(members, members.ResolveMethod(name, parameters, returnType, isProtected: false)))
         {
             return;
         }
@@ -216,10 +216,10 @@ internal static class MappedInterfaceAbstractMemberFactory
         writer.WriteLine($"public abstract {returnType} {name}({parameters});");
     }
 
-    /// <summary>Emits a single <c>public abstract</c> property, if not already written.</summary>
-    private static void WriteProperty(IndentedTextWriter writer, HashSet<string> writtenMembers, string type, string name, bool hasSetter)
+    /// <summary>Emits a single <c>public abstract</c> property, if not already declared.</summary>
+    private static void WriteProperty(IndentedTextWriter writer, ImplementableMemberSet members, string type, string name, bool hasSetter)
     {
-        if (!writtenMembers.Add($"P:{name}"))
+        if (!ShouldDeclare(members, members.ResolveProperty(name, type, hasGetter: true, hasSetter, isProtected: false)))
         {
             return;
         }
@@ -228,9 +228,9 @@ internal static class MappedInterfaceAbstractMemberFactory
         writer.WriteLine($"public abstract {type} {name} {{ get;{(hasSetter ? " set;" : "")} }}");
     }
 
-    /// <summary>Emits a single <c>public abstract</c> indexer, if not already written.</summary>
+    /// <summary>Emits a single <c>public abstract</c> indexer, if not already declared.</summary>
     /// <param name="writer">The writer.</param>
-    /// <param name="writtenMembers">Signature keys of members already written.</param>
+    /// <param name="members">The members declared so far.</param>
     /// <param name="type">The indexer's element type.</param>
     /// <param name="indexType">The index parameter's type.</param>
     /// <param name="indexName">The index parameter's name.</param>
@@ -238,14 +238,14 @@ internal static class MappedInterfaceAbstractMemberFactory
     /// <param name="indexerName">The <see cref="System.Runtime.CompilerServices.IndexerNameAttribute"/> name to apply, or <see langword="null"/> to leave the default (<c>Item</c>).</param>
     private static void WriteIndexer(
         IndentedTextWriter writer,
-        HashSet<string> writtenMembers,
+        ImplementableMemberSet members,
         string type,
         string indexType,
         string indexName,
         bool hasSetter,
         string? indexerName = null)
     {
-        if (!writtenMembers.Add($"P:this[{indexType}]"))
+        if (!ShouldDeclare(members, members.ResolveProperty($"this[{indexType}]", type, hasGetter: true, hasSetter, isProtected: false)))
         {
             return;
         }
@@ -255,8 +255,7 @@ internal static class MappedInterfaceAbstractMemberFactory
         // metadata this base is otherwise generated from).
         if (indexerName is null)
         {
-            _ = writtenMembers.Add("P:Item");
-            _ = writtenMembers.Add("M:Item(uint index)");
+            members.Reserve("Item", "uint index");
         }
 
         writer.WriteLine();
@@ -267,5 +266,22 @@ internal static class MappedInterfaceAbstractMemberFactory
         }
 
         writer.WriteLine($"public abstract {type} this[{indexType} {indexName}] {{ get;{(hasSetter ? " set;" : "")} }}");
+    }
+
+    /// <summary>
+    /// Decides whether a member has to be declared, given how it resolves against the members declared so far.
+    /// </summary>
+    /// <remarks>
+    /// A .NET interface member can only be satisfied by a public member, as there is no Windows Runtime interface to forward
+    /// to explicitly, so an existing protected member with the same signature is a conflict.
+    /// </remarks>
+    private static bool ShouldDeclare(ImplementableMemberSet members, ImplementableMemberResolution resolution)
+    {
+        if (resolution is ImplementableMemberResolution.Forward)
+        {
+            members.MarkConflict();
+        }
+
+        return resolution is ImplementableMemberResolution.Declare;
     }
 }
