@@ -68,8 +68,8 @@ public static unsafe class WindowsRuntimeImplementationMarshal
         {
             throw new InvalidCastException(
                 $"The object of type '{value.GetType()}' does not wrap an implementation of type '{implementableClassType}'. Only an instance " +
-                $"that was obtained by marshalling such an implementation can be converted back to it: one representing a Windows Runtime " +
-                $"object implemented natively, or in another process, has no managed implementation to return.");
+                $"obtained by marshalling such an implementation can be converted back to it. Instances backed by a native or out-of-process " +
+                $"object, or by an implementation of a different type, have no such implementation to return.");
         }
 
         // Only a projected type can be wrapping an implementation, and only when it is a wrapper to begin with
