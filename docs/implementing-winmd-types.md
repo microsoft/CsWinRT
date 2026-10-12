@@ -82,6 +82,8 @@ Contoso.Widgets.Widget widget = implementation;
 MyWidget original = (MyWidget)widget;
 ```
 
+The implicit conversion also applies to every projected base class of the implemented class, so an implementation of a derived runtime class can be handed to anything expecting one of its base classes.
+
 Callers always receive the projected type, including callers in this same process receiving an object this project created. That is deliberate: a consumer of `Contoso.Widgets.Widget` should not need to know, or be able to tell, whether the object behind it was implemented in C#, implemented natively, or lives in another process. It also means a consumer cannot reach an implementation by accident — `obj as MyWidget` on a projected instance is `null`, and no conversion applies, because conversions are chosen at compile time from the static type of the expression, and `Widget` declares none to `MyWidget`.
 
 The conversions preserve identity: converting the same implementation twice yields the same projected instance, and converting it back yields the original implementation. The explicit conversion throws `InvalidCastException` when the instance has no managed implementation to return (it wraps a native or out-of-process object), or wraps an implementation of a different runtime class.

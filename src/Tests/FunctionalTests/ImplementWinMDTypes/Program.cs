@@ -96,6 +96,14 @@ if (projectedDerived.Value != 5 || projectedDerived.One() != 1)
     return 109;
 }
 
+// It also converts straight to the projected base class, to the same instance
+global::TestComponent.Composable projectedDerivedBase = myDerived;
+
+if (!ReferenceEquals(projectedDerivedBase, projectedDerived))
+{
+    return 132;
+}
+
 // Everything above activates in managed code. Native callers instead go through the generated
 // activation entry point and call the returned factory through its COM vtable.
 unsafe

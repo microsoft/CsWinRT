@@ -81,7 +81,7 @@ public static unsafe class WindowsRuntimeImplementationMarshal
 
         // Retrieve the managed object behind the wrapper, which is only possible if the native object it wraps is
         // a COM Callable Wrapper for one. Marshalling deliberately does not unwrap these (see
-        // 'TryGetManagedObjectForProjection'), so this is the supported way to reach it.
+        // 'IsImplementationObject'), so this is the supported way to reach it.
         if (!WindowsRuntimeMarshal.TryGetManagedObject(windowsRuntimeObject.NativeObjectReference.GetThisPtrUnsafe(), out object? managedObject))
         {
             return ThrowInvalidCastException(value, implementableClassType);
@@ -96,12 +96,11 @@ public static unsafe class WindowsRuntimeImplementationMarshal
     }
 
     /// <summary>
-    /// Tries to retrieve a managed object from a pointer to a COM object, if it is a COM Callable Wrapper for one
-    /// that can be handed back to callers expecting a projected type.
+    /// Checks whether a managed object retrieved from a COM Callable Wrapper is an implementation of a Windows Runtime
+    /// class declared in existing metadata, which must not be handed back to callers expecting a projected type.
     /// </summary>
-    /// <param name="value">The external COM object to try to get a managed object from.</param>
-    /// <param name="result">The resulting managed object, if it can be handed back directly.</param>
-    /// <returns>Whether <paramref name="result"/> was retrieved and can be handed back directly.</returns>
+    /// <param name="value">The managed object to check.</param>
+    /// <returns>Whether <paramref name="value"/> is such an implementation.</returns>
     /// <remarks>
     /// <para>
     /// Unwrapping a COM Callable Wrapper preserves reference identity, which is what callers want in the general
@@ -116,18 +115,8 @@ public static unsafe class WindowsRuntimeImplementationMarshal
     /// the implementation type itself).
     /// </para>
     /// </remarks>
-    internal static bool TryGetManagedObjectForProjection(void* value, [NotNullWhen(true)] out object? result)
+    internal static bool IsImplementationObject(object value)
     {
-        if (!WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject) ||
-            managedObject is IWindowsRuntimeImplementableClass)
-        {
-            result = null;
-
-            return false;
-        }
-
-        result = managedObject;
-
-        return true;
+        return value is IWindowsRuntimeImplementableClass;
     }
 }

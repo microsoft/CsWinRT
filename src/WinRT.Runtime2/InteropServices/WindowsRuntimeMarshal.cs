@@ -176,7 +176,8 @@ public static unsafe class WindowsRuntimeMarshal
         }
 
         // Unwrap recognized managed CCWs before requiring 'IInspectable', which they might not implement
-        if (WindowsRuntimeImplementationMarshal.TryGetManagedObjectForProjection(value, out object? managedObject))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject) &&
+            !WindowsRuntimeImplementationMarshal.IsImplementationObject(managedObject))
         {
             return managedObject;
         }

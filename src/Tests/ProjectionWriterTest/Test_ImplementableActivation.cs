@@ -73,7 +73,7 @@ public class Test_ImplementableActivation
 
         Assert.IsTrue(ImplementsActivationFactory(factory));
         Assert.IsTrue(HasDefaultActivationOnly(ActivationMetadata.ParameterlessConstructor));
-        StringAssert.Contains(text, $"{ActivationMetadata.ParameterlessConstructor} instance = ActivateInstance();");
+        StringAssert.Contains(text, $"{ActivationMetadata.ParameterlessConstructor} __instance = ActivateInstance();");
         StringAssert.Contains(text, $"public abstract {ActivationMetadata.ParameterlessConstructor} ActivateInstance();");
         Assert.IsFalse(text.Contains("CreateInstance();", StringComparison.Ordinal));
     }

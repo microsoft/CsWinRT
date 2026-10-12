@@ -76,8 +76,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return null;
         }
 
-        // If the value is a CCW we recognize, just unwrap it directly
-        if (WindowsRuntimeImplementationMarshal.TryGetManagedObjectForProjection(value, out object? managedObject))
+        // If the value is a CCW we recognize, just unwrap it directly (unless it is an implementation of a projected runtime class)
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject) &&
+            !WindowsRuntimeImplementationMarshal.IsImplementationObject(managedObject))
         {
             return managedObject;
         }
@@ -108,8 +109,9 @@ public static unsafe class WindowsRuntimeObjectMarshaller
             return null;
         }
 
-        // If the value is a CCW we recognize, just unwrap it directly
-        if (WindowsRuntimeImplementationMarshal.TryGetManagedObjectForProjection(value, out object? managedObject))
+        // If the value is a CCW we recognize, just unwrap it directly (unless it is an implementation of a projected runtime class)
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject) &&
+            !WindowsRuntimeImplementationMarshal.IsImplementationObject(managedObject))
         {
             return managedObject;
         }

@@ -64,6 +64,12 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
+        // A removed runtime class is not projected, so there would be no projected class for the base to convert to
+        if (type.IsRemoved)
+        {
+            return false;
+        }
+
         if (!context.Settings.ImplementWinMDTypes && !context.Settings.ImplementableTypes.Contains(type.FullName))
         {
             return false;
@@ -87,6 +93,13 @@ internal static class AbiImplementableClassFactory
         // member impossible to implement. C# cannot express both (e.g. 'MapControl.Style' of type 'MapStyle'
         // alongside the inherited 'FrameworkElement.Style' of type 'Style').
         if (HasConflictingBaseProperty(context, type))
+        {
+            return false;
+        }
+
+        // Members of different instantiations of the same generic interface differ only in their types (e.g. the
+        // 'GetEnumerator()' of 'IEnumerable<int>' and 'IEnumerable<string>'), so C# cannot declare both 'abstract'.
+        if (HasConflictingGenericInstantiations(context, type))
         {
             return false;
         }
@@ -148,13 +161,13 @@ internal static class AbiImplementableClassFactory
             return false;
         }
 
-        HashSet<TypeDefinition> baseClosure = [];
+        Dictionary<string, TypeDefinition> baseClosure = [];
 
         CollectInterfaceClosure(context, baseType, baseClosure);
 
         HashSet<string> baseProperties = [];
 
-        foreach (TypeDefinition baseInterface in baseClosure)
+        foreach (TypeDefinition baseInterface in baseClosure.Values)
         {
             foreach (PropertyDefinition baseProperty in baseInterface.Properties)
             {
@@ -162,14 +175,14 @@ internal static class AbiImplementableClassFactory
             }
         }
 
-        HashSet<TypeDefinition> closure = [];
+        Dictionary<string, TypeDefinition> closure = [];
 
         CollectInterfaceClosure(context, type, closure);
 
-        foreach (TypeDefinition interfaceType in closure)
+        foreach ((string interfaceKey, TypeDefinition interfaceType) in closure)
         {
             // Interfaces the base already covers contribute the base's own declarations, not new ones.
-            if (baseClosure.Contains(interfaceType))
+            if (baseClosure.ContainsKey(interfaceKey))
             {
                 continue;
             }
@@ -180,6 +193,29 @@ internal static class AbiImplementableClassFactory
                 {
                     return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns whether a type implements, directly or through its base classes, more than one instantiation of the
+    /// same generic interface.
+    /// </summary>
+    private static bool HasConflictingGenericInstantiations(ProjectionEmitContext context, TypeDefinition type)
+    {
+        Dictionary<string, TypeDefinition> closure = [];
+
+        CollectInterfaceClosure(context, type, closure);
+
+        HashSet<TypeDefinition> genericInterfaces = [];
+
+        foreach (TypeDefinition interfaceType in closure.Values)
+        {
+            if (interfaceType.GenericParameters.Count > 0 && !genericInterfaces.Add(interfaceType))
+            {
+                return true;
             }
         }
 
@@ -203,11 +239,11 @@ internal static class AbiImplementableClassFactory
     /// </summary>
     private static bool ImplementsUnsupportedMappedInterface(ProjectionEmitContext context, TypeDefinition type)
     {
-        HashSet<TypeDefinition> closure = [];
+        Dictionary<string, TypeDefinition> closure = [];
 
         CollectInterfaceClosure(context, type, closure);
 
-        foreach (TypeDefinition interfaceType in closure)
+        foreach (TypeDefinition interfaceType in closure.Values)
         {
             if (IsCustomMappedInterface(interfaceType) && !MappedInterfaceAbstractMemberFactory.IsSupported(interfaceType.Name ?? ""))
             {
@@ -267,7 +303,7 @@ internal static class AbiImplementableClassFactory
         // implemented via the base and only this class's own members are declared here.
         TypeDefinition? baseType = GetImplementableBaseType(context, type);
 
-        HashSet<TypeDefinition> baseClosure = [];
+        Dictionary<string, TypeDefinition> baseClosure = [];
 
         if (baseType is not null)
         {
@@ -285,7 +321,7 @@ internal static class AbiImplementableClassFactory
             bases.Add($"global::ABI.{baseNs}.{IdentifierEscaping.StripBackticks(baseName)}");
         }
 
-        CollectImplementedInterfaces(context, type, null, [.. baseClosure], bases);
+        CollectImplementedInterfaces(context, type, null, [.. baseClosure.Keys], bases);
 
         // Mark the base so an implementation deriving from it can be recognized at runtime with a single type
         // test. Marshalling needs that to hand callers the projected type rather than the implementation (see
@@ -304,16 +340,26 @@ internal static class AbiImplementableClassFactory
         {
             HashSet<string> writtenMethods = [];
             HashSet<string> writtenEvents = [];
-            HashSet<TypeDefinition> writtenInterfaces = [.. baseClosure];
 
-            // Seed the member sets with what the base already declares. Skipping its interfaces is not
-            // enough: a new interface can declare a member with the same signature as one the base already
-            // declared 'abstract', and redeclaring it here would hide the inherited member.
-            foreach (TypeDefinition baseInterface in baseClosure)
+            // Seed the member sets with what the bases already declare. Skipping their interfaces is not
+            // enough: a new interface can declare a member with the same signature as one a base already
+            // declared 'abstract', and redeclaring it here would hide the inherited member. The bases' members
+            // are collected by replaying their emission, so they are keyed exactly as they are declared (e.g. a
+            // custom-mapped 'IClosable' declares 'Dispose()', not the 'Close()' its metadata describes).
+            if (baseType is not null)
             {
-                CollectDeclaredMemberKeys(baseInterface, writtenMethods, writtenEvents);
+                using IndentedTextWriterOwner discardedWriterOwner = IndentedTextWriterPool.GetOrCreate();
+
+                Dictionary<string, PropertyInfo> baseProperties = [];
+                HashSet<string> baseInterfaces = [];
+
+                for (TypeDefinition? current = baseType; current is not null; current = GetImplementableBaseType(context, current))
+                {
+                    WriteInterfaceMembersRecursive(discardedWriterOwner.Writer, context, current, null, writtenMethods, baseProperties, writtenEvents, baseInterfaces);
+                }
             }
 
+            HashSet<string> writtenInterfaces = [.. baseClosure.Keys];
             Dictionary<string, PropertyInfo> properties = [];
 
             WriteInterfaceMembersRecursive(writer, context, type, null, writtenMethods, properties, writtenEvents, writtenInterfaces);
@@ -350,6 +396,25 @@ internal static class AbiImplementableClassFactory
                         using WindowsRuntimeObjectReferenceValue objectReferenceValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);
 
                         return ({{projectedType}})WindowsRuntimeImplementationMarshal.WrapToManaged(objectReferenceValue.GetThisPtrUnsafe());
+                    }
+                    """);
+            }
+
+            // Every base inherits the conversion to each projected ancestor from the base for that ancestor, which
+            // competes with the conversion to this projected class followed by a reference conversion to the
+            // ancestor, making a conversion to the ancestor ambiguous. Declaring it here too, from this exact type,
+            // makes it the most specific one, and routing it through this class's conversion keeps the result the
+            // same either way.
+            for (TypeDefinition? ancestor = baseType; ancestor is not null; ancestor = GetImplementableBaseType(context, ancestor))
+            {
+                string ancestorProjectedType = TypedefNameWriter.BuildGlobalQualifiedName(ancestor.GetRawNamespace(), ancestor.GetStrippedName());
+                string ancestorBody = context.Settings.ReferenceProjection ? "throw null;" : $"return ({projectedType})value;";
+
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, $$"""
+                    public static implicit operator {{ancestorProjectedType}}({{nameStripped}} value)
+                    {
+                        {{ancestorBody}}
                     }
                     """);
             }
@@ -423,11 +488,11 @@ internal static class AbiImplementableClassFactory
         // Every activation factory implements 'IActivationFactory', even for a class without default activation (e.g. a
         // static class), since it is the interface 'DllGetActivationFactory' hands out the factory as.
         List<string> bases = ["global::WindowsRuntime.InteropServices.IActivationFactory"];
-        HashSet<TypeDefinition> declared = [];
+        HashSet<string> declared = [];
 
         foreach (TypeDefinition iface in factoryInterfaces)
         {
-            if (declared.Add(iface))
+            if (declared.Add(GetInterfaceKey(iface, null)))
             {
                 bases.Add(TypedefNameWriter.WriteTypedefName(context, iface, TypedefNameType.CCW, false).Format());
                 CollectImplementedInterfaces(context, iface, null, declared, bases);
@@ -444,7 +509,7 @@ internal static class AbiImplementableClassFactory
         {
             HashSet<string> writtenMethods = [];
             HashSet<string> writtenEvents = [];
-            HashSet<TypeDefinition> writtenInterfaces = [];
+            HashSet<string> writtenInterfaces = [];
             Dictionary<string, PropertyInfo> properties = [];
 
             // 'ActivateInstance' returns the implementation's base, so the compiler checks what it constructs, and
@@ -476,7 +541,7 @@ internal static class AbiImplementableClassFactory
 
             foreach (TypeDefinition iface in factoryInterfaces)
             {
-                if (!writtenInterfaces.Add(iface))
+                if (!writtenInterfaces.Add(GetInterfaceKey(iface, null)))
                 {
                     continue;
                 }
@@ -748,11 +813,11 @@ internal static class AbiImplementableClassFactory
                             "Only activating '{{displayName}}' directly is.");
                     }
 
-                    {{nameStripped}} instance = {{hookName}}({{WriteUserArguments}});
+                    {{nameStripped}} __instance = {{hookName}}({{WriteUserArguments}});
 
-                    {{innerParameter}} = instance;
+                    {{innerParameter}} = __instance;
 
-                    return instance;
+                    return __instance;
                 }
                 """);
 
@@ -884,10 +949,8 @@ internal static class AbiImplementableClassFactory
         HashSet<string> writtenMethods,
         IDictionary<string, PropertyInfo> properties,
         HashSet<string> writtenEvents,
-        HashSet<TypeDefinition> writtenInterfaces)
+        HashSet<string> writtenInterfaces)
     {
-        GenericContext genericContext = new(currentInstance, null);
-
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
             if (impl.Interface is null)
@@ -900,7 +963,9 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
-            if (!writtenInterfaces.Add(ifaceType))
+            GenericInstanceTypeSignature? nextInstance = GetInterfaceInstance(impl, currentInstance);
+
+            if (!writtenInterfaces.Add(GetInterfaceKey(ifaceType, nextInstance)))
             {
                 continue;
             }
@@ -910,23 +975,9 @@ internal static class AbiImplementableClassFactory
             // members entirely, and would satisfy nothing).
             if (IsCustomMappedInterface(ifaceType))
             {
-                GenericInstanceTypeSignature? mappedInstance = null;
-
-                if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? mappedGi))
-                {
-                    mappedInstance = currentInstance is not null && mappedGi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature mappedSubGi ? mappedSubGi : mappedGi;
-                }
-
-                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, mappedInstance, ifaceType.Name ?? "", writtenMethods);
+                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, nextInstance, ifaceType.Name ?? "", writtenMethods);
 
                 continue;
-            }
-
-            GenericInstanceTypeSignature? nextInstance = null;
-
-            if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
-            {
-                nextInstance = currentInstance is not null && gi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature subGi ? subGi : gi;
             }
 
             // An '[Overridable]' or '[Protected]' interface is part of a runtime class's derivation contract
@@ -957,7 +1008,7 @@ internal static class AbiImplementableClassFactory
         HashSet<string> writtenMethods,
         IDictionary<string, PropertyInfo> properties,
         HashSet<string> writtenEvents,
-        HashSet<TypeDefinition> writtenInterfaces)
+        HashSet<string> writtenInterfaces)
     {
         GenericContext? memberContext = nextInstance is not null ? new GenericContext(nextInstance, null) : null;
 
@@ -1057,11 +1108,9 @@ internal static class AbiImplementableClassFactory
         ProjectionEmitContext context,
         TypeDefinition declaringType,
         GenericInstanceTypeSignature? currentInstance,
-        HashSet<TypeDefinition> visited,
+        HashSet<string> visited,
         List<string> collected)
     {
-        GenericContext genericContext = new(currentInstance, null);
-
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
             if (impl.Interface is null || !impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
@@ -1069,19 +1118,14 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
-            if (!visited.Add(ifaceType))
-            {
-                continue;
-            }
-
             // Declare the interface, constructed with its type arguments when it is generic. Custom-mapped
             // interfaces are declared in their .NET form (e.g. 'IMap<K, V>' as 'IDictionary<K, V>'), which is
             // what an author implements; the runtime's collection adapters service the Windows Runtime side.
-            GenericInstanceTypeSignature? nextInstance = null;
+            GenericInstanceTypeSignature? nextInstance = GetInterfaceInstance(impl, currentInstance);
 
-            if (impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? gi))
+            if (!visited.Add(GetInterfaceKey(ifaceType, nextInstance)))
             {
-                nextInstance = currentInstance is not null && gi.InstantiateGenericTypes(genericContext) is GenericInstanceTypeSignature subGi ? subGi : gi;
+                continue;
             }
 
             // Format the substituted signature, so an inherited generic interface is declared with the
@@ -1127,25 +1171,6 @@ internal static class AbiImplementableClassFactory
     }
 
     /// <summary>
-    /// Records the dedupe keys of the members an interface declares, without emitting them.
-    /// </summary>
-    /// <param name="ifaceType">The interface to inspect.</param>
-    /// <param name="writtenMethods">The set of method dedupe keys to add to.</param>
-    /// <param name="writtenEvents">The set of event names to add to.</param>
-    private static void CollectDeclaredMemberKeys(TypeDefinition ifaceType, HashSet<string> writtenMethods, HashSet<string> writtenEvents)
-    {
-        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
-        {
-            _ = writtenMethods.Add(new MethodSignatureInfo(method).GetDedupeKey(method.GetRawName()));
-        }
-
-        foreach (EventDefinition evt in ifaceType.Events)
-        {
-            _ = writtenEvents.Add(evt.GetRawName());
-        }
-    }
-
-    /// <summary>
     /// Returns the base runtime class of <paramref name="type"/> that has its own generated abstract
     /// base, or <see langword="null"/> if the class derives directly from <c>WindowsRuntimeObject</c>.
     /// </summary>
@@ -1178,20 +1203,70 @@ internal static class AbiImplementableClassFactory
     /// Adds all interfaces implemented by <paramref name="type"/> (transitively, including its own base
     /// classes) into <paramref name="interfaces"/> so a derived class does not re-declare inherited members.
     /// </summary>
-    private static void CollectInterfaceClosure(ProjectionEmitContext context, TypeDefinition type, HashSet<TypeDefinition> interfaces)
+    /// <remarks>
+    /// Interfaces are keyed by their closed signature (see <see cref="GetInterfaceKey"/>), so different
+    /// instantiations of the same generic interface are all included.
+    /// </remarks>
+    private static void CollectInterfaceClosure(ProjectionEmitContext context, TypeDefinition type, Dictionary<string, TypeDefinition> interfaces)
     {
         for (TypeDefinition? current = type; current is not null;)
         {
-            foreach (InterfaceImplementation impl in current.Interfaces)
-            {
-                if (impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType) && interfaces.Add(ifaceType))
-                {
-                    CollectInterfaceClosure(context, ifaceType, interfaces);
-                }
-            }
+            CollectInterfaceClosure(context, current, null, interfaces);
 
             current = current.BaseType is { } baseRef ? baseRef.ResolveAsTypeDefinition(context.Cache) : null;
         }
+    }
+
+    /// <summary>
+    /// Adds the interfaces implemented by <paramref name="declaringType"/> (transitively) into <paramref name="interfaces"/>.
+    /// </summary>
+    private static void CollectInterfaceClosure(
+        ProjectionEmitContext context,
+        TypeDefinition declaringType,
+        GenericInstanceTypeSignature? currentInstance,
+        Dictionary<string, TypeDefinition> interfaces)
+    {
+        foreach (InterfaceImplementation impl in declaringType.Interfaces)
+        {
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
+            {
+                continue;
+            }
+
+            GenericInstanceTypeSignature? nextInstance = GetInterfaceInstance(impl, currentInstance);
+
+            if (interfaces.TryAdd(GetInterfaceKey(ifaceType, nextInstance), ifaceType))
+            {
+                CollectInterfaceClosure(context, ifaceType, nextInstance, interfaces);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the closed signature of a generic interface implementation, with the type arguments of the type declaring it substituted.
+    /// </summary>
+    /// <param name="impl">The interface implementation.</param>
+    /// <param name="currentInstance">The instantiation of the type declaring <paramref name="impl"/>, if it is a generic interface.</param>
+    /// <returns>The closed signature, or <see langword="null"/> if the interface is not generic.</returns>
+    private static GenericInstanceTypeSignature? GetInterfaceInstance(InterfaceImplementation impl, GenericInstanceTypeSignature? currentInstance)
+    {
+        if (impl.Interface is null || !impl.Interface.TryGetGenericInstance(out GenericInstanceTypeSignature? instance))
+        {
+            return null;
+        }
+
+        return currentInstance is not null && instance.InstantiateGenericTypes(new GenericContext(currentInstance, null)) is GenericInstanceTypeSignature substitutedInstance
+            ? substitutedInstance
+            : instance;
+    }
+
+    /// <summary>
+    /// Gets the key identifying an implemented interface: its closed signature if it is generic, so different
+    /// instantiations of the same generic interface are told apart, and its name otherwise.
+    /// </summary>
+    private static string GetInterfaceKey(TypeDefinition ifaceType, GenericInstanceTypeSignature? instance)
+    {
+        return instance?.FullName ?? ifaceType.FullName;
     }
 
     /// <summary>
