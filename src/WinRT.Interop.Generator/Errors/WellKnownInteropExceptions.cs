@@ -907,7 +907,8 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// </summary>
     public static WellKnownInteropWarning GenericTypeDiscoveryRecursionLimitExceededWarning(TypeSignature type, ModuleDefinition module, int limit, bool supplemental = false)
     {
-        string phase = supplemental ? "Supplemental generic discovery" : "Generic member discovery";
+        string phase = GetGenericDiscoveryPhaseName(supplemental);
+
         return Warning(104,
             $"{phase} reached the maximum depth of {limit} while processing type '{type}' in module '{module}': " +
             "its members will not be analyzed further. Marshalling support for types only reachable through those members may be incomplete.");
@@ -918,7 +919,8 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// </summary>
     public static WellKnownInteropWarning GenericMethodDiscoveryRecursionLimitExceededWarning(MethodDefinition method, ModuleDefinition module, int limit, bool supplemental = false)
     {
-        string phase = supplemental ? "Supplemental generic discovery" : "Generic member discovery";
+        string phase = GetGenericDiscoveryPhaseName(supplemental);
+
         return Warning(104,
             $"{phase} reached the maximum depth of {limit} while processing method '{method}' in module '{module}': " +
             "its body will not be analyzed further. Marshalling support for types only reachable through that body may be incomplete.");
@@ -929,7 +931,8 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// </summary>
     public static WellKnownInteropWarning GenericTypeDiscoveryComplexityLimitExceededWarning(ModuleDefinition module, int limit, bool supplemental = false)
     {
-        string phase = supplemental ? "Supplemental generic discovery" : "Generic member discovery";
+        string phase = GetGenericDiscoveryPhaseName(supplemental);
+
         return Warning(105,
             $"{phase} encountered a type signature with more than {limit} elements in module '{module}': " +
             "the expanded signature will not be analyzed further. Marshalling support for types only reachable through that signature may be incomplete.");
@@ -948,15 +951,22 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     /// <summary>
     /// The isolated supplemental allowance for additive generic discovery was exhausted.
     /// </summary>
-    /// <param name="module">The root module being analyzed.</param>
-    /// <param name="limit">The maximum supplemental type and method instantiations.</param>
-    /// <returns>The warning without changing any primary discovery results.</returns>
     public static WellKnownInteropWarning SupplementalGenericDiscoveryLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
             $"Supplemental generic discovery reached the maximum of {limit} transitive type or method instantiations while processing module '{module}': " +
             "additional dispatch-derived or shorter-depth contexts will not have their members analyzed. " +
             "Primary discovery results are preserved, but supplemental marshalling support may be incomplete.");
+    }
+
+    /// <summary>
+    /// Gets the phase label shared by generic-discovery diagnostics.
+    /// </summary>
+    /// <param name="supplemental">Whether the warning originated in supplemental discovery.</param>
+    /// <returns>The phase label used in diagnostic text.</returns>
+    private static string GetGenericDiscoveryPhaseName(bool supplemental)
+    {
+        return supplemental ? "Supplemental generic discovery" : "Generic member discovery";
     }
 
     /// <summary>

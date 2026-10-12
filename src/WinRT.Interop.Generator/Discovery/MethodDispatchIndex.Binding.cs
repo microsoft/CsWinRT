@@ -40,12 +40,12 @@ internal sealed partial class MethodDispatchIndex
 
             for (int i = 0; i < pattern.TypeArguments.Count; i++)
             {
-                // Variant arguments need not equal the statically observed interface argument.
-                // Retain existing receiver bindings when a variant position cannot be unified.
+                // Keep actual receiver bindings when variant interface arguments cannot be unified
                 if (definition?.GenericParameters[i].Attributes is { } attributes &&
                     (attributes & GenericParameterAttributes.VarianceMask) != 0)
                 {
                     TypeSignature?[] candidateBindings = (TypeSignature?[])bindings.Clone();
+
                     if (TryUnify(pattern.TypeArguments[i], actual.TypeArguments[i], candidateBindings))
                     {
                         candidateBindings.CopyTo(bindings, 0);
@@ -62,10 +62,17 @@ internal sealed partial class MethodDispatchIndex
             matches = TryUnify(target.DeclarationType, declarationType, bindings);
         }
 
-        GenericInstanceTypeSignature? receiverContext = bindings.Length == 0 ? null : new(
-            target.Receiver, target.Receiver.IsValueType,
-            bindings.Select((binding, index) => binding ?? new GenericParameterSignature(GenericParameterType.Type, index)));
-        bodyType = target.BodyType.InstantiateGenericTypes(new GenericContext(receiverContext, null));
+        GenericInstanceTypeSignature? receiverContext = bindings.Length == 0 ? null : new GenericInstanceTypeSignature(
+            genericType: target.Receiver,
+            isValueType: target.Receiver.IsValueType,
+            typeArguments: bindings.Select((binding, index) => binding ?? new GenericParameterSignature(
+                parameterType: GenericParameterType.Type,
+                index: index)));
+
+        bodyType = target.BodyType.InstantiateGenericTypes(new GenericContext(
+            type: receiverContext,
+            method: null));
+
         return matches;
     }
 
@@ -82,7 +89,10 @@ internal sealed partial class MethodDispatchIndex
             return null;
         }
 
-        GenericContext context = new(constraint as GenericInstanceTypeSignature, null);
+        GenericContext context = new(
+            type: constraint as GenericInstanceTypeSignature,
+            method: null);
+
         return GetHierarchy(definition).FirstOrDefault(entry => ReferenceEquals(entry.Definition, target.Receiver))
             ?.Signature.InstantiateGenericTypes(context);
     }
@@ -104,6 +114,7 @@ internal sealed partial class MethodDispatchIndex
             }
 
             bindings[parameter.Index] = actual;
+
             return true;
         }
 

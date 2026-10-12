@@ -31,8 +31,14 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>Dispatch-capable body contexts already expanded before the publishing barrier.</summary>
     private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _expandedBodies = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>One oversized primary receiver retained silently for a supplemental diagnostic.</summary>
+    private TypeSignature? _complexReceiver;
+
+    /// <summary>The traversal depth of the retained oversized receiver.</summary>
+    private int _complexReceiverDepth;
+
     /// <summary>The stable ordinal of this enumeration's root module.</summary>
-    private readonly int _origin;
+    private readonly int _moduleOrdinal;
 
     /// <summary>The publication sequence within this enumeration.</summary>
     private int _publicationSequence;
@@ -43,13 +49,14 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <param name="operand">The method descriptor, opcode, and optional constrained receiver.</param>
     /// <param name="callerContext">The caller's type and method arguments.</param>
     /// <param name="depth">The transitive dispatch depth, never the root exemption.</param>
-    private void EnumerateDispatch(MethodOperand operand, GenericContext callerContext, int depth)
+    private void RegisterDispatch(MethodOperand operand, GenericContext callerContext, int depth)
     {
         _token.ThrowIfCancellationRequested();
 
         if (!_isSupplemental)
         {
             RecordDispatchObservation(operand, callerContext, depth);
+
             return;
         }
 
@@ -62,27 +69,20 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             return;
         }
 
-        TypeSignature declaringType = method.DeclaringType!.ToTypeSignature(_module.RuntimeContext).InstantiateGenericTypes(callerContext);
-        GenericInstanceMethodSignature arguments = new(signature.Attributes,
-            signature.TypeArguments.Select(argument => argument.InstantiateGenericTypes(callerContext)));
-        TypeSignature? constraint = operand.Constraint?.ToTypeSignature(_module.RuntimeContext).InstantiateGenericTypes(callerContext);
-        int complexity = declaringType.GetSignatureElementCount(MaxSignatureComplexity + 1) +
-            (constraint?.GetSignatureElementCount(MaxSignatureComplexity + 1) ?? 0);
-
-        foreach (TypeSignature argument in arguments.TypeArguments)
-        {
-            complexity += argument.GetSignatureElementCount(MaxSignatureComplexity + 1);
-            if (!IsComplexityWithinLimit(complexity, depth))
-            {
-                return;
-            }
-        }
-
-        if (!IsComplexityWithinLimit(complexity, depth) ||
-            !arguments.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)))
+        if (!TryComposeDispatchContext(method, signature, operand.Constraint, callerContext, out DispatchCallContext call))
         {
             return;
         }
+
+        if (!IsComplexityWithinLimit(call.Complexity, depth) ||
+            !call.Arguments.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)))
+        {
+            return;
+        }
+
+        TypeSignature declaringType = call.DeclaringType;
+        GenericInstanceMethodSignature arguments = call.Arguments;
+        TypeSignature? constraint = call.Constraint;
 
         if (constraint is not null)
         {
@@ -98,12 +98,10 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             }
         }
 
-        IList<TypeSignature> key = [declaringType, .. arguments.TypeArguments, .. constraint is null ? [] : new[] { constraint }];
-        if (!_visitedDispatches.TryGetValue(definition, out Dictionary<IList<TypeSignature>, int>? contexts))
-        {
-            contexts = new Dictionary<IList<TypeSignature>, int>(_signatureComparer);
-            _visitedDispatches.Add(definition, contexts);
-        }
+        IList<TypeSignature> key = constraint is null
+            ? [declaringType, .. arguments.TypeArguments]
+            : [declaringType, .. arguments.TypeArguments, constraint];
+        Dictionary<IList<TypeSignature>, int> contexts = GetMethodContexts(_visitedDispatches, definition);
 
         if (contexts.TryGetValue(key, out int priorDepth) && priorDepth <= depth)
         {
@@ -111,6 +109,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         }
 
         contexts[key] = depth;
+
+        // Bind every policy-eligible implementation in the index's stable metadata order
         foreach (MethodDispatchIndex.Target target in _dispatchIndex.GetTargets(definition))
         {
             _token.ThrowIfCancellationRequested();
@@ -129,6 +129,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             if (constraint is not null)
             {
                 TypeSignature? receiverType = _dispatchIndex.GetConstrainedReceiver(target, constraint);
+
                 if (receiverType is not null)
                 {
                     ScheduleDispatch(target, declaringType, arguments, receiverType, depth);
@@ -141,7 +142,13 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
             if (target.Receiver.GenericParameters.Count > 0)
             {
-                _ = RegisterDemand(new DispatchContextRegistry.Demand(target, declaringType, arguments, depth, _origin, _publicationSequence++));
+                _ = RegisterDemand(new DispatchContextRegistry.Demand(
+                    Target: target,
+                    DeclarationType: declaringType,
+                    Arguments: arguments,
+                    Depth: depth,
+                    Origin: _moduleOrdinal,
+                    Sequence: _publicationSequence++));
             }
         }
     }
@@ -154,7 +161,12 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <param name="arguments">The composed method arguments.</param>
     /// <param name="receiverType">An actually observed receiver context, if available.</param>
     /// <param name="depth">The transitive expansion depth.</param>
-    private void ScheduleDispatch(MethodDispatchIndex.Target target, TypeSignature declarationType, GenericInstanceMethodSignature arguments, TypeSignature? receiverType, int depth)
+    private void ScheduleDispatch(
+        MethodDispatchIndex.Target target,
+        TypeSignature declarationType,
+        GenericInstanceMethodSignature arguments,
+        TypeSignature? receiverType,
+        int depth)
     {
         _token.ThrowIfCancellationRequested();
 
@@ -166,22 +178,24 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             return;
         }
 
-        int complexity = bodyType.GetSignatureElementCount(MaxSignatureComplexity + 1);
-        foreach (TypeSignature argument in arguments.TypeArguments)
-        {
-            complexity += argument.GetSignatureElementCount(MaxSignatureComplexity + 1);
-        }
-
-        if (IsComplexityWithinLimit(complexity, depth))
+        if (IsComplexityWithinLimit(GetContextComplexity(bodyType, arguments.TypeArguments), depth))
         {
             IList<TypeSignature> key = [.. (bodyType as GenericInstanceTypeSignature)?.TypeArguments ?? [], .. arguments.TypeArguments];
+
             if (_expandedBodies.TryGetValue(target.Method, out Dictionary<IList<TypeSignature>, int>? contexts) &&
                 contexts.TryGetValue(key, out int expandedDepth) && expandedDepth <= depth)
             {
                 return;
             }
 
-            EnqueueMethodBody(target.Method, bodyType, arguments, new GenericContext(bodyType as GenericInstanceTypeSignature, arguments), Math.Max(1, depth));
+            EnqueueMethodBody(
+                method: target.Method,
+                declaringType: bodyType,
+                methodArguments: arguments,
+                genericContext: new GenericContext(
+                    type: bodyType as GenericInstanceTypeSignature,
+                    method: arguments),
+                depth: Math.Max(1, depth));
         }
     }
 
@@ -198,21 +212,43 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 (!_receiverCandidates.TryGetValue(candidate, out int priorDepth) || priorDepth > depth))
             {
                 _receiverCandidates[candidate] = depth;
+
                 foreach (TypeSignature receiver in _dispatchIndex.GetReceiverContexts(candidate))
                 {
-                    if ((_isSupplemental && IsSignatureWithinComplexityLimit(receiver, depth)) ||
-                        (!_isSupplemental && (depth == 0 || receiver.GetSignatureElementCount(MaxSignatureComplexity + 1) <= MaxSignatureComplexity)))
+                    if (IsReceiverWithinComplexityLimit(receiver, depth))
                     {
                         RegisterReceiver(receiver, depth);
-                    }
-                    else if (!_isSupplemental && _complexReceiver is null)
-                    {
-                        _complexReceiver = receiver;
-                        _complexReceiverDepth = depth;
                     }
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Checks receiver complexity without allowing passive primary observations to emit warnings.
+    /// </summary>
+    /// <param name="receiver">The observed receiver signature.</param>
+    /// <param name="depth">Its traversal depth.</param>
+    /// <returns>Whether the receiver may be registered.</returns>
+    private bool IsReceiverWithinComplexityLimit(TypeSignature receiver, int depth)
+    {
+        if (_isSupplemental)
+        {
+            return IsSignatureWithinComplexityLimit(receiver, depth);
+        }
+
+        if (depth == 0 || GetSignatureComplexity(receiver) <= MaxSignatureComplexity)
+        {
+            return true;
+        }
+
+        if (_complexReceiver is null)
+        {
+            _complexReceiver = receiver;
+            _complexReceiverDepth = depth;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -239,12 +275,17 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         }
 
         contexts[signature] = depth;
+
         if (!_isSupplemental)
         {
             return;
         }
 
-        _dispatchContexts?.Receivers.Add(new DispatchContextRegistry.Receiver(signature, depth, _origin, _publicationSequence++));
+        _dispatchContexts?.Receivers.Add(new DispatchContextRegistry.Receiver(
+            Signature: signature,
+            Depth: depth,
+            Origin: _moduleOrdinal,
+            Sequence: _publicationSequence++));
 
         if (_receiverDemands.TryGetValue(definition, out List<DispatchContextRegistry.Demand>? demands))
         {
@@ -264,6 +305,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     private bool RegisterDemand(DispatchContextRegistry.Demand demand, bool expandExistingReceivers = true)
     {
         (int, int) key = (demand.Target.Ordinal, demand.Origin);
+
         if (!_demandContexts.TryGetValue(key, out Dictionary<IList<TypeSignature>, int>? visited))
         {
             visited = new Dictionary<IList<TypeSignature>, int>(_signatureComparer);
@@ -271,12 +313,14 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         }
 
         IList<TypeSignature> arguments = [demand.DeclarationType, .. demand.Arguments.TypeArguments];
+
         if (visited.TryGetValue(arguments, out int priorDepth) && priorDepth <= demand.Depth)
         {
             return false;
         }
 
         visited[arguments] = demand.Depth;
+
         if (!_receiverDemands.TryGetValue(demand.Target.Receiver, out List<DispatchContextRegistry.Demand>? demands))
         {
             demands = [];
@@ -298,122 +342,72 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     }
 
     /// <summary>
-    /// Completes cross-module joins after the parallel publishing barrier.
+    /// Resolves and composes a dispatch operand without applying phase-specific policy or diagnostics.
     /// </summary>
-    /// <param name="registry">The completed write-only registry.</param>
-    /// <returns>The signatures discovered from late joins and their transitive bodies.</returns>
-    private IEnumerable<TResult> EnumerateAdditionalDispatchContexts(DispatchContextRegistry registry)
+    /// <param name="method">The declaration operand.</param>
+    /// <param name="arguments">Its method arguments before substitution.</param>
+    /// <param name="constraint">The optional constrained receiver operand.</param>
+    /// <param name="callerContext">The caller's type and method arguments.</param>
+    /// <param name="context">The composed context, including the unmodified receiver constraint.</param>
+    /// <returns>Whether all declaring and constraint signatures are available.</returns>
+    private bool TryComposeDispatchContext(
+        IMethodDefOrRef method,
+        GenericInstanceMethodSignature arguments,
+        ITypeDefOrRef? constraint,
+        GenericContext callerContext,
+        out DispatchCallContext context)
     {
-        if (registry.Demands.IsEmpty || registry.Receivers.IsEmpty)
+        context = default;
+
+        if (method.DeclaringType?.TryGetTypeSignature(
+            context: _module.RuntimeContext,
+            throwOnResolutionFailure: false,
+            typeSignature: out TypeSignature? declaringType) is not true)
         {
-            yield break;
+            return false;
         }
 
-        foreach (DispatchContextRegistry.ExpandedBody body in registry.ExpandedBodies)
-        {
-            _token.ThrowIfCancellationRequested();
-            if (!_expandedBodies.TryGetValue(body.Method, out Dictionary<IList<TypeSignature>, int>? contexts))
-            {
-                contexts = new Dictionary<IList<TypeSignature>, int>(_signatureComparer);
-                _expandedBodies.Add(body.Method, contexts);
-            }
+        TypeSignature? constraintType = null;
 
-            if (!contexts.TryGetValue(body.Arguments, out int priorDepth) || body.Depth < priorDepth)
-            {
-                contexts[body.Arguments] = body.Depth;
-            }
+        if (constraint is not null && !constraint.TryGetTypeSignature(
+            context: _module.RuntimeContext,
+            throwOnResolutionFailure: false,
+            typeSignature: out constraintType))
+        {
+            return false;
         }
 
-        Dictionary<TypeSignature, HashSet<int>> origins = new(_signatureComparer);
-        foreach (DispatchContextRegistry.Receiver receiver in registry.Receivers
-            .OrderBy(static receiver => receiver.Origin).ThenBy(static receiver => receiver.Sequence))
-        {
-            _token.ThrowIfCancellationRequested();
-            if (!origins.TryGetValue(receiver.Signature, out HashSet<int>? modules))
-            {
-                modules = [];
-                origins.Add(receiver.Signature, modules);
-            }
+        context = new DispatchCallContext(
+            declaringType: declaringType.InstantiateGenericTypes(callerContext),
+            arguments: new GenericInstanceMethodSignature(
+                attributes: arguments.Attributes,
+                typeArguments: arguments.TypeArguments.Select(argument => argument.InstantiateGenericTypes(callerContext))),
+            constraint: constraintType?.InstantiateGenericTypes(callerContext));
 
-            _ = modules.Add(receiver.Origin);
-            RegisterReceiver(receiver.Signature, receiver.Depth);
-        }
-
-        Dictionary<int, Dictionary<IList<TypeSignature>, ImportedDemand>> imported = [];
-        List<ImportedDemand> orderedDemands = [];
-        foreach (DispatchContextRegistry.Demand demand in registry.Demands
-            .OrderBy(static demand => demand.Origin).ThenBy(static demand => demand.Sequence).ThenBy(static demand => demand.Target.Ordinal))
-        {
-            _token.ThrowIfCancellationRequested();
-            if (!imported.TryGetValue(demand.Target.Ordinal, out Dictionary<IList<TypeSignature>, ImportedDemand>? contexts))
-            {
-                contexts = new Dictionary<IList<TypeSignature>, ImportedDemand>(_signatureComparer);
-                imported.Add(demand.Target.Ordinal, contexts);
-            }
-
-            IList<TypeSignature> arguments = [demand.DeclarationType, .. demand.Arguments.TypeArguments];
-            if (!contexts.TryGetValue(arguments, out ImportedDemand? entry))
-            {
-                entry = new ImportedDemand(demand);
-                contexts.Add(arguments, entry);
-                orderedDemands.Add(entry);
-            }
-
-            if (!entry.Depths.TryGetValue(demand.Origin, out int priorDepth) || demand.Depth < priorDepth)
-            {
-                entry.Depths[demand.Origin] = demand.Depth;
-            }
-        }
-
-        foreach (ImportedDemand entry in orderedDemands)
-        {
-            _token.ThrowIfCancellationRequested();
-            if (_transitiveTypeLimitReported)
-            {
-                break;
-            }
-
-            DispatchContextRegistry.Demand demand = entry.Demand with { Depth = entry.Depths.Values.Min() };
-            if (!RegisterDemand(demand, expandExistingReceivers: false))
-            {
-                continue;
-            }
-
-            if (_receiverContexts.TryGetValue(demand.Target.Receiver, out Dictionary<TypeSignature, int>? receivers))
-            {
-                foreach ((TypeSignature receiver, int depth) in receivers)
-                {
-                    int dispatchDepth = int.MaxValue;
-                    foreach ((int origin, int originDepth) in entry.Depths)
-                    {
-                        if (!origins[receiver].Contains(origin))
-                        {
-                            dispatchDepth = Math.Min(dispatchDepth, originDepth);
-                        }
-                    }
-
-                    if (dispatchDepth != int.MaxValue)
-                    {
-                        ScheduleDispatch(demand.Target, demand.DeclarationType, demand.Arguments, receiver, Math.Max(depth, dispatchDepth));
-                    }
-                }
-            }
-        }
-
-        foreach (TResult result in EnumeratePendingMembers())
-        {
-            yield return result;
-        }
+        return true;
     }
 
-    /// <summary>A dispatch context with the minimum observed depth from each publishing module.</summary>
-    /// <param name="demand">The first stable representative used for binding and ordering.</param>
-    private sealed class ImportedDemand(DispatchContextRegistry.Demand demand)
+    /// <summary>
+    /// A composed dispatch context before phase-specific constraint normalization or filtering.
+    /// </summary>
+    /// <param name="declaringType">The substituted declaration type.</param>
+    /// <param name="arguments">The substituted method arguments.</param>
+    /// <param name="constraint">The original substituted constraint, if available.</param>
+    private readonly struct DispatchCallContext(
+        TypeSignature declaringType,
+        GenericInstanceMethodSignature arguments,
+        TypeSignature? constraint)
     {
-        /// <summary>The first stable representative used for binding and ordering.</summary>
-        public DispatchContextRegistry.Demand Demand { get; } = demand;
+        /// <summary>The substituted declaration type.</summary>
+        public TypeSignature DeclaringType { get; } = declaringType;
 
-        /// <summary>The minimum depth for each origin that observed this binding and method context.</summary>
-        public Dictionary<int, int> Depths { get; } = [];
+        /// <summary>The substituted method arguments.</summary>
+        public GenericInstanceMethodSignature Arguments { get; } = arguments;
+
+        /// <summary>The original constraint, or <see langword="null"/> for an unconstrained call.</summary>
+        public TypeSignature? Constraint { get; } = constraint;
+
+        /// <summary>The aggregate context complexity, before any context is hashed.</summary>
+        public int Complexity { get; } = GetContextComplexity(declaringType, arguments.TypeArguments, constraint);
     }
 }

@@ -78,7 +78,7 @@ internal partial class InteropGenerator
 
         try
         {
-            // Finish loading before indexing dispatch relationships: an implementation can be in a later input.
+            // Finish loading before indexing dispatch relationships: an implementation can be in a later input
             ParallelLoopResult result = Parallel.ForEach(
                 source: assembliesToProcess.Concat([args.OutputAssemblyPath]),
                 parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
@@ -90,6 +90,7 @@ internal partial class InteropGenerator
                 throw WellKnownInteropExceptions.LoadAndDiscoverModulesLoopDidNotComplete();
             }
 
+            // Stable ordinals keep bounded dispatch independent of input ordering and parallelism
             ModuleDefinition[] modules = [.. discoveryState.Modules
                 .OrderBy(static pair => pair.Value.Assembly?.Name?.Value, StringComparer.Ordinal)
                 .ThenBy(static pair => pair.Value.Assembly?.Version)
@@ -97,24 +98,28 @@ internal partial class InteropGenerator
                 .ThenBy(static pair => pair.Key, StringComparer.Ordinal)
                 .Select(static pair => pair.Value)
                 .Distinct<ModuleDefinition>(ReferenceEqualityComparer.Instance)];
-            discoveryState.DispatchIndex = new MethodDispatchIndex(
-                modules,
-                runtimeContext, signatureComparer, args.Token,
-                module => ShouldProcessModule(args, discoveryState, module) && !module.ReferencesWindowsRuntimeVersion2Assembly);
 
+            discoveryState.TrackDispatchIndex(new MethodDispatchIndex(
+                modules: modules,
+                runtimeContext: runtimeContext,
+                comparer: signatureComparer,
+                token: args.Token,
+                shouldProcessModule: module => ShouldProcessModule(args, discoveryState, module) && !module.ReferencesWindowsRuntimeVersion2Assembly));
+
+            // Every module now observes the same complete, read-only dispatch index
             result = Parallel.ForEach(
-                modules,
-                new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
-                module => ProcessModule(args, discoveryState, module));
+                source: modules,
+                parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
+                body: module => ProcessModule(args, discoveryState, module));
 
             if (!result.IsCompleted)
             {
                 throw WellKnownInteropExceptions.LoadAndDiscoverModulesLoopDidNotComplete();
             }
 
-            // Complete late receiver/method-argument joins only after all module publishers have finished.
-            DiscoverGenericTypeInstantiations(args, discoveryState, outputModule, additionalDispatchContexts: true);
-            DiscoverSzArrayTypes(args, discoveryState, outputModule, additionalDispatchContexts: true);
+            // Complete late receiver/method-argument joins only after all module publishers have finished
+            DiscoverGenericTypeInstantiations(args, discoveryState, outputModule, completeCrossModuleJoins: true);
+            DiscoverSzArrayTypes(args, discoveryState, outputModule, completeCrossModuleJoins: true);
         }
         catch (AggregateException e)
         {
@@ -312,9 +317,11 @@ internal partial class InteropGenerator
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The invocation state.</param>
     /// <param name="module">The loaded module.</param>
-    private static void ProcessModule(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState, ModuleDefinition module)
+    private static void ProcessModule(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module)
     {
-
         // Determine whether this module should be analyzed, based on the runtime it targets, the configured
         // marshalling mode, and the explicit assembly selections. Modules referencing the Windows Runtime
         // assembly are analyzed in every mode unless explicitly excluded.
@@ -593,12 +600,12 @@ internal partial class InteropGenerator
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="module">The module currently being analyzed.</param>
-    /// <param name="additionalDispatchContexts">Whether to complete late cross-module contexts instead of scanning roots.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts instead of scanning roots.</param>
     private static void DiscoverGenericTypeInstantiations(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         ModuleDefinition module,
-        bool additionalDispatchContexts = false)
+        bool completeCrossModuleJoins = false)
     {
         try
         {
@@ -617,9 +624,9 @@ internal partial class InteropGenerator
                 isMarshallingDisabledModule: discoveryState.IsMarshallingDisabledModule,
                 treatWarningsAsErrors: args.TreatWarningsAsErrors,
                 token: args.Token,
-                dispatchIndex: discoveryState.DispatchIndex ?? throw new InvalidOperationException("Dispatch metadata has not been indexed."),
+                dispatchIndex: discoveryState.DispatchIndex,
                 dispatchContexts: discoveryState.GenericDispatchContexts,
-                additionalDispatchContexts: additionalDispatchContexts))
+                completeCrossModuleJoins: completeCrossModuleJoins))
             {
                 args.Token.ThrowIfCancellationRequested();
 
@@ -645,12 +652,12 @@ internal partial class InteropGenerator
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     /// <param name="module">The module currently being analyzed.</param>
-    /// <param name="additionalDispatchContexts">Whether to complete late cross-module contexts instead of scanning roots.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts instead of scanning roots.</param>
     private static void DiscoverSzArrayTypes(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         ModuleDefinition module,
-        bool additionalDispatchContexts = false)
+        bool completeCrossModuleJoins = false)
     {
         try
         {
@@ -669,9 +676,9 @@ internal partial class InteropGenerator
                 isMarshallingDisabledModule: discoveryState.IsMarshallingDisabledModule,
                 treatWarningsAsErrors: args.TreatWarningsAsErrors,
                 token: args.Token,
-                dispatchIndex: discoveryState.DispatchIndex ?? throw new InvalidOperationException("Dispatch metadata has not been indexed."),
+                dispatchIndex: discoveryState.DispatchIndex,
                 dispatchContexts: discoveryState.SzArrayDispatchContexts,
-                additionalDispatchContexts: additionalDispatchContexts))
+                completeCrossModuleJoins: completeCrossModuleJoins))
             {
                 args.Token.ThrowIfCancellationRequested();
 

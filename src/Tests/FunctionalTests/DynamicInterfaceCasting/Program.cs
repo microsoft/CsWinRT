@@ -59,13 +59,14 @@ if ((object)instance as IList<ManagedClass> != null)
     return 106;
 }
 
-// Use different element types so the three discovery paths cannot supply each other's marshalling.
+// Use different element types so the three discovery paths cannot supply each other's marshalling
 if (!IsList<InputStreamOptions>(instance2.GetInputStreamOptionsVector()))
 {
     return 107;
 }
 
 object genericCastVector = instance2.GetInputStreamOptionsVector();
+
 if (!ReferenceEquals(genericCastVector, AsList<InputStreamOptions>(genericCastVector)))
 {
     return 108;
@@ -82,6 +83,7 @@ if (!Is<IList<FileAccessMode>>(instance2.GetFileAccessModeVector()))
 }
 
 object methodArgumentVector = instance2.GetFileAccessModeVector();
+
 if (!ReferenceEquals(methodArgumentVector, As<IList<FileAccessMode>>(methodArgumentVector)))
 {
     return 111;
@@ -93,6 +95,7 @@ if (!OuterIsList<CreationCollisionOption>(instance2.GetCreationCollisionOptionVe
 }
 
 object nestedCastVector = instance2.GetCreationCollisionOptionVector();
+
 if (!ReferenceEquals(nestedCastVector, OuterAsList<CreationCollisionOption>(nestedCastVector)))
 {
     return 113;
@@ -103,7 +106,76 @@ if (OuterReadCount<CreationCollisionOption>(instance2.GetCreationCollisionOption
     return 114;
 }
 
-return 100;
+// Each operation gets a fresh opaque wrapper, so a successful type test cannot prime the cast
+int dispatchResult = RunGenericDispatchChecks(instance2, cast: false);
+
+if (dispatchResult != 100)
+{
+    return dispatchResult;
+}
+
+return RunGenericDispatchChecks(instance2, cast: true);
+
+static int RunGenericDispatchChecks(TestComponentCSharp.Class component, bool cast)
+{
+    GenericDispatch.IListChecker interfaceChecker = new GenericDispatch.ListChecker();
+
+    if (!interfaceChecker.Check<TestComponentCSharp.InterfaceDispatchElement>(
+        GenericDispatch.Wrap(component.GetInterfaceDispatchVector()), cast))
+    {
+        return cast ? 116 : 115;
+    }
+
+    GenericDispatch.IDirectChecker directChecker = new GenericDispatch.DirectChecker();
+
+    if (!directChecker.Check<TestComponentCSharp.DirectDispatchElement>(
+        GenericDispatch.Wrap(component.GetDirectDispatchVector()), cast))
+    {
+        return cast ? 118 : 117;
+    }
+
+    GenericDispatch.AbstractChecker abstractChecker = new GenericDispatch.AbstractCheckerImpl();
+
+    if (!abstractChecker.Check<TestComponentCSharp.AbstractDispatchElement>(
+        GenericDispatch.Wrap(component.GetAbstractDispatchVector()), cast))
+    {
+        return cast ? 120 : 119;
+    }
+
+    GenericDispatch.VirtualChecker virtualChecker = new GenericDispatch.VirtualCheckerImpl();
+
+    if (!virtualChecker.Check<TestComponentCSharp.VirtualDispatchElement>(
+        GenericDispatch.Wrap(component.GetVirtualDispatchVector()), cast))
+    {
+        return cast ? 122 : 121;
+    }
+
+    GenericDispatch.VirtualCheckerImpl sealedChecker = new GenericDispatch.VirtualCheckerImpl();
+
+    if (!sealedChecker.Check<TestComponentCSharp.SealedDispatchElement>(
+        GenericDispatch.Wrap(component.GetSealedDispatchVector()), cast))
+    {
+        return cast ? 124 : 123;
+    }
+
+    // Control: IList<E> is already an explicit call-site argument, independent of dispatch discovery
+    GenericDispatch.ITypeChecker typeChecker = new GenericDispatch.TypeChecker();
+
+    if (!typeChecker.Check<IList<TestComponentCSharp.ClosedArgumentElement>>(
+        GenericDispatch.Wrap(component.GetClosedArgumentVector()), cast))
+    {
+        return cast ? 126 : 125;
+    }
+
+    // Control: ordinary generic calls propagate the two-hop Cast<IList<T>> context
+    if (!GenericDispatch.Forward<TestComponentCSharp.StaticChainElement>(
+        GenericDispatch.Wrap(component.GetStaticChainVector()), cast))
+    {
+        return cast ? 128 : 127;
+    }
+
+    return 100;
+}
 
 static bool IsList<T>(object value) => value is IList<T>;
 

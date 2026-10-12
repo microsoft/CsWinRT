@@ -162,7 +162,7 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="token">The cancellation token for discovery.</param>
     /// <param name="dispatchIndex">The invocation's complete dispatch metadata index.</param>
     /// <param name="dispatchContexts">The write-only cross-module context registry.</param>
-    /// <param name="additionalDispatchContexts">Whether to complete the registry rather than scan module roots.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts rather than scan module roots.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(
         this ModuleDefinition module,
@@ -173,7 +173,7 @@ internal static partial class ModuleDefinitionExtensions
         CancellationToken token,
         MethodDispatchIndex dispatchIndex,
         DispatchContextRegistry dispatchContexts,
-        bool additionalDispatchContexts)
+        bool completeCrossModuleJoins)
     {
         return TypeSignatureDiscovery<GenericInstanceTypeSignature>.Enumerate(
             module: module,
@@ -185,7 +185,7 @@ internal static partial class ModuleDefinitionExtensions
             token: token,
             dispatchIndex: dispatchIndex,
             dispatchContexts: dispatchContexts,
-            additionalDispatchContexts: additionalDispatchContexts);
+            completeCrossModuleJoins: completeCrossModuleJoins);
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ internal static partial class ModuleDefinitionExtensions
     /// <param name="token">The cancellation token for discovery.</param>
     /// <param name="dispatchIndex">The invocation's complete dispatch metadata index.</param>
     /// <param name="dispatchContexts">The write-only cross-module context registry.</param>
-    /// <param name="additionalDispatchContexts">Whether to complete the registry rather than scan module roots.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts rather than scan module roots.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
     public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(
         this ModuleDefinition module,
@@ -210,7 +210,7 @@ internal static partial class ModuleDefinitionExtensions
         CancellationToken token,
         MethodDispatchIndex dispatchIndex,
         DispatchContextRegistry dispatchContexts,
-        bool additionalDispatchContexts)
+        bool completeCrossModuleJoins)
     {
         return TypeSignatureDiscovery<SzArrayTypeSignature>.Enumerate(
             module: module,
@@ -222,7 +222,7 @@ internal static partial class ModuleDefinitionExtensions
             token: token,
             dispatchIndex: dispatchIndex,
             dispatchContexts: dispatchContexts,
-            additionalDispatchContexts: additionalDispatchContexts);
+            completeCrossModuleJoins: completeCrossModuleJoins);
     }
 
     /// <summary>

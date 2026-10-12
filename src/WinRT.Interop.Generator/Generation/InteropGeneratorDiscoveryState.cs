@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
-using WindowsRuntime.InteropGenerator.Discovery;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -25,6 +25,9 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
 
     /// <summary>Cached module discovery decisions for this invocation.</summary>
     private readonly ConcurrentDictionary<ModuleDefinition, bool> _moduleProcessingDecisions = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Backing field for <see cref="DispatchIndex"/>.</summary>
+    private MethodDispatchIndex? _dispatchIndex;
 
     /// <summary>Backing field for <see cref="WindowsRuntimeSdkProjectionModule"/>.</summary>
     private ModuleDefinition? _windowsRuntimeSdkProjectionModule;
@@ -132,13 +135,19 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// </summary>
     public SignatureComparer SignatureComparer { get; } = signatureComparer;
 
-    /// <summary>The read-only dispatch metadata index created after loading all input modules.</summary>
-    public MethodDispatchIndex? DispatchIndex { get; set; }
+    /// <summary>
+    /// Gets the read-only dispatch metadata index created after loading all input modules.
+    /// </summary>
+    public MethodDispatchIndex DispatchIndex => _dispatchIndex ?? throw new InvalidOperationException("Dispatch metadata has not been indexed.");
 
-    /// <summary>Cross-module dispatch contexts collected by the generic discovery enumerations.</summary>
+    /// <summary>
+    /// Gets the cross-module contexts collected by the generic discovery enumerations.
+    /// </summary>
     public DispatchContextRegistry GenericDispatchContexts { get; } = new();
 
-    /// <summary>Cross-module dispatch contexts collected by the SZ-array discovery enumerations.</summary>
+    /// <summary>
+    /// Gets the cross-module contexts collected by the SZ-array discovery enumerations.
+    /// </summary>
     public DispatchContextRegistry SzArrayDispatchContexts { get; } = new();
 
     /// <summary>
@@ -341,6 +350,18 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
         ThrowIfReadOnly();
 
         _ = _modules.TryAdd(path, module);
+    }
+
+    /// <summary>
+    /// Tracks the completed dispatch index before parallel member discovery begins.
+    /// </summary>
+    /// <param name="index">The read-only metadata index.</param>
+    [MemberNotNull(nameof(_dispatchIndex))]
+    public void TrackDispatchIndex(MethodDispatchIndex index)
+    {
+        ThrowIfReadOnly();
+
+        _dispatchIndex = index;
     }
 
     /// <summary>

@@ -819,6 +819,146 @@ namespace UnitTest
             Assert.AreEqual(3, OuterGetGenericListCount<CreationCollisionOption>(value));
         }
 
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericInterfaceDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInterfaceDispatchVector());
+            IGenericListDispatch checker = new GenericListDispatch();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.InterfaceDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericDirectTypeTestDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetDirectDispatchVector());
+            IGenericDirectDispatch checker = new GenericDirectDispatch();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.DirectDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericAbstractDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetAbstractDispatchVector());
+            GenericAbstractDispatch checker = new GenericAbstractDispatchImpl();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.AbstractDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericVirtualDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetVirtualDispatchVector());
+            GenericVirtualDispatch checker = new GenericVirtualDispatchImpl();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.VirtualDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericSealedDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetSealedDispatchVector());
+            GenericVirtualDispatchImpl checker = new GenericVirtualDispatchImpl();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.SealedDispatchElement>(value, cast));
+        }
+
+        // The closed collection type is an explicit call-site argument, independent of dispatch discovery
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericMethodArgumentControl_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetClosedArgumentVector());
+            IGenericTypeDispatch checker = new GenericTypeDispatch();
+
+            Assert.IsTrue(checker.Check<IList<TestComponentCSharp.ClosedArgumentElement>>(value, cast));
+        }
+
+        // Ordinary method propagation closes the two-hop Cast<IList<T>> path without virtual dispatch
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericStaticChain_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetStaticChainVector());
+
+            Assert.IsTrue(ForwardGenericListDispatch<TestComponentCSharp.StaticChainElement>(value, cast));
+        }
+
+        private interface IGenericListDispatch
+        {
+            bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericListDispatch : IGenericListDispatch
+        {
+            public bool Check<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+        }
+
+        private interface IGenericDirectDispatch
+        {
+            bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericDirectDispatch : IGenericDirectDispatch
+        {
+            public bool Check<T>(object value, bool cast) => cast ? CheckGenericListDispatch<T>(value, true) : value is IList<T>;
+        }
+
+        private abstract class GenericAbstractDispatch
+        {
+            public abstract bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericAbstractDispatchImpl : GenericAbstractDispatch
+        {
+            public override bool Check<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+        }
+
+        private class GenericVirtualDispatch
+        {
+            public virtual bool Check<T>(object value, bool cast) => false;
+        }
+
+        private sealed class GenericVirtualDispatchImpl : GenericVirtualDispatch
+        {
+            public override bool Check<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+        }
+
+        private interface IGenericTypeDispatch
+        {
+            bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericTypeDispatch : IGenericTypeDispatch
+        {
+            public bool Check<T>(object value, bool cast) => CheckGenericDispatch<T>(value, cast);
+        }
+
+        private static bool ForwardGenericListDispatch<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+
+        private static bool CheckGenericListDispatch<T>(object value, bool cast)
+        {
+            return CheckGenericDispatch<IList<T>>(value, cast) && (!cast || ((IList<T>)value).Count == 3);
+        }
+
+        private static bool CheckGenericDispatch<T>(object value, bool cast)
+        {
+            return cast ? ReferenceEquals(value, (T)value) : value is T;
+        }
+
         private static unsafe object CreateGenericCastInspectable(object vector)
         {
             void* target = WindowsRuntimeMarshal.ConvertToUnmanaged(vector);

@@ -11,13 +11,9 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 /// <summary>
 /// Collects receiver contexts and unresolved dispatch demands during a parallel discovery pass.
 /// </summary>
-/// <remarks>
-/// Readers run only after the processing barrier. Each pass then completes cross-module joins
-/// in one additional bounded discovery enumeration, without resuming or sharing module worklists.
-/// </remarks>
 internal sealed class DispatchContextRegistry
 {
-    /// <summary>The actually observed receiver contexts.</summary>
+    /// <summary>The actual receiver contexts, read only after the parallel publishing barrier.</summary>
     public ConcurrentBag<Receiver> Receivers { get; } = [];
 
     /// <summary>The dispatch bindings that may need receiver parameters from another module.</summary>
@@ -40,7 +36,13 @@ internal sealed class DispatchContextRegistry
     /// <param name="Depth">The expansion depth in the owning enumeration.</param>
     /// <param name="Origin">The owning module's stable ordinal.</param>
     /// <param name="Sequence">The stable publication sequence within that enumeration.</param>
-    internal sealed record Demand(MethodDispatchIndex.Target Target, TypeSignature DeclarationType, GenericInstanceMethodSignature Arguments, int Depth, int Origin, int Sequence);
+    internal sealed record Demand(
+        MethodDispatchIndex.Target Target,
+        TypeSignature DeclarationType,
+        GenericInstanceMethodSignature Arguments,
+        int Depth,
+        int Origin,
+        int Sequence);
 
     /// <summary>A dispatch-capable method context already queued and expanded before the publishing barrier.</summary>
     /// <param name="Method">The resolved body definition.</param>

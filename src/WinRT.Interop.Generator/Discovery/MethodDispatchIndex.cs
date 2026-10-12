@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using AsmResolver.DotNet;
@@ -24,17 +24,11 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>Possible implementations, indexed by declaration identity rather than method name.</summary>
     private readonly Dictionary<MethodDefinition, List<Target>> _targets = new(ReferenceEqualityComparer.Instance);
 
-    /// <summary>Metadata hierarchies in each type's formal parameter context.</summary>
-    private readonly Dictionary<TypeDefinition, HierarchyType[]> _hierarchies = new(ReferenceEqualityComparer.Instance);
-
     /// <summary>Generic receiver definitions whose actual contexts can close dispatch bodies.</summary>
     private readonly HashSet<TypeDefinition> _receivers = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>Only the hierarchy entries that can contribute receiver arguments to dispatch.</summary>
     private readonly Dictionary<TypeDefinition, HierarchyType[]> _receiverHierarchies = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Whether a definition's metadata hierarchy contains any generic virtual declaration.</summary>
-    private readonly Dictionary<TypeDefinition, bool> _hasGenericDispatch = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>The stable ordinals of all loaded input modules.</summary>
     private readonly Dictionary<ModuleDefinition, int> _moduleOrdinals = new(ReferenceEqualityComparer.Instance);
@@ -51,9 +45,6 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>The token checked while indexing metadata relationships.</summary>
     private readonly CancellationToken _token;
 
-    /// <summary>Whether construction has finished and cached hierarchies can no longer be added.</summary>
-    private readonly bool _isReadOnly;
-
     /// <summary>
     /// Builds the index after all input modules have been loaded.
     /// </summary>
@@ -62,16 +53,23 @@ internal sealed partial class MethodDispatchIndex
     /// <param name="comparer">The invocation's signature comparer.</param>
     /// <param name="token">The cancellation token.</param>
     /// <param name="shouldProcessModule">The policy for indexed implementation bodies.</param>
-    public MethodDispatchIndex(IEnumerable<ModuleDefinition> modules, RuntimeContext runtimeContext, SignatureComparer comparer, CancellationToken token, Func<ModuleDefinition, bool> shouldProcessModule)
+    public MethodDispatchIndex(
+        IEnumerable<ModuleDefinition> modules,
+        RuntimeContext runtimeContext,
+        SignatureComparer comparer,
+        CancellationToken token,
+        Func<ModuleDefinition, bool> shouldProcessModule)
     {
         _runtimeContext = runtimeContext;
         _comparer = comparer;
         _token = token;
         _shouldProcessModule = shouldProcessModule;
 
+        // Stable module and metadata order also determines bounded dispatch scheduling order
         foreach (ModuleDefinition module in modules)
         {
             _moduleOrdinals.Add(module, _moduleOrdinals.Count);
+
             foreach (TypeDefinition type in module.GetAllTypes())
             {
                 token.ThrowIfCancellationRequested();
@@ -79,9 +77,11 @@ internal sealed partial class MethodDispatchIndex
             }
         }
 
+        // Retain only ancestors that can supply actual generic receiver arguments
         foreach ((TypeDefinition type, HierarchyType[] hierarchy) in _hierarchies)
         {
             HierarchyType[] receivers = [.. hierarchy.Where(entry => _receivers.Contains(entry.Definition))];
+
             if (receivers.Length > 0)
             {
                 _receiverHierarchies.Add(type, receivers);
@@ -106,6 +106,7 @@ internal sealed partial class MethodDispatchIndex
     /// <returns>The stable ordinal.</returns>
     public int GetModuleOrdinal(ModuleDefinition module)
     {
+        // A completion-only root outside the index sorts after the loaded publishing modules
         return _moduleOrdinals.TryGetValue(module, out int ordinal) ? ordinal : _moduleOrdinals.Count;
     }
 
@@ -130,7 +131,9 @@ internal sealed partial class MethodDispatchIndex
             yield break;
         }
 
-        GenericContext context = new(signature as GenericInstanceTypeSignature, null);
+        GenericContext context = new(
+            type: signature as GenericInstanceTypeSignature,
+            method: null);
 
         foreach (HierarchyType entry in hierarchy)
         {
@@ -144,8 +147,7 @@ internal sealed partial class MethodDispatchIndex
     /// <param name="type">The receiver definition.</param>
     private void IndexType(TypeDefinition type)
     {
-        // Most framework and projection types have no generic method slots. Do not compose their
-        // generic hierarchies merely to establish that there are no dispatch bindings to index.
+        // Most framework and projection types have no generic slots, so avoid composing their hierarchies
         if (!HasGenericDispatch(type))
         {
             return;
@@ -153,15 +155,19 @@ internal sealed partial class MethodDispatchIndex
 
         TypeSignature receiver = GetIdentitySignature(type);
 
+        // Follow class slots and explicit remaps in their original metadata order
         foreach (MethodDefinition method in type.Methods)
         {
             if (method.IsVirtual && method.Signature is { GenericParameterCount: > 0 })
             {
                 foreach ((MethodDefinition declaration, TypeSignature declaringType) in GetSlots(method, receiver, new HashSet<MethodDefinition>(ReferenceEqualityComparer.Instance)))
                 {
-                    AddTarget(declaration, new Target(type, declaringType, method, receiver));
+                    AddTarget(declaration, new Target(
+                        Receiver: type,
+                        DeclarationType: declaringType,
+                        Method: method,
+                        BodyType: receiver));
                 }
-
             }
         }
 
@@ -172,125 +178,123 @@ internal sealed partial class MethodDispatchIndex
 
         HierarchyType[] hierarchy = GetHierarchy(type);
 
+        // Interfaces can be implemented explicitly, by an inherited method, or by a default body
         foreach (HierarchyType iface in hierarchy.Where(static entry => entry.Definition.IsInterface))
         {
-            foreach (MethodDefinition declaration in iface.Definition.Methods)
+            IndexInterfaceImplementations(type, iface, hierarchy);
+        }
+    }
+
+    /// <summary>
+    /// Indexes each generic declaration against the receiver's substitution-aware hierarchy.
+    /// </summary>
+    /// <param name="receiver">The receiver definition.</param>
+    /// <param name="iface">The implemented interface in the receiver's formal parameters.</param>
+    /// <param name="hierarchy">The possible owners of implementation bodies.</param>
+    private void IndexInterfaceImplementations(TypeDefinition receiver, HierarchyType iface, HierarchyType[] hierarchy)
+    {
+        foreach (MethodDefinition declaration in iface.Definition.Methods)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            if (!declaration.IsVirtual || declaration.Signature is not { GenericParameterCount: > 0 })
             {
-                _token.ThrowIfCancellationRequested();
+                continue;
+            }
 
-                if (!declaration.IsVirtual || declaration.Signature is not { GenericParameterCount: > 0 })
+            MethodSignature signature = declaration.Signature.InstantiateGenericTypes(new GenericContext(
+                type: iface.Signature as GenericInstanceTypeSignature,
+                method: null));
+
+            foreach (HierarchyType owner in hierarchy)
+            {
+                IndexExplicitImplementations(receiver, iface, declaration, owner);
+                IndexImplicitImplementations(receiver, iface, declaration, signature, owner);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Indexes MethodImpl bindings, including covariant returns and default-interface overrides.
+    /// </summary>
+    /// <param name="receiver">The receiver definition.</param>
+    /// <param name="iface">The implemented interface context.</param>
+    /// <param name="declaration">The declaration identity.</param>
+    /// <param name="owner">The owner of possible implementation bodies.</param>
+    private void IndexExplicitImplementations(
+        TypeDefinition receiver,
+        HierarchyType iface,
+        MethodDefinition declaration,
+        HierarchyType owner)
+    {
+        foreach (MethodImplementation implementation in owner.Definition.MethodImplementations)
+        {
+            if (implementation.Declaration?.TryResolve(_runtimeContext, out MethodDefinition? slot) is true &&
+                ReferenceEquals(slot, declaration) &&
+                implementation.Body?.TryResolve(_runtimeContext, out MethodDefinition? body) is true &&
+                TryGetDeclaringSignature(implementation.Declaration, out TypeSignature? declaringSignature))
+            {
+                TypeSignature slotType = declaringSignature.InstantiateGenericTypes(new GenericContext(
+                    type: owner.Signature as GenericInstanceTypeSignature,
+                    method: null));
+
+                if (_comparer.Equals(slotType, iface.Signature))
                 {
-                    continue;
-                }
-
-                MethodSignature signature = declaration.Signature.InstantiateGenericTypes(new GenericContext(iface.Signature as GenericInstanceTypeSignature, null));
-
-                foreach (HierarchyType owner in hierarchy)
-                {
-                    // Explicit implementations also cover covariant returns and default-interface overrides.
-                    foreach (MethodImplementation implementation in owner.Definition.MethodImplementations)
-                    {
-                        if (implementation.Declaration?.TryResolve(_runtimeContext, out MethodDefinition? slot) is true &&
-                            ReferenceEquals(slot, declaration) &&
-                            implementation.Body?.TryResolve(_runtimeContext, out MethodDefinition? body) is true)
-                        {
-                            TypeSignature slotType = GetDeclaringSignature(implementation.Declaration).InstantiateGenericTypes(
-                                new GenericContext(owner.Signature as GenericInstanceTypeSignature, null));
-
-                            if (_comparer.Equals(slotType, iface.Signature))
-                            {
-                                AddTarget(declaration, new Target(type, iface.Signature, body, owner.Signature));
-                            }
-                        }
-                    }
-
-                    foreach (MethodDefinition body in owner.Definition.Methods)
-                    {
-                        if (owner.Definition.IsInterface)
-                        {
-                            if (ReferenceEquals(body, declaration) && !body.IsAbstract)
-                            {
-                                AddTarget(declaration, new Target(type, iface.Signature, body, owner.Signature));
-                            }
-
-                            continue;
-                        }
-
-                        if (body.IsPublic && body.IsStatic == declaration.IsStatic &&
-                            body.Name == declaration.Name &&
-                            body.Signature is { GenericParameterCount: > 0 } bodySignature &&
-                            _comparer.Equals(signature, bodySignature.InstantiateGenericTypes(new GenericContext(owner.Signature as GenericInstanceTypeSignature, null))))
-                        {
-                            AddTarget(declaration, new Target(type, iface.Signature, body, owner.Signature));
-                        }
-                    }
+                    AddTarget(declaration, new Target(
+                        Receiver: receiver,
+                        DeclarationType: iface.Signature,
+                        Method: body,
+                        BodyType: owner.Signature));
                 }
             }
         }
     }
 
     /// <summary>
-    /// Checks dispatch relevance using definition relationships only, without composing type signatures.
+    /// Indexes signature-matching class implementations and the declaration's own default body.
     /// </summary>
-    /// <param name="type">The possible receiver definition.</param>
-    /// <returns>Whether its base or interface graph contains a generic virtual declaration.</returns>
-    private bool HasGenericDispatch(TypeDefinition type)
+    /// <param name="receiver">The receiver definition.</param>
+    /// <param name="iface">The implemented interface context.</param>
+    /// <param name="declaration">The declaration identity.</param>
+    /// <param name="signature">The declaration signature in the receiver's formal parameters.</param>
+    /// <param name="owner">The owner of possible implementation bodies.</param>
+    private void IndexImplicitImplementations(
+        TypeDefinition receiver,
+        HierarchyType iface,
+        MethodDefinition declaration,
+        MethodSignature signature,
+        HierarchyType owner)
     {
-        if (_hasGenericDispatch.TryGetValue(type, out bool cached))
+        foreach (MethodDefinition body in owner.Definition.Methods)
         {
-            return cached;
-        }
-
-        Stack<TypeDefinition> pending = new();
-        HashSet<TypeDefinition> visited = new(ReferenceEqualityComparer.Instance);
-        pending.Push(type);
-
-        while (pending.TryPop(out TypeDefinition? current))
-        {
-            _token.ThrowIfCancellationRequested();
-
-            if (!visited.Add(current))
+            if (owner.Definition.IsInterface)
             {
-                continue;
-            }
-
-            if (_hasGenericDispatch.TryGetValue(current, out bool relevant))
-            {
-                if (relevant)
+                if (ReferenceEquals(body, declaration) && !body.IsAbstract)
                 {
-                    _hasGenericDispatch[type] = true;
-                    return true;
+                    AddTarget(declaration, new Target(
+                        Receiver: receiver,
+                        DeclarationType: iface.Signature,
+                        Method: body,
+                        BodyType: owner.Signature));
                 }
 
                 continue;
             }
 
-            if (current.Methods.Any(static method => method.IsVirtual && method.Signature is { GenericParameterCount: > 0 }))
+            if (body.IsPublic && body.IsStatic == declaration.IsStatic &&
+                body.Name == declaration.Name &&
+                body.Signature is { GenericParameterCount: > 0 } bodySignature &&
+                _comparer.Equals(signature, bodySignature.InstantiateGenericTypes(new GenericContext(
+                    type: owner.Signature as GenericInstanceTypeSignature,
+                    method: null))))
             {
-                _hasGenericDispatch[type] = true;
-                return true;
-            }
-
-            if (current.BaseType?.TryResolve(_runtimeContext, out TypeDefinition? baseType) is true)
-            {
-                pending.Push(baseType);
-            }
-
-            foreach (InterfaceImplementation implementation in current.Interfaces)
-            {
-                if (implementation.Interface?.TryResolve(_runtimeContext, out TypeDefinition? iface) is true)
-                {
-                    pending.Push(iface);
-                }
+                AddTarget(declaration, new Target(
+                    Receiver: receiver,
+                    DeclarationType: iface.Signature,
+                    Method: body,
+                    BodyType: owner.Signature));
             }
         }
-
-        foreach (TypeDefinition definition in visited)
-        {
-            _hasGenericDispatch[definition] = false;
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -300,7 +304,10 @@ internal sealed partial class MethodDispatchIndex
     /// <param name="declaringType">Its declaring context in the receiver's type parameters.</param>
     /// <param name="visited">The declaration identities already on this path.</param>
     /// <returns>The declarations that dispatch to this method.</returns>
-    private IEnumerable<(MethodDefinition, TypeSignature)> GetSlots(MethodDefinition method, TypeSignature declaringType, HashSet<MethodDefinition> visited)
+    private IEnumerable<(MethodDefinition Declaration, TypeSignature DeclaringType)> GetSlots(
+        MethodDefinition method,
+        TypeSignature declaringType,
+        HashSet<MethodDefinition> visited)
     {
         _token.ThrowIfCancellationRequested();
 
@@ -310,15 +317,19 @@ internal sealed partial class MethodDispatchIndex
         }
 
         yield return (method, declaringType);
-        GenericContext context = new(declaringType as GenericInstanceTypeSignature, null);
+
+        GenericContext context = new(
+            type: declaringType as GenericInstanceTypeSignature,
+            method: null);
 
         foreach (MethodImplementation implementation in method.DeclaringType!.MethodImplementations)
         {
             if (implementation.Body?.TryResolve(_runtimeContext, out MethodDefinition? body) is true &&
                 ReferenceEquals(body, method) &&
-                implementation.Declaration?.TryResolve(_runtimeContext, out MethodDefinition? declaration) is true)
+                implementation.Declaration?.TryResolve(_runtimeContext, out MethodDefinition? declaration) is true &&
+                TryGetDeclaringSignature(implementation.Declaration, out TypeSignature? declaringSignature))
             {
-                TypeSignature slotType = GetDeclaringSignature(implementation.Declaration).InstantiateGenericTypes(context);
+                TypeSignature slotType = declaringSignature.InstantiateGenericTypes(context);
 
                 foreach ((MethodDefinition slot, TypeSignature type) in GetSlots(declaration, slotType, visited))
                 {
@@ -338,7 +349,9 @@ internal sealed partial class MethodDispatchIndex
                     candidate.IsVirtual && !candidate.IsStatic &&
                     candidate.Name == method.Name &&
                     candidate.Signature is { } candidateSignature &&
-                    _comparer.Equals(signature, candidateSignature.InstantiateGenericTypes(new GenericContext(ancestorType as GenericInstanceTypeSignature, null))));
+                    _comparer.Equals(signature, candidateSignature.InstantiateGenericTypes(new GenericContext(
+                        type: ancestorType as GenericInstanceTypeSignature,
+                        method: null))));
 
                 if (declaration is not null)
                 {
@@ -389,101 +402,19 @@ internal sealed partial class MethodDispatchIndex
     }
 
     /// <summary>
-    /// Retrieves the cached, substitution-aware base and interface hierarchy.
+    /// A possible implementation in its receiver's formal type context.
     /// </summary>
-    /// <param name="type">The type definition.</param>
-    /// <returns>The metadata hierarchy in depth-first order.</returns>
-    private HierarchyType[] GetHierarchy(TypeDefinition type)
-    {
-        if (!_hierarchies.TryGetValue(type, out HierarchyType[]? hierarchy))
-        {
-            List<HierarchyType> entries = [];
-            CollectHierarchy(GetIdentitySignature(type), entries, new HashSet<TypeDefinition>(ReferenceEqualityComparer.Instance));
-            hierarchy = [.. entries];
-            if (!_isReadOnly)
-            {
-                _hierarchies.Add(type, hierarchy);
-            }
-        }
-
-        return hierarchy;
-    }
-
-    /// <summary>
-    /// Collects metadata relationships, guarding malformed cycles by definition identity.
-    /// </summary>
-    /// <param name="signature">The current type template.</param>
-    /// <param name="entries">The resulting hierarchy.</param>
-    /// <param name="path">The definitions currently on the path.</param>
-    private void CollectHierarchy(TypeSignature signature, List<HierarchyType> entries, HashSet<TypeDefinition> path)
-    {
-        _token.ThrowIfCancellationRequested();
-
-        if (!signature.TryResolve(_runtimeContext, out TypeDefinition? definition) || !path.Add(definition))
-        {
-            return;
-        }
-
-        if (!entries.Any(entry => ReferenceEquals(entry.Definition, definition) && _comparer.Equals(entry.Signature, signature)))
-        {
-            entries.Add(new HierarchyType(definition, signature));
-            GenericContext context = new(signature as GenericInstanceTypeSignature, null);
-
-            if (definition.BaseType?.TryGetTypeSignature(_runtimeContext, false, out TypeSignature? baseType) is true)
-            {
-                CollectHierarchy(baseType.InstantiateGenericTypes(context), entries, path);
-            }
-
-            foreach (InterfaceImplementation implementation in definition.Interfaces)
-            {
-                if (implementation.Interface?.TryGetTypeSignature(_runtimeContext, false, out TypeSignature? iface) is true)
-                {
-                    CollectHierarchy(iface.InstantiateGenericTypes(context), entries, path);
-                }
-            }
-        }
-
-        _ = path.Remove(definition);
-    }
-
-    /// <summary>
-    /// Gets a definition's formal declaring context, including nested-type parameters.
-    /// </summary>
-    /// <param name="type">The type definition.</param>
-    /// <returns>The identity type signature.</returns>
-    private static TypeSignature GetIdentitySignature(TypeDefinition type)
-    {
-        return type.GenericParameters.Count == 0
-            ? type.ToTypeSignature()
-            : new GenericInstanceTypeSignature(type, type.IsValueType,
-                Enumerable.Range(0, type.GenericParameters.Count).Select(index => new GenericParameterSignature(GenericParameterType.Type, index)));
-    }
-
-    /// <summary>
-    /// Gets the type context encoded on a declaration operand.
-    /// </summary>
-    /// <param name="method">The method operand.</param>
-    /// <returns>Its declaring type signature.</returns>
-    private TypeSignature GetDeclaringSignature(IMethodDefOrRef method)
-    {
-        return method.DeclaringType is TypeDefinition type
-            ? GetIdentitySignature(type)
-            : method.DeclaringType!.ToTypeSignature(_runtimeContext);
-    }
-
-    /// <summary>A possible implementation in its receiver's formal type context.</summary>
     /// <param name="Receiver">The receiver whose type arguments parameterize the binding.</param>
     /// <param name="DeclarationType">The slot's declaring type in receiver parameters.</param>
     /// <param name="Method">The body definition.</param>
     /// <param name="BodyType">The body's declaring type in receiver parameters.</param>
-    internal sealed record Target(TypeDefinition Receiver, TypeSignature DeclarationType, MethodDefinition Method, TypeSignature BodyType)
+    internal sealed record Target(
+        TypeDefinition Receiver,
+        TypeSignature DeclarationType,
+        MethodDefinition Method,
+        TypeSignature BodyType)
     {
         /// <summary>The binding's stable ordinal in the invocation metadata index.</summary>
         public int Ordinal { get; init; }
     }
-
-    /// <summary>A definition with its type signature in the starting type's parameters.</summary>
-    /// <param name="Definition">The resolved definition.</param>
-    /// <param name="Signature">The substituted type signature.</param>
-    private sealed record HierarchyType(TypeDefinition Definition, TypeSignature Signature);
 }

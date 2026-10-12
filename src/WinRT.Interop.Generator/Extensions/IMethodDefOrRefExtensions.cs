@@ -79,8 +79,7 @@ internal static class IMethodDefOrRefExtensions
                     yield return fieldType;
                 }
 
-                // Generic casts and type tests can be the only use of 'IList<T>', without locals or allocations.
-                // Collect their operands so discovery can instantiate them with the caller's generic context.
+                // Generic casts and type tests can expose types absent from signatures, locals, and allocations
                 foreach (ITypeDefOrRef operandType in definition.EnumerateCastAndTypeTokenOperandTypes())
                 {
                     // Gracefully handle resolution failures (see notes above)

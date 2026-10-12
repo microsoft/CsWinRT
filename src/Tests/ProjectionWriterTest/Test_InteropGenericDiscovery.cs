@@ -104,7 +104,7 @@ public partial class Test_InteropGenericDiscovery
             }
             """;
 
-        // The root body and 32 callee bodies each allocate one additional nested 'Node' type.
+        // The root body and 32 callee bodies each allocate one additional nested 'Node' type
         AssertGeneration(source, 33, expectedWarning: RecursionWarning);
     }
 
@@ -665,13 +665,12 @@ public partial class Test_InteropGenericDiscovery
         ]);
 
         return ProjectionWriterRunner.Run(
-            Environment.GetEnvironmentVariable("CSWINRT_TEST_INTEROP_GENERATOR")
-                ?? ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
+            ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"),
             $"@{responseFile}",
             timeout: timeout ?? TimeSpan.FromSeconds(30));
     }
 
-    private static HashSet<string> GetComWrappersTypeAssociations(string path, string groupName = "WindowsRuntimeComWrappersTypeMapGroup")
+    private static HashSet<string> GetComWrappersTypeAssociations(string path)
     {
         using FileStream stream = File.OpenRead(path);
         using PEReader pe = new(stream);
@@ -712,7 +711,7 @@ public partial class Test_InteropGenericDiscovery
             Assert.AreEqual(0x12, signature.ReadByte());
             TypeReference group = reader.GetTypeReference((TypeReferenceHandle)signature.ReadTypeHandle());
 
-            if (reader.GetString(group.Name) != groupName)
+            if (reader.GetString(group.Name) != "WindowsRuntimeComWrappersTypeMapGroup")
             {
                 continue;
             }
@@ -734,7 +733,6 @@ public partial class Test_InteropGenericDiscovery
         try
         {
             string metadata = ArrayPropertyMetadata.Create(directory, exclusiveTo: true, includeArrayProperties: false);
-            DispatchMetadata.AddElementEnum(metadata);
 
             foreach (bool referenceProjection in new[] { false, true })
             {
