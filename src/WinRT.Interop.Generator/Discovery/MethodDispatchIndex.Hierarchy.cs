@@ -10,14 +10,9 @@ using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class MethodDispatchIndex
+/// <inheritdoc cref="MethodDispatchIndex"/>
+internal partial class MethodDispatchIndex
 {
-    /// <summary>Metadata hierarchies in each type's formal parameter context.</summary>
-    private readonly Dictionary<TypeDefinition, HierarchyType[]> _hierarchies = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Whether a definition's metadata hierarchy contains any generic virtual declaration.</summary>
-    private readonly Dictionary<TypeDefinition, bool> _hasGenericDispatch = new(ReferenceEqualityComparer.Instance);
-
     /// <summary>
     /// Checks dispatch relevance using definition relationships only, without composing type signatures.
     /// </summary>
@@ -55,6 +50,8 @@ internal sealed partial class MethodDispatchIndex
                 continue;
             }
 
+            // Only generic virtual slots need indexing: other overrides are closed by their receiver type,
+            // which the type worklist already scans, but method arguments only flow through the call site.
             if (current.Methods.Any(static method => method.IsVirtual && method.Signature is { GenericParameterCount: > 0 }))
             {
                 _hasGenericDispatch[type] = true;
@@ -91,6 +88,8 @@ internal sealed partial class MethodDispatchIndex
     /// <returns>The metadata hierarchy in depth-first order.</returns>
     private HierarchyType[] GetHierarchy(TypeDefinition type)
     {
+        // The completed index is shared by parallel module discovery
+        // Build uncached constraint hierarchies locally instead of writing to its shared cache.
         return _hierarchies.TryGetValue(type, out HierarchyType[]? hierarchy)
             ? hierarchy
             : CreateHierarchy(type, _runtimeContext, _comparer, _token);
@@ -153,7 +152,8 @@ internal sealed partial class MethodDispatchIndex
     {
         token.ThrowIfCancellationRequested();
 
-        // Stop metadata cycles by definition identity even when recursive edges keep changing type arguments
+        // Malformed metadata can revisit a definition with increasingly nested type arguments
+        // Guard by definition identity because those signatures would never repeat exactly.
         if (!signature.TryResolve(runtimeContext, out TypeDefinition? definition) || !path.Add(definition))
         {
             return;

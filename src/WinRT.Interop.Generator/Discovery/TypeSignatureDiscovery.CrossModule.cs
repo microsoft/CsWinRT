@@ -8,7 +8,8 @@ using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class TypeSignatureDiscovery<TResult>
+/// <inheritdoc cref="TypeSignatureDiscovery{TResult}"/>
+internal partial class TypeSignatureDiscovery<TResult>
 {
     /// <summary>
     /// Completes cross-module joins after the parallel publishing barrier.

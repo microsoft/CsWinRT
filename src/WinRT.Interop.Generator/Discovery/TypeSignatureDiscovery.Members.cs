@@ -9,7 +9,8 @@ using WindowsRuntime.InteropGenerator.Models;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class TypeSignatureDiscovery<TResult>
+/// <inheritdoc cref="TypeSignatureDiscovery{TResult}"/>
+internal partial class TypeSignatureDiscovery<TResult>
 {
     /// <summary>
     /// Expands queued member contexts in discovery order.
@@ -24,7 +25,9 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         //     List<T> M() => [];
         // }
         //
-        // A 'C<int>' TypeSpec closes 'List<int>' in 'M()'; factory results and caches need the same traversal
+        // The open method definition only exposes 'List<T>'; a 'C<int>' TypeSpec lets 'M()' reveal 'List<int>'
+        // Closed types discovered through generic factories need the same traversal of ordinary methods
+        // and cache initializers to expose nested property/indexer descriptors transitively.
         while (_pendingMembers.TryDequeue(out PendingMember current))
         {
             _token.ThrowIfCancellationRequested();
@@ -85,7 +88,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     {
         _token.ThrowIfCancellationRequested();
 
-        // 'Node<Pair<T, T>>' grows exponentially, so bound complexity before visiting or hashing it
+        // 'Node<Pair<T, T>>' can grow exponentially before reaching the depth limit
+        // Bound complexity before visitors, hashing, or diagnostic formatting recursively walk the signature.
         if (!IsSignatureWithinComplexityLimit(type, depth))
         {
             yield break;
@@ -120,7 +124,9 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             yield break;
         }
 
-        // Substitute the caller into the callee's declaring type and arguments before visiting its members
+        // The operand's generic parameters belong to the callee, not the currently scanned caller
+        // Substitute the caller into its declaring type and method arguments first, then use
+        // that composed context for the callee's signatures and body.
         TypeSignature? declaringType = (method.DeclaringType as TypeSpecification)?.Signature?.InstantiateGenericTypes(callerContext);
         GenericInstanceMethodSignature? methodArguments = specification?.Signature is { } signature
             ? new GenericInstanceMethodSignature(
@@ -128,7 +134,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 typeArguments: [.. signature.TypeArguments.Select(argument => argument.InstantiateGenericTypes(callerContext))])
             : null;
 
-        // Bound the entire context before visiting or hashing any individual argument
+        // Many individually small arguments can collectively exceed the complexity limit
+        // Bound the whole context before visiting or hashing any of its signatures.
         if (!IsComplexityWithinLimit(GetContextComplexity(declaringType, methodArguments?.TypeArguments), depth))
         {
             yield break;
@@ -198,7 +205,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         {
             IMethodDescriptor descriptor = operand.Descriptor;
 
-            // Non-generic calls cannot provide new substitutions. Do not crawl their dependency bodies
+            // Follow only calls carrying generic substitutions to avoid crawling ordinary dependency bodies
             if (descriptor is MethodSpecification || descriptor.DeclaringType is TypeSpecification)
             {
                 foreach (TResult result in EnumerateMethodTypes(descriptor, genericContext, methodDepth))
@@ -219,7 +226,9 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <returns>The methods eligible for discovery in this context.</returns>
     private IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
     {
-        // Explicit TypeSpecs allow a one-hop scan; further ordinary traversal follows module policy
+        // An explicit TypeSpec supplies the caller's type arguments for a one-hop member scan,
+        // even when its dependency module is skipped by policy; further traversal still
+        // follows the configured assembly marshalling rules.
         if (_typeSpecifications.Contains(typeSignature) ||
             (type.DeclaringModule is ModuleDefinition declaringModule && _shouldProcessModule(declaringModule)))
         {
@@ -232,7 +241,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             return [];
         }
 
-        // Static initializers can reveal concrete cached values behind 'object' or interface fields
+        // Fields declared as 'object' or an interface hide the concrete type from their signatures
+        // Static initializers can reveal the constructed instances and arrays stored in those caches.
         return type.TryGetStaticConstructor(out MethodDefinition? initializer) ? [initializer] : [];
     }
 }

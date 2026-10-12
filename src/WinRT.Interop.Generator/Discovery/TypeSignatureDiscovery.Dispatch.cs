@@ -11,38 +11,9 @@ using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class TypeSignatureDiscovery<TResult>
+/// <inheritdoc cref="TypeSignatureDiscovery{TResult}"/>
+internal partial class TypeSignatureDiscovery<TResult>
 {
-    /// <summary>Observed dispatch contexts, deduplicated by slot definition identity.</summary>
-    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedDispatches = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Constructed type signatures already considered as sources of receiver contexts.</summary>
-    private readonly Dictionary<TypeSignature, int> _receiverCandidates;
-
-    /// <summary>Actually observed receiver contexts, indexed by receiver definition.</summary>
-    private readonly Dictionary<TypeDefinition, Dictionary<TypeSignature, int>> _receiverContexts = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Dispatch demands waiting for receiver type arguments, indexed by receiver definition.</summary>
-    private readonly Dictionary<TypeDefinition, List<DispatchContextRegistry.Demand>> _receiverDemands = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Demand contexts grouped by stable binding and origin ordinals.</summary>
-    private readonly Dictionary<(int Target, int Origin), Dictionary<IList<TypeSignature>, int>> _demandContexts = [];
-
-    /// <summary>Dispatch-capable body contexts already expanded before the publishing barrier.</summary>
-    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _expandedBodies = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>One oversized primary receiver retained silently for a supplemental diagnostic.</summary>
-    private TypeSignature? _complexReceiver;
-
-    /// <summary>The traversal depth of the retained oversized receiver.</summary>
-    private int _complexReceiverDepth;
-
-    /// <summary>The stable ordinal of this enumeration's root module.</summary>
-    private readonly int _moduleOrdinal;
-
-    /// <summary>The publication sequence within this enumeration.</summary>
-    private int _publicationSequence;
-
     /// <summary>
     /// Registers virtual calls and method-pointer loads with their composed generic arguments.
     /// </summary>
@@ -131,6 +102,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
             if (constraint is not null)
             {
+                // A constrained call names its receiver, so it never waits for a later receiver join
                 TypeSignature? receiverType = _dispatchIndex.GetConstrainedReceiver(target, constraint);
 
                 if (receiverType is not null)
@@ -143,6 +115,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
             ScheduleDispatch(target, declaringType, arguments, null, depth);
 
+            // Generic receivers can still be closed later by a receiver observed here or in another module
             if (target.Receiver.GenericParameters.Count > 0)
             {
                 _ = RegisterDemand(new DispatchContextRegistry.Demand(
@@ -185,12 +158,14 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         {
             IList<TypeSignature> key = [.. (bodyType as GenericInstanceTypeSignature)?.TypeArguments ?? [], .. arguments.TypeArguments];
 
+            // Bodies already expanded by a publishing module at this depth or shallower need no late rescan
             if (_expandedBodies.TryGetValue(target.Method, out Dictionary<IList<TypeSignature>, int>? contexts) &&
                 contexts.TryGetValue(key, out int expandedDepth) && expandedDepth <= depth)
             {
                 return;
             }
 
+            // Possible implementations never inherit the depth-zero root exemption from module policy
             EnqueueMethodBody(
                 method: target.Method,
                 declaringType: bodyType,
@@ -279,6 +254,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
         contexts[signature] = depth;
 
+        // Primary only records receivers; publication and joins wait for supplemental replay
         if (!_isSupplemental)
         {
             return;

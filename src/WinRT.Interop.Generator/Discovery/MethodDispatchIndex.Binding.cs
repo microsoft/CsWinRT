@@ -7,7 +7,8 @@ using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class MethodDispatchIndex
+/// <inheritdoc cref="MethodDispatchIndex"/>
+internal partial class MethodDispatchIndex
 {
     /// <summary>
     /// Binds a target's receiver parameters to an observed declaration and, optionally, a real receiver context.
@@ -19,7 +20,8 @@ internal sealed partial class MethodDispatchIndex
     /// <returns>Whether the relationship is compatible with the observed contexts.</returns>
     public bool TryBind(Target target, TypeSignature declarationType, TypeSignature? receiverType, out TypeSignature bodyType)
     {
-        // Seed the writable inference state without modifying the observed receiver's shared metadata
+        // Inference fills missing receiver arguments and variance checks commit tentative bindings
+        // Keep this writable state separate from receiver metadata shared by parallel discovery.
         TypeSignature?[] bindings = new TypeSignature?[target.Receiver.GenericParameters.Count];
 
         if (receiverType is GenericInstanceTypeSignature receiver)
@@ -43,7 +45,8 @@ internal sealed partial class MethodDispatchIndex
 
             for (int i = 0; i < pattern.TypeArguments.Count; i++)
             {
-                // Keep actual receiver bindings when variant interface arguments cannot be unified
+                // A call through IOuter<object> can dispatch to an implementation of IOuter<string>
+                // Preserve observed receiver arguments when variance makes exact unification fail.
                 if (definition?.GenericParameters[i].IsVariant == true)
                 {
                     TypeSignature?[] candidateBindings = (TypeSignature?[])bindings.Clone();
@@ -65,7 +68,7 @@ internal sealed partial class MethodDispatchIndex
         }
 
         // Reconstruct the receiver context to substitute the implementation's declaring type
-        // Keep unbound receiver parameters open rather than inventing type arguments
+        // Keep unbound receiver parameters open rather than inventing type arguments.
         GenericInstanceTypeSignature? receiverContext = bindings.Length == 0 ? null : new GenericInstanceTypeSignature(
             genericType: target.Receiver,
             isValueType: target.Receiver.IsValueType,

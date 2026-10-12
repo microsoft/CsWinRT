@@ -11,32 +11,9 @@ using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class TypeSignatureDiscovery<TResult>
+/// <inheritdoc cref="TypeSignatureDiscovery{TResult}"/>
+internal partial class TypeSignatureDiscovery<TResult>
 {
-    /// <summary>Actual scans recorded during traversal and consulted only by supplemental replay.</summary>
-    private readonly Dictionary<TypeSignature, int> _coveredTypes;
-
-    /// <summary>Method contexts actually scanned at their minimum observed depth.</summary>
-    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _coveredMethods = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Dispatch observations recorded without affecting the primary queue or budget.</summary>
-    private readonly List<DispatchObservation> _dispatchObservations = [];
-
-    /// <summary>Composed dispatch keys deduplicated before replaying the supplemental phase.</summary>
-    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, DispatchObservation>> _dispatchObservationContexts = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>Whether an oversized dispatch observation has already been retained for diagnostics.</summary>
-    private bool _complexDispatchRecorded;
-
-    /// <summary>Shallower type sightings that may recover a depth-limited primary path.</summary>
-    private readonly Dictionary<TypeSignature, int> _shallowerTypes;
-
-    /// <summary>Shallower method sightings, retained in their first observation order.</summary>
-    private readonly List<ShallowerMethodObservation> _shallowerMethods = [];
-
-    /// <summary>Minimum method sighting depths, without repeated list entries for hot contexts.</summary>
-    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, ShallowerMethodObservation>> _shallowerMethodContexts = new(ReferenceEqualityComparer.Instance);
-
     /// <summary>
     /// Records a shorter method path without changing the primary's first-visit state.
     /// </summary>
@@ -160,6 +137,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         {
             contexts[arguments] = depth;
 
+            // Only indexed dispatch bodies can be rescheduled by the late join, so publish just those
             if (_dispatchIndex.IsDispatchBody(method))
             {
                 _dispatchContexts?.ExpandedBodies.Add(new DispatchContextRegistry.ExpandedBody(
@@ -190,8 +168,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     private IEnumerable<TResult> EnumerateSupplementalMembers()
     {
         TypeSignatureDiscovery<TResult> primary = _primary!;
+
+        // Seed with the primary results so this phase only yields additions
         _results.UnionWith(primary._results);
 
+        // Report the complexity warning that passive primary receiver registration deferred
         if (primary._complexReceiver is { } complexReceiver)
         {
             _ = IsSignatureWithinComplexityLimit(complexReceiver, primary._complexReceiverDepth);
@@ -212,7 +193,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             RegisterDispatch(observation.Operand, observation.Context, observation.Depth);
         }
 
-        // Shorter paths can recover depth-limited scans, but must not retry primary budget-rejected methods
+        // Replay shorter paths after a depth-limit hit, when they can recover skipped descendants
+        // Keep primary budget-rejected methods out of this replay instead of extending their allowance.
         if (primary._recursionLimitReported)
         {
             foreach ((TypeSignature type, int depth) in primary._shallowerTypes)

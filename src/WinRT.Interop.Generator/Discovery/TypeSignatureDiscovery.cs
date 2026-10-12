@@ -60,6 +60,9 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>The completed primary traversal, read-only while supplemental work is running.</summary>
     private readonly TypeSignatureDiscovery<TResult>? _primary;
 
+    /// <summary>The stable ordinal of this enumeration's root module.</summary>
+    private readonly int _moduleOrdinal;
+
     /// <summary>The signatures already reported to the consumer.</summary>
     private readonly HashSet<TResult> _results;
 
@@ -69,11 +72,50 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>Type contexts already considered for member expansion, distinct from reported results.</summary>
     private readonly Dictionary<TypeSignature, int> _visitedTypes;
 
+    /// <summary>Argument contexts grouped by resolved method definition identity, not by method signature.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedMethods;
+
     /// <summary>The FIFO worklist of type or method contexts awaiting member discovery.</summary>
     private readonly Queue<PendingMember> _pendingMembers;
 
-    /// <summary>Argument contexts grouped by resolved method definition identity, not by method signature.</summary>
-    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedMethods;
+    /// <summary>Actual scans recorded during traversal and consulted only by supplemental replay.</summary>
+    private readonly Dictionary<TypeSignature, int> _coveredTypes;
+
+    /// <summary>Method contexts actually scanned at their minimum observed depth.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _coveredMethods = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Shallower type sightings that may recover a depth-limited primary path.</summary>
+    private readonly Dictionary<TypeSignature, int> _shallowerTypes;
+
+    /// <summary>Shallower method sightings, retained in their first observation order.</summary>
+    private readonly List<ShallowerMethodObservation> _shallowerMethods = [];
+
+    /// <summary>Minimum method sighting depths, without repeated list entries for hot contexts.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, ShallowerMethodObservation>> _shallowerMethodContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Dispatch observations recorded without affecting the primary queue or budget.</summary>
+    private readonly List<DispatchObservation> _dispatchObservations = [];
+
+    /// <summary>Composed dispatch keys deduplicated before replaying the supplemental phase.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, DispatchObservation>> _dispatchObservationContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Observed dispatch contexts, deduplicated by slot definition identity.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedDispatches = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Constructed type signatures already considered as sources of receiver contexts.</summary>
+    private readonly Dictionary<TypeSignature, int> _receiverCandidates;
+
+    /// <summary>Actually observed receiver contexts, indexed by receiver definition.</summary>
+    private readonly Dictionary<TypeDefinition, Dictionary<TypeSignature, int>> _receiverContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Dispatch demands waiting for receiver type arguments, indexed by receiver definition.</summary>
+    private readonly Dictionary<TypeDefinition, List<DispatchContextRegistry.Demand>> _receiverDemands = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Demand contexts grouped by stable binding and origin ordinals.</summary>
+    private readonly Dictionary<(int Target, int Origin), Dictionary<IList<TypeSignature>, int>> _demandContexts = [];
+
+    /// <summary>Dispatch-capable body contexts already expanded before the publishing barrier.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _expandedBodies = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>Whether a recursion warning has been reported for either a type or a method.</summary>
     private bool _recursionLimitReported;
@@ -84,8 +126,20 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>Whether the shared transitive instantiation budget warning has been reported.</summary>
     private bool _transitiveTypeLimitReported;
 
+    /// <summary>Whether an oversized dispatch observation has already been retained for diagnostics.</summary>
+    private bool _complexDispatchRecorded;
+
     /// <summary>The number of transitive type and method instantiations reserved so far.</summary>
     private int _transitiveTypeCount;
+
+    /// <summary>One oversized primary receiver retained silently for a supplemental diagnostic.</summary>
+    private TypeSignature? _complexReceiver;
+
+    /// <summary>The traversal depth of the retained oversized receiver.</summary>
+    private int _complexReceiverDepth;
+
+    /// <summary>The publication sequence within this enumeration.</summary>
+    private int _publicationSequence;
 
     /// <summary>
     /// Creates the state for a single enumeration.
@@ -163,6 +217,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         bool completeCrossModuleJoins)
     {
         // Keep construction inside this iterator: repeated or interleaved enumerations must not share state
+        // A join pass only reads the completed registry, so it publishes nothing and uses supplemental admission.
         TypeSignatureDiscovery<TResult> discovery = new(
             module: module,
             visitor: visitor,
@@ -265,7 +320,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         // static List<T> M<T>() => [];
         // static object N() => M<int>();
         //
-        // Substitution reveals 'List<int>' even when it appears nowhere else in the caller's metadata
+        // Substitution reveals 'List<int>' even when it appears nowhere else in the caller's metadata.
         foreach (MethodSpecification specification in _module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
             foreach (TResult result in EnumerateMethodTypes(specification, default, depth: 0))

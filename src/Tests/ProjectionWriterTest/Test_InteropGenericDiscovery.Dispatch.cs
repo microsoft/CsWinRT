@@ -9,6 +9,7 @@ using ProjectionWriterTest.Helpers;
 
 namespace ProjectionWriterTest;
 
+/// <inheritdoc cref="Test_InteropGenericDiscovery"/>
 public partial class Test_InteropGenericDiscovery
 {
     [TestMethod]

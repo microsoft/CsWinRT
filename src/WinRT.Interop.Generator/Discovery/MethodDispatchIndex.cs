@@ -21,6 +21,18 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>The resolution-aware comparer for signatures and substituted relationships.</summary>
     private readonly SignatureComparer _comparer;
 
+    /// <summary>Whether bodies from a loaded module participate in transitive discovery.</summary>
+    private readonly Func<ModuleDefinition, bool> _shouldProcessModule;
+
+    /// <summary>The token checked while indexing metadata relationships.</summary>
+    private readonly CancellationToken _token;
+
+    /// <summary>Metadata hierarchies in each type's formal parameter context.</summary>
+    private readonly Dictionary<TypeDefinition, HierarchyType[]> _hierarchies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Whether a definition's metadata hierarchy contains any generic virtual declaration.</summary>
+    private readonly Dictionary<TypeDefinition, bool> _hasGenericDispatch = new(ReferenceEqualityComparer.Instance);
+
     /// <summary>Possible implementations, indexed by declaration identity rather than method name.</summary>
     private readonly Dictionary<MethodDefinition, List<Target>> _targets = new(ReferenceEqualityComparer.Instance);
 
@@ -36,14 +48,8 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>Methods that can be reached as indexed dispatch bodies.</summary>
     private readonly HashSet<MethodDefinition> _bodyMethods = new(ReferenceEqualityComparer.Instance);
 
-    /// <summary>Whether bodies from a loaded module participate in transitive discovery.</summary>
-    private readonly Func<ModuleDefinition, bool> _shouldProcessModule;
-
     /// <summary>The next stable binding ordinal.</summary>
     private int _targetOrdinal;
-
-    /// <summary>The token checked while indexing metadata relationships.</summary>
-    private readonly CancellationToken _token;
 
     /// <summary>
     /// Builds the index after all input modules have been loaded.

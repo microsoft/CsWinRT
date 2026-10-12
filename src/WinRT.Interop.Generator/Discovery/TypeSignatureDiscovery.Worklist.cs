@@ -10,7 +10,8 @@ using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
-internal sealed partial class TypeSignatureDiscovery<TResult>
+/// <inheritdoc cref="TypeSignatureDiscovery{TResult}"/>
+internal partial class TypeSignatureDiscovery<TResult>
 {
     /// <summary>
     /// Preserves ordinary generic type discovery's first-visit reservation semantics.
@@ -26,6 +27,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
+            // The first visit keeps its place; a shallower sighting is only kept for supplemental replay
             if (_visitedTypes.TryGetValue(genericType, out int priorDepth))
             {
                 if (depth < priorDepth && (!_shallowerTypes.TryGetValue(genericType, out int recordedDepth) || depth < recordedDepth))
@@ -52,6 +54,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
             _visitedTypes.Add(genericType, depth);
 
+            // 'Node<T>' -> 'Node<Node<T>>' never repeats an exact signature, so deduplication cannot stop it
+            // Keep reporting discovered types beyond the depth limit, but do not expand their members.
             if (depth <= MaxDiscoveryDepth)
             {
                 _pendingMembers.Enqueue(new PendingMember(
@@ -103,6 +107,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
+            // Compare against actual primary scans, not visits, so budget-rejected primary types can still expand
             if (_primary?._coveredTypes.TryGetValue(genericType, out int primaryDepth) is true && primaryDepth <= depth)
             {
                 continue;
@@ -131,6 +136,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
+            // A shallower requeue reuses this enumeration's earlier reservation
             if (!visited && !TryReserveTransitiveInstantiation(depth))
             {
                 continue;
@@ -223,7 +229,8 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             return false;
         }
 
-        // First visits stay reserved even when the budget or depth limit rejects expansion
+        // Reserving before checking limits preserves ordinary discovery's first-visit/FIFO behavior
+        // Defer shorter sightings to supplemental replay rather than changing primary scheduling.
         contexts.Add(arguments, depth);
 
         return TryReserveTransitiveInstantiation(depth) && IsMethodWithinDepthLimit(method, depth);
