@@ -475,7 +475,7 @@ namespace ImplementWinMDTypes
     /// <summary>
     /// Implements the statics of 'TestComponent.TestRunner', which has no default activation.
     /// </summary>
-    [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyTestRunnerFactory))]
+    [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(global::TestComponent.TestRunner))]
     public sealed class MyTestRunnerFactory : global::ABI.TestComponent.TestRunnerActivationFactory
     {
         public override void TestProducer(global::TestComponent.ITests callee) => throw new NotImplementedException();

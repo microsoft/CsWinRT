@@ -121,9 +121,8 @@ public class Test_AuthoringExportTypesGenerator
     [TestMethod]
     public void StaticsOnlyClass_ResolvesNameFromFactoryBase()
     {
-        // A statics-only runtime class has no instance type, so the runtime class name can only come from
-        // the factory base. This is why discovery prefers it over the '[WindowsRuntimeActivationFactory]'
-        // argument, which here deliberately points at the factory itself.
+        // A statics-only runtime class has no instance type, so the runtime class name is read from the
+        // factory base, and the '[WindowsRuntimeActivationFactory]' argument names the projected class.
         const string source = """
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
@@ -147,7 +146,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
-                [WindowsRuntimeActivationFactory(typeof(MyWidgetUtilsFactory))]
+                [WindowsRuntimeActivationFactory(typeof(global::Contoso.Widgets.WidgetUtils))]
                 public sealed class MyWidgetUtilsFactory : global::ABI.Contoso.Widgets.WidgetUtilsActivationFactory
                 {
                     public override int Compute() => 42;

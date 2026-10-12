@@ -36,6 +36,8 @@ public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetActivationFactor
 
 The generated base is separate from the projected class (which is often `sealed`) and converts to and from it, so an instance can be passed anywhere the projected type is expected (see [Passing implementations around](#passing-implementations-around)). Any additional (non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
 
+The type passed to `[WindowsRuntimeActivationFactory]` is the implementation, or the projected class itself (the only option for a statics-only class, which has no implementation). The factory must not be abstract or generic, and needs a parameterless constructor accessible within its assembly, since CsWinRT instantiates it. Violations are reported as `CSWINRT2023`, a type argument naming a different class as `CSWINRT2024`, and a second factory for the same class as `CSWINRT2025`.
+
 ### Constructors
 
 Constructing the class without arguments is always `ActivateInstance`, and every constructor (with or without arguments) returns the generated base rather than the projected class, so the compiler checks that it constructs an implementation. The factory base converts the result to the projected class the Windows Runtime factory interface returns. Statics are declared exactly as the interface has them, since they can return any instance.
@@ -52,7 +54,7 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 }
 ```
 
-This requires an accessible parameterless constructor, and only one implementation of that runtime class in the project. A generic type is never activatable, so it never gets one. Declaring the factory anyway always takes precedence, which is what to do when it needs to carry extra interop interfaces on its vtable.
+This requires an accessible parameterless constructor, and only one implementation of that runtime class in the project. A generic type is never activatable, so it never gets one. Declaring the factory anyway always takes precedence, which is what to do when it needs to carry extra interop interfaces on its vtable. When the class is activatable but neither applies, it cannot be activated from the project, which is reported as warning `CSWINRT2026` on the implementation.
 
 ### Unsealed classes
 

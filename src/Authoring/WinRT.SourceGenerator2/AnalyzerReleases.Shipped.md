@@ -29,3 +29,7 @@ CSWINRT2019 | WindowsRuntime.SourceGenerator | Warning | '[WindowsRuntimeNativeE
 CSWINRT2020 | WindowsRuntime.SourceGenerator | Warning | Duplicate '[WindowsRuntimeNativeExposedType]' target type
 CSWINRT2021 | WindowsRuntime.SourceGenerator | Warning | Unsupported '[Experimental]' target for Windows Runtime metadata
 CSWINRT2022 | WindowsRuntime.SourceGenerator | Warning | '[Obsolete]' on an authored API without '[Deprecated]'
+CSWINRT2023 | WindowsRuntime.SourceGenerator | Error | Invalid '[WindowsRuntimeActivationFactory]' target type
+CSWINRT2024 | WindowsRuntime.SourceGenerator | Error | Mismatched '[WindowsRuntimeActivationFactory]' runtime class type
+CSWINRT2025 | WindowsRuntime.SourceGenerator | Error | Duplicate '[WindowsRuntimeActivationFactory]' for a Windows Runtime class
+CSWINRT2026 | WindowsRuntime.SourceGenerator | Warning | Implemented Windows Runtime class is not activatable

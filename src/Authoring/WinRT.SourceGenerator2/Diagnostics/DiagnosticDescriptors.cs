@@ -312,4 +312,58 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Deprecating a publicly exposed API of a Windows Runtime component requires '[Windows.Foundation.Metadata.Deprecated]', which is the only deprecation the '.winmd' can carry. '[Obsolete]' is a .NET concept with no Windows Runtime counterpart: it is not translated by the WinMD generator, so on its own it deprecates the API for nobody but the C# code inside the component itself.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[WindowsRuntimeActivationFactory]</c> attribute applied to a type that cannot be used as an activation factory.
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidActivationFactoryType = new(
+        id: "CSWINRT2023",
+        title: "Invalid '[WindowsRuntimeActivationFactory]' target type",
+        messageFormat: """The type '{0}' cannot be used as an activation factory: {1}""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Types annotated with '[WindowsRuntimeActivationFactory]' must either be non-abstract classes deriving from a generated activation factory base (to implement the activation factory of a Windows Runtime class defined in existing metadata), or public abstract classes in a Windows Runtime component (to add interfaces to the activation factory generated for an authored Windows Runtime class).",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[WindowsRuntimeActivationFactory]</c> attribute with a type argument that does not match the Windows Runtime class the activation factory is for.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ActivationFactoryRuntimeClassMismatch = new(
+        id: "CSWINRT2024",
+        title: "Mismatched '[WindowsRuntimeActivationFactory]' runtime class type",
+        messageFormat: """The '[WindowsRuntimeActivationFactory]' attribute on '{0}' specifies the type '{1}', which {2}""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "The type argument of '[WindowsRuntimeActivationFactory]' must identify the Windows Runtime class the annotated activation factory is for: the implemented Windows Runtime class (or an implementation of it) for a factory deriving from a generated activation factory base, or an activatable authored Windows Runtime class for an abstract factory extending the generated activation factory.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for more than one <c>[WindowsRuntimeActivationFactory]</c> type declared for the same Windows Runtime class.
+    /// </summary>
+    public static readonly DiagnosticDescriptor DuplicateActivationFactory = new(
+        id: "CSWINRT2025",
+        title: "Duplicate '[WindowsRuntimeActivationFactory]' for a Windows Runtime class",
+        messageFormat: """The type '{0}' is one of several activation factories declared for the Windows Runtime class '{1}' ({2}), but a Windows Runtime class can only have one activation factory""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Each Windows Runtime class can only have a single activation factory, so at most one type annotated with '[WindowsRuntimeActivationFactory]' can be declared for it in a given project.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an implementation of an activatable Windows Runtime class defined in existing metadata, which has no activation factory.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ImplementedRuntimeClassNotActivatable = new(
+        id: "CSWINRT2026",
+        title: "Implemented Windows Runtime class is not activatable",
+        messageFormat: """The type '{0}' implements the Windows Runtime class '{1}', but '{1}' cannot be activated from this project: no activation factory is declared for it with '[WindowsRuntimeActivationFactory]', and CsWinRT cannot generate one, because {2}. Declare an activation factory deriving from '{3}' to make '{1}' activatable.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "CsWinRT only generates the activation factory for an implemented Windows Runtime class when the class can only be activated through a parameterless constructor, and there is a single implementation it can construct. In every other case, the activation factory has to be declared with '[WindowsRuntimeActivationFactory]', or the class cannot be activated.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
 }

@@ -98,7 +98,7 @@ public partial class AuthoringExportTypesGenerator
             // The factory must extend a generated factory base: that is what supplies the conversion to a COM Callable
             // Wrapper, which cannot be done from this compilation. The class it activates is read from that base, so
             // statics-only runtime classes (which have no instance base) resolve too.
-            INamedTypeSymbol? factoryBase = GetImplementableBase(type, implementableClasses.GetFactoryRuntimeClassName);
+            INamedTypeSymbol? factoryBase = implementableClasses.GetFactoryBase(type);
 
             return factoryBase is not null && implementableClasses.GetFactoryRuntimeClassName(factoryBase) is string runtimeClassName
                 ? new AuthoringActivationFactoryInfo(
@@ -130,7 +130,7 @@ public partial class AuthoringExportTypesGenerator
 
             ImplementableClassLookup implementableClasses = new();
 
-            if (GetImplementableBase(type, implementableClasses.GetInstanceRuntimeClassName) is not INamedTypeSymbol implementableBase ||
+            if (implementableClasses.GetInstanceBase(type) is not INamedTypeSymbol implementableBase ||
                 implementableClasses.GetInstanceRuntimeClassName(implementableBase) is not string runtimeClassName)
             {
                 return null;
@@ -224,38 +224,12 @@ public partial class AuthoringExportTypesGenerator
         {
             // The generated factory just constructs the implementation, so both it and a parameterless constructor have
             // to be reachable from the generated code.
-            if (!compilation.IsSymbolAccessibleWithin(implementation, compilation.Assembly) ||
-                !implementation.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
-            {
-                return null;
-            }
-
-            // The factory base sits next to the class base it activates, in the same assembly, under a reserved name
-            string factoryBaseName = $"{implementableBase.ContainingNamespace.ToDisplayString()}.{implementableBase.Name}ActivationFactory";
-
-            return implementableBase.ContainingAssembly.GetTypeByMetadataName(factoryBaseName) is INamedTypeSymbol factoryBase &&
+            return compilation.IsSymbolAccessibleWithin(implementation, compilation.Assembly) &&
+                   implementation.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)) &&
+                   implementableClasses.GetFactoryBaseForInstanceBase(implementableBase) is INamedTypeSymbol factoryBase &&
                    implementableClasses.HasDefaultActivationOnly(factoryBase)
                 ? factoryBase
                 : null;
-        }
-
-        /// <summary>
-        /// Finds the nearest generated abstract base class that a type derives from.
-        /// </summary>
-        /// <param name="type">The type whose base classes to inspect.</param>
-        /// <param name="getRuntimeClassName">Gets the Windows Runtime class a type is a generated base of the wanted kind for, if any.</param>
-        /// <returns>The generated base class, or <see langword="null"/> if there is none.</returns>
-        private static INamedTypeSymbol? GetImplementableBase(INamedTypeSymbol? type, Func<INamedTypeSymbol, string?> getRuntimeClassName)
-        {
-            for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
-            {
-                if (getRuntimeClassName(current) is not null)
-                {
-                    return current;
-                }
-            }
-
-            return null;
         }
     }
 }

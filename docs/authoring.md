@@ -56,7 +56,7 @@ public abstract class WidgetFactoryExtensions : IWidgetFactoryInterop
 }
 ```
 
-The class must be public (in public containing types, if nested) and non-generic, with a public or protected parameterless constructor, since the generated factory is compiled into a separate assembly. It is not a runtime class itself, so it is not included in the component's `.winmd`, and each runtime class can have at most one.
+The class must be public (in public containing types, if nested) and non-generic, with a public or protected parameterless constructor and no abstract members, since the generated factory is compiled into a separate assembly and derives from it. It is not a runtime class itself, so it is not included in the component's `.winmd`, and each runtime class can have at most one. Violations are reported as `CSWINRT2023`, a type argument that is not an activatable runtime class authored by the component as `CSWINRT2024`, and a second class for the same runtime class as `CSWINRT2025`.
 
 ## Packaging your WinRT component
 
