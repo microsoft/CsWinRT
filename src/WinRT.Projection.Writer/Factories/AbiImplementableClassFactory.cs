@@ -419,16 +419,11 @@ internal static class AbiImplementableClassFactory
         string nameStripped = type.GetStrippedName();
         string projectedType = TypedefNameWriter.BuildGlobalQualifiedName(type.GetRawNamespace(), nameStripped);
 
-        // Inheritance list: the factory/statics interfaces (and any of their base interfaces). A class with a
-        // default (parameterless) activation is activated through 'IActivationFactory' instead, which carries no
-        // dedicated factory interface in metadata, so it is added explicitly.
-        List<string> bases = [];
+        // Inheritance list: 'IActivationFactory', then the factory/statics interfaces (and any of their base interfaces).
+        // Every activation factory implements 'IActivationFactory', even for a class without default activation (e.g. a
+        // static class), since it is the interface 'DllGetActivationFactory' hands out the factory as.
+        List<string> bases = ["global::WindowsRuntime.InteropServices.IActivationFactory"];
         HashSet<TypeDefinition> declared = [];
-
-        if (hasDefaultActivation || hasComposableDefaultActivation)
-        {
-            bases.Add("global::WindowsRuntime.InteropServices.IActivationFactory");
-        }
 
         foreach (TypeDefinition iface in factoryInterfaces)
         {
@@ -465,6 +460,17 @@ internal static class AbiImplementableClassFactory
                     }
 
                     public abstract {{nameStripped}} ActivateInstance();
+                    """);
+            }
+            else
+            {
+                // Without default activation there is nothing to construct, so this fails with 'E_NOTIMPL'
+                writer.WriteLine();
+                writer.WriteLine(isMultiline: true, """
+                    object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()
+                    {
+                        throw new global::System.NotImplementedException();
+                    }
                     """);
             }
 
@@ -515,7 +521,9 @@ internal static class AbiImplementableClassFactory
                     [EditorBrowsable(EditorBrowsableState.Never)]
                     public static unsafe nint GetActivationFactoryUnsafe({{factoryName}} value)
                     {
-                        return (nint)WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value).DetachThisPtrUnsafe();
+                        return (nint)global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>
+                            .ConvertToUnmanaged(value, in global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IActivationFactory)
+                            .DetachThisPtrUnsafe();
                     }
                     """);
             }

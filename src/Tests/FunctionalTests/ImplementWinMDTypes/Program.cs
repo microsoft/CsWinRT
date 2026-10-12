@@ -125,6 +125,48 @@ unsafe
         return 113;
     }
 
+    // A class without default activation (here, one with only statics) still hands out its factory as
+    // 'IActivationFactory', as every activation factory does, and 'ActivateInstance' fails with 'E_NOTIMPL'.
+    void* runnerFactory = ABI.ImplementWinMDTypes.ManagedExports.GetActivationFactory("TestComponent.TestRunner".AsSpan());
+
+    if (runnerFactory is null)
+    {
+        return 128;
+    }
+
+    try
+    {
+        if (Marshal.QueryInterface((nint)runnerFactory, WellKnownInterfaceIIDs.IID_IActivationFactory, out nint runnerActivationFactory) != 0)
+        {
+            return 129;
+        }
+
+        try
+        {
+            // 'DllGetActivationFactory' returns the 'IActivationFactory' interface itself, not another one
+            if (runnerActivationFactory != (nint)runnerFactory)
+            {
+                return 130;
+            }
+
+            void* activated = null;
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)runnerActivationFactory)[6])((void*)runnerActivationFactory, &activated);
+
+            if (hr != unchecked((int)0x80004001) || activated is not null)
+            {
+                return 131;
+            }
+        }
+        finally
+        {
+            Release((void*)runnerActivationFactory);
+        }
+    }
+    finally
+    {
+        Release(runnerFactory);
+    }
+
     // An unsealed class is only activatable through its composable factory in metadata, which a caller
     // activating it by class name does not use. Implemented here, its public parameterless constructor also
     // backs default activation through 'IActivationFactory' ('MyComposableFactory' for 'Composable', and a
@@ -428,6 +470,35 @@ namespace ImplementWinMDTypes
         public override int ExpectRequiredThree(global::TestComponent.IRequiredThree t) => 0;
 
         public override int ExpectRequiredFour(global::TestComponent.IRequiredFour t) => 0;
+    }
+
+    /// <summary>
+    /// Implements the statics of 'TestComponent.TestRunner', which has no default activation.
+    /// </summary>
+    [global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(MyTestRunnerFactory))]
+    public sealed class MyTestRunnerFactory : global::ABI.TestComponent.TestRunnerActivationFactory
+    {
+        public override void TestProducer(global::TestComponent.ITests callee) => throw new NotImplementedException();
+
+        public override uint TestConsumer(global::TestComponent.TestHandler caller) => throw new NotImplementedException();
+
+        public override void TestSelf()
+        {
+        }
+
+        public override global::TestComponent.ITests MakeTests() => throw new NotImplementedException();
+
+        public override global::System.Collections.Generic.IList<int> CreateInt32Vector() => throw new NotImplementedException();
+
+        public override global::System.Collections.Generic.IList<string> CreateStringVector() => throw new NotImplementedException();
+
+        public override global::System.Collections.Generic.IList<global::Windows.Foundation.IStringable> CreateStringableVector() => throw new NotImplementedException();
+
+        public override TimeSpan CreateTimeSpan(uint milliseconds) => TimeSpan.FromMilliseconds(milliseconds);
+
+        public override global::Windows.Foundation.IAsyncAction CreateAsyncAction(uint milliseconds) => throw new NotImplementedException();
+
+        public override string ExpectObject(object value) => throw new NotImplementedException();
     }
 
     /// <summary>

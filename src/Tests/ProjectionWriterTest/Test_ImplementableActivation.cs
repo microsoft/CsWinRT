@@ -79,16 +79,17 @@ public class Test_ImplementableActivation
     }
 
     /// <summary>
-    /// A class that is only constructed with arguments is not meant to be activated without them.
+    /// A class that is only constructed with arguments is not meant to be activated without them. Its factory still
+    /// implements <c>IActivationFactory</c>, as every activation factory does, but activating it fails.
     /// </summary>
     [TestMethod]
     public void ParameterizedConstructorOnly_IsNotDefaultActivatable()
     {
         ClassDeclarationSyntax factory = GetFactoryBase(ActivationMetadata.ParameterizedConstructor);
 
-        Assert.IsFalse(ImplementsActivationFactory(factory));
+        Assert.IsTrue(ImplementsActivationFactory(factory));
         Assert.IsFalse(HasDefaultActivationOnly(ActivationMetadata.ParameterizedConstructor));
-        Assert.IsFalse(factory.ToString().Contains("ActivateInstance", StringComparison.Ordinal));
+        AssertActivateInstanceNotImplemented(factory);
     }
 
     /// <summary>
@@ -99,8 +100,9 @@ public class Test_ImplementableActivation
     {
         ClassDeclarationSyntax factory = GetFactoryBase(ActivationMetadata.ProtectedConstructor);
 
-        Assert.IsFalse(ImplementsActivationFactory(factory));
+        Assert.IsTrue(ImplementsActivationFactory(factory));
         Assert.IsFalse(HasDefaultActivationOnly(ActivationMetadata.ProtectedConstructor));
+        AssertActivateInstanceNotImplemented(factory);
         StringAssert.Contains(factory.ToString(), $"protected abstract {ActivationMetadata.ProtectedConstructor} CreateInstance();");
     }
 
@@ -279,6 +281,18 @@ public class Test_ImplementableActivation
     private static bool ImplementsActivationFactory(ClassDeclarationSyntax factory)
     {
         return factory.BaseList?.Types.Any(static type => type.ToString().EndsWith(".IActivationFactory", StringComparison.Ordinal)) == true;
+    }
+
+    /// <summary>
+    /// Checks that a factory without default activation leaves nothing to implement for it, and fails activation instead.
+    /// </summary>
+    private static void AssertActivateInstanceNotImplemented(ClassDeclarationSyntax factory)
+    {
+        string text = factory.ToString();
+
+        Assert.IsFalse(Regex.IsMatch(text, @"abstract \S+ ActivateInstance\(\);"));
+        StringAssert.Contains(text, "object global::WindowsRuntime.InteropServices.IActivationFactory.ActivateInstance()");
+        StringAssert.Contains(text, "throw new global::System.NotImplementedException();");
     }
 
     /// <summary>
