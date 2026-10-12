@@ -73,9 +73,17 @@ internal static class ComponentFactory
         // component's managed implementation assemblies (the .winmd doesn't carry those fields).
         bool emitStaticConstructor = context.StaticConstructorAnalyzer.RequiresStaticConstructor(type.FullName);
 
-        // Writes the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
+        // The class the component declares to extend this factory with, if any (e.g. to add COM interop interfaces)
+        string? extensionTypeName = context.ActivationFactoryExtensions?.GetExtensionTypeName(type.FullName);
+
+        // Writes the base class (if any) and the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
         void WriteBaseInterfaceList(IndentedTextWriter writer)
         {
+            if (extensionTypeName is not null)
+            {
+                writer.Write($"{extensionTypeName}, ");
+            }
+
             writer.Write("global::WindowsRuntime.InteropServices.IActivationFactory");
 
             // Build the inheritance list: factory interfaces ('[Activatable]' or '[Static]') only

@@ -19,6 +19,28 @@ TEST(MultiComponent, GreeterMethods)
     EXPECT_EQ(greeter.Add(2, 3), 5);
 }
 
+// The COM interop interface that 'GreeterFactoryExtensions' adds to the generated activation factory for 'Greeter'
+struct __declspec(uuid("6E1D3C6B-2E5B-4C8A-9E4F-3A7B1F2C9D10")) IGreeterFactoryInterop : ::IUnknown
+{
+    virtual HRESULT __stdcall GetMagicNumber(int* value) = 0;
+};
+
+TEST(MultiComponent, GreeterFactoryExposesInteropInterface)
+{
+    winrt::Windows::Foundation::IActivationFactory factory = get_activation_factory<AuthoringTest2::Greeter>();
+
+    com_ptr<IGreeterFactoryInterop> interop;
+    check_hresult(get_unknown(factory)->QueryInterface(__uuidof(IGreeterFactoryInterop), interop.put_void()));
+
+    int value = 0;
+    check_hresult(interop->GetMagicNumber(&value));
+    EXPECT_EQ(value, 42);
+
+    // The generated factory still activates the class as usual
+    AuthoringTest2::Greeter greeter = factory.ActivateInstance<AuthoringTest2::Greeter>();
+    EXPECT_EQ(greeter.Add(2, 3), 5);
+}
+
 TEST(MultiComponent, BothComponentsActivateInOneProcess)
 {
     AuthoringTest3::Calculator first;

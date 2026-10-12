@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.Generator.Helpers;
@@ -71,6 +72,13 @@ internal sealed class AssemblyAnalyzer
                 continue;
             }
 
+            // Skip activation factories. They are not runtime classes themselves: they either implement the factory
+            // for a class declared in existing metadata, or extend the one CsWinRT generates for an authored class.
+            if (IsActivationFactory(type))
+            {
+                continue;
+            }
+
             // We include classes, interfaces, structs, enums, and delegates
             if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || type.IsDelegate)
             {
@@ -79,6 +87,16 @@ internal sealed class AssemblyAnalyzer
         }
 
         return publicTypes;
+    }
+
+    /// <summary>
+    /// Checks whether a type is annotated with <c>[WindowsRuntimeActivationFactory]</c>.
+    /// </summary>
+    /// <param name="type">The <see cref="TypeDefinition"/> to inspect.</param>
+    /// <returns>Whether <paramref name="type"/> is an activation factory.</returns>
+    private static bool IsActivationFactory(TypeDefinition type)
+    {
+        return type.FindCustomAttributes("WindowsRuntime.InteropServices", "WindowsRuntimeActivationFactoryAttribute").Any();
     }
 
     /// <summary>

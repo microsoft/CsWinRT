@@ -37,6 +37,27 @@ It is recommended to use .NET 6 and Visual Studio 2022 for C#/WinRT authoring sc
 
 4. Implement your runtime classes in the class files in your library project, following the necessary [WinRT guidelines and type restrictions](https://docs.microsoft.com/windows/uwp/winrt-components/creating-windows-runtime-components-in-csharp-and-visual-basic#declaring-types-in-windows-runtime-components).
 
+### Adding interfaces to an activation factory
+
+C#/WinRT generates the activation factory for each runtime class, implementing its activation and statics interfaces. To also expose other interfaces on it (e.g. a COM interop interface native callers query the factory for), declare a public abstract class implementing them, annotated with `[WindowsRuntimeActivationFactory]` naming the runtime class. The generated factory derives from it, so its interfaces are added to the factory's vtable, while activation and statics are still generated as usual:
+
+```csharp
+[GeneratedComInterface]
+[Guid("6E1D3C6B-2E5B-4C8A-9E4F-3A7B1F2C9D10")]
+internal partial interface IWidgetFactoryInterop
+{
+    int GetMagicNumber();
+}
+
+[WindowsRuntimeActivationFactory(typeof(Widget))]
+public abstract class WidgetFactoryExtensions : IWidgetFactoryInterop
+{
+    int IWidgetFactoryInterop.GetMagicNumber() => 42;
+}
+```
+
+The class must be public (in public containing types, if nested) and non-generic, with a public or protected parameterless constructor, since the generated factory is compiled into a separate assembly. It is not a runtime class itself, so it is not included in the component's `.winmd`, and each runtime class can have at most one.
+
 ## Packaging your WinRT component
 
 You may want to distribute and share your component as a NuGet package. To generate a NuGet package for the component, you can choose one of the options below. Your component can then be used in consuming apps by a `PackageReference`.

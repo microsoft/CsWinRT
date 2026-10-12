@@ -68,4 +68,9 @@ internal static class WellKnownAttributeNames
     /// The <c>[VersionAttribute]</c> attribute type name.
     /// </summary>
     public const string VersionAttribute = "VersionAttribute";
+
+    /// <summary>
+    /// The <c>[WindowsRuntimeActivationFactoryAttribute]</c> attribute type name (declared in <see cref="WellKnownNamespaces.WindowsRuntimeInteropServices"/>).
+    /// </summary>
+    public const string WindowsRuntimeActivationFactoryAttribute = "WindowsRuntimeActivationFactoryAttribute";
 }
