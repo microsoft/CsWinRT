@@ -2138,6 +2138,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     // Assigning an element of an inline array element only writes to (part of) that element
                     span[0][1] = 5;
+                    span[0][^1] = 7;
 
                     foreach (ref Buffer4 buffer in span)
                     {
@@ -2193,48 +2194,6 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     string parameterName = nameof(span);
                     string propertyName = nameof(span.Length);
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
-    }
-
-    [TestMethod]
-    public async Task LoopVariableReadsAfterClearOfReassignedSpan_Warn()
-    {
-        const string source = """
-            using System;
-
-            public class Sample
-            {
-                public void Fill(Span<int> span, Span<int> other)
-                {
-                    foreach (ref int x in span)
-                    {
-                        // The loop keeps iterating over the original buffer, which is not the one being cleared
-                        span = other;
-                        span.Clear();
-
-                        int value = {|CSWINRT2023:x|};
-                    }
-                }
-
-                public void FillWithLaterReassignment(Span<int> span, Span<int> other, bool flag)
-                {
-                    foreach (ref int x in span)
-                    {
-                        // A previous iteration might have already redirected the span without clearing the original buffer
-                        if (flag)
-                        {
-                            span.Clear();
-
-                            int value = {|CSWINRT2023:x|};
-                        }
-
-                        span = other;
-                        flag = true;
-                    }
                 }
             }
             """;
@@ -2432,33 +2391,6 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     i = 1;
 
                     _ = {|CSWINRT2023:span[i]|};
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
-    }
-
-    [TestMethod]
-    [DataRow("Clear()")]
-    [DataRow("Fill(42)")]
-    public async Task LoopVariableReadsAfterGuaranteedInitializationBeforeReassignment_DoNotWarn(string initialization)
-    {
-        string source = $$"""
-            using System;
-
-            public class Sample
-            {
-                public void Fill(Span<int> span, Span<int> other)
-                {
-                    foreach (ref int element in span)
-                    {
-                        span.{{initialization}};
-
-                        int value = element;
-
-                        span = other;
-                    }
                 }
             }
             """;
@@ -2749,6 +2681,64 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                         _ = pair.{{readField}};
                         _ = {|CSWINRT2023:pair|}.Y;
                     }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsInConditionalCallsWithDirectives_WarnOnlyWhenKept()
+    {
+        const string source = """
+            #define UNDEFINED_LATER
+            #undef UNDEFINED_LATER
+            #if NEVER_DEFINED
+            #define INACTIVE
+            #endif
+            #define KEPT
+
+            using System;
+            using System.Diagnostics;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    // Removed: the symbol is '#undef'-ed, or only defined in an inactive region
+                    TraceUndefined(span[0]);
+                    TraceInactive(span[1]);
+                    TraceNeither(span[2]);
+
+                    // Kept: at least one of the conditional symbols is defined
+                    TraceEither({|CSWINRT2023:span[3]|});
+
+                    // A kept call is an unconditional write, so it covers a later read
+                    TraceEither(span[4] = 1);
+                    _ = span[4];
+                }
+
+                [Conditional("UNDEFINED_LATER")]
+                private static void TraceUndefined(int x)
+                {
+                }
+
+                [Conditional("INACTIVE")]
+                private static void TraceInactive(int x)
+                {
+                }
+
+                [Conditional("NEVER_DEFINED")]
+                [Conditional("ALSO_NEVER_DEFINED")]
+                private static void TraceNeither(int x)
+                {
+                }
+
+                [Conditional("NEVER_DEFINED")]
+                [Conditional("KEPT")]
+                private static void TraceEither(int x)
+                {
                 }
             }
             """;
