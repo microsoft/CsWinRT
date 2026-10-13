@@ -14,6 +14,36 @@ namespace ProjectionWriterTest.Helpers;
 /// Creates synthetic metadata with an unsealed runtime class activated through two <c>[Composable]</c> factory
 /// interfaces, as MIDL emits for constructors added in a later contract version (e.g. WinUI's <c>DataTemplate</c>).
 /// </summary>
+/// <remarks>
+/// The metadata has the same shape MIDL produces for the following IDL (the constructor added in version 2 goes on a
+/// second factory interface, <c>IWidgetFactory2</c>), without the contract attributes the projection does not need:
+/// <code>
+/// namespace Contoso
+/// {
+///     [contractversion(2)]
+///     apicontract ContosoContract {};
+///
+///     [contract(ContosoContract, 1)]
+///     unsealed runtimeclass Widget
+///     {
+///         Widget();
+///
+///         [contract(ContosoContract, 2)]
+///         Widget(Int32 count);
+///
+///         void DoStuffWidget();
+///     }
+///
+///     [contract(ContosoContract, 1)]
+///     unsealed runtimeclass DerivedWidget : Widget
+///     {
+///         DerivedWidget();
+///
+///         void DoStuffDerivedWidget();
+///     }
+/// }
+/// </code>
+/// </remarks>
 internal static class ComposableFactoryMetadata
 {
     /// <summary>The unsealed class with two composable factories.</summary>
@@ -98,18 +128,18 @@ internal static class ComposableFactoryMetadata
             return owner;
         }
 
-        // Adds a '[Composable]' factory with one constructor taking 'arguments' (the outer and the inner trail them)
-        void AddComposableFactory(TypeDefinition owner, string interfaceName, string methodName, TypeSignature[] arguments, uint version)
+        // Adds a '[Composable]' factory with one 'CreateInstance' constructor taking 'arguments' (the outer and the inner trail them)
+        void AddComposableFactory(TypeDefinition owner, string interfaceName, (TypeSignature Type, string Name)[] arguments, uint version)
         {
             TypeDefinition factory = AddExclusiveInterface(interfaceName, owner);
 
-            MethodDefinition method = new(methodName,
+            MethodDefinition method = new("CreateInstance",
                 MethodAttributes.Public | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.HideBySig,
-                MethodSignature.CreateInstance(owner.ToTypeSignature(), [.. arguments, objectType, objectType.MakeByReferenceType()]));
+                MethodSignature.CreateInstance(owner.ToTypeSignature(), [.. arguments.Select(static argument => argument.Type), objectType, objectType.MakeByReferenceType()]));
 
             for (int p = 0; p < arguments.Length; p++)
             {
-                method.ParameterDefinitions.Add(new ParameterDefinition((ushort)(p + 1), $"value{p}", ParameterAttributes.In));
+                method.ParameterDefinitions.Add(new ParameterDefinition((ushort)(p + 1), arguments[p].Name, ParameterAttributes.In));
             }
 
             method.ParameterDefinitions.Add(new ParameterDefinition((ushort)(arguments.Length + 1), "baseInterface", ParameterAttributes.In));
@@ -123,15 +153,16 @@ internal static class ComposableFactoryMetadata
                 new CustomAttributeArgument(module.CorLibTypeFactory.UInt32, version)));
         }
 
-        // Mirrors 'DataTemplate': a parameterless constructor, plus one taking an argument added in a later version
+        // Mirrors 'DataTemplate': a parameterless constructor, plus one taking an argument added in a later version (MIDL
+        // encodes contract version 'N' as 'N << 16')
         TypeDefinition widget = AddClass(ClassName, objectType.Type);
 
-        AddComposableFactory(widget, $"I{ClassName}Factory", "CreateInstance", [], version: 1);
-        AddComposableFactory(widget, $"I{ClassName}Factory2", "CreateInstanceWithValue", [module.CorLibTypeFactory.Int32], version: 2);
+        AddComposableFactory(widget, $"I{ClassName}Factory", [], version: 0x10000);
+        AddComposableFactory(widget, $"I{ClassName}Factory2", [(module.CorLibTypeFactory.Int32, "count")], version: 0x20000);
 
         TypeDefinition derived = AddClass(DerivedClassName, widget);
 
-        AddComposableFactory(derived, $"I{DerivedClassName}Factory", "CreateInstance", [], version: 1);
+        AddComposableFactory(derived, $"I{DerivedClassName}Factory", [], version: 0x10000);
 
         string path = Path.Combine(directory, "Contoso.winmd");
 
