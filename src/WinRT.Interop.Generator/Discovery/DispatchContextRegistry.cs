@@ -22,31 +22,50 @@ internal sealed class DispatchContextRegistry
     /// <summary>Dispatch-capable body contexts already expanded by the module enumerations.</summary>
     public ConcurrentBag<ExpandedBody> ExpandedBodies { get; } = [];
 
-    /// <summary>An observed receiver context with its traversal provenance.</summary>
+    /// <summary>
+    /// An observed receiver context with its traversal provenance.
+    /// </summary>
     /// <param name="Signature">The observed constructed receiver.</param>
     /// <param name="Depth">Its traversal depth.</param>
     /// <param name="Origin">The owning module's stable ordinal.</param>
     /// <param name="Sequence">The stable publication sequence within that enumeration.</param>
-    public sealed record Receiver(TypeSignature Signature, int Depth, int Origin, int Sequence);
+    /// <param name="IsDefaultBody">Whether this observation was published during the default-interface body phase.</param>
+    public sealed record Receiver(
+        TypeSignature Signature,
+        int Depth,
+        int Origin,
+        int Sequence,
+        bool IsDefaultBody);
 
-    /// <summary>A dispatch binding retained until additional receiver contexts become available.</summary>
+    /// <summary>
+    /// A dispatch binding retained until additional receiver contexts become available.
+    /// </summary>
     /// <param name="Target">The indexed metadata relationship.</param>
     /// <param name="DeclarationType">The observed declaring context.</param>
     /// <param name="Arguments">The observed method type arguments.</param>
     /// <param name="Depth">The expansion depth in the owning enumeration.</param>
     /// <param name="Origin">The owning module's stable ordinal.</param>
     /// <param name="Sequence">The stable publication sequence within that enumeration.</param>
+    /// <param name="IsDefaultBody">Whether this observation was published during the default-interface body phase.</param>
     public sealed record Demand(
         MethodDispatchIndex.Target Target,
         TypeSignature DeclarationType,
         GenericInstanceMethodSignature Arguments,
         int Depth,
         int Origin,
-        int Sequence);
+        int Sequence,
+        bool IsDefaultBody);
 
-    /// <summary>A dispatch-capable method context already queued and expanded before the publishing barrier.</summary>
+    /// <summary>
+    /// A dispatch-capable method context already queued and expanded before the publishing barrier.
+    /// </summary>
     /// <param name="Method">The resolved body definition.</param>
     /// <param name="Arguments">The combined declaring-type and method arguments.</param>
     /// <param name="Depth">The depth at which the body was expanded.</param>
-    public sealed record ExpandedBody(MethodDefinition Method, IList<TypeSignature> Arguments, int Depth);
+    /// <param name="IsDefaultBody">Whether this observation was published during the default-interface body phase.</param>
+    public sealed record ExpandedBody(
+        MethodDefinition Method,
+        IList<TypeSignature> Arguments,
+        int Depth,
+        bool IsDefaultBody);
 }

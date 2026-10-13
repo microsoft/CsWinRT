@@ -34,9 +34,18 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         // Generic virtual slots and constrained static dispatch can contribute additional implementation bodies
         if (_transitiveTypeLimitReported ||
-            (!operand.IsVirtual && operand.Constraint is null) ||
-            operand.Descriptor is not MethodSpecification { Method: { } method, Signature: { } signature } ||
-            !method.TryResolve(_module.RuntimeContext, out MethodDefinition? definition) ||
+            (!operand.IsVirtual && operand.Constraint is null))
+        {
+            return;
+        }
+
+        if (operand.Descriptor is not MethodSpecification { Method: { } method, Signature: { } signature })
+        {
+            return;
+        }
+
+        // Only overridable declarations can contribute additional dispatch implementations
+        if (!method.TryResolve(_module.RuntimeContext, out MethodDefinition? definition) ||
             !definition.IsVirtual || definition.IsFinal)
         {
             return;
@@ -47,8 +56,12 @@ internal partial class TypeSignatureDiscovery<TResult>
             return;
         }
 
-        if (!IsComplexityWithinLimit(call.Complexity, depth) ||
-            !call.Arguments.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)))
+        if (!IsComplexityWithinLimit(call.Complexity, depth))
+        {
+            return;
+        }
+
+        if (!call.Arguments.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)))
         {
             return;
         }
@@ -124,7 +137,8 @@ internal partial class TypeSignatureDiscovery<TResult>
                     Arguments: arguments,
                     Depth: depth,
                     Origin: _moduleOrdinal,
-                    Sequence: _publicationSequence++));
+                    Sequence: _publicationSequence++,
+                    IsDefaultBody: _isDefaultInterfaceTraversal));
             }
         }
     }
@@ -146,10 +160,19 @@ internal partial class TypeSignatureDiscovery<TResult>
     {
         _token.ThrowIfCancellationRequested();
 
-        if (_transitiveTypeLimitReported ||
-            !IsSignatureWithinComplexityLimit(target.DeclarationType, depth) ||
-            !IsSignatureWithinComplexityLimit(target.BodyType, depth) ||
-            !_dispatchIndex.TryBind(target, declarationType, receiverType, out TypeSignature bodyType))
+        if (_transitiveTypeLimitReported)
+        {
+            return;
+        }
+
+        // Validate templates before binding can compose a larger constructed body context
+        if (!IsSignatureWithinComplexityLimit(target.DeclarationType, depth) ||
+            !IsSignatureWithinComplexityLimit(target.BodyType, depth))
+        {
+            return;
+        }
+
+        if (!_dispatchIndex.TryBind(target, declarationType, receiverType, out TypeSignature bodyType))
         {
             return;
         }
@@ -186,17 +209,26 @@ internal partial class TypeSignatureDiscovery<TResult>
     {
         foreach (GenericInstanceTypeSignature candidate in signature?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
         {
-            if (candidate.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
-                (!_receiverCandidates.TryGetValue(candidate, out int priorDepth) || priorDepth > depth))
+            if (!candidate.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
             {
-                _receiverCandidates[candidate] = depth;
+                continue;
+            }
 
-                foreach (TypeSignature receiver in _dispatchIndex.GetReceiverContexts(candidate))
+            // Revisit only a shallower actual receiver, preserving the first-admission order
+            if (_receiverCandidates.TryGetValue(candidate, out int priorDepth) && priorDepth <= depth)
+            {
+                continue;
+            }
+
+            _receiverCandidates[candidate] = depth;
+
+            RecordDefaultReceiver(candidate, depth);
+
+            foreach (TypeSignature receiver in _dispatchIndex.GetReceiverContexts(candidate))
+            {
+                if (IsReceiverWithinComplexityLimit(receiver, depth))
                 {
-                    if (IsReceiverWithinComplexityLimit(receiver, depth))
-                    {
-                        RegisterReceiver(receiver, depth);
-                    }
+                    RegisterReceiver(receiver, depth);
                 }
             }
         }
@@ -234,7 +266,11 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="signature">The actual receiver context.</param>
     /// <param name="depth">The discovery depth of the receiver context.</param>
-    private void RegisterReceiver(TypeSignature signature, int depth)
+    /// <param name="expandExistingDemands">Whether to join existing demands or defer imported pairs to their stage.</param>
+    private void RegisterReceiver(
+        TypeSignature signature,
+        int depth,
+        bool expandExistingDemands = true)
     {
         if (!signature.TryResolve(_module.RuntimeContext, out TypeDefinition? definition))
         {
@@ -264,9 +300,11 @@ internal partial class TypeSignatureDiscovery<TResult>
             Signature: signature,
             Depth: depth,
             Origin: _moduleOrdinal,
-            Sequence: _publicationSequence++));
+            Sequence: _publicationSequence++,
+            IsDefaultBody: _isDefaultInterfaceTraversal));
 
-        if (_receiverDemands.TryGetValue(definition, out List<DispatchContextRegistry.Demand>? demands))
+        if (expandExistingDemands &&
+            _receiverDemands.TryGetValue(definition, out List<DispatchContextRegistry.Demand>? demands))
         {
             foreach (DispatchContextRegistry.Demand demand in demands)
             {

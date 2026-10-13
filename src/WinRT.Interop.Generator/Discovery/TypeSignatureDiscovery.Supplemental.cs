@@ -123,7 +123,8 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <param name="depth">The original scan depth.</param>
     private void RecordMethodScan(MethodDefinition method, GenericContext context, int depth)
     {
-        // Type worklist contexts are covered by _coveredTypes; method items always have MethodSpec arguments
+        // Type scans and selected non-generic bodies have no 'MethodSpec' arguments
+        // Their coverage is tracked separately; there is no generic-method context to publish.
         if (context.Method is null)
         {
             return;
@@ -143,7 +144,8 @@ internal partial class TypeSignatureDiscovery<TResult>
                 _dispatchContexts?.ExpandedBodies.Add(new DispatchContextRegistry.ExpandedBody(
                     Method: method,
                     Arguments: arguments,
-                    Depth: depth));
+                    Depth: depth,
+                    IsDefaultBody: _isDefaultInterfaceTraversal));
             }
         }
     }
@@ -171,6 +173,12 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         // Seed with the primary results so this phase only yields additions
         _results.UnionWith(primary._results);
+
+        // Preserve first-sighting order without expanding defaults ahead of the existing supplemental FIFO
+        foreach (DefaultReceiverObservation observation in primary._defaultReceiverObservations)
+        {
+            RecordDefaultReceiver(observation.Signature, observation.Depth);
+        }
 
         // Report the complexity warning that passive primary receiver registration deferred
         if (primary._complexReceiver is { } complexReceiver)
@@ -217,6 +225,11 @@ internal partial class TypeSignatureDiscovery<TResult>
         }
 
         foreach (TResult result in EnumeratePendingMembers())
+        {
+            yield return result;
+        }
+
+        foreach (TResult result in EnumerateDefaultInterfaceMembers())
         {
             yield return result;
         }

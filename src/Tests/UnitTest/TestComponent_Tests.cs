@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using test_component_base;
 using test_component_derived.Nested;
@@ -896,6 +897,47 @@ namespace UnitTest
 
             Assert.IsTrue(ForwardGenericListDispatch<TestComponentCSharp.StaticChainElement>(value, cast));
         }
+
+        [TestMethod]
+        public unsafe void Collections_ConstructedReceiver_DefaultInterfaceBody_CCW()
+        {
+            object value = ((IDefaultCollectionFactory)new DefaultCollectionFactory<TestComponentCSharp.InterfaceDispatchElement>()).Create();
+            void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+            nint vector = 0;
+
+            try
+            {
+                // Existing enum-vector tests do not root this nested vector; typed assertions here would mask discovery
+
+                // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.InterfaceDispatchElement;i4)))
+                Guid iid = new("fa87665e-7544-5f82-bc73-a9517cd8c8c5");
+
+                Assert.AreEqual(0, Marshal.QueryInterface((nint)pointer, iid, out vector));
+                Assert.AreNotEqual(nint.Zero, vector);
+            }
+            finally
+            {
+                if (vector != 0)
+                {
+                    _ = Marshal.Release(vector);
+                }
+
+                WindowsRuntimeMarshal.Free(pointer);
+                GC.KeepAlive(value);
+            }
+        }
+
+        private interface IDefaultCollectionFactory
+        {
+            object Create();
+        }
+
+        private interface IDefaultCollectionFactory<T> : IDefaultCollectionFactory
+        {
+            object IDefaultCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+        }
+
+        private sealed class DefaultCollectionFactory<T> : IDefaultCollectionFactory<T>;
 
         private interface IGenericListDispatch
         {

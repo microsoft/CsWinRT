@@ -15,6 +15,328 @@ public partial class Test_InteropGenericDiscovery
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    public void DefaultInterfaceBody_PublishesContextsForLateDispatch(bool publishesReceiver)
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropDefaultPublication_").FullName;
+
+        try
+        {
+            string contracts = ProjectionWriterRunner.CompileSources(
+                [$$"""
+                namespace Across;
+                public struct First;
+                public struct Second;
+                public sealed class Pair<X, Y>;
+                public sealed class Node<T> : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "node";
+                }
+                public interface IDispatch { void Check<T>(); }
+                public sealed class Target<U> : IDispatch
+                {
+                    public void Check<T>() => _ = new Node<Pair<U, T>>();
+                }
+                public interface IFactory { object Create(); }
+                public interface IFactory<T> : IFactory
+                {
+                    object IFactory.Create()
+                    {
+                        {{(publishesReceiver ? "return new Target<T>();" : "((IDispatch)null!).Check<T>(); return null!;")}}
+                    }
+                }
+                public sealed class Factory<T> : IFactory<T>;
+                """], Path.Combine(directory, "Contracts.dll"));
+            string producer = ProjectionWriterRunner.CompileSources(
+                [$$"""
+                public static class Producer
+                {
+                    public static object Create() => new Across.{{(publishesReceiver ? "Factory" : "Target")}}<Across.First>();
+                }
+                """], Path.Combine(directory, "Producer.dll"), additionalReferences: [contracts]);
+            string caller = ProjectionWriterRunner.CompileSources(
+                [$$"""
+                public static class Caller
+                {
+                    public static void Invoke()
+                    {
+                        {{(publishesReceiver ? "((Across.IDispatch)null!).Check<Across.Second>();" : "_ = new Across.Factory<Across.Second>();")}}
+                    }
+                }
+                """], Path.Combine(directory, "Caller.dll"), additionalReferences: [contracts]);
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = Producer.Create();
+                        Caller.Invoke();
+                    }
+                }
+                """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [contracts, producer, caller]);
+            (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors: true,
+                additionalReferences: [contracts, producer, caller]);
+
+            Assert.AreEqual(0, exitCode, log);
+            Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll")).Any(type =>
+                type.StartsWith("Across.Node`1[[Across.Pair`2[[Across.First,", StringComparison.Ordinal) &&
+                type.Contains("],[Across.Second,", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void DefaultInterfaceBody_PreservesGenericDispatchLateCutoff()
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropDefaultLateCutoff_").FullName;
+
+        try
+        {
+            string markers = string.Join('\n', Enumerable.Range(0, 1024).Select(index => $"public struct Marker{index};"));
+            string roots = string.Join('\n', Enumerable.Range(0, 1024).Select(index => $"_ = new Target<Marker{index}>();"));
+            string contracts = ProjectionWriterRunner.CompileSources(
+                [$$"""
+                namespace LateCutoff;
+                public struct DispatchArgument;
+                public struct DefaultArgument;
+                {{markers}}
+                public sealed class Pair<X, Y>;
+                public sealed class Node<T> : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "node";
+                }
+                public interface IDispatch { void Check<T>(); }
+                public sealed class Target<U> : IDispatch
+                {
+                    public void Check<T>() => _ = new Node<Pair<U, T>>();
+                }
+                public interface IFactory { void Create(); }
+                public interface IFactory<T> : IFactory
+                {
+                    void IFactory.Create() => ((IDispatch)null!).Check<T>();
+                }
+                public sealed class Factory<T> : IFactory<T>;
+                """], Path.Combine(directory, "Contracts.dll"));
+            string defaults = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Defaults
+                {
+                    public static object Create() => new LateCutoff.Factory<LateCutoff.DefaultArgument>();
+                }
+                """], Path.Combine(directory, "A_Defaults.dll"), additionalReferences: [contracts]);
+            string caller = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Caller
+                {
+                    public static void Invoke() => ((LateCutoff.IDispatch)null!).Check<LateCutoff.DispatchArgument>();
+                }
+                """], Path.Combine(directory, "B_Caller.dll"), additionalReferences: [contracts]);
+            string receivers = ProjectionWriterRunner.CompileSources(
+                [$$"""
+                using LateCutoff;
+                public static class Receivers
+                {
+                    public static void Create()
+                    {
+                        {{roots}}
+                    }
+                }
+                """], Path.Combine(directory, "C_Receivers.dll"), additionalReferences: [contracts]);
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = Defaults.Create();
+                        Caller.Invoke();
+                        Receivers.Create();
+                    }
+                }
+                """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [contracts, defaults, caller, receivers]);
+            byte[]? firstOutput = null;
+
+            foreach (bool reverse in new[] { false, true })
+            {
+                (int exitCode, string log) = RunGenerator(directory, app,
+                    additionalReferences: reverse ? [receivers, caller, defaults, contracts] : [contracts, defaults, caller, receivers],
+                    maxDegreesOfParallelism: reverse ? 4 : 1,
+                    timeout: TimeSpan.FromMinutes(2));
+
+                Assert.AreEqual(0, exitCode, log);
+                StringAssert.Contains(log, "Supplemental generic discovery");
+
+                string interop = Path.Combine(directory, "WinRT.Interop.dll");
+                string[] nodes = [.. GetComWrappersTypeAssociations(interop).Where(static type =>
+                    type.StartsWith("LateCutoff.Node`1", StringComparison.Ordinal))];
+
+                Assert.AreEqual(1024, nodes.Length, log);
+                Assert.IsTrue(nodes.All(static type => type.Contains("],[LateCutoff.DispatchArgument,", StringComparison.Ordinal)),
+                    "Default-body publication displaced initial generic-dispatch cross-module contexts.");
+                Assert.IsTrue(nodes.Any(static type => type.StartsWith("LateCutoff.Node`1[[LateCutoff.Pair`2[[LateCutoff.Marker1023,", StringComparison.Ordinal)));
+
+                byte[] output = File.ReadAllBytes(interop);
+
+                if (firstOutput is not null)
+                {
+                    CollectionAssert.AreEqual(firstOutput, output);
+                }
+
+                firstOutput = output;
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("minimal", false, false, true)]
+    [DataRow("strict", false, false, false)]
+    [DataRow("strict", true, false, true)]
+    [DataRow("minimal", false, true, false)]
+    [DataRow("strict", true, true, false)]
+    public void DefaultInterfaceBody_RespectsBodyModulePolicy(string mode, bool optIn, bool optOut, bool expected)
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropDefaultBodyPolicy_").FullName;
+
+        try
+        {
+            string implementation = ProjectionWriterRunner.CompileSources(
+                ["""
+                namespace Policy;
+                public struct Marker;
+                public interface IFactory { object Create(); }
+                public interface IFactory<T> : IFactory
+                {
+                    object IFactory.Create() => new T[1];
+                }
+                public sealed class Factory<T> : IFactory<T>;
+                """], Path.Combine(directory, "Foreign.dll"));
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public sealed class Root : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "root";
+                }
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = new Root();
+                        _ = ((Policy.IFactory)new Policy.Factory<Policy.Marker>()).Create();
+                    }
+                }
+                """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [implementation]);
+            (int exitCode, string log) = RunGenerator(directory, app,
+                additionalReferences: [implementation],
+                additionalArguments: [
+                    $"--marshalling-mode {mode}",
+                    .. optIn ? new[] { "--marshalling-enabled-assembly-names Foreign" } : [],
+                    .. optOut ? new[] { "--marshalling-disabled-assembly-names Foreign" } : []]);
+
+            Assert.AreEqual(0, exitCode, log);
+            Assert.AreEqual(expected, GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
+                .Any(type => type.StartsWith("Policy.Marker[],", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void DefaultInterfaceBody_ReceiverDiscoveredByLateJoin()
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropLateDefaultBody_").FullName;
+
+        try
+        {
+            string contracts = ProjectionWriterRunner.CompileSources(
+                ["""
+                namespace Across;
+                public struct First;
+                public struct Second;
+                public sealed class Pair<X, Y>;
+                public sealed class Node<T> : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "node";
+                }
+                public interface IDispatch { object Create<T>(); }
+                public interface IFactory { object Create(); }
+                public interface IFactory<T> : IFactory
+                {
+                    object IFactory.Create() => new Node<T>();
+                }
+                public sealed class Factory<T> : IFactory<T>;
+                public sealed class Outer<U> : IDispatch
+                {
+                    public object Create<T>() => new Factory<Pair<U, T>>();
+                }
+                """], Path.Combine(directory, "Contracts.dll"));
+            string producer = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Producer
+                {
+                    public static Across.IDispatch Create() => new Across.Outer<Across.First>();
+                }
+                """], Path.Combine(directory, "Producer.dll"), additionalReferences: [contracts]);
+            string caller = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Caller
+                {
+                    public static object Invoke<T>(Across.IDispatch value) => value.Create<T>();
+                }
+                """], Path.Combine(directory, "Caller.dll"), additionalReferences: [contracts]);
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Program
+                {
+                    public static void Main() => _ = Caller.Invoke<Across.Second>(Producer.Create());
+                }
+                """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [contracts, producer, caller]);
+            byte[]? firstOutput = null;
+
+            foreach (bool reverse in new[] { false, true })
+            {
+                (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors: true,
+                    additionalReferences: reverse ? [caller, producer, contracts] : [contracts, producer, caller],
+                    maxDegreesOfParallelism: reverse ? 4 : 1);
+
+                Assert.AreEqual(0, exitCode, log);
+
+                string interop = Path.Combine(directory, "WinRT.Interop.dll");
+
+                Assert.IsTrue(GetComWrappersTypeAssociations(interop).Any(type =>
+                    type.StartsWith("Across.Node`1[[Across.Pair`2[[Across.First,", StringComparison.Ordinal)), log);
+
+                byte[] output = File.ReadAllBytes(interop);
+
+                if (firstOutput is not null)
+                {
+                    CollectionAssert.AreEqual(firstOutput, output);
+                }
+
+                firstOutput = output;
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     public void GenericDispatch_JoinsLateReceiverContextsAcrossModules(bool fixpoint)
     {
         string directory = Directory.CreateTempSubdirectory("InteropDispatchModules_").FullName;
@@ -119,16 +441,23 @@ public partial class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
-    public void GenericDispatch_CompletedModuleJoinsDoNotConsumeLateBudget()
+    [DataRow(false)]
+    [DataRow(true)]
+    public void GenericDispatch_CompletedModuleJoinsDoNotConsumeLateBudget(bool includeDefaults)
     {
         string directory = Directory.CreateTempSubdirectory("InteropCompletedJoins_").FullName;
 
         try
         {
             string contracts = ProjectionWriterRunner.CompileSources(
-                ["""
+                [$$"""
                 public interface IOuter { void Check<T>(); }
-                public sealed class Outer<U> : IOuter
+                public interface IFactory { object Create(); }
+                public interface IFactory<T> : IFactory
+                {
+                    object IFactory.Create() => null!;
+                }
+                public sealed class Outer<U> : IOuter{{(includeDefaults ? ", IFactory<U>" : "")}}
                 {
                     public void Check<T>() { }
                 }

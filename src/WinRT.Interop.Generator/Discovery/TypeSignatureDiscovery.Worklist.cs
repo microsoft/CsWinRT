@@ -157,9 +157,9 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="method">The method to resolve.</param>
     /// <param name="declaringType">The declaring type with the caller's arguments substituted.</param>
-    /// <param name="methodArguments">The substituted method arguments, if this is a MethodSpec.</param>
+    /// <param name="methodArguments">The substituted method arguments, if this is a 'MethodSpec'.</param>
     /// <param name="genericContext">The composed context to use when scanning the body.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit MethodSpec root.</param>
+    /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
     private void EnqueueMethodBody(
         IMethodDefOrRef method,
         TypeSignature? declaringType,
@@ -167,7 +167,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         GenericContext genericContext,
         int depth)
     {
-        // Ordinary methods are covered by the type worklist, so only explicit MethodSpec roots retain a one-hop scan
+        // Ordinary methods are covered by the type worklist, so only explicit 'MethodSpec' roots retain a one-hop scan
         if (methodArguments is null ||
             !method.TryResolve(_module.RuntimeContext, out MethodDefinition? definition) ||
             definition.CilMethodBody is null ||

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -20,16 +21,39 @@ internal partial class MethodDispatchIndex
     /// <returns>Whether its base or interface graph contains a generic virtual declaration.</returns>
     private bool HasGenericDispatch(TypeDefinition type)
     {
-        if (_hasGenericDispatch.TryGetValue(type, out bool cached))
+        // Only generic virtual slots need indexing: other overrides are closed by their receiver type,
+        // which the type worklist already scans, but method arguments only flow through the call site.
+        return HasReachableDefinition(
+            type: type,
+            cache: _hasGenericDispatch,
+            isRelevant: static current => current.Methods.Any(static method =>
+                method.IsVirtual &&
+                method.Signature is { GenericParameterCount: > 0 }));
+    }
+
+    /// <summary>
+    /// Checks definition relationships with a cache specific to the caller's relevance predicate.
+    /// </summary>
+    /// <param name="type">The starting definition.</param>
+    /// <param name="cache">The results for this predicate only.</param>
+    /// <param name="isRelevant">The declaration test to apply before visiting a definition's ancestors.</param>
+    /// <returns>Whether the starting definition or an ancestor satisfies the predicate.</returns>
+    private bool HasReachableDefinition(
+        TypeDefinition type,
+        Dictionary<TypeDefinition, bool> cache,
+        Func<TypeDefinition, bool> isRelevant)
+    {
+        if (cache.TryGetValue(type, out bool cached))
         {
             return cached;
         }
 
         Stack<TypeDefinition> pending = new();
         HashSet<TypeDefinition> visited = new(ReferenceEqualityComparer.Instance);
+
         pending.Push(type);
 
-        // Dispatch relevance depends on reachable definitions, not their particular generic instantiations
+        // Relevance depends on reachable definitions, not their particular generic instantiations
         while (pending.TryPop(out TypeDefinition? current))
         {
             _token.ThrowIfCancellationRequested();
@@ -39,22 +63,23 @@ internal partial class MethodDispatchIndex
                 continue;
             }
 
-            if (_hasGenericDispatch.TryGetValue(current, out bool relevant))
+            if (cache.TryGetValue(current, out bool relevant))
             {
+                // A cached result answers reachability from this definition, so its ancestors need no separate visit
                 if (relevant)
                 {
-                    _hasGenericDispatch[type] = true;
+                    cache[type] = true;
+
                     return true;
                 }
 
                 continue;
             }
 
-            // Only generic virtual slots need indexing: other overrides are closed by their receiver type,
-            // which the type worklist already scans, but method arguments only flow through the call site.
-            if (current.Methods.Any(static method => method.IsVirtual && method.Signature is { GenericParameterCount: > 0 }))
+            if (isRelevant(current))
             {
-                _hasGenericDispatch[type] = true;
+                cache[type] = true;
+
                 return true;
             }
 
@@ -73,9 +98,10 @@ internal partial class MethodDispatchIndex
         }
 
         // With no reachable generic slot, every definition inspected in this graph is irrelevant
+        // The same negative-cache rule applies to defaults, using their separate predicate and cache.
         foreach (TypeDefinition definition in visited)
         {
-            _hasGenericDispatch[definition] = false;
+            cache[definition] = false;
         }
 
         return false;
@@ -118,17 +144,19 @@ internal partial class MethodDispatchIndex
     /// <param name="runtimeContext">The metadata resolution context.</param>
     /// <param name="comparer">The resolution-aware signature comparer.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="canVisit">An optional bound for newly composed metadata relationships.</param>
     /// <returns>The metadata hierarchy in depth-first order.</returns>
     private static HierarchyType[] CreateHierarchy(
         TypeDefinition type,
         RuntimeContext runtimeContext,
         SignatureComparer comparer,
-        CancellationToken token)
+        CancellationToken token,
+        Func<TypeSignature, int, bool>? canVisit = null)
     {
         List<HierarchyType> entries = [];
         HashSet<TypeDefinition> path = new(ReferenceEqualityComparer.Instance);
 
-        CollectHierarchy(GetIdentitySignature(type), entries, path, runtimeContext, comparer, token);
+        CollectHierarchy(GetIdentitySignature(type), entries, path, runtimeContext, comparer, token, canVisit);
 
         return [.. entries];
     }
@@ -142,19 +170,32 @@ internal partial class MethodDispatchIndex
     /// <param name="runtimeContext">The metadata resolution context.</param>
     /// <param name="comparer">The resolution-aware signature comparer.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="canVisit">An optional bound, checked before resolving or comparing the signature.</param>
     private static void CollectHierarchy(
         TypeSignature signature,
         List<HierarchyType> entries,
         HashSet<TypeDefinition> path,
         RuntimeContext runtimeContext,
         SignatureComparer comparer,
-        CancellationToken token)
+        CancellationToken token,
+        Func<TypeSignature, int, bool>? canVisit)
     {
         token.ThrowIfCancellationRequested();
 
+        // Check composed-signature bounds before resolution and deduplication admit an oversized context
+        if (canVisit?.Invoke(signature, path.Count) is false)
+        {
+            return;
+        }
+
+        if (!signature.TryResolve(runtimeContext, out TypeDefinition? definition))
+        {
+            return;
+        }
+
         // Malformed metadata can revisit a definition with increasingly nested type arguments
         // Guard by definition identity because those signatures would never repeat exactly.
-        if (!signature.TryResolve(runtimeContext, out TypeDefinition? definition) || !path.Add(definition))
+        if (!path.Add(definition))
         {
             return;
         }
@@ -172,14 +213,14 @@ internal partial class MethodDispatchIndex
 
             if (definition.BaseType?.TryGetTypeSignature(runtimeContext, false, out TypeSignature? baseType) is true)
             {
-                CollectHierarchy(baseType.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token);
+                CollectHierarchy(baseType.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token, canVisit);
             }
 
             foreach (InterfaceImplementation implementation in definition.Interfaces)
             {
                 if (implementation.Interface?.TryGetTypeSignature(runtimeContext, false, out TypeSignature? iface) is true)
                 {
-                    CollectHierarchy(iface.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token);
+                    CollectHierarchy(iface.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token, canVisit);
                 }
             }
         }

@@ -18,14 +18,14 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <returns>The signatures visible from instantiated members.</returns>
     private IEnumerable<TResult> EnumeratePendingMembers()
     {
-        // A type context can close an ordinary method that has no MethodSpec of its own:
+        // A type context can close an ordinary method that has no 'MethodSpec' of its own:
         //
         // class C<T>
         // {
         //     List<T> M() => [];
         // }
         //
-        // The open method definition only exposes 'List<T>'; a 'C<int>' TypeSpec lets 'M()' reveal 'List<int>'
+        // The open method definition only exposes 'List<T>'; a 'C<int>' 'TypeSpec' lets 'M()' reveal 'List<int>'
         // Closed types discovered through generic factories need the same traversal of ordinary methods
         // and cache initializers to expose nested property/indexer descriptors transitively.
         while (_pendingMembers.TryDequeue(out PendingMember current))
@@ -35,9 +35,18 @@ internal partial class TypeSignatureDiscovery<TResult>
             if (current.Method is MethodDefinition currentMethod)
             {
                 // Only supplemental traversal supersedes queued entries when it observes a shorter path
-                if (_isSupplemental && current.Arguments is { } arguments && _visitedMethods[currentMethod][arguments] < current.Depth)
+                if (_isSupplemental &&
+                    current.Arguments is { } arguments)
                 {
-                    continue;
+                    // Default bodies have no method arguments and use their own visited map
+                    Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> visitedMethods = current.Context.Method is null
+                        ? _visitedDefaultBodies
+                        : _visitedMethods;
+
+                    if (visitedMethods[currentMethod][arguments] < current.Depth)
+                    {
+                        continue;
+                    }
                 }
 
                 // A method item's context was already counted at its own depth; only its callees advance it
@@ -112,7 +121,7 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="descriptor">The referenced method or method specification.</param>
     /// <param name="callerContext">The caller's declaring-type and method arguments.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit MethodSpec root.</param>
+    /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
     /// <returns>The signatures visible after substituting the callee's context.</returns>
     private IEnumerable<TResult> EnumerateMethodTypes(IMethodDescriptor descriptor, GenericContext callerContext, int depth)
     {
@@ -226,7 +235,7 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <returns>The methods eligible for discovery in this context.</returns>
     private IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
     {
-        // An explicit TypeSpec supplies the caller's type arguments for a one-hop member scan,
+        // An explicit 'TypeSpec' supplies the caller's type arguments for a one-hop member scan,
         // even when its dependency module is skipped by policy; further traversal still
         // follows the configured assembly marshalling rules.
         if (_typeSpecifications.Contains(typeSignature) ||

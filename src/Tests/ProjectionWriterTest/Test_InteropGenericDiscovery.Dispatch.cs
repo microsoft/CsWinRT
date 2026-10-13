@@ -415,9 +415,10 @@ public partial class Test_InteropGenericDiscovery
         string main,
         string helpers = "",
         string associationPrefix = "Dispatch.Node`1[[Dispatch.Marker,",
-        bool expected = true)
+        bool expected = true,
+        string? associationContains = null)
     {
-        AssertDispatchSource(CreateDispatchSource(declarations, main, helpers), associationPrefix, expected);
+        AssertDispatchSource(CreateDispatchSource(declarations, main, helpers), associationPrefix, expected, associationContains);
     }
 
     private static string CreateDispatchSource(string declarations, string main, string helpers)
@@ -457,7 +458,7 @@ public partial class Test_InteropGenericDiscovery
             """;
     }
 
-    private static void AssertDispatchSource(string source, string associationPrefix, bool expected = true)
+    private static void AssertDispatchSource(string source, string associationPrefix, bool expected = true, string? associationContains = null)
     {
         string directory = Directory.CreateTempSubdirectory("InteropDispatchTest_").FullName;
 
@@ -471,7 +472,8 @@ public partial class Test_InteropGenericDiscovery
 
             Assert.AreEqual(0, exitCode, log);
             Assert.AreEqual(expected, GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
-                .Any(type => type.StartsWith(associationPrefix, StringComparison.Ordinal)), log);
+                .Any(type => type.StartsWith(associationPrefix, StringComparison.Ordinal) &&
+                    (associationContains is null || type.Contains(associationContains, StringComparison.Ordinal))), log);
         }
         finally
         {

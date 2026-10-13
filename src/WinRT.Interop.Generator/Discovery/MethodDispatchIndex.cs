@@ -11,10 +11,16 @@ using AsmResolver.DotNet.Signatures;
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
 /// <summary>
-/// An invocation's read-only generic dispatch relationships, built without reading method bodies.
+/// An invocation's read-only generic dispatch and default-body relationships, built without reading method bodies.
 /// </summary>
 internal sealed partial class MethodDispatchIndex
 {
+    /// <summary>The default-interface ancestry bound, mirroring the member discovery depth limit.</summary>
+    private const int MaxDefaultHierarchyDepth = 32;
+
+    /// <summary>The default-interface signature bound, mirroring the member discovery complexity limit.</summary>
+    private const int MaxDefaultHierarchyComplexity = 256;
+
     /// <summary>The runtime context shared by the loaded input modules.</summary>
     private readonly RuntimeContext _runtimeContext;
 
@@ -32,6 +38,18 @@ internal sealed partial class MethodDispatchIndex
 
     /// <summary>Whether a definition's metadata hierarchy contains any generic virtual declaration.</summary>
     private readonly Dictionary<TypeDefinition, bool> _hasGenericDispatch = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Whether a definition's interface graph can supply non-generic default bodies.</summary>
+    private readonly Dictionary<TypeDefinition, bool> _hasDefaultBodies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Applicable default bodies in each concrete receiver's formal type context.</summary>
+    private readonly Dictionary<TypeDefinition, DefaultBody[]> _defaultBodies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Bounded default-interface hierarchies, separate from the existing generic dispatch cache.</summary>
+    private readonly Dictionary<TypeDefinition, HierarchyType[]> _defaultHierarchies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Incomplete default hierarchies, diagnosed only if their receiver is actually observed.</summary>
+    private readonly Dictionary<TypeDefinition, DefaultHierarchyLimit> _defaultHierarchyLimits = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>Possible implementations, indexed by declaration identity rather than method name.</summary>
     private readonly Dictionary<MethodDefinition, List<Target>> _targets = new(ReferenceEqualityComparer.Instance);
@@ -80,6 +98,9 @@ internal sealed partial class MethodDispatchIndex
             {
                 token.ThrowIfCancellationRequested();
                 IndexType(type);
+
+                // Default selection has separate caches and does not add generic dispatch targets
+                IndexDefaultBodies(type);
             }
         }
 
@@ -146,7 +167,7 @@ internal sealed partial class MethodDispatchIndex
     }
 
     /// <summary>
-    /// Indexes class slots, explicit MethodImpls, and implicit or inherited interface implementations.
+    /// Indexes class slots, explicit 'MethodImpl'-s, and implicit or inherited interface implementations.
     /// </summary>
     /// <param name="type">The receiver definition.</param>
     private void IndexType(TypeDefinition type)
@@ -220,7 +241,7 @@ internal sealed partial class MethodDispatchIndex
     }
 
     /// <summary>
-    /// Indexes MethodImpl bindings, including covariant returns and default-interface overrides.
+    /// Indexes 'MethodImpl' bindings, including covariant returns and default-interface overrides.
     /// </summary>
     /// <param name="receiver">The receiver definition.</param>
     /// <param name="iface">The implemented interface context.</param>
@@ -273,7 +294,7 @@ internal sealed partial class MethodDispatchIndex
     {
         foreach (MethodDefinition body in owner.Definition.Methods)
         {
-            // Other interface bodies require an explicit MethodImpl; only this declaration supplies its default body
+            // Other interface bodies require an explicit 'MethodImpl'; only this declaration supplies its default body
             if (owner.Definition.IsInterface)
             {
                 if (ReferenceEquals(body, declaration) && !body.IsAbstract)

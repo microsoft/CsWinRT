@@ -45,7 +45,7 @@ internal partial class MethodDispatchIndex
 
             for (int i = 0; i < pattern.TypeArguments.Count; i++)
             {
-                // A call through IOuter<object> can dispatch to an implementation of IOuter<string>
+                // A call through 'IOuter<object>' can dispatch to an implementation of 'IOuter<string>'
                 // Preserve observed receiver arguments when variance makes exact unification fail.
                 if (definition?.GenericParameters[i].IsVariant == true)
                 {

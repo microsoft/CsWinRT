@@ -114,7 +114,44 @@ if (dispatchResult != 100)
     return dispatchResult;
 }
 
-return RunGenericDispatchChecks(instance2, cast: true);
+dispatchResult = RunGenericDispatchChecks(instance2, cast: true);
+
+if (dispatchResult != 100)
+{
+    return dispatchResult;
+}
+
+unsafe
+{
+    object value = ((IDefaultCollectionFactory)new DefaultCollectionFactory<TestComponentCSharp.InterfaceDispatchElement>()).Create();
+    void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+    nint vector = 0;
+
+    try
+    {
+        // Existing enum-vector tests do not root this nested vector; typed assertions here would mask discovery
+
+        // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.InterfaceDispatchElement;i4)))
+        Guid iid = new("fa87665e-7544-5f82-bc73-a9517cd8c8c5");
+
+        if (Marshal.QueryInterface((nint)pointer, iid, out vector) != 0 || vector == 0)
+        {
+            return 129;
+        }
+    }
+    finally
+    {
+        if (vector != 0)
+        {
+            _ = Marshal.Release(vector);
+        }
+
+        WindowsRuntimeMarshal.Free(pointer);
+        GC.KeepAlive(value);
+    }
+}
+
+return 100;
 
 static int RunGenericDispatchChecks(TestComponentCSharp.Class component, bool cast)
 {
@@ -198,6 +235,18 @@ object SetAndGetBoxedValue(TestComponentCSharp.Class instance, object val)
     instance.ObjectProperty = val;
     return instance.ObjectProperty;
 }
+
+interface IDefaultCollectionFactory
+{
+    object Create();
+}
+
+interface IDefaultCollectionFactory<T> : IDefaultCollectionFactory
+{
+    object IDefaultCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+}
+
+sealed class DefaultCollectionFactory<T> : IDefaultCollectionFactory<T>;
 
 class ManagedClass
 {

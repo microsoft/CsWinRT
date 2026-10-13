@@ -117,6 +117,21 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>Dispatch-capable body contexts already expanded before the publishing barrier.</summary>
     private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _expandedBodies = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>Actual default-body receiver observations in first-sighting order.</summary>
+    private readonly List<DefaultReceiverObservation> _defaultReceiverObservations = [];
+
+    /// <summary>Minimum observation depths for receivers with applicable default bodies.</summary>
+    private readonly Dictionary<TypeSignature, DefaultReceiverObservation> _defaultReceiverContexts;
+
+    /// <summary>Deferred default receivers, drained only after the existing supplemental worklist.</summary>
+    private readonly Queue<DefaultReceiverObservation> _pendingDefaultReceivers = new();
+
+    /// <summary>Type-only interface body contexts, separate from generic 'MethodSpec' contexts.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedDefaultBodies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Tags receiver, demand, and body-scan publications as default-phase observations for staged late joins.</summary>
+    private bool _isDefaultInterfaceTraversal;
+
     /// <summary>Whether a recursion warning has been reported for either a type or a method.</summary>
     private bool _recursionLimitReported;
 
@@ -181,6 +196,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         _primary = primary;
         _moduleOrdinal = dispatchIndex.GetModuleOrdinal(module);
         _receiverCandidates = new Dictionary<TypeSignature, int>(signatureComparer);
+        _defaultReceiverContexts = new Dictionary<TypeSignature, DefaultReceiverObservation>(signatureComparer);
         _coveredTypes = new Dictionary<TypeSignature, int>(signatureComparer);
         _shallowerTypes = new Dictionary<TypeSignature, int>(signatureComparer);
         _results = new HashSet<TResult>(signatureComparer);
@@ -241,7 +257,15 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             yield return result;
         }
 
-        if (!completeCrossModuleJoins)
+        if (completeCrossModuleJoins)
+        {
+            // Only actual sightings in the join traversal enter this queue; imported receivers do not
+            foreach (TResult result in discovery.EnumerateDefaultInterfaceMembers())
+            {
+                yield return result;
+            }
+        }
+        else
         {
             // Receiver-only modules must still publish their contexts for the late cross-module join
             TypeSignatureDiscovery<TResult> supplemental = new(

@@ -16,6 +16,188 @@ public partial class Test_InteropGenericDiscovery
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    public void DefaultInterfaceBody_IncompleteSpecificityDiscardsReceiverSelection(bool treatWarningsAsErrors)
+    {
+        string hierarchy = string.Join('\n', Enumerable.Range(1, 39).Select(index =>
+            $"public interface ILevel{index}<T> : ILevel{index - 1}<T>;"));
+        string interfaces = string.Join(", ", Enumerable.Range(0, 41).Select(index => $"ILevel{index}<T>"));
+
+        // Previsited ancestors keep the receiver walk shallow, but comparing the last override
+        // against the base default still needs a complete, independently bounded interface hierarchy.
+        AssertDispatchLimit($$"""
+            using Windows.Foundation;
+            namespace DispatchLimits;
+            public struct Marker;
+            public sealed class Node<T> : IStringable { public override string ToString() => "node"; }
+            public interface IFactory { object Create(); }
+            public interface ILevel0<T> : IFactory
+            {
+                object IFactory.Create() => new Node<T>();
+            }
+            {{hierarchy}}
+            public interface ILevel40<T> : ILevel39<T>
+            {
+                object IFactory.Create() => null!;
+            }
+            public sealed class Factory<T> : {{interfaces}};
+            public static class Program
+            {
+                public static void Main() => _ = ((IFactory)new Factory<Marker>()).Create();
+            }
+            """, RecursionWarning, treatWarningsAsErrors);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public void DefaultInterfaceBody_MetadataHierarchyIsBounded(bool expanding, bool treatWarningsAsErrors)
+    {
+        int levels = expanding ? 10 : 40;
+        string hierarchy = string.Join('\n', Enumerable.Range(0, levels).Select(index =>
+            $"public interface ILevel{index}<T> : ILevel{index + 1}<{(expanding ? "Pair<T, T>" : "T")}>;"));
+
+        AssertDispatchLimit($$"""
+            using Windows.Foundation;
+            namespace DispatchLimits;
+            public struct Marker;
+            public sealed class Pair<X, Y>;
+            public sealed class Node<T> : IStringable { public override string ToString() => "node"; }
+            public interface IFactory { object Create(); }
+            public interface ILevel{{levels}}<T> : IFactory
+            {
+                object IFactory.Create() => new Node<T>();
+            }
+            {{hierarchy}}
+            public sealed class Factory<T> : ILevel0<T>;
+            public static class Program
+            {
+                public static void Main() => _ = ((IFactory)new Factory<Marker>()).Create();
+            }
+            """, expanding ? ComplexityWarning : RecursionWarning, treatWarningsAsErrors);
+    }
+
+    [TestMethod]
+    [DataRow("Node<T>", RecursionWarning, false)]
+    [DataRow("Node<T>", RecursionWarning, true)]
+    [DataRow("Pair<T, T>", ComplexityWarning, false)]
+    [DataRow("Pair<T, T>", ComplexityWarning, true)]
+    public void DefaultInterfaceBody_ExpandingReceiversRespectLimits(string argument, string warning, bool treatWarningsAsErrors)
+    {
+        AssertDispatchLimit($$"""
+            using Windows.Foundation;
+            namespace DispatchLimits;
+            public struct Marker;
+            public sealed class Pair<X, Y>;
+            public sealed class Node<T> : IStringable { public override string ToString() => "node"; }
+            public interface IFactory { object Create(); }
+            public interface IFactory<T> : IFactory
+            {
+                object IFactory.Create()
+                {
+                    _ = new Node<T>();
+                    return new Factory<{{argument}}>();
+                }
+            }
+            public sealed class Factory<T> : IFactory<T>;
+            public static class Program
+            {
+                public static void Main() => _ = ((IFactory)new Factory<Marker>()).Create();
+            }
+            """, warning, treatWarningsAsErrors);
+    }
+
+    [TestMethod]
+    public void DefaultInterfaceBody_DoesNotDisplaceExistingSupplementalCutoff()
+    {
+        string targets = string.Join('\n', Enumerable.Range(0, 1030).Select(index => $$"""
+            public struct Marker{{index}};
+            public sealed class Target{{index}} : IDispatch
+            {
+                public object Create<T>() => new Existing<Pair<Marker{{index}}, T>>();
+            }
+            """));
+        string directory = Directory.CreateTempSubdirectory("InteropDefaultBodyCutoff_").FullName;
+
+        try
+        {
+            HashSet<string>? original = null;
+            byte[]? firstOutput = null;
+            string app = Path.Combine(directory, "App.dll");
+
+            foreach ((bool observeDefault, int parallelism) in new[] { (false, 1), (true, 1), (true, 4) })
+            {
+                if (parallelism == 1)
+                {
+                    _ = ProjectionWriterRunner.CompileSources(
+                    [$$"""
+                    using Windows.Foundation;
+                    namespace Cutoff;
+                    public struct Marker;
+                    public sealed class Pair<X, Y>;
+                    public sealed class Existing<T> : IStringable { public override string ToString() => "existing"; }
+                    public sealed class Additional<T> : IStringable { public override string ToString() => "additional"; }
+                    public interface IDispatch { object Create<T>(); }
+                    {{targets}}
+                    public interface IFactory { object Create(); }
+                    public interface IFactory<T> : IFactory
+                    {
+                        object IFactory.Create() => new Additional<T>();
+                    }
+                    public sealed class Factory<T> : IFactory<T>;
+                    public static class Program
+                    {
+                        public static void Main()
+                        {
+                            {{(observeDefault ? "_ = new Factory<Marker>();" : "")}}
+                            _ = ((IDispatch)new Target0()).Create<Marker>();
+                        }
+                    }
+                    """], app, outputKind: OutputKind.ConsoleApplication);
+                }
+
+                (int exitCode, string log) = RunGenerator(directory, app, maxDegreesOfParallelism: parallelism);
+
+                Assert.AreEqual(0, exitCode, log);
+                StringAssert.Contains(log, "Supplemental generic discovery");
+
+                string interop = Path.Combine(directory, "WinRT.Interop.dll");
+                HashSet<string> associations = GetComWrappersTypeAssociations(interop);
+                HashSet<string> existing = [.. associations.Where(static type => type.StartsWith("Cutoff.Existing`1", StringComparison.Ordinal))];
+
+                Assert.AreEqual(1024, existing.Count, log);
+                Assert.IsFalse(associations.Any(static type => type.StartsWith("Cutoff.Additional`1", StringComparison.Ordinal)), log);
+
+                if (original is not null)
+                {
+                    Assert.IsTrue(original.SetEquals(existing), "Default receivers displaced previously covered supplemental bodies.");
+                }
+
+                original = existing;
+
+                if (observeDefault)
+                {
+                    byte[] output = File.ReadAllBytes(interop);
+
+                    if (firstOutput is not null)
+                    {
+                        CollectionAssert.AreEqual(firstOutput, output);
+                    }
+
+                    firstOutput = output;
+                }
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     public void GenericDispatch_ExpandingCallsRespectExistingDepthLimit(bool treatWarningsAsErrors)
     {
         AssertDispatchLimit("""
