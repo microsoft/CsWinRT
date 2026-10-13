@@ -323,6 +323,6 @@ internal static partial class DiagnosticDescriptors
         category: "WindowsRuntime.SourceGenerator",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "A 'Span<T>' parameter on a Windows Runtime method is projected as a fill array in the ABI, meaning the implementation is only allowed to write to it, not read from it. Reading from such a parameter (e.g. by indexing it for a value or a readonly reference, converting it to 'ReadOnlySpan<T>', or iterating over it) is not supported. Use 'ReadOnlySpan<T>' for a parameter that should be read from instead.",
+        description: "A 'Span<T>' parameter on a Windows Runtime method is projected as a write-only fill array in the ABI. Reading the buffer's existing contents is not supported, but reading values the implementation has initialized is valid. The analyzer detects element reads and conservatively treats readonly references, conversions to 'ReadOnlySpan<T>', and value or readonly iteration as potential reads. Use 'ReadOnlySpan<T>' for a parameter that should receive input data instead.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
