@@ -2465,4 +2465,294 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
 
         await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
     }
+
+    [TestMethod]
+    public async Task RefReassignmentResultReads_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int n = 0;
+                    ref int slot = ref n;
+
+                    // The result of a ref assignment is the new referent, so consuming it by value reads the element
+                    _ = (slot = ref {|CSWINRT2023:span[0]|});
+                    int value = (slot = ref {|CSWINRT2023:span[1]|});
+                    Value(slot = ref {|CSWINRT2023:span[2]|});
+                }
+
+                private static void Value(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task FieldReadsAfterSameFieldWrite_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public struct Inner
+            {
+                public int Value;
+            }
+
+            public struct Pair
+            {
+                public int X;
+                public int Y;
+                public Inner Inner;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Pair> span)
+                {
+                    span[0].X = 1;
+                    _ = span[0].X;
+
+                    span[1].Inner.Value = 2;
+                    _ = span[1].Inner.Value;
+
+                    (span[2].X, span[2].Y) = (3, 4);
+                    _ = span[2].X;
+                    _ = span[2].Y;
+
+                    foreach (ref Pair pair in span)
+                    {
+                        pair.X = 5;
+                        _ = pair.X;
+
+                        pair.Inner.Value = 6;
+                        _ = pair.Inner.Value;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task FieldReadsAfterOtherFieldWrite_Warn()
+    {
+        const string source = """
+            using System;
+
+            public struct Inner
+            {
+                public int Value;
+            }
+
+            public struct Pair
+            {
+                public int X;
+                public int Y;
+                public Inner Inner;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Pair> span)
+                {
+                    span[0].X = 1;
+                    _ = {|CSWINRT2023:span[0]|}.Y;
+                    _ = {|CSWINRT2023:span[0]|};
+
+                    span[1].Inner.Value = 2;
+                    _ = {|CSWINRT2023:span[1]|}.X;
+
+                    int i = 0;
+                    span[i].X = 3;
+                    i++;
+                    _ = {|CSWINRT2023:span[i]|}.X;
+
+                    foreach (ref Pair pair in span)
+                    {
+                        pair.X = 4;
+                        _ = {|CSWINRT2023:pair|}.Y;
+                        _ = {|CSWINRT2023:pair|};
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task FieldReadsAfterContainingFieldOrElementWrite_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public struct Inner
+            {
+                public int Value;
+                public int Other;
+            }
+
+            public class Node
+            {
+                public int Value;
+            }
+
+            public struct Pair
+            {
+                public int X;
+                public Inner Inner;
+                public Node Node;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Pair> span)
+                {
+                    span[0] = new Pair();
+                    _ = span[0].X;
+                    _ = span[0].Inner.Value;
+
+                    span[1].Inner = new Inner { Value = 42 };
+                    _ = span[1].Inner.Value;
+                    _ = span[1].Inner.Other;
+
+                    int i = 2;
+                    span[i].X = 42;
+                    _ = span[i].X;
+
+                    Set(out span[3].X);
+                    _ = span[3].X;
+
+                    span[4].Node = new Node();
+                    span[4].Node.Value = 42;
+                    _ = span[4].Node.Value;
+
+                    foreach (ref Pair pair in span)
+                    {
+                        pair.Inner = new Inner { Value = 42 };
+                        _ = pair.Inner.Value;
+
+                        Set(out pair.X);
+                        _ = pair.X;
+                    }
+                }
+
+                private static void Set(out int value) => value = 42;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task FieldReadsAfterNonCoveringWrites_Warn()
+    {
+        const string source = """
+            using System;
+
+            public struct Inner
+            {
+                public int Value;
+                public int Other;
+
+                public int Touch() => Value + Other;
+            }
+
+            public class Node
+            {
+                public int Value;
+            }
+
+            public struct Pair
+            {
+                public int X;
+                public Inner Inner;
+                public Node Node;
+
+                public int Touch() => X + Inner.Other;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Pair> span)
+                {
+                    span[0].Inner.Value = 42;
+                    _ = {|CSWINRT2023:span[0]|}.Inner;
+                    _ = {|CSWINRT2023:span[0]|}.Inner.Other;
+
+                    span[1].X = 42;
+                    _ = {|CSWINRT2023:span[1]|}.Touch();
+
+                    span[2].Inner.Value = 42;
+                    _ = {|CSWINRT2023:span[2]|}.Inner.Touch();
+
+                    span[3].X = 42;
+                    {|CSWINRT2023:span[3]|}.Node.Value = 42;
+                }
+
+                public void FillWithReassignment(Span<Pair> span, Span<Pair> other)
+                {
+                    span[0].X = 42;
+                    span = other;
+
+                    _ = {|CSWINRT2023:span[0]|}.X;
+                }
+
+                public void FillWithIndirectReassignment(Span<Pair> span, Span<Pair> other)
+                {
+                    span[0].X = Redirect(ref span, other);
+
+                    _ = {|CSWINRT2023:span[0]|}.X;
+                }
+
+                private static int Redirect(ref Span<Pair> span, Span<Pair> other)
+                {
+                    span = other;
+
+                    return 42;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    [DataRow("X", "Item1")]
+    [DataRow("Item1", "X")]
+    public async Task TupleFieldReadsAfterEquivalentFieldWrite_DoNotWarn(string writeField, string readField)
+    {
+        string source = $$"""
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<(int X, int Y)> span)
+                {
+                    span[0].{{writeField}} = 42;
+
+                    _ = span[0].{{readField}};
+                    _ = {|CSWINRT2023:span[0]|}.Y;
+
+                    foreach (ref (int X, int Y) pair in span)
+                    {
+                        pair.{{writeField}} = 42;
+
+                        _ = pair.{{readField}};
+                        _ = {|CSWINRT2023:pair|}.Y;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
 }
