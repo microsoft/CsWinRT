@@ -27,8 +27,9 @@ public sealed class Greeter
 /// <summary>
 /// Implements 'TestComponent.Class', a runtime class declared in existing metadata, so it does *not* go
 /// into this component's '.winmd'. It can only be activated through the parameterless
-/// 'ActivateInstance', so no factory is declared here: CsWinRT generates one.
+/// 'ActivateInstance', so no factory is declared here: CsWinRT generates one, as requested by the attribute.
 /// </summary>
+[global::WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
 public sealed class ImplementedClass : global::ABI.TestComponent.Class
 {
     public override int One() => 1;

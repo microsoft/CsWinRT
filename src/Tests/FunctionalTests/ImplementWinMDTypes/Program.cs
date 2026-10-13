@@ -183,8 +183,8 @@ unsafe
 
     // An unsealed class is only activatable through its composable factory in metadata, which a caller
     // activating it by class name does not use. Implemented here, its public parameterless constructor also
-    // backs default activation through 'IActivationFactory' ('MyComposableFactory' for 'Composable', and a
-    // generated factory for 'Derived').
+    // backs default activation through 'IActivationFactory' ('MyComposableFactory' for 'Composable', and the
+    // factory generated for 'MyDerived' for 'Derived').
     foreach (string composableClassName in (string[])["TestComponent.Composable", "TestComponent.Derived"])
     {
         if (!NativeActivate(composableClassName, out void* composableInstance))
@@ -436,10 +436,11 @@ static extern int WindowsDeleteString(nint hstring);
 namespace ImplementWinMDTypes
 {
     /// <summary>
-    /// Implements 'TestComponent.Class', a runtime class with default activation. It declares no factory,
-    /// so CsWinRT generates one (see the checks above): the only thing a factory can do for a class with
-    /// default activation is construct the implementation.
+    /// Implements 'TestComponent.Class', a runtime class with default activation. The only thing a factory can do
+    /// for such a class is construct the implementation, so it requests a generated one instead of declaring it
+    /// (see the checks above).
     /// </summary>
+    [global::WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
     public sealed class MyClass : global::ABI.TestComponent.Class
     {
         public override int One() => 1;
@@ -519,6 +520,7 @@ namespace ImplementWinMDTypes
     /// Implements 'TestComponent.Derived', a composable runtime class deriving from another one. Its base
     /// chains to <c>ABI.TestComponent.Composable</c>, so that class's members have to be supplied too.
     /// </summary>
+    [global::WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
     public sealed class MyDerived : global::ABI.TestComponent.Derived
     {
         public override int Value { get; set; }

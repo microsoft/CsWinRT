@@ -30,10 +30,11 @@ public sealed partial class AuthoringExportTypesGenerator : IIncrementalGenerato
                 Helpers.GetDeclaredActivationFactory)
             .SkipNullValues();
 
-        // Get the implementations of Windows Runtime classes declared in existing metadata, which may need a factory generated
+        // Get the implementations of Windows Runtime classes declared in existing metadata that opted into a generated factory
         IncrementalValuesProvider<AuthoringImplementationInfo> implementations = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                static (node, _) => node is ClassDeclarationSyntax { BaseList.Types.Count: > 0 },
+            .ForAttributeWithMetadataName(
+                "WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactoryAttribute",
+                static (node, _) => node is ClassDeclarationSyntax,
                 Helpers.GetImplementation)
             .SkipNullValues();
 

@@ -8,8 +8,9 @@ namespace AuthoringImplementWinMDTypesTest;
 /// <summary>
 /// Implements 'TestComponent.Class', a runtime class declared in existing metadata. It can only be
 /// activated through the parameterless 'ActivateInstance', so no factory is declared here: CsWinRT
-/// generates one.
+/// generates one, as requested by the attribute.
 /// </summary>
+[global::WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
 public sealed class ImplementedClass : global::ABI.TestComponent.Class
 {
     public override int One() => 1;

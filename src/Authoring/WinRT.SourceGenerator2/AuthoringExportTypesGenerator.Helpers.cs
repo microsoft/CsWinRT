@@ -109,14 +109,16 @@ public partial class AuthoringExportTypesGenerator
         }
 
         /// <summary>
-        /// Gets the Windows Runtime class implemented by a candidate type, if it derives from a generated instance base.
+        /// Gets the Windows Runtime class implemented by a type annotated with <c>[GeneratedWindowsRuntimeActivationFactory]</c>.
         /// </summary>
-        /// <param name="context">The <see cref="GeneratorSyntaxContext"/> for the candidate type.</param>
+        /// <param name="context">The <see cref="GeneratorAttributeSyntaxContext"/> for the annotated type.</param>
         /// <param name="token">The <see cref="CancellationToken"/> instance to use.</param>
         /// <returns>The implementation, or <see langword="null"/> if the type is not one.</returns>
-        public static AuthoringImplementationInfo? GetImplementation(GeneratorSyntaxContext context, CancellationToken token)
+        public static AuthoringImplementationInfo? GetImplementation(GeneratorAttributeSyntaxContext context, CancellationToken token)
         {
-            if (context.SemanticModel.GetDeclaredSymbol(context.Node, token) is not INamedTypeSymbol { IsAbstract: false, IsStatic: false, TypeKind: TypeKind.Class } type)
+            token.ThrowIfCancellationRequested();
+
+            if (context.TargetSymbol is not INamedTypeSymbol { IsAbstract: false, IsStatic: false, TypeKind: TypeKind.Class } type)
             {
                 return null;
             }
@@ -147,10 +149,10 @@ public partial class AuthoringExportTypesGenerator
 
         /// <summary>
         /// Gets the activation factories for the current compilation: the ones the author declared, plus the ones CsWinRT
-        /// supplies for implementations whose runtime class has no declared factory.
+        /// generates for implementations annotated with <c>[GeneratedWindowsRuntimeActivationFactory]</c>.
         /// </summary>
         /// <param name="declaredFactories">The activation factories the author declared.</param>
-        /// <param name="implementations">The implementations of Windows Runtime classes declared in existing metadata.</param>
+        /// <param name="implementations">The implementations annotated with <c>[GeneratedWindowsRuntimeActivationFactory]</c>.</param>
         /// <param name="assemblyName">The name of the current assembly.</param>
         /// <returns>The activation factories, ordered by runtime class name.</returns>
         public static EquatableArray<AuthoringActivationFactoryInfo> GetActivationFactories(
@@ -160,8 +162,8 @@ public partial class AuthoringExportTypesGenerator
         {
             ImmutableArray<AuthoringActivationFactoryInfo>.Builder builder = ImmutableArray.CreateBuilder<AuthoringActivationFactoryInfo>();
 
-            // Runtime classes the author declared a factory for. Those always win: the factory may implement additional
-            // interop interfaces that need to be on its vtable, which cannot be inferred from here.
+            // Runtime classes the author declared a factory for. Requesting a generated one as well is reported as a duplicate
+            // by the analyzer, and the declared one wins, as it may implement additional interop interfaces for its vtable.
             HashSet<string> declaredRuntimeClasses = new(StringComparer.Ordinal);
 
             foreach (AuthoringActivationFactoryInfo factory in declaredFactories)
@@ -173,7 +175,7 @@ public partial class AuthoringExportTypesGenerator
 
             string factoryNamespace = $"ABI.{assemblyName.EscapeIdentifierName()}";
 
-            // A partial type with a base list on several declarations is discovered once per declaration
+            // A partial type with the attribute on several declarations is discovered once per declaration
             foreach (IGrouping<string, AuthoringImplementationInfo> group in implementations
                 .Distinct()
                 .GroupBy(static implementation => implementation.RuntimeClassName, StringComparer.Ordinal))
@@ -183,8 +185,8 @@ public partial class AuthoringExportTypesGenerator
                     continue;
                 }
 
-                // Several implementations of the same runtime class give no basis for picking the one to activate,
-                // so the author has to say which by declaring the factory themselves.
+                // Requesting the factory on several implementations of the same runtime class is reported by the analyzer, as
+                // is requesting it for a class whose factory cannot be generated (which has no factory base name here).
                 if (group.Take(2).Count() != 1 || group.First() is not { FactoryBaseTypeName: string factoryBaseTypeName } implementation)
                 {
                     continue;
