@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -15,8 +14,8 @@ namespace WindowsRuntime.SourceGenerator.Diagnostics;
 
 /// <summary>
 /// A diagnostic analyzer that warns when an implementation of an activatable Windows Runtime class defined in existing metadata
-/// leaves that class without an activation factory: none is declared with <c>[WindowsRuntimeActivationFactory]</c>, and CsWinRT
-/// cannot generate one.
+/// leaves that class without an activation factory: none is declared for it with <c>[WindowsRuntimeActivationFactory]</c>, and
+/// none is requested for it with <c>[GeneratedWindowsRuntimeActivationFactory]</c> on one of its implementations.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyzer
@@ -32,17 +31,18 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
 
         context.RegisterCompilationStartAction(static context =>
         {
-            // Get the '[WindowsRuntimeActivationFactory]' symbol
-            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAttribute") is not { } activationFactoryAttributeType)
+            // Get the '[WindowsRuntimeActivationFactory]' and '[GeneratedWindowsRuntimeActivationFactory]' symbols
+            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAttribute") is not { } activationFactoryAttributeType ||
+                context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactoryAttribute") is not { } generatedActivationFactoryAttributeType)
             {
                 return;
             }
 
             ImplementableClassLookup implementableClasses = new();
 
-            // The implementations of Windows Runtime classes, and the Windows Runtime classes with a declared activation factory
+            // The implementations of Windows Runtime classes, and the Windows Runtime classes with an activation factory
             ConcurrentBag<(string RuntimeClassName, INamedTypeSymbol Type, INamedTypeSymbol InstanceBase)> implementations = [];
-            ConcurrentDictionary<string, byte> declaredFactories = new(StringComparer.Ordinal);
+            ConcurrentDictionary<string, byte> classesWithFactory = new(StringComparer.Ordinal);
 
             context.RegisterSymbolAction(context =>
             {
@@ -55,13 +55,23 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
                 if (type.HasAttributeWithType(activationFactoryAttributeType) &&
                     implementableClasses.GetFactoryBase(type.BaseType) is INamedTypeSymbol factoryBase)
                 {
-                    _ = declaredFactories.TryAdd(implementableClasses.GetFactoryRuntimeClassName(factoryBase)!, 0);
+                    _ = classesWithFactory.TryAdd(implementableClasses.GetFactoryRuntimeClassName(factoryBase)!, 0);
                 }
 
-                if (implementableClasses.GetInstanceBase(type.BaseType) is INamedTypeSymbol instanceBase)
+                if (implementableClasses.GetInstanceBase(type.BaseType) is not INamedTypeSymbol instanceBase)
                 {
-                    implementations.Add((implementableClasses.GetInstanceRuntimeClassName(instanceBase)!, type, instanceBase));
+                    return;
                 }
+
+                string runtimeClassName = implementableClasses.GetInstanceRuntimeClassName(instanceBase)!;
+
+                // A requested factory counts even if it cannot be generated, as that is reported on the attribute instead
+                if (type.HasAttributeWithType(generatedActivationFactoryAttributeType))
+                {
+                    _ = classesWithFactory.TryAdd(runtimeClassName, 0);
+                }
+
+                implementations.Add((runtimeClassName, type, instanceBase));
             }, SymbolKind.NamedType);
 
             context.RegisterCompilationEndAction(context =>
@@ -70,8 +80,7 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
                     static implementation => implementation.RuntimeClassName,
                     StringComparer.Ordinal))
                 {
-                    // The class is activated through the factory the author declared
-                    if (declaredFactories.ContainsKey(group.Key))
+                    if (classesWithFactory.ContainsKey(group.Key))
                     {
                         continue;
                     }
@@ -83,40 +92,16 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
                         continue;
                     }
 
-                    // Generic implementations are never activated, so CsWinRT only considers the other ones
-                    List<INamedTypeSymbol> candidates = [.. group
-                        .Select(static implementation => implementation.Type)
-                        .Where(static type => !type.IsGenericOrNestedInGenericType)];
+                    bool hasDefaultActivationOnly = implementableClasses.HasDefaultActivationOnly(factoryBase);
 
-                    if (candidates.Count == 0)
+                    foreach ((_, INamedTypeSymbol type, _) in group)
                     {
-                        foreach ((_, INamedTypeSymbol type, _) in group)
-                        {
-                            Report(context, type, group.Key, factoryBase, "it is generic, or nested in a generic type, so it cannot be instantiated");
-                        }
-
-                        continue;
-                    }
-
-                    if (candidates.Count > 1)
-                    {
-                        string names = string.Join(", ", candidates
-                            .Select(static type => $"'{type.ToDisplayString()}'")
-                            .OrderBy(static name => name, StringComparer.Ordinal));
-
-                        foreach (INamedTypeSymbol type in candidates)
-                        {
-                            Report(context, type, group.Key, factoryBase, $"there are several implementations of it to choose from ({names})");
-                        }
-
-                        continue;
-                    }
-
-                    INamedTypeSymbol implementation = candidates[0];
-
-                    if (GetNotGeneratableReason(implementation, factoryBase, context.Compilation, implementableClasses) is string reason)
-                    {
-                        Report(context, implementation, group.Key, factoryBase, reason);
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            DiagnosticDescriptors.ImplementedRuntimeClassNotActivatable,
+                            type.Locations.FirstOrDefault(),
+                            type,
+                            group.Key,
+                            GetSuggestion(type, factoryBase, hasDefaultActivationOnly, context.Compilation)));
                     }
                 }
             });
@@ -124,53 +109,26 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
     }
 
     /// <summary>
-    /// Gets why CsWinRT cannot generate the activation factory for the only implementation of a Windows Runtime class.
+    /// Gets how to make an implemented Windows Runtime class activatable, from one of its implementations.
     /// </summary>
     /// <param name="implementation">The implementation.</param>
     /// <param name="factoryBase">The generated activation factory base for the implemented class.</param>
+    /// <param name="hasDefaultActivationOnly">Whether the implemented class is only activated through its parameterless constructor.</param>
     /// <param name="compilation">The current <see cref="Compilation"/>.</param>
-    /// <param name="implementableClasses">The lookup for the generated bases.</param>
-    /// <returns>The reason, or <see langword="null"/> if CsWinRT generates the activation factory.</returns>
-    private static string? GetNotGeneratableReason(
-        INamedTypeSymbol implementation,
-        INamedTypeSymbol factoryBase,
-        Compilation compilation,
-        ImplementableClassLookup implementableClasses)
+    /// <returns>The suggestion to include in the diagnostic.</returns>
+    private static string GetSuggestion(INamedTypeSymbol implementation, INamedTypeSymbol factoryBase, bool hasDefaultActivationOnly, Compilation compilation)
     {
-        if (!implementableClasses.HasDefaultActivationOnly(factoryBase))
+        string declare = $"declare an activation factory deriving from '{factoryBase}' with '[WindowsRuntimeActivationFactory]'";
+
+        // Only suggest the generated factory where it would be valid (otherwise, 'CSWINRT2027' would report it)
+        if (hasDefaultActivationOnly &&
+            !implementation.IsGenericOrNestedInGenericType &&
+            compilation.IsSymbolAccessibleWithin(implementation, compilation.Assembly) &&
+            implementation.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
         {
-            return "the class has statics or constructors with parameters, which only a declared activation factory can implement";
+            return $"annotate '{implementation}' with '[GeneratedWindowsRuntimeActivationFactory]', or {declare}";
         }
 
-        if (!compilation.IsSymbolAccessibleWithin(implementation, compilation.Assembly))
-        {
-            return $"'{implementation}' is not accessible from the rest of its assembly";
-        }
-
-        if (!implementation.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
-        {
-            return $"'{implementation}' has no parameterless constructor accessible from the rest of its assembly";
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Reports a diagnostic for an implementation whose Windows Runtime class is not activatable.
-    /// </summary>
-    /// <param name="context">The <see cref="CompilationAnalysisContext"/> to report the diagnostic to.</param>
-    /// <param name="type">The implementation.</param>
-    /// <param name="runtimeClassName">The implemented Windows Runtime class.</param>
-    /// <param name="factoryBase">The generated activation factory base for the implemented class.</param>
-    /// <param name="reason">Why CsWinRT cannot generate the activation factory.</param>
-    private static void Report(CompilationAnalysisContext context, INamedTypeSymbol type, string runtimeClassName, INamedTypeSymbol factoryBase, string reason)
-    {
-        context.ReportDiagnostic(Diagnostic.Create(
-            DiagnosticDescriptors.ImplementedRuntimeClassNotActivatable,
-            type.Locations.FirstOrDefault(),
-            type,
-            runtimeClassName,
-            reason,
-            factoryBase));
+        return declare;
     }
 }

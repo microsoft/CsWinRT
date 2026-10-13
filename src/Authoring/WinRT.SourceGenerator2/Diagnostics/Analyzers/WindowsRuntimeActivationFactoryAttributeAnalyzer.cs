@@ -18,6 +18,8 @@ namespace WindowsRuntime.SourceGenerator.Diagnostics;
 ///   <item>A non-abstract class deriving from a generated activation factory base, implementing the activation factory of a Windows Runtime class defined in existing metadata.</item>
 ///   <item>A public abstract class in a Windows Runtime component, adding interfaces to the activation factory generated for an authored Windows Runtime class.</item>
 /// </list>
+/// It also validates implementations annotated with <c>[GeneratedWindowsRuntimeActivationFactory]</c>, which request a generated
+/// activation factory instead, so that a Windows Runtime class getting more than one activation factory either way is reported.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : DiagnosticAnalyzer
@@ -27,7 +29,8 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
     [
         DiagnosticDescriptors.InvalidActivationFactoryType,
         DiagnosticDescriptors.ActivationFactoryRuntimeClassMismatch,
-        DiagnosticDescriptors.DuplicateActivationFactory
+        DiagnosticDescriptors.DuplicateActivationFactory,
+        DiagnosticDescriptors.InvalidGeneratedActivationFactoryType
     ];
 
     /// <inheritdoc/>
@@ -44,16 +47,42 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
                 return;
             }
 
+            // Get the '[GeneratedWindowsRuntimeActivationFactory]' symbol
+            INamedTypeSymbol? generatedActivationFactoryAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactoryAttribute");
+
             bool isComponent = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetCsWinRTComponent();
             ImplementableClassLookup implementableClasses = new();
 
-            // The valid activation factories, keyed by the Windows Runtime class each one is for
+            // The valid activation factories (declared or requested), keyed by the Windows Runtime class each one is for
             ConcurrentBag<(string RuntimeClassName, INamedTypeSymbol Type, Location Location)> activationFactories = [];
 
             context.RegisterSymbolAction(context =>
             {
-                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Class } type ||
-                    !type.TryGetAttributeWithType(activationFactoryAttributeType, out AttributeData? attribute))
+                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Class } type)
+                {
+                    return;
+                }
+
+                if (generatedActivationFactoryAttributeType is not null &&
+                    type.TryGetAttributeWithType(generatedActivationFactoryAttributeType, out AttributeData? generatedAttribute))
+                {
+                    Location generatedLocation = generatedAttribute.GetLocation(context.CancellationToken) ?? type.Locations.FirstOrDefault() ?? Location.None;
+
+                    if (GetInvalidGeneratedFactoryReason(type, context.Compilation, implementableClasses, out string? implementedRuntimeClassName) is string generatedInvalidReason)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            DiagnosticDescriptors.InvalidGeneratedActivationFactoryType,
+                            generatedLocation,
+                            type,
+                            generatedInvalidReason));
+                    }
+                    else
+                    {
+                        activationFactories.Add((implementedRuntimeClassName!, type, generatedLocation));
+                    }
+                }
+
+                if (!type.TryGetAttributeWithType(activationFactoryAttributeType, out AttributeData? attribute))
                 {
                     return;
                 }
@@ -173,6 +202,66 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
         {
             return "it has no parameterless constructor accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
         }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets why CsWinRT cannot generate the activation factory for a type annotated with <c>[GeneratedWindowsRuntimeActivationFactory]</c>.
+    /// </summary>
+    /// <param name="type">The annotated type.</param>
+    /// <param name="compilation">The current <see cref="Compilation"/>.</param>
+    /// <param name="implementableClasses">The lookup for the generated bases.</param>
+    /// <param name="runtimeClassName">The Windows Runtime class <paramref name="type"/> implements, if it is valid.</param>
+    /// <returns>The reason, or <see langword="null"/> if <paramref name="type"/> is valid.</returns>
+    private static string? GetInvalidGeneratedFactoryReason(
+        INamedTypeSymbol type,
+        Compilation compilation,
+        ImplementableClassLookup implementableClasses,
+        out string? runtimeClassName)
+    {
+        runtimeClassName = null;
+
+        if (implementableClasses.GetInstanceBase(type.BaseType) is not INamedTypeSymbol instanceBase ||
+            implementableClasses.GetInstanceRuntimeClassName(instanceBase) is not string implementedRuntimeClassName)
+        {
+            return "it does not derive from a generated implementable base class (such as 'ABI.<Namespace>.<Class>'), so it does not implement a Windows Runtime class defined in existing metadata.";
+        }
+
+        // The generated activation factory constructs the annotated type from the generated activation entry point
+        if (type.IsAbstract || type.IsStatic)
+        {
+            return "it is abstract, so CsWinRT cannot instantiate it.";
+        }
+
+        if (type.IsGenericOrNestedInGenericType)
+        {
+            return "it is generic, or nested in a generic type, so CsWinRT cannot instantiate it.";
+        }
+
+        if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
+        {
+            return "it is not accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
+        }
+
+        if (!type.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
+        {
+            return "it has no parameterless constructor accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
+        }
+
+        if (implementableClasses.GetFactoryBaseForInstanceBase(instanceBase) is not INamedTypeSymbol factoryBase)
+        {
+            return $"the Windows Runtime class '{implementedRuntimeClassName}' it implements is not activatable.";
+        }
+
+        if (!implementableClasses.HasDefaultActivationOnly(factoryBase))
+        {
+            return
+                $"the Windows Runtime class '{implementedRuntimeClassName}' it implements has statics or constructors with parameters, which only a declared activation factory can implement. " +
+                $"Declare one deriving from '{factoryBase}' with '[WindowsRuntimeActivationFactory]' instead.";
+        }
+
+        runtimeClassName = implementedRuntimeClassName;
 
         return null;
     }
