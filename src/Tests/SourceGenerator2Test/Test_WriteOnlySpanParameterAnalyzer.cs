@@ -1302,4 +1302,1167 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
 
         await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
     }
+
+    // --- Regression tests for false positives (and their read counterparts) ---
+
+    [TestMethod]
+    public async Task NestedStructFieldWrites_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public struct Inner
+            {
+                public int Value;
+            }
+
+            public struct Pair
+            {
+                public int X;
+                public int Y;
+                public Inner Inner;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Pair> span, Span<(int, int)> tuples)
+                {
+                    // Assigning a field of a struct element only writes to (part of) that element
+                    span[0].X = 1;
+                    span[0].Y = 2;
+                    span[1].Inner.Value = 3;
+                    (span[2].X, span[2].Y) = (4, 5);
+                    tuples[0].Item1 = 6;
+
+                    foreach (ref Pair pair in span)
+                    {
+                        pair.X = 7;
+                        pair.Inner.Value = 8;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task NestedStructFieldReads_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Node
+            {
+                public int Value;
+            }
+
+            public struct Pair
+            {
+                public int X;
+                public int Y;
+                public Node Node;
+
+                public void Touch()
+                {
+                }
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Pair> span, Span<Node> nodes)
+                {
+                    int x = {|CSWINRT2023:span[0]|}.X;
+                    {|CSWINRT2023:span[1]|}.X += 1;
+                    {|CSWINRT2023:span[2]|}.X++;
+                    Value({|CSWINRT2023:span[3]|}.Y);
+                    {|CSWINRT2023:span[4]|}.Touch();
+
+                    // Writing a field through a reference stored in the element reads that reference
+                    {|CSWINRT2023:span[5]|}.Node.Value = 1;
+                    {|CSWINRT2023:nodes[0]|}.Value = 1;
+
+                    // Writing one field says nothing about the other ones
+                    span[6].X = 1;
+                    int y = {|CSWINRT2023:span[6]|}.Y;
+
+                    foreach (ref Pair pair in span)
+                    {
+                        int value = {|CSWINRT2023:pair|}.X;
+                    }
+                }
+
+                private static void Value(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task DeconstructionAssignments_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    (span[0], span[1]) = (1, 2);
+                    ((span[2], span[3]), _) = ((3, 4), 5);
+                    (span[4], span[5]) = GetPair();
+                    (span[6], int declared) = (6, 7);
+
+                    foreach (ref int x in span)
+                    {
+                        int other;
+
+                        (x, other) = (1, 2);
+                    }
+                }
+
+                private static (int, int) GetPair() => (0, 0);
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task DeconstructionReads_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    (int a, int b) = ({|CSWINRT2023:span[0]|}, {|CSWINRT2023:span[1]|});
+                    var tuple = ({|CSWINRT2023:span[2]|}, 0);
+                    (span[3], int c) = ({|CSWINRT2023:span[4]|}, 1);
+
+                    foreach (ref int x in span)
+                    {
+                        (int d, int e) = ({|CSWINRT2023:x|}, 0);
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterDeconstructionWrite_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    // A deconstruction definitely assigns each of its targets
+                    (span[0], span[1]) = (1, 2);
+
+                    int value = span[0];
+                    int other = span[1];
+
+                    foreach (ref int x in span)
+                    {
+                        int unused;
+
+                        (x, unused) = (1, 2);
+
+                        int nested = x;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task RefReassignments_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int n = 0;
+                    ref int slot = ref n;
+
+                    // Rebinding a writable 'ref' local to an element only aliases it
+                    slot = ref span[0];
+                    slot = 1;
+
+                    foreach (ref int x in span)
+                    {
+                        int m = 0;
+                        ref int other = ref m;
+
+                        other = ref x;
+                        other = 2;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task RefConditionalWrites_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span, bool flag, bool other)
+                {
+                    int local = 0;
+
+                    (flag ? ref span[0] : ref span[1]) = 5;
+
+                    ref int slot = ref (flag ? ref span[2] : ref span[3]);
+                    slot = 5;
+
+                    Set(out (flag ? ref span[4] : ref span[5]));
+                    (flag ? ref span[6] : ref (other ? ref span[7] : ref span[8])) = 6;
+                    (flag ? ref span[9] : ref local) = 7;
+                    ((flag ? ref span[10] : ref span[11]), local) = (8, 9);
+
+                    foreach (ref int x in span)
+                    {
+                        (flag ? ref x : ref local) = 1;
+                    }
+                }
+
+                private static void Set(out int x) => x = 0;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task RefConditionalReads_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span, bool flag)
+                {
+                    int value = flag ? {|CSWINRT2023:span[0]|} : {|CSWINRT2023:span[1]|};
+                    int other = (flag ? ref {|CSWINRT2023:span[2]|} : ref {|CSWINRT2023:span[3]|});
+                    (flag ? ref {|CSWINRT2023:span[4]|} : ref {|CSWINRT2023:span[5]|}) += 1;
+                    In(in (flag ? ref {|CSWINRT2023:span[6]|} : ref {|CSWINRT2023:span[7]|}));
+
+                    foreach (ref int x in span)
+                    {
+                        int nested = (flag ? ref {|CSWINRT2023:x|} : ref value);
+                    }
+                }
+
+                private static void In(in int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task AbiNamespace_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+
+            namespace ABI
+            {
+                public class Sample
+                {
+                    public void Fill(Span<int> span)
+                    {
+                        int x = span[0];
+                    }
+                }
+            }
+
+            namespace ABI.Custom
+            {
+                public class Sample
+                {
+                    public void Fill(Span<int> span)
+                    {
+                        int x = span[0];
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task NonAbiNamespaces_Warn()
+    {
+        const string source = """
+            using System;
+
+            namespace ABIExtensions
+            {
+                public class Sample
+                {
+                    public void Fill(Span<int> span)
+                    {
+                        int x = {|CSWINRT2023:span[0]|};
+                    }
+                }
+            }
+
+            namespace Custom.ABI
+            {
+                public class Sample
+                {
+                    public void Fill(Span<int> span)
+                    {
+                        int x = {|CSWINRT2023:span[0]|};
+                    }
+                }
+            }
+
+            namespace Abi.Custom
+            {
+                public class Sample
+                {
+                    public void Fill(Span<int> span)
+                    {
+                        int x = {|CSWINRT2023:span[0]|};
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ExplicitImplementationOfNonProjectedInterfaces_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+
+            internal class Hidden
+            {
+                public interface IFillable
+                {
+                    void Fill(Span<int> span);
+                }
+            }
+
+            public class Outer
+            {
+                public interface IFillable
+                {
+                    void Fill(Span<int> span);
+                }
+            }
+
+            internal interface IInternalFillable
+            {
+                void Fill(Span<int> span);
+            }
+
+            namespace ABI.Custom
+            {
+                public interface IFillable
+                {
+                    void Fill(Span<int> span);
+                }
+            }
+
+            public class Sample : Hidden.IFillable, Outer.IFillable, IInternalFillable, ABI.Custom.IFillable
+            {
+                void Hidden.IFillable.Fill(Span<int> span)
+                {
+                    int x = span[0];
+                }
+
+                void Outer.IFillable.Fill(Span<int> span)
+                {
+                    int x = span[0];
+                }
+
+                void IInternalFillable.Fill(Span<int> span)
+                {
+                    int x = span[0];
+                }
+
+                void ABI.Custom.IFillable.Fill(Span<int> span)
+                {
+                    int x = span[0];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ExplicitImplementationOfNonWindowsRuntimeInterfaces_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample : ISpanFormattable, IUtf8SpanFormattable
+            {
+                public string ToString(string format, IFormatProvider formatProvider) => "";
+
+                bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider provider)
+                {
+                    destination[0] = char.ToUpperInvariant(destination[0]);
+                    charsWritten = 1;
+
+                    return true;
+                }
+
+                bool IUtf8SpanFormattable.TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider provider)
+                {
+                    utf8Destination[0] = (byte)(utf8Destination[0] | 0x20);
+                    bytesWritten = 1;
+
+                    return true;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task PublicImplementationOfNonWindowsRuntimeInterface_Warns()
+    {
+        const string source = """
+            using System;
+
+            public class Sample : ISpanFormattable
+            {
+                public string ToString(string format, IFormatProvider formatProvider) => "";
+
+                // A public method is still part of the class surface, regardless of the interface
+                public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider provider)
+                {
+                    destination[0] = char.ToUpperInvariant({|CSWINRT2023:destination[0]|});
+                    charsWritten = 1;
+
+                    return true;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ExplicitImplementationOfProjectedInterface_Warns()
+    {
+        const string referenceProjectionSource = """
+            namespace Contoso
+            {
+                public interface IFillable
+                {
+                    void Fill(System.Span<int> span);
+                }
+            }
+            """;
+
+        const string source = """
+            using System;
+
+            public class Sample : Contoso.IFillable
+            {
+                void Contoso.IFillable.Fill(Span<int> span)
+                {
+                    int x = {|CSWINRT2023:span[0]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true, referenceProjectionSource: referenceProjectionSource);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterWholeSpanWriteWithUnstableIndex_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public ref struct Cursor
+            {
+                private ref int _index;
+
+                public Cursor(ref int index)
+                {
+                    _index = ref index;
+                }
+
+                public void Advance() => _index++;
+            }
+
+            public class Sample
+            {
+                public void FillWithOutIndex(Span<int> span)
+                {
+                    int i = 0;
+                    Set(out i);
+                    span.Clear();
+
+                    // Every element is initialized, so it doesn't matter which one is read
+                    _ = span[i];
+                }
+
+                public void FillWithModifiedIndex(Span<int> span)
+                {
+                    int i = 0;
+                    span.Fill(1);
+                    i++;
+
+                    _ = span[i];
+                }
+
+                public void FillWithEscapingIndex(Span<int> span)
+                {
+                    int i = 0;
+                    Cursor cursor = new(ref i);
+
+                    span.Clear();
+                    cursor.Advance();
+
+                    _ = span[i];
+                }
+
+                private static void Set(out int x) => x = 0;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterElementWriteWithOutIndex_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    // An 'out' argument is implicitly 'scoped', so the reference can't escape the call
+                    int i = 0;
+                    Set(out i);
+
+                    span[i] = 1;
+
+                    int value = span[i];
+                }
+
+                private static void Set(out int x) => x = 0;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsWithEscapingOutIndex_Warn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics.CodeAnalysis;
+
+            public ref struct Holder
+            {
+                private ref int _value;
+
+                public Holder([UnscopedRef] out int value)
+                {
+                    value = 0;
+                    _value = ref value;
+                }
+
+                public void Set() => _value = 5;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int i;
+                    Holder holder = new(out i);         // An '[UnscopedRef]' 'out' reference can escape
+
+                    span[i] = 1;
+                    holder.Set();
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsWithOperandsWrittenThroughRefConditional_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void FillWithConditionalIndex(Span<int> span, bool flag)
+                {
+                    int i = 0;
+                    int j = 0;
+
+                    span[i] = 1;
+                    (flag ? ref i : ref j) = 5;
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+
+                public void FillWithConditionalOutIndex(Span<int> span, bool flag)
+                {
+                    int i = 0;
+                    int j = 0;
+
+                    span[i] = 1;
+                    Set(out (flag ? ref i : ref j));
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+
+                public void FillWithConditionalDeconstructedIndex(Span<int> span, bool flag)
+                {
+                    int i = 0;
+                    int j = 0;
+
+                    span[i] = 1;
+                    ((flag ? ref i : ref j), _) = (5, 0);
+
+                    int value = {|CSWINRT2023:span[i]|};
+                }
+
+                public void FillWithConditionalSpan(Span<int> span, Span<int> other, bool flag)
+                {
+                    span.Clear();
+                    (flag ? ref span : ref other) = other;
+
+                    int value = {|CSWINRT2023:span[0]|};
+                }
+
+                public void FillWithConditionalSpanAlias(Span<int> span, Span<int> other, bool flag)
+                {
+                    ref Span<int> alias = ref (flag ? ref span : ref other);
+
+                    span.Clear();
+                    alias = other;
+
+                    int value = {|CSWINRT2023:span[0]|};
+                }
+
+                private static void Set(out int x) => x = 0;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsInErasedConditionalCalls_DoNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics;
+
+            public class Logger
+            {
+                [Conditional("NEVER_DEFINED")]
+                public virtual void Log(int x)
+                {
+                }
+            }
+
+            public class Sample : Logger
+            {
+                public override void Log(int x)
+                {
+                }
+
+                public void Fill(Span<int> span)
+                {
+                    // The calls are removed entirely (arguments included), as the symbols are not defined
+                    Trace(span[0]);
+                    TraceIn(in span[1]);
+                    Log(span[2]);
+                    Debug.Assert(span[3] == 0);
+                    Debug.WriteLine(span[4]);
+                }
+
+                [Conditional("NEVER_DEFINED")]
+                private static void Trace(int x)
+                {
+                }
+
+                [Conditional("NEVER_DEFINED")]
+                private static void TraceIn(in int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsInDefinedConditionalCalls_Warn()
+    {
+        const string source = """
+            #define TRACE_ENABLED
+            #define DEBUG
+
+            using System;
+            using System.Diagnostics;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    Trace({|CSWINRT2023:span[0]|});
+                    TraceIn(in {|CSWINRT2023:span[1]|});
+                    Debug.Assert({|CSWINRT2023:span[2]|} == 0);
+                }
+
+                [Conditional("TRACE_ENABLED")]
+                private static void Trace(int x)
+                {
+                }
+
+                [Conditional("TRACE_ENABLED")]
+                private static void TraceIn(in int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsInUnimplementedPartialMethodCalls_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public partial class Sample
+            {
+                static partial void Trace(int x);
+
+                static partial void TraceIn(in int x);
+
+                public void Fill(Span<int> span)
+                {
+                    // Calls to a 'partial void' method with no implementation are removed entirely
+                    Trace(span[0]);
+                    TraceIn(in span[1]);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsInImplementedPartialMethodCalls_Warn()
+    {
+        const string source = """
+            using System;
+
+            public partial class Sample
+            {
+                static partial void Trace(int x);
+
+                static partial void Trace(int x)
+                {
+                }
+
+                public void Fill(Span<int> span)
+                {
+                    Trace({|CSWINRT2023:span[0]|});
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task InlineArrayElementWrites_DoNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Runtime.CompilerServices;
+
+            [InlineArray(4)]
+            public struct Buffer4
+            {
+                private int _element;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Buffer4> span)
+                {
+                    // Assigning an element of an inline array element only writes to (part of) that element
+                    span[0][1] = 5;
+
+                    foreach (ref Buffer4 buffer in span)
+                    {
+                        buffer[2] = 6;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task InlineArrayElementReads_Warn()
+    {
+        const string source = """
+            using System;
+            using System.Runtime.CompilerServices;
+
+            [InlineArray(4)]
+            public struct Buffer4
+            {
+                private int _element;
+            }
+
+            public class Sample
+            {
+                public void Fill(Span<Buffer4> span)
+                {
+                    int value = {|CSWINRT2023:span[0]|}[1];
+                    {|CSWINRT2023:span[1]|}[2] += 1;
+
+                    foreach (ref Buffer4 buffer in span)
+                    {
+                        int nested = {|CSWINRT2023:buffer|}[3];
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task NameOf_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    string parameterName = nameof(span);
+                    string propertyName = nameof(span.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task LoopVariableReadsAfterClearOfReassignedSpan_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span, Span<int> other)
+                {
+                    foreach (ref int x in span)
+                    {
+                        // The loop keeps iterating over the original buffer, which is not the one being cleared
+                        span = other;
+                        span.Clear();
+
+                        int value = {|CSWINRT2023:x|};
+                    }
+                }
+
+                public void FillWithLaterReassignment(Span<int> span, Span<int> other, bool flag)
+                {
+                    foreach (ref int x in span)
+                    {
+                        // A previous iteration might have already redirected the span without clearing the original buffer
+                        if (flag)
+                        {
+                            span.Clear();
+
+                            int value = {|CSWINRT2023:x|};
+                        }
+
+                        span = other;
+                        flag = true;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ConservativeReadOnlyViewsAndAliases_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public unsafe void Fill(Span<int> span, ReadOnlySpan<int> source)
+                {
+                    // Read-only views, address-only uses and 'ref readonly' aliases are conservatively reported,
+                    // even when they are not actually used to read any element of the span.
+                    ReadOnlySpan<int> view = {|CSWINRT2023:span|};
+                    int length = view.Length;
+
+                    bool overlaps = source.Overlaps({|CSWINRT2023:span|});
+                    bool reverseOverlaps = {|CSWINRT2023:span|}.Overlaps(source);
+                    bool same = source == {|CSWINRT2023:span|};
+
+                    ref readonly int slot = ref {|CSWINRT2023:span[0]|};
+
+                    int n = 0;
+                    ref readonly int rebound = ref n;
+                    rebound = ref {|CSWINRT2023:span[1]|};
+
+                    fixed (int* pointer = &{|CSWINRT2023:span[2]|})
+                    {
+                    }
+
+                    foreach (ref readonly int x in {|CSWINRT2023:span|})
+                    {
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterWholeSpanWriteWithReadOnlyRefIndex_DoNotWarn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void FillWithReadOnlyRefIndex(Span<int> span)
+                {
+                    int n = 0;
+
+                    span.Clear();
+
+                    // Every element is initialized, so it doesn't matter what the index aliases
+                    ref readonly int index = ref n;
+                    _ = span[index];
+                }
+
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterErasedRefArgument_DoNotWarn()
+    {
+        const string source = """
+            using System;
+            using System.Diagnostics;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int i = 0;
+
+                    span[i] = 1;
+                    Bump(ref i);                            // The call is removed, so the index is unchanged
+
+                    _ = span[i];
+                }
+
+                [Conditional("NEVER_DEFINED")]
+                private static void Bump(ref int x) => x++;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task ReadsAfterDefinedRefArgument_Warn()
+    {
+        const string source = """
+            #define BUMP_ENABLED
+
+            using System;
+            using System.Diagnostics;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int i = 0;
+
+                    span[i] = 1;
+                    Bump(ref i);
+
+                    _ = {|CSWINRT2023:span[i]|};
+                }
+
+                [Conditional("BUMP_ENABLED")]
+                private static void Bump(ref int x) => x++;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    [DataRow("Clear()")]
+    [DataRow("Fill(42)")]
+    public async Task ReadsAfterEarlierWholeSpanWriteAndUnstableElementWrite_DoNotWarn(string initialization)
+    {
+        string source = $$"""
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span)
+                {
+                    int i = 0;
+
+                    span.{{initialization}};
+                    span[i] = 1;
+                    i = 1;
+
+                    _ = span[i];
+                }
+
+                public void FillWithNestedBlock(Span<int> span)
+                {
+                    int i = 0;
+
+                    span.{{initialization}};
+
+                    {
+                        span[i] = 1;
+                        i = 1;
+
+                        _ = span[i];
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    [DataRow("Clear()")]
+    [DataRow("Fill(42)")]
+    public async Task ReadsAfterUnstableElementWriteWithoutCoveringWholeSpanWrite_Warn(string initialization)
+    {
+        string source = $$"""
+            using System;
+
+            public class Sample
+            {
+                public void FillWithoutInitialization(Span<int> span)
+                {
+                    int i = 0;
+
+                    span[i] = 1;
+                    i = 1;
+
+                    _ = {|CSWINRT2023:span[i]|};
+                }
+
+                public void FillWithReassignedSpan(Span<int> span, Span<int> other)
+                {
+                    int i = 0;
+
+                    span.{{initialization}};
+                    span = other;
+                    span[i] = 1;
+                    i = 1;
+
+                    _ = {|CSWINRT2023:span[i]|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    [DataRow("Clear()")]
+    [DataRow("Fill(42)")]
+    public async Task LoopVariableReadsAfterGuaranteedInitializationBeforeReassignment_DoNotWarn(string initialization)
+    {
+        string source = $$"""
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span, Span<int> other)
+                {
+                    foreach (ref int element in span)
+                    {
+                        span.{{initialization}};
+
+                        int value = element;
+
+                        span = other;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
 }
