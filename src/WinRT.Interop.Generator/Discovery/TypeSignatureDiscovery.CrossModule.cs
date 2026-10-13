@@ -23,78 +23,74 @@ internal partial class TypeSignatureDiscovery<TResult>
             yield break;
         }
 
-        ImportExpandedBodies(registry, isDefaultBody: false);
-
         Dictionary<TypeSignature, HashSet<int>> origins = new(_signatureComparer);
+        List<ImportedDemand> previousDemands = [];
+        DispatchContextRegistry.DiscoveryPhase[] phases =
+        [
+            DispatchContextRegistry.DiscoveryPhase.GenericDispatch,
+            DispatchContextRegistry.DiscoveryPhase.DefaultInterfaces,
+            DispatchContextRegistry.DiscoveryPhase.StaticDispatch
+        ];
 
-        _ = ImportReceivers(registry, origins, isDefaultBody: false);
-
-        List<ImportedDemand> initialDemands = ImportDemands(registry, isDefaultBody: false);
-
-        // Default-body contexts must remain outside the active maps until the initial joins and their descendants drain
-        // Inline joins would otherwise compete with those descendants for the same transitive allowance.
-        foreach (ImportedDemand entry in initialDemands)
+        foreach (DispatchContextRegistry.DiscoveryPhase phase in phases)
         {
-            _token.ThrowIfCancellationRequested();
+            // Complete join-local instance defaults before advancing to static dispatch
+            // Static publications and coverage records must not consume the allowance needed by those default descendants.
+            if (phase == DispatchContextRegistry.DiscoveryPhase.StaticDispatch)
+            {
+                foreach (TResult result in EnumerateDefaultInterfaceMembers())
+                {
+                    yield return result;
+                }
+            }
 
             if (_transitiveTypeLimitReported)
             {
                 break;
             }
 
-            RegisterImportedDemand(entry);
-            ScheduleImportedDemand(entry, origins);
-        }
+            _dispatchPhase = phase;
 
-        foreach (TResult result in EnumeratePendingMembers())
-        {
-            yield return result;
-        }
+            // Later coverage cannot suppress an earlier body whose descendants still need their existing allowance
+            ImportExpandedBodies(registry, phase);
 
-        if (_transitiveTypeLimitReported)
-        {
-            yield break;
-        }
+            Dictionary<TypeSignature, int> phaseReceivers = ImportReceivers(registry, origins, phase);
+            List<ImportedDemand> phaseDemands = ImportDemands(registry, phase);
 
-        // Retain default-phase provenance on join-local demand records even though this pass does not republish them
-        _isDefaultInterfaceTraversal = true;
-
-        // A completed default-phase body may have unexpanded descendants after a local cutoff
-        // Delay its coverage as well as its contexts so it cannot suppress an initial cross-module scan.
-        ImportExpandedBodies(registry, isDefaultBody: true);
-
-        Dictionary<TypeSignature, int> defaultBodyReceivers = ImportReceivers(registry, origins, isDefaultBody: true);
-        List<ImportedDemand> defaultBodyDemands = ImportDemands(registry, isDefaultBody: true);
-
-        // Existing demands can now join newly imported receivers without retrying their old pairs
-        foreach (ImportedDemand entry in initialDemands)
-        {
-            _token.ThrowIfCancellationRequested();
-
-            if (_transitiveTypeLimitReported)
+            // Earlier demands join only this phase's receivers, avoiding retries of pairs already considered
+            foreach (ImportedDemand entry in previousDemands)
             {
-                break;
+                _token.ThrowIfCancellationRequested();
+
+                if (_transitiveTypeLimitReported)
+                {
+                    break;
+                }
+
+                ScheduleImportedDemand(entry, origins, phaseReceivers);
             }
 
-            ScheduleImportedDemand(entry, origins, defaultBodyReceivers);
-        }
-
-        foreach (ImportedDemand entry in defaultBodyDemands)
-        {
-            _token.ThrowIfCancellationRequested();
-
-            if (_transitiveTypeLimitReported)
+            // Newly imported demands can join every receiver admitted so far, including earlier phases
+            foreach (ImportedDemand entry in phaseDemands)
             {
-                break;
+                _token.ThrowIfCancellationRequested();
+
+                if (_transitiveTypeLimitReported)
+                {
+                    break;
+                }
+
+                RegisterImportedDemand(entry);
+                ScheduleImportedDemand(entry, origins);
             }
 
-            RegisterImportedDemand(entry);
-            ScheduleImportedDemand(entry, origins);
-        }
+            // Finish this phase's transitive descendants before the next phase can reserve any work
+            foreach (TResult result in EnumeratePendingMembers())
+            {
+                yield return result;
+            }
 
-        foreach (TResult result in EnumeratePendingMembers())
-        {
-            yield return result;
+            previousDemands.AddRange(phaseDemands);
         }
     }
 
@@ -102,10 +98,10 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// Imports minimum scan depths so completed local bodies do not consume the late allowance.
     /// </summary>
     /// <param name="registry">The completed registry.</param>
-    /// <param name="isDefaultBody">The publication phase being admitted.</param>
-    private void ImportExpandedBodies(DispatchContextRegistry registry, bool isDefaultBody)
+    /// <param name="phase">The publication phase being admitted.</param>
+    private void ImportExpandedBodies(DispatchContextRegistry registry, DispatchContextRegistry.DiscoveryPhase phase)
     {
-        foreach (DispatchContextRegistry.ExpandedBody body in registry.ExpandedBodies.Where(body => body.IsDefaultBody == isDefaultBody))
+        foreach (DispatchContextRegistry.ExpandedBody body in registry.ExpandedBodies.Where(body => body.Phase == phase))
         {
             _token.ThrowIfCancellationRequested();
 
@@ -123,17 +119,17 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="registry">The completed registry.</param>
     /// <param name="origins">The modules that observed each receiver in the phases admitted so far.</param>
-    /// <param name="isDefaultBody">The publication phase being admitted.</param>
+    /// <param name="phase">The publication phase being admitted.</param>
     /// <returns>The minimum depths of receiver sightings from this phase only.</returns>
     private Dictionary<TypeSignature, int> ImportReceivers(
         DispatchContextRegistry registry,
         Dictionary<TypeSignature, HashSet<int>> origins,
-        bool isDefaultBody)
+        DispatchContextRegistry.DiscoveryPhase phase)
     {
         Dictionary<TypeSignature, int> depths = new(_signatureComparer);
 
         foreach (DispatchContextRegistry.Receiver receiver in registry.Receivers
-            .Where(receiver => receiver.IsDefaultBody == isDefaultBody)
+            .Where(receiver => receiver.Phase == phase)
             .OrderBy(static receiver => receiver.Origin)
             .ThenBy(static receiver => receiver.Sequence))
         {
@@ -163,15 +159,15 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// Deduplicates published demands while preserving first-observation order and per-module depths.
     /// </summary>
     /// <param name="registry">The completed registry.</param>
-    /// <param name="isDefaultBody">The publication phase being admitted.</param>
+    /// <param name="phase">The publication phase being admitted.</param>
     /// <returns>The distinct demands in deterministic scheduling order.</returns>
-    private List<ImportedDemand> ImportDemands(DispatchContextRegistry registry, bool isDefaultBody)
+    private List<ImportedDemand> ImportDemands(DispatchContextRegistry registry, DispatchContextRegistry.DiscoveryPhase phase)
     {
         Dictionary<int, Dictionary<IList<TypeSignature>, ImportedDemand>> imported = [];
         List<ImportedDemand> orderedDemands = [];
 
         foreach (DispatchContextRegistry.Demand demand in registry.Demands
-            .Where(demand => demand.IsDefaultBody == isDefaultBody)
+            .Where(demand => demand.Phase == phase)
             .OrderBy(static demand => demand.Origin)
             .ThenBy(static demand => demand.Sequence)
             .ThenBy(static demand => demand.Target.Ordinal))

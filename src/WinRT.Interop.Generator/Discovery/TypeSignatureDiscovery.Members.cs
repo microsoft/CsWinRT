@@ -224,6 +224,11 @@ internal partial class TypeSignatureDiscovery<TResult>
 
                 RegisterDispatch(operand, genericContext, methodDepth);
             }
+            else
+            {
+                // A non-generic static slot has no 'MethodSpec' or generic declaring type to trigger member propagation
+                RecordStaticDispatch(operand, genericContext, depth: methodDepth);
+            }
         }
     }
 

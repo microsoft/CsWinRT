@@ -129,8 +129,20 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>Type-only interface body contexts, separate from generic 'MethodSpec' contexts.</summary>
     private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedDefaultBodies = new(ReferenceEqualityComparer.Instance);
 
-    /// <summary>Tags receiver, demand, and body-scan publications as default-phase observations for staged late joins.</summary>
-    private bool _isDefaultInterfaceTraversal;
+    /// <summary>Static call observations retained in first-sighting order without primary expansion.</summary>
+    private readonly List<StaticCallObservation> _staticCallObservations = [];
+
+    /// <summary>Minimum depths for exact static slot, receiver, and method-argument contexts.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, StaticCallObservation>> _staticCallContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Static calls deferred until earlier supplemental work and instance defaults have drained.</summary>
+    private readonly Queue<StaticCallObservation> _pendingStaticCalls = new();
+
+    /// <summary>Tags publications with the phase that owns their remaining supplemental allowance.</summary>
+    private DispatchContextRegistry.DiscoveryPhase _dispatchPhase;
+
+    /// <summary>Whether an oversized static call has already been retained for a deferred diagnostic.</summary>
+    private bool _complexStaticCallRecorded;
 
     /// <summary>Whether a recursion warning has been reported for either a type or a method.</summary>
     private bool _recursionLimitReported;
@@ -261,6 +273,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         {
             // Only actual sightings in the join traversal enter this queue; imported receivers do not
             foreach (TResult result in discovery.EnumerateDefaultInterfaceMembers())
+            {
+                yield return result;
+            }
+
+            foreach (TResult result in discovery.EnumerateStaticDispatchMembers())
             {
                 yield return result;
             }

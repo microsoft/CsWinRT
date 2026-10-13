@@ -51,6 +51,24 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>Incomplete default hierarchies, diagnosed only if their receiver is actually observed.</summary>
     private readonly Dictionary<TypeDefinition, DefaultHierarchyLimit> _defaultHierarchyLimits = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>Whether a definition can reach a static virtual interface slot.</summary>
+    private readonly Dictionary<TypeDefinition, bool> _hasStaticDispatch = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Whether a definition can reach a policy-eligible static implementation body.</summary>
+    private readonly Dictionary<TypeDefinition, bool> _hasEligibleStaticBodies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Bounded static-dispatch hierarchies, separate from all earlier discovery caches.</summary>
+    private readonly Dictionary<TypeDefinition, HierarchyType[]> _staticHierarchies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Incomplete static hierarchies, diagnosed only for observed constrained calls.</summary>
+    private readonly Dictionary<TypeDefinition, DefaultHierarchyLimit> _staticHierarchyLimits = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Selected static implementations by receiver and declaration identity, without dispatch ordinals.</summary>
+    private readonly Dictionary<TypeDefinition, Dictionary<MethodDefinition, List<Target>>> _staticTargets = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Static 'MethodImpl' rows grouped once per owner by resolved declaration identity.</summary>
+    private readonly Dictionary<TypeDefinition, Dictionary<MethodDefinition, List<MethodImplementation>>> _staticMethodImplementations = new(ReferenceEqualityComparer.Instance);
+
     /// <summary>Possible implementations, indexed by declaration identity rather than method name.</summary>
     private readonly Dictionary<MethodDefinition, List<Target>> _targets = new(ReferenceEqualityComparer.Instance);
 
@@ -101,6 +119,7 @@ internal sealed partial class MethodDispatchIndex
 
                 // Default selection has separate caches and does not add generic dispatch targets
                 IndexDefaultBodies(type);
+                IndexStaticDispatch(type);
             }
         }
 

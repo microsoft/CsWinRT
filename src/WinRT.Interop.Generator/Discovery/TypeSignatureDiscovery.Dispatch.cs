@@ -24,6 +24,9 @@ internal partial class TypeSignatureDiscovery<TResult>
     {
         _token.ThrowIfCancellationRequested();
 
+        // Shared generic contexts still deduplicate through the existing method map; additional static work runs last
+        RecordStaticDispatch(operand, callerContext, depth: depth);
+
         // Primary traversal only records observations; dispatch expansion belongs to the supplemental allowance
         if (!_isSupplemental)
         {
@@ -61,7 +64,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             return;
         }
 
-        if (!call.Arguments.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)))
+        if (!HasConstructedMethodArgument(call.Arguments))
         {
             return;
         }
@@ -97,6 +100,16 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         contexts[key] = depth;
 
+        MethodDispatchIndex.Target? staticTarget = null;
+        TypeSignature? staticBodyType = null;
+
+        // A closed static constraint selects one implementation, unlike an instance receiver's runtime subtype
+        // Keep the current candidates when bounded metadata makes that selection inconclusive.
+        if (definition.IsStatic && constraint is not null)
+        {
+            _ = _dispatchIndex.TryGetStaticTarget(definition, declaringType, constraint, out staticTarget, out staticBodyType);
+        }
+
         // Bind every policy-eligible implementation in the index's stable metadata order
         foreach (MethodDispatchIndex.Target target in _dispatchIndex.GetTargets(definition))
         {
@@ -120,6 +133,12 @@ internal partial class TypeSignatureDiscovery<TResult>
 
                 if (receiverType is not null)
                 {
+                    if (staticTarget is not null &&
+                        !MatchesStaticTarget(target, declaringType, receiverType, staticTarget, staticBodyType!))
+                    {
+                        continue;
+                    }
+
                     ScheduleDispatch(target, declaringType, arguments, receiverType, depth);
                 }
 
@@ -138,7 +157,7 @@ internal partial class TypeSignatureDiscovery<TResult>
                     Depth: depth,
                     Origin: _moduleOrdinal,
                     Sequence: _publicationSequence++,
-                    IsDefaultBody: _isDefaultInterfaceTraversal));
+                    Phase: _dispatchPhase));
             }
         }
     }
@@ -301,7 +320,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             Depth: depth,
             Origin: _moduleOrdinal,
             Sequence: _publicationSequence++,
-            IsDefaultBody: _isDefaultInterfaceTraversal));
+            Phase: _dispatchPhase));
 
         if (expandExistingDemands &&
             _receiverDemands.TryGetValue(definition, out List<DispatchContextRegistry.Demand>? demands))
@@ -402,6 +421,17 @@ internal partial class TypeSignatureDiscovery<TResult>
             constraint: constraintType?.InstantiateGenericTypes(callerContext));
 
         return true;
+    }
+
+    /// <summary>
+    /// Checks the shared method-argument admission rule for generic dispatch.
+    /// </summary>
+    /// <param name="arguments">The actual 'MethodSpec' arguments, if present.</param>
+    /// <returns>Whether at least one argument is fully constructed.</returns>
+    private static bool HasConstructedMethodArgument(GenericInstanceMethodSignature? arguments)
+    {
+        // Static replay uses the same gate as generic dispatch so partially open contexts cannot drift between paths
+        return arguments?.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)) is true;
     }
 
     /// <summary>

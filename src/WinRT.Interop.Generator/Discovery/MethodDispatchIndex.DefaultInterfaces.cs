@@ -38,7 +38,25 @@ internal partial class MethodDispatchIndex
     /// <returns>The complete bounded hierarchy, or an empty array on overflow.</returns>
     private HierarchyType[] GetDefaultHierarchy(TypeDefinition type)
     {
-        if (_defaultHierarchies.TryGetValue(type, out HierarchyType[]? hierarchy))
+        return GetBoundedInterfaceHierarchy(type, InterfaceDispatchKind.Instance);
+    }
+
+    /// <summary>
+    /// Composes an interface hierarchy within the selected discovery path's independent caches.
+    /// </summary>
+    /// <param name="type">The definition whose formal hierarchy is needed.</param>
+    /// <param name="kind">The interface dispatch path that owns the cached result.</param>
+    /// <returns>The complete bounded hierarchy, or an empty array on overflow.</returns>
+    private HierarchyType[] GetBoundedInterfaceHierarchy(TypeDefinition type, InterfaceDispatchKind kind)
+    {
+        Dictionary<TypeDefinition, HierarchyType[]> hierarchies = kind == InterfaceDispatchKind.Static
+            ? _staticHierarchies
+            : _defaultHierarchies;
+        Dictionary<TypeDefinition, DefaultHierarchyLimit> limits = kind == InterfaceDispatchKind.Static
+            ? _staticHierarchyLimits
+            : _defaultHierarchyLimits;
+
+        if (hierarchies.TryGetValue(type, out HierarchyType[]? hierarchy))
         {
             return hierarchy;
         }
@@ -81,13 +99,13 @@ internal partial class MethodDispatchIndex
 
         if (limit != DefaultHierarchyLimit.None)
         {
-            _defaultHierarchyLimits.Add(type, limit);
+            limits.Add(type, limit);
 
             // Missing a more-specific ancestor could select a body that was actually re-abstracted or replaced
             hierarchy = [];
         }
 
-        _defaultHierarchies.Add(type, hierarchy);
+        hierarchies.Add(type, hierarchy);
 
         return hierarchy;
     }
@@ -199,25 +217,12 @@ internal partial class MethodDispatchIndex
                     continue;
                 }
 
-                List<DefaultBody> candidates = [];
-
-                // Abstract 'MethodImpl'-s must participate in specificity so re-abstraction hides the base body
-                foreach (HierarchyType owner in hierarchy.Where(static entry => entry.Definition.IsInterface))
-                {
-                    candidates.AddRange(GetExplicitDefaultImplementations(owner, declaration, iface.Signature));
-                }
-
-                // Include the declaration itself: it supplies the inherited body unless a more-specific owner replaces it
-                candidates.Add(new DefaultBody(
-                    Method: declaration,
-                    Owner: iface.Signature));
-
-                // Drop a candidate when another candidate's owner derives from its owner
-                // Re-abstractions participate so they can hide inherited bodies without supplying a replacement.
-                DefaultBody[] mostSpecific =
-                [
-                    .. candidates.Where(candidate => !HasMoreSpecificDefaultBody(candidate, candidates, receiver))
-                ];
+                DefaultBody[] mostSpecific = GetMostSpecificInterfaceBodies(
+                    hierarchy: hierarchy,
+                    iface: iface,
+                    declaration: declaration,
+                    receiver: receiver,
+                    kind: InterfaceDispatchKind.Instance);
 
                 // The ancestry predicate records an owner-hierarchy limit on the receiver if comparison is incomplete
                 // Discard the whole selection, including earlier slots, rather than risk choosing a replaced body.
@@ -258,6 +263,39 @@ internal partial class MethodDispatchIndex
         {
             _defaultBodies.Add(receiver, [.. bodies]);
         }
+    }
+
+    /// <summary>
+    /// Selects maximal interface implementations while retaining re-abstractions in the comparison.
+    /// </summary>
+    /// <param name="hierarchy">The receiver hierarchy in formal receiver parameters.</param>
+    /// <param name="iface">The constructed interface declaring the slot.</param>
+    /// <param name="declaration">The slot definition.</param>
+    /// <param name="receiver">The receiver whose bounds constrain selection.</param>
+    /// <param name="kind">The discovery path owning the hierarchy caches.</param>
+    /// <returns>The most-specific candidates, including abstract entries.</returns>
+    private DefaultBody[] GetMostSpecificInterfaceBodies(
+        HierarchyType[] hierarchy,
+        HierarchyType iface,
+        MethodDefinition declaration,
+        TypeDefinition receiver,
+        InterfaceDispatchKind kind)
+    {
+        List<DefaultBody> candidates = [];
+
+        // Abstract 'MethodImpl'-s must participate so re-abstraction can hide an inherited body
+        foreach (HierarchyType owner in hierarchy.Where(static entry => entry.Definition.IsInterface))
+        {
+            candidates.AddRange(GetExplicitDefaultImplementations(owner, declaration, iface.Signature, kind));
+        }
+
+        // The declaration's own default survives when no more-derived interface remaps its slot
+        candidates.Add(new DefaultBody(
+            Method: declaration,
+            Owner: iface.Signature));
+
+        // A more-derived constructed owner supersedes an ancestor, regardless of whether it supplies a body
+        return [.. candidates.Where(candidate => !HasMoreSpecificDefaultBody(candidate, candidates, receiver, kind))];
     }
 
     /// <summary>
@@ -324,11 +362,13 @@ internal partial class MethodDispatchIndex
     /// <param name="candidate">The body whose precedence is being checked.</param>
     /// <param name="candidates">All bodies and re-abstractions for the slot, in metadata order.</param>
     /// <param name="receiver">The receiver whose hierarchy bounds constrain selection.</param>
+    /// <param name="kind">The discovery path owning the hierarchy caches.</param>
     /// <returns>Whether another owner supersedes the candidate.</returns>
     private bool HasMoreSpecificDefaultBody(
         DefaultBody candidate,
         IReadOnlyList<DefaultBody> candidates,
-        TypeDefinition receiver)
+        TypeDefinition receiver,
+        InterfaceDispatchKind kind)
     {
         foreach (DefaultBody other in candidates)
         {
@@ -339,7 +379,7 @@ internal partial class MethodDispatchIndex
             }
 
             // Preserve metadata order: ancestry checks can record a bound that invalidates the whole selection
-            if (IsDefaultInterfaceAncestor(candidate.Owner, other.Owner, receiver))
+            if (IsDefaultInterfaceAncestor(candidate.Owner, other.Owner, receiver, kind))
             {
                 return true;
             }
@@ -354,13 +394,19 @@ internal partial class MethodDispatchIndex
     /// <param name="owner">The possible implementation owner.</param>
     /// <param name="declaration">The original slot definition.</param>
     /// <param name="slotType">The slot's constructed interface context.</param>
+    /// <param name="kind">Whether declaration indexing can use the static path's owner cache.</param>
     /// <returns>The matching body definitions, including abstract re-abstractions.</returns>
     private IEnumerable<DefaultBody> GetExplicitDefaultImplementations(
         HierarchyType owner,
         MethodDefinition declaration,
-        TypeSignature slotType)
+        TypeSignature slotType,
+        InterfaceDispatchKind kind = InterfaceDispatchKind.Instance)
     {
-        foreach (MethodImplementation implementation in owner.Definition.MethodImplementations)
+        IEnumerable<MethodImplementation> implementations = kind == InterfaceDispatchKind.Static
+            ? GetStaticMethodImplementations(owner.Definition, declaration)
+            : owner.Definition.MethodImplementations;
+
+        foreach (MethodImplementation implementation in implementations)
         {
             _token.ThrowIfCancellationRequested();
 
@@ -404,11 +450,13 @@ internal partial class MethodDispatchIndex
     /// <param name="ancestor">The less-specific candidate owner.</param>
     /// <param name="descendant">The possible overriding owner.</param>
     /// <param name="receiver">The receiver whose selection must be discarded if specificity cannot be determined.</param>
+    /// <param name="kind">The discovery path owning the hierarchy caches.</param>
     /// <returns>Whether the latter inherits the former in this receiver context.</returns>
     private bool IsDefaultInterfaceAncestor(
         TypeSignature ancestor,
         TypeSignature descendant,
-        TypeDefinition receiver)
+        TypeDefinition receiver,
+        InterfaceDispatchKind kind)
     {
         if (!descendant.TryResolve(_runtimeContext, out TypeDefinition? definition))
         {
@@ -421,12 +469,15 @@ internal partial class MethodDispatchIndex
             type: descendant as GenericInstanceTypeSignature,
             method: null);
 
-        HierarchyType[] hierarchy = GetDefaultHierarchy(definition);
+        HierarchyType[] hierarchy = GetBoundedInterfaceHierarchy(definition, kind);
+        Dictionary<TypeDefinition, DefaultHierarchyLimit> limits = kind == InterfaceDispatchKind.Static
+            ? _staticHierarchyLimits
+            : _defaultHierarchyLimits;
 
         // An incomplete candidate ancestry also makes the receiver's entire specificity selection inconclusive
-        if (_defaultHierarchyLimits.TryGetValue(definition, out DefaultHierarchyLimit limit))
+        if (limits.TryGetValue(definition, out DefaultHierarchyLimit limit))
         {
-            _ = _defaultHierarchyLimits.TryAdd(receiver, limit);
+            _ = limits.TryAdd(receiver, limit);
 
             return false;
         }
@@ -437,11 +488,21 @@ internal partial class MethodDispatchIndex
     }
 
     /// <summary>
-    /// A selected interface body whose owner is expressed in receiver parameters.
+    /// An interface implementation body whose owner is expressed in receiver parameters.
     /// </summary>
-    /// <param name="Method">The interface body definition.</param>
-    /// <param name="Owner">Its declaring interface in the receiver's formal context.</param>
+    /// <param name="Method">The implementation body definition.</param>
+    /// <param name="Owner">Its declaring owner in the receiver's formal context.</param>
     public sealed record DefaultBody(MethodDefinition Method, TypeSignature Owner);
+
+    /// <summary>The interface dispatch path whose hierarchy and bounds are being evaluated.</summary>
+    private enum InterfaceDispatchKind
+    {
+        /// <summary>Receiver-driven instance default bodies.</summary>
+        Instance,
+
+        /// <summary>Constrained static virtual calls.</summary>
+        Static
+    }
 
     /// <summary>
     /// The discovery bound reached while composing a default-interface hierarchy.

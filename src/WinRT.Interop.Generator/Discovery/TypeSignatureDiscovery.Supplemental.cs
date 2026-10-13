@@ -7,7 +7,6 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Models;
-using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
@@ -90,7 +89,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             return;
         }
 
-        if (!call.Arguments.TypeArguments.Any(static argument => argument.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance)))
+        if (!HasConstructedMethodArgument(call.Arguments))
         {
             return;
         }
@@ -145,7 +144,7 @@ internal partial class TypeSignatureDiscovery<TResult>
                     Method: method,
                     Arguments: arguments,
                     Depth: depth,
-                    IsDefaultBody: _isDefaultInterfaceTraversal));
+                    Phase: _dispatchPhase));
             }
         }
     }
@@ -178,6 +177,11 @@ internal partial class TypeSignatureDiscovery<TResult>
         foreach (DefaultReceiverObservation observation in primary._defaultReceiverObservations)
         {
             RecordDefaultReceiver(observation.Signature, observation.Depth);
+        }
+
+        foreach (StaticCallObservation observation in primary._staticCallObservations)
+        {
+            RecordStaticCall(observation.Call, depth: observation.Depth);
         }
 
         // Report the complexity warning that passive primary receiver registration deferred
@@ -230,6 +234,11 @@ internal partial class TypeSignatureDiscovery<TResult>
         }
 
         foreach (TResult result in EnumerateDefaultInterfaceMembers())
+        {
+            yield return result;
+        }
+
+        foreach (TResult result in EnumerateStaticDispatchMembers())
         {
             yield return result;
         }

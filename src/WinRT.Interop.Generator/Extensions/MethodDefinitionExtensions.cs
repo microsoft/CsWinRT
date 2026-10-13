@@ -323,8 +323,9 @@ internal static class MethodDefinitionExtensions
 
                 yield return new MethodOperand(
                     Descriptor: descriptor,
+                    Constraint: constraint,
                     IsVirtual: instruction.OpCode.Code is CilCode.Callvirt or CilCode.Ldvirtftn,
-                    Constraint: constraint);
+                    IsStaticDispatch: constraint is not null && instruction.OpCode.Code is CilCode.Call or CilCode.Ldftn);
 
                 constraint = null;
             }

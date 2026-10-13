@@ -68,7 +68,10 @@ internal partial class TypeSignatureDiscovery<TResult>
     private IEnumerable<TResult> EnumerateDefaultInterfaceMembers()
     {
         // Tag contexts found by these bodies and their callees for the later cross-module stage
-        _isDefaultInterfaceTraversal = true;
+        if (_dispatchPhase < DispatchContextRegistry.DiscoveryPhase.DefaultInterfaces)
+        {
+            _dispatchPhase = DispatchContextRegistry.DiscoveryPhase.DefaultInterfaces;
+        }
 
         // Initial supplemental work drains before this phase, including ordinary callees of dispatch bodies
         // Later batches handle receivers discovered by defaults without granting them another allowance.

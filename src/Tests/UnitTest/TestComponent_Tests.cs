@@ -939,6 +939,77 @@ namespace UnitTest
 
         private sealed class DefaultCollectionFactory<T> : IDefaultCollectionFactory<T>;
 
+        [TestMethod]
+        public void Collections_StaticInterfaceDefault_CCW()
+        {
+            object value = CreateStaticCollection<StaticCollectionFactory<TestComponentCSharp.DirectDispatchElement>>();
+
+            // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.DirectDispatchElement;i4)))
+            AssertStaticCollectionVector(value, new Guid("8958cbbf-1e98-53ff-a747-92f4b5614187"));
+        }
+
+        [TestMethod]
+        public void Collections_StaticInterfaceDefaultCache_CCW()
+        {
+            object value = GetStaticCollection<StaticCollectionCache<TestComponentCSharp.AbstractDispatchElement>>();
+
+            // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.AbstractDispatchElement;i4)))
+            AssertStaticCollectionVector(value, new Guid("e9027f2f-5043-5447-ad65-775032182bfc"));
+        }
+
+        private static object CreateStaticCollection<TFactory>() where TFactory : IStaticCollectionFactory => TFactory.Create();
+
+        private static object GetStaticCollection<TFactory>() where TFactory : IStaticCollectionCache => TFactory.Value;
+
+        private static unsafe void AssertStaticCollectionVector(object value, Guid iid)
+        {
+            // Keep the closed expected interface out of metadata; only the selected static body introduces it
+            void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+            nint vector = 0;
+
+            try
+            {
+                Assert.AreEqual(0, Marshal.QueryInterface((nint)pointer, iid, out vector));
+                Assert.AreNotEqual(nint.Zero, vector);
+            }
+            finally
+            {
+                if (vector != 0)
+                {
+                    _ = Marshal.Release(vector);
+                }
+
+                WindowsRuntimeMarshal.Free(pointer);
+                GC.KeepAlive(value);
+            }
+        }
+
+        private interface IStaticCollectionFactory
+        {
+            static abstract object Create();
+        }
+
+        private interface IStaticCollectionFactory<T> : IStaticCollectionFactory
+        {
+            static object IStaticCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+        }
+
+        private sealed class StaticCollectionFactory<T> : IStaticCollectionFactory<T>;
+
+        private interface IStaticCollectionCache
+        {
+            static abstract object Value { get; }
+        }
+
+        private interface IStaticCollectionCache<T> : IStaticCollectionCache
+        {
+            private static readonly object Cached = new List<IAsyncOperation<T>>();
+
+            static object IStaticCollectionCache.Value => Cached;
+        }
+
+        private sealed class StaticCollectionCache<T> : IStaticCollectionCache<T>;
+
         private interface IGenericListDispatch
         {
             bool Check<T>(object value, bool cast);

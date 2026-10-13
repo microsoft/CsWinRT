@@ -151,7 +151,50 @@ unsafe
     }
 }
 
+// These arguments differ from the instance-default test, and neither closed async collection is rooted elsewhere
+
+// pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.DirectDispatchElement;i4)))
+if (!HasStaticCollectionVector(
+    CreateStaticCollection<StaticCollectionFactory<TestComponentCSharp.DirectDispatchElement>>(),
+    new Guid("8958cbbf-1e98-53ff-a747-92f4b5614187")))
+{
+    return 130;
+}
+
+// pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.AbstractDispatchElement;i4)))
+if (!HasStaticCollectionVector(
+    GetStaticCollection<StaticCollectionCache<TestComponentCSharp.AbstractDispatchElement>>(),
+    new Guid("e9027f2f-5043-5447-ad65-775032182bfc")))
+{
+    return 131;
+}
+
 return 100;
+
+static object CreateStaticCollection<TFactory>() where TFactory : IStaticCollectionFactory => TFactory.Create();
+
+static object GetStaticCollection<TFactory>() where TFactory : IStaticCollectionCache => TFactory.Value;
+
+static unsafe bool HasStaticCollectionVector(object value, Guid iid)
+{
+    void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+    nint vector = 0;
+
+    try
+    {
+        return Marshal.QueryInterface((nint)pointer, iid, out vector) == 0 && vector != 0;
+    }
+    finally
+    {
+        if (vector != 0)
+        {
+            _ = Marshal.Release(vector);
+        }
+
+        WindowsRuntimeMarshal.Free(pointer);
+        GC.KeepAlive(value);
+    }
+}
 
 static int RunGenericDispatchChecks(TestComponentCSharp.Class component, bool cast)
 {
@@ -247,6 +290,32 @@ interface IDefaultCollectionFactory<T> : IDefaultCollectionFactory
 }
 
 sealed class DefaultCollectionFactory<T> : IDefaultCollectionFactory<T>;
+
+interface IStaticCollectionFactory
+{
+    static abstract object Create();
+}
+
+interface IStaticCollectionFactory<T> : IStaticCollectionFactory
+{
+    static object IStaticCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+}
+
+sealed class StaticCollectionFactory<T> : IStaticCollectionFactory<T>;
+
+interface IStaticCollectionCache
+{
+    static abstract object Value { get; }
+}
+
+interface IStaticCollectionCache<T> : IStaticCollectionCache
+{
+    private static readonly object Cached = new List<IAsyncOperation<T>>();
+
+    static object IStaticCollectionCache.Value => Cached;
+}
+
+sealed class StaticCollectionCache<T> : IStaticCollectionCache<T>;
 
 class ManagedClass
 {
