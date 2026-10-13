@@ -57,12 +57,45 @@ public sealed class Test_ImplementedRuntimeClassActivationAnalyzer
     // --- Tests where the analyzer should NOT warn ---
 
     [TestMethod]
-    public async Task DefaultActivatableClass_WithSingleImplementation_DoesNotWarn()
+    public async Task DefaultActivatableClass_WithGeneratedFactoryAttribute_DoesNotWarn()
     {
         const string source = ImplementableClasses + """
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 internal class MyWidget : global::ABI.Contoso.Widgets.Widget;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task MultipleImplementations_OneWithGeneratedFactoryAttribute_DoesNotWarn()
+    {
+        // The class is activatable through the annotated implementation, which is all that is needed
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget;
+
+                public sealed class OtherWidget : global::ABI.Contoso.Widgets.Widget;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task InvalidGeneratedFactoryAttribute_DoesNotWarn()
+    {
+        // Requesting a factory that cannot be generated is reported on the attribute ('CSWINRT2027') instead
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class MyGadget : global::ABI.Contoso.Widgets.Gadget;
             }
             """;
 
@@ -121,12 +154,13 @@ public sealed class Test_ImplementedRuntimeClassActivationAnalyzer
     }
 
     [TestMethod]
-    public async Task GenericImplementation_WithOtherImplementation_DoesNotWarn()
+    public async Task GenericImplementation_WithAnnotatedImplementation_DoesNotWarn()
     {
-        // Generic implementations are never activated, so the other implementation is the only candidate
+        // The annotated implementation makes the class activatable, so the generic one is fine too
         const string source = ImplementableClasses + """
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget;
 
                 public sealed class MyWidget<T> : global::ABI.Contoso.Widgets.Widget;
@@ -137,6 +171,20 @@ public sealed class Test_ImplementedRuntimeClassActivationAnalyzer
     }
 
     // --- Tests where the analyzer SHOULD warn ---
+
+    [TestMethod]
+    public async Task DefaultActivatableClass_WithoutGeneratedFactoryAttribute_Warns()
+    {
+        // The generated factory is opt-in, so a single implementation is not enough on its own
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                internal class {|CSWINRT2026:MyWidget|} : global::ABI.Contoso.Widgets.Widget;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
 
     [TestMethod]
     public async Task ClassWithFactoryMethods_WithoutDeclaredFactory_Warns()

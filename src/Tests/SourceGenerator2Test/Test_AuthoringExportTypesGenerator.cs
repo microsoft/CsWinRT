@@ -282,10 +282,10 @@ public class Test_AuthoringExportTypesGenerator
     }
 
     [TestMethod]
-    public void ImplementableClass_WithoutDeclaredFactory_GeneratesActivationFactory()
+    public void ImplementableClass_WithGeneratedFactoryAttribute_GeneratesActivationFactory()
     {
-        // A class whose only activation path is the parameterless 'ActivateInstance' needs no author input
-        // beyond the implementation itself, so CsWinRT supplies the factory.
+        // A class whose only activation path is the parameterless 'ActivateInstance' needs no author input beyond
+        // requesting it on the implementation, so CsWinRT generates the factory.
         const string source = """
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
@@ -316,6 +316,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
                 {
                     public override void DoStuff() { }
@@ -394,6 +395,50 @@ public class Test_AuthoringExportTypesGenerator
     }
 
     [TestMethod]
+    public void ImplementableClass_WithoutGeneratedFactoryAttribute_DoesNotGenerateActivationFactory()
+    {
+        // The generated factory is opt-in, so an implementation alone does not make its class activatable
+        const string source = """
+            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
+
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+
+            namespace Contoso.Widgets
+            {
+                public sealed class Widget;
+            }
+
+            namespace ABI.Contoso.Widgets
+            {
+                public abstract class Widget
+                {
+                    public abstract void DoStuff();
+                }
+
+                public abstract class WidgetActivationFactory : IActivationFactory
+                {
+                    object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                    public abstract Widget ActivateInstance();
+
+                    public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
+                }
+            }
+
+            namespace MyApp
+            {
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        CSharpGeneratorTest<AuthoringExportTypesGenerator>.VerifyNoSource(source, "ManagedExports.g.cs");
+    }
+
+    [TestMethod]
     public void ImplementableClass_WithoutDefaultActivation_DoesNotGenerateActivationFactory()
     {
         // Activating this class goes through factory methods, whose members only the author can implement
@@ -425,6 +470,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
                 {
                     public override void DoStuff() { }
@@ -469,6 +515,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
                 {
                     public MyWidget(int value) { }
@@ -484,7 +531,7 @@ public class Test_AuthoringExportTypesGenerator
     [TestMethod]
     public void MultipleImplementationsOfSameClass_DoNotGenerateActivationFactory()
     {
-        // Nothing here says which of the two to activate, so the author has to declare the factory
+        // Requesting the factory on both says nothing about which one to activate (which is reported as 'CSWINRT2025')
         const string source = """
             using WindowsRuntime;
             using WindowsRuntime.InteropServices;
@@ -515,11 +562,13 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
                 {
                     public override void DoStuff() { }
                 }
 
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyOtherWidget : global::ABI.Contoso.Widgets.Widget
                 {
                     public override void DoStuff() { }
@@ -557,6 +606,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget<T> : global::ABI.Contoso.Widgets.Widget
                 {
                     public override void DoStuff() { }
@@ -564,6 +614,7 @@ public class Test_AuthoringExportTypesGenerator
 
                 public static class Outer<T>
                 {
+                    [GeneratedWindowsRuntimeActivationFactory]
                     public sealed class NestedWidget : global::ABI.Contoso.Widgets.Widget
                     {
                         public override void DoStuff() { }
@@ -623,6 +674,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
+                [GeneratedWindowsRuntimeActivationFactory]
                 public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget
                 {
                     public override void DoStuff() { }

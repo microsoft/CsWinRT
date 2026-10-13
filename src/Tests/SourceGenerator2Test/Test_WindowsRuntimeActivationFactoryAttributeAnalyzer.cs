@@ -25,6 +25,8 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
 
         [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
         [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.WidgetUtils")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Gadget")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Gizmo")]
 
         namespace Contoso.Widgets
         {
@@ -51,6 +53,15 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
             {
                 public abstract int Compute();
             }
+
+            public abstract class Gadget;
+
+            public abstract class GadgetActivationFactory
+            {
+                public abstract Gadget CreateWithName(string name);
+            }
+
+            public abstract class Gizmo;
         }
 
         namespace MyApp
@@ -253,6 +264,113 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
                 public sealed class OtherWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
                 {
                     public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    // --- Generated activation factories that should not warn ---
+
+    [TestMethod]
+    public async Task GeneratedFactory_ForDefaultActivatableClass_DoesNotWarn()
+    {
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                internal sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    // --- Generated activation factories that should warn ---
+
+    [TestMethod]
+    [DataRow("public sealed class AnnotatedWidget;")]
+    [DataRow("public abstract class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget;")]
+    [DataRow("public sealed class AnnotatedWidget<T> : global::ABI.Contoso.Widgets.Widget { public override void DoStuff() { } }")]
+    [DataRow("public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget { public AnnotatedWidget(int value) { } public override void DoStuff() { } }")]
+    [DataRow("public sealed class AnnotatedGizmo : global::ABI.Contoso.Widgets.Gizmo;")]
+    [DataRow("public sealed class AnnotatedGadget : global::ABI.Contoso.Widgets.Gadget;")]
+    public async Task InvalidGeneratedFactory_Warns(string declaration)
+    {
+        string source = ImplementableClasses + $$"""
+            namespace MyApp
+            {
+                [{|CSWINRT2027:GeneratedWindowsRuntimeActivationFactory|}]
+                {{declaration}}
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task PrivateGeneratedFactory_Warns()
+    {
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                internal static class Outer
+                {
+                    [{|CSWINRT2027:GeneratedWindowsRuntimeActivationFactory|}]
+                    private sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                    {
+                        public override void DoStuff() { }
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task GeneratedFactory_WithDeclaredFactory_Warns()
+    {
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [{|CSWINRT2025:GeneratedWindowsRuntimeActivationFactory|}]
+                public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+
+                [{|CSWINRT2025:WindowsRuntimeActivationFactory(typeof(MyWidget))|}]
+                public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
+                {
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task GeneratedFactories_OnSeveralImplementations_Warn()
+    {
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [{|CSWINRT2025:GeneratedWindowsRuntimeActivationFactory|}]
+                public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+
+                [{|CSWINRT2025:GeneratedWindowsRuntimeActivationFactory|}]
+                public sealed class OtherAnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
                 }
             }
             """;
