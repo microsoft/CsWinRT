@@ -3,6 +3,8 @@
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
@@ -60,7 +62,12 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // Also get the '[Conditional]' symbol, which is used to detect calls that might be removed entirely
             INamedTypeSymbol? conditionalAttributeType = context.Compilation.GetTypeByMetadataName("System.Diagnostics.ConditionalAttribute");
 
-            WellKnownSymbols symbols = new(spanType, readOnlySpanType, conditionalAttributeType);
+            WellKnownSymbols symbols = new(
+                spanType,
+                readOnlySpanType,
+                conditionalAttributeType,
+                context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyAttribute"),
+                context.Compilation.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeTypeAttribute"));
 
             // The whole body of a method is analyzed at once, rather than each operation in isolation, so that
             // each candidate read can also be inspected in the context of the code that necessarily runs before it
@@ -139,7 +146,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
         // The indexer must be invoked directly on a write-only 'Span<T>' parameter
         if (operation.Instance is not IParameterReferenceOperation { Parameter: { } parameter } ||
-            !IsFillArrayParameter(parameter, symbols))
+            !IsFillArrayParameter(parameter, symbols) ||
+            IsUnevaluated(operation, symbols))
         {
             return;
         }
@@ -193,7 +201,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
         // The operand must be a write-only 'Span<T>' parameter
         if (operation.Operand is not IParameterReferenceOperation { Parameter: { } parameter } ||
-            !IsFillArrayParameter(parameter, symbols))
+            !IsFillArrayParameter(parameter, symbols) ||
+            IsUnevaluated(operation, symbols))
         {
             return;
         }
@@ -245,7 +254,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
         // The iterated collection must be a write-only 'Span<T>' parameter
         if (collection is not IParameterReferenceOperation { Parameter: { } parameter } ||
-            !IsFillArrayParameter(parameter, symbols))
+            !IsFillArrayParameter(parameter, symbols) ||
+            IsUnevaluated(operation, symbols))
         {
             return;
         }
@@ -293,7 +303,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // The loop variable can't be captured by a lambda or ref reassigned, so all aliasing usages
             // of the current element are guaranteed to appear directly in the body of the loop.
             if (operation is not ILocalReferenceOperation { Local: { } local } ||
-                !SymbolEqualityComparer.Default.Equals(local, target.Alias))
+                !SymbolEqualityComparer.Default.Equals(local, target.Alias) ||
+                IsUnevaluated(operation, target.Symbols))
             {
                 continue;
             }
@@ -366,15 +377,16 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         return
             IsSpanParameter(parameter, symbols.SpanType) &&
             parameter.ContainingSymbol is IMethodSymbol method &&
-            IsWindowsRuntimeMethod(method);
+            IsWindowsRuntimeMethod(method, symbols);
     }
 
     /// <summary>
     /// Checks whether a given method is part of the Windows Runtime ABI surface of an authored component.
     /// </summary>
     /// <param name="method">The method to check.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
     /// <returns>Whether <paramref name="method"/> is projected to the Windows Runtime.</returns>
-    private static bool IsWindowsRuntimeMethod(IMethodSymbol method)
+    private static bool IsWindowsRuntimeMethod(IMethodSymbol method, WellKnownSymbols symbols)
     {
         // The method must be an ordinary method, a constructor, or an explicit interface
         // implementation (and not e.g. a local function, a lambda, an operator or a property accessor).
@@ -385,7 +397,8 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
         // The containing type must be a public, top-level class (i.e. an authored runtime class). Other type
         // kinds can't have method bodies with fill array parameters, and nested types are never projected.
-        if (method.ContainingType is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public, ContainingType: null })
+        if (method.ContainingType is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public, ContainingType: null } ||
+            IsAbiNamespace(method.ContainingNamespace))
         {
             return false;
         }
@@ -396,14 +409,46 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             return true;
         }
 
-        // Explicit interface implementations are also part of the ABI surface, through the interfaces they
-        // implement. Only public interfaces are considered, as those are the ones projected to the Windows Runtime.
+        // Explicit implementations are exported through authored or projected Windows Runtime interfaces,
+        // not through arbitrary public .NET contracts (such as 'ISpanFormattable').
         foreach (IMethodSymbol implementedMethod in method.ExplicitInterfaceImplementations)
         {
-            if (implementedMethod.ContainingType.DeclaredAccessibility is Accessibility.Public)
+            INamedTypeSymbol interfaceType = implementedMethod.ContainingType;
+
+            if (interfaceType is not { DeclaredAccessibility: Accessibility.Public, ContainingType: null } ||
+                IsAbiNamespace(interfaceType.ContainingNamespace))
+            {
+                continue;
+            }
+
+            if (SymbolEqualityComparer.Default.Equals(interfaceType.ContainingAssembly, method.ContainingAssembly) ||
+                (symbols.ReferenceAssemblyAttributeType is { } referenceAssemblyAttributeType &&
+                 interfaceType.ContainingAssembly.HasAttributeWithType(referenceAssemblyAttributeType)) ||
+                (symbols.WindowsRuntimeTypeAttributeType is { } windowsRuntimeTypeAttributeType &&
+                 interfaceType.HasAttributeWithType(windowsRuntimeTypeAttributeType)))
             {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a namespace belongs to the implementation-only ABI namespace tree.
+    /// </summary>
+    /// <param name="namespaceSymbol">The namespace to check.</param>
+    /// <returns>Whether the WinMD generator excludes this namespace.</returns>
+    private static bool IsAbiNamespace(INamespaceSymbol namespaceSymbol)
+    {
+        while (!namespaceSymbol.IsGlobalNamespace)
+        {
+            if (namespaceSymbol.ContainingNamespace.IsGlobalNamespace)
+            {
+                return namespaceSymbol.Name == "ABI";
+            }
+
+            namespaceSymbol = namespaceSymbol.ContainingNamespace;
         }
 
         return false;
@@ -417,10 +462,43 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <returns>Whether <paramref name="operation"/> is a write-only usage of the element.</returns>
     private static bool IsWriteOnlyElementUsage(IOperation operation)
     {
+        // Accessing a field of a value type only computes its address. A reference-type receiver, on the
+        // other hand, must be read even when the field reached through that reference is only assigned.
+        if (operation.Parent is IFieldReferenceOperation field &&
+            ReferenceEquals(field.Instance, operation) &&
+            operation.Type is { IsValueType: true })
+        {
+            return IsWriteOnlyElementUsage(field);
+        }
+
+        // An inline-array element likewise denotes storage within the containing value. A range access
+        // produces a span instead, so leave that view-producing case under the existing conservative rule.
+        if (operation.Parent is IInlineArrayAccessOperation inlineArrayAccess &&
+            ReferenceEquals(inlineArrayAccess.Instance, operation) &&
+            inlineArrayAccess.Argument.Type is not { Name: "Range", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } })
+        {
+            return IsWriteOnlyElementUsage(inlineArrayAccess);
+        }
+
+        if (operation.Parent is IConditionalOperation { IsRef: true } conditional &&
+            !ReferenceEquals(conditional.Condition, operation))
+        {
+            return IsWriteOnlyElementUsage(conditional);
+        }
+
         // The examples below use an indexer access for the element reference, but the same reasoning
         // applies verbatim to a 'ref' alias to the element (e.g. a writable 'foreach' loop variable).
         return operation.Parent switch
         {
+            // Rebinding a writable alias does not read its new referent, unless the result of the
+            // ref assignment is itself consumed by value (e.g. '_ = (slot = ref span[i])').
+            ISimpleAssignmentOperation { IsRef: true } assignment =>
+                ReferenceEquals(assignment.Target, operation) ||
+                (assignment.Target is ILocalReferenceOperation { Local.RefKind: RefKind.Ref } or
+                                      IParameterReferenceOperation { Parameter.RefKind: RefKind.Ref } or
+                                      IFieldReferenceOperation { Field.RefKind: RefKind.Ref } &&
+                 (assignment.Parent is IExpressionStatementOperation || IsWriteOnlyElementUsage(assignment))),
+
             // 'span[i] = value' (the element is the target of the assignment): this only writes to the element.
             // Note that a compound assignment ('span[i] += value') is not handled here, as it also reads.
             ISimpleAssignmentOperation simpleAssignment => ReferenceEquals(simpleAssignment.Target, operation),
@@ -432,6 +510,9 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // 'ref var x = ref span[i]' (a writable 'ref' alias to the element): the alias may be used to write
             // to the element, so we also conservatively treat it as write-only (a 'ref readonly' alias cannot).
             IVariableInitializerOperation { Parent: IVariableDeclaratorOperation { Symbol.RefKind: RefKind.Ref } } => true,
+
+            // Deconstruction targets do not read the old element value.
+            ITupleOperation tuple => IsDeconstructionTarget(tuple),
 
             // Any other usage reads the value (e.g. as a value, a 'ref readonly' alias, an 'in' argument, a
             // compound assignment, or an increment/decrement), which is not valid for a write-only fill array.
@@ -473,15 +554,31 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             if (parent is IBlockOperation block)
             {
                 int index = block.Operations.IndexOf(current);
+                ReadTarget spanTarget = ReadTarget.ForSpan(target.Parameter, target.Symbols);
 
                 for (int i = index - 1; i >= 0; i--)
                 {
+                    // A whole-span write does not depend on the index used by this particular read.
+                    if (target.Index is not null && IsGuaranteedCoveringWrite(block.Operations[i], spanTarget))
+                    {
+                        return AreOperandsStable(block.Operations, i, index, spanTarget);
+                    }
+
                     if (IsGuaranteedCoveringWrite(block.Operations[i], target))
                     {
-                        // A preceding write only covers the read if the operands it depends on can't have changed in
-                        // between. If they can, no earlier write can be relied upon either, as it would span an even
-                        // wider range of statements, so there is no point in continuing the search past this one.
-                        return AreOperandsStable(block.Operations, i, index, target);
+                        if (AreOperandsStable(block.Operations, i, index, target))
+                        {
+                            return true;
+                        }
+
+                        if (target.Index is null)
+                        {
+                            return false;
+                        }
+
+                        // An unstable index invalidates earlier element writes, but an earlier whole-span write
+                        // may still cover this read. Continue looking for one, checking the span's own stability.
+                        target = spanTarget;
                     }
                 }
             }
@@ -538,7 +635,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             invocation.Instance is { } instance &&
             IsReferenceTo(instance, target.Parameter))
         {
-            return true;
+            return IsOriginalLoopBuffer(operation, target);
         }
 
         // 'span[i] = value' and 'Foo(out span[i])' initialize a single element, so they only
@@ -561,6 +658,84 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
+    /// Checks whether a whole-span write can initialize the buffer captured by a ref foreach loop.
+    /// </summary>
+    /// <param name="write">The whole-span write to check.</param>
+    /// <param name="target">The location that the write should cover.</param>
+    /// <returns>Whether no loop iteration can redirect the span before its original buffer is initialized.</returns>
+    private static bool IsOriginalLoopBuffer(IOperation write, ReadTarget target)
+    {
+        if (target.Alias is null)
+        {
+            return true;
+        }
+
+        for (IOperation? current = write.Parent; current is not null; current = current.Parent)
+        {
+            if (current is not IForEachLoopOperation { LoopControlVariable: IVariableDeclaratorOperation { Symbol: { } loopVariable } } loop ||
+                !SymbolEqualityComparer.Default.Equals(loopVariable, target.Alias))
+            {
+                continue;
+            }
+
+            foreach (IOperation operation in loop.Body.DescendantsAndSelf())
+            {
+                // A later iteration can observe a reassignment anywhere in the body. It is safe only when
+                // this write necessarily precedes that reassignment, initializing the original buffer first.
+                if (IsPotentialWrite(operation, target.Parameter) &&
+                    !IsUnevaluated(operation, target.Symbols) &&
+                    !IsGuaranteedBefore(write, operation, target.Symbols))
+                {
+                    return false;
+                }
+            }
+
+            break;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks whether a write unconditionally precedes an operation in a common block.
+    /// </summary>
+    /// <param name="write">The write that must run first.</param>
+    /// <param name="operation">The operation that must be preceded by the write.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
+    /// <returns>Whether reaching <paramref name="operation"/> requires executing <paramref name="write"/> first.</returns>
+    private static bool IsGuaranteedBefore(IOperation write, IOperation operation, WellKnownSymbols symbols)
+    {
+        for (IOperation? current = write; current?.Parent is { } parent; current = parent)
+        {
+            if (IsConditionallyExecuted(current, symbols))
+            {
+                return false;
+            }
+
+            if (parent is not IBlockOperation block)
+            {
+                continue;
+            }
+
+            IOperation statement = operation;
+
+            while (statement.Parent is { } statementParent && !ReferenceEquals(statementParent, block))
+            {
+                statement = statementParent;
+            }
+
+            int writeIndex = block.Operations.IndexOf(current);
+
+            if (writeIndex >= 0 && block.Operations.IndexOf(statement) > writeIndex)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Checks whether a given operation might not be reached during the execution of its parent operation.
     /// </summary>
     /// <param name="operation">The operation to check.</param>
@@ -568,7 +743,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <returns>Whether <paramref name="operation"/> might be skipped, or run at some later point.</returns>
     private static bool IsConditionallyExecuted(IOperation operation, WellKnownSymbols symbols)
     {
-        return (operation is IInvocationOperation { TargetMethod: { } targetMethod } && IsErasableCall(targetMethod, symbols)) ||
+        return (operation is IInvocationOperation invocation && IsOmittedCall(invocation, symbols)) ||
             operation is
                 IConditionalOperation or            // 'if' statements and '?:' expressions
                 IConditionalAccessOperation or      // '?.' and '?[]' accesses
@@ -588,13 +763,35 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks whether calls to a given method might be removed entirely by the compiler, arguments included.
+    /// Checks whether an operation is in an expression that the compiler does not evaluate.
     /// </summary>
-    /// <param name="method">The method to check.</param>
+    /// <param name="operation">The operation to check.</param>
     /// <param name="symbols">The well known symbols used by the analyzer.</param>
-    /// <returns>Whether calls to <paramref name="method"/> might not survive compilation.</returns>
-    private static bool IsErasableCall(IMethodSymbol method, WellKnownSymbols symbols)
+    /// <returns>Whether <paramref name="operation"/> is not evaluated.</returns>
+    private static bool IsUnevaluated(IOperation operation, WellKnownSymbols symbols)
     {
+        for (IOperation? current = operation; current is not null; current = current.Parent)
+        {
+            if (current is INameOfOperation ||
+                (current is IInvocationOperation invocation && IsOmittedCall(invocation, symbols)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a call is removed entirely by the compiler, arguments included.
+    /// </summary>
+    /// <param name="invocation">The invocation to check.</param>
+    /// <param name="symbols">The well known symbols used by the analyzer.</param>
+    /// <returns>Whether <paramref name="invocation"/> does not survive compilation.</returns>
+    private static bool IsOmittedCall(IInvocationOperation invocation, WellKnownSymbols symbols)
+    {
+        IMethodSymbol method = invocation.TargetMethod;
+
         // A 'partial void' method that has no implementing declaration has all of its call sites removed
         if (method is { IsPartialDefinition: true, PartialImplementationPart: null })
         {
@@ -606,18 +803,68 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        // A call to a method annotated with '[Conditional]' is removed when the associated preprocessor symbol
-        // is not defined. An override cannot carry the attribute itself, but it does inherit the conditional
-        // symbols of the method it overrides, so the whole chain of overridden methods is inspected here.
+        bool hasConditionalAttribute = false;
+
+        // Any defined conditional symbol preserves the call, including symbols inherited from an override.
         for (IMethodSymbol? currentMethod = method; currentMethod is not null; currentMethod = currentMethod.OverriddenMethod)
         {
-            if (currentMethod.HasAttributeWithType(conditionalAttributeType))
+            foreach (AttributeData attribute in currentMethod.GetAttributes())
             {
-                return true;
+                if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, conditionalAttributeType))
+                {
+                    continue;
+                }
+
+                hasConditionalAttribute = true;
+
+                if (attribute.ConstructorArguments is [{ Value: string symbolName }] &&
+                    IsConditionalSymbolDefined(invocation.Syntax.SyntaxTree, symbolName))
+                {
+                    return false;
+                }
             }
         }
 
-        return false;
+        return hasConditionalAttribute;
+    }
+
+    /// <summary>
+    /// Resolves a conditional symbol in the call-site file, including active local directives.
+    /// </summary>
+    /// <param name="tree">The syntax tree containing the call.</param>
+    /// <param name="symbolName">The conditional symbol to resolve.</param>
+    /// <returns>Whether the symbol is defined in <paramref name="tree"/>.</returns>
+    private static bool IsConditionalSymbolDefined(SyntaxTree tree, string symbolName)
+    {
+        bool isDefined = false;
+
+        foreach (string definedSymbol in ((CSharpParseOptions)tree.Options).PreprocessorSymbolNames)
+        {
+            if (definedSymbol == symbolName)
+            {
+                isDefined = true;
+                break;
+            }
+        }
+
+        // C# requires '#define' and '#undef' to precede the first token in a file. Only active directives
+        // apply, so directives inside an inactive '#if' branch must not override the call-site state.
+        foreach (SyntaxTrivia trivia in tree.GetRoot().GetLeadingTrivia())
+        {
+            switch (trivia.GetStructure())
+            {
+                case DefineDirectiveTriviaSyntax { IsActive: true } define when define.Name.ValueText == symbolName:
+                    isDefined = true;
+                    break;
+                case UndefDirectiveTriviaSyntax { IsActive: true } undef when undef.Name.ValueText == symbolName:
+                    isDefined = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return isDefined;
     }
 
     /// <summary>
@@ -652,13 +899,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             foreach (IOperation operation in statements[i].DescendantsAndSelf())
             {
                 // Reassigning the span parameter would make the write apply to an entirely different buffer
-                if (IsPotentialWrite(operation, target.Parameter))
+                if (IsPotentialWrite(operation, target.Parameter) && !IsUnevaluated(operation, target.Symbols))
                 {
                     return false;
                 }
 
                 // Likewise, modifying the index variable would make the two accesses target different elements
-                if (indexSymbol is not null && IsPotentialWrite(operation, indexSymbol))
+                if (indexSymbol is not null && IsPotentialWrite(operation, indexSymbol) && !IsUnevaluated(operation, target.Symbols))
                 {
                     return false;
                 }
@@ -683,13 +930,22 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             // A reference passed to another method can outlive the call that receives it (e.g. by being stored
             // in a 'ref' field, or by being wrapped in a span), so it is not enough to only look at the calls
             // between the write and the read: one made before the write can still be used to modify an operand.
-            if (operation is not IArgumentOperation { Parameter.RefKind: not RefKind.None, Value: { } value })
+            if (operation is not IArgumentOperation { Parameter.RefKind: not RefKind.None, Value: { } value } ||
+                IsUnevaluated(operation, target.Symbols))
             {
                 continue;
             }
 
-            if (IsReferenceTo(value, target.Parameter) ||
-                (indexSymbol is not null && IsReferenceTo(value, indexSymbol)))
+            // Ordinary 'out' parameters are scoped by default, unlike '[UnscopedRef] out' parameters.
+            // Keep treating 'ref' arguments conservatively: APIs such as 'MemoryMarshal.CreateSpan'
+            // can return an alias even though their 'ref' parameter is annotated as scoped.
+            if (operation is IArgumentOperation { Parameter: { RefKind: RefKind.Out, ScopedKind: ScopedKind.ScopedRef } })
+            {
+                continue;
+            }
+
+            if (MayReferenceOperand(value, target.Parameter) ||
+                (indexSymbol is not null && MayReferenceOperand(value, indexSymbol)))
             {
                 return true;
             }
@@ -721,7 +977,20 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <returns>Whether <paramref name="operation"/> might modify the value of <paramref name="symbol"/>.</returns>
     private static bool IsPotentialWrite(IOperation operation, ISymbol symbol)
     {
-        return IsReferenceTo(operation, symbol) && operation.Parent switch
+        if (!IsReferenceTo(operation, symbol))
+        {
+            return false;
+        }
+
+        // A ref conditional preserves the storage denoted by either arm. A write to the selected arm
+        // can invalidate either operand, even though it is not a definite write to both of them.
+        while (operation.Parent is IConditionalOperation { IsRef: true } conditional &&
+               !ReferenceEquals(conditional.Condition, operation))
+        {
+            operation = conditional;
+        }
+
+        return operation.Parent switch
         {
             // 'x = value', 'x += value' and 'x ??= value'
             IAssignmentOperation assignment => ReferenceEquals(assignment.Target, operation),
@@ -740,6 +1009,20 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
 
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Checks whether a by-reference argument can refer to an operand, possibly through a ref conditional.
+    /// </summary>
+    /// <param name="operation">The reference-producing expression to check.</param>
+    /// <param name="symbol">The operand to look for.</param>
+    /// <returns>Whether <paramref name="operation"/> might reference <paramref name="symbol"/>.</returns>
+    private static bool MayReferenceOperand(IOperation operation, ISymbol symbol)
+    {
+        return IsReferenceTo(operation, symbol) ||
+            (operation is IConditionalOperation { IsRef: true } conditional &&
+             (MayReferenceOperand(conditional.WhenTrue, symbol) ||
+              (conditional.WhenFalse is { } whenFalse && MayReferenceOperand(whenFalse, symbol))));
     }
 
     /// <summary>
@@ -771,10 +1054,12 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         return operation.Parent switch
         {
             // 'span[i] = value' or 'x = value': the element is definitely assigned
-            ISimpleAssignmentOperation simpleAssignment => ReferenceEquals(simpleAssignment.Target, operation),
+            ISimpleAssignmentOperation { IsRef: false } simpleAssignment => ReferenceEquals(simpleAssignment.Target, operation),
 
             // 'Foo(out span[i])' or 'Foo(out x)': the callee has to assign the element before returning
             IArgumentOperation { Parameter.RefKind: RefKind.Out } => true,
+
+            ITupleOperation tuple => IsDeconstructionTarget(tuple),
 
             // Note that 'ref' arguments and writable 'ref' aliases are not definite writes: the callee (or the
             // code using the alias) might never actually write to the element, so they can't be relied upon.
@@ -887,10 +1172,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
     /// <param name="spanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.</param>
     /// <param name="readOnlySpanType">The <see cref="INamedTypeSymbol"/> for <see cref="System.ReadOnlySpan{T}"/>.</param>
     /// <param name="conditionalAttributeType">The <see cref="INamedTypeSymbol"/> for <c>[Conditional]</c>, if available.</param>
+    /// <param name="referenceAssemblyAttributeType">The marker for reference projection assemblies, if available.</param>
+    /// <param name="windowsRuntimeTypeAttributeType">The marker for implementation projection types, if available.</param>
     private readonly struct WellKnownSymbols(
         INamedTypeSymbol spanType,
         INamedTypeSymbol readOnlySpanType,
-        INamedTypeSymbol? conditionalAttributeType)
+        INamedTypeSymbol? conditionalAttributeType,
+        INamedTypeSymbol? referenceAssemblyAttributeType,
+        INamedTypeSymbol? windowsRuntimeTypeAttributeType)
     {
         /// <summary>
         /// Gets the <see cref="INamedTypeSymbol"/> for <see cref="System.Span{T}"/>.
@@ -906,6 +1195,16 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         /// Gets the <see cref="INamedTypeSymbol"/> for <c>[Conditional]</c>, if available.
         /// </summary>
         public INamedTypeSymbol? ConditionalAttributeType => conditionalAttributeType;
+
+        /// <summary>
+        /// Gets the marker for reference projection assemblies.
+        /// </summary>
+        public INamedTypeSymbol? ReferenceAssemblyAttributeType => referenceAssemblyAttributeType;
+
+        /// <summary>
+        /// Gets the marker for implementation projection types.
+        /// </summary>
+        public INamedTypeSymbol? WindowsRuntimeTypeAttributeType => windowsRuntimeTypeAttributeType;
     }
 
     /// <summary>
