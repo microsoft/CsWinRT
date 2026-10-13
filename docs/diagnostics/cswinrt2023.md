@@ -33,6 +33,8 @@ public void Fill(Span<int> destination)
 
 Writes through nested struct fields, inline-array elements, deconstruction targets, writable `ref` aliases, and writable ref-conditional targets do not themselves read the old value. A compound assignment or increment, however, reads the value it updates.
 
+A definite write to a struct field also permits reading that field back. Writing a containing struct field or the whole element covers its nested fields, but writing a single leaf field does not initialize its siblings or the entire element.
+
 ## Scope and limitations
 
 The warning is enabled by default when `CsWinRTComponent` is `true`. It applies to by-value `Span<T>` parameters on methods and constructors exported from public, top-level classes, including explicit implementations of exported Windows Runtime interfaces. Classes and interfaces in `ABI.*` namespaces, nested interfaces, and explicit implementations of ordinary .NET interfaces such as `ISpanFormattable` and `IUtf8SpanFormattable` are not exported fill-array contracts.

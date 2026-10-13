@@ -161,7 +161,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // Skip reads of an element that the method is guaranteed to have already written to
         if (allowsSuppression &&
             operation.Arguments is [{ Value: { } index }] &&
-            IsPrecededByCoveringWrite(operation, ReadTarget.ForElement(parameter, symbols, index)))
+            IsPrecededByCoveringWrite(operation, ReadTarget.ForElement(parameter, symbols, index).WithAccess(operation)))
         {
             return;
         }
@@ -316,7 +316,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             }
 
             // Skip reads of an element that the method is guaranteed to have already written to
-            if (allowsSuppression && IsPrecededByCoveringWrite(operation, target))
+            if (allowsSuppression && IsPrecededByCoveringWrite(operation, target.WithAccess(operation)))
             {
                 continue;
             }
@@ -638,12 +638,13 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             return IsOriginalLoopBuffer(operation, target);
         }
 
-        // 'span[i] = value' and 'Foo(out span[i])' initialize a single element, so they only
-        // cover reads of that same element (i.e. reads through an equivalent index expression).
+        // Element and field assignments only cover the same element (through an equivalent index),
+        // and a field write must cover the field path being read, not just some part of the element.
         if (target.Index is { } index &&
+            target.Access is { } elementAccess &&
             operation is IPropertyReferenceOperation { Property.IsIndexer: true, Instance: { } spanInstance, Arguments: [{ Value: { } writeIndex }] } &&
             IsReferenceTo(spanInstance, target.Parameter) &&
-            IsDefiniteWrite(operation) &&
+            IsDefiniteFieldWrite(operation, elementAccess) &&
             AreIndexesEquivalent(writeIndex, index))
         {
             return true;
@@ -653,8 +654,40 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // the element it aliases, so they cover reads of that element through the same variable.
         return
             target.Alias is { } alias &&
+            target.Access is { } aliasAccess &&
             IsReferenceTo(operation, alias) &&
-            IsDefiniteWrite(operation);
+            IsDefiniteFieldWrite(operation, aliasAccess);
+    }
+
+    /// <summary>
+    /// Checks whether an element or value-type field write covers the field path accessed by a read.
+    /// </summary>
+    /// <param name="write">The indexer or loop-variable reference at the root of the potential write.</param>
+    /// <param name="read">The indexer or loop-variable reference at the root of the read.</param>
+    /// <returns>Whether the write initializes the entire value being read.</returns>
+    private static bool IsDefiniteFieldWrite(IOperation write, IOperation read)
+    {
+        // The written path must be a prefix of the read path. Walking both operation chains avoids
+        // allocating paths and stops at reference-type receivers, whose fields are not part of the buffer.
+        while (write.Parent is IFieldReferenceOperation writtenField &&
+               ReferenceEquals(writtenField.Instance, write) &&
+               write.Type is { IsValueType: true })
+        {
+            if (read.Parent is not IFieldReferenceOperation readField ||
+                !ReferenceEquals(readField.Instance, read) ||
+                read.Type is not { IsValueType: true } ||
+                !SymbolEqualityComparer.Default.Equals(
+                    writtenField.Field.CorrespondingTupleField ?? writtenField.Field,
+                    readField.Field.CorrespondingTupleField ?? readField.Field))
+            {
+                return false;
+            }
+
+            write = writtenField;
+            read = readField;
+        }
+
+        return IsDefiniteWrite(write);
     }
 
     /// <summary>
@@ -1220,12 +1253,14 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         /// <param name="symbols">The well known symbols used by the analyzer.</param>
         /// <param name="index">The index of the element being read, if the read goes through the span indexer.</param>
         /// <param name="alias">The writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read, if any.</param>
-        private ReadTarget(IParameterSymbol parameter, WellKnownSymbols symbols, IOperation? index, ILocalSymbol? alias)
+        /// <param name="access">The element reference whose containing field path is being read, if any.</param>
+        private ReadTarget(IParameterSymbol parameter, WellKnownSymbols symbols, IOperation? index, ILocalSymbol? alias, IOperation? access = null)
         {
             Parameter = parameter;
             Symbols = symbols;
             Index = index;
             Alias = alias;
+            Access = access;
         }
 
         /// <summary>
@@ -1247,6 +1282,11 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         /// Gets the writable <c>ref</c> <c>foreach</c> loop variable aliasing the element being read, if any.
         /// </summary>
         public ILocalSymbol? Alias { get; }
+
+        /// <summary>
+        /// Gets the element reference whose containing field path is being read, if any.
+        /// </summary>
+        public IOperation? Access { get; }
 
         /// <summary>
         /// Gets the local or parameter that <see cref="Index"/> refers to, if it is a plain variable reference.
@@ -1291,6 +1331,16 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         public static ReadTarget ForAlias(IParameterSymbol parameter, WellKnownSymbols symbols, ILocalSymbol alias)
         {
             return new(parameter, symbols, index: null, alias);
+        }
+
+        /// <summary>
+        /// Includes the access operation so field writes can be matched to the value being read.
+        /// </summary>
+        /// <param name="access">The indexer or loop-variable reference at the root of the read.</param>
+        /// <returns>A target with the same location and the specified field-access context.</returns>
+        public ReadTarget WithAccess(IOperation access)
+        {
+            return new(Parameter, Symbols, Index, Alias, access);
         }
     }
 }
