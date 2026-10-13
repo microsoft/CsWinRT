@@ -249,6 +249,8 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace ABI.Contoso.Widgets
             {
+                public abstract class Widget;
+
                 public abstract class WidgetActivationFactory : IActivationFactory
                 {
                     object IActivationFactory.ActivateInstance() => ActivateInstance();
@@ -261,7 +263,7 @@ public class Test_AuthoringExportTypesGenerator
 
             namespace MyApp
             {
-                public sealed class MyWidget;
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget;
 
                 [WindowsRuntimeActivationFactory(typeof(MyWidget))]
                 public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
@@ -803,6 +805,135 @@ public class Test_AuthoringExportTypesGenerator
 
         StringAssert.Contains(managedExports, "return new global::MyApp.MyWidget();");
         Assert.IsFalse(managedExports.Contains("MyOtherWidget"));
+    }
+
+    /// <summary>
+    /// Stands in for a reference projection with two default-activatable classes, <c>Widget</c> and <c>Gadget</c>.
+    /// </summary>
+    private const string TwoDefaultActivatableClasses = """
+        using WindowsRuntime;
+        using WindowsRuntime.InteropServices;
+
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Widget")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.ImplementableClass.v1", "Contoso.Widgets.Gadget")]
+
+        namespace Contoso.Widgets
+        {
+            public sealed class Widget;
+
+            public sealed class Gadget;
+        }
+
+        namespace ABI.Contoso.Widgets
+        {
+            public abstract class Widget;
+
+            public abstract class WidgetActivationFactory : IActivationFactory
+            {
+                object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                public abstract Widget ActivateInstance();
+
+                public static nint GetActivationFactoryUnsafe(WidgetActivationFactory value) => throw null!;
+            }
+
+            public abstract class Gadget;
+
+            public abstract class GadgetActivationFactory : IActivationFactory
+            {
+                object IActivationFactory.ActivateInstance() => ActivateInstance();
+
+                public abstract Gadget ActivateInstance();
+
+                public static nint GetActivationFactoryUnsafe(GadgetActivationFactory value) => throw null!;
+            }
+        }
+
+        """;
+
+    [TestMethod]
+    public void GeneratedFactoryNames_AreValidAndUnique()
+    {
+        // 'A.B.Impl' and 'A_B.Impl' both map to 'A_B_Impl', and '@class' must not leave an '@' in the middle of a name
+        const string source = TwoDefaultActivatableClasses + """
+            namespace A.B
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class @class : global::ABI.Contoso.Widgets.Widget;
+            }
+
+            namespace A_B
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class @class : global::ABI.Contoso.Widgets.Gadget;
+            }
+            """;
+
+        string managedExports = GetManagedExports(source, isCsWinRTComponent: false);
+
+        StringAssert.Contains(managedExports, "internal sealed class A_B_classActivationFactory : global::ABI.Contoso.Widgets.GadgetActivationFactory");
+        StringAssert.Contains(managedExports, "internal sealed class A_B_class_2ActivationFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory");
+
+        _ = CSharpGeneratorTest<AuthoringExportTypesGenerator>.Compile(source);
+    }
+
+    [TestMethod]
+    public void DuplicateDeclaredFactories_AreNotRegistered()
+    {
+        // Both are reported as 'CSWINRT2025', so neither is registered (which would also declare the same field twice)
+        const string source = TwoDefaultActivatableClasses + """
+            namespace MyApp
+            {
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget;
+
+                [WindowsRuntimeActivationFactory(typeof(MyWidget))]
+                public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
+                {
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
+                }
+
+                [WindowsRuntimeActivationFactory(typeof(MyWidget))]
+                public sealed class MyOtherWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
+                {
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
+                }
+
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class MyGadget : global::ABI.Contoso.Widgets.Gadget;
+            }
+            """;
+
+        string managedExports = GetManagedExports(source, isCsWinRTComponent: false);
+
+        Assert.IsFalse(managedExports.Contains("MyWidgetFactory"));
+        Assert.IsFalse(managedExports.Contains("MyOtherWidgetFactory"));
+        StringAssert.Contains(managedExports, "return new global::MyApp.MyGadget();");
+
+        _ = CSharpGeneratorTest<AuthoringExportTypesGenerator>.Compile(source);
+    }
+
+    [TestMethod]
+    public void DeclaredFactoryForUnrelatedType_DoesNotReplaceGeneratedFactory()
+    {
+        // The declared factory is reported as 'CSWINRT2024', so it is not registered, and does not count as a duplicate
+        const string source = TwoDefaultActivatableClasses + """
+            namespace MyApp
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget;
+
+                [WindowsRuntimeActivationFactory(typeof(string))]
+                public sealed class WrongFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
+                {
+                    public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget();
+                }
+            }
+            """;
+
+        string managedExports = GetManagedExports(source, isCsWinRTComponent: false);
+
+        StringAssert.Contains(managedExports, "return new global::MyApp.MyWidget();");
+        Assert.IsFalse(managedExports.Contains("WrongFactory"));
     }
 
     /// <summary>

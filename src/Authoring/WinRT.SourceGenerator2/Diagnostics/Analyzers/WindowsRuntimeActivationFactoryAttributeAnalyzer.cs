@@ -70,7 +70,7 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
                 {
                     Location generatedLocation = generatedAttribute.GetLocation(context.CancellationToken) ?? type.Locations.FirstOrDefault() ?? Location.None;
 
-                    if (GetInvalidGeneratedFactoryReason(type, context.Compilation, implementableClasses, out string? implementedRuntimeClassName) is string generatedInvalidReason)
+                    if (ActivationFactoryValidation.GetInvalidGeneratedFactoryReason(type, context.Compilation, implementableClasses, out string? implementedRuntimeClassName, out _, out _) is string generatedInvalidReason)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             DiagnosticDescriptors.InvalidGeneratedActivationFactoryType,
@@ -96,7 +96,7 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
                 INamedTypeSymbol? factoryBase = implementableClasses.GetFactoryBase(type.BaseType);
 
                 string? invalidReason = factoryBase is not null
-                    ? GetInvalidImplementedFactoryReason(type, factoryBase, context.Compilation)
+                    ? ActivationFactoryValidation.GetInvalidImplementedFactoryReason(type, factoryBase, context.Compilation)
                     : GetInvalidFactoryExtensionReason(type, isComponent);
 
                 if (invalidReason is not null)
@@ -123,7 +123,7 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
                 if (factoryBase is not null)
                 {
                     runtimeClassName = implementableClasses.GetFactoryRuntimeClassName(factoryBase)!;
-                    mismatchReason = GetImplementedRuntimeClassMismatchReason(runtimeClassType, runtimeClassName, factoryBase, implementableClasses);
+                    mismatchReason = ActivationFactoryValidation.GetImplementedRuntimeClassMismatchReason(runtimeClassType, runtimeClassName, factoryBase, implementableClasses);
                 }
                 else
                 {
@@ -176,79 +176,6 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
     }
 
     /// <summary>
-    /// Gets why a type deriving from a generated activation factory base cannot be used as an activation factory.
-    /// </summary>
-    /// <param name="type">The annotated type.</param>
-    /// <param name="factoryBase">The generated activation factory base <paramref name="type"/> derives from.</param>
-    /// <param name="compilation">The current <see cref="Compilation"/>.</param>
-    /// <returns>The reason, or <see langword="null"/> if <paramref name="type"/> is valid.</returns>
-    private static string? GetInvalidImplementedFactoryReason(INamedTypeSymbol type, INamedTypeSymbol factoryBase, Compilation compilation)
-    {
-        // CsWinRT instantiates the factory from the generated activation entry point in the same assembly
-        if (type.IsAbstract)
-        {
-            return $"it derives from the generated activation factory base '{factoryBase}', so it implements the activation factory itself, and must not be abstract.";
-        }
-
-        if (type.GetNotInstantiableFromGeneratedCodeReason(compilation) is string reason)
-        {
-            return $"{reason}, so CsWinRT cannot instantiate it.";
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Gets why CsWinRT cannot generate the activation factory for a type annotated with <c>[GeneratedWindowsRuntimeActivationFactory]</c>.
-    /// </summary>
-    /// <param name="type">The annotated type.</param>
-    /// <param name="compilation">The current <see cref="Compilation"/>.</param>
-    /// <param name="implementableClasses">The lookup for the generated bases.</param>
-    /// <param name="runtimeClassName">The Windows Runtime class <paramref name="type"/> implements, if it is valid.</param>
-    /// <returns>The reason, or <see langword="null"/> if <paramref name="type"/> is valid.</returns>
-    private static string? GetInvalidGeneratedFactoryReason(
-        INamedTypeSymbol type,
-        Compilation compilation,
-        ImplementableClassLookup implementableClasses,
-        out string? runtimeClassName)
-    {
-        runtimeClassName = null;
-
-        if (implementableClasses.GetInstanceBase(type.BaseType) is not INamedTypeSymbol instanceBase ||
-            implementableClasses.GetInstanceRuntimeClassName(instanceBase) is not string implementedRuntimeClassName)
-        {
-            return "it does not derive from a generated implementable base class (such as 'ABI.<Namespace>.<Class>'), so it does not implement a Windows Runtime class defined in existing metadata.";
-        }
-
-        // The generated activation factory constructs the annotated type from the generated activation entry point
-        if (type.IsAbstract || type.IsStatic)
-        {
-            return "it is abstract, so CsWinRT cannot instantiate it.";
-        }
-
-        if (type.GetNotInstantiableFromGeneratedCodeReason(compilation) is string reason)
-        {
-            return $"{reason}, so CsWinRT cannot instantiate it.";
-        }
-
-        if (implementableClasses.GetFactoryBaseForInstanceBase(instanceBase) is not INamedTypeSymbol factoryBase)
-        {
-            return $"the Windows Runtime class '{implementedRuntimeClassName}' it implements is not activatable.";
-        }
-
-        if (!implementableClasses.HasDefaultActivationOnly(factoryBase))
-        {
-            return
-                $"the Windows Runtime class '{implementedRuntimeClassName}' it implements has statics or constructors with parameters, which only a declared activation factory can implement. " +
-                $"Declare one deriving from '{factoryBase}' with '[WindowsRuntimeActivationFactory]' instead.";
-        }
-
-        runtimeClassName = implementedRuntimeClassName;
-
-        return null;
-    }
-
-    /// <summary>
     /// Gets why a type not deriving from a generated activation factory base cannot extend a generated activation factory.
     /// </summary>
     /// <param name="type">The annotated type.</param>
@@ -298,39 +225,6 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// Gets why the type argument of the attribute on a factory deriving from a generated activation factory base does not match it.
-    /// </summary>
-    /// <param name="runtimeClassType">The type argument of the attribute.</param>
-    /// <param name="runtimeClassName">The Windows Runtime class the factory base activates.</param>
-    /// <param name="factoryBase">The generated activation factory base.</param>
-    /// <param name="implementableClasses">The lookup for the generated bases.</param>
-    /// <returns>The reason, or <see langword="null"/> if <paramref name="runtimeClassType"/> matches.</returns>
-    private static string? GetImplementedRuntimeClassMismatchReason(
-        INamedTypeSymbol runtimeClassType,
-        string runtimeClassName,
-        INamedTypeSymbol factoryBase,
-        ImplementableClassLookup implementableClasses)
-    {
-        // An implementation of the class (the common case)
-        if (implementableClasses.GetInstanceBase(runtimeClassType) is INamedTypeSymbol instanceBase &&
-            implementableClasses.GetInstanceRuntimeClassName(instanceBase) == runtimeClassName)
-        {
-            return null;
-        }
-
-        // The projected class itself (needed for statics-only classes, which have no implementation)
-        if (runtimeClassType is { ContainingType: null, ContainingNamespace.IsGlobalNamespace: false } &&
-            $"{runtimeClassType.ContainingNamespace.ToDisplayString()}.{runtimeClassType.MetadataName}" == runtimeClassName)
-        {
-            return null;
-        }
-
-        return
-            $"is neither the Windows Runtime class '{runtimeClassName}' activated by the generated activation factory base '{factoryBase}', " +
-            $"nor an implementation of it (a class deriving from 'ABI.{runtimeClassName}').";
     }
 
     /// <summary>

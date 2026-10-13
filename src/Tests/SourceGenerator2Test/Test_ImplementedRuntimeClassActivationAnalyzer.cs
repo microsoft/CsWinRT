@@ -195,6 +195,41 @@ public sealed class Test_ImplementedRuntimeClassActivationAnalyzer
     // --- Tests where the analyzer SHOULD warn ---
 
     [TestMethod]
+    [DataRow("""
+        [WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
+        internal sealed class GeneratedWidget : global::ABI.Contoso.Widgets.Widget
+        {
+            public required int Value { get; set; }
+        }
+        """)]
+    [DataRow("""
+        [WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory(typeof(string))]
+        internal sealed class GeneratedWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory
+        {
+            public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => null!;
+        }
+        """)]
+    public async Task InvalidFactoryInGeneratedCode_Warns(string generatedDeclaration)
+    {
+        // Diagnostics are not reported in generated code, so an invalid factory there must not hide the missing factory
+        string generatedSource = $$"""
+            namespace MyApp
+            {
+                {{generatedDeclaration}}
+            }
+            """;
+
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                public sealed class {|CSWINRT2026:MyWidget|} : global::ABI.Contoso.Widgets.Widget;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, generatedSource: generatedSource);
+    }
+
+    [TestMethod]
     public async Task DefaultActivatableClass_WithoutGeneratedFactoryAttribute_Warns()
     {
         // The generated factory is opt-in, so a single implementation is not enough on its own

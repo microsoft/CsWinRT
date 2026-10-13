@@ -113,14 +113,7 @@ public partial class AuthoringExportTypesGenerator
         /// <returns>A stable, valid C# identifier for the factory's backing field.</returns>
         private static string GetActivationFactoryFieldName(AuthoringActivationFactoryInfo factory)
         {
-            System.Text.StringBuilder builder = new("_activationFactory_");
-
-            foreach (char c in factory.RuntimeClassName)
-            {
-                _ = builder.Append(char.IsLetterOrDigit(c) ? c : '_');
-            }
-
-            return builder.ToString();
+            return factory.FieldName!;
         }
 
         /// <summary>

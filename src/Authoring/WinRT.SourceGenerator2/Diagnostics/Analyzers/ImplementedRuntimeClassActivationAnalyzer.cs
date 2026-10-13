@@ -53,11 +53,21 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
                     return;
                 }
 
-                // Same as the source generator, which only registers declared factories deriving from a generated base
-                if (type.HasAttributeWithType(activationFactoryAttributeType) &&
+                // Valid factories count, as those are the ones the source generator registers. An invalid one counts too when
+                // it is reported on its attribute, but not in generated code, where nothing would say the class is not activatable.
+                bool countsInvalidFactories = !context.IsGeneratedCode;
+
+                if (type.TryGetAttributeWithType(activationFactoryAttributeType, out AttributeData? attribute) &&
                     implementableClasses.GetFactoryBase(type.BaseType) is INamedTypeSymbol factoryBase)
                 {
-                    _ = classesWithFactory.TryAdd(implementableClasses.GetFactoryRuntimeClassName(factoryBase)!, 0);
+                    string? factoryRuntimeClassName = countsInvalidFactories
+                        ? implementableClasses.GetFactoryRuntimeClassName(factoryBase)
+                        : ActivationFactoryValidation.GetImplementedFactoryRuntimeClassName(type, attribute, context.Compilation, implementableClasses, out _);
+
+                    if (factoryRuntimeClassName is not null)
+                    {
+                        _ = classesWithFactory.TryAdd(factoryRuntimeClassName, 0);
+                    }
                 }
 
                 if (implementableClasses.GetInstanceBase(type.BaseType) is not INamedTypeSymbol instanceBase)
@@ -67,8 +77,8 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
 
                 string runtimeClassName = implementableClasses.GetInstanceRuntimeClassName(instanceBase)!;
 
-                // A requested factory counts even if it cannot be generated, as that is reported on the attribute instead
-                if (type.HasAttributeWithType(generatedActivationFactoryAttributeType))
+                if (type.HasAttributeWithType(generatedActivationFactoryAttributeType) &&
+                    (countsInvalidFactories || ActivationFactoryValidation.GetInvalidGeneratedFactoryReason(type, context.Compilation, implementableClasses, out _, out _, out _) is null))
                 {
                     _ = classesWithFactory.TryAdd(runtimeClassName, 0);
                 }

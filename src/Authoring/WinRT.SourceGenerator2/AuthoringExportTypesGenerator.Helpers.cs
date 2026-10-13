@@ -82,13 +82,7 @@ public partial class AuthoringExportTypesGenerator
         {
             token.ThrowIfCancellationRequested();
 
-            if (context.TargetSymbol is not INamedTypeSymbol { IsAbstract: false, IsStatic: false, TypeKind: TypeKind.Class } type)
-            {
-                return null;
-            }
-
-            // '[WindowsRuntimeActivationFactory(typeof(<runtime class impl>))]'
-            if (context.Attributes is not [{ ConstructorArguments: [{ Kind: TypedConstantKind.Type, Value: INamedTypeSymbol }] }])
+            if (context.TargetSymbol is not INamedTypeSymbol type || context.Attributes is not [AttributeData attribute])
             {
                 return null;
             }
@@ -97,17 +91,18 @@ public partial class AuthoringExportTypesGenerator
 
             // The factory must extend a generated factory base: that is what supplies the conversion to a COM Callable
             // Wrapper, which cannot be done from this compilation. The class it activates is read from that base, so
-            // statics-only runtime classes (which have no instance base) resolve too. The generated code also has to be
-            // able to instantiate it (the analyzer reports it otherwise, so this just avoids follow-up compiler errors).
-            INamedTypeSymbol? factoryBase = implementableClasses.GetFactoryBase(type);
-
-            return factoryBase is not null &&
-                   implementableClasses.GetFactoryRuntimeClassName(factoryBase) is string runtimeClassName &&
-                   type.GetNotInstantiableFromGeneratedCodeReason(context.SemanticModel.Compilation) is null
+            // statics-only runtime classes (which have no instance base) resolve too. Invalid factories are reported by
+            // the analyzer, so they are skipped here to avoid follow-up compiler errors in the generated code.
+            return ActivationFactoryValidation.GetImplementedFactoryRuntimeClassName(
+                type,
+                attribute,
+                context.SemanticModel.Compilation,
+                implementableClasses,
+                out INamedTypeSymbol? factoryBase) is string runtimeClassName
                 ? new AuthoringActivationFactoryInfo(
                     RuntimeClassName: runtimeClassName,
                     FactoryTypeName: type.ToDisplayString(),
-                    FactoryBaseTypeName: factoryBase.ToDisplayString())
+                    FactoryBaseTypeName: factoryBase!.ToDisplayString())
                 : null;
         }
 
@@ -124,16 +119,20 @@ public partial class AuthoringExportTypesGenerator
         {
             token.ThrowIfCancellationRequested();
 
-            if (context.TargetSymbol is not INamedTypeSymbol { IsAbstract: false, IsStatic: false, TypeKind: TypeKind.Class } type)
+            if (context.TargetSymbol is not INamedTypeSymbol type)
             {
                 return null;
             }
 
             ImplementableClassLookup implementableClasses = new();
 
-            if (implementableClasses.GetInstanceBase(type) is not INamedTypeSymbol implementableBase ||
-                implementableClasses.GetInstanceRuntimeClassName(implementableBase) is not string runtimeClassName ||
-                GetGeneratedFactoryBase(context.SemanticModel.Compilation, type, implementableBase, implementableClasses) is not INamedTypeSymbol factoryBase)
+            if (ActivationFactoryValidation.GetInvalidGeneratedFactoryReason(
+                type,
+                context.SemanticModel.Compilation,
+                implementableClasses,
+                out string? runtimeClassName,
+                out INamedTypeSymbol? implementableBase,
+                out INamedTypeSymbol? factoryBase) is not null)
             {
                 return null;
             }
@@ -141,10 +140,10 @@ public partial class AuthoringExportTypesGenerator
             token.ThrowIfCancellationRequested();
 
             return new(
-                RuntimeClassName: runtimeClassName,
+                RuntimeClassName: runtimeClassName!,
                 ImplementationTypeName: type.ToDisplayString(),
-                ImplementableBaseTypeName: implementableBase.ToDisplayString(),
-                FactoryBaseTypeName: factoryBase.ToDisplayString());
+                ImplementableBaseTypeName: implementableBase!.ToDisplayString(),
+                FactoryBaseTypeName: factoryBase!.ToDisplayString());
         }
 
         /// <summary>
@@ -160,75 +159,80 @@ public partial class AuthoringExportTypesGenerator
             ImmutableArray<AuthoringImplementationInfo> implementations,
             string assemblyName)
         {
-            ImmutableArray<AuthoringActivationFactoryInfo>.Builder builder = ImmutableArray.CreateBuilder<AuthoringActivationFactoryInfo>();
-
-            // Runtime classes the author declared a factory for. Requesting a generated one as well is reported as a duplicate
-            // by the analyzer, and the declared one wins, as it may implement additional interop interfaces for its vtable.
-            HashSet<string> declaredRuntimeClasses = new(StringComparer.Ordinal);
-
-            foreach (AuthoringActivationFactoryInfo factory in declaredFactories)
-            {
-                _ = declaredRuntimeClasses.Add(factory.RuntimeClassName);
-
-                builder.Add(factory);
-            }
-
             string factoryNamespace = $"ABI.{assemblyName.EscapeIdentifierName()}";
 
             // A partial type with the attribute on several declarations is discovered once per declaration
-            foreach (IGrouping<string, AuthoringImplementationInfo> group in implementations
+            IEnumerable<AuthoringActivationFactoryInfo> generatedFactories = implementations
                 .Distinct()
-                .GroupBy(static implementation => implementation.RuntimeClassName, StringComparer.Ordinal))
-            {
-                if (declaredRuntimeClasses.Contains(group.Key))
-                {
-                    continue;
-                }
-
-                // Requesting the factory on several implementations of the same runtime class is reported by the analyzer
-                if (group.Take(2).Count() != 1 || group.First() is not { FactoryBaseTypeName: string factoryBaseTypeName } implementation)
-                {
-                    continue;
-                }
-
-                builder.Add(new(
+                .Select(implementation => new AuthoringActivationFactoryInfo(
                     RuntimeClassName: implementation.RuntimeClassName,
-                    FactoryTypeName: $"{factoryNamespace}.{implementation.ImplementationTypeName.Replace('.', '_')}ActivationFactory",
-                    FactoryBaseTypeName: factoryBaseTypeName,
+                    FactoryTypeName: "", // Named below, once it is known which names are taken
+                    FactoryBaseTypeName: implementation.FactoryBaseTypeName,
                     GeneratedForImplementationTypeName: implementation.ImplementationTypeName,
                     ImplementableBaseTypeName: implementation.ImplementableBaseTypeName));
+
+            // A Windows Runtime class can only have one activation factory, whether declared or generated, so a class with
+            // several is skipped altogether (the analyzer reports all of them, so this just avoids follow-up compiler errors).
+            // Discovery order follows syntax trees, so sort to keep the generated code (and the names below) stable.
+            List<AuthoringActivationFactoryInfo> factories =
+            [
+                .. declaredFactories
+                    .Distinct()
+                    .Concat(generatedFactories)
+                    .GroupBy(static factory => factory.RuntimeClassName, StringComparer.Ordinal)
+                    .Where(static group => group.Take(2).Count() == 1)
+                    .Select(static group => group.First())
+                    .OrderBy(static factory => factory.RuntimeClassName, StringComparer.Ordinal)
+            ];
+
+            // Names are derived from type names with every separator replaced by '_', so different types can map to the same
+            // name. Those are rare enough that just appending a counter keeps the names readable, and stable given the order.
+            HashSet<string> fieldNames = new(StringComparer.Ordinal);
+            HashSet<string> generatedTypeNames = new(StringComparer.Ordinal);
+
+            ImmutableArray<AuthoringActivationFactoryInfo>.Builder builder = ImmutableArray.CreateBuilder<AuthoringActivationFactoryInfo>(factories.Count);
+
+            foreach (AuthoringActivationFactoryInfo factory in factories)
+            {
+                AuthoringActivationFactoryInfo uniqueFactory = factory with
+                {
+                    FieldName = GetUniqueName(fieldNames, $"_activationFactory_{factory.RuntimeClassName.EscapeIdentifierName()}", suffix: "")
+                };
+
+                // The '@' escaping keywords is dropped, as the name has a suffix (so it cannot be a keyword anyway)
+                if (factory.GeneratedForImplementationTypeName is string implementationTypeName)
+                {
+                    string typeName = implementationTypeName.Replace("@", "").EscapeIdentifierName();
+
+                    uniqueFactory = uniqueFactory with
+                    {
+                        FactoryTypeName = $"{factoryNamespace}.{GetUniqueName(generatedTypeNames, typeName, suffix: "ActivationFactory")}"
+                    };
+                }
+
+                builder.Add(uniqueFactory);
             }
 
-            // Discovery order follows syntax trees, so sort to keep the generated code stable
-            builder.Sort(static (left, right) => StringComparer.Ordinal.Compare(left.RuntimeClassName, right.RuntimeClassName));
-
-            return builder.ToImmutable();
+            return builder.MoveToImmutable();
         }
 
         /// <summary>
-        /// Finds the generated factory base for an implementation, if CsWinRT can supply that factory itself.
+        /// Gets a name not used yet, by appending a counter to a base name if needed, and records it as used.
         /// </summary>
-        /// <param name="compilation">The <see cref="Compilation"/> instance to use.</param>
-        /// <param name="implementation">The implementation the generated factory would construct.</param>
-        /// <param name="implementableBase">The generated abstract base class the implementation extends.</param>
-        /// <param name="implementableClasses">The lookup for the generated bases.</param>
-        /// <returns>
-        /// The generated factory base, or <see langword="null"/> if the class has none, if activating it takes more than
-        /// a parameterless constructor (i.e. it has factory methods with arguments, or statics, whose members only the
-        /// author can implement), or if the generated factory could not construct the implementation.
-        /// </returns>
-        private static INamedTypeSymbol? GetGeneratedFactoryBase(
-            Compilation compilation,
-            INamedTypeSymbol implementation,
-            INamedTypeSymbol implementableBase,
-            ImplementableClassLookup implementableClasses)
+        /// <param name="usedNames">The names already used.</param>
+        /// <param name="baseName">The base name.</param>
+        /// <param name="suffix">The suffix to append after the counter.</param>
+        /// <returns>The unique name.</returns>
+        private static string GetUniqueName(HashSet<string> usedNames, string baseName, string suffix)
         {
-            // The generated factory just constructs the implementation, so the generated code has to be able to instantiate it
-            return implementation.GetNotInstantiableFromGeneratedCodeReason(compilation) is null &&
-                   implementableClasses.GetFactoryBaseForInstanceBase(implementableBase) is INamedTypeSymbol factoryBase &&
-                   implementableClasses.HasDefaultActivationOnly(factoryBase)
-                ? factoryBase
-                : null;
+            string name = $"{baseName}{suffix}";
+
+            for (int i = 2; !usedNames.Add(name); i++)
+            {
+                name = $"{baseName}_{i}{suffix}";
+            }
+
+            return name;
         }
     }
 }
