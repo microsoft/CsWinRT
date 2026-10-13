@@ -47,7 +47,7 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
-            if (!TryReserveTransitiveInstantiation(depth))
+            if (!TryReserveTransitiveInstantiation(depth: depth))
             {
                 continue;
             }
@@ -137,7 +137,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             }
 
             // A shallower requeue reuses this enumeration's earlier reservation
-            if (!visited && !TryReserveTransitiveInstantiation(depth))
+            if (!visited && !TryReserveTransitiveInstantiation(depth: depth))
             {
                 continue;
             }
@@ -233,7 +233,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         // Defer shorter sightings to supplemental replay rather than changing primary scheduling.
         contexts.Add(arguments, depth);
 
-        return TryReserveTransitiveInstantiation(depth) && IsMethodWithinDepthLimit(method, depth);
+        return TryReserveTransitiveInstantiation(depth: depth) && IsMethodWithinDepthLimit(method, depth);
     }
 
     /// <summary>
@@ -257,7 +257,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             (!visited || priorDepth > depth) &&
             _primary?.IsMethodCovered(method, arguments, depth) is not true &&
             IsMethodWithinDepthLimit(method, depth) &&
-            (visited || TryReserveTransitiveInstantiation(depth));
+            (visited || TryReserveTransitiveInstantiation(depth: depth));
     }
 
     /// <summary>
@@ -323,7 +323,7 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <returns>Whether the signature may be visited.</returns>
     private bool IsSignatureWithinComplexityLimit(TypeSignature? type, int depth)
     {
-        return IsComplexityWithinLimit(GetSignatureComplexity(type), depth);
+        return IsComplexityWithinLimit(GetSignatureComplexity(type), depth: depth);
     }
 
     /// <summary>

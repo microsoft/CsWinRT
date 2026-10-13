@@ -50,7 +50,7 @@ internal partial class TypeSignatureDiscovery<TResult>
                 }
 
                 // A method item's context was already counted at its own depth; only its callees advance it
-                foreach (TResult result in EnumerateMethodBodyTypes(currentMethod, current.Context, current.Depth, current.Depth + 1))
+                foreach (TResult result in EnumerateMethodBodyTypes(currentMethod, current.Context, typeDepth: current.Depth, methodDepth: current.Depth + 1))
                 {
                     yield return result;
                 }
@@ -79,7 +79,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             // The type's arguments can close member signatures that are open in the method table
             foreach (MethodDefinition method in GetMethodsToScan(typeSignature, type))
             {
-                foreach (TResult result in EnumerateMethodBodyTypes(method, genericContext, current.Depth + 1, current.Depth + 1))
+                foreach (TResult result in EnumerateMethodBodyTypes(method, genericContext, typeDepth: current.Depth + 1, methodDepth: current.Depth + 1))
                 {
                     yield return result;
                 }
@@ -99,13 +99,13 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         // 'Node<Pair<T, T>>' can grow exponentially before reaching the depth limit
         // Bound complexity before visitors, hashing, or diagnostic formatting recursively walk the signature.
-        if (!IsSignatureWithinComplexityLimit(type, depth))
+        if (!IsSignatureWithinComplexityLimit(type, depth: depth))
         {
             yield break;
         }
 
-        EnqueueGenericTypes(type, depth);
-        RegisterReceiverContexts(type, depth);
+        EnqueueGenericTypes(type, depth: depth);
+        RegisterReceiverContexts(type, depth: depth);
 
         foreach (TResult result in type?.AcceptVisitor(_visitor) ?? [])
         {
@@ -145,7 +145,7 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         // Many individually small arguments can collectively exceed the complexity limit
         // Bound the whole context before visiting or hashing any of its signatures.
-        if (!IsComplexityWithinLimit(GetContextComplexity(declaringType, methodArguments?.TypeArguments), depth))
+        if (!IsComplexityWithinLimit(GetContextComplexity(declaringType, methodArguments?.TypeArguments), depth: depth))
         {
             yield break;
         }
@@ -157,14 +157,14 @@ internal partial class TypeSignatureDiscovery<TResult>
         // Method arguments can require marshalling even when the callee's signature omits them
         foreach (TypeSignature argument in methodArguments?.TypeArguments ?? [])
         {
-            foreach (TResult result in EnumerateTypeSignatures(argument, depth))
+            foreach (TResult result in EnumerateTypeSignatures(argument, depth: depth))
             {
                 yield return result;
             }
         }
 
         // Closed declaring types provide contexts for otherwise non-generic member discovery
-        foreach (TResult result in EnumerateTypeSignatures(declaringType, depth))
+        foreach (TResult result in EnumerateTypeSignatures(declaringType, depth: depth))
         {
             yield return result;
         }
@@ -177,7 +177,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             // The reference signature remains usable even when the callee cannot be resolved
             foreach (TypeSignature visibleType in visibleTypes)
             {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth))
+                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: depth))
                 {
                     yield return result;
                 }
@@ -185,7 +185,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         }
 
         // Queue the body after reporting its signatures, so their type contexts keep their place in the FIFO
-        EnqueueMethodBody(method, declaringType, methodArguments, genericContext, depth);
+        EnqueueMethodBody(method, declaringType, methodArguments, genericContext, depth: depth);
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         // Substitute the active context into every signature source shared with root discovery
         foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(_module.RuntimeContext))
         {
-            foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), typeDepth))
+            foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: typeDepth))
             {
                 yield return result;
             }
@@ -217,7 +217,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             // Follow only calls carrying generic substitutions to avoid crawling ordinary dependency bodies
             if (descriptor is MethodSpecification || descriptor.DeclaringType is TypeSpecification)
             {
-                foreach (TResult result in EnumerateMethodTypes(descriptor, genericContext, methodDepth))
+                foreach (TResult result in EnumerateMethodTypes(descriptor, genericContext, depth: methodDepth))
                 {
                     yield return result;
                 }
