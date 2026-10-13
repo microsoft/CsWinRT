@@ -36,7 +36,9 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        // Generated code is analyzed too, without reporting diagnostics in it, as the source generator also picks up
+        // activation factories declared or requested there, and a class can only have one in the whole project.
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
 
         context.RegisterCompilationStartAction(static context =>
@@ -188,19 +190,9 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
             return $"it derives from the generated activation factory base '{factoryBase}', so it implements the activation factory itself, and must not be abstract.";
         }
 
-        if (type.IsGenericOrNestedInGenericType)
+        if (type.GetNotInstantiableFromGeneratedCodeReason(compilation) is string reason)
         {
-            return "it is generic, or nested in a generic type, so CsWinRT cannot instantiate it.";
-        }
-
-        if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
-        {
-            return "it is not accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
-        }
-
-        if (!type.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
-        {
-            return "it has no parameterless constructor accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
+            return $"{reason}, so CsWinRT cannot instantiate it.";
         }
 
         return null;
@@ -234,19 +226,9 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
             return "it is abstract, so CsWinRT cannot instantiate it.";
         }
 
-        if (type.IsGenericOrNestedInGenericType)
+        if (type.GetNotInstantiableFromGeneratedCodeReason(compilation) is string reason)
         {
-            return "it is generic, or nested in a generic type, so CsWinRT cannot instantiate it.";
-        }
-
-        if (!compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
-        {
-            return "it is not accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
-        }
-
-        if (!type.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
-        {
-            return "it has no parameterless constructor accessible from the rest of its assembly, so CsWinRT cannot instantiate it.";
+            return $"{reason}, so CsWinRT cannot instantiate it.";
         }
 
         if (implementableClasses.GetFactoryBaseForInstanceBase(instanceBase) is not INamedTypeSymbol factoryBase)

@@ -215,6 +215,23 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
     }
 
     [TestMethod]
+    [DataRow("file sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory { public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget(); }")]
+    [DataRow("public sealed class MyWidgetFactory : global::ABI.Contoso.Widgets.WidgetActivationFactory { public required int Value { get; set; } public override global::ABI.Contoso.Widgets.Widget ActivateInstance() => new MyWidget(); }")]
+    public async Task ImplementedFactory_NotInstantiableFromGeneratedCode_Warns(string declaration)
+    {
+        // The generated activation entry point is in another file, and constructs the factory with 'new()'
+        string source = ImplementableClasses + $$"""
+            namespace MyApp
+            {
+                [{|CSWINRT2023:WindowsRuntimeActivationFactory(typeof(MyWidget))|}]
+                {{declaration}}
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
     public async Task ImplementedFactory_ForUnrelatedType_Warns()
     {
         const string source = ImplementableClasses + """
@@ -274,6 +291,79 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
     // --- Generated activation factories that should not warn ---
 
     [TestMethod]
+    public async Task GeneratedFactory_WithRequiredMembersSetByConstructor_DoesNotWarn()
+    {
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [GeneratedWindowsRuntimeActivationFactory]
+                public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]
+                    public AnnotatedWidget() => Value = 1;
+
+                    public required int Value { get; set; }
+
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task GeneratedFactory_WithInheritedRequiredMembers_Warns()
+    {
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                public abstract class RequiredWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public required int Value { get; set; }
+                }
+
+                [{|CSWINRT2027:GeneratedWindowsRuntimeActivationFactory|}]
+                public sealed class AnnotatedWidget : RequiredWidget
+                {
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task GeneratedFactory_InGeneratedCode_CountsTowardsDuplicates()
+    {
+        // The source generator picks up requests in generated code as well, so the duplicate is reported on the other one
+        const string generatedSource = """
+            namespace MyApp
+            {
+                [WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
+                public sealed class GeneratedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                [{|CSWINRT2025:GeneratedWindowsRuntimeActivationFactory|}]
+                public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget
+                {
+                    public override void DoStuff() { }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, generatedSource: generatedSource);
+    }
+
+    [TestMethod]
     public async Task GeneratedFactory_ForDefaultActivatableClass_DoesNotWarn()
     {
         const string source = ImplementableClasses + """
@@ -299,6 +389,8 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
     [DataRow("public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget { public AnnotatedWidget(int value) { } public override void DoStuff() { } }")]
     [DataRow("public sealed class AnnotatedGizmo : global::ABI.Contoso.Widgets.Gizmo;")]
     [DataRow("public sealed class AnnotatedGadget : global::ABI.Contoso.Widgets.Gadget;")]
+    [DataRow("file sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget { public override void DoStuff() { } }")]
+    [DataRow("public sealed class AnnotatedWidget : global::ABI.Contoso.Widgets.Widget { public required int Value { get; set; } public override void DoStuff() { } }")]
     public async Task InvalidGeneratedFactory_Warns(string declaration)
     {
         string source = ImplementableClasses + $$"""

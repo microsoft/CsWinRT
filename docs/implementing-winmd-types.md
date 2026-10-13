@@ -38,7 +38,7 @@ public sealed class MyWidgetFactory : ABI.Contoso.Widgets.WidgetActivationFactor
 
 The generated base is separate from the projected class (which is often `sealed`) and converts to and from it, so an instance can be passed anywhere the projected type is expected (see [Passing implementations around](#passing-implementations-around)). Any additional (non-exclusive) Windows Runtime interfaces declared on the factory are added to its vtable as well.
 
-The type passed to `[WindowsRuntimeActivationFactory]` is the implementation, or the projected class itself (the only option for a statics-only class, which has no implementation). The factory must not be abstract or generic, and needs a parameterless constructor accessible within its assembly, since CsWinRT instantiates it. Violations are reported as `CSWINRT2023`, a type argument naming a different class as `CSWINRT2024`, and a second factory for the same class as `CSWINRT2025`.
+The type passed to `[WindowsRuntimeActivationFactory]` is the implementation, or the projected class itself (the only option for a statics-only class, which has no implementation). The factory must not be abstract, generic or file-local, and needs a parameterless constructor accessible within its assembly (marked `[SetsRequiredMembers]` if the factory has required members), since CsWinRT instantiates it. Violations are reported as `CSWINRT2023`, a type argument naming a different class as `CSWINRT2024`, and a second factory for the same class as `CSWINRT2025`.
 
 ### Constructors
 
@@ -57,7 +57,7 @@ public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 }
 ```
 
-The annotated type must not be abstract or generic, and needs a parameterless constructor accessible within its assembly; violations, or annotating an implementation of a class with factory methods or statics, are reported as `CSWINRT2027`. A class can only have one activation factory, so annotating several of its implementations, or annotating one and declaring a factory as well, is reported as `CSWINRT2025`. Declare the factory instead when it needs to carry extra interop interfaces on its vtable.
+The annotated type must not be abstract, generic or file-local, and needs a parameterless constructor accessible within its assembly (marked `[SetsRequiredMembers]` if the type has required members); violations, or annotating an implementation of a class with factory methods or statics, are reported as `CSWINRT2027`. A class can only have one activation factory, so annotating several of its implementations, or annotating one and declaring a factory as well, is reported as `CSWINRT2025`. Declare the factory instead when it needs to carry extra interop interfaces on its vtable.
 
 An implementation of an activatable class that has neither a declared nor a requested factory leaves the class unactivatable from the project, which is reported as warning `CSWINRT2026` on the implementation (suppress it when the class is only meant to be instantiated from C#, never activated by its class name).
 

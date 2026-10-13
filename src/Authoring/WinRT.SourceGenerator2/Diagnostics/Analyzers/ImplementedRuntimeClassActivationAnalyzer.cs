@@ -26,7 +26,9 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        // Generated code is analyzed too, without reporting diagnostics in it, as the source generator also picks up
+        // activation factories declared or requested there, which make the class activatable.
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
 
         context.RegisterCompilationStartAction(static context =>
@@ -121,10 +123,7 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
         string declare = $"declare an activation factory deriving from '{factoryBase}' with '[WindowsRuntimeActivationFactory]'";
 
         // Only suggest the generated factory where it would be valid (otherwise, 'CSWINRT2027' would report it)
-        if (hasDefaultActivationOnly &&
-            !implementation.IsGenericOrNestedInGenericType &&
-            compilation.IsSymbolAccessibleWithin(implementation, compilation.Assembly) &&
-            implementation.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)))
+        if (hasDefaultActivationOnly && implementation.GetNotInstantiableFromGeneratedCodeReason(compilation) is null)
         {
             return $"annotate '{implementation}' with '[GeneratedWindowsRuntimeActivationFactory]', or {declare}";
         }

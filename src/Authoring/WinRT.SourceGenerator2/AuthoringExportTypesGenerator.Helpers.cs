@@ -97,10 +97,13 @@ public partial class AuthoringExportTypesGenerator
 
             // The factory must extend a generated factory base: that is what supplies the conversion to a COM Callable
             // Wrapper, which cannot be done from this compilation. The class it activates is read from that base, so
-            // statics-only runtime classes (which have no instance base) resolve too.
+            // statics-only runtime classes (which have no instance base) resolve too. The generated code also has to be
+            // able to instantiate it (the analyzer reports it otherwise, so this just avoids follow-up compiler errors).
             INamedTypeSymbol? factoryBase = implementableClasses.GetFactoryBase(type);
 
-            return factoryBase is not null && implementableClasses.GetFactoryRuntimeClassName(factoryBase) is string runtimeClassName
+            return factoryBase is not null &&
+                   implementableClasses.GetFactoryRuntimeClassName(factoryBase) is string runtimeClassName &&
+                   type.GetNotInstantiableFromGeneratedCodeReason(context.SemanticModel.Compilation) is null
                 ? new AuthoringActivationFactoryInfo(
                     RuntimeClassName: runtimeClassName,
                     FactoryTypeName: type.ToDisplayString(),
@@ -113,7 +116,10 @@ public partial class AuthoringExportTypesGenerator
         /// </summary>
         /// <param name="context">The <see cref="GeneratorAttributeSyntaxContext"/> for the annotated type.</param>
         /// <param name="token">The <see cref="CancellationToken"/> instance to use.</param>
-        /// <returns>The implementation, or <see langword="null"/> if the type is not one.</returns>
+        /// <returns>
+        /// The implementation, or <see langword="null"/> if CsWinRT cannot generate its activation factory (which the analyzer
+        /// reports, so an invalid request does not count against a valid one for the same class either, like in the analyzer).
+        /// </returns>
         public static AuthoringImplementationInfo? GetImplementation(GeneratorAttributeSyntaxContext context, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
@@ -123,17 +129,11 @@ public partial class AuthoringExportTypesGenerator
                 return null;
             }
 
-            // A generic type cannot be a Windows Runtime class, so there is nothing to activate for it (and naming a
-            // factory after it would not even produce valid code).
-            if (type.IsGenericOrNestedInGenericType)
-            {
-                return null;
-            }
-
             ImplementableClassLookup implementableClasses = new();
 
             if (implementableClasses.GetInstanceBase(type) is not INamedTypeSymbol implementableBase ||
-                implementableClasses.GetInstanceRuntimeClassName(implementableBase) is not string runtimeClassName)
+                implementableClasses.GetInstanceRuntimeClassName(implementableBase) is not string runtimeClassName ||
+                GetGeneratedFactoryBase(context.SemanticModel.Compilation, type, implementableBase, implementableClasses) is not INamedTypeSymbol factoryBase)
             {
                 return null;
             }
@@ -144,7 +144,7 @@ public partial class AuthoringExportTypesGenerator
                 RuntimeClassName: runtimeClassName,
                 ImplementationTypeName: type.ToDisplayString(),
                 ImplementableBaseTypeName: implementableBase.ToDisplayString(),
-                FactoryBaseTypeName: GetGeneratedFactoryBase(context.SemanticModel.Compilation, type, implementableBase, implementableClasses)?.ToDisplayString());
+                FactoryBaseTypeName: factoryBase.ToDisplayString());
         }
 
         /// <summary>
@@ -185,8 +185,7 @@ public partial class AuthoringExportTypesGenerator
                     continue;
                 }
 
-                // Requesting the factory on several implementations of the same runtime class is reported by the analyzer, as
-                // is requesting it for a class whose factory cannot be generated (which has no factory base name here).
+                // Requesting the factory on several implementations of the same runtime class is reported by the analyzer
                 if (group.Take(2).Count() != 1 || group.First() is not { FactoryBaseTypeName: string factoryBaseTypeName } implementation)
                 {
                     continue;
@@ -224,10 +223,8 @@ public partial class AuthoringExportTypesGenerator
             INamedTypeSymbol implementableBase,
             ImplementableClassLookup implementableClasses)
         {
-            // The generated factory just constructs the implementation, so both it and a parameterless constructor have
-            // to be reachable from the generated code.
-            return compilation.IsSymbolAccessibleWithin(implementation, compilation.Assembly) &&
-                   implementation.InstanceConstructors.Any(constructor => constructor.Parameters.IsEmpty && compilation.IsSymbolAccessibleWithin(constructor, compilation.Assembly)) &&
+            // The generated factory just constructs the implementation, so the generated code has to be able to instantiate it
+            return implementation.GetNotInstantiableFromGeneratedCodeReason(compilation) is null &&
                    implementableClasses.GetFactoryBaseForInstanceBase(implementableBase) is INamedTypeSymbol factoryBase &&
                    implementableClasses.HasDefaultActivationOnly(factoryBase)
                 ? factoryBase

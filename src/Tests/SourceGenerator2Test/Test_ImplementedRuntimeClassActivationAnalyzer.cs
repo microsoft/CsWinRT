@@ -170,6 +170,28 @@ public sealed class Test_ImplementedRuntimeClassActivationAnalyzer
         await VerifyCS.VerifyAnalyzerAsync(source);
     }
 
+    [TestMethod]
+    public async Task GeneratedFactory_InGeneratedCode_DoesNotWarn()
+    {
+        // The source generator picks up requests in generated code as well, which makes the class activatable
+        const string generatedSource = """
+            namespace MyApp
+            {
+                [WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactory]
+                internal sealed class GeneratedWidget : global::ABI.Contoso.Widgets.Widget;
+            }
+            """;
+
+        const string source = ImplementableClasses + """
+            namespace MyApp
+            {
+                public sealed class MyWidget : global::ABI.Contoso.Widgets.Widget;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, generatedSource: generatedSource);
+    }
+
     // --- Tests where the analyzer SHOULD warn ---
 
     [TestMethod]
