@@ -44,19 +44,22 @@ The type passed to `[WindowsRuntimeActivationFactory]` is the implementation, or
 
 Constructing the class without arguments is always `ActivateInstance`, and every constructor (with or without arguments) returns the generated base rather than the projected class, so the compiler checks that it constructs an implementation. The factory base converts the result to the projected class the Windows Runtime factory interface returns. Statics are declared exactly as the interface has them, since they can return any instance.
 
-### When the factory can be omitted
+### Generating the factory instead
 
-Declaring the factory is only necessary when it has something to say. If the class can only be activated through the parameterless `IActivationFactory.ActivateInstance` — no factory methods with arguments, and no statics — a factory can do nothing but construct the implementation, so CsWinRT generates one:
+Declaring the factory is only necessary when it has something to say. If the class can only be activated through the parameterless `IActivationFactory.ActivateInstance` — no factory methods with arguments, and no statics — a factory can do nothing but construct the implementation, so CsWinRT can generate it. Request it by annotating the implementation with `[GeneratedWindowsRuntimeActivationFactory]`:
 
 ```csharp
 // No factory needed: 'Widget' has default activation only
+[GeneratedWindowsRuntimeActivationFactory]
 public sealed class MyWidget : ABI.Contoso.Widgets.Widget
 {
     public override void DoStuff() { }
 }
 ```
 
-This requires an accessible parameterless constructor, and only one implementation of that runtime class in the project. A generic type is never activatable, so it never gets one. Declaring the factory anyway always takes precedence, which is what to do when it needs to carry extra interop interfaces on its vtable. When the class is activatable but neither applies, it cannot be activated from the project, which is reported as warning `CSWINRT2026` on the implementation.
+The annotated type must not be abstract or generic, and needs a parameterless constructor accessible within its assembly; violations, or annotating an implementation of a class with factory methods or statics, are reported as `CSWINRT2027`. A class can only have one activation factory, so annotating several of its implementations, or annotating one and declaring a factory as well, is reported as `CSWINRT2025`. Declare the factory instead when it needs to carry extra interop interfaces on its vtable.
+
+An implementation of an activatable class that has neither a declared nor a requested factory leaves the class unactivatable from the project, which is reported as warning `CSWINRT2026` on the implementation (suppress it when the class is only meant to be instantiated from C#, never activated by its class name).
 
 ### Unsealed classes
 
@@ -64,8 +67,8 @@ In metadata, an unsealed class is only activatable through its composable factor
 
 | Constructors in metadata | Default activation | Factory needed? |
 | --- | --- | --- |
-| None | Added, through `ActivateInstance` | No, unless the class also has statics |
-| A public parameterless constructor | Added, through `ActivateInstance`, which the composable constructor also calls | No, if it is the only constructor and there are no statics |
+| None | Added, through `ActivateInstance` | No (it can be generated), unless the class also has statics |
+| A public parameterless constructor | Added, through `ActivateInstance`, which the composable constructor also calls | No (it can be generated), if it is the only constructor and there are no statics |
 | Only ones taking arguments, or only protected ones | Not added: the class is not meant to be activated without them | Yes |
 
 Where a factory is still needed, `ActivateInstance` is implemented alongside the other constructors and the statics, exactly as for a sealed class.

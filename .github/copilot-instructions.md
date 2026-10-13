@@ -351,7 +351,7 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
 | `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
-**Diagnostic analyzers** producing diagnostics with IDs `CSWINRT2000`–`CSWINRT2026` (the full list, with severities, is in `AnalyzerReleases.Shipped.md`). Some notable groups:
+**Diagnostic analyzers** producing diagnostics with IDs `CSWINRT2000`–`CSWINRT2027` (the full list, with severities, is in `AnalyzerReleases.Shipped.md`). Some notable groups:
 
 Validate `[GeneratedCustomPropertyProvider]` usage:
 
@@ -367,8 +367,9 @@ Validate general projection usage:
 
 Validate activation factories for authored and implemented Windows Runtime classes (both analyzers share `Helpers/ImplementableClassLookup.cs` with `AuthoringExportTypesGenerator`, so they apply the same rules):
 
-- `CSWINRT2023`–`CSWINRT2025`: Invalid `[WindowsRuntimeActivationFactory]` target type, mismatched runtime class type argument, and duplicate factories for the same runtime class (`WindowsRuntimeActivationFactoryAttributeAnalyzer`)
-- `CSWINRT2026`: Implementation of an activatable Windows Runtime class defined in existing metadata that has no declared activation factory, and for which CsWinRT cannot generate one (`ImplementedRuntimeClassActivationAnalyzer`, warning)
+- `CSWINRT2023`–`CSWINRT2025`: Invalid `[WindowsRuntimeActivationFactory]` target type, mismatched runtime class type argument, and more than one activation factory (declared, or requested with `[GeneratedWindowsRuntimeActivationFactory]`) for the same runtime class (`WindowsRuntimeActivationFactoryAttributeAnalyzer`)
+- `CSWINRT2026`: Implementation of an activatable Windows Runtime class defined in existing metadata that has neither a declared activation factory nor one requested with `[GeneratedWindowsRuntimeActivationFactory]` (`ImplementedRuntimeClassActivationAnalyzer`, warning)
+- `CSWINRT2027`: Invalid `[GeneratedWindowsRuntimeActivationFactory]` target type, e.g. not an implementation, not instantiable, or implementing a class with factory methods or statics (`WindowsRuntimeActivationFactoryAttributeAnalyzer`)
 
 ### 3. Projection writer (`src/WinRT.Projection.Writer/`)
 
@@ -746,7 +747,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 
 | Project | Error ID Pattern | Range |
 |---------|-----------------|-------|
-| Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2026` |
+| Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2027` |
 | Reference Projection Generator | `CSWINRTPROJECTIONREFGENxxxx` | `0001`–`0008`, `9999` |
 | Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0011`, `9999` |
 | Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5024`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
