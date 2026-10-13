@@ -2745,4 +2745,71 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
 
         await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
     }
+
+    [TestMethod]
+    public async Task LoopVariableReadsAfterClearOfReassignedSpan_Warn()
+    {
+        const string source = """
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span, Span<int> other)
+                {
+                    foreach (ref int x in span)
+                    {
+                        span = other;
+                        span.Clear();
+
+                        int value = {|CSWINRT2023:x|};
+                    }
+                }
+
+                public void FillWithLaterReassignment(Span<int> span, Span<int> other, bool flag)
+                {
+                    foreach (ref int x in span)
+                    {
+                        if (flag)
+                        {
+                            span.Clear();
+
+                            int value = {|CSWINRT2023:x|};
+                        }
+
+                        span = other;
+                        flag = true;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    [DataRow("Clear()")]
+    [DataRow("Fill(42)")]
+    public async Task LoopVariableReadsAfterGuaranteedInitializationBeforeReassignment_DoNotWarn(string initialization)
+    {
+        string source = $$"""
+            using System;
+
+            public class Sample
+            {
+                public void Fill(Span<int> span, Span<int> other)
+                {
+                    foreach (ref int element in span)
+                    {
+                        span.{{initialization}};
+
+                        int value = element;
+
+                        span = other;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
 }
