@@ -58,7 +58,7 @@ internal sealed unsafe class EventSourceCache
     public static void Create(WindowsRuntimeObjectReference objectReference, int index, WeakReference<object> state)
     {
         // Try to get the weak reference source for the input object (it's not guaranteed to be present)
-        if (!objectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource, out void* weakRefSourceSource))
+        if (!objectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource, out void* weakReferenceSource))
         {
             return;
         }
@@ -97,7 +97,7 @@ internal sealed unsafe class EventSourceCache
             void* weakReference;
 
             // Resolve the weak reference from the current object
-            HRESULT hresult = IWeakReferenceSourceVftbl.GetWeakReferenceUnsafe(weakRefSourceSource, &weakReference);
+            HRESULT hresult = IWeakReferenceSourceVftbl.GetWeakReferenceUnsafe(weakReferenceSource, &weakReference);
 
             // The call above should pretty much always succeed
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
@@ -108,7 +108,7 @@ internal sealed unsafe class EventSourceCache
         }
         finally
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(weakRefSourceSource);
+            _ = IUnknownVftbl.ReleaseUnsafe(weakReferenceSource);
         }
 
         WindowsRuntimeObjectReference? targetWeakReferenceToDispose = null;
