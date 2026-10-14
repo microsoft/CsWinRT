@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Concurrent;
 using System;
-using System.Threading;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -16,30 +16,33 @@ internal sealed unsafe class EventSourceCache
     /// <summary>
     /// The reader-writer lock protecting <see cref="Caches"/>.
     /// </summary>
+    /// <remarks>
+    /// Holding the read lock prevents a cache from being removed and disposed.
+    /// </remarks>
     private static readonly ReaderWriterLockSlim CachesLock = new();
 
     /// <summary>
     /// The global cache of event source caches.
     /// </summary>
     /// <remarks>
-    /// It is responsibility of subscribed states to remove themselves from the cache.
+    /// It is the responsibility of subscribed states to remove themselves from the cache.
     /// </remarks>
     private static readonly ConcurrentDictionary<nint, EventSourceCache> Caches = new();
 
     /// <summary>
-    /// The set of registered event states for a given <see cref="EventSourceCache"/> instance.
+    /// The registered event states for the current cache, keyed by event index.
     /// </summary>
     private readonly ConcurrentDictionary<int, WeakReference<object>> _states = new();
 
     /// <summary>
-    /// The target weak reference for the event source cache.
+    /// The native weak reference owned by the current cache, or <see langword="null"/> after disposal.
     /// </summary>
     private WindowsRuntimeObjectReference? _targetWeakReference;
 
     /// <summary>
     /// Creates a new <see cref="EventSourceCache"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="targetWeakReference">The target weak reference for the event source cache.</param>
+    /// <param name="targetWeakReference">The native weak reference whose ownership is transferred to the cache.</param>
     /// <param name="index">The index of the target event being registered first.</param>
     /// <param name="state">The event state currently being registered.</param>
     private EventSourceCache(WindowsRuntimeObjectReference targetWeakReference, int index, WeakReference<object> state)
@@ -50,7 +53,7 @@ internal sealed unsafe class EventSourceCache
     }
 
     /// <summary>
-    /// Creates a new <see cref="EventSourceCache"/> instance for the target event and state.
+    /// Caches a state for the target event, creating an <see cref="EventSourceCache"/> instance if needed.
     /// </summary>
     /// <param name="objectReference">The <see cref="WindowsRuntimeObjectReference"/> instance for the object exposing the event.</param>
     /// <param name="index">The index of the event being registered.</param>
@@ -66,7 +69,7 @@ internal sealed unsafe class EventSourceCache
         // If event source implements weak reference support, track event registrations so that
         // unsubscribes will work across garbage collections. Note that most static/factory classes
         // do not implement 'IWeakReferenceSource', so a static codegen caching approach is also used.
-        WindowsRuntimeObjectReference? targetWeakReference;
+        WindowsRuntimeObjectReference targetWeakReference;
         void* thisPtr;
 
         try
@@ -79,6 +82,7 @@ internal sealed unsafe class EventSourceCache
 
             objectReference.ReleaseUnsafe();
 
+            // Reuse a live cache without acquiring another native weak reference
             CachesLock.EnterReadLock();
 
             try
@@ -96,65 +100,22 @@ internal sealed unsafe class EventSourceCache
 
             void* weakReference;
 
-            // Resolve the weak reference from the current object
+            // Get a new native weak reference to the object
             HRESULT hresult = IWeakReferenceSourceVftbl.GetWeakReferenceUnsafe(weakReferenceSource, &weakReference);
 
             // The call above should pretty much always succeed
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
             targetWeakReference = WindowsRuntimeObjectReference.AttachUnsafe(
-                ref weakReference,
-                in WellKnownWindowsInterfaceIIDs.IID_IWeakReference)!;
+                thisPtr: ref weakReference,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IWeakReference)!;
         }
         finally
         {
             _ = IUnknownVftbl.ReleaseUnsafe(weakReferenceSource);
         }
 
-        WindowsRuntimeObjectReference? targetWeakReferenceToDispose = null;
-
-        try
-        {
-            while (true)
-            {
-                CachesLock.EnterReadLock();
-
-                try
-                {
-                    if (Caches.TryGetValue((nint)thisPtr, out EventSourceCache? cache))
-                    {
-                        cache.Update(targetWeakReference, index, state, out targetWeakReferenceToDispose);
-                        targetWeakReference = null;
-                        break;
-                    }
-                }
-                finally
-                {
-                    CachesLock.ExitReadLock();
-                }
-
-                CachesLock.EnterWriteLock();
-
-                try
-                {
-                    if (!Caches.ContainsKey((nint)thisPtr))
-                    {
-                        _ = Caches.TryAdd((nint)thisPtr, new EventSourceCache(targetWeakReference, index, state));
-                        targetWeakReference = null;
-                        break;
-                    }
-                }
-                finally
-                {
-                    CachesLock.ExitWriteLock();
-                }
-            }
-        }
-        finally
-        {
-            targetWeakReference?.Dispose();
-            targetWeakReferenceToDispose?.Dispose();
-        }
+        AddOrUpdateState(thisPtr, targetWeakReference, index, state);
     }
 
     /// <summary>
@@ -167,7 +128,7 @@ internal sealed unsafe class EventSourceCache
     {
         objectReference.AddRefUnsafe();
 
-        // Get the pointer value for the lookup (see notes above)
+        // The pointer is only used as a cache key, so it does not need to be kept alive
         void* thisPtr = objectReference.GetThisPtrUnsafe();
 
         objectReference.ReleaseUnsafe();
@@ -181,7 +142,7 @@ internal sealed unsafe class EventSourceCache
     /// <param name="thisPtr">The pointer for the native object to unregister the event for.</param>
     /// <param name="index">The index of the event being unregistered.</param>
     /// <param name="state">The state for the event being unregistered.</param>
-    public static void Remove(void* thisPtr, int index, WeakReference<object> state)
+    public static void RemoveState(void* thisPtr, int index, WeakReference<object> state)
     {
         if (!Caches.TryGetValue((nint)thisPtr, out EventSourceCache? cache))
         {
@@ -197,32 +158,101 @@ internal sealed unsafe class EventSourceCache
             return;
         }
 
-        // Using double-checked lock idiom to only take the lock when we might actually have a match
-        if (cache._states.IsEmpty)
+        // Only take the write lock if this might have been the last state
+        if (!cache._states.IsEmpty)
         {
-            bool shouldDispose = false;
+            return;
+        }
 
-            CachesLock.EnterWriteLock();
+        bool shouldDispose;
 
-            try
+        CachesLock.EnterWriteLock();
+
+        try
+        {
+            // Recheck under the write lock, and only remove this exact cache instance.
+            // Another thread might have registered a state or replaced the cache.
+            shouldDispose = cache._states.IsEmpty &&
+                Caches.TryRemove(new KeyValuePair<nint, EventSourceCache>((nint)thisPtr, cache));
+        }
+        finally
+        {
+            CachesLock.ExitWriteLock();
+        }
+
+        // Dispose outside the global lock, as releasing a native reference can be expensive
+        if (shouldDispose)
+        {
+            cache.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Adds or updates the cache for a given event, taking ownership of a new native weak reference.
+    /// </summary>
+    /// <param name="thisPtr">The native object pointer used as the cache key.</param>
+    /// <param name="targetWeakReference">The native weak reference whose ownership is transferred to this method.</param>
+    /// <param name="index">The event index.</param>
+    /// <param name="state">The event state.</param>
+    private static void AddOrUpdateState(
+        void* thisPtr,
+        WindowsRuntimeObjectReference targetWeakReference,
+        int index,
+        WeakReference<object> state)
+    {
+        WindowsRuntimeObjectReference? ownedTargetWeakReference = targetWeakReference;
+        WindowsRuntimeObjectReference? targetWeakReferenceToDispose = null;
+
+        try
+        {
+            // Update an existing cache under the read lock, or add one under the write lock.
+            // Retry if another thread added a cache between the two lock acquisitions.
+            while (true)
             {
-                if (cache._states.IsEmpty)
+                CachesLock.EnterReadLock();
+
+                try
                 {
-                    if (Caches.TryRemove(new KeyValuePair<nint, EventSourceCache>((nint)thisPtr, cache)))
+                    if (Caches.TryGetValue((nint)thisPtr, out EventSourceCache? cache))
                     {
-                        shouldDispose = true;
+                        cache.UpdateState(ownedTargetWeakReference, index, state, out targetWeakReferenceToDispose);
+
+                        // The reference is now owned by the cache or scheduled for disposal
+                        ownedTargetWeakReference = null;
+
+                        break;
                     }
                 }
-            }
-            finally
-            {
-                CachesLock.ExitWriteLock();
-            }
+                finally
+                {
+                    CachesLock.ExitReadLock();
+                }
 
-            if (shouldDispose)
-            {
-                cache.Dispose();
+                CachesLock.EnterWriteLock();
+
+                try
+                {
+                    if (!Caches.ContainsKey((nint)thisPtr))
+                    {
+                        _ = Caches.TryAdd((nint)thisPtr, new EventSourceCache(ownedTargetWeakReference, index, state));
+
+                        // The new cache owns the reference
+                        ownedTargetWeakReference = null;
+
+                        break;
+                    }
+                }
+                finally
+                {
+                    CachesLock.ExitWriteLock();
+                }
             }
+        }
+        finally
+        {
+            // Release unconsumed or replaced references only after leaving the global locks
+            ownedTargetWeakReference?.Dispose();
+            targetWeakReferenceToDispose?.Dispose();
         }
     }
 
@@ -234,7 +264,7 @@ internal sealed unsafe class EventSourceCache
     /// <returns>Whether the state was cached.</returns>
     private bool TrySetStateIfTargetAlive(int index, WeakReference<object> state)
     {
-        void* weakReference = null;
+        void* targetPtr;
 
         lock (this)
         {
@@ -243,15 +273,16 @@ internal sealed unsafe class EventSourceCache
                 return false;
             }
 
-            ResolveTargetUnsafe(_targetWeakReference, out weakReference);
+            targetPtr = ResolveTargetUnsafe(_targetWeakReference);
         }
 
-        if (weakReference is null)
+        if (targetPtr is null)
         {
             return false;
         }
 
-        _ = IUnknownVftbl.ReleaseUnsafe(weakReference);
+        // The resolved strong reference is only needed to check whether the target is alive
+        _ = IUnknownVftbl.ReleaseUnsafe(targetPtr);
 
         SetState(index, state);
 
@@ -261,26 +292,27 @@ internal sealed unsafe class EventSourceCache
     /// <summary>
     /// Updates the cache for a given event.
     /// </summary>
-    /// <param name="targetWeakReference">The native weak reference for the event source.</param>
+    /// <param name="targetWeakReference">The new native weak reference to cache or dispose.</param>
     /// <param name="index">The event index.</param>
     /// <param name="state">The event state.</param>
-    /// <param name="targetWeakReferenceToDispose">The native weak reference that is no longer used by the cache.</param>
-    private void Update(
+    /// <param name="targetWeakReferenceToDispose">The replaced or unused native weak reference to dispose outside the global lock.</param>
+    /// <remarks>
+    /// The caller must hold the global read lock to prevent the cache from being removed and disposed.
+    /// </remarks>
+    private void UpdateState(
         WindowsRuntimeObjectReference targetWeakReference,
         int index,
         WeakReference<object> state,
         out WindowsRuntimeObjectReference targetWeakReferenceToDispose)
     {
-        void* weakReference = null;
+        void* targetPtr;
 
-        // If the target no longer exists, destroy the cache
         lock (this)
         {
-            // The global read lock prevents the cache from being removed and disposed while updating.
-            ResolveTargetUnsafe(_targetWeakReference!, out weakReference);
+            targetPtr = ResolveTargetUnsafe(_targetWeakReference!);
 
-            // Update the target and clear the state if the old target is not alive anymore
-            if (weakReference is null)
+            // A reused native address must not retain states from the previous target
+            if (targetPtr is null)
             {
                 targetWeakReferenceToDispose = _targetWeakReference!;
                 _targetWeakReference = targetWeakReference;
@@ -289,14 +321,15 @@ internal sealed unsafe class EventSourceCache
             }
             else
             {
+                // The existing target is still alive, so the incoming weak reference is redundant
                 targetWeakReferenceToDispose = targetWeakReference;
             }
         }
 
-        // Release native references outside of the lock to avoid holding it for longer.
-        if (weakReference is not null)
+        // Release the resolved strong reference outside the instance lock
+        if (targetPtr is not null)
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(weakReference);
+            _ = IUnknownVftbl.ReleaseUnsafe(targetPtr);
         }
 
         SetState(index, state);
@@ -309,27 +342,27 @@ internal sealed unsafe class EventSourceCache
     /// <returns>The state for the target event, if present.</returns>
     private WeakReference<object>? GetState(int index)
     {
-        void* weakReference = null;
+        void* targetPtr;
 
-        // If target no longer exists, destroy cache
         lock (this)
         {
+            // Lookups do not hold the global read lock, so the cache might already be disposed
             if (_targetWeakReference is null)
             {
                 return null;
             }
 
-            ResolveTargetUnsafe(_targetWeakReference, out weakReference);
+            targetPtr = ResolveTargetUnsafe(_targetWeakReference);
         }
 
         // There's no state to return if the target is not alive anymore
-        if (weakReference is null)
+        if (targetPtr is null)
         {
             return null;
         }
 
-        // Release the weak reference outside the lock (see notes above)
-        _ = IUnknownVftbl.ReleaseUnsafe(weakReference);
+        // Release the resolved strong reference outside the instance lock
+        _ = IUnknownVftbl.ReleaseUnsafe(targetPtr);
 
         return _states.TryGetValue(index, out WeakReference<object>? weakState) ? weakState : null;
     }
@@ -354,30 +387,29 @@ internal sealed unsafe class EventSourceCache
         lock (this)
         {
             targetWeakReference = _targetWeakReference;
+
             _targetWeakReference = null;
         }
 
+        // Native cleanup must not keep the instance lock held
         targetWeakReference?.Dispose();
     }
 
     /// <summary>
-    /// Resolves a native weak reference to an <c>IUnknown</c> pointer.
+    /// Resolves a native weak reference to a strong <c>IUnknown</c> pointer.
     /// </summary>
     /// <param name="targetWeakReference">The native weak reference to resolve.</param>
-    /// <param name="objectReference">The resolved strong reference, if the target is still alive.</param>
-    private static void ResolveTargetUnsafe(WindowsRuntimeObjectReference targetWeakReference, out void* objectReference)
+    /// <returns>
+    /// The strong reference to release after use, or <see langword="null"/> if the target is no longer alive or resolution fails.
+    /// </returns>
+    private static void* ResolveTargetUnsafe(WindowsRuntimeObjectReference targetWeakReference)
     {
         using WindowsRuntimeObjectReferenceValue targetWeakReferenceValue = targetWeakReference.AsValue();
         Guid iid = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
-        void* resolvedObject = null;
+        void* targetPtr = null;
 
-        HRESULT hresult = IWeakReferenceVftbl.ResolveUnsafe(targetWeakReferenceValue.GetThisPtrUnsafe(), &iid, &resolvedObject);
+        HRESULT hresult = IWeakReferenceVftbl.ResolveUnsafe(targetWeakReferenceValue.GetThisPtrUnsafe(), &iid, &targetPtr);
 
-        if (hresult.Failed)
-        {
-            resolvedObject = null;
-        }
-
-        objectReference = resolvedObject;
+        return hresult.Failed ? null : targetPtr;
     }
 }
