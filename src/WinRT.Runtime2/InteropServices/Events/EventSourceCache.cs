@@ -66,7 +66,7 @@ internal sealed unsafe class EventSourceCache
         // If event source implements weak reference support, track event registrations so that
         // unsubscribes will work across garbage collections. Note that most static/factory classes
         // do not implement 'IWeakReferenceSource', so a static codegen caching approach is also used.
-        WindowsRuntimeObjectReference targetWeakReference;
+        WindowsRuntimeObjectReference? targetWeakReference;
         void* thisPtr;
 
         try
@@ -124,7 +124,7 @@ internal sealed unsafe class EventSourceCache
                     if (Caches.TryGetValue((nint)thisPtr, out EventSourceCache? cache))
                     {
                         cache.Update(targetWeakReference, index, state, out targetWeakReferenceToDispose);
-                        targetWeakReference = null!;
+                        targetWeakReference = null;
                         break;
                     }
                 }
@@ -140,7 +140,7 @@ internal sealed unsafe class EventSourceCache
                     if (!Caches.ContainsKey((nint)thisPtr))
                     {
                         _ = Caches.TryAdd((nint)thisPtr, new EventSourceCache(targetWeakReference, index, state));
-                        targetWeakReference = null!;
+                        targetWeakReference = null;
                         break;
                     }
                 }
