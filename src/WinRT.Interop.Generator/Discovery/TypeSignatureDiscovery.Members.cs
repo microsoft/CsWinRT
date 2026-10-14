@@ -172,12 +172,15 @@ internal partial class TypeSignatureDiscovery<TResult>
         // Referenced signatures remain visible even when module policy prevents following the body
         if (method.Signature is MethodSignature methodSignature)
         {
-            TypeSignature[] visibleTypes = [methodSignature.ReturnType, .. methodSignature.ParameterTypes];
-
             // The reference signature remains usable even when the callee cannot be resolved
-            foreach (TypeSignature visibleType in visibleTypes)
+            foreach (TResult result in EnumerateTypeSignatures(methodSignature.ReturnType.InstantiateGenericTypes(genericContext), depth: depth))
             {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: depth))
+                yield return result;
+            }
+
+            foreach (TypeSignature parameterType in methodSignature.ParameterTypes)
+            {
+                foreach (TResult result in EnumerateTypeSignatures(parameterType.InstantiateGenericTypes(genericContext), depth: depth))
                 {
                     yield return result;
                 }
