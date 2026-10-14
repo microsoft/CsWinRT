@@ -1,7 +1,7 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-set CsWinRTBuildNetSDKVersion=10.0.109
+set CsWinRTBuildNetSDKVersion=10.0.402
 
 set this_dir=%~dp0
 
@@ -72,26 +72,17 @@ set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, CustomProp
 if "%cswinrt_platform%" EQU "x86" set run_functional_tests=true
 if "%cswinrt_platform%" EQU "x64" set run_functional_tests=true
 
-goto :skip_build_tools
-rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents) 
-msbuild -ver | findstr 16.X >nul
-if ErrorLevel 1 (
-  echo Using VS Build Tools 16.X 
-  if %cswinrt_platform%==x86 (
-    set msbuild_path="%this_dir%.buildtools\MSBuild\Current\Bin\\"
-  ) else (
-    set msbuild_path="%this_dir%.buildtools\MSBuild\Current\Bin\amd64\\"
-  )
-  if not exist !msbuild_path! (
-    if not exist .buildtools md .buildtools 
-    powershell -NoProfile -ExecutionPolicy unrestricted -File .\get_buildtools.ps1
-  )
-  set nuget_params=-MSBuildPath !msbuild_path!
-) else (
-  set msbuild_path=
-  set nuget_params=
+rem Require Visual Studio 2026 rather than silently using an older developer prompt.
+%msbuild_path%msbuild.exe -version -nologo >nul 2>&1
+if errorlevel 1 (
+  echo ERROR: Visual Studio 2026 MSBuild is required. Run this script from its Developer Command Prompt.
+  exit /b 1
 )
-:skip_build_tools
+%msbuild_path%msbuild.exe -version -nologo | findstr /r /b "18\." >nul
+if errorlevel 1 (
+  echo ERROR: Visual Studio 2026 MSBuild is required. Run this script from its Developer Command Prompt.
+  exit /b 1
+)
 
 set nuget_dir=%this_dir%.nuget
 

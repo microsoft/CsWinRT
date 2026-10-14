@@ -105,7 +105,7 @@ jobs:
       type: windows
       isCustom: true
       name: 'Azure Pipelines'
-      vmImage: 'windows-2022'
+      vmImage: 'windows-2025-vs2026'
     timeoutInMinutes: 360    
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
@@ -133,7 +133,7 @@ jobs:
       type: windows
       isCustom: true
       name: 'Azure Pipelines'
-      vmImage: 'windows-2022'
+      vmImage: 'windows-2025-vs2026'
     timeoutInMinutes: 120
     strategy:
       matrix:
