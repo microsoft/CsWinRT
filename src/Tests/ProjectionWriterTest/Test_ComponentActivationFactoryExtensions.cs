@@ -58,6 +58,29 @@ public class Test_ComponentActivationFactoryExtensions
     }
 
     [TestMethod]
+    public void ExtensionWithKeywordNames_IsReferencedByItsEscapedQualifiedName()
+    {
+        // Each part of the name is escaped on its own, whether it is a namespace, a containing type or the type itself
+        string source = GenerateComponentFactories("""
+            namespace @event
+            {
+                public static class @class
+                {
+                    [WindowsRuntimeActivationFactory(typeof(Contoso.User))]
+                    public abstract class @void
+                    {
+                        protected @void()
+                        {
+                        }
+                    }
+                }
+            }
+            """);
+
+        StringAssert.StartsWith(GetBaseList(source, "UserServerActivationFactory"), "global::Extensions.@event.@class.@void, ");
+    }
+
+    [TestMethod]
     public void NonAbstractFactory_IsNotAnExtension()
     {
         // A complete activation factory (as written when implementing a runtime class declared in existing metadata)

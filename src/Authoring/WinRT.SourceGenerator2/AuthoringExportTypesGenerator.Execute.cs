@@ -39,7 +39,9 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="data">The input data.</param>
         /// <param name="token">The cancellation token for the operation.</param>
         /// <returns>The resulting info.</returns>
-        public static AuthoringNativeExportsInfo GetNativeExportsInfo(((string AssemblyName, AuthoringExportTypesOptions Options) Left, EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories) data, CancellationToken token)
+        public static AuthoringNativeExportsInfo GetNativeExportsInfo(
+            ((string AssemblyName, AuthoringExportTypesOptions Options) Left, EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories) data,
+            CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
 
@@ -55,7 +57,9 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="input">The input data.</param>
         /// <param name="token">The cancellation token for the operation.</param>
         /// <returns>All portable executable references for the input compilation.</returns>
-        public static AuthoringManagedExportsInfo GetManagedExportsInfo(((Compilation Compilation, AuthoringExportTypesOptions Options) Left, EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories) input, CancellationToken token)
+        public static AuthoringManagedExportsInfo GetManagedExportsInfo(
+            ((Compilation Compilation, AuthoringExportTypesOptions Options) Left, EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories) input,
+            CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
 

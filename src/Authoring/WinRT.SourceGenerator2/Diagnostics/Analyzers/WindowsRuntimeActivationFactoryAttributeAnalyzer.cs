@@ -97,7 +97,7 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
 
                 string? invalidReason = factoryBase is not null
                     ? ActivationFactoryValidation.GetInvalidImplementedFactoryReason(type, factoryBase, context.Compilation)
-                    : GetInvalidFactoryExtensionReason(type, isComponent);
+                    : ActivationFactoryValidation.GetInvalidFactoryExtensionReason(type, isComponent);
 
                 if (invalidReason is not null)
                 {
@@ -128,7 +128,7 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
                 else
                 {
                     runtimeClassName = runtimeClassType.ToDisplayString();
-                    mismatchReason = GetAuthoredRuntimeClassMismatchReason(runtimeClassType, context.Compilation, activationFactoryAttributeType, implementableClasses);
+                    mismatchReason = ActivationFactoryValidation.GetAuthoredRuntimeClassMismatchReason(runtimeClassType, context.Compilation, activationFactoryAttributeType, implementableClasses);
                 }
 
                 if (mismatchReason is not null)
@@ -173,142 +173,5 @@ public sealed class WindowsRuntimeActivationFactoryAttributeAnalyzer : Diagnosti
                 }
             });
         });
-    }
-
-    /// <summary>
-    /// Gets why a type not deriving from a generated activation factory base cannot extend a generated activation factory.
-    /// </summary>
-    /// <param name="type">The annotated type.</param>
-    /// <param name="isComponent">Whether the current project is a Windows Runtime component.</param>
-    /// <returns>The reason, or <see langword="null"/> if <paramref name="type"/> is valid.</returns>
-    private static string? GetInvalidFactoryExtensionReason(INamedTypeSymbol type, bool isComponent)
-    {
-        if (type.IsStatic || !type.IsAbstract)
-        {
-            return
-                "it must either derive from a generated activation factory base, to implement the activation factory of a Windows Runtime class " +
-                "defined in existing metadata, or be an abstract class, to add interfaces to the activation factory generated for an authored Windows Runtime class.";
-        }
-
-        // The generated activation factory, which derives from this type, only exists for Windows Runtime components
-        if (!isComponent)
-        {
-            return
-                "an abstract activation factory adds interfaces to the activation factory generated for an authored Windows Runtime class, " +
-                "which only exists in a Windows Runtime component (set 'CsWinRTComponent' to 'true').";
-        }
-
-        // The generated activation factory derives from this type from another assembly ('WinRT.Component.dll')
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
-        {
-            if (current.DeclaredAccessibility is not Accessibility.Public)
-            {
-                return "it or one of its containing types is not public, so the generated activation factory cannot derive from it.";
-            }
-        }
-
-        if (type.IsGenericOrNestedInGenericType)
-        {
-            return "it is generic, or nested in a generic type, so the generated activation factory cannot derive from it.";
-        }
-
-        if (!type.InstanceConstructors.Any(static constructor =>
-            constructor.Parameters.IsEmpty &&
-            constructor.DeclaredAccessibility is Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal))
-        {
-            return "it has no public or protected parameterless constructor, so the generated activation factory cannot derive from it.";
-        }
-
-        if (type.GetMembers().FirstOrDefault(static member => member.IsAbstract) is ISymbol abstractMember)
-        {
-            return $"it declares the abstract member '{abstractMember.Name}', which the generated activation factory deriving from it cannot implement.";
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Gets why the type argument of the attribute on an abstract factory is not an activatable authored Windows Runtime class.
-    /// </summary>
-    /// <param name="runtimeClassType">The type argument of the attribute.</param>
-    /// <param name="compilation">The current <see cref="Compilation"/>.</param>
-    /// <param name="activationFactoryAttributeType">The <c>[WindowsRuntimeActivationFactory]</c> symbol.</param>
-    /// <param name="implementableClasses">The lookup for the generated bases.</param>
-    /// <returns>The reason, or <see langword="null"/> if <paramref name="runtimeClassType"/> is valid.</returns>
-    private static string? GetAuthoredRuntimeClassMismatchReason(
-        INamedTypeSymbol runtimeClassType,
-        Compilation compilation,
-        INamedTypeSymbol activationFactoryAttributeType,
-        ImplementableClassLookup implementableClasses)
-    {
-        if (!SymbolEqualityComparer.Default.Equals(runtimeClassType.ContainingAssembly, compilation.Assembly))
-        {
-            return "is not declared in this project, so it is not a Windows Runtime class authored by this component.";
-        }
-
-        // These mirror the types the WinMD generator exports as authored Windows Runtime classes
-        if (runtimeClassType.TypeKind is not TypeKind.Class ||
-            runtimeClassType.DeclaredAccessibility is not Accessibility.Public ||
-            runtimeClassType.ContainingType is not null ||
-            runtimeClassType.IsGenericType ||
-            IsInAbiNamespace(runtimeClassType) ||
-            runtimeClassType.HasAttributeWithType(activationFactoryAttributeType) ||
-            implementableClasses.GetInstanceBase(runtimeClassType) is not null)
-        {
-            return "is not a Windows Runtime class authored by this component (a public, non-generic, top-level class).";
-        }
-
-        if (!HasActivationFactory(runtimeClassType))
-        {
-            return "has no public constructors and no public static members, so no activation factory is generated for it.";
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Checks whether a type is declared in the <c>ABI</c> namespace or in one of its child namespaces.
-    /// </summary>
-    /// <param name="type">The type to check.</param>
-    /// <returns>Whether <paramref name="type"/> is declared in the <c>ABI</c> namespace.</returns>
-    private static bool IsInAbiNamespace(INamedTypeSymbol type)
-    {
-        INamespaceSymbol? rootNamespace = null;
-
-        for (INamespaceSymbol? current = type.ContainingNamespace; current is { IsGlobalNamespace: false }; current = current.ContainingNamespace)
-        {
-            rootNamespace = current;
-        }
-
-        return rootNamespace?.Name == "ABI";
-    }
-
-    /// <summary>
-    /// Checks whether an authored Windows Runtime class gets an activation factory, i.e. whether it has public constructors or public static members.
-    /// </summary>
-    /// <param name="type">The authored Windows Runtime class.</param>
-    /// <returns>Whether <paramref name="type"/> gets an activation factory.</returns>
-    private static bool HasActivationFactory(INamedTypeSymbol type)
-    {
-        if (!type.IsAbstract && !type.IsStatic && type.InstanceConstructors.Any(static constructor => constructor.DeclaredAccessibility is Accessibility.Public))
-        {
-            return true;
-        }
-
-        foreach (ISymbol member in type.GetMembers())
-        {
-            if (!member.IsStatic || member.DeclaredAccessibility is not Accessibility.Public)
-            {
-                continue;
-            }
-
-            // Static constructors, accessors and operators are not exposed as Windows Runtime statics
-            if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } or IPropertySymbol or IEventSymbol)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

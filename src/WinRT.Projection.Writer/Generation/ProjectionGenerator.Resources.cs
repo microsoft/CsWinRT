@@ -45,7 +45,6 @@ internal sealed partial class ProjectionGenerator
                 continue;
             }
 
-
             using Stream stream = asm.GetManifestResourceStream(resName)!;
             using StreamReader reader = new(stream);
             string content = reader.ReadToEnd();

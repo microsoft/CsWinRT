@@ -133,7 +133,7 @@ public sealed class ImplementedRuntimeClassActivationAnalyzer : DiagnosticAnalyz
         string declare = $"declare an activation factory deriving from '{factoryBase}' with '[WindowsRuntimeActivationFactory]'";
 
         // Only suggest the generated factory where it would be valid (otherwise, 'CSWINRT2027' would report it)
-        if (hasDefaultActivationOnly && implementation.GetNotInstantiableFromGeneratedCodeReason(compilation) is null)
+        if (hasDefaultActivationOnly && ActivationFactoryValidation.GetNotInstantiableFromGeneratedCodeReason(implementation, compilation) is null)
         {
             return $"annotate '{implementation}' with '[GeneratedWindowsRuntimeActivationFactory]', or {declare}";
         }

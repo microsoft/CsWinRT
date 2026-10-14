@@ -4,10 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
+using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Errors;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.References;
 
 namespace WindowsRuntime.ProjectionWriter.Metadata;
@@ -118,7 +119,9 @@ internal sealed class ComponentActivationFactoryExtensions
     {
         foreach (MethodDefinition method in type.Methods)
         {
-            if (method.IsConstructor && !method.IsStatic && method.Parameters.Count == 0 &&
+            if (method.IsConstructor &&
+                !method.IsStatic &&
+                method.Parameters.Count == 0 &&
                 (method.IsPublic || method.IsFamily || method.IsFamilyOrAssembly))
             {
                 return true;
@@ -131,32 +134,15 @@ internal sealed class ComponentActivationFactoryExtensions
     /// <summary>
     /// Gets the fully qualified C# name of a (possibly nested) type.
     /// </summary>
+    /// <remarks>
+    /// Generic types (and types nested in them) are rejected before this is called, as the generated factory cannot derive
+    /// from them, so the name never has an arity suffix or type arguments.
+    /// </remarks>
     private static string GetGlobalQualifiedName(TypeDefinition type)
     {
-        Stack<string> names = new();
-        TypeDefinition current = type;
+        // Nested types are separated by '+' in metadata names, and each part may be a C# keyword (e.g. a class named '@class')
+        IEnumerable<string> parts = type.FullName.Split('.', '+').Select(IdentifierEscaping.EscapeIdentifier);
 
-        while (current.DeclaringType is { } declaringType)
-        {
-            names.Push(current.Name!.Value);
-
-            current = declaringType;
-        }
-
-        StringBuilder builder = new("global::");
-
-        if (current.Namespace?.Value is { Length: > 0 } ns)
-        {
-            _ = builder.Append(ns).Append('.');
-        }
-
-        _ = builder.Append(current.Name!.Value);
-
-        foreach (string name in names)
-        {
-            _ = builder.Append('.').Append(name);
-        }
-
-        return builder.ToString();
+        return $"global::{string.Join('.', parts)}";
     }
 }

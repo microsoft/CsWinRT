@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -415,7 +416,7 @@ internal static class ComponentFactory
         {
             // The namespace has to match what the component's own generated activation entry point forwards to,
             // which is 'ABI.<EscapedAssemblyName>.ManagedExports' in this assembly.
-            string moduleNamespace = IdentifierEscaping.EscapeAssemblyName(kv.Key);
+            string moduleNamespace = CSharpIdentifiers.EscapeIdentifierName(kv.Key);
 
             writer.WriteLine();
 

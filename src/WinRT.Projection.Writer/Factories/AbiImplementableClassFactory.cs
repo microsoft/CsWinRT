@@ -128,8 +128,11 @@ internal static class AbiImplementableClassFactory
 
         if (reason.Value is not null)
         {
-            (context.Settings.Logger ?? Console.Out.WriteLine)(
-                $"No implementable base generated for '{type.FullName}': {reason.Value}. It can still be used through its projection, but cannot be implemented in C#.");
+            Action<string> logger = context.Settings.Logger ?? Console.Out.WriteLine;
+
+            logger(
+                $"No implementable base generated for '{type.FullName}': {reason.Value}. " +
+                "It can still be used through its projection, but cannot be implemented in C#.");
         }
 
         return reason.Value is null;
@@ -628,12 +631,12 @@ internal static class AbiImplementableClassFactory
         List<string> bases = ["global::WindowsRuntime.InteropServices.IActivationFactory"];
         HashSet<string> declared = [];
 
-        foreach (TypeDefinition iface in factoryInterfaces)
+        foreach (TypeDefinition interfaceType in factoryInterfaces)
         {
-            if (declared.Add(GetInterfaceKey(iface, null)))
+            if (declared.Add(GetInterfaceKey(interfaceType, null)))
             {
-                bases.Add(TypedefNameWriter.WriteTypedefName(context, iface, TypedefNameType.CCW, false).Format());
-                CollectImplementedInterfaces(context, iface, null, declared, bases);
+                bases.Add(TypedefNameWriter.WriteTypedefName(context, interfaceType, TypedefNameType.CCW, false).Format());
+                CollectImplementedInterfaces(context, interfaceType, null, declared, bases);
             }
         }
 
@@ -735,26 +738,26 @@ internal static class AbiImplementableClassFactory
                 """);
         }
 
-        foreach (TypeDefinition iface in factoryInterfaces)
+        foreach (TypeDefinition interfaceType in factoryInterfaces)
         {
-            if (!writtenInterfaces.Add(GetInterfaceKey(iface, null)))
+            if (!writtenInterfaces.Add(GetInterfaceKey(interfaceType, null)))
             {
                 continue;
             }
 
             // A composable factory method carries the raw COM aggregation contract. That is infrastructure,
             // not something an author should implement, so it is generated here and forwards to a hook.
-            if (composableInterfaces.Contains(iface))
+            if (composableInterfaces.Contains(interfaceType))
             {
-                EmitComposableFactoryMembers(writer, context, iface, nameStripped, projectedType, hasComposableDefaultActivation ? parameterlessConstructor : null, members);
+                EmitComposableFactoryMembers(writer, context, interfaceType, nameStripped, projectedType, hasComposableDefaultActivation ? parameterlessConstructor : null, members);
             }
-            else if (activatableInterfaces.Contains(iface))
+            else if (activatableInterfaces.Contains(interfaceType))
             {
-                EmitActivatableFactoryMembers(writer, context, iface, type, nameStripped, projectedType, members);
+                EmitActivatableFactoryMembers(writer, context, interfaceType, type, nameStripped, projectedType, members);
             }
             else
             {
-                EmitInterfaceMembers(writer, context, iface, null, isProtectedSurface: false, members, properties, writtenInterfaces);
+                EmitInterfaceMembers(writer, context, interfaceType, null, isProtectedSurface: false, members, properties, writtenInterfaces);
             }
         }
 
@@ -872,15 +875,15 @@ internal static class AbiImplementableClassFactory
 
         int constructorCount = 0;
 
-        foreach (TypeDefinition iface in composableInterfaces)
+        foreach (TypeDefinition interfaceType in composableInterfaces)
         {
-            foreach (MethodDefinition method in iface.GetNonSpecialMethods())
+            foreach (MethodDefinition method in interfaceType.GetNonSpecialMethods())
             {
                 constructorCount++;
 
                 // The trailing two parameters are always the outer and the inner, so these are all it takes
                 if (parameterlessConstructor is null &&
-                    publicComposableInterfaces.Contains(iface) &&
+                    publicComposableInterfaces.Contains(interfaceType) &&
                     method.Signature?.ParameterTypes.Count == 2)
                 {
                     parameterlessConstructor = method;
@@ -921,15 +924,15 @@ internal static class AbiImplementableClassFactory
     private static void EmitComposableFactoryMembers(
         IndentedTextWriter writer,
         ProjectionEmitContext context,
-        TypeDefinition ifaceType,
+        TypeDefinition interfaceType,
         string nameStripped,
         string projectedType,
         MethodDefinition? defaultActivationConstructor,
         ImplementableMemberSet members)
     {
-        string interfaceName = TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format();
+        string interfaceName = TypedefNameWriter.WriteTypedefName(context, interfaceType, TypedefNameType.CCW, false).Format();
 
-        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        foreach (MethodDefinition method in interfaceType.GetNonSpecialMethods())
         {
             // A removed constructor is not projected, so it is not part of the factory either
             if (method.IsRemoved)
@@ -1039,15 +1042,15 @@ internal static class AbiImplementableClassFactory
     private static void EmitActivatableFactoryMembers(
         IndentedTextWriter writer,
         ProjectionEmitContext context,
-        TypeDefinition ifaceType,
+        TypeDefinition interfaceType,
         TypeDefinition type,
         string nameStripped,
         string projectedType,
         ImplementableMemberSet members)
     {
-        string interfaceName = TypedefNameWriter.WriteTypedefName(context, ifaceType, TypedefNameType.CCW, false).Format();
+        string interfaceName = TypedefNameWriter.WriteTypedefName(context, interfaceType, TypedefNameType.CCW, false).Format();
 
-        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        foreach (MethodDefinition method in interfaceType.GetNonSpecialMethods())
         {
             // A removed constructor is not projected, so it is not part of the factory either
             if (method.IsRemoved)
@@ -1123,7 +1126,7 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
-            ImplementableMemberResolution resolution = members.ResolveProperty(name, info.TypeText, info.HasGetter, info.HasSetter, info.IsProtectedSurface);
+            ImplementableMemberResolution resolution = members.ResolveProperty(name, info.TypeName, info.HasGetter, info.HasSetter, info.IsProtectedSurface);
 
             if (resolution is ImplementableMemberResolution.Declare)
             {
@@ -1135,7 +1138,7 @@ internal static class AbiImplementableClassFactory
                 };
 
                 writer.WriteLine();
-                writer.WriteLine($"{(info.IsProtectedSurface ? "protected" : "public")} abstract {info.TypeText} {name} {accessors}");
+                writer.WriteLine($"{(info.IsProtectedSurface ? "protected" : "public")} abstract {info.TypeName} {name} {accessors}");
             }
 
             // A protected property cannot implement an interface property implicitly, so each interface gets an explicit
@@ -1165,7 +1168,7 @@ internal static class AbiImplementableClassFactory
 
                 writer.WriteLine();
                 writer.WriteLine(isMultiline: true, $$"""
-                    {{info.TypeText}} {{source.InterfaceName}}.{{name}}
+                    {{info.TypeName}} {{source.InterfaceName}}.{{name}}
                     {
                         {{forwarders}}
                     }
@@ -1194,14 +1197,14 @@ internal static class AbiImplementableClassFactory
                 continue;
             }
 
-            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? interfaceType))
             {
                 continue;
             }
 
             GenericInstanceTypeSignature? nextInstance = GetInterfaceInstance(impl, currentInstance);
 
-            if (!writtenInterfaces.Add(GetInterfaceKey(ifaceType, nextInstance)))
+            if (!writtenInterfaces.Add(GetInterfaceKey(interfaceType, nextInstance)))
             {
                 continue;
             }
@@ -1209,9 +1212,9 @@ internal static class AbiImplementableClassFactory
             // A custom-mapped interface is declared in its .NET form, so its members are declared from that
             // .NET shape rather than from the Windows Runtime metadata shape (which describes different
             // members entirely, and would satisfy nothing).
-            if (IsCustomMappedInterface(ifaceType))
+            if (IsCustomMappedInterface(interfaceType))
             {
-                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, nextInstance, ifaceType.Name ?? "", members);
+                MappedInterfaceAbstractMemberFactory.WriteAbstractMembers(writer, context, nextInstance, interfaceType.Name ?? "", members);
 
                 continue;
             }
@@ -1221,12 +1224,12 @@ internal static class AbiImplementableClassFactory
             // implementable base has to match, or an authored type would expose them publicly.
             bool isProtectedSurface = impl.IsOverridable() || impl.HasWindowsFoundationMetadataAttribute(References.WellKnownAttributeNames.ProtectedAttribute);
 
-            EmitInterfaceMembers(writer, context, ifaceType, nextInstance, isProtectedSurface, members, properties, writtenInterfaces);
+            EmitInterfaceMembers(writer, context, interfaceType, nextInstance, isProtectedSurface, members, properties, writtenInterfaces);
         }
     }
 
     /// <summary>
-    /// Emits the <c>abstract</c> members declared directly on <paramref name="ifaceType"/> and recurses into its
+    /// Emits the <c>abstract</c> members declared directly on <paramref name="interfaceType"/> and recurses into its
     /// base interfaces. Methods and events are emitted inline; properties are merged into <paramref name="properties"/>.
     /// </summary>
     /// <remarks>
@@ -1238,7 +1241,7 @@ internal static class AbiImplementableClassFactory
     private static void EmitInterfaceMembers(
         IndentedTextWriter writer,
         ProjectionEmitContext context,
-        TypeDefinition ifaceType,
+        TypeDefinition interfaceType,
         GenericInstanceTypeSignature? nextInstance,
         bool isProtectedSurface,
         ImplementableMemberSet members,
@@ -1248,9 +1251,9 @@ internal static class AbiImplementableClassFactory
         GenericContext? memberContext = nextInstance is not null ? new GenericContext(nextInstance, null) : null;
 
         // Explicit interface implementations need the interface named as it is declared on the base
-        string interfaceName = FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? ifaceType);
+        string interfaceName = FormatInterfaceName(context, nextInstance?.ToTypeDefOrRef() ?? interfaceType);
 
-        foreach (MethodDefinition method in ifaceType.GetNonSpecialMethods())
+        foreach (MethodDefinition method in interfaceType.GetNonSpecialMethods())
         {
             // A removed member is not part of the projected interface, so there is nothing to implement
             if (method.IsRemoved)
@@ -1286,7 +1289,7 @@ internal static class AbiImplementableClassFactory
         }
 
         // Properties (merged after the walk)
-        foreach (PropertyDefinition prop in ifaceType.Properties)
+        foreach (PropertyDefinition prop in interfaceType.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetMethods();
 
@@ -1297,25 +1300,25 @@ internal static class AbiImplementableClassFactory
             }
 
             string name = prop.GetRawName();
-            string typeText = InterfaceFactory.WritePropType(context, prop, memberContext);
+            string typeName = InterfaceFactory.WritePropType(context, prop, memberContext);
 
             if (!properties.TryGetValue(name, out PropertyInfo? info))
             {
                 info = new PropertyInfo
                 {
-                    TypeText = typeText,
+                    TypeName = typeName,
                     IsProtectedSurface = isProtectedSurface
                 };
                 properties[name] = info;
             }
 
-            info.HasConflict |= info.TypeText != typeText;
+            info.HasConflict |= info.TypeName != typeName;
             info.HasGetter |= getter is not null;
             info.HasSetter |= setter is not null;
             info.Sources.Add(new PropertySource(interfaceName, getter is not null, setter is not null));
         }
 
-        foreach (EventDefinition evt in ifaceType.Events)
+        foreach (EventDefinition evt in interfaceType.Events)
         {
             // MIDL places '[Deprecated]' on the 'add' accessor, not on the event
             if (evt.AddMethod is { IsRemoved: true })
@@ -1352,7 +1355,7 @@ internal static class AbiImplementableClassFactory
             }
         }
 
-        WriteInterfaceMembersRecursive(writer, context, ifaceType, nextInstance, members, properties, writtenInterfaces);
+        WriteInterfaceMembersRecursive(writer, context, interfaceType, nextInstance, members, properties, writtenInterfaces);
     }
 
     /// <summary>
@@ -1369,7 +1372,7 @@ internal static class AbiImplementableClassFactory
     {
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
-            if (impl.Interface is null || !impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
+            if (impl.Interface is null || !impl.TryResolveTypeDef(context.Cache, out TypeDefinition? interfaceType))
             {
                 continue;
             }
@@ -1379,7 +1382,7 @@ internal static class AbiImplementableClassFactory
             // what an author implements; the runtime's collection adapters service the Windows Runtime side.
             GenericInstanceTypeSignature? nextInstance = GetInterfaceInstance(impl, currentInstance);
 
-            if (!visited.Add(GetInterfaceKey(ifaceType, nextInstance)))
+            if (!visited.Add(GetInterfaceKey(interfaceType, nextInstance)))
             {
                 continue;
             }
@@ -1391,12 +1394,12 @@ internal static class AbiImplementableClassFactory
             // A custom-mapped interface's .NET form already implies its base interfaces (e.g.
             // 'IDictionary<K, V>' implies 'IEnumerable<KeyValuePair<K, V>>'), and the Windows Runtime bases
             // are not what the author implements, so the walk stops here.
-            if (IsCustomMappedInterface(ifaceType))
+            if (IsCustomMappedInterface(interfaceType))
             {
                 continue;
             }
 
-            CollectImplementedInterfaces(context, ifaceType, nextInstance, visited, collected);
+            CollectImplementedInterfaces(context, interfaceType, nextInstance, visited, collected);
         }
     }
 
@@ -1484,16 +1487,16 @@ internal static class AbiImplementableClassFactory
     {
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
-            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? ifaceType))
+            if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? interfaceType))
             {
                 continue;
             }
 
             GenericInstanceTypeSignature? nextInstance = GetInterfaceInstance(impl, currentInstance);
 
-            if (interfaces.TryAdd(GetInterfaceKey(ifaceType, nextInstance), ifaceType))
+            if (interfaces.TryAdd(GetInterfaceKey(interfaceType, nextInstance), interfaceType))
             {
-                CollectInterfaceClosure(context, ifaceType, nextInstance, interfaces);
+                CollectInterfaceClosure(context, interfaceType, nextInstance, interfaces);
             }
         }
     }
@@ -1520,17 +1523,21 @@ internal static class AbiImplementableClassFactory
     /// Gets the key identifying an implemented interface: its closed signature if it is generic, so different
     /// instantiations of the same generic interface are told apart, and its name otherwise.
     /// </summary>
-    private static string GetInterfaceKey(TypeDefinition ifaceType, GenericInstanceTypeSignature? instance)
+    private static string GetInterfaceKey(TypeDefinition interfaceType, GenericInstanceTypeSignature? instance)
     {
-        return instance?.FullName ?? ifaceType.FullName;
+        return instance?.FullName ?? interfaceType.FullName;
     }
 
     /// <summary>
-    /// Accumulated getter/setter presence and projected type text for a merged property.
+    /// Accumulated getter/setter presence and projected type for a merged property.
     /// </summary>
     private sealed class PropertyInfo
     {
-        public required string TypeText { get; init; }
+        /// <summary>
+        /// The name of the property's type, as written in the generated C# (i.e. its projected name, qualified with
+        /// <c>global::</c> where needed), taken from the first interface declaring the property.
+        /// </summary>
+        public required string TypeName { get; init; }
 
         /// <summary>
         /// Whether the first interface declaring the property is <c>[Overridable]</c> or <c>[Protected]</c>, so the property is
@@ -1538,8 +1545,14 @@ internal static class AbiImplementableClassFactory
         /// </summary>
         public bool IsProtectedSurface { get; init; }
 
+        /// <summary>
+        /// Whether any interface declaring the property declares a getter.
+        /// </summary>
         public bool HasGetter { get; set; }
 
+        /// <summary>
+        /// Whether any interface declaring the property declares a setter.
+        /// </summary>
         public bool HasSetter { get; set; }
 
         /// <summary>

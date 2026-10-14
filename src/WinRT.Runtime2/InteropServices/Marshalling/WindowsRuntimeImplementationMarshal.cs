@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0046
 
@@ -115,6 +116,7 @@ public static unsafe class WindowsRuntimeImplementationMarshal
     /// the implementation type itself).
     /// </para>
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsImplementationObject(object value)
     {
         return value is IWindowsRuntimeImplementableClass;
