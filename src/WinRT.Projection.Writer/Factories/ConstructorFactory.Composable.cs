@@ -13,18 +13,15 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static partial class ConstructorFactory
 {
     /// <summary>
-    /// Emits:
+    /// Emits, for one composable factory of a runtime class:
     /// 1. Public/protected constructors for each composable factory method (with proper body).
     /// 2. Static factory callback class (per ctor) for parameterized composable activation.
-    /// 3. Four protected base-chaining constructors used by derived projected types.
     /// </summary>
-    public static void WriteComposableConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? composableType, TypeDefinition classType, string visibility)
+    /// <remarks>
+    /// The base-chaining constructors are emitted separately, once per class (see <see cref="WriteComposableBaseConstructors"/>).
+    /// </remarks>
+    public static void WriteComposableConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition composableType, TypeDefinition classType, string visibility)
     {
-        if (composableType is null)
-        {
-            return;
-        }
-
         string typeName = classType.GetRawName();
 
         // Emit the factory objref + IIDs at the top so the parameterized ctors can reference it.
@@ -175,13 +172,21 @@ internal static partial class ConstructorFactory
 
             methodIndex++;
         }
+    }
 
+    /// <summary>
+    /// Emits the four protected base-chaining constructors that derived projected types call, once per composable
+    /// runtime class (however many composable factories it has).
+    /// </summary>
+    public static void WriteComposableBaseConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
+    {
         if (context.Settings.ReferenceProjection)
         {
             return;
         }
 
-        // Emit the four base-chaining constructors used by derived projected types.
+        string typeName = classType.GetRawName();
+        int gcPressure = ClassFactory.GetGcPressureAmount(classType);
         string gcPressureBody = gcPressure > 0
             ? "GC.AddMemoryPressure(" + gcPressure.ToString(CultureInfo.InvariantCulture) + ");"
             : string.Empty;
