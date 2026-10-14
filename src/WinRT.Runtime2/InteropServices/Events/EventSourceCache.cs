@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
@@ -405,10 +406,13 @@ internal sealed unsafe class EventSourceCache
     private static void* ResolveTargetUnsafe(WindowsRuntimeObjectReference targetWeakReference)
     {
         using WindowsRuntimeObjectReferenceValue targetWeakReferenceValue = targetWeakReference.AsValue();
-        Guid iid = WellKnownWindowsInterfaceIIDs.IID_IUnknown;
+
         void* targetPtr = null;
 
-        HRESULT hresult = IWeakReferenceVftbl.ResolveUnsafe(targetWeakReferenceValue.GetThisPtrUnsafe(), &iid, &targetPtr);
+        HRESULT hresult = IWeakReferenceVftbl.ResolveUnsafe(
+            thisPtr: targetWeakReferenceValue.GetThisPtrUnsafe(),
+            riid: (Guid*)Unsafe.AsPointer(in WellKnownWindowsInterfaceIIDs.IID_IUnknown),
+            objectReference: &targetPtr);
 
         return hresult.Failed ? null : targetPtr;
     }
