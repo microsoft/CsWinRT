@@ -39,24 +39,32 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="data">The input data.</param>
         /// <param name="token">The cancellation token for the operation.</param>
         /// <returns>The resulting info.</returns>
-        public static AuthoringNativeExportsInfo GetNativeExportsInfo((Compilation compilation, AuthoringExportTypesOptions Options) data, CancellationToken token)
+        public static AuthoringNativeExportsInfo GetNativeExportsInfo(
+            ((string AssemblyName, AuthoringExportTypesOptions Options) Left, EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories) data,
+            CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
 
             return new(
-                AssemblyName: data.compilation.AssemblyName ?? "",
-                Options: data.Options);
+                AssemblyName: data.Left.AssemblyName,
+                HasActivationFactories: !data.ActivationFactories.IsEmpty,
+                Options: data.Left.Options);
         }
 
         /// <summary>
         /// Gets all portable executable references from a compilation.
         /// </summary>
-        /// <param name="data">The input data.</param>
+        /// <param name="input">The input data.</param>
         /// <param name="token">The cancellation token for the operation.</param>
         /// <returns>All portable executable references for the input compilation.</returns>
-        public static AuthoringManagedExportsInfo GetManagedExportsInfo((Compilation Compilation, AuthoringExportTypesOptions Options) data, CancellationToken token)
+        public static AuthoringManagedExportsInfo GetManagedExportsInfo(
+            ((Compilation Compilation, AuthoringExportTypesOptions Options) Left, EquatableArray<AuthoringActivationFactoryInfo> ActivationFactories) input,
+            CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
+
+            (Compilation Compilation, AuthoringExportTypesOptions Options) data = input.Left;
+            EquatableArray<AuthoringActivationFactoryInfo> activationFactories = input.ActivationFactories;
 
             // Skip going through references if merging is not enabled
             if (!data.Options.MergeReferencedActivationFactories)
@@ -64,6 +72,7 @@ public partial class AuthoringExportTypesGenerator
                 return new(
                     AssemblyName: data.Compilation.AssemblyName ?? "",
                     MergedManagedExportsTypeNames: [],
+                    ActivationFactories: activationFactories,
                     Options: data.Options);
             }
 
@@ -97,7 +106,29 @@ public partial class AuthoringExportTypesGenerator
             return new(
                 AssemblyName: data.Compilation.AssemblyName ?? "",
                 MergedManagedExportsTypeNames: builder.ToImmutable(),
+                ActivationFactories: activationFactories,
                 Options: data.Options);
+        }
+
+        /// <summary>
+        /// Gets the singleton field name used for a discovered activation factory.
+        /// </summary>
+        /// <param name="factory">The activation factory info.</param>
+        /// <returns>A stable, valid C# identifier for the factory's backing field.</returns>
+        private static string GetActivationFactoryFieldName(AuthoringActivationFactoryInfo factory)
+        {
+            return factory.FieldName!;
+        }
+
+        /// <summary>
+        /// Gets the simple name of a generated activation factory type, which is declared in the same
+        /// namespace as the <c>ManagedExports</c> type referring to it.
+        /// </summary>
+        /// <param name="factory">The activation factory to get the type name for.</param>
+        /// <returns>The simple type name.</returns>
+        private static string GetGeneratedActivationFactoryTypeName(AuthoringActivationFactoryInfo factory)
+        {
+            return factory.FactoryTypeName[(factory.FactoryTypeName.LastIndexOf('.') + 1)..];
         }
 
         /// <summary>
@@ -107,20 +138,26 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="info">The input info.</param>
         public static void EmitManagedExports(SourceProductionContext context, AuthoringManagedExportsInfo info)
         {
-            if (!info.Options.ShouldEmitManagedExports())
+            if (!info.Options.ShouldEmitManagedExports(!info.ActivationFactories.IsEmpty))
             {
                 return;
             }
 
             IndentedTextWriter writer = new(literalLength: 0, formattedCount: 0); // TODO: adjust the literal length
 
-            // Emit the '[WindowsRuntimeComponentAssemblyExportsType]' attribute so other tooling (including this same generator)
-            // can reliably find the generated export types from other assemblies, which is needed when merging activation factories.
-            writer.WriteLine($$"""
+            writer.WriteLine("""
                 // <auto-generated/>
                 #pragma warning disable
 
-                [assembly: global::WindowsRuntime.InteropServices.WindowsRuntimeComponentAssembly]
+                """, isMultiline: true);
+
+            // Mark the assembly as a component whose types are projected into the generated 'WinRT.Component.dll'. A project
+            // that only implements types declared in an existing .winmd is not one, as the referenced projection covers them.
+            writer.WriteLineIf(info.Options.ShouldEmitComponentAssemblyAttribute(), "[assembly: global::WindowsRuntime.InteropServices.WindowsRuntimeComponentAssembly]");
+
+            // Emit the '[WindowsRuntimeComponentAssemblyExportsType]' attribute so other tooling (including this same generator)
+            // can reliably find the generated export types from other assemblies, which is needed when merging activation factories.
+            writer.WriteLine($$"""
                 [assembly: global::WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyExportsType(typeof(global::ABI.{{info.AssemblyName.EscapeIdentifierName()}}.ManagedExports))]
                 
                 namespace ABI.{{info.AssemblyName.EscapeIdentifierName()}};
@@ -147,6 +184,17 @@ public partial class AuthoringExportTypesGenerator
             // Indent via a block, as we'll also need to emit custom logic for the activation factory
             using (writer.WriteBlock())
             {
+                // Emit a lazily-created singleton field for each user-authored activation factory
+                foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
+                {
+                    writer.WriteLine($"private static readonly global::{factory.FactoryTypeName} {GetActivationFactoryFieldName(factory)} = new();");
+                }
+
+                if (!info.ActivationFactories.IsEmpty)
+                {
+                    writer.WriteLine();
+                }
+
                 // The 'GetActivationFactory' method is the one that actually contains all the high-level logic for
                 // activation scenarios. If we have any native exports (see below), those would call this method too.
                 writer.WriteLine($$"""
@@ -160,6 +208,21 @@ public partial class AuthoringExportTypesGenerator
 
                 using (writer.WriteBlock())
                 {
+                    // Emit a check for each user-authored activation factory, returning its CCW pointer. The
+                    // conversion lives on the generated factory base, since this compilation only sees the
+                    // runtime reference assembly and so cannot marshal on its own.
+                    foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
+                    {
+                        writer.WriteLine($$"""
+                            if (activatableClassId.SequenceEqual("{{factory.RuntimeClassName}}".AsSpan()))
+                            {
+                                return (void*)global::{{factory.FactoryBaseTypeName}}.GetActivationFactoryUnsafe({{GetActivationFactoryFieldName(factory)}});
+                            }
+                            """, isMultiline: true);
+
+                        writer.WriteLine();
+                    }
+
                     // Emit the unsafe accessor pointing to 'WinRT.Component.dll', where the actual activation code is located
                     if (info.Options.IsComponent)
                     {
@@ -188,6 +251,11 @@ public partial class AuthoringExportTypesGenerator
                     {
                         writer.WriteLine("return ReferencedManagedExports.GetActivationFactory(activatableClassId);");
                     }
+                    else
+                    {
+                        // Only the checks emitted above can match, so nothing else is activatable from here
+                        writer.WriteLine("return null;");
+                    }
                 }
 
                 // Emit the reflection friendly overload as well
@@ -198,6 +266,37 @@ public partial class AuthoringExportTypesGenerator
                     public static nint GetActivationFactory(string activatableClassId)
                     {
                         return (nint)GetActivationFactory(activatableClassId.AsSpan());
+                    }
+                    """, isMultiline: true);
+            }
+
+            // Emit the activation factories CsWinRT supplies on the author's behalf. These are for implementations
+            // of runtime classes declared in existing metadata whose only activation path is the parameterless
+            // 'ActivateInstance', so implementing the factory amounts to constructing the implementation.
+            foreach (AuthoringActivationFactoryInfo factory in info.ActivationFactories)
+            {
+                if (factory is not { GeneratedForImplementationTypeName: string implementationTypeName, ImplementableBaseTypeName: string implementableBaseTypeName })
+                {
+                    continue;
+                }
+
+                writer.WriteLine();
+                writer.WriteLine($$"""
+                    /// <summary>
+                    /// The activation factory for <see cref="global::{{implementationTypeName}}"/>, which implements
+                    /// the <c>{{factory.RuntimeClassName}}</c> Windows Runtime class.
+                    /// </summary>
+                    """, isMultiline: true);
+                writer.WriteGeneratedAttributes(nameof(AuthoringExportTypesGenerator), useFullyQualifiedTypeNames: false);
+                writer.WriteLine($$"""
+                    [EditorBrowsable(EditorBrowsableState.Never)]
+                    internal sealed class {{GetGeneratedActivationFactoryTypeName(factory)}} : global::{{factory.FactoryBaseTypeName}}
+                    {
+                        /// <inheritdoc/>
+                        public override global::{{implementableBaseTypeName}} ActivateInstance()
+                        {
+                            return new global::{{implementationTypeName}}();
+                        }
                     }
                     """, isMultiline: true);
             }
@@ -260,7 +359,7 @@ public partial class AuthoringExportTypesGenerator
         /// <param name="info">The input info.</param>
         public static void EmitNativeExports(SourceProductionContext context, AuthoringNativeExportsInfo info)
         {
-            if (!info.Options.ShouldEmitNativeExports())
+            if (!info.Options.ShouldEmitNativeExports(info.HasActivationFactories))
             {
                 return;
             }

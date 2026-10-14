@@ -64,6 +64,7 @@ internal static class TypeMapping
         new("Microsoft.UI.Xaml.Media.Animation.RepeatBehavior", new("Microsoft.UI.Xaml.Media.Animation", "RepeatBehavior")),
         new("Microsoft.UI.Xaml.Media.Media3D.Matrix3D", new("Microsoft.UI.Xaml.Media.Media3D", "Matrix3D")),
         new("WindowsRuntime.InteropServices.EventRegistrationToken", new("Windows.Foundation", "EventRegistrationToken", "struct(Windows.Foundation.EventRegistrationToken;i8)")),
+        new("WindowsRuntime.InteropServices.IActivationFactory", new("Windows.Foundation", "IActivationFactory")),
         new("Windows.Foundation.IReferenceArray", new("Windows.Foundation", "IReferenceArray`1")),
         new("System.Collections.Generic.IEnumerable`1", new("Windows.Foundation.Collections", "IIterable`1")),
         new("System.Collections.Generic.IEnumerator`1", new("Windows.Foundation.Collections", "IIterator`1")),

@@ -72,4 +72,9 @@ internal sealed class ComponentImplementationMetadata
     {
         return _typesByFullName.GetValueOrDefault(fullName);
     }
+
+    /// <summary>
+    /// Gets all the types defined in the loaded implementation assemblies.
+    /// </summary>
+    public IEnumerable<TypeDefinition> Types => _typesByFullName.Values;
 }

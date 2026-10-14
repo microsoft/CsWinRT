@@ -48,6 +48,8 @@ public static class ProjectionWriter
                 MaxDegreesOfParallelism = options.MaxDegreesOfParallelism,
                 Component = options.Component,
                 PublicExclusiveTo = options.PublicExclusiveTo,
+                ImplementWinMDTypes = options.ImplementWinMDTypes,
+                ImplementableTypes = System.Collections.Frozen.FrozenSet.ToFrozenSet(options.ImplementableTypes, System.StringComparer.Ordinal),
                 IdicExclusiveTo = options.IdicExclusiveTo,
                 ReferenceProjection = options.ReferenceProjection,
                 OutputFolder = Path.GetFullPath(options.OutputFolder),
@@ -57,8 +59,10 @@ public static class ProjectionWriter
             settings.Include.UnionWith(options.Include);
             settings.IncludeTypes.UnionWith(options.IncludeTypes);
             settings.Exclude.UnionWith(options.Exclude);
+            settings.ExcludeTypes.UnionWith(options.ExcludeTypes);
             settings.AdditionExclude.UnionWith(options.AdditionExclude);
             settings.ComponentImplementationAssemblies.UnionWith(options.ComponentImplementationAssemblyPaths);
+            settings.ComponentAssemblyNames.UnionWith(options.ComponentAssemblyNames);
             settings.PublicExclusiveToTypes.UnionWith(options.PublicExclusiveToTypes);
             settings.IdicExclusiveToIncludes.UnionWith(options.IdicExclusiveToIncludes);
             settings.IdicExclusiveToExcludes.UnionWith(options.IdicExclusiveToExcludes);

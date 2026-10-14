@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;
@@ -30,7 +31,7 @@ internal static class IdentifierEscaping
     /// <returns>The escaped identifier.</returns>
     public static string EscapeIdentifier(string identifier)
     {
-        return CSharpKeywords.IsKeyword(identifier) ? "@" + identifier : identifier;
+        return CSharpIdentifiers.IsKeyword(identifier) ? "@" + identifier : identifier;
     }
 
     /// <summary>
@@ -41,7 +42,7 @@ internal static class IdentifierEscaping
     /// <param name="identifier">The identifier to write.</param>
     public static void WriteEscapedIdentifier(IndentedTextWriter writer, string identifier)
     {
-        writer.WriteIf(CSharpKeywords.IsKeyword(identifier), "@");
+        writer.WriteIf(CSharpIdentifiers.IsKeyword(identifier), "@");
 
         writer.Write(identifier);
     }

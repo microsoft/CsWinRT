@@ -169,6 +169,28 @@ internal static class WinMDGeneratorRunner
     /// <returns>A lookup from metadata row to the fully qualified names of the attributes applied to it.</returns>
     public static ILookup<string, string> GetGeneratedAttributes(string source)
     {
+        return Generate(source, ReadAttributes);
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and returns the full names of the types in the produced <c>.winmd</c>.
+    /// </summary>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <returns>The full names of the types in the produced <c>.winmd</c>.</returns>
+    public static string[] GetGeneratedTypeNames(string source)
+    {
+        return Generate(source, ReadTypeNames);
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and reads the produced <c>.winmd</c>.
+    /// </summary>
+    /// <typeparam name="T">The type of value read from the produced <c>.winmd</c>.</typeparam>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <param name="read">Reads the value from the produced <c>.winmd</c>, given its path.</param>
+    /// <returns>The value read from the produced <c>.winmd</c>.</returns>
+    private static T Generate<T>(string source, Func<string, T> read)
+    {
         string toolPath = GetGeneratorPath();
         string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
 
@@ -190,12 +212,30 @@ internal static class WinMDGeneratorRunner
 
             Assert.AreEqual(0, exitCode, output);
 
-            return ReadAttributes(outputWinMDPath);
+            return read(outputWinMDPath);
         }
         finally
         {
             TryDeleteDirectory(temporaryDirectory);
         }
+    }
+
+    /// <summary>
+    /// Reads the full names of the types in a <c>.winmd</c>.
+    /// </summary>
+    /// <param name="winmdPath">The path of the <c>.winmd</c> to read.</param>
+    /// <returns>The full names of the types in the <c>.winmd</c>.</returns>
+    private static string[] ReadTypeNames(string winmdPath)
+    {
+        using FileStream stream = File.OpenRead(winmdPath);
+        using PEReader peReader = new(stream);
+
+        MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+
+        return [.. reader.TypeDefinitions
+            .Select(reader.GetTypeDefinition)
+            .Select(type => Format(reader.GetString(type.Namespace), reader.GetString(type.Name)))
+            .Where(static name => name != "<Module>")];
     }
 
     /// <summary>

@@ -39,14 +39,11 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// consume the accumulated post-loop state.
 /// </para>
 /// </remarks>
-/// <param name="settings">The active projection settings.</param>
-/// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
-/// <param name="token">The cancellation token observed across all phases.</param>
-internal sealed partial class ProjectionGenerator(Settings settings, MetadataCache cache, CancellationToken token)
+internal sealed partial class ProjectionGenerator
 {
-    private readonly Settings _settings = settings;
-    private readonly MetadataCache _cache = cache;
-    private readonly CancellationToken _token = token;
+    private readonly Settings _settings;
+    private readonly MetadataCache _cache;
+    private readonly CancellationToken _token;
 
     /// <summary>
     /// Analyzes the component's managed implementation assemblies to decide which activation
@@ -54,8 +51,31 @@ internal sealed partial class ProjectionGenerator(Settings settings, MetadataCac
     /// by every emit context, so its memoization cache is reused across namespaces. Empty (and
     /// unused) outside component mode, where no implementation assemblies are provided.
     /// </summary>
-    private readonly ComponentStaticConstructorAnalyzer _staticConstructorAnalyzer =
-        new(ComponentImplementationMetadata.Load(settings.ComponentImplementationAssemblies));
+    private readonly ComponentStaticConstructorAnalyzer _staticConstructorAnalyzer;
+
+    /// <summary>
+    /// The classes the component declares to extend the activation factories generated for it. Created once
+    /// and shared by every emit context. Empty outside component mode.
+    /// </summary>
+    private readonly ComponentActivationFactoryExtensions _activationFactoryExtensions;
+
+    /// <summary>
+    /// Creates a new <see cref="ProjectionGenerator"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="settings">The active projection settings.</param>
+    /// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
+    /// <param name="token">The cancellation token observed across all phases.</param>
+    public ProjectionGenerator(Settings settings, MetadataCache cache, CancellationToken token)
+    {
+        _settings = settings;
+        _cache = cache;
+        _token = token;
+
+        ComponentImplementationMetadata componentImplementationMetadata = ComponentImplementationMetadata.Load(settings.ComponentImplementationAssemblies);
+
+        _staticConstructorAnalyzer = new ComponentStaticConstructorAnalyzer(componentImplementationMetadata);
+        _activationFactoryExtensions = new ComponentActivationFactoryExtensions(componentImplementationMetadata);
+    }
 
     /// <summary>
     /// Runs the projection-generation pipeline end-to-end.

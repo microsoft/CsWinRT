@@ -18,6 +18,13 @@
 
     <!-- Generate projections for the types in the 'Authoring' namespace of the input '.winmd' below -->
     <CsWinRTIncludes>Authoring</CsWinRTIncludes>
+
+    <!--
+      Packed by 'run-smoke-tests.ps1' so the sibling 'ComponentUsingProjection' smoke test can consume
+      this projection the way a real consumer does: as a package, which resolves to the reference
+      assembly under 'ref' rather than to the forwarder a project reference would give.
+    -->
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,5 +42,14 @@
       at a deterministic, sibling output path.
     -->
     <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\Authoring\bin\$(Configuration)\$(TargetFramework)\Authoring.winmd" />
+
+    <!--
+      Lay the package out the way a real Windows Runtime projection package is laid out. The reference assembly
+      is packed under 'ref' by default ('CsWinRTPackReferenceProjection'), this metadata goes under 'metadata',
+      and the targets file hands that metadata back to a consumer, as a projection package's targets do.
+      The 'ComponentUsingProjection' smoke test relies on this layout, so 'run-smoke-tests.ps1' asserts on it.
+    -->
+    <CsWinRTPackedWinMD Include="@(CsWinRTInputs)" />
+    <None Include="Projection.targets" Pack="true" PackagePath="buildTransitive\$(TargetFramework)\" />
   </ItemGroup>
 </Project>

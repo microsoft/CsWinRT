@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -73,9 +74,17 @@ internal static class ComponentFactory
         // component's managed implementation assemblies (the .winmd doesn't carry those fields).
         bool emitStaticConstructor = context.StaticConstructorAnalyzer.RequiresStaticConstructor(type.FullName);
 
-        // Writes the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
+        // The class the component declares to extend this factory with, if any (e.g. to add COM interop interfaces)
+        string? extensionTypeName = context.ActivationFactoryExtensions?.GetExtensionTypeName(type.FullName);
+
+        // Writes the base class (if any) and the set of interfaces implemented by the factory class ('IActivationFactory' is always included)
         void WriteBaseInterfaceList(IndentedTextWriter writer)
         {
+            if (extensionTypeName is not null)
+            {
+                writer.Write($"{extensionTypeName}, ");
+            }
+
             writer.Write("global::WindowsRuntime.InteropServices.IActivationFactory");
 
             // Build the inheritance list: factory interfaces ('[Activatable]' or '[Static]') only
@@ -405,9 +414,34 @@ internal static class ComponentFactory
         writer.WriteLine("using System;");
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
+            // The namespace has to match what the component's own generated activation entry point forwards to,
+            // which is 'ABI.<EscapedAssemblyName>.ManagedExports' in this assembly.
+            string moduleNamespace = CSharpIdentifiers.EscapeIdentifierName(kv.Key);
+
             writer.WriteLine();
+
+            // A component with no activatable classes still gets an entry point, but a 'switch' needs at
+            // least one case to be valid over a span, so that case returns directly instead.
+            if (kv.Value.Count == 0)
+            {
+                writer.WriteLine(isMultiline: true, $$"""
+                    namespace ABI.{{moduleNamespace}}
+                    {
+                    public static class ManagedExports
+                    {
+                    public static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)
+                    {
+                    return null;
+                    }
+                    }
+                    }
+                    """);
+
+                continue;
+            }
+
             writer.WriteLine(isMultiline: true, $$"""
-                namespace ABI.{{kv.Key}}
+                namespace ABI.{{moduleNamespace}}
                 {
                 public static class ManagedExports
                 {

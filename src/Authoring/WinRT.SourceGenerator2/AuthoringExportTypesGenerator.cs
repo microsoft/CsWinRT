@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using WindowsRuntime.SourceGenerator.Models;
 
 namespace WindowsRuntime.SourceGenerator;
@@ -18,14 +19,41 @@ public sealed partial class AuthoringExportTypesGenerator : IIncrementalGenerato
         // Get the options for the generator from the analyzer options
         IncrementalValueProvider<AuthoringExportTypesOptions> options = context.AnalyzerConfigOptionsProvider.Select(Execute.GetOptions);
 
+        // Get the name of the assembly being compiled, which the generated code is named after
+        IncrementalValueProvider<string> assemblyName = context.CompilationProvider.Select(static (compilation, _) => compilation.AssemblyName ?? "");
+
+        // Get the activation factories the author declared with '[WindowsRuntimeActivationFactory]'
+        IncrementalValuesProvider<AuthoringActivationFactoryInfo> declaredActivationFactories = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "WindowsRuntime.InteropServices.WindowsRuntimeActivationFactoryAttribute",
+                static (node, _) => node is ClassDeclarationSyntax,
+                Helpers.GetDeclaredActivationFactory)
+            .SkipNullValues();
+
+        // Get the implementations of Windows Runtime classes declared in existing metadata that opted into a generated factory
+        IncrementalValuesProvider<AuthoringImplementationInfo> implementations = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "WindowsRuntime.InteropServices.GeneratedWindowsRuntimeActivationFactoryAttribute",
+                static (node, _) => node is ClassDeclarationSyntax,
+                Helpers.GetImplementation)
+            .SkipNullValues();
+
+        // Combine them into the activation factories to emit
+        IncrementalValueProvider<EquatableArray<AuthoringActivationFactoryInfo>> activationFactories = declaredActivationFactories.Collect()
+            .Combine(implementations.Collect())
+            .Combine(assemblyName)
+            .Select(static (data, _) => Helpers.GetActivationFactories(data.Left.Left, data.Left.Right, data.Right));
+
         // Get the generation info specific to managed exports
         IncrementalValueProvider<AuthoringManagedExportsInfo> managedExportsInfo = context.CompilationProvider
             .Combine(options)
+            .Combine(activationFactories)
             .Select(Execute.GetManagedExportsInfo);
 
         // Get the generation info specific to native exports
-        IncrementalValueProvider<AuthoringNativeExportsInfo> nativeExportsInfo = context.CompilationProvider
+        IncrementalValueProvider<AuthoringNativeExportsInfo> nativeExportsInfo = assemblyName
             .Combine(options)
+            .Combine(activationFactories)
             .Select(Execute.GetNativeExportsInfo);
 
         // Generate the managed exports type
