@@ -269,7 +269,7 @@ internal static partial class AbiMethodBodyFactory
                             {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
                             Span<{{elementProjected}}> __{{raw}} = __{{raw}}Size <= 16
                                 ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
-                                : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size));
+                                : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size)).AsSpan(0, (int)__{{raw}}Size);
                         """);
                 }
             }
@@ -320,24 +320,7 @@ internal static partial class AbiMethodBodyFactory
                 string ptr = IdentifierEscaping.EscapeIdentifier(raw);
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
-                // For non-blittable structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
-                // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
-                // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
-                // the data param is void** and the cast is (void**).
-                string dataParamType;
-                string dataCastExpr;
-
-                if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
-                {
-                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
-                    dataParamType = abiStructName + "* data";
-                    dataCastExpr = "(" + abiStructName + "*)" + ptr;
-                }
-                else
-                {
-                    dataParamType = "void** data";
-                    dataCastExpr = "(void**)" + ptr;
-                }
+                string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, szArr.BaseType);
 
                 writer.IncreaseIndent();
                 UnsafeAccessorFactory.EmitStaticMethod(
@@ -346,8 +329,8 @@ internal static partial class AbiMethodBodyFactory
                     returnType: "void",
                     functionName: $"CopyToManaged_{raw}",
                     interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
-                    parameterList: $"uint length, {dataParamType}, Span<{elementProjected.Format()}> span");
-                writer.WriteLine($"CopyToManaged_{raw}(null, __{raw}Size, {dataCastExpr}, __{raw});");
+                    parameterList: $"uint length, {elementAbi}* data, Span<{elementProjected.Format()}> span");
+                writer.WriteLine($"CopyToManaged_{raw}(null, __{raw}Size, ({elementAbi}*){ptr}, __{raw});");
                 writer.DecreaseIndent();
             }
 

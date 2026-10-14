@@ -701,12 +701,6 @@ internal static partial class ConstructorFactory
                     continue;
                 }
 
-                // Mapped value types ('DateTime'/'TimeSpan') need no disposal or pool return
-                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
-                {
-                    continue;
-                }
-
                 string raw = p.GetRawName();
                 ArrayTempNames names = new(raw);
 
@@ -740,7 +734,7 @@ internal static partial class ConstructorFactory
                         }
                         """);
                 }
-                else
+                else if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
                     // Complex structs use a typed <ABI struct>* (no cast), ref types use 'void**'
                     string disposeDataParamType;

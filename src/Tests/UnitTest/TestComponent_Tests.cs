@@ -475,6 +475,70 @@ namespace UnitTest
         }
 
         [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_NonBlittable_Pooled(int count)
+        {
+            NonBlittable[] values = Enumerable.Range(0, count)
+                .Select(i => new NonBlittable(i % 2 == 0, (char)('a' + i % 26), $"value-{i}", i))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array14);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Nested_Pooled(int count)
+        {
+            Nested[] values = Enumerable.Range(0, count)
+                .Select(i => new Nested(default, new NonBlittable(i % 2 == 0, 'a', $"value-{i}", i)))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array15);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Stringable_Pooled(int count)
+        {
+            IStringable[] values = Enumerable.Range(0, count)
+                .Select(i => (IStringable)Windows.Data.Json.JsonValue.CreateNumberValue(i))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array16);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Blittable_Large(int count)
+        {
+            int[] values = Enumerable.Range(0, count).ToArray();
+            AssertArrayRoundTrip(values, Tests.Array7);
+        }
+
+        private delegate T[] ArrayRoundTrip<T>(ReadOnlySpan<T> values, Span<T> filled, out T[] received);
+
+        private static void AssertArrayRoundTrip<T>(T[] values, ArrayRoundTrip<T> roundTrip)
+        {
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                T[] filled = new T[values.Length];
+                T[] returned = roundTrip(values, filled, out T[] received);
+                CollectionAssert.AreEqual(values, filled);
+                CollectionAssert.AreEqual(values, received);
+                CollectionAssert.AreEqual(values, returned);
+            }
+        }
+
+        [TestMethod]
         public void Array_NullInterfaces()
         {
             IStringable[] a = null;

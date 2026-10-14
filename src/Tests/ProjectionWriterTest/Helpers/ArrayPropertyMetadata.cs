@@ -117,6 +117,13 @@ internal static class ArrayPropertyMetadata
 
         _ = AddMethod("AcceptValues", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Int32));
         _ = AddMethod("AcceptNames", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.String));
+        _ = AddMethod("AcceptObjects", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Object));
+        _ = AddMethod("AcceptWidgets", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(owner.ToTypeSignature()));
+        _ = AddMethod("AcceptInterfaces", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(iface.ToTypeSignature()));
+        _ = AddMethod("AcceptPayloads", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(payload.ToTypeSignature(true)));
+        _ = AddMethod("AcceptDates", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(dateTime.ToTypeSignature(true)));
+        MethodDefinition fillNames = AddMethod("FillNames", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.String));
+        fillNames.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
         MethodDefinition fill = AddMethod("FillValues", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Int32));
         fill.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
 

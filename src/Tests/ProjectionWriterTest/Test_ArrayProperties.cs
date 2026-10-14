@@ -110,6 +110,51 @@ public class Test_ArrayProperties
         RunRuntimeFixture("other-members");
     }
 
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(15)]
+    [DataRow(16)]
+    [DataRow(17)]
+    [DataRow(33)]
+    [DataRow(64)]
+    public void NativeArrayMethods_PreserveExactSpanLengths(int length)
+    {
+        RunRuntimeFixture($"methods:{length}");
+    }
+
+    [TestMethod]
+    public void PooledArrayMethods_SliceBuffersAndReturnEachRental()
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionArrayPoolTest_").FullName;
+        try
+        {
+            string output = GenerateSources(directory, referenceProjection: false, exclusiveTo: true);
+            var root = CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(output, "Contoso.cs"))).GetRoot();
+            InvocationExpressionSyntax[] rentals = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                .Where(invocation => invocation.Expression is MemberAccessExpressionSyntax access
+                    && access.Name.Identifier.ValueText == "Rent").ToArray();
+            Assert.IsTrue(rentals.Length > 0);
+            foreach (InvocationExpressionSyntax rental in rentals)
+            {
+                Assert.IsTrue(rental.Ancestors().OfType<InvocationExpressionSyntax>().Any(
+                    invocation => invocation.Expression is MemberAccessExpressionSyntax access
+                        && access.Name.Identifier.ValueText == "AsSpan"), rental.ToString());
+                string buffer = rental.Ancestors().OfType<AssignmentExpressionSyntax>().First().Left.ToString();
+                MethodDeclarationSyntax method = rental.Ancestors().OfType<MethodDeclarationSyntax>().First();
+                int returns = method.DescendantNodes().OfType<InvocationExpressionSyntax>().Count(
+                    invocation => invocation.Expression is MemberAccessExpressionSyntax access
+                        && access.Name.Identifier.ValueText == "Return"
+                        && invocation.ArgumentList.Arguments[0].Expression.ToString() == buffer);
+                Assert.AreEqual(1, returns, $"{method.Identifier}: {buffer}");
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [ClassCleanup]
     public static void Cleanup()
     {

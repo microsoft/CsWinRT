@@ -1165,8 +1165,7 @@ internal static partial class AbiMethodBodyFactory
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
             // For runtime classes/objects: Dispose_<name> (UnsafeAccessor) + return ArrayPool.
-            // For mapped value types (DateTime/TimeSpan): no per-element disposal needed and truth
-            // doesn't return the ArrayPool either, so skip entirely.
+            // For mapped value types (DateTime/TimeSpan): only return the rented storage.
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -1183,11 +1182,6 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
-                {
-                    continue;
-                }
-
-                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
                     continue;
                 }
@@ -1233,7 +1227,7 @@ internal static partial class AbiMethodBodyFactory
                             """);
                     }
                 }
-                else
+                else if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
                     // For complex structs, both the Dispose_<name> data param and the fixed()
                     // pointer must be typed as <ABI struct>*; the cast can be omitted. For

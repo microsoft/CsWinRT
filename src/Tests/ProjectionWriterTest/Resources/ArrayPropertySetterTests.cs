@@ -43,14 +43,15 @@ internal static unsafe class Program
                 VerifyOtherMembers(target, ccw);
                 break;
             default:
-                VerifyArrays(target, ccw, int.Parse(args[0]));
+                bool methods = args[0].StartsWith("methods:", StringComparison.Ordinal);
+                VerifyArrays(target, ccw, int.Parse(methods ? args[0]["methods:".Length..] : args[0]), methods);
                 break;
         }
 
         return 0;
     }
 
-    private static void VerifyArrays(Target target, void* ccw, int length)
+    private static void VerifyArrays(Target target, void* ccw, int length, bool methods = false)
     {
         int[] expectedValues = Enumerable.Range(1, length).ToArray();
         int[] nativeValues = (int[])expectedValues.Clone();
@@ -58,6 +59,11 @@ internal static unsafe class Program
         {
             Check(Set(ccw, "Values", (uint)length, data) == 0, "int setter");
             Check(nativeValues.SequenceEqual(expectedValues), "setter modified native input");
+            if (methods)
+            {
+                Check(CallArrayMethod(ccw, "AcceptValues", (uint)length, data) == 0, "int method");
+                Check(target.SeenValues.SequenceEqual(expectedValues), "int method contents");
+            }
             nativeValues.AsSpan().Clear();
         }
         CheckOwned(target.Values, expectedValues);
@@ -82,6 +88,11 @@ internal static unsafe class Program
         {
             Check(Set(ccw, "Names", namesLength, nativeNames) == 0, "string setter");
             Check(HStringArrayMarshaller.ConvertToManaged(namesLength, nativeNames).SequenceEqual(names), "borrowed HSTRINGs");
+            if (methods)
+            {
+                Check(CallArrayMethod(ccw, "AcceptNames", namesLength, nativeNames) == 0, "string method");
+                Check(target.SeenNames.SequenceEqual(names), "string method contents");
+            }
         }
         finally
         {
@@ -101,6 +112,11 @@ internal static unsafe class Program
         {
             Check(Set(ccw, "Objects", objectsLength, nativeObjects) == 0, "object setter");
             Check(WindowsRuntimeObjectArrayMarshaller.ConvertToManaged(objectsLength, nativeObjects).SequenceEqual(objects), "borrowed objects");
+            if (methods)
+            {
+                Check(CallArrayMethod(ccw, "AcceptObjects", objectsLength, nativeObjects) == 0, "object method");
+                Check(target.SeenObjects.SequenceEqual(objects), "object method contents");
+            }
         }
         finally
         {
@@ -118,6 +134,11 @@ internal static unsafe class Program
             int hr = Set(ccw, "Interfaces", (uint)length, data);
             RestrictedErrorInfo.ThrowExceptionForHR(hr);
             Check(hr == 0, "interface setter");
+            if (methods)
+            {
+                Check(CallArrayMethod(ccw, "AcceptInterfaces", (uint)length, data) == 0, "interface method");
+                Check(target.SeenInterfaces.SequenceEqual(Enumerable.Repeat<IWidget2>(target, length)), "interface method contents");
+            }
         }
         CheckOwned(target.Interfaces, Enumerable.Repeat<IWidget2>(target, length).ToArray());
 
@@ -125,6 +146,11 @@ internal static unsafe class Program
         fixed (nint* data = widgets)
         {
             Check(Set(ccw, "Widgets", (uint)length, data) == 0, "runtime class setter");
+            if (methods)
+            {
+                Check(CallArrayMethod(ccw, "AcceptWidgets", (uint)length, data) == 0, "runtime class method");
+                Check(target.SeenWidgets.Length == length && target.SeenWidgets.All(widget => widget is null), "runtime class method contents");
+            }
         }
         CheckOwned(target.Widgets, new Widget[length]);
 
@@ -144,6 +170,11 @@ internal static unsafe class Program
             fixed (ABI.Contoso.Payload* data = nativePayloads)
             {
                 Check(Set(ccw, "Payloads", (uint)length, data) == 0, "non-blittable struct setter");
+                if (methods)
+                {
+                    Check(CallArrayMethod(ccw, "AcceptPayloads", (uint)length, data) == 0, "struct method");
+                    Check(target.SeenPayloads.SequenceEqual(payloads), "struct method contents");
+                }
             }
         }
         finally
@@ -154,6 +185,32 @@ internal static unsafe class Program
             }
         }
         CheckOwned(target.Payloads, payloads);
+
+        if (methods)
+        {
+            DateTimeOffset[] dates = Enumerable.Range(0, length).Select(i => DateTimeOffset.FromUnixTimeSeconds(i)).ToArray();
+            ABI.System.DateTimeOffset[] nativeDates = dates.Select(ABI.System.DateTimeOffsetMarshaller.ConvertToUnmanaged).ToArray();
+            fixed (ABI.System.DateTimeOffset* data = nativeDates)
+            {
+                Check(CallArrayMethod(ccw, "AcceptDates", (uint)length, data) == 0, "mapped value method");
+                Check(target.SeenDates.SequenceEqual(dates), "mapped value method contents");
+            }
+
+            nint[] filledNames = new nint[length];
+            fixed (nint* data = filledNames)
+            {
+                try
+                {
+                    Check(CallArrayMethod(ccw, "FillNames", (uint)length, data) == 0, "string fill method");
+                    Check(HStringArrayMarshaller.ConvertToManaged((uint)length, (void**)data)
+                        .SequenceEqual(Enumerable.Range(0, length).Select(i => $"filled-{i}")), "string fill contents");
+                }
+                finally
+                {
+                    HStringArrayMarshaller.Dispose((uint)length, (void**)data);
+                }
+            }
+        }
 
         // A later setter call must not overwrite an array retained by an earlier call.
         int[] retained = target.Values;
@@ -357,8 +414,25 @@ internal static unsafe class Program
         public string Label { get; set; } = "";
         public int[] SeenValues { get; private set; } = [];
         public string[] SeenNames { get; private set; } = [];
+        public object[] SeenObjects { get; private set; } = [];
+        public Widget[] SeenWidgets { get; private set; } = [];
+        public IWidget2[] SeenInterfaces { get; private set; } = [];
+        public Payload[] SeenPayloads { get; private set; } = [];
+        public DateTimeOffset[] SeenDates { get; private set; } = [];
         public void AcceptValues(ReadOnlySpan<int> value) => SeenValues = value.ToArray();
         public void AcceptNames(ReadOnlySpan<string> value) => SeenNames = value.ToArray();
+        public void AcceptObjects(ReadOnlySpan<object> value) => SeenObjects = value.ToArray();
+        public void AcceptWidgets(ReadOnlySpan<Widget> value) => SeenWidgets = value.ToArray();
+        public void AcceptInterfaces(ReadOnlySpan<IWidget2> value) => SeenInterfaces = value.ToArray();
+        public void AcceptPayloads(ReadOnlySpan<Payload> value) => SeenPayloads = value.ToArray();
+        public void AcceptDates(ReadOnlySpan<DateTimeOffset> value) => SeenDates = value.ToArray();
+        public void FillNames(Span<string> value)
+        {
+            for (int i = 0; i < value.Length; i++)
+            {
+                value[i] = $"filled-{i}";
+            }
+        }
         public void FillValues(Span<int> value) => value.Fill(42);
     }
 }
