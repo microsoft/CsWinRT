@@ -364,7 +364,7 @@ internal static partial class AbiMethodBodyFactory
                 {{storageT}}[] {{names.ArrayFromPool}} = null;
                 Span<{{storageT}}> {{names.Span}} = {{callName}}.Length <= 16
                     ? {{names.InlineArray}}[..{{callName}}.Length]
-                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
+                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                 """);
 
             if (szArr.BaseType.IsString() && cat == ParameterCategory.PassArray)
@@ -378,13 +378,13 @@ internal static partial class AbiMethodBodyFactory
                     HStringHeader[] {{names.HeaderArrayFromPool}} = null;
                     Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
                         ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
-                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                     
                     Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
                     nint[] {{names.PinnedHandleArrayFromPool}} = null;
                     Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
                         ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
-                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                     """);
             }
         }
@@ -1232,15 +1232,6 @@ internal static partial class AbiMethodBodyFactory
                             }
                             """);
                     }
-
-                    // Both PassArray and FillArray need the inline-array's nint pool returned.
-                    writer.WriteLine();
-                    writer.WriteLine(isMultiline: true, $$"""
-                        if ({{names.ArrayFromPool}} is not null)
-                        {
-                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
-                        }
-                        """);
                 }
                 else
                 {

@@ -374,6 +374,35 @@ namespace UnitTest
         }
 
         [TestMethod]
+        [DataRow(4, 4)]
+        [DataRow(4, 64)]
+        [DataRow(16, 4)]
+        [DataRow(16, 64)]
+        [DataRow(17, 4)]
+        [DataRow(17, 64)]
+        [DataRow(33, 4)]
+        [DataRow(33, 64)]
+        [DataRow(64, 4)]
+        [DataRow(64, 64)]
+        public void Array_String_Pooled(int count, int length)
+        {
+            string[] values = new string[count];
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = new string((char)('a' + i % 26), length);
+            }
+
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                string[] filled = new string[count];
+                string[] returned = Tests.Array12(values, filled, out string[] received);
+                CollectionAssert.AreEqual(values, filled);
+                CollectionAssert.AreEqual(values, received);
+                CollectionAssert.AreEqual(values, returned);
+            }
+        }
+
+        [TestMethod]
         public void Array_NullStringArray()
         {
             string[] a = null;
