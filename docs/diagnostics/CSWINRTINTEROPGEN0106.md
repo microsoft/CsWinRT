@@ -14,6 +14,8 @@ When receiver arguments and dispatch calls are discovered in different input mod
 
 Static-phase publications are admitted last, after the earlier join stages and their join-local instance-default fixpoint. They can join earlier receiver or demand observations without retrying already completed module-local pairs. The late counter is never reset between these stages.
 
+Demands discovered by late traversal itself are not part of the completed publication registry. If they need receivers imported by a later stage, those missing pairs are appended after all existing late work and its default/static descendants finish. They share the same remaining late allowance; exhaustion can leave these pairs incomplete, but they cannot displace earlier admitted contexts. Their transitive descendants continue through the ordinary worklist and default/static fixpoint without resetting the counter.
+
 Explicit signatures in the input assembly are discovery roots and do not count toward this limit. After the limit is reached, additional types found through member traversal can still be discovered, but their members are not scanned. Other discovery branches continue, and types only reachable through unscanned members may not receive all required marshalling support.
 
 Simplify the expanding generic pattern if this warning affects a required interop path. Setting `CsWinRTGeneratorTreatWarningsAsErrors` to `true` (or passing `--treat-warnings-as-errors true` to the tool) makes reaching the limit fail generation.

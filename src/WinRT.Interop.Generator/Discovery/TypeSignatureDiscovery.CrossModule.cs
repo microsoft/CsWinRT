@@ -55,6 +55,10 @@ internal partial class TypeSignatureDiscovery<TResult>
             ImportExpandedBodies(registry, phase);
 
             Dictionary<TypeSignature, int> phaseReceivers = ImportReceivers(registry, origins, phase);
+
+            // Imports skip inline joins, so demands seen before this phase must pair with its receivers explicitly later
+            _importedReceiverPhases.Add(phaseReceivers);
+
             List<ImportedDemand> phaseDemands = ImportDemands(registry, phase);
 
             // Earlier demands join only this phase's receivers, avoiding retries of pairs already considered
@@ -91,6 +95,118 @@ internal partial class TypeSignatureDiscovery<TResult>
             }
 
             previousDemands.AddRange(phaseDemands);
+        }
+    }
+
+    /// <summary>
+    /// Records a demand discovered by late traversal, which is absent from the completed publication registry.
+    /// </summary>
+    /// <param name="demand">The newly registered dispatch context.</param>
+    private void RecordLateDemand(DispatchContextRegistry.Demand demand)
+    {
+        // Late demands share the output module's origin; identify them by binding and composed declaring/method arguments
+        if (!_lateDemandContexts.TryGetValue(demand.Target.Ordinal, out Dictionary<IList<TypeSignature>, LateDemandObservation>? contexts))
+        {
+            contexts = new Dictionary<IList<TypeSignature>, LateDemandObservation>(_signatureComparer);
+
+            _lateDemandContexts.Add(demand.Target.Ordinal, contexts);
+        }
+
+        IList<TypeSignature> arguments = [demand.DeclarationType, .. demand.Arguments.TypeArguments];
+
+        // The first sighting fixes which imported phases 'RegisterDemand' could already join inline
+        if (!contexts.TryGetValue(arguments, out LateDemandObservation? observation))
+        {
+            observation = new LateDemandObservation(
+                demand: demand,
+                importedPhaseCount: _importedReceiverPhases.Count);
+
+            contexts.Add(arguments, observation);
+            _lateDemandObservations.Add(observation);
+        }
+
+        // A shallower registration rejoins current receivers inline; later-phase pairs must use that depth too
+        observation.Depth = Math.Min(observation.Depth, demand.Depth);
+    }
+
+    /// <summary>
+    /// Appends missing late demand/receiver pairs without displacing any previously admitted work.
+    /// </summary>
+    /// <returns>The signatures discovered from these pairs and their transitive descendants.</returns>
+    private IEnumerable<TResult> EnumerateLateDispatchMembers()
+    {
+        if (_transitiveTypeLimitReported)
+        {
+            yield break;
+        }
+
+        // Scheduling only enqueues bodies; demands recorded by the drains below already see every imported phase
+        foreach (LateDemandObservation observation in _lateDemandObservations)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            if (_transitiveTypeLimitReported)
+            {
+                break;
+            }
+
+            ScheduleLateDemand(observation);
+        }
+
+        // New demands and receivers encountered below join inline: every publication phase has already been imported
+        foreach (TResult result in EnumeratePendingMembers())
+        {
+            yield return result;
+        }
+
+        // The static/default fixpoint starts only from its deferred queues, so pending bodies must drain first
+        foreach (TResult result in EnumerateStaticDispatchMembers())
+        {
+            yield return result;
+        }
+    }
+
+    /// <summary>
+    /// Joins a late demand with receiver sightings imported after its first observation.
+    /// </summary>
+    /// <param name="observation">The demand, minimum depth, and first-observation phase boundary.</param>
+    private void ScheduleLateDemand(LateDemandObservation observation)
+    {
+        DispatchContextRegistry.Demand demand = observation.Demand;
+
+        if (!_receiverContexts.TryGetValue(demand.Target.Receiver, out Dictionary<TypeSignature, int>? receivers))
+        {
+            return;
+        }
+
+        // 'RegisterDemand' already considered earlier receiver phases inline; only later imports can leave missing pairs
+        for (int phase = observation.ImportedPhaseCount; phase < _importedReceiverPhases.Count; phase++)
+        {
+            Dictionary<TypeSignature, int> phaseReceivers = _importedReceiverPhases[phase];
+
+            foreach (TypeSignature receiver in receivers.Keys)
+            {
+                _token.ThrowIfCancellationRequested();
+
+                if (_transitiveTypeLimitReported)
+                {
+                    return;
+                }
+
+                // Keep this phase's own sighting depth, as 'ScheduleImportedDemand' does
+                if (!phaseReceivers.TryGetValue(receiver, out int receiverDepth))
+                {
+                    continue;
+                }
+
+                // No origin filter: late demands carry the output module's ordinal, but no module published or joined them
+                ScheduleDispatch(
+                    target: demand.Target,
+                    declarationType: demand.DeclarationType,
+                    arguments: demand.Arguments,
+                    receiverType: receiver,
+                    depth: Math.Max(receiverDepth, observation.Depth));
+            }
         }
     }
 
@@ -269,5 +385,22 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         /// <summary>The minimum depth for each origin that observed this binding and method context.</summary>
         public Dictionary<int, int> Depths { get; } = [];
+    }
+
+    /// <summary>
+    /// A late-local demand and the receiver phase boundary already available at its first sighting.
+    /// </summary>
+    /// <param name="demand">The first stable representative used for binding and ordering.</param>
+    /// <param name="importedPhaseCount">The number of receiver phases already imported at first sighting.</param>
+    private sealed class LateDemandObservation(DispatchContextRegistry.Demand demand, int importedPhaseCount)
+    {
+        /// <summary>The first stable representative used for binding and ordering.</summary>
+        public DispatchContextRegistry.Demand Demand { get; } = demand;
+
+        /// <summary>The receiver phases that were already available for inline joining.</summary>
+        public int ImportedPhaseCount { get; } = importedPhaseCount;
+
+        /// <summary>The minimum depth at which this binding and method context was observed.</summary>
+        public int Depth { get; set; } = demand.Depth;
     }
 }

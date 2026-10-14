@@ -114,6 +114,15 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>Demand contexts grouped by stable binding and origin ordinals.</summary>
     private readonly Dictionary<(int Target, int Origin), Dictionary<IList<TypeSignature>, int>> _demandContexts = [];
 
+    /// <summary>Receiver depths from each imported phase, in admission order.</summary>
+    private readonly List<Dictionary<TypeSignature, int>> _importedReceiverPhases = [];
+
+    /// <summary>Demands first discovered by late traversal, retained in observation order.</summary>
+    private readonly List<LateDemandObservation> _lateDemandObservations = [];
+
+    /// <summary>Minimum late demand depths for each binding and composed argument context.</summary>
+    private readonly Dictionary<int, Dictionary<IList<TypeSignature>, LateDemandObservation>> _lateDemandContexts = [];
+
     /// <summary>Dispatch-capable body contexts already expanded before the publishing barrier.</summary>
     private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _expandedBodies = new(ReferenceEqualityComparer.Instance);
 
@@ -278,6 +287,12 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             }
 
             foreach (TResult result in discovery.EnumerateStaticDispatchMembers())
+            {
+                yield return result;
+            }
+
+            // Reserve missing late pairs only after all existing joins and their descendants have drained
+            foreach (TResult result in discovery.EnumerateLateDispatchMembers())
             {
                 yield return result;
             }

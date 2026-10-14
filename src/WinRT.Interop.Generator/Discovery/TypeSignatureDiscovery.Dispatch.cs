@@ -150,14 +150,22 @@ internal partial class TypeSignatureDiscovery<TResult>
             // Generic receivers can still be closed later by a receiver observed here or in another module
             if (target.Receiver.GenericParameters.Count > 0)
             {
-                _ = RegisterDemand(new DispatchContextRegistry.Demand(
+                DispatchContextRegistry.Demand demand = new(
                     Target: target,
                     DeclarationType: declaringType,
                     Arguments: arguments,
                     Depth: depth,
                     Origin: _moduleOrdinal,
                     Sequence: _publicationSequence++,
-                    Phase: _dispatchPhase));
+                    Phase: _dispatchPhase);
+
+                bool registered = RegisterDemand(demand);
+
+                // Only the late pass has no registry, so later publication stages cannot import its new demands
+                if (registered && _dispatchContexts is null)
+                {
+                    RecordLateDemand(demand);
+                }
             }
         }
     }

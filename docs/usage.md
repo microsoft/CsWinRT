@@ -246,6 +246,8 @@ Receiver-driven non-generic defaults are deferred until the existing supplementa
 
 Additional constrained static calls form a final supplemental phase and use that same remaining allowance, not another 1024 reservations. Their ordinary callees, static initializers, and newly exposed instance defaults retain canonical member traversal and the static phase's provenance. Cross-module completion admits publications in generic-dispatch, instance-default, then static-dispatch order. It completes the existing join-local instance-default work before importing static publications, so later calls cannot displace those earlier contexts. Pairs involving an earlier demand and a newly published receiver, or a new demand and an earlier receiver, remain supported; module-local pairs are not retried with a fresh late budget.
 
+Dispatch calls discovered while completing cross-module joins can also require receivers imported by a later publication phase. These late-local demands are retained and paired after the existing joins and their default/static descendants finish, using only the remaining late allowance. Descendants of the appended pairs can interleave ordinary generic calls, instance defaults, and constrained static calls; newly discovered demands and receivers join inline once all publication phases have been imported.
+
 ### Opting in specific assemblies
 
 The `CsWinRTMarshallingEnabledAssembly` item lets you analyze specific assemblies regardless of the marshalling mode, unless explicitly excluded. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
