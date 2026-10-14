@@ -482,7 +482,7 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 
 - **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtprojectiongen`
-- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
+- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn, transitively through `WinRT.Generator.Core`), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
 
 **Three projection modes:**
 
@@ -593,7 +593,7 @@ A shared infrastructure library (`WinRT.Generator.Core.dll`) referenced by all f
 - **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`, `DisableRuntimeMarshalling`, `IsAotCompatible`
 - **Root namespace**: `WindowsRuntime.Generator` (the `.Core` suffix is dropped)
 - **Assembly name**: `WinRT.Generator.Core`
-- **Dependency**: `AsmResolver.DotNet`
+- **Dependencies**: `AsmResolver.DotNet`, and `Microsoft.CodeAnalysis.CSharp` (only for `SyntaxFacts`, so identifiers escaped by the build tools match the source generator's; the rest of Roslyn is trimmed away, so published tool size is unaffected)
 - **`[InternalsVisibleTo]`**: exposes its internals to the five CLI tool assemblies (`cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtprojectiongen`, `cswinrtprojectionrefgen`, `cswinrtwinmdgen`)
 
 **What it provides:**
@@ -604,7 +604,7 @@ A shared infrastructure library (`WinRT.Generator.Core.dll`) referenced by all f
 | Response files | `Parsing/ResponseFileParser`, `Parsing/ResponseFileBuilder`, `Attributes/CommandLineArgumentNameAttribute` | Reflection-based parsing/formatting of the `.rsp` files: properties are mapped to `--flag` names via `[CommandLineArgumentName]`, so each tool's `*Args` type is a plain record with no hand-written parse/format code |
 | Error contract | `Errors/IGeneratorErrorFactory`, `Errors/WellKnownGeneratorException`, `Errors/UnhandledGeneratorException`, `Errors/WellKnownGeneratorMessages`, `Errors/GeneratorExceptionExtensions` | The shared infrastructure is generic over an `IGeneratorErrorFactory` (a `static abstract` interface) so it can route the common logical errors (response-file parsing, debug-repro packing, etc.) through each tool's own `WellKnown*Exceptions` factory — preserving per-tool error IDs and the shared `{ErrorPrefix}9999` unhandled-exception format |
 | Debug repro | `DebugRepro/DebugReproPacker` | Shared helpers to package input files (with hashed names) into a self-contained `.zip` and to unpack/replay one (each tool still owns its per-category subfolder layout) |
-| Misc helpers | `Helpers/MvidGenerator`, `Helpers/GeneratorJsonSerializerContext`, `Extensions/{File,Path,RuntimeContext,IncrementalHash}Extensions`, `References/{WellKnownPublicKeys,WellKnownPublicKeyTokens}` | Deterministic MVID hashing, AOT-safe JSON, path/file/`RuntimeContext` extensions, and the strong-name public keys/tokens used when emitting or referencing assemblies |
+| Misc helpers | `Helpers/CSharpIdentifiers`, `Helpers/MvidGenerator`, `Helpers/GeneratorJsonSerializerContext`, `Extensions/{File,Path,RuntimeContext,IncrementalHash}Extensions`, `References/{WellKnownPublicKeys,WellKnownPublicKeyTokens}` | C# keyword checks and identifier escaping (matching the source generator), deterministic MVID hashing, AOT-safe JSON, path/file/`RuntimeContext` extensions, and the strong-name public keys/tokens used when emitting or referencing assemblies |
 
 The library has no error IDs of its own — the per-tool `WellKnown*Exceptions` factories (each with its own `CSWINRT*GEN` prefix) own them and are dispatched through `IGeneratorErrorFactory`.
 

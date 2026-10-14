@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Frozen;
-using System.Globalization;
 using System.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace WindowsRuntime.Generator.Helpers;
 
@@ -13,29 +12,13 @@ namespace WindowsRuntime.Generator.Helpers;
 internal static class CSharpIdentifiers
 {
     /// <summary>
-    /// The set of reserved C# keywords (matching what <c>SyntaxFacts.GetKeywordKind</c> recognizes in Roslyn, which the
-    /// CsWinRT source generator uses, so names escaped by both agree).
-    /// </summary>
-    private static readonly FrozenSet<string> Keywords =
-    [
-        "__arglist", "__makeref", "__reftype", "__refvalue",
-        "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue",
-        "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally",
-        "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long",
-        "namespace", "new", "null", "object", "operator", "out", "override", "params", "private", "protected", "public",
-        "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch",
-        "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void",
-        "volatile", "while"
-    ];
-
-    /// <summary>
     /// Returns whether <paramref name="identifier"/> is a reserved C# keyword.
     /// </summary>
     /// <param name="identifier">The identifier to test.</param>
     /// <returns><see langword="true"/> if <paramref name="identifier"/> is a C# keyword; otherwise <see langword="false"/>.</returns>
     public static bool IsKeyword(string identifier)
     {
-        return Keywords.Contains(identifier);
+        return SyntaxFacts.GetKeywordKind(identifier) is not SyntaxKind.None;
     }
 
     /// <summary>
@@ -59,7 +42,7 @@ internal static class CSharpIdentifiers
 
         string escapedValue;
 
-        if (IsValidIdentifier(value))
+        if (SyntaxFacts.IsValidIdentifier(value))
         {
             escapedValue = value;
         }
@@ -67,62 +50,19 @@ internal static class CSharpIdentifiers
         {
             StringBuilder builder = new(value.Length + 1);
 
-            if (!IsIdentifierStartCharacter(value[0]))
+            if (!SyntaxFacts.IsIdentifierStartCharacter(value[0]))
             {
                 _ = builder.Append('_');
             }
 
             foreach (char c in value)
             {
-                _ = builder.Append(IsIdentifierPartCharacter(c) ? c : '_');
+                _ = builder.Append(SyntaxFacts.IsIdentifierPartCharacter(c) ? c : '_');
             }
 
             escapedValue = builder.ToString();
         }
 
         return IsKeyword(escapedValue) ? $"_{escapedValue}" : escapedValue;
-
-        static bool IsValidIdentifier(string value)
-        {
-            if (!IsIdentifierStartCharacter(value[0]))
-            {
-                return false;
-            }
-
-            foreach (char c in value)
-            {
-                if (!IsIdentifierPartCharacter(c))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        static bool IsIdentifierStartCharacter(char c) => c == '_' || IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(c));
-
-        static bool IsIdentifierPartCharacter(char c)
-        {
-            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
-
-            return IsLetterChar(category) || category is
-                UnicodeCategory.DecimalDigitNumber or
-                UnicodeCategory.ConnectorPunctuation or
-                UnicodeCategory.NonSpacingMark or
-                UnicodeCategory.SpacingCombiningMark or
-                UnicodeCategory.Format;
-        }
-
-        static bool IsLetterChar(UnicodeCategory category)
-        {
-            return category is
-                UnicodeCategory.UppercaseLetter or
-                UnicodeCategory.LowercaseLetter or
-                UnicodeCategory.TitlecaseLetter or
-                UnicodeCategory.ModifierLetter or
-                UnicodeCategory.OtherLetter or
-                UnicodeCategory.LetterNumber;
-        }
     }
 }

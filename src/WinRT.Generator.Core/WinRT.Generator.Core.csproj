@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <ItemGroup>

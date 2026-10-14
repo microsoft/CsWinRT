@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <PackageReference Include="Basic.Reference.Assemblies.Net100" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 
     <!-- Core MSTest attributes/assertions -->
     <PackageReference Include="MSTest.TestFramework" />
