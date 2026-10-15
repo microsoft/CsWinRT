@@ -320,7 +320,8 @@ namespace System
             Task.ContinueWith(static (_, state) =>
             {
                 Interlocked.Exchange(ref ((AsyncInfoToTaskBridge<TResult, TProgress>)state)._asyncInfo, null);
-            }, this,
+            },
+                this,
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);
