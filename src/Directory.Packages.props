@@ -22,12 +22,11 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
     <PackageVersion Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-25565-01" />
     <PackageVersion Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.109" />
-    <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.14.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
+    <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="18.11.0" />
     <PackageVersion Include="Microsoft.VCRTForwarders.140" Version="1.1.0" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
-    <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.1.635-beta" />
     <PackageVersion Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="[10.0.26100.9169]" />
@@ -35,24 +34,17 @@
     <PackageVersion Include="Microsoft.WindowsAppSDK.Foundation" Version="$(MicrosoftWinAppSDKFoundationVersion)" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="$(MicrosoftWinAppSDKIxpVersion)" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="$(MicrosoftWinAppSDKWinUIVersion)" />
-    <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NUnit" Version="3.12.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageVersion Include="Perfolizer" Version="0.2.1" />
-    <PackageVersion Include="PolySharp" Version="1.15.0" />
     <PackageVersion Include="SimpleMathComponent" Version="0.1.0-prerelease" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
-    <PackageVersion Include="System.Memory" Version="4.5.4" />
     <PackageVersion Include="System.Numerics.Tensors" Version="9.0.7" />
-    <PackageVersion Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageVersion Include="System.Runtime.Extensions" Version="4.3.1" />
-    <PackageVersion Include="MSTest.TestAdapter" Version="4.1.0" />
-    <PackageVersion Include="MSTest.TestFramework" Version="4.1.0" />
-    <PackageVersion Include="MSTest.Analyzers" Version="4.1.0" />
-    <PackageVersion Include="MSTest.Engine" Version="2.0.0-alpha.26103.11" />
-    <PackageVersion Include="MSTest.SourceGeneration" Version="2.0.0-alpha.26103.11" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.1.0" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.1.0" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="4.5.1" />
+    <PackageVersion Include="MSTest.TestFramework" Version="4.5.1" />
+    <PackageVersion Include="MSTest.Analyzers" Version="4.5.1" />
+    <PackageVersion Include="MSTest.SourceGeneration" Version="4.5.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.5.1" />
   </ItemGroup>
 </Project>

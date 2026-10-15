@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFramework>net10.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <CsWinRTEnabled>false</CsWinRTEnabled>
@@ -31,7 +32,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 
     <!-- MSTest runner and generators -->
-    <PackageReference Include="MSTest.Engine" />
+    <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.SourceGeneration" />
   </ItemGroup>
 

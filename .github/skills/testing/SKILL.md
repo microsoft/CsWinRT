@@ -25,8 +25,9 @@ CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. 
 - **Test framework:** MSTest (`[TestClass]`, `[TestMethod]`, `Assert.*`)
 - **TFM:** Variable via `$(AppBuildTFMs)`, multi-platform (x86/x64)
 - **Output type:** Exe, self-contained, AOT-enabled
-- **Key dependencies:** MSTest.TestFramework, MSTest.Engine, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
+- **Key dependencies:** MSTest.TestFramework, MSTest.TestAdapter, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
 - **References:** WinRT.SourceGenerator2 (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
+- **Runner:** `EnableMSTestRunner=true` enables MTP through `MSTest.TestAdapter`; `MSTest.SourceGeneration` supplies trim/AOT-safe metadata. `MSTest.Engine` is not needed.
 
 **Test organization:**
 - Single namespace: `UnitTest`
@@ -338,4 +339,5 @@ A **WinRT test component** (defined in `TestComponentCSharp.idl`, implemented in
 - Test naming: `DescriptiveCondition_ExpectedBehavior` for analyzer/generator tests
 - Use raw string literals (`"""..."""`) for inline source code in generator/analyzer tests
 - Use `[DataRow]` for parameterized MSTest tests
+- In `UnitTest`, use `[DynamicData]` for array `Type` arguments to avoid the Native AOT argument-packing failures observed with `[DataRow]`. The stable MSTest source generator omits direct `typeof(T[])` arguments from generated attribute metadata and falls back to reflection; this omission does not cause failures in every test project. Use `typeof(T[])` in the provider; its IL type token is visible to WinRT interop discovery.
 - Keep test methods focused — one scenario per test
