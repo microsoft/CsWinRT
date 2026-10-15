@@ -311,17 +311,19 @@ namespace System
 
             _asyncInfo = asyncInfo;
 
-            // The operation's completion delegate targets this bridge, and the returned task does not itself retain
-            // the bridge. Without another root (such as a live cancellation registration), GC can release
-            // the RCW's native references before completion. Some operations, including PackageManager deployments,
-            // then stop delivering completion callbacks, leaving the task pending. Retain the bridge through a pending
-            // continuation, clearing its RCW reference on all task-completion paths, including cancellation without a
-            // native completion callback. This avoids retaining the RCW in Task.AsyncState for the task's lifetime.
+            // Keep the operation's RCW alive while the task is pending. The native completion delegate targets this
+            // bridge, so retaining the task alone would not otherwise retain the RCW. Releasing its native references
+            // early can stop completion callbacks for some implementations, including PackageManager deployments.
+            // The pending continuation keeps this bridge reachable from the task and clears its RCW reference when
+            // the task completes, including cancellation without a native callback. This releases the operation even
+            // if the caller retains the completed task.
             Task.ContinueWith(static (_, state) =>
             {
                 Interlocked.Exchange(ref ((AsyncInfoToTaskBridge<TResult, TProgress>)state)._asyncInfo, null);
             }, this,
-                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
 
             this._ct = cancellationToken;
             if (this._ct.CanBeCanceled)
