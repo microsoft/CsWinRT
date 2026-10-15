@@ -27,19 +27,34 @@ namespace UnitTest
         [InlineData(2, AsyncStatus.Canceled)]
         [InlineData(3, AsyncStatus.Canceled)]
         [InlineData(4, AsyncStatus.Canceled)]
-        public void PendingTaskKeepsAsyncInfoAlive(int kind, AsyncStatus status)
+        public void AsyncInfoSurvivesUntilCompletionAndIsCollected(int kind, AsyncStatus status)
         {
             var instance = new Class();
-            var (task, operation) = Start(instance, kind);
+            var (weakTask, weakOperation) = CompleteOperation(instance, kind, status);
+            Assert.True(SpinWait.SpinUntil(() =>
+            {
+                Collect();
+                return !weakTask.IsAlive && !weakOperation.IsAlive;
+            }, 5000), "The completed task and its operation must be collectible once the caller releases the task.");
+            GC.KeepAlive(instance);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static (WeakReference WeakTask, WeakReference WeakOperation) CompleteOperation(
+            Class instance,
+            int kind,
+            AsyncStatus status)
+        {
+            var (task, weakOperation) = Start(instance, kind);
 
             Collect();
-            Assert.True(operation.IsAlive, "The pending task must keep its WinRT operation alive.");
+            Assert.True(weakOperation.IsAlive, "The WinRT operation must survive collection while awaiting completion.");
             Assert.False(task.IsCompleted);
 
             const int E_FAIL = unchecked((int)0x80004005);
             if (status == AsyncStatus.Canceled)
             {
-                Cancel(operation);
+                Cancel(weakOperation);
             }
             else if (kind == 4)
             {
@@ -57,10 +72,12 @@ namespace UnitTest
                 if (task is Task<int> result)
                 {
                     Assert.Equal(50, result.Result);
+                    Assert.Equal(50, result.GetAwaiter().GetResult());
                 }
                 else if (task is Task<uint> unsignedResult)
                 {
                     Assert.Equal(50u, unsignedResult.Result);
+                    Assert.Equal(50u, unsignedResult.GetAwaiter().GetResult());
                 }
             }
             else
@@ -78,14 +95,7 @@ namespace UnitTest
                 }
             }
 
-            // Task completion can wake this thread before the native completion callback has returned.
-            Assert.True(SpinWait.SpinUntil(() =>
-            {
-                Collect();
-                return !operation.IsAlive;
-            }, 5000), "The completed task must release its WinRT operation.");
-            GC.KeepAlive(task);
-            GC.KeepAlive(instance);
+            return (new WeakReference(task), weakOperation);
         }
 
         [Theory]
@@ -121,10 +131,44 @@ namespace UnitTest
             }
             else
             {
-                var error = Assert.Throws<AggregateException>(() => task.Wait(5000));
+                Assert.True(task.IsCompleted);
+                var error = Assert.Throws<AggregateException>(task.Wait);
                 Assert.Equal(E_FAIL, error.InnerException.HResult);
             }
             GC.KeepAlive(instance);
+        }
+
+        [Theory]
+        [InlineData(AsyncStatus.Completed)]
+        [InlineData(AsyncStatus.Error)]
+        public void WrlCompletionSurvivesWithoutCallerTaskReference(AsyncStatus status)
+        {
+            var instance = new Class();
+            var called = new TaskCompletionSource<AsyncStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var (weakTask, weakOperation) = StartAbandonedWrlAddition(instance,
+                (_, completedStatus) => called.TrySetResult(completedStatus));
+
+            Collect();
+            Assert.False(called.Task.IsCompleted);
+            const int E_FAIL = unchecked((int)0x80004005);
+            Assert.True(instance.TryCompleteWrlAsync(status == AsyncStatus.Error ? E_FAIL : 0));
+            Assert.True(called.Task.Wait(5000));
+            Assert.Equal(status, called.Task.Result);
+            Assert.True(SpinWait.SpinUntil(() =>
+            {
+                Collect();
+                return !weakTask.IsAlive && !weakOperation.IsAlive;
+            }, 5000), "The abandoned task and its WinRT operation must be collectible after completion.");
+            GC.KeepAlive(instance);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static (WeakReference WeakTask, WeakReference WeakOperation) StartAbandonedWrlAddition(Class instance,
+            AsyncOperationWithProgressCompletedHandler<uint, uint> observer)
+        {
+            var operation = instance.WrlAddAsyncWithProgress(42, 8, observer);
+            var task = operation.AsTask();
+            return (new WeakReference(task), new WeakReference(operation));
         }
 
         [Theory]
@@ -133,6 +177,19 @@ namespace UnitTest
         public void WrlOperationCanceledThroughToken(bool alreadyCanceled)
         {
             var instance = new Class();
+            var (weakTask, weakOperation) = CancelWrlOperation(instance, alreadyCanceled);
+            Assert.True(SpinWait.SpinUntil(() =>
+            {
+                Collect();
+                return !weakTask.IsAlive && !weakOperation.IsAlive;
+            }, 5000), "The canceled task and its operation must be collectible once the caller releases the task.");
+            GC.KeepAlive(instance);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static (WeakReference WeakTask, WeakReference WeakOperation) CancelWrlOperation(
+            Class instance, bool alreadyCanceled)
+        {
             using var cancellation = new CancellationTokenSource();
             if (alreadyCanceled)
             {
@@ -140,7 +197,7 @@ namespace UnitTest
             }
             var called = new TaskCompletionSource<AsyncStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
             int callbackCount = 0;
-            var (task, operation) = StartCancellableWrlAddition(instance, (_, status) =>
+            var (task, weakOperation) = StartCancellableWrlAddition(instance, (_, status) =>
             {
                 Interlocked.Increment(ref callbackCount);
                 called.TrySetResult(status);
@@ -157,15 +214,10 @@ namespace UnitTest
             Assert.True(called.Task.Wait(5000), "The WRL cancellation completion handler was not called.");
             Assert.Equal(AsyncStatus.Canceled, called.Task.Result);
             Assert.Equal(1, callbackCount);
-            var error = Assert.Throws<TaskCanceledException>(() => task.GetAwaiter().GetResult());
+            // A lambda capturing task would share the closure retained by the native observer above.
+            var error = Assert.Throws<TaskCanceledException>(((Task)task).GetAwaiter().GetResult);
             Assert.Equal(cancellation.Token, error.CancellationToken);
-            Assert.True(SpinWait.SpinUntil(() =>
-            {
-                Collect();
-                return !operation.IsAlive;
-            }, 5000), "The canceled task must release its WinRT operation.");
-            GC.KeepAlive(task);
-            GC.KeepAlive(instance);
+            return (new WeakReference(task), weakOperation);
         }
 
         [Theory]
@@ -305,7 +357,7 @@ namespace UnitTest
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static (Task<uint> Task, WeakReference Operation) StartCancellableWrlAddition(Class instance,
+        private static (Task<uint> Task, WeakReference WeakOperation) StartCancellableWrlAddition(Class instance,
             AsyncOperationWithProgressCompletedHandler<uint, uint> observer, CancellationToken token)
         {
             var operation = instance.WrlAddAsyncWithProgress(42, 8, observer);
@@ -320,13 +372,13 @@ namespace UnitTest
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void Cancel(WeakReference operation)
+        private static void Cancel(WeakReference weakOperation)
         {
-            ((IAsyncInfo)operation.Target).Cancel();
+            ((IAsyncInfo)weakOperation.Target).Cancel();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static (Task Task, WeakReference Operation) Start(Class instance, int kind)
+        private static (Task Task, WeakReference WeakOperation) Start(Class instance, int kind)
         {
             switch (kind)
             {

@@ -299,32 +299,19 @@ namespace System
         private const int JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
 
         private readonly CancellationToken _ct;
-        private IAsyncInfo _asyncInfo;
         private readonly CancellationTokenRegistration _registration;
 
         internal AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+            // The native completion delegate targets this bridge, not the operation's RCW. Store the operation in
+            // Task.AsyncState so retaining the task also retains the RCW and its native references. Otherwise some
+            // implementations, including PackageManager deployments, can stop delivering completion callbacks.
+            // This deliberately retains the operation for the task's lifetime, including after completion.
+            : base(asyncInfo)
         {
             if (asyncInfo == null)
             {
                 throw new ArgumentNullException(nameof(asyncInfo));
             }
-
-            _asyncInfo = asyncInfo;
-
-            // Keep the operation's RCW alive while the task is pending. The native completion delegate targets this
-            // bridge, so retaining the task alone would not otherwise retain the RCW. Releasing its native references
-            // early can stop completion callbacks for some implementations, including PackageManager deployments.
-            // The pending continuation keeps this bridge reachable from the task and clears its RCW reference when
-            // the task completes, including cancellation without a native callback. This releases the operation even
-            // if the caller retains the completed task.
-            Task.ContinueWith(static (_, state) =>
-            {
-                Interlocked.Exchange(ref ((AsyncInfoToTaskBridge<TResult, TProgress>)state)._asyncInfo, null);
-            },
-                this,
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
 
             this._ct = cancellationToken;
             if (this._ct.CanBeCanceled)
@@ -356,8 +343,7 @@ namespace System
         {
             try
             {
-                // Completion may have released the source before this cancellation callback starts.
-                Volatile.Read(ref _asyncInfo)?.Cancel();
+                ((IAsyncInfo)Task.AsyncState).Cancel();
             }
             catch (Exception e) when (
                 e is COMException comException &&
