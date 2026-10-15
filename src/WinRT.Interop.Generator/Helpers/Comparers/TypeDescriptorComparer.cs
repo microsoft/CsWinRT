@@ -126,8 +126,9 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
 
         if (result == 0)
         {
-            // Display names omit the assembly scopes of generic arguments. For example, a type
-            // and a reference through its forwarding assembly can otherwise sort as equal.
+            // Resolving a type specification other than an SZ array (e.g. a by-ref, pointer, or modified type)
+            // drops its shape and the generic arguments of its element type, including within generic arguments.
+            // Break those ties by comparing the type arguments and specification element types structurally.
             if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
             {
                 result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);

@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -25,10 +26,15 @@ internal static class InteropIncrementalRunner
     private const string ImplementationPaths = "--implementation-assembly-paths";
     private const string OutputDirectory = "--generated-assembly-directory";
 
+    // Layout of the record written by 'InteropGenerationCache': magic, fingerprint, digest, DLL length, MVID offset
+    private const int CacheMvidOffsetOffset = 8 + 32 + 32 + sizeof(long);
+    private const int CacheRecordSize = CacheMvidOffsetOffset + sizeof(long);
+
     private static readonly string[] Scenarios =
     [
         "cold", "unchanged", "reordered-paths", "generic-argument-scopes",
-        "missing-output", "missing-cache", "malformed-cache", "truncated-cache", "corrupt-dll", "truncated-dll",
+        "missing-output", "missing-cache", "malformed-cache", "truncated-cache", "misplaced-mvid-cache",
+        "zeroed-mvid-misplaced-cache", "corrupt-dll", "truncated-dll", "corrupt-mvid",
         "opt-out-cold", "opt-out", "re-enable",
         "method-body", "unrelated-type", "type-identity", "assembly-identity", "assembly-version",
         "runtime-class-name", "interop-usage",
@@ -172,7 +178,7 @@ internal static class InteropIncrementalRunner
             RecordMutation(path, mutation, directory);
         }
 
-        bool expectHit = name is "unchanged" or "reordered-paths" or "generic-argument-scopes" or "method-body" or "unrelated-type";
+        bool expectHit = name is "unchanged" or "reordered-paths" or "generic-argument-scopes" or "corrupt-mvid" or "method-body" or "unrelated-type";
         bool enabled = name is not ("opt-out" or "opt-out-cold");
         string cachePath = Path.Combine(cachedDirectory, CacheName);
         string dllPath = Path.Combine(cachedDirectory, DllName);
@@ -186,16 +192,25 @@ internal static class InteropIncrementalRunner
                 File.Delete(cachePath);
                 break;
             case "malformed-cache":
-                RecordMutation(cachePath, path => File.WriteAllText(path, "This is not an interop cache."), directory);
+                RecordMutation(cachePath, ChangeCacheMagic, directory);
                 break;
             case "truncated-cache":
                 RecordMutation(cachePath, Truncate, directory);
+                break;
+            case "misplaced-mvid-cache":
+                RecordMutation(cachePath, path => MoveCacheMvidOffset(path, -1), directory);
+                break;
+            case "zeroed-mvid-misplaced-cache":
+                ZeroMvidAndMoveCacheMvidOffset(dllPath, cachePath, directory);
                 break;
             case "corrupt-dll":
                 RecordMutation(dllPath, ChangePeBytesKeepingMvid, directory);
                 break;
             case "truncated-dll":
                 RecordMutation(dllPath, Truncate, directory);
+                break;
+            case "corrupt-mvid":
+                RecordMutation(dllPath, ChangeMvidOnly, directory);
                 break;
             case "method-body":
             case "unrelated-type":
@@ -402,7 +417,66 @@ internal static class InteropIncrementalRunner
     {
         byte[] bytes = File.ReadAllBytes(path);
         Require(bytes.Length > 1, $"Cannot truncate '{path}': it is already too short.");
-        File.WriteAllBytes(path, bytes.AsSpan(0, bytes.Length / 2).ToArray());
+        File.WriteAllBytes(path, bytes.AsSpan(0, bytes.Length / 2));
+    }
+
+    private static void ChangeCacheMagic(string path)
+    {
+        byte[] bytes = ReadCacheRecord(path);
+        bytes[0] ^= 1;
+        File.WriteAllBytes(path, bytes);
+    }
+
+    // The digest excludes the 16 bytes at the recorded offset, so moving it must invalidate the cache
+    private static void MoveCacheMvidOffset(string path, int delta)
+    {
+        byte[] bytes = ReadCacheRecord(path);
+        Span<byte> value = bytes.AsSpan(CacheMvidOffsetOffset, sizeof(long));
+        long offset = BinaryPrimitives.ReadInt64LittleEndian(value);
+        Require(offset + delta >= 0, $"Unexpected MVID offset in '{path}': {offset}.");
+        BinaryPrimitives.WriteInt64LittleEndian(value, offset + delta);
+        File.WriteAllBytes(path, bytes);
+    }
+
+    // Zeroing the (excluded) MVID entry and moving the recorded offset onto an adjacent zero byte makes both
+    // offsets clear identical bytes. The cache must still reject the record rather than patch the wrong bytes.
+    private static void ZeroMvidAndMoveCacheMvidOffset(string dllPath, string cachePath, string directory)
+    {
+        int offset = checked((int)BinaryPrimitives.ReadInt64LittleEndian(ReadCacheRecord(cachePath).AsSpan(CacheMvidOffsetOffset)));
+        byte[] bytes = File.ReadAllBytes(dllPath);
+        Require(offset > 0 && offset + 16 < bytes.Length &&
+                bytes.AsSpan(offset, 16).SequenceEqual(ReadMvid(dllPath).ToByteArray()),
+            $"The cache record does not point to the MVID of '{dllPath}'.");
+        int delta = bytes[offset - 1] == 0 ? -1 : bytes[offset + 16] == 0 ? 1 : 0;
+        Require(delta != 0, $"The MVID in '{dllPath}' has no adjacent zero byte to move the recorded offset onto.");
+        byte[] zeroed = (byte[])bytes.Clone();
+        zeroed.AsSpan(offset, 16).Clear();
+        RecordMutation(dllPath, path => File.WriteAllBytes(path, zeroed), directory);
+        RecordMutation(cachePath, path => MoveCacheMvidOffset(path, delta), directory);
+    }
+
+    private static byte[] ReadCacheRecord(string path)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        Require(bytes.Length == CacheRecordSize, $"Unexpected cache record length in '{path}': {bytes.Length} bytes.");
+        return bytes;
+    }
+
+    // Changes only the MVID of a generated DLL, locating its bytes by value rather than by metadata offsets
+    private static void ChangeMvidOnly(string path)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        Guid mvid = ReadMvid(path);
+        byte[] mvidBytes = mvid.ToByteArray();
+        int offset = bytes.AsSpan().IndexOf(mvidBytes);
+        Require(offset >= 0 && bytes.AsSpan(offset + 1).IndexOf(mvidBytes) < 0,
+            $"The MVID {mvid} must occur exactly once in '{path}'.");
+        for (int i = 0; i < mvidBytes.Length; i++)
+        {
+            bytes[offset + i] ^= 0xFF;
+        }
+        File.WriteAllBytes(path, bytes);
+        Require(ReadMvid(path) != mvid, "The MVID mutation did not change the MVID.");
     }
 
     private static string Hash(string path)
