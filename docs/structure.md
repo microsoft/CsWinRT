@@ -84,13 +84,14 @@ Contains various testing-related projects:
   |-----------|----------|
   | `cold`, `unchanged`, `reordered-paths` | Cold generation; five unchanged hits with parallelism `-1, 1, 2, -1, 1`; reversed reference/implementation path lists |
   | `generic-argument-scopes` | Five forced-fresh emissions and cache hits with parallelism `1, 2, -1, 1, 2` and alternating input order, comparing whole DLLs to catch scope-insensitive sorting of nested generic/array arguments |
-  | `missing-output`, `missing-cache`, `malformed-cache`, `truncated-cache`, `corrupt-dll`, `truncated-dll` | Recovery from absent or damaged cache artifacts, including same-length DLL corruption outside the MVID |
+  | `missing-output`, `missing-cache`, `malformed-cache`, `truncated-cache`, `misplaced-mvid-cache`, `zeroed-mvid-misplaced-cache`, `corrupt-dll`, `truncated-dll` | Recovery from absent or damaged cache artifacts, including same-length records with an invalid magic or a moved MVID offset (also onto an adjacent zero byte after zeroing the cached MVID, so both offsets clear identical bytes), and same-length DLL corruption outside the MVID |
+  | `corrupt-mvid` | A hit that repairs a DLL whose MVID bytes alone were changed |
   | `opt-out-cold`, `opt-out`, `re-enable` | Opt-out with absent/existing caches, and stale-cache rejection after disabled generation replaces the DLL with changed interop code |
   | `method-body`, `unrelated-type` | Hits after verified actual IL-byte changes or a plain managed type addition, with new input and output MVIDs |
   | `type-identity`, `assembly-identity`, `assembly-version`, `runtime-class-name`, `interop-usage` | Misses after exposed type/assembly changes, adding a runtime class name marker, or adding another exposed type |
   | `runtime-bytes`, `framework-bytes`, `projection-bytes`, `reference-projection-bytes` | Full-byte invalidation of runtime, framework, private SDK projection, and reference projection inputs while keeping their MVIDs unchanged |
 
-  All 24 scenarios run by default, with a fixed repetition count; use the comma-separated `--scenario` selector for small batches on expensive repros. `reference-projection-bytes` deterministically selects an assembly carrying `[WindowsRuntimeReferenceAssembly]` and fails clearly if none is available. Optionally append `--baseline-generator <previous-generator.exe|previous-generator.dll>` to compare the unmodified seed output with a cache-disabled emission from a pre-change generator as well. Both managed and Native AOT tools are supported.
+  All 27 scenarios run by default, with a fixed repetition count; use the comma-separated `--scenario` selector for small batches on expensive repros. `reference-projection-bytes` deterministically selects an assembly carrying `[WindowsRuntimeReferenceAssembly]` and fails clearly if none is available. Optionally append `--baseline-generator <previous-generator.exe|previous-generator.dll>` to compare the unmodified seed output with a cache-disabled emission from a pre-change generator as well. Both managed and Native AOT tools are supported.
 
   On failure the runner stops, preserving the mutated inputs, response files, complete stdout/stderr logs, output hashes/MVIDs, and DLL/cache files under the named scenario directory. On success it removes only its owned replay directory.
 

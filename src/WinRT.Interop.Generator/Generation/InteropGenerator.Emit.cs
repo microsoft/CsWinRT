@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
@@ -206,6 +207,131 @@ internal partial class InteropGenerator
 
         // Write the optional interop generation report
         WriteLog(args, discoveryState, module);
+    }
+
+    /// <summary>
+    /// Normalizes equivalent assembly references in the loaded modules before emission.
+    /// </summary>
+    /// <param name="discoveryState">The completed discovery state.</param>
+    /// <remarks>
+    /// Only the in-memory metadata is updated, after parallel discovery (and its validation) has completed.
+    /// This runs before computing the incremental generation fingerprint, so both see the same references.
+    /// </remarks>
+    private static void NormalizeAssemblyReferences(InteropGeneratorDiscoveryState discoveryState)
+    {
+        ModuleDefinition[] modules = [.. discoveryState.Modules.Values.Concat([
+            discoveryState.WindowsRuntimeSdkProjectionModule,
+            discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+            discoveryState.WindowsRuntimeProjectionModule,
+            discoveryState.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>()];
+
+        Dictionary<AssemblyDescriptor, AssemblyDefinition> assemblies = new(discoveryState.SignatureComparer);
+
+        // Index the loaded assembly definitions, preferring the highest version for equivalent identities. Implicit
+        // imports copy processor-architecture flags from definitions (e.g. '0x70' in 'System.Runtime'), while ordinary
+        // references omit them. These flags are not part of .NET assembly binding, so we can just remove them.
+        foreach (ModuleDefinition module in modules.OrderByDescending(static module => module.Assembly?.Version))
+        {
+            if (module.Assembly is { } assembly)
+            {
+                assembly.Attributes &= ~AssemblyAttributes.FullMask;
+
+                _ = assemblies.TryAdd(assembly, assembly);
+            }
+        }
+
+        // Normalize all assembly references declared by each loaded module
+        foreach (ModuleDefinition module in modules)
+        {
+            foreach (AssemblyReference reference in module.AssemblyReferences)
+            {
+                Normalize(reference);
+            }
+
+            if (module.CorLibTypeFactory.CorLibScope is AssemblyReference corLib)
+            {
+                Normalize(corLib);
+            }
+        }
+
+        HashSet<TypeSignature> visited = new(ReferenceEqualityComparer.Instance);
+        IEnumerable<TypeSignature> types = discoveryState.GenericDelegateTypes
+            .Concat(discoveryState.IEnumerator1Types)
+            .Concat(discoveryState.IEnumerable1Types)
+            .Concat(discoveryState.IReadOnlyList1Types)
+            .Concat(discoveryState.IList1Types)
+            .Concat(discoveryState.IReadOnlyDictionary2Types)
+            .Concat(discoveryState.IDictionary2Types)
+            .Concat(discoveryState.KeyValuePairTypes)
+            .Concat(discoveryState.IMapChangedEventArgs1Types)
+            .Concat(discoveryState.IObservableVector1Types)
+            .Concat(discoveryState.IObservableMap2Types)
+            .Concat(discoveryState.IAsyncActionWithProgress1Types)
+            .Concat(discoveryState.IAsyncOperation1Types)
+            .Concat(discoveryState.IAsyncOperationWithProgress2Types)
+            .Cast<TypeSignature>()
+            .Concat(discoveryState.UserDefinedTypes)
+            .Concat(discoveryState.SzArrayAndVtableTypes.Keys)
+            .Concat(discoveryState.UserDefinedVtableTypes.SelectMany(static types => types))
+            .Concat(discoveryState.SzArrayAndVtableTypes.Values.SelectMany(static types => types));
+
+        // Also normalize the scopes of all discovered signatures, which can be created outside of module references
+        foreach (TypeSignature type in types)
+        {
+            NormalizeType(type);
+        }
+
+        // Normalizes the scopes of a signature and of all its nested signatures
+        void NormalizeType(TypeSignature type)
+        {
+            if (!visited.Add(type))
+            {
+                return;
+            }
+
+            if (type.Scope?.GetAssembly() is AssemblyReference reference)
+            {
+                Normalize(reference);
+            }
+
+            if (type is GenericInstanceTypeSignature generic)
+            {
+                foreach (TypeSignature argument in generic.TypeArguments)
+                {
+                    NormalizeType(argument);
+                }
+            }
+            else if (type is TypeSpecificationSignature specification)
+            {
+                NormalizeType(specification.BaseType);
+            }
+        }
+
+        // Normalizes the version, flags, and public key of an assembly reference
+        void Normalize(AssemblyReference reference)
+        {
+            // Never retarget a CsWinRT 2.x reference to the loaded runtime (only reachable if validation is disabled)
+            if (reference.Name?.AsSpan().SequenceEqual("WinRT.Runtime"u8) is true && reference.Version.Major < 3)
+            {
+                return;
+            }
+
+            // IgnoreVersion deduplication must not let a parallel worker randomly choose an
+            // older BCL reference (e.g. System.Runtime 6 versus 10) for the emitted signature.
+            if (assemblies.TryGetValue(reference, out AssemblyDefinition? definition))
+            {
+                reference.Version = definition.Version;
+            }
+
+            reference.Attributes &= ~AssemblyAttributes.FullMask;
+
+            // Equivalent references can use either the full public key or its token
+            if (reference.HasPublicKey)
+            {
+                reference.PublicKeyOrToken = reference.GetPublicKeyToken();
+                reference.HasPublicKey = false;
+            }
+        }
     }
 
     /// <summary>

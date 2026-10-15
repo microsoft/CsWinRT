@@ -24,8 +24,26 @@ internal static class InteropGenerationCache
     /// <summary>The name of the cache record, relative to the generated assembly directory.</summary>
     private const string CacheFileName = "WinRT.Interop.cache";
 
-    /// <summary>The fixed size of a versioned record (magic, key, output digest, length, MVID offset).</summary>
-    private const int RecordSize = 8 + SHA256.HashSizeInBytes + SHA256.HashSizeInBytes + sizeof(long) + sizeof(long);
+    /// <summary>The size of the MVID entry in the GUID heap of the generated assembly.</summary>
+    private const int MvidSize = 16;
+
+    /// <summary>The offset of the fingerprint in a cache record (after the magic and format version).</summary>
+    private const int FingerprintOffset = 8;
+
+    /// <summary>The offset of the digest of the generated assembly in a cache record.</summary>
+    private const int DigestOffset = FingerprintOffset + SHA256.HashSizeInBytes;
+
+    /// <summary>The offset of the length of the generated assembly in a cache record.</summary>
+    private const int LengthOffset = DigestOffset + SHA256.HashSizeInBytes;
+
+    /// <summary>The offset of the MVID entry of the generated assembly in a cache record.</summary>
+    private const int MvidOffsetOffset = LengthOffset + sizeof(long);
+
+    /// <summary>The fixed size of a cache record.</summary>
+    private const int RecordSize = MvidOffsetOffset + sizeof(long);
+
+    /// <summary>Gets the magic and format version that a cache record starts with.</summary>
+    private static ReadOnlySpan<byte> RecordMagic => "CWRTIC02"u8;
 
     /// <summary>
     /// Reuses a verified output, refreshing its content-derived MVID without emitting any IL or metadata.
@@ -42,7 +60,6 @@ internal static class InteropGenerationCache
         try
         {
             using FileStream cache = File.OpenRead(cachePath);
-            Span<byte> record = stackalloc byte[RecordSize];
 
             if (cache.Length != RecordSize)
             {
@@ -51,20 +68,25 @@ internal static class InteropGenerationCache
                 return false;
             }
 
+            Span<byte> record = stackalloc byte[RecordSize];
+
             cache.ReadExactly(record);
 
-            if (!record[..8].SequenceEqual("CWRTIC01"u8) ||
-                !record.Slice(8, SHA256.HashSizeInBytes).SequenceEqual(fingerprint))
+            // A different fingerprint is the expected outcome after any change in emission inputs
+            if (!record[..FingerprintOffset].SequenceEqual(RecordMagic) ||
+                !record.Slice(FingerprintOffset, SHA256.HashSizeInBytes).SequenceEqual(fingerprint))
             {
                 return false;
             }
 
-            long length = BinaryPrimitives.ReadInt64LittleEndian(record[72..]);
-            long mvidOffset = BinaryPrimitives.ReadInt64LittleEndian(record[80..]);
+            long length = BinaryPrimitives.ReadInt64LittleEndian(record[LengthOffset..]);
+            long mvidOffset = BinaryPrimitives.ReadInt64LittleEndian(record[MvidOffsetOffset..]);
 
+            // Other readers are allowed while validating and refreshing the output, but no other writers. This
+            // is more permissive than the exclusive access needed to regenerate the assembly in case of a miss.
             using FileStream assembly = new(assemblyPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
 
-            if (length != assembly.Length || mvidOffset < 0 || mvidOffset > length - 16)
+            if (length != assembly.Length || mvidOffset < 0 || mvidOffset > length - MvidSize)
             {
                 ConsoleApp.Log("Ignoring interop cache: the generated assembly has changed.");
 
@@ -75,7 +97,8 @@ internal static class InteropGenerationCache
 
             HashAssembly(assembly, mvidOffset, digest, args.Token);
 
-            if (!digest.SequenceEqual(record.Slice(40, SHA256.HashSizeInBytes)))
+            // The digest also covers the recorded MVID offset, so a different offset cannot match it
+            if (!digest.SequenceEqual(record.Slice(DigestOffset, SHA256.HashSizeInBytes)))
             {
                 ConsoleApp.Log("Ignoring interop cache: the generated assembly checksum does not match.");
 
@@ -86,11 +109,12 @@ internal static class InteropGenerationCache
 
             // The existing deterministic MVID hashes every input byte, including method bodies.
             // Updating only its GUID heap entry preserves exact fresh-generation output on a hit.
-            Span<byte> bytes = stackalloc byte[16];
+            Span<byte> mvidBytes = stackalloc byte[MvidSize];
 
-            _ = mvid.TryWriteBytes(bytes);
+            _ = mvid.TryWriteBytes(mvidBytes);
+
             assembly.Position = mvidOffset;
-            assembly.Write(bytes);
+            assembly.Write(mvidBytes);
             assembly.Flush();
             File.SetLastWriteTimeUtc(assembly.SafeFileHandle, DateTime.UtcNow);
 
@@ -127,18 +151,21 @@ internal static class InteropGenerationCache
             module.Write(assembly);
             args.Token.ThrowIfCancellationRequested();
 
-            byte[]? record = null;
+            Span<byte> record = stackalloc byte[RecordSize];
+            bool isRecordCreated = false;
 
             try
             {
-                record = CreateRecord(assembly, fingerprint, args.Token);
+                WriteRecord(assembly, fingerprint, record, args.Token);
+
+                isRecordCreated = true;
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or BadImageFormatException)
             {
                 ConsoleApp.Log($"Could not create interop cache: {e.Message}");
             }
 
-            if (record is not null)
+            if (isRecordCreated)
             {
                 try
                 {
@@ -162,6 +189,7 @@ internal static class InteropGenerationCache
     /// <summary>
     /// Cleans up an owned temporary file without hiding the original generation failure.
     /// </summary>
+    /// <param name="path">The path of the temporary file to delete.</param>
     private static void DeleteTemporaryFile(string path)
     {
         try
@@ -175,12 +203,17 @@ internal static class InteropGenerationCache
     }
 
     /// <summary>
-    /// Creates the record from an exclusively owned, successfully emitted output.
+    /// Writes the record for an exclusively owned, successfully emitted output.
     /// </summary>
-    private static byte[] CreateRecord(FileStream stream, ReadOnlySpan<byte> fingerprint, CancellationToken token)
+    /// <param name="stream">The stream for the generated assembly.</param>
+    /// <param name="fingerprint">The emission fingerprint associated with the generated assembly.</param>
+    /// <param name="record">The target buffer for the cache record.</param>
+    /// <param name="token">The token for the operation.</param>
+    private static void WriteRecord(FileStream stream, ReadOnlySpan<byte> fingerprint, Span<byte> record, CancellationToken token)
     {
-        stream.Position = 0;
         long mvidOffset;
+
+        stream.Position = 0;
 
         using (PEReader reader = new(stream, PEStreamOptions.LeaveOpen | PEStreamOptions.PrefetchMetadata))
         {
@@ -192,47 +225,61 @@ internal static class InteropGenerationCache
                 throw new BadImageFormatException("The generated assembly has no MVID.");
             }
 
+            // GUID heap indices are 1-based
             mvidOffset = reader.PEHeaders.MetadataStartOffset +
                 metadata.GetHeapMetadataOffset(HeapIndex.Guid) +
-                (16L * (MetadataTokens.GetHeapOffset(mvid) - 1));
+                ((long)MvidSize * (MetadataTokens.GetHeapOffset(mvid) - 1));
         }
 
-        byte[] record = new byte[RecordSize];
+        RecordMagic.CopyTo(record);
+        fingerprint.CopyTo(record[FingerprintOffset..]);
 
-        "CWRTIC01"u8.CopyTo(record);
-        fingerprint.CopyTo(record.AsSpan(8));
-        HashAssembly(stream, mvidOffset, record.AsSpan(40, SHA256.HashSizeInBytes), token);
-        BinaryPrimitives.WriteInt64LittleEndian(record.AsSpan(72), stream.Length);
-        BinaryPrimitives.WriteInt64LittleEndian(record.AsSpan(80), mvidOffset);
+        HashAssembly(stream, mvidOffset, record.Slice(DigestOffset, SHA256.HashSizeInBytes), token);
 
-        return record;
+        BinaryPrimitives.WriteInt64LittleEndian(record[LengthOffset..], stream.Length);
+        BinaryPrimitives.WriteInt64LittleEndian(record[MvidOffsetOffset..], mvidOffset);
     }
 
     /// <summary>
-    /// Hashes the complete PE, treating the MVID entry as zero so it can be refreshed independently.
+    /// Hashes the MVID offset and the complete PE, treating the MVID entry as zero so it can be refreshed independently.
     /// </summary>
+    /// <param name="stream">The stream for the generated assembly.</param>
+    /// <param name="mvidOffset">The offset of the MVID entry in the generated assembly.</param>
+    /// <param name="destination">The target buffer for the resulting digest.</param>
+    /// <param name="token">The token for the operation.</param>
     private static void HashAssembly(FileStream stream, long mvidOffset, Span<byte> destination, CancellationToken token)
     {
         using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        byte[] buffer = ArrayPool<byte>.Shared.Rent(65536);
 
-        stream.Position = 0;
+        Span<byte> mvidOffsetBytes = stackalloc byte[sizeof(long)];
+
+        // Clearing the MVID entry alone does not identify its offset: if the bytes around it are zero, a nearby offset
+        // would clear the same bytes. Hashing the offset too ensures the record can only patch the original MVID entry.
+        BinaryPrimitives.WriteInt64LittleEndian(mvidOffsetBytes, mvidOffset);
+
+        hash.AppendData(mvidOffsetBytes);
+
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(65536);
         long offset = 0;
         int read;
 
-        while ((read = stream.Read(buffer)) > 0)
+        stream.Position = 0;
+
+        while ((read = stream.Read(buffer.AsSpan())) > 0)
         {
             token.ThrowIfCancellationRequested();
 
+            // Clear the part of the MVID entry within the current chunk, if any
             long start = Math.Max(offset, mvidOffset);
-            long end = Math.Min(offset + read, mvidOffset + 16);
+            long end = Math.Min(offset + read, mvidOffset + MvidSize);
 
             if (end > start)
             {
                 buffer.AsSpan((int)(start - offset), (int)(end - start)).Clear();
             }
 
-            hash.AppendData(buffer, 0, read);
+            hash.AppendData(buffer.AsSpan(0, read));
+
             offset += read;
         }
 
