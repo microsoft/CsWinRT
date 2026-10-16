@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -2648,37 +2647,10 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] userDefinedTypes =
-            [.. inputs.EnumerateUserDefinedAndVtableTypes()];
-        Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsBySet = [];
-        Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsByIdentity = new(ReferenceEqualityComparer.Instance);
-        List<UserDefinedVtableGroup> groups = [];
-
-        // Group by semantic set equality once per canonical set, then reuse its identity for every user type.
-        foreach ((TypeSignature type, TypeSignatureEquatableSet vtableTypes) in userDefinedTypes)
-        {
-            args.Token.ThrowIfCancellationRequested();
-
-            ref UserDefinedVtableGroup? identityGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                groupsByIdentity, vtableTypes, out _);
-
-            if (identityGroup is null)
-            {
-                ref UserDefinedVtableGroup? semanticGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                    groupsBySet, vtableTypes, out _);
-
-                if (semanticGroup is null)
-                {
-                    semanticGroup = new(type, vtableTypes, interopReferences.RuntimeContext);
-                    groups.Add(semanticGroup);
-                }
-
-                identityGroup = semanticGroup;
-            }
-        }
+        IReadOnlyList<UserDefinedVtableGroup> groups = inputs.GetUserDefinedVtableGroups();
 
         // Share marshallers across types with the same explicitly implemented interfaces
-        foreach (UserDefinedVtableGroup group in groups.OrderBy(static group => group.OrderedTypes))
+        foreach (UserDefinedVtableGroup group in groups)
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2719,7 +2691,7 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in userDefinedTypes)
+        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes, UserDefinedVtableGroup group) in inputs.EnumerateUserDefinedAndVtableTypes())
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2728,7 +2700,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
                     vtableTypes: vtableTypes,
-                    comWrappersMarshallerAttributeType: groupsByIdentity[vtableTypes].MarshallerAttributeType!,
+                    comWrappersMarshallerAttributeType: group.MarshallerAttributeType!,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -2746,17 +2718,6 @@ internal partial class InteropGenerator
                 WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
-    }
-
-    private sealed class UserDefinedVtableGroup(TypeSignature representative, TypeSignatureEquatableSet vtableTypes, RuntimeContext runtimeContext)
-    {
-        public TypeSignature Representative { get; } = representative;
-
-        public TypeSignatureEquatableSet VtableTypes { get; } = vtableTypes;
-
-        public OrderedVtableTypes OrderedTypes { get; } = new(vtableTypes, runtimeContext);
-
-        public TypeDefinition? MarshallerAttributeType { get; set; }
     }
 
     /// <summary>
