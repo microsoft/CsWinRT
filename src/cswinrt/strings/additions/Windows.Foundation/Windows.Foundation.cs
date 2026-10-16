@@ -299,10 +299,14 @@ namespace System
         private const int JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
 
         private readonly CancellationToken _ct;
-        private readonly CancellationTokenRegistration _asyncInfoRegistration;
         private readonly CancellationTokenRegistration _registration;
 
         internal AsyncInfoToTaskBridge(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+            // The native completion delegate targets this bridge, not the operation's RCW. Store the operation in
+            // Task.AsyncState so retaining the task also retains the RCW and its native references. Otherwise some
+            // implementations, including PackageManager deployments, can stop delivering completion callbacks.
+            // This deliberately retains the operation for the task's lifetime, including after completion.
+            : base(asyncInfo)
         {
             if (asyncInfo == null)
             {
@@ -312,41 +316,17 @@ namespace System
             this._ct = cancellationToken;
             if (this._ct.CanBeCanceled)
             {
-#if NET
-                _registration = this._ct.Register(static (b, ct) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(ct), this);
-#else
-                _registration = this._ct.Register((b) => ((TaskCompletionSource<TResult>)b).TrySetCanceled(this._ct), this);
-#endif
                 // Handle Exception from Cancel() if the token is already canceled.
                 try
                 {
-                    _asyncInfoRegistration = this._ct.Register(static ai =>
-                    {
-                        IAsyncInfo asyncInfo = (IAsyncInfo)ai;
-
-                        try
-                        {
-                            asyncInfo.Cancel();
-                        }
-                        catch (Exception e) when (
-                            e is COMException comException &&
-                            comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
-                        {
-                            // In the event of the async action/operation failing because it belonged to some COM server
-                            // that was disconnected, handle the failure gracefully and do nothing here. We don't want to
-                            // crash the entire process because of this. In this case, the task being returned to the
-                            // callers will already be marked as canceled, so this way they can properly handle things.
-                            // If they then tried to call any other methods on another object from the same COM server,
-                            // that would likely also fail in the same way, but once again at least they'll be able to
-                            // handle that as needed.
-                        }
-                    }, asyncInfo);
+                    _registration = this._ct.Register(static state =>
+                        ((AsyncInfoToTaskBridge<TResult, TProgress>)state).Cancel(), this);
                 }
                 catch (Exception ex)
                 {
-                    if (!base.Task.IsFaulted)
+                    // An already-canceled token invokes Cancel during registration; its finally completes the task.
+                    if (!base.Task.IsCompleted)
                     {
-                        Debug.Fail($"Expected base task to already be faulted but found it in state {base.Task.Status}");
                         base.TrySetException(ex);
                     }
                 }
@@ -358,6 +338,26 @@ namespace System
                 this.Cleanup();
             }
         }
+
+        private void Cancel()
+        {
+            try
+            {
+                ((IAsyncInfo)Task.AsyncState).Cancel();
+            }
+            catch (Exception e) when (
+                e is COMException comException &&
+                comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
+            {
+                // A disconnected server cannot deliver completion; the task is canceled in the finally block.
+            }
+            finally
+            {
+                // Cancel the task even if native cancellation throws and CTS.Cancel(true) stops invoking callbacks.
+                base.TrySetCanceled(_ct);
+            }
+        }
+
         internal void CompleteFromAsyncAction(IAsyncAction asyncInfo, AsyncStatus asyncStatus)
         {
             Complete(asyncInfo, null, asyncStatus);
@@ -464,7 +464,6 @@ namespace System
         private void Cleanup()
         {
             _registration.Dispose();
-            _asyncInfoRegistration.Dispose();
         }
     }
 }
