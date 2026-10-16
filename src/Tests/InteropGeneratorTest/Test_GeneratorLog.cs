@@ -110,7 +110,7 @@ public sealed class Test_GeneratorLog
             File.Delete(logPath);
             (int exitCode, string log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
             Assert.AreEqual(0, exitCode, log);
-            Assert.IsFalse(log.Contains("Reusing cached interop code ->", StringComparison.Ordinal), log);
+            StringAssert.Contains(log, "Generating interop code");
             Assert.IsTrue(File.Exists(logPath), "A requested report must be written even when the DLL has a valid cache.");
             CollectionAssert.AreEqual(expected, File.ReadAllBytes(output));
         }

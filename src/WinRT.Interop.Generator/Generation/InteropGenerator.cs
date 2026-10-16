@@ -43,31 +43,27 @@ internal static partial class InteropGenerator
         // Prepare the output module (normalizing references first, so the fingerprint sees the same metadata as emit)
         (ModuleDefinition module, ModuleDefinition windowsRuntimeModule) = runner.RunPhase(
             phaseName: "prepare emission",
-            body: args =>
-            {
-                NormalizeAssemblyReferences(discoveryState);
+            state: discoveryState,
+            body: PrepareEmission);
 
-                ModuleDefinition module = DefineInteropModule(args, discoveryState, out ModuleDefinition runtime, out _);
+        byte[]? fingerprint = null;
 
-                return (module, runtime);
-            });
-
-        // Compute the incremental generation fingerprint, if enabled. The optional report includes
-        // emitted type and IL counts, which cannot be collected on a cache hit, so it disables the cache.
-        byte[]? fingerprint = runner.Args.EnableIncrementalGeneration && runner.Args.LogDirectory is null
-            ? runner.RunPhase(
+        // The optional report includes emitted type and IL counts, so it requires fresh emission
+        if (runner.Args.EnableIncrementalGeneration && runner.Args.LogDirectory is null)
+        {
+            // Compute the fingerprint of the emission inputs
+            fingerprint = runner.RunPhase(
                 phaseName: "fingerprint",
                 logMessage: "Checking interop generation cache",
-                body: args => InteropGenerationFingerprint.TryCreate(args, discoveryState))
-            : null;
+                body: args => InteropGenerationFingerprint.Create(args, discoveryState));
 
-        // Reuse the previously generated interop assembly, if its emission inputs are unchanged
-        if (fingerprint is not null &&
-            runner.RunPhase("cache lookup", args => InteropGenerationCache.TryReuse(args, fingerprint, module.Mvid)))
-        {
-            ConsoleApp.Log($"Reusing cached interop code -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
+            // Reuse the previously generated interop assembly, if its emission inputs are unchanged
+            if (runner.RunPhase("cache lookup", args => InteropGenerationCache.TryReuse(args, fingerprint, module.Mvid)))
+            {
+                ConsoleApp.Log($"Cached interop code -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
 
-            return;
+                return;
+            }
         }
 
         // Emit the resulting interop assembly
