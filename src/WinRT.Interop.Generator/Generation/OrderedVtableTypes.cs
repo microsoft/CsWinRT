@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
@@ -23,21 +22,30 @@ internal sealed class OrderedVtableTypes : IComparable<OrderedVtableTypes>
     /// Creates an ordered view after the interface signatures have been imported for emission.
     /// </summary>
     /// <param name="set">The canonical interface set.</param>
-    /// <param name="runtimeContext">The runtime context used by the existing ordering comparer.</param>
-    public OrderedVtableTypes(TypeSignatureEquatableSet set, RuntimeContext runtimeContext)
+    /// <param name="comparer">The comparer shared by this invocation's user-defined type preparation.</param>
+    public OrderedVtableTypes(TypeSignatureEquatableSet set, TypeDescriptorComparer comparer)
     {
         Set = set;
-        _comparer = new(runtimeContext);
+        _comparer = comparer;
 
-        (TypeSignature Type, string Key)[] ordered =
-        [
-            .. set.Select(type => (Type: type, Key: _comparer.GetOrderKey(type)))
-                .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
-                .ThenBy(static entry => entry.Type, _comparer)
-        ];
+        IEnumerable<(TypeSignature Type, string Key)> ordered = set
+            .Select(type => (Type: type, Key: _comparer.GetOrderKey(type)))
+            .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
+            .ThenBy(static entry => entry.Type, _comparer);
 
-        Types = Array.ConvertAll(ordered, static entry => entry.Type);
-        _keys = Array.ConvertAll(ordered, static entry => entry.Key);
+        TypeSignature[] types = new TypeSignature[set.Count];
+        string[] keys = new string[set.Count];
+        int index = 0;
+
+        foreach ((TypeSignature type, string key) in ordered)
+        {
+            types[index] = type;
+            keys[index] = key;
+            index++;
+        }
+
+        Types = types;
+        _keys = keys;
     }
 
     /// <summary>
@@ -71,7 +79,7 @@ internal sealed class OrderedVtableTypes : IComparable<OrderedVtableTypes>
 
             if (result == 0)
             {
-                result = _comparer.Compare(Types[i], other.Types[i]);
+                result = _comparer.CompareEqualOrderKeys(Types[i], other.Types[i]);
             }
 
             if (result != 0)

@@ -34,9 +34,20 @@ public sealed class Test_CcwInterfaceOrdering
         Assert.AreEqual(32, shared.Length);
         Assert.AreEqual(1, shared.Distinct(StringComparer.Ordinal).Count(),
             "Types with the same semantic interface set must share the first ordered representative's marshaller.");
+        StringAssert.Contains(shared[0], "Shared0",
+            "The first type in global canonical order must remain the shared group's representative.");
         Assert.AreNotEqual(shared[0], marshallers["GroupingInput.DisposableOnly"]);
         Assert.AreNotEqual(shared[0], marshallers["GroupingInput.ExplicitStringable"]);
         Assert.AreNotEqual(marshallers["GroupingInput.DisposableOnly"], marshallers["GroupingInput.ExplicitStringable"]);
+
+        string[] expectedOrder = Enumerable.Range(0, 32)
+            .Select(index => "GroupingInput.Shared" + index)
+            .Append("GroupingInput.DisposableOnly")
+            .Append("GroupingInput.ExplicitStringable")
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        CollectionAssert.AreEqual(expectedOrder, marshallers.Keys.ToArray(),
+            "Proxy associations must retain global type order rather than being emitted in vtable-group order.");
     }
 
     [TestMethod]
@@ -54,7 +65,9 @@ public sealed class Test_CcwInterfaceOrdering
     }
 
     [TestMethod]
-    public async Task PreparedSetOrder_MatchesLegacyComparisonForPrefixesScopesAndShapes()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PreparedSetOrder_MatchesLegacyComparisonForPrefixesScopesAndShapes(bool cacheDisplayNames)
     {
         using InteropGeneratorRunner runner = new(ccwGroupingCases: true);
         (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("comparison"));
@@ -78,7 +91,9 @@ public sealed class Test_CcwInterfaceOrdering
         TypeReference genericDefinition = new(module, null, "Ambiguous", "I`1");
         TypeSignature oneArgument = genericDefinition.MakeGenericInstanceType(false, [combinedArgument]);
         TypeSignature twoArguments = genericDefinition.MakeGenericInstanceType(false, [separateFirst, separateSecond]);
-        TypeDescriptorComparer descriptorComparer = new(context);
+        TypeDescriptorComparer descriptorComparer = cacheDisplayNames
+            ? TypeDescriptorComparer.CreateForEmission(context)
+            : new(context);
         Assert.AreEqual(descriptorComparer.GetOrderKey(oneArgument), descriptorComparer.GetOrderKey(twoArguments),
             "The delimiter collision must exercise the structural comparison fallback.");
         Assert.AreNotEqual(0, descriptorComparer.Compare(oneArgument, twoArguments));
@@ -97,10 +112,23 @@ public sealed class Test_CcwInterfaceOrdering
             new(comparer, otherNested),
             new(comparer, oneArgument),
             new(comparer, twoArguments),
-            new(comparer, module.CorLibTypeFactory.Int32)
+            new(comparer, module.CorLibTypeFactory.Int32),
+            new(comparer, module.CorLibTypeFactory.Int32.MakeSzArrayType()),
+            new(comparer, module.CorLibTypeFactory.Int32.MakeByReferenceType()),
+            new(comparer, module.CorLibTypeFactory.Int32.MakePointerType()),
+            new(comparer, module.CorLibTypeFactory.String),
+            new(comparer, module.CorLibTypeFactory.String.MakeSzArrayType())
         ];
 
-        OrderedVtableTypes[] prepared = sets.Select(set => new OrderedVtableTypes(set, context)).ToArray();
+        TypeDescriptorComparer uncached = new(context);
+
+        foreach (TypeSignature type in sets.SelectMany(static set => set))
+        {
+            Assert.AreEqual(uncached.GetOrderKey(type), descriptorComparer.GetOrderKey(type),
+                $"Caching display names changed the ordering key for '{type}'.");
+        }
+
+        OrderedVtableTypes[] prepared = sets.Select(set => new OrderedVtableTypes(set, descriptorComparer)).ToArray();
 
         for (int i = 0; i < sets.Length; i++)
         {

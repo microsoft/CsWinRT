@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
@@ -16,6 +17,12 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
 {
     /// <summary>The context used to order equivalent forwarded names consistently.</summary>
     private readonly RuntimeContext? _runtimeContext;
+
+    /// <summary>Assembly display names cached only for finalized, single-threaded emission.</summary>
+    private Dictionary<AssemblyDescriptor, string>? _assemblyNames;
+
+    /// <summary>Resolved definition display names cached only for finalized, single-threaded emission.</summary>
+    private Dictionary<TypeDefinition, string>? _definitionNames;
 
     /// <summary>
     /// Creates a new <see cref="TypeDescriptorComparer"/> instance.
@@ -35,6 +42,21 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     /// Use a comparer constructed with a runtime context when ordering resolved type identities.
     /// </remarks>
     public static TypeDescriptorComparer Default { get; } = new(null);
+
+    /// <summary>
+    /// Creates an invocation-local comparer that reuses display names during single-threaded emission.
+    /// </summary>
+    /// <param name="runtimeContext">The context whose type and assembly identities have been normalized.</param>
+    /// <returns>A comparer with emission-local display-name caches.</returns>
+    /// <remarks>Type names and assembly identities must remain unchanged for this comparer's lifetime.</remarks>
+    public static TypeDescriptorComparer CreateForEmission(RuntimeContext runtimeContext)
+    {
+        return new(runtimeContext)
+        {
+            _assemblyNames = new(ReferenceEqualityComparer.Instance),
+            _definitionNames = new(ReferenceEqualityComparer.Instance)
+        };
+    }
 
     /// <summary>
     /// Creates a new comparer for the specified <see cref="ITypeDescriptor"/> type.
@@ -59,7 +81,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
 
         try
         {
-            AppendFullyQualifiedName(type, _runtimeContext, ref handler);
+            AppendFullyQualifiedName(type, _runtimeContext, ref handler, _assemblyNames, _definitionNames);
 
             return handler.Text.ToString();
         }
@@ -72,17 +94,22 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     /// <summary>
     /// Appends the resolved identity of a type, including constructed arguments and array shape.
     /// </summary>
-    private static void AppendFullyQualifiedName(ITypeDescriptor type, RuntimeContext? runtimeContext, ref DefaultInterpolatedStringHandler handler)
+    private static void AppendFullyQualifiedName(
+        ITypeDescriptor type,
+        RuntimeContext? runtimeContext,
+        ref DefaultInterpolatedStringHandler handler,
+        Dictionary<AssemblyDescriptor, string>? assemblyNames,
+        Dictionary<TypeDefinition, string>? definitionNames)
     {
         // Resolving the outer type loses generic arguments or array shape, so format those recursively
         if (type is GenericInstanceTypeSignature generic)
         {
-            AppendFullyQualifiedName(generic.GenericType, runtimeContext, ref handler);
+            AppendFullyQualifiedName(generic.GenericType, runtimeContext, ref handler, assemblyNames, definitionNames);
             handler.AppendLiteral("<");
 
             foreach (TypeSignature argument in generic.TypeArguments)
             {
-                AppendFullyQualifiedName(argument, runtimeContext, ref handler);
+                AppendFullyQualifiedName(argument, runtimeContext, ref handler, assemblyNames, definitionNames);
                 handler.AppendLiteral(";");
             }
 
@@ -93,7 +120,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
 
         if (type is SzArrayTypeSignature array)
         {
-            AppendFullyQualifiedName(array.BaseType, runtimeContext, ref handler);
+            AppendFullyQualifiedName(array.BaseType, runtimeContext, ref handler, assemblyNames, definitionNames);
             handler.AppendLiteral("[]");
 
             return;
@@ -105,6 +132,47 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
             type = definition;
         }
 
+        if (definitionNames is not null && type is TypeDefinition resolved)
+        {
+            ref string? name = ref CollectionsMarshal.GetValueRefOrAddDefault(definitionNames, resolved, out _);
+            name ??= FormatDefinitionName(resolved, assemblyNames);
+            handler.AppendLiteral(name);
+
+            return;
+        }
+
+        AppendNamedType(type, ref handler, assemblyNames);
+    }
+
+    /// <summary>Formats a resolved definition after its normal type resolution.</summary>
+    /// <param name="type">The resolved definition.</param>
+    /// <param name="assemblyNames">The optional assembly display-name cache.</param>
+    /// <returns>The definition's fully qualified display name.</returns>
+    private static string FormatDefinitionName(TypeDefinition type, Dictionary<AssemblyDescriptor, string>? assemblyNames)
+    {
+        DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
+
+        try
+        {
+            AppendNamedType(type, ref handler, assemblyNames);
+
+            return handler.Text.ToString();
+        }
+        finally
+        {
+            handler.Clear();
+        }
+    }
+
+    /// <summary>Appends a named type and its assembly identity.</summary>
+    /// <param name="type">The named descriptor.</param>
+    /// <param name="handler">The target text handler.</param>
+    /// <param name="assemblyNames">The optional assembly display-name cache.</param>
+    private static void AppendNamedType(
+        ITypeDescriptor type,
+        ref DefaultInterpolatedStringHandler handler,
+        Dictionary<AssemblyDescriptor, string>? assemblyNames)
+    {
         handler.AppendFormatted(type);
 
         // Definitions use a module scope, while references use an assembly scope.
@@ -112,7 +180,16 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         if (type.Scope?.GetAssembly() is AssemblyDescriptor assembly)
         {
             handler.AppendLiteral(", ");
-            handler.AppendFormatted(assembly);
+            if (assemblyNames is null)
+            {
+                handler.AppendFormatted(assembly);
+            }
+            else
+            {
+                ref string? name = ref CollectionsMarshal.GetValueRefOrAddDefault(assemblyNames, assembly, out _);
+                name ??= assembly.ToString();
+                handler.AppendLiteral(name);
+            }
         }
     }
 
@@ -137,8 +214,8 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         DefaultInterpolatedStringHandler xHandler = new(0, 0, null, stackalloc char[256]);
         DefaultInterpolatedStringHandler yHandler = new(0, 0, null, stackalloc char[256]);
 
-        AppendFullyQualifiedName(x, _runtimeContext, ref xHandler);
-        AppendFullyQualifiedName(y, _runtimeContext, ref yHandler);
+        AppendFullyQualifiedName(x, _runtimeContext, ref xHandler, _assemblyNames, _definitionNames);
+        AppendFullyQualifiedName(y, _runtimeContext, ref yHandler, _assemblyNames, _definitionNames);
 
         // Compare alphabetically without allocating the resulting 'string'
         int result = xHandler.Text.CompareTo(yHandler.Text, StringComparison.Ordinal);
@@ -147,26 +224,37 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         xHandler.Clear();
         yHandler.Clear();
 
-        if (result == 0)
-        {
-            // Resolving a type specification other than an SZ array (e.g. a by-ref, pointer, or modified type)
-            // drops its shape and the generic arguments of its element type, including within generic arguments.
-            // Break those ties by comparing the type arguments and specification element types structurally.
-            if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
-            {
-                result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);
+        return result != 0 ? result : CompareEqualOrderKeys(x, y);
+    }
 
-                for (int i = 0; result == 0 && i < xGeneric.TypeArguments.Count; i++)
-                {
-                    result = Compare(xGeneric.TypeArguments[i], yGeneric.TypeArguments[i]);
-                }
-            }
-            else if (x is TypeSpecificationSignature xSpecification && y is TypeSpecificationSignature ySpecification)
-            {
-                result = Compare(xSpecification.BaseType, ySpecification.BaseType);
-            }
+    /// <summary>
+    /// Applies the structural tie-break when descriptors have equal primary keys from this comparer.
+    /// </summary>
+    /// <param name="x">The first descriptor.</param>
+    /// <param name="y">The second descriptor with the same primary key.</param>
+    /// <returns>The structural ordering of the descriptors.</returns>
+    public int CompareEqualOrderKeys(ITypeDescriptor x, ITypeDescriptor y)
+    {
+        if (ReferenceEquals(x, y))
+        {
+            return 0;
         }
 
-        return result;
+        // Matching display keys can still hide different generic arguments or specification shapes.
+        if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
+        {
+            int result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);
+
+            for (int i = 0; result == 0 && i < xGeneric.TypeArguments.Count; i++)
+            {
+                result = Compare(xGeneric.TypeArguments[i], yGeneric.TypeArguments[i]);
+            }
+
+            return result;
+        }
+
+        return x is TypeSpecificationSignature xSpecification && y is TypeSpecificationSignature ySpecification
+            ? Compare(xSpecification.BaseType, ySpecification.BaseType)
+            : 0;
     }
 }
