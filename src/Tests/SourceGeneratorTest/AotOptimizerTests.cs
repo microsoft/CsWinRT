@@ -98,6 +98,69 @@ public class AotOptimizerTests
     }
 
     [TestMethod]
+    public void ExpressionBodiedMethod_DiscoversConcreteReturnType()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class Test
+            {
+                public object M() => new List<int>();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.List`1[System.Int32]"));
+    }
+
+    [TestMethod]
+    public void CoalesceExpression_DiscoversConcreteTypesInBothOperands()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class Test
+            {
+                private static List<int> GetList() => null;
+
+                public object M()
+                {
+                    return GetList() ?? (object)new List<string>();
+                }
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.List`1[System.Int32]"));
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.List`1[System.String]"));
+    }
+
+    [TestMethod]
+    public void SuppressNullableWarningExpression_DiscoversConcreteType()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class Test
+            {
+                private static bool GetFlag() => true;
+
+                public object M()
+                {
+                    return (GetFlag() ? new List<int>() : new List<string>())!;
+                }
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.List`1[System.Int32]"));
+        Assert.IsTrue(generated.Contains("System.Collections.Generic.List`1[System.String]"));
+    }
+
+    [TestMethod]
     public void ConditionalExpression_NoBoxing_DoesNotDiscoverConcreteTypes()
     {
         // The lists are assigned to their own concrete type, so nothing is boxed or cast and there is
@@ -112,6 +175,45 @@ public class AotOptimizerTests
                 public List<int> M()
                 {
                     return GetFlag() ? new List<int>() : new List<int>();
+                }
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsFalse(generated.Contains("System.Collections.Generic.List`1[System.Int32]"));
+    }
+
+    [TestMethod]
+    public void ExpressionBodiedMethod_NoBoxing_DoesNotDiscoverConcreteTypes()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class Test
+            {
+                public List<int> M() => new List<int>();
+            }
+            """;
+
+        string generated = RunAotOptimizer(source);
+
+        Assert.IsFalse(generated.Contains("System.Collections.Generic.List`1[System.Int32]"));
+    }
+
+    [TestMethod]
+    public void CoalesceExpression_NoBoxing_DoesNotDiscoverConcreteTypes()
+    {
+        const string source = """
+            using System.Collections.Generic;
+
+            internal class Test
+            {
+                private static List<int> GetList() => null;
+
+                public List<int> M()
+                {
+                    return GetList() ?? new List<int>();
                 }
             }
             """;
