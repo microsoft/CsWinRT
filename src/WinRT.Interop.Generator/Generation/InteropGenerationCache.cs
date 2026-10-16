@@ -10,7 +10,6 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Threading;
-using ConsoleAppFramework;
 using WindowsRuntime.InteropGenerator.References;
 using ModuleDefinition = AsmResolver.DotNet.ModuleDefinition;
 
@@ -37,13 +36,13 @@ internal static class InteropGenerationCache
     private const int LengthOffset = DigestOffset + SHA256.HashSizeInBytes;
 
     /// <summary>The offset of the MVID entry of the generated assembly in a cache record.</summary>
-    private const int MvidOffsetOffset = LengthOffset + sizeof(long);
+    private const int MvidOffset = LengthOffset + sizeof(long);
 
     /// <summary>The fixed size of a cache record.</summary>
-    private const int RecordSize = MvidOffsetOffset + sizeof(long);
+    private const int RecordSize = MvidOffset + sizeof(long);
 
     /// <summary>Gets the magic and format version that a cache record starts with.</summary>
-    private static ReadOnlySpan<byte> RecordMagic => "CWRTIC02"u8;
+    private static ReadOnlySpan<byte> RecordMagic => "CWRTIC01"u8;
 
     /// <summary>
     /// Reuses a verified output, refreshing its content-derived MVID without emitting any IL or metadata.
@@ -61,10 +60,9 @@ internal static class InteropGenerationCache
         {
             using FileStream cache = File.OpenRead(cachePath);
 
+            // A different length indicates a truncated, damaged, or incompatible cache record
             if (cache.Length != RecordSize)
             {
-                ConsoleApp.Log("Ignoring interop cache: invalid record length.");
-
                 return false;
             }
 
@@ -80,16 +78,15 @@ internal static class InteropGenerationCache
             }
 
             long length = BinaryPrimitives.ReadInt64LittleEndian(record[LengthOffset..]);
-            long mvidOffset = BinaryPrimitives.ReadInt64LittleEndian(record[MvidOffsetOffset..]);
+            long mvidOffset = BinaryPrimitives.ReadInt64LittleEndian(record[MvidOffset..]);
 
             // Other readers are allowed while validating and refreshing the output, but no other writers. This
             // is more permissive than the exclusive access needed to regenerate the assembly in case of a miss.
             using FileStream assembly = new(assemblyPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
 
+            // A size mismatch or out-of-bounds MVID offset means the record cannot safely describe this assembly
             if (length != assembly.Length || mvidOffset < 0 || mvidOffset > length - MvidSize)
             {
-                ConsoleApp.Log("Ignoring interop cache: the generated assembly has changed.");
-
                 return false;
             }
 
@@ -100,8 +97,6 @@ internal static class InteropGenerationCache
             // The digest also covers the recorded MVID offset, so a different offset cannot match it
             if (!digest.SequenceEqual(record.Slice(DigestOffset, SHA256.HashSizeInBytes)))
             {
-                ConsoleApp.Log("Ignoring interop cache: the generated assembly checksum does not match.");
-
                 return false;
             }
 
@@ -116,18 +111,14 @@ internal static class InteropGenerationCache
             assembly.Position = mvidOffset;
             assembly.Write(mvidBytes);
             assembly.Flush();
+
+            // Refresh the timestamp so MSBuild considers the reused output up to date
             File.SetLastWriteTimeUtc(assembly.SafeFileHandle, DateTime.UtcNow);
 
             return true;
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
-            return false;
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            ConsoleApp.Log($"Ignoring interop cache: {e.Message}");
-
             return false;
         }
     }
@@ -152,53 +143,17 @@ internal static class InteropGenerationCache
             args.Token.ThrowIfCancellationRequested();
 
             Span<byte> record = stackalloc byte[RecordSize];
-            bool isRecordCreated = false;
 
-            try
-            {
-                WriteRecord(assembly, fingerprint, record, args.Token);
+            WriteRecord(assembly, fingerprint, record, args.Token);
 
-                isRecordCreated = true;
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException or BadImageFormatException)
-            {
-                ConsoleApp.Log($"Could not create interop cache: {e.Message}");
-            }
-
-            if (isRecordCreated)
-            {
-                try
-                {
-                    // Keep the DLL exclusively open until its record is published, so a concurrent
-                    // invocation cannot associate this key with somebody else's output.
-                    File.WriteAllBytes(temporaryCachePath, record);
-                    File.Move(temporaryCachePath, cachePath, overwrite: true);
-                }
-                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-                {
-                    ConsoleApp.Log($"Could not save interop cache: {e.Message}");
-                }
-            }
+            // Keep the DLL exclusively open until its record is published, so a concurrent
+            // invocation cannot associate this key with somebody else's output.
+            File.WriteAllBytes(temporaryCachePath, record);
+            File.Move(temporaryCachePath, cachePath, overwrite: true);
         }
         finally
         {
-            DeleteTemporaryFile(temporaryCachePath);
-        }
-    }
-
-    /// <summary>
-    /// Cleans up an owned temporary file without hiding the original generation failure.
-    /// </summary>
-    /// <param name="path">The path of the temporary file to delete.</param>
-    private static void DeleteTemporaryFile(string path)
-    {
-        try
-        {
-            File.Delete(path);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            ConsoleApp.Log($"Could not remove temporary interop file '{path}': {e.Message}");
+            File.Delete(temporaryCachePath);
         }
     }
 
@@ -215,6 +170,7 @@ internal static class InteropGenerationCache
 
         stream.Position = 0;
 
+        // Keep the caller-owned stream open for hashing below and retain its exclusive lock until cache publication
         using (PEReader reader = new(stream, PEStreamOptions.LeaveOpen | PEStreamOptions.PrefetchMetadata))
         {
             MetadataReader metadata = reader.GetMetadataReader();
@@ -237,7 +193,7 @@ internal static class InteropGenerationCache
         HashAssembly(stream, mvidOffset, record.Slice(DigestOffset, SHA256.HashSizeInBytes), token);
 
         BinaryPrimitives.WriteInt64LittleEndian(record[LengthOffset..], stream.Length);
-        BinaryPrimitives.WriteInt64LittleEndian(record[MvidOffsetOffset..], mvidOffset);
+        BinaryPrimitives.WriteInt64LittleEndian(record[MvidOffset..], mvidOffset);
     }
 
     /// <summary>

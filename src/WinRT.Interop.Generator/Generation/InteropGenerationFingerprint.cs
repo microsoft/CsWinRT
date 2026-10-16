@@ -15,7 +15,8 @@ using AsmResolver.DotNet.Serialized;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using ConsoleAppFramework;
+using WindowsRuntime.Generator.Errors;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -77,16 +78,14 @@ internal sealed class InteropGenerationFingerprint
             }
         }
 
-        ReadOnlySpan<ModuleDefinition?> privateImplementationModules =
+        // The same applies to all private projection and component modules
+        foreach (ModuleDefinition? module in (ReadOnlySpan<ModuleDefinition?>)
         [
             state.WindowsRuntimeSdkProjectionModule,
             state.WindowsRuntimeSdkXamlProjectionModule,
             state.WindowsRuntimeProjectionModule,
             state.WindowsRuntimeComponentModule
-        ];
-
-        // The same applies to all private projection and component modules
-        foreach (ModuleDefinition? module in privateImplementationModules)
+        ])
         {
             if (module is not null)
             {
@@ -96,28 +95,20 @@ internal sealed class InteropGenerationFingerprint
     }
 
     /// <summary>
-    /// Computes a cache key, or reports why this invocation cannot be cached.
+    /// Computes a cache key from the inputs consumed by emission.
     /// </summary>
     /// <param name="args">The invocation arguments.</param>
     /// <param name="state">The completed discovery state.</param>
-    /// <returns>The SHA256 fingerprint, or <see langword="null"/> if caching is unavailable.</returns>
-    public static byte[]? TryCreate(InteropGeneratorArgs args, InteropGeneratorDiscoveryState state)
+    /// <returns>The SHA256 fingerprint.</returns>
+    public static byte[] Create(InteropGeneratorArgs args, InteropGeneratorDiscoveryState state)
     {
         try
         {
             return new InteropGenerationFingerprint(args, state).Create();
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or NotSupportedException or BadImageFormatException)
+        catch (Exception e) when (!e.IsWellKnown)
         {
-            ConsoleApp.Log($"Incremental interop generation unavailable: {e.Message}");
-
-            return null;
-        }
-        catch (AggregateException e) when (e.InnerExceptions.All(static error => error is IOException or UnauthorizedAccessException or NotSupportedException or BadImageFormatException))
-        {
-            ConsoleApp.Log($"Incremental interop generation unavailable: {e.Message}");
-
-            return null;
+            throw WellKnownInteropExceptions.GenerationFingerprintError(e);
         }
     }
 
@@ -160,28 +151,9 @@ internal sealed class InteropGenerationFingerprint
     {
         writer.Write(Environment.Version.ToString());
 
-        if (!RuntimeFeature.IsDynamicCodeSupported)
-        {
-            using FileStream stream = File.OpenRead(Environment.ProcessPath ?? throw new NotSupportedException("The native generator path is unavailable."));
+        using FileStream stream = File.OpenRead(Environment.ProcessPath!);
 
-            writer.Write(SHA256.HashData(stream));
-        }
-        else
-        {
-            // Managed development runs also depend on the separately deployed generator libraries.
-            string[] paths = [.. Directory.EnumerateFiles(AppContext.BaseDirectory, "*.dll").Order(StringComparer.Ordinal)];
-
-            writer.Write(paths.Length);
-
-            foreach (string path in paths)
-            {
-                writer.Write(Path.GetFileName(path));
-
-                using FileStream stream = File.OpenRead(path);
-
-                writer.Write(SHA256.HashData(stream));
-            }
-        }
+        writer.Write(SHA256.HashData(stream));
     }
 
     /// <summary>
@@ -306,7 +278,7 @@ internal sealed class InteropGenerationFingerprint
             vtableSets[index++] = [.. types.Select(GetTypeName).Order(StringComparer.Ordinal)];
         }
 
-        Array.Sort(vtableSets, CompareNames);
+        Array.Sort(vtableSets, static (left, right) => ((ReadOnlySpan<string>)left).CompareLexicographically(right));
 
         writer.Write(vtableSets.Length);
 
@@ -318,22 +290,6 @@ internal sealed class InteropGenerationFingerprint
             {
                 writer.Write(type);
             }
-        }
-
-        // Orders sorted sets of names lexicographically
-        static int CompareNames(string[] left, string[] right)
-        {
-            for (int i = 0; i < Math.Min(left.Length, right.Length); i++)
-            {
-                int result = StringComparer.Ordinal.Compare(left[i], right[i]);
-
-                if (result != 0)
-                {
-                    return result;
-                }
-            }
-
-            return left.Length.CompareTo(right.Length);
         }
     }
 
@@ -374,7 +330,7 @@ internal sealed class InteropGenerationFingerprint
             parallelOptions: new ParallelOptions { CancellationToken = _args.Token, MaxDegreeOfParallelism = _args.MaxDegreesOfParallelism },
             body: i =>
             {
-                using FileStream stream = File.OpenRead(implementationModules[i].FilePath ?? throw new NotSupportedException("An emission dependency has no backing file."));
+                using FileStream stream = File.OpenRead(implementationModules[i].FilePath!);
 
                 implementationHashes[i] = SHA256.HashData(stream);
             });
@@ -453,6 +409,7 @@ internal sealed class InteropGenerationFingerprint
     /// </summary>
     private void DiscoverMetadataDependencies()
     {
+        // Visit each signature object once to terminate recursive type graphs
         HashSet<TypeSignature> visited = new(ReferenceEqualityComparer.Instance);
 
         while (_pendingTypes.TryDequeue(out TypeSignature? signature))
@@ -464,6 +421,7 @@ internal sealed class InteropGenerationFingerprint
                 continue;
             }
 
+            // Resolving a constructed or wrapped type alone would lose its argument or element dependencies
             if (signature is GenericInstanceTypeSignature generic)
             {
                 foreach (TypeSignature argument in generic.TypeArguments)
@@ -476,6 +434,7 @@ internal sealed class InteropGenerationFingerprint
                 _pendingTypes.Enqueue(specification.BaseType);
             }
 
+            // Different signatures can resolve to the same definition; inspect its metadata only once
             if (signature is GenericParameterSignature or FunctionPointerTypeSignature or SentinelTypeSignature ||
                 !signature.TryResolve(_state.RuntimeContext, out TypeDefinition? definition) ||
                 !_definitions.Add(definition))
@@ -485,12 +444,14 @@ internal sealed class InteropGenerationFingerprint
 
             ModuleDefinition declaringModule = definition.DeclaringModule!;
 
+            // Hash whole modules when emission consumes projection code or dependencies outside the explicit inputs
             if (!_implementationModules.Contains(declaringModule) &&
                 (definition.IsProjectedWindowsRuntimeType || !_inputModules.Contains(declaringModule)))
             {
                 _ = _implementationModules.Add(declaringModule);
             }
 
+            // Inherited, enclosing, and implemented types contribute metadata used to build marshalling support
             if (definition.BaseType is { } baseType)
             {
                 _pendingTypes.Enqueue(baseType.ToTypeSignature(_state.RuntimeContext));
@@ -543,17 +504,20 @@ internal sealed class InteropGenerationFingerprint
             return;
         }
 
+        // Type flags, inheritance, and layout affect the marshalling code generated for application types
         writer.Write((uint)type.Attributes);
         writer.Write(type.BaseType is { } baseType ? GetTypeName(baseType.ToTypeSignature(_state.RuntimeContext)) : "");
         writer.Write(type.ClassLayout?.ClassSize ?? 0);
         writer.Write(type.ClassLayout?.PackingSize ?? 0);
         writer.Write(type.Interfaces.Count);
 
+        // Preserve interface declaration order as well as identity, since emission can select a representative interface
         foreach (InterfaceImplementation implementation in type.Interfaces)
         {
             writer.Write(implementation.Interface is { } interfaceType ? GetTypeName(interfaceType.ToTypeSignature(_state.RuntimeContext)) : "");
         }
 
+        // Generic parameter flags include variance, which affects the interfaces exposed by a CCW
         writer.Write(type.GenericParameters.Count);
 
         foreach (GenericParameter parameter in type.GenericParameters)
@@ -561,10 +525,12 @@ internal sealed class InteropGenerationFingerprint
             writer.Write((int)parameter.Attributes);
         }
 
+        // Attribute identities and payloads can alter runtime class names and marshalling behavior
         WriteCustomAttributes(writer, type);
 
         writer.Write(type.IsValueType);
 
+        // Instance field order, types, and offsets determine value-type signatures and ABI layout
         if (type.IsValueType)
         {
             FieldDefinition[] fields = [.. type.Fields.Where(static field => !field.IsStatic)];
@@ -623,15 +589,18 @@ internal sealed class InteropGenerationFingerprint
     /// <returns>The unambiguous, assembly-qualified name of <paramref name="type"/>.</returns>
     private string GetTypeName(TypeSignature type)
     {
+        // Reuse names by signature object to avoid rebuilding them during dependency traversal and sorting
         if (!_typeNames.TryGetValue(type, out string? name))
         {
             DefaultInterpolatedStringHandler builder = new(0, 0, CultureInfo.InvariantCulture);
 
+            // Prefix the signature kind so wrappers and their underlying types cannot share a key
             builder.AppendFormatted((int)type.ElementType);
             builder.AppendLiteral(":");
 
             switch (type)
             {
+                // Include the generic definition and recursively scoped arguments, not just their display names
                 case GenericInstanceTypeSignature generic:
                     builder.AppendFormatted(generic.IsValueType);
                     AppendDescriptor(ref builder, generic.GenericType);
@@ -644,6 +613,8 @@ internal sealed class InteropGenerationFingerprint
                     }
 
                     break;
+
+                // Preserve modifier identity and array bounds in addition to the wrapped element type
                 case TypeSpecificationSignature specification:
                     if (specification is CustomModifierTypeSignature modifier)
                     {
@@ -664,11 +635,15 @@ internal sealed class InteropGenerationFingerprint
 
                     AppendPart(ref builder, GetTypeName(specification.BaseType));
                     break;
+
+                // Type and method parameters can have the same index but represent different slots
                 case GenericParameterSignature parameter:
                     builder.AppendFormatted((int)parameter.ParameterType);
                     builder.AppendLiteral(":");
                     builder.AppendFormatted(parameter.Index);
                     break;
+
+                // Function pointer identity includes calling convention, return type, and parameter signatures
                 case FunctionPointerTypeSignature pointer:
                     builder.AppendFormatted((int)pointer.Signature.Attributes);
                     builder.AppendLiteral(":");
@@ -683,6 +658,7 @@ internal sealed class InteropGenerationFingerprint
                         AppendPart(ref builder, GetTypeName(parameterType));
                     }
 
+                    // Vararg parameters after the sentinel are distinct from the fixed parameter list
                     builder.AppendFormatted(pointer.Signature.IncludeSentinel);
                     builder.AppendFormatted(pointer.Signature.SentinelParameterTypes.Count);
                     builder.AppendLiteral(":");
@@ -693,19 +669,24 @@ internal sealed class InteropGenerationFingerprint
                     }
 
                     break;
+
+                // Ordinary named types are identified by their resolved definition and assembly scope
                 default:
                     AppendDescriptor(ref builder, type);
                     break;
             }
 
+            // Share one string across equivalent signatures from different modules without allocating for a hit
             if (_uniqueTypeNames.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(builder.Text, out string? existingName))
             {
                 name = existingName;
+
                 builder.Clear();
             }
             else
             {
                 name = builder.ToStringAndClear();
+
                 _ = _uniqueTypeNames.Add(name);
             }
 

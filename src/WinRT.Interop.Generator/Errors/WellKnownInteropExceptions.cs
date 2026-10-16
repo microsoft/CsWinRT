@@ -1006,6 +1006,14 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Failed to compute the interop generation fingerprint.
+    /// </summary>
+    public static WellKnownInteropException GenerationFingerprintError(Exception exception)
+    {
+        return Exception(111, "Failed to compute the interop generation fingerprint.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

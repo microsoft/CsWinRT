@@ -25,6 +25,23 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 internal partial class InteropGenerator
 {
     /// <summary>
+    /// Normalizes the discovered references and initializes the output module before fingerprinting and emission.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <returns>The output module and the Windows Runtime implementation module.</returns>
+    private static (ModuleDefinition Module, ModuleDefinition WindowsRuntimeModule) PrepareEmission(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState)
+    {
+        NormalizeAssemblyReferences(discoveryState);
+
+        ModuleDefinition module = DefineInteropModule(args, discoveryState, out ModuleDefinition runtime, out _);
+
+        return (module, runtime);
+    }
+
+    /// <summary>
     /// Runs the emit logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>

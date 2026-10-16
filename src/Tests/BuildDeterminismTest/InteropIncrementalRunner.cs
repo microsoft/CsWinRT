@@ -361,19 +361,19 @@ internal static class InteropIncrementalRunner
 
         string dllPath = Path.Combine(outputDirectory, DllName);
         string[] lines = File.ReadAllLines(stdoutPath);
-        int hitLines = lines.Count(line => line.StartsWith("Reusing cached interop code -> ", StringComparison.Ordinal));
+        bool checkedCache = lines.Contains("Checking interop generation cache", StringComparer.Ordinal);
+        bool cached = lines.Contains($"Cached interop code -> {dllPath}", StringComparer.Ordinal);
         bool generated = lines.Contains("Generating interop code", StringComparer.Ordinal);
         bool completed = lines.Contains($"Interop code generated -> {dllPath}", StringComparer.Ordinal);
 
         if (expectHit)
         {
-            Require(hitLines == 1 && lines.Contains($"Reusing cached interop code -> {dllPath}", StringComparer.Ordinal) &&
-                    !generated && !completed,
-                $"Expected only a cache-hit message, not emission. See '{stdoutPath}'.");
+            Require(checkedCache && cached && !generated && !completed,
+                $"Expected cached interop code without emission. See '{stdoutPath}'.");
         }
         else
         {
-            Require(hitLines == 0 && generated && completed,
+            Require(!cached && generated && completed,
                 $"Expected a full emission, not a cache hit. See '{stdoutPath}'.");
         }
 
