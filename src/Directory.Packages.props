@@ -40,11 +40,8 @@
     <PackageVersion Include="Perfolizer" Version="0.2.1" />
     <PackageVersion Include="SimpleMathComponent" Version="0.1.0-prerelease" />
     <PackageVersion Include="System.Numerics.Tensors" Version="9.0.7" />
-    <PackageVersion Include="MSTest.TestAdapter" Version="4.5.1" />
-    <PackageVersion Include="MSTest.TestFramework" Version="4.5.1" />
-    <PackageVersion Include="MSTest.Analyzers" Version="4.5.1" />
-    <PackageVersion Include="MSTest.SourceGeneration" Version="4.5.1" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.5.1" />
+    <!-- The custom WinUI test host still references these directly; MSTest.Sdk owns its own versions. -->
+    <PackageVersion Include="MSTest.TestAdapter" Version="4.5.1" Condition="'$(UsingMSTestSdk)' != 'true'" />
+    <PackageVersion Include="MSTest.TestFramework" Version="4.5.1" Condition="'$(UsingMSTestSdk)' != 'true'" />
   </ItemGroup>
 </Project>

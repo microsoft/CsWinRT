@@ -1,11 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFramework>net10.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
 
     <!-- This project runs the projection writer end-to-end; it needs no CsWinRT processing itself -->
     <CsWinRTEnabled>false</CsWinRTEnabled>
@@ -27,18 +24,6 @@
   <ItemGroup>
     <PackageReference Include="Basic.Reference.Assemblies.Net100" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-
-    <!-- Core MSTest attributes/assertions -->
-    <PackageReference Include="MSTest.TestFramework" />
-    <PackageReference Include="MSTest.Analyzers" />
-
-    <!-- MTP build integration + optional reporting -->
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
-
-    <!-- MSTest runner and generators -->
-    <PackageReference Include="MSTest.TestAdapter" />
-    <PackageReference Include="MSTest.SourceGeneration" />
   </ItemGroup>
 
   <ItemGroup>

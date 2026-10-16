@@ -27,7 +27,7 @@ CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. 
 - **Output type:** Exe, self-contained, AOT-enabled
 - **Key dependencies:** MSTest.TestFramework, MSTest.TestAdapter, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
 - **References:** WinRT.SourceGenerator2 (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
-- **Runner:** `EnableMSTestRunner=true` enables MTP through `MSTest.TestAdapter`; `MSTest.SourceGeneration` supplies trim/AOT-safe metadata. `MSTest.Engine` is not needed.
+- **Runner:** UnitTest, SourceGenerator2Test, and the four generator/writer test projects use `MSTest.Sdk`, pinned in `global.json`. The SDK supplies the runner and matching MSTest/MTP packages, using its default extension profile (TRX reporting and code coverage). Shared `Directory.Build.props` enables source generation for CoreCLR as well as Native AOT. Do not add redundant runner properties or MSTest package references; the custom WinUI lifetime-test host still manages its packages separately.
 
 **Test organization:**
 - Single namespace: `UnitTest`

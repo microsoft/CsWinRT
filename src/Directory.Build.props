@@ -1,6 +1,10 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Set common MSBuild properties and item metadata for CsWinRT tool and tests -->
+  <PropertyGroup Condition="'$(UsingMSTestSdk)' == 'true'">
+    <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
+  </PropertyGroup>
+
   <PropertyGroup Label="Globals">
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>15.0</VCProjectVersion>
