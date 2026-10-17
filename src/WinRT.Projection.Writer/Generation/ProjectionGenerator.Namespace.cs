@@ -133,6 +133,12 @@ internal sealed partial class ProjectionGenerator
             // Skip generic types and mapped types
             if (MappedTypes.Get(ns2, nm2) is not null || type.IsGeneric)
             {
+                if (MappedTypes.Get(ns2, nm2) is { EmitAbi: true } additionType && _settings.AdditionFilter.IncludesNamespace(ns))
+                {
+                    MetadataAttributeFactory.AddWindowsRuntimeMetadataTypeEntry(
+                        context, type, TypedefNameWriter.BuildGlobalQualifiedName(additionType.MappedNamespace, additionType.MappedName));
+                }
+
                 written = true;
                 continue;
             }
