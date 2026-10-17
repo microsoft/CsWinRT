@@ -85,6 +85,26 @@ internal readonly struct GeneratorPhaseRunner<TArgs>(
         return result;
     }
 
+    /// <inheritdoc cref="RunPhase{T}(string, Func{TArgs, T})"/>
+    /// <param name="state">The state produced by an earlier phase.</param>
+    public T RunPhase<TState, T>(string phaseName, TState state, Func<TArgs, TState, T> body)
+    {
+        T result;
+
+        try
+        {
+            result = body(Args, state);
+        }
+        catch (Exception e) when (!e.IsWellKnown)
+        {
+            throw wrapUnhandled(phaseName, e);
+        }
+
+        args.Token.ThrowIfCancellationRequested();
+
+        return result;
+    }
+
     /// <inheritdoc cref="RunPhase(string, Action{TArgs})"/>
     /// <param name="logMessage">The progress message to log before the body runs.</param>
     /// <returns>The value returned by <paramref name="body"/>.</returns>
@@ -108,4 +128,3 @@ internal readonly struct GeneratorPhaseRunner<TArgs>(
         return result;
     }
 }
-

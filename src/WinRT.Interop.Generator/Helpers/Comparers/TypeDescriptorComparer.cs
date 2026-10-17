@@ -124,6 +124,26 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         xHandler.Clear();
         yHandler.Clear();
 
+        if (result == 0)
+        {
+            // Resolving a type specification other than an SZ array (e.g. a by-ref, pointer, or modified type)
+            // drops its shape and the generic arguments of its element type, including within generic arguments.
+            // Break those ties by comparing the type arguments and specification element types structurally.
+            if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
+            {
+                result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);
+
+                for (int i = 0; result == 0 && i < xGeneric.TypeArguments.Count; i++)
+                {
+                    result = Compare(xGeneric.TypeArguments[i], yGeneric.TypeArguments[i]);
+                }
+            }
+            else if (x is TypeSpecificationSignature xSpecification && y is TypeSpecificationSignature ySpecification)
+            {
+                result = Compare(xSpecification.BaseType, ySpecification.BaseType);
+            }
+        }
+
         return result;
     }
 }
