@@ -306,6 +306,21 @@ public partial class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    public void InterfaceReimplementation_InheritsExplicitBaseImplementation()
+    {
+        AssertDispatchNode("""
+            public interface IOuter { bool Check<T>(); }
+            public class Base<U> : IOuter
+            {
+                bool IOuter.Check<T>() => Build<U, T>();
+            }
+            public sealed class Outer<U> : Base<U>, IOuter;
+            """, "_ = ((IOuter)new Outer<First>()).Check<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,");
+    }
+
+    [TestMethod]
     public void ExplicitInterfaceMapping_TakesPrecedenceOverMatchingPublicMethod()
     {
         AssertDispatchNode("""
@@ -655,6 +670,29 @@ public partial class Test_InteropGenericDiscovery
             """, "_ = ((IOuter<CallMarker>)new Outer<ReceiverMarker>()).Create<Marker>();",
             associationPrefix: "Dispatch.ReceiverMarker[],",
             absentAssociationPrefixes: ["Dispatch.CallMarker[],"]);
+    }
+
+    [TestMethod]
+    public void VariantDefaultInterface_ObservedInterfaceDoesNotSupplyReceiverArguments()
+    {
+        AssertDispatchNode("""
+            public sealed class ReceiverMarker;
+            public interface IOuter<out U>
+            {
+                bool Check<T>() => Build<U, T>();
+            }
+            public sealed class Outer : IOuter<ReceiverMarker>;
+            public static class Observation
+            {
+                public static IOuter<string> Value = null!;
+            }
+            """, """
+            _ = Observation.Value;
+            _ = ((IOuter<object>)new Outer()).Check<Marker>();
+            """,
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.ReceiverMarker,",
+            associationContains: "],[Dispatch.Marker,",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Pair`2[[System.String,"]);
     }
 
     [TestMethod]

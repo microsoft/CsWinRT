@@ -36,6 +36,9 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>Metadata hierarchies in each type's formal parameter context.</summary>
     private readonly Dictionary<TypeDefinition, HierarchyType[]> _hierarchies = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>Interface ownership closures, separate from the hierarchies used to publish receiver contexts.</summary>
+    private readonly Dictionary<TypeDefinition, HierarchyType[]> _declaredInterfaceHierarchies = new(ReferenceEqualityComparer.Instance);
+
     /// <summary>Whether a definition's metadata hierarchy contains any generic virtual declaration.</summary>
     private readonly Dictionary<TypeDefinition, bool> _hasGenericDispatch = new(ReferenceEqualityComparer.Instance);
 
@@ -353,7 +356,15 @@ internal sealed partial class MethodDispatchIndex
                 method: null));
             GenericContext context = new(type: declaredType as GenericInstanceTypeSignature, method: null);
 
-            if (GetOrAddHierarchy(definition).Any(entry =>
+            // Ownership metadata must not make an observed interface signature act as a concrete receiver.
+            if (!_declaredInterfaceHierarchies.TryGetValue(definition, out HierarchyType[]? hierarchy))
+            {
+                hierarchy = CreateHierarchy(definition, _runtimeContext, _comparer, _token);
+
+                _declaredInterfaceHierarchies.Add(definition, hierarchy);
+            }
+
+            if (hierarchy.Any(entry =>
                 ReferenceEquals(entry.Definition, iface.Definition) &&
                 _comparer.Equals(entry.Signature.InstantiateGenericTypes(context), iface.Signature)))
             {
