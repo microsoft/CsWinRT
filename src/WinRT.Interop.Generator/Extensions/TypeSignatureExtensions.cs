@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropGenerator;
 /// <summary>
 /// Extensions for the <see cref="TypeSignature"/> type.
 /// </summary>
-internal static class TypeSignatureExtensions
+internal static partial class TypeSignatureExtensions
 {
     extension(TypeSignature signature)
     {
