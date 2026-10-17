@@ -52,4 +52,9 @@ internal static class WellKnownNamespaces
     /// The <c>Microsoft.UI.Xaml</c> namespace (WinUI, where <c>DependencyProperty</c> lives in that mode).
     /// </summary>
     public const string MicrosoftUIXaml = "Microsoft.UI.Xaml";
+
+    /// <summary>
+    /// The <c>WindowsRuntime.InteropServices</c> namespace (the CsWinRT runtime's interop APIs).
+    /// </summary>
+    public const string WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices";
 }

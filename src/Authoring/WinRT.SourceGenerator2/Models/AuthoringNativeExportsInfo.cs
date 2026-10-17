@@ -7,5 +7,6 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// Options for <see cref="AuthoringExportTypesGenerator"/> specific to native exports.
 /// </summary>
 /// <param name="AssemblyName">The assembly name for the current assembly.</param>
+/// <param name="HasActivationFactories">Whether the compilation declares any <c>[WindowsRuntimeActivationFactory]</c> types.</param>
 /// <param name="Options">The options for the generator.</param>
-internal record AuthoringNativeExportsInfo(string AssemblyName, AuthoringExportTypesOptions Options);
+internal record AuthoringNativeExportsInfo(string AssemblyName, bool HasActivationFactories, AuthoringExportTypesOptions Options);

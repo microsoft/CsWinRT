@@ -156,6 +156,7 @@ By running the interop generator at the very end of the build process (after all
 | `CsWinRTPackReferenceProjection` | `true` | Pack the reference assembly of a reference projection under `ref/<tfm>` |
 | `CsWinRTPackedWinMD` | *(item)* | The `.winmd` files to pack under `metadata/` (explicit: `CsWinRTInputs` also holds dependency metadata) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
+| `CsWinRTImplementWinMDTypes` | `false` | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C# |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | `CsWinRTMergeReferencedActivationFactories` | `false` | Merge activation factories from referenced components |
 
@@ -350,7 +351,7 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
 | `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
-**Five diagnostic analyzers** producing 10 diagnostics (IDs `CSWINRT2000`–`CSWINRT2009`; the first nine are errors, the last is a warning):
+**Diagnostic analyzers** producing diagnostics with IDs `CSWINRT2000`–`CSWINRT2027` (the full list, with severities, is in `AnalyzerReleases.Shipped.md`). Some notable groups:
 
 Validate `[GeneratedCustomPropertyProvider]` usage:
 
@@ -363,6 +364,12 @@ Validate `[GeneratedCustomPropertyProvider]` usage:
 Validate general projection usage:
 
 - `CSWINRT2009`: Cast to a `[ComImport]` interface type is not supported under CsWinRT 3.0 (`ComImportInterfaceAnalyzer`)
+
+Validate activation factories for authored and implemented Windows Runtime classes (both analyzers share `Helpers/ImplementableClassLookup.cs` with `AuthoringExportTypesGenerator`, so they apply the same rules):
+
+- `CSWINRT2023`–`CSWINRT2025`: Invalid `[WindowsRuntimeActivationFactory]` target type, mismatched runtime class type argument, and more than one activation factory (declared, or requested with `[GeneratedWindowsRuntimeActivationFactory]`) for the same runtime class (`WindowsRuntimeActivationFactoryAttributeAnalyzer`)
+- `CSWINRT2026`: Implementation of an activatable Windows Runtime class defined in existing metadata that has neither a declared activation factory nor one requested with `[GeneratedWindowsRuntimeActivationFactory]` (`ImplementedRuntimeClassActivationAnalyzer`, warning)
+- `CSWINRT2027`: Invalid `[GeneratedWindowsRuntimeActivationFactory]` target type, e.g. not an implementation, not instantiable, or implementing a class with factory methods or statics (`WindowsRuntimeActivationFactoryAttributeAnalyzer`)
 
 ### 3. Projection writer (`src/WinRT.Projection.Writer/`)
 
@@ -475,7 +482,7 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 
 - **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtprojectiongen`
-- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
+- **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn, transitively through `WinRT.Generator.Core`), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
 
 **Three projection modes:**
 
@@ -586,7 +593,7 @@ A shared infrastructure library (`WinRT.Generator.Core.dll`) referenced by all f
 - **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`, `DisableRuntimeMarshalling`, `IsAotCompatible`
 - **Root namespace**: `WindowsRuntime.Generator` (the `.Core` suffix is dropped)
 - **Assembly name**: `WinRT.Generator.Core`
-- **Dependency**: `AsmResolver.DotNet`
+- **Dependencies**: `AsmResolver.DotNet`, and `Microsoft.CodeAnalysis.CSharp` (only for `SyntaxFacts`, so identifiers escaped by the build tools match the source generator's; the rest of Roslyn is trimmed away, so published tool size is unaffected)
 - **`[InternalsVisibleTo]`**: exposes its internals to the five CLI tool assemblies (`cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtprojectiongen`, `cswinrtprojectionrefgen`, `cswinrtwinmdgen`)
 
 **What it provides:**
@@ -597,7 +604,7 @@ A shared infrastructure library (`WinRT.Generator.Core.dll`) referenced by all f
 | Response files | `Parsing/ResponseFileParser`, `Parsing/ResponseFileBuilder`, `Attributes/CommandLineArgumentNameAttribute` | Reflection-based parsing/formatting of the `.rsp` files: properties are mapped to `--flag` names via `[CommandLineArgumentName]`, so each tool's `*Args` type is a plain record with no hand-written parse/format code |
 | Error contract | `Errors/IGeneratorErrorFactory`, `Errors/WellKnownGeneratorException`, `Errors/UnhandledGeneratorException`, `Errors/WellKnownGeneratorMessages`, `Errors/GeneratorExceptionExtensions` | The shared infrastructure is generic over an `IGeneratorErrorFactory` (a `static abstract` interface) so it can route the common logical errors (response-file parsing, debug-repro packing, etc.) through each tool's own `WellKnown*Exceptions` factory — preserving per-tool error IDs and the shared `{ErrorPrefix}9999` unhandled-exception format |
 | Debug repro | `DebugRepro/DebugReproPacker` | Shared helpers to package input files (with hashed names) into a self-contained `.zip` and to unpack/replay one (each tool still owns its per-category subfolder layout) |
-| Misc helpers | `Helpers/MvidGenerator`, `Helpers/GeneratorJsonSerializerContext`, `Extensions/{File,Path,RuntimeContext,IncrementalHash}Extensions`, `References/{WellKnownPublicKeys,WellKnownPublicKeyTokens}` | Deterministic MVID hashing, AOT-safe JSON, path/file/`RuntimeContext` extensions, and the strong-name public keys/tokens used when emitting or referencing assemblies |
+| Misc helpers | `Helpers/CSharpIdentifiers`, `Helpers/MvidGenerator`, `Helpers/GeneratorJsonSerializerContext`, `Extensions/{File,Path,RuntimeContext,IncrementalHash}Extensions`, `References/{WellKnownPublicKeys,WellKnownPublicKeyTokens}` | C# keyword checks and identifier escaping (matching the source generator), deterministic MVID hashing, AOT-safe JSON, path/file/`RuntimeContext` extensions, and the strong-name public keys/tokens used when emitting or referencing assemblies |
 
 The library has no error IDs of its own — the per-tool `WellKnown*Exceptions` factories (each with its own `CSWINRT*GEN` prefix) own them and are dispatched through `IGeneratorErrorFactory`.
 
@@ -740,10 +747,10 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 
 | Project | Error ID Pattern | Range |
 |---------|-----------------|-------|
-| Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2009` |
+| Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2027` |
 | Reference Projection Generator | `CSWINRTPROJECTIONREFGENxxxx` | `0001`–`0008`, `9999` |
 | Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0011`, `9999` |
-| Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5021`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
+| Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5024`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0014`, `9999` |

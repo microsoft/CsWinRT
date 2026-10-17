@@ -162,6 +162,13 @@ internal static class AbiClassFactory
 
         if (type.IsExclusiveTo && !context.Settings.IsPublicExclusiveTo(type.FullName))
         {
+            // A runtime class implemented in C# needs the CCW vtables for its '[exclusiveto]' interfaces:
+            // that is what a native call dispatches through to reach the author's overrides.
+            if (AbiImplementableClassFactory.IsImplementableExclusiveToInterface(context, type))
+            {
+                return true;
+            }
+
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
             TypeDefinition? exclusiveToType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);

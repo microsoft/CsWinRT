@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
@@ -126,7 +127,7 @@ internal static class MethodFactory
     {
         string name = p.GetRawName();
 
-        writer.WriteIf(CSharpKeywords.IsKeyword(name), "@");
+        writer.WriteIf(CSharpIdentifiers.IsKeyword(name), "@");
 
         writer.Write(name);
     }

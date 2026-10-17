@@ -9,8 +9,11 @@ using System.ComponentModel;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// Indicates which type contains the managed <c>GetActivationFactory</c> method to invoke for authoring scenarios. This
-/// attribute is only meant to be used within an assembly annotated with <see cref="WindowsRuntimeComponentAssemblyAttribute"/>.
+/// Indicates which type contains the managed <c>GetActivationFactory</c> method to invoke for authoring scenarios.
+/// Its presence is also what marks an assembly as taking part in the merged activation performed by
+/// <c>WinRT.Component.dll</c>. It does not imply that the assembly is an authored Windows Runtime component: an
+/// assembly implementing classes declared in existing metadata carries this attribute but not
+/// <see cref="WindowsRuntimeComponentAssemblyAttribute"/>.
 /// </summary>
 /// <remarks>
 /// This attribute is emitted by the CsWinRT generator, and it is not meant to be used directly.

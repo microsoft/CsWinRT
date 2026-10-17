@@ -121,6 +121,42 @@ public class Test_TypeFiltering
         });
     }
 
+    [TestMethod]
+    public void ExactTypeExcludes_CarveOutOfANamespaceInclude()
+    {
+        // Harvested from a reference projection's own metadata, which declares the internal
+        // exclusive-to interfaces alongside the public runtime classes
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                Include = ["Contoso"],
+                ExcludeTypes =
+                [
+                    "Contoso.User2",
+                    "Contoso.IUser2",
+                    "Contoso.IUser2Statics",
+                    "Contoso.UserProfile.UserSetupManager",
+                    "Contoso.UserProfile.IUserSetupManager",
+                    "Contoso.UserProfile.IUserSetupManagerStatics"
+                ]
+            });
+
+            string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));
+
+            StringAssert.Contains(source, "class User");
+            Assert.IsFalse(source.Contains("User2", StringComparison.Ordinal));
+
+            string allSources = string.Join(
+                Environment.NewLine,
+                Directory.GetFiles(outputFolder, "*.cs").Select(File.ReadAllText));
+
+            Assert.IsFalse(allSources.Contains("UserSetupManager", StringComparison.Ordinal));
+        });
+    }
+
     private static void AssertSelectedTypes(string outputFolder)
     {
         string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));

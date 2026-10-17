@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A Windows Runtime component whose types are *only* implementations of runtime classes declared in
+    existing metadata ('TestComponent'), so it authors nothing of its own and its generated '.winmd' is
+    empty. The component still forwards activation to 'WinRT.Component.dll', so that entry point has to
+    exist even with nothing activatable of its own (see 'ComponentFactory.WriteModuleActivationFactory').
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <CsWinRTComponent>true</CsWinRTComponent>
+    <IsTrimmable>true</IsTrimmable>
+    <TargetPlatformResourceVersion>10.0.18362.0</TargetPlatformResourceVersion>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Projections\TestImplementWinMDTypes\TestImplementWinMDTypes.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
+  </ItemGroup>
+
+</Project>

@@ -28,15 +28,15 @@ internal static class ResponseFileParser
     /// for <c>ToolTask</c> response files), which is stripped before reading the file.
     /// </remarks>
     /// <typeparam name="TArgs">The strongly-typed args record. Must have a public parameterless constructor surface (only public properties are inspected via reflection).</typeparam>
-    /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
+    /// <typeparam name="TError">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    public static TArgs Parse<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TErr>(
+    public static TArgs Parse<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TError>(
         string path,
         CancellationToken token)
         where TArgs : class
-        where TErr : IGeneratorErrorFactory
+        where TError : IGeneratorErrorFactory
     {
         // If the path is a response file, it will start with the '@' character.
         // This matches the default escaping 'ToolTask' uses for response files.
@@ -54,43 +54,43 @@ internal static class ResponseFileParser
         }
         catch (Exception e)
         {
-            throw TErr.ResponseFileReadError(e);
+            throw TError.ResponseFileReadError(e);
         }
 
-        Dictionary<string, string> argsMap = BuildArgsMap<TErr>(lines);
+        Dictionary<string, string> argsMap = BuildArgsMap<TError>(lines);
 
-        return Populate<TArgs, TErr>(argsMap, token);
+        return Populate<TArgs, TError>(argsMap, token);
     }
 
     /// <summary>
     /// Parses an instance of <typeparamref name="TArgs"/> from a response file read from a stream.
     /// </summary>
     /// <typeparam name="TArgs">The strongly-typed args record.</typeparam>
-    /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
+    /// <typeparam name="TError">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="stream">The stream containing the response file content.</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    public static TArgs Parse<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TErr>(
+    public static TArgs Parse<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TError>(
         Stream stream,
         CancellationToken token)
         where TArgs : class
-        where TErr : IGeneratorErrorFactory
+        where TError : IGeneratorErrorFactory
     {
         string[] lines = File.ReadAllLines(stream);
 
-        Dictionary<string, string> argsMap = BuildArgsMap<TErr>(lines);
+        Dictionary<string, string> argsMap = BuildArgsMap<TError>(lines);
 
-        return Populate<TArgs, TErr>(argsMap, token);
+        return Populate<TArgs, TError>(argsMap, token);
     }
 
     /// <summary>
     /// Builds the name-to-value map from the lines of a response file.
     /// </summary>
-    /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
+    /// <typeparam name="TError">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="lines">The lines read from the response file.</param>
     /// <returns>The resulting map.</returns>
-    private static Dictionary<string, string> BuildArgsMap<TErr>(string[] lines)
-        where TErr : IGeneratorErrorFactory
+    private static Dictionary<string, string> BuildArgsMap<TError>(string[] lines)
+        where TError : IGeneratorErrorFactory
     {
         Dictionary<string, string> argsMap = [];
 
@@ -110,7 +110,7 @@ internal static class ResponseFileParser
 
             if (indexOfSpace == -1)
             {
-                throw TErr.MalformedResponseFile();
+                throw TError.MalformedResponseFile();
             }
 
             // Now we can parse the actual command line argument name and value
@@ -120,7 +120,7 @@ internal static class ResponseFileParser
             // We should never have duplicate commands
             if (!argsMap.TryAdd(argumentName, argumentValue))
             {
-                throw TErr.MalformedResponseFile();
+                throw TError.MalformedResponseFile();
             }
         }
 
@@ -131,15 +131,15 @@ internal static class ResponseFileParser
     /// Populates an arguments object with the provided parsed values.
     /// </summary>
     /// <typeparam name="TArgs">The strongly-typed args record.</typeparam>
-    /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
+    /// <typeparam name="TError">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="argsMap">The pre-built name-to-value map.</param>
     /// <param name="token">The cancellation token, assigned to any <see cref="CancellationToken"/>-typed property on <typeparamref name="TArgs"/>.</param>
     /// <returns>The populated <typeparamref name="TArgs"/> instance.</returns>
-    private static TArgs Populate<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TErr>(
+    private static TArgs Populate<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.AllConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TArgs, TError>(
         Dictionary<string, string> argsMap,
         CancellationToken token)
         where TArgs : class
-        where TErr : IGeneratorErrorFactory
+        where TError : IGeneratorErrorFactory
     {
         // We bypass any constructor (and the runtime's required-member enforcement) by using
         // 'GetUninitializedObject'. All properties are then populated via reflection from the
@@ -172,7 +172,7 @@ internal static class ResponseFileParser
 
             if (!hasValue)
             {
-                ApplyDefault<TErr>(instance, property, propertyType, isRequired);
+                ApplyDefault<TError>(instance, property, propertyType, isRequired);
 
                 continue;
             }
@@ -187,11 +187,11 @@ internal static class ResponseFileParser
             }
             else if (isRequired)
             {
-                throw TErr.ResponseFileArgumentParsingError(property.Name, null);
+                throw TError.ResponseFileArgumentParsingError(property.Name, null);
             }
             else
             {
-                ApplyDefault<TErr>(instance, property, propertyType, isRequired: false);
+                ApplyDefault<TError>(instance, property, propertyType, isRequired: false);
             }
         }
 
@@ -201,21 +201,21 @@ internal static class ResponseFileParser
     /// <summary>
     /// Applies the default value for a property when the response file does not provide one.
     /// </summary>
-    /// <typeparam name="TErr">The per-tool well-known exception factory used to route parsing errors.</typeparam>
+    /// <typeparam name="TError">The per-tool well-known exception factory used to route parsing errors.</typeparam>
     /// <param name="instance">The args instance being populated.</param>
     /// <param name="property">The property being set.</param>
     /// <param name="propertyType">The property's type.</param>
     /// <param name="isRequired">Whether the property has <see cref="RequiredMemberAttribute"/>.</param>
-    private static void ApplyDefault<TErr>(
+    private static void ApplyDefault<TError>(
         object instance,
         PropertyInfo property,
         Type propertyType,
         bool isRequired)
-        where TErr : IGeneratorErrorFactory
+        where TError : IGeneratorErrorFactory
     {
         if (isRequired)
         {
-            throw TErr.ResponseFileArgumentParsingError(property.Name, null);
+            throw TError.ResponseFileArgumentParsingError(property.Name, null);
         }
 
         // '[DefaultValue("…")]' takes precedence: it lets per-tool args express initializer-style

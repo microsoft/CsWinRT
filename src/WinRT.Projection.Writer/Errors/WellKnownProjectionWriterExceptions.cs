@@ -162,6 +162,22 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5022, $"Invalid exclusive-to IDIC filter '{filter ?? "<null>"}' in '{optionName}'. Use case-sensitive namespace or type-name prefixes, without wildcards or regular expressions.");
     }
 
+    /// <summary>
+    /// An abstract <c>[WindowsRuntimeActivationFactory]</c> class extending a generated activation factory cannot be derived from.
+    /// </summary>
+    public static WellKnownProjectionWriterException InvalidActivationFactoryExtension(string typeName, string runtimeClassName)
+    {
+        return Exception(5023, $"The activation factory for '{runtimeClassName}' cannot extend '{typeName}': it must be a public, non-generic abstract class (in public containing types, if nested) with a public or protected parameterless constructor.");
+    }
+
+    /// <summary>
+    /// More than one abstract <c>[WindowsRuntimeActivationFactory]</c> class extends the activation factory for the same runtime class.
+    /// </summary>
+    public static WellKnownProjectionWriterException DuplicateActivationFactoryExtension(string runtimeClassName, string firstTypeName, string secondTypeName)
+    {
+        return Exception(5024, $"The activation factory for '{runtimeClassName}' can only extend one class, but both '{firstTypeName}' and '{secondTypeName}' are declared for it.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException($"{ErrorPrefix}{id:0000}", message, innerException);
