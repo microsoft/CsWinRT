@@ -4,7 +4,7 @@ stages:
   jobs: 
   - job: BuildAndTest
     condition: ne(variables['_BenchmarksOnly'],'true')
-    timeoutInMinutes: 270
+    timeoutInMinutes: 300
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
     strategy:
       maxParallel: 10

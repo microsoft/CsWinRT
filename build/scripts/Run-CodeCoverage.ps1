@@ -101,7 +101,7 @@ try {
         }
         & dotnet tool run dotnet-coverage collect --settings $settings --output $report --output-format coverage `
             $command | Out-Host
-        $expectedExitCode = 100
+        $expectedExitCode = if ($Name -eq 'ClassActivation') { 0 } else { 100 }
     }
 
     if ($LASTEXITCODE -ne $expectedExitCode) {
