@@ -13,6 +13,95 @@ namespace ProjectionWriterTest;
 public partial class Test_InteropGenericDiscovery
 {
     [TestMethod]
+    public void VariantInterface_LateReceiverJoin_DoesNotInventGenericOrArrayArguments()
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropVariantLateReceiver_").FullName;
+
+        try
+        {
+            string contracts = ProjectionWriterRunner.CompileSources(
+                ["""
+                namespace Across;
+                public interface IMarker;
+                public class CallMarker;
+                public sealed class ReceiverMarker : CallMarker, IMarker;
+                public sealed class Node<U, T> : Windows.Foundation.IStringable where U : IMarker
+                {
+                    public override string ToString() => "node";
+                }
+                public interface IOuter<out U> { object Check<T>(); }
+                public sealed class Outer<U> : IOuter<U> where U : IMarker
+                {
+                    public object Check<T>()
+                    {
+                        _ = new U[1];
+                        return new Node<U, T>();
+                    }
+                }
+                """], Path.Combine(directory, "Contracts.dll"));
+            string producer = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Producer
+                {
+                    public static object Create() => new Across.Outer<Across.ReceiverMarker>();
+                }
+                """], Path.Combine(directory, "Producer.dll"), additionalReferences: [contracts]);
+            string caller = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Caller
+                {
+                    public static object Invoke() => ((Across.IOuter<Across.CallMarker>)null!).Check<int>();
+                }
+                """], Path.Combine(directory, "Caller.dll"), additionalReferences: [contracts]);
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = Producer.Create();
+                        _ = Caller.Invoke();
+                    }
+                }
+                """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [contracts, producer, caller]);
+            byte[]? firstOutput = null;
+
+            foreach (bool reverse in new[] { false, true })
+            {
+                (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors: true,
+                    additionalReferences: reverse ? [caller, producer, contracts] : [contracts, producer, caller],
+                    maxDegreesOfParallelism: reverse ? 4 : 1);
+
+                Assert.AreEqual(0, exitCode, log);
+
+                string interop = Path.Combine(directory, "WinRT.Interop.dll");
+                string[] associations = [.. GetComWrappersTypeAssociations(interop)];
+                string[] nodes = [.. associations.Where(static type => type.StartsWith("Across.Node`2", StringComparison.Ordinal))];
+
+                Assert.HasCount(1, nodes, log);
+                Assert.IsTrue(nodes[0].StartsWith("Across.Node`2[[Across.ReceiverMarker,", StringComparison.Ordinal), log);
+                StringAssert.Contains(nodes[0], "],[System.Int32,");
+                Assert.IsTrue(associations.Any(static type => type.StartsWith("Across.ReceiverMarker[],", StringComparison.Ordinal)), log);
+                Assert.IsFalse(associations.Any(static type => type.StartsWith("Across.CallMarker[],", StringComparison.Ordinal)), log);
+
+                byte[] output = File.ReadAllBytes(interop);
+
+                if (firstOutput is not null)
+                {
+                    CollectionAssert.AreEqual(firstOutput, output);
+                }
+
+                firstOutput = output;
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void CrossModuleInheritedNonvirtualImplementation_ClosesForwardingStub()
     {
         string directory = Directory.CreateTempSubdirectory("InteropInheritedDispatch_").FullName;

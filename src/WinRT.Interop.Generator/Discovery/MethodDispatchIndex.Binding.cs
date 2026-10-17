@@ -20,8 +20,7 @@ internal partial class MethodDispatchIndex
     /// <returns>Whether the relationship is compatible with the observed contexts.</returns>
     public bool TryBind(Target target, TypeSignature declarationType, TypeSignature? receiverType, out TypeSignature bodyType)
     {
-        // Inference fills missing receiver arguments and variance checks commit tentative bindings
-        // Keep this writable state separate from receiver metadata shared by parallel discovery.
+        // Keep writable inference state separate from receiver metadata shared by parallel discovery.
         TypeSignature?[] bindings = new TypeSignature?[target.Receiver.GenericParameters.Count];
 
         if (receiverType is GenericInstanceTypeSignature receiver)
@@ -45,17 +44,10 @@ internal partial class MethodDispatchIndex
 
             for (int i = 0; i < pattern.TypeArguments.Count; i++)
             {
-                // A call through 'IOuter<object>' can dispatch to an implementation of 'IOuter<string>'
-                // Preserve observed receiver arguments when variance makes exact unification fail.
-                if (definition?.GenericParameters[i].IsVariant == true)
+                // A variant reference argument describes a conversion, not the receiver's exact type argument.
+                // Value types do not participate in variance and still permit exact inference.
+                if (definition?.GenericParameters[i].IsVariant == true && !actual.TypeArguments[i].IsValueType)
                 {
-                    TypeSignature?[] candidateBindings = (TypeSignature?[])bindings.Clone();
-
-                    if (TryUnify(pattern.TypeArguments[i], actual.TypeArguments[i], candidateBindings))
-                    {
-                        candidateBindings.CopyTo(bindings, 0);
-                    }
-
                     continue;
                 }
 

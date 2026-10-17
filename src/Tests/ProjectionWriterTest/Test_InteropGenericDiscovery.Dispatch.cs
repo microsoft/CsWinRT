@@ -553,7 +553,108 @@ public partial class Test_InteropGenericDiscovery
             {
                 public bool Check<T>() => Build<U, T>();
             }
-            """, "_ = ((IOuter<object>)new Outer<string>()).Check<Marker>();", associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[System.String,");
+            """, "_ = ((IOuter<object>)new Outer<string>()).Check<Marker>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[System.String,",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Pair`2[[System.Object,"]);
+    }
+
+    [TestMethod]
+    public void VariantInterface_DoesNotInventConstrainedReceiverArguments()
+    {
+        AssertDispatchNode("""
+            public interface IMarker;
+            public sealed class ReceiverMarker : IMarker;
+            public sealed class ConstrainedNode<U, T> : IStringable where U : IMarker
+            {
+                public override string ToString() => "constrained";
+            }
+            public interface IOuter<out U> { object Check<T>(); }
+            public sealed class Outer<U> : IOuter<U> where U : IMarker
+            {
+                public object Check<T>() => new ConstrainedNode<U, T>();
+            }
+            """, "_ = ((IOuter<object>)new Outer<ReceiverMarker>()).Check<int>();",
+            associationPrefix: "Dispatch.ConstrainedNode`2[[Dispatch.ReceiverMarker,",
+            associationContains: "],[System.Int32,",
+            absentAssociationPrefixes: ["Dispatch.ConstrainedNode`2[[System.Object,"]);
+    }
+
+    [TestMethod]
+    public void ContravariantInterface_DoesNotInventReceiverArguments()
+    {
+        AssertDispatchNode("""
+            public interface IOuter<in U> { bool Check<T>(); }
+            public sealed class Outer<U> : IOuter<U>
+            {
+                public bool Check<T>() => Build<U, T>();
+            }
+            """, "_ = ((IOuter<string>)new Outer<object>()).Check<Marker>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[System.Object,",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Pair`2[[System.String,"]);
+    }
+
+    [TestMethod]
+    public void VariantInterface_WithoutObservedReceiver_KeepsReceiverArgumentsOpen()
+    {
+        AssertDispatchNode("""
+            public interface IOuter<out U> { bool Check<T>(); }
+            public sealed class Outer<U> : IOuter<U>
+            {
+                public bool Check<T>()
+                {
+                    _ = Build<U, T>();
+                    return Build<T>();
+                }
+            }
+            """, "_ = ((IOuter<object>)null!).Check<Marker>();",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Pair`2[[System.Object,"]);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("out ")]
+    public void InterfaceValueTypeArgument_InfersExactReceiverWithoutObservation(string variance)
+    {
+        AssertDispatchNode($$"""
+            public interface IOuter<{{variance}}U> { bool Check<T>(); }
+            public sealed class Outer<U> : IOuter<U>
+            {
+                public bool Check<T>() => Build<U, T>();
+            }
+            """, "_ = ((IOuter<First>)null!).Check<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,");
+    }
+
+    [TestMethod]
+    public void MixedVariantInterface_InfersReceiverFromInvariantPosition()
+    {
+        AssertDispatchNode("""
+            public interface IOuter<out V, W> { bool Check<T>(); }
+            public sealed class Outer<U> : IOuter<U, U>
+            {
+                public bool Check<T>() => Build<U, T>();
+            }
+            """, "_ = ((IOuter<object, string>)null!).Check<Marker>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[System.String,",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Pair`2[[System.Object,"]);
+    }
+
+    [TestMethod]
+    public void VariantInterface_ClosesSzArraysOnlyFromObservedReceivers()
+    {
+        AssertDispatchNode("""
+            public interface IMarker;
+            public class CallMarker;
+            public sealed class ReceiverMarker : CallMarker, IMarker;
+            public interface IOuter<out U> { object Create<T>(); }
+            public sealed class Outer<U> : IOuter<U> where U : IMarker
+            {
+                public object Create<T>() => new U[1];
+            }
+            """, "_ = ((IOuter<CallMarker>)new Outer<ReceiverMarker>()).Create<Marker>();",
+            associationPrefix: "Dispatch.ReceiverMarker[],",
+            absentAssociationPrefixes: ["Dispatch.CallMarker[],"]);
     }
 
     [TestMethod]
