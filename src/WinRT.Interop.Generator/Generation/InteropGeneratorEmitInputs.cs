@@ -1,19 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <summary>
-/// Lazily enumerates ordered, output-bound signatures for the emit phase. Discovery may retain
+/// Provides ordered, output-bound signatures for the emit phase. Discovery may retain
 /// any of several forwarded spellings of the same type, so they must be resolved before creating metadata.
+/// User-defined types and their groups are prepared lazily once, sharing group state between emission passes.
 /// </summary>
 internal sealed class InteropGeneratorEmitInputs
 {
@@ -34,6 +38,9 @@ internal sealed class InteropGeneratorEmitInputs
 
     /// <summary>Canonicalized interface sets shared by discovered set identity.</summary>
     private readonly Dictionary<TypeSignatureEquatableSet, TypeSignatureEquatableSet> _canonicalVtableSets = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>The shared, lazily prepared groups and globally ordered proxy inputs.</summary>
+    private UserDefinedTypeInputs UserDefinedTypes => field ??= CreateUserDefinedTypeInputs();
 
     /// <summary>
     /// Creates an output-bound view of the completed discovery state without materializing its signatures.
@@ -163,10 +170,84 @@ internal sealed class InteropGeneratorEmitInputs
         return CanonicalizeTypesAndVtables(_discoveryState.SzArrayAndVtableTypes);
     }
 
-    /// <summary>Enumerates the ordered user-defined types and their shared canonicalized interface sets.</summary>
-    public IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> EnumerateUserDefinedAndVtableTypes()
+    /// <summary>Gets the shared user-defined vtable groups in their emission order.</summary>
+    /// <returns>The groups ordered by their prepared interface sets.</returns>
+    public IReadOnlyList<UserDefinedVtableGroup> GetUserDefinedVtableGroups()
     {
-        return CanonicalizeTypesAndVtables(_discoveryState.UserDefinedAndVtableTypes);
+        return UserDefinedTypes.VtableGroups;
+    }
+
+    /// <summary>Enumerates user-defined proxy inputs in global canonical type order.</summary>
+    /// <returns>Each type's own canonical interface set and its shared group.</returns>
+    public IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)> EnumerateUserDefinedAndVtableTypes()
+    {
+        return UserDefinedTypes.Types;
+    }
+
+    /// <summary>Prepares the shared groups and their proxy associations without changing either emission order.</summary>
+    /// <returns>The ordered groups and globally ordered proxy inputs.</returns>
+    private UserDefinedTypeInputs CreateUserDefinedTypeInputs()
+    {
+        // Finish importing forwarded names before formatting keys, so each key describes
+        // the resolved identity that emission uses.
+        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] imported =
+            [.. _discoveryState.UserDefinedAndVtableTypes.Select(pair =>
+            {
+                _token.ThrowIfCancellationRequested();
+
+                return (
+                    Type: _importer.ImportTypeSignature(pair.Key),
+                    VtableTypes: CanonicalizeVtableSet(pair.Value));
+            })];
+
+        // Identities are now stable; share cached display names across type and interface ordering.
+        TypeDescriptorComparer comparer = TypeDescriptorComparer.CreateForEmission(_runtimeContext);
+
+        // Compute each primary key once for 'OrderBy'; preserve the structural tie-break with 'ThenBy'.
+        IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> orderedTypes = imported
+            .Select(pair => (pair.Type, pair.VtableTypes, Key: comparer.GetOrderKey(pair.Type)))
+            .OrderBy(static pair => pair.Key, StringComparer.Ordinal)
+            .ThenBy(static pair => pair.Type, comparer)
+            .Select(static pair => (pair.Type, pair.VtableTypes));
+
+        // Equal interface sets share generated marshallers. The identity map avoids rehashing
+        // a shared canonical set for every user type, without treating distinct equal sets as different groups.
+        Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsBySet = [];
+        Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsByIdentity = new(ReferenceEqualityComparer.Instance);
+        List<UserDefinedVtableGroup> groups = [];
+        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)[] types =
+            new (TypeSignature, TypeSignatureEquatableSet, UserDefinedVtableGroup)[imported.Length];
+        int index = 0;
+
+        // The first type with a set names its shared generated types, so choose representatives
+        // in global type order rather than parallel discovery order.
+        foreach ((TypeSignature type, TypeSignatureEquatableSet vtableTypes) in orderedTypes)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            ref UserDefinedVtableGroup? identityGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                groupsByIdentity, vtableTypes, out _);
+
+            if (identityGroup is null)
+            {
+                ref UserDefinedVtableGroup? semanticGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    groupsBySet, vtableTypes, out _);
+
+                if (semanticGroup is null)
+                {
+                    semanticGroup = new(type, vtableTypes, comparer);
+                    groups.Add(semanticGroup);
+                }
+
+                identityGroup = semanticGroup;
+            }
+
+            // Proxies keep global type order and their own interface set, while sharing the group's marshaller.
+            types[index++] = (type, vtableTypes, identityGroup);
+        }
+
+        // 'OrderBy' keeps interface-set ties stable; proxies independently keep global type order.
+        return new([.. groups.OrderBy(static group => group.OrderedTypes)], types);
     }
 
     /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>
@@ -219,5 +300,21 @@ internal sealed class InteropGeneratorEmitInputs
                     VtableTypes: CanonicalizeVtableSet(pair.Value));
             })
             .OrderByFullyQualifiedTypeName(static pair => pair.Type, _runtimeContext);
+    }
+
+    /// <summary>
+    /// Shares the prepared groups and proxy associations between both user-defined type emission passes.
+    /// </summary>
+    /// <param name="vtableGroups">The shared groups in interface-set order.</param>
+    /// <param name="types">The globally ordered proxy inputs, retaining each type's own interface set.</param>
+    private sealed class UserDefinedTypeInputs(
+        IReadOnlyList<UserDefinedVtableGroup> vtableGroups,
+        IReadOnlyList<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)> types)
+    {
+        /// <summary>Gets the shared groups in interface-set order.</summary>
+        public IReadOnlyList<UserDefinedVtableGroup> VtableGroups { get; } = vtableGroups;
+
+        /// <summary>Gets the globally ordered types, their own canonical interface sets, and their shared groups.</summary>
+        public IReadOnlyList<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)> Types { get; } = types;
     }
 }
