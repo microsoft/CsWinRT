@@ -31,7 +31,7 @@ steps:
           solution: $(Build.SourcesDirectory)\src\Tests\${{ test.name }}\${{ test.project }}.csproj
           msbuildArguments: /t:Restore /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,WindowsPackageType=None,RuntimeIdentifier=win-x64,RestoreRecursive=false,solutiondir=$(Build.SourcesDirectory)\src\
           platform: x64
-          configuration: Release
+          configuration: $(BuildConfiguration)
 
       - task: MSBuild@1
         displayName: Build ${{ test.name }} for JIT coverage
@@ -40,7 +40,7 @@ steps:
           solution: $(Build.SourcesDirectory)\src\Tests\${{ test.name }}\${{ test.project }}.csproj
           msbuildArguments: /t:Build /bl:$(StagingFolder)\binlog\MSTest-${{ test.name }}-JIT-coverage.binlog /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,WindowsPackageType=None,RuntimeIdentifier=win-x64,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
           platform: x64
-          configuration: Release
+          configuration: $(BuildConfiguration)
 
     - task: PowerShell@2
       displayName: Collect ${{ test.name }} JIT coverage
@@ -61,7 +61,7 @@ steps:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\${{ test }}.csproj
         msbuildArguments: /t:Restore /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,RuntimeIdentifier=win-x64,RestoreRecursive=false,solutiondir=$(Build.SourcesDirectory)\src\
         platform: x64
-        configuration: Release
+        configuration: $(BuildConfiguration)
 
     - task: MSBuild@1
       displayName: Publish ${{ test }} for JIT coverage
@@ -70,7 +70,7 @@ steps:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\${{ test }}.csproj
         msbuildArguments: /t:Publish /bl:$(StagingFolder)\binlog\Functional-${{ test }}-JIT-coverage.binlog /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,RuntimeIdentifier=win-x64,TargetFramework=net10.0,PublishDir=$(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\bin\Release\net10.0\win-x64\coverage\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: x64
-        configuration: Release
+        configuration: $(BuildConfiguration)
 
     - task: PowerShell@2
       displayName: Collect ${{ test }} JIT coverage
