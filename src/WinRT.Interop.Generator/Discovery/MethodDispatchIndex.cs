@@ -72,6 +72,9 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>Possible implementations, indexed by declaration identity rather than method name.</summary>
     private readonly Dictionary<MethodDefinition, List<Target>> _targets = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>Virtual slot closures in each method's formal declaring context, populated only during indexing.</summary>
+    private readonly Dictionary<MethodDefinition, (MethodDefinition Declaration, TypeSignature DeclaringType)[]> _slots = new(ReferenceEqualityComparer.Instance);
+
     /// <summary>Generic receiver definitions whose actual contexts can close dispatch bodies.</summary>
     private readonly HashSet<TypeDefinition> _receivers = new(ReferenceEqualityComparer.Instance);
 
@@ -204,7 +207,7 @@ internal sealed partial class MethodDispatchIndex
         {
             if (method.IsVirtual && method.Signature is { GenericParameterCount: > 0 })
             {
-                foreach ((MethodDefinition declaration, TypeSignature declaringType) in GetSlots(method, receiver, new HashSet<MethodDefinition>(ReferenceEqualityComparer.Instance)))
+                foreach ((MethodDefinition declaration, TypeSignature declaringType) in GetOrAddSlots(method))
                 {
                     AddTarget(declaration, new Target(
                         Receiver: type,
@@ -251,12 +254,152 @@ internal sealed partial class MethodDispatchIndex
                 type: iface.Signature as GenericInstanceTypeSignature,
                 method: null));
 
+            if (!declaration.IsStatic &&
+                GetClassInterfaceImplementation(iface, declaration, signature, hierarchy) is DefaultBody implementation)
+            {
+                AddTarget(declaration, new Target(
+                    Receiver: receiver,
+                    DeclarationType: iface.Signature,
+                    Method: implementation.Method,
+                    BodyType: implementation.Owner));
+            }
+
             foreach (HierarchyType owner in hierarchy)
             {
                 IndexExplicitImplementations(receiver, iface, declaration, owner);
-                IndexImplicitImplementations(receiver, iface, declaration, signature, owner);
+
+                // Instance class mappings were selected above; same-named hiding methods are not slot implementations.
+                if (declaration.IsStatic || owner.Definition.IsInterface)
+                {
+                    IndexImplicitImplementations(receiver, iface, declaration, signature, owner);
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// Selects a class mapping where the interface is introduced or reimplemented, then follows its virtual slot.
+    /// </summary>
+    /// <param name="iface">The constructed interface in receiver parameters.</param>
+    /// <param name="declaration">The interface slot definition.</param>
+    /// <param name="signature">The slot signature in receiver parameters.</param>
+    /// <param name="hierarchy">The receiver's substitution-aware hierarchy.</param>
+    /// <returns>The class implementation, if any.</returns>
+    private DefaultBody? GetClassInterfaceImplementation(
+        HierarchyType iface,
+        MethodDefinition declaration,
+        MethodSignature signature,
+        HierarchyType[] hierarchy)
+    {
+        HierarchyType[] classes = [.. hierarchy.Where(static entry => !entry.Definition.IsInterface)];
+        bool canMatchImplicitly = false;
+
+        foreach (HierarchyType owner in classes)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            DefaultBody? implementation = GetExplicitDefaultImplementations(owner, declaration, iface.Signature).FirstOrDefault();
+
+            if (implementation is not null)
+            {
+                return GetClassSlotOverride(implementation, classes);
+            }
+
+            // Inheriting an interface map does not let a new slot replace it. Only an InterfaceImpl row remaps it.
+            canMatchImplicitly |= DeclaresInterface(owner, iface);
+
+            if (!canMatchImplicitly)
+            {
+                continue;
+            }
+
+            foreach (MethodDefinition body in owner.Definition.Methods)
+            {
+                if (!body.IsPublic || !body.IsVirtual || body.IsStatic ||
+                    body.Name != declaration.Name ||
+                    body.Signature is not { } bodySignature ||
+                    !_comparer.Equals(signature, bodySignature.InstantiateGenericTypes(new GenericContext(
+                        type: owner.Signature as GenericInstanceTypeSignature,
+                        method: null))))
+                {
+                    continue;
+                }
+
+                return GetClassSlotOverride(new DefaultBody(Method: body, Owner: owner.Signature), classes);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Checks a class's own interface rows, including their constructed interface ancestry.
+    /// </summary>
+    /// <param name="owner">The class in receiver parameters.</param>
+    /// <param name="iface">The interface whose map can be reimplemented.</param>
+    /// <returns>Whether this class introduces or reimplements the interface.</returns>
+    private bool DeclaresInterface(HierarchyType owner, HierarchyType iface)
+    {
+        foreach (InterfaceImplementation implementation in owner.Definition.Interfaces)
+        {
+            if (implementation.Interface?.TryGetTypeSignature(_runtimeContext, false, out TypeSignature? signature) is not true ||
+                !signature.TryResolve(_runtimeContext, out TypeDefinition? definition))
+            {
+                continue;
+            }
+
+            TypeSignature declaredType = signature.InstantiateGenericTypes(new GenericContext(
+                type: owner.Signature as GenericInstanceTypeSignature,
+                method: null));
+            GenericContext context = new(type: declaredType as GenericInstanceTypeSignature, method: null);
+
+            if (GetOrAddHierarchy(definition).Any(entry =>
+                ReferenceEquals(entry.Definition, iface.Definition) &&
+                _comparer.Equals(entry.Signature.InstantiateGenericTypes(context), iface.Signature)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Follows a selected class slot by identity, including covariant-return overrides above the mapping owner.
+    /// </summary>
+    /// <param name="implementation">The original class mapping.</param>
+    /// <param name="classes">The class hierarchy, most-derived first, in receiver parameters.</param>
+    /// <returns>The most-derived override or the original mapping.</returns>
+    private DefaultBody GetClassSlotOverride(DefaultBody implementation, HierarchyType[] classes)
+    {
+        if (implementation.Method.IsFinal)
+        {
+            return implementation;
+        }
+
+        foreach (HierarchyType owner in classes)
+        {
+            _token.ThrowIfCancellationRequested();
+
+            foreach (MethodDefinition method in owner.Definition.Methods)
+            {
+                if (!method.IsVirtual || method.IsStatic || method.Signature is not { GenericParameterCount: > 0 })
+                {
+                    continue;
+                }
+
+                GenericContext context = new(type: owner.Signature as GenericInstanceTypeSignature, method: null);
+
+                if (GetOrAddSlots(method).Any(slot =>
+                    ReferenceEquals(slot.Declaration, implementation.Method) &&
+                    _comparer.Equals(slot.DeclaringType.InstantiateGenericTypes(context), implementation.Owner)))
+                {
+                    return new DefaultBody(Method: method, Owner: owner.Signature);
+                }
+            }
+        }
+
+        return implementation;
     }
 
     /// <summary>
@@ -416,6 +559,23 @@ internal sealed partial class MethodDispatchIndex
         }
 
         _ = visited.Remove(method);
+    }
+
+    /// <summary>
+    /// Caches a virtual method's slot closure in its formal declaring context during indexing.
+    /// </summary>
+    /// <param name="method">The virtual method definition.</param>
+    /// <returns>The declaration identities and their constructed owners.</returns>
+    private (MethodDefinition Declaration, TypeSignature DeclaringType)[] GetOrAddSlots(MethodDefinition method)
+    {
+        if (!_slots.TryGetValue(method, out (MethodDefinition Declaration, TypeSignature DeclaringType)[]? slots))
+        {
+            slots = [.. GetSlots(method, GetIdentitySignature(method.DeclaringType!), new HashSet<MethodDefinition>(ReferenceEqualityComparer.Instance))];
+
+            _slots.Add(method, slots);
+        }
+
+        return slots;
     }
 
     /// <summary>

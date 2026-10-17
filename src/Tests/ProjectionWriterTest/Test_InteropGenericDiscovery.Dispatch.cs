@@ -215,6 +215,178 @@ public partial class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void InheritedInterfaceSlot_DoesNotVisitHidingMethod(bool virtualMethod)
+    {
+        AssertDispatchNode($$"""
+            public sealed class ConstrainedNode<T> : IStringable where T : struct
+            {
+                public override string ToString() => "constrained";
+            }
+            public interface IOuter { object Check<T>(); }
+            public class Base : IOuter
+            {
+                public object Check<T>() => Build<T>();
+            }
+            public class Outer : Base
+            {
+                public new {{(virtualMethod ? "virtual " : "")}}object Check<T>() where T : struct => new ConstrainedNode<T>();
+            }
+            """, "_ = ((IOuter)new Outer()).Check<string>();",
+            associationPrefix: "Dispatch.Node`1[[System.String,",
+            absentAssociationPrefixes: ["Dispatch.ConstrainedNode`1[[System.String,"]);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void InterfaceReimplementation_SelectsNewSlot(bool indirectInterface)
+    {
+        AssertDispatchNode($$"""
+            public interface IOuter { bool Check<T>(); }
+            public interface IDerived : IOuter;
+            public class Base<U> : IOuter
+            {
+                public virtual bool Check<T>() => false;
+            }
+            public class Outer<U> : Base<U>, {{(indirectInterface ? "IDerived" : "IOuter")}}
+            {
+                public new virtual bool Check<T>() => Build<U, T>();
+            }
+            """, "_ = ((IOuter)new Outer<First>()).Check<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,");
+    }
+
+    [TestMethod]
+    public void InheritedInterfaceSlot_FollowsOverridePastHidingSlot()
+    {
+        AssertDispatchNode("""
+            public interface IOuter { bool Check<T>(); }
+            public class Base<U> : IOuter
+            {
+                public virtual bool Check<T>() => false;
+            }
+            public class Middle<U> : Base<U>
+            {
+                public override bool Check<T>() => Build<U, T>();
+            }
+            public class Outer<U> : Middle<U>
+            {
+                public new virtual bool Check<T>() => Build<T>();
+            }
+            public class Derived<U> : Outer<U>
+            {
+                public override bool Check<T>() => Build<Third, T>();
+            }
+            """, "_ = ((IOuter)new Derived<First>()).Check<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Second,", "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.Third,"]);
+    }
+
+    [TestMethod]
+    public void InheritedExplicitInterfaceSlot_DoesNotVisitHidingMethod()
+    {
+        AssertDispatchNode("""
+            public interface IOuter { bool Check<T>(); }
+            public class Base<U> : IOuter
+            {
+                bool IOuter.Check<T>() => Build<U, T>();
+            }
+            public class Outer<U> : Base<U>
+            {
+                public virtual bool Check<T>() => Build<T>();
+            }
+            """, "_ = ((IOuter)new Outer<First>()).Check<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,",
+            absentAssociationPrefixes: ["Dispatch.Node`1[[Dispatch.Second,"]);
+    }
+
+    [TestMethod]
+    public void ExplicitInterfaceMapping_TakesPrecedenceOverMatchingPublicMethod()
+    {
+        AssertDispatchNode("""
+            public sealed class ConstrainedNode<T> : IStringable where T : struct
+            {
+                public override string ToString() => "constrained";
+            }
+            public interface IOuter { object Check<T>(); }
+            public class Outer : IOuter
+            {
+                object IOuter.Check<T>() => Build<T>();
+                public virtual object Check<T>() where T : struct => new ConstrainedNode<T>();
+            }
+            """, "_ = ((IOuter)new Outer()).Check<string>();",
+            associationPrefix: "Dispatch.Node`1[[System.String,",
+            absentAssociationPrefixes: ["Dispatch.ConstrainedNode`1[[System.String,"]);
+    }
+
+    [TestMethod]
+    public void InterfaceMapping_SelectsNearestInheritedSlot()
+    {
+        AssertDispatchNode("""
+            public sealed class ConstrainedNode<T> : IStringable where T : struct
+            {
+                public override string ToString() => "constrained";
+            }
+            public interface IOuter { object Check<T>(); }
+            public class Ancestor
+            {
+                public virtual object Check<T>() where T : struct => new ConstrainedNode<T>();
+            }
+            public class Base : Ancestor
+            {
+                public new virtual object Check<T>() => Build<T>();
+            }
+            public sealed class Outer : Base, IOuter;
+            """, "_ = ((IOuter)new Outer()).Check<string>();",
+            associationPrefix: "Dispatch.Node`1[[System.String,",
+            absentAssociationPrefixes: ["Dispatch.ConstrainedNode`1[[System.String,"]);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void InterfaceMapping_FollowsCovariantReturnOverride(bool inheritedMapping)
+    {
+        AssertDispatchNode($$"""
+            public interface IOuter { object Create<T>(); }
+            public class Base<U>{{(inheritedMapping ? " : IOuter" : "")}}
+            {
+                public virtual object Create<T>() => null!;
+            }
+            public class Middle<U> : Base<U>
+            {
+                public override IStringable Create<T>() => new Node<Pair<U, T>>();
+            }
+            public sealed class Outer<U> : Middle<U>{{(inheritedMapping ? "" : ", IOuter")}};
+            """, "_ = ((IOuter)new Outer<First>()).Create<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,");
+    }
+
+    [TestMethod]
+    public void AbstractInterfaceMapping_FollowsConcreteOverride()
+    {
+        AssertDispatchNode("""
+            public interface IOuter { bool Check<T>(); }
+            public abstract class Base<U> : IOuter
+            {
+                public abstract bool Check<T>();
+            }
+            public sealed class Outer<U> : Base<U>
+            {
+                public override bool Check<T>() => Build<U, T>();
+            }
+            """, "_ = ((IOuter)new Outer<First>()).Check<Second>();",
+            associationPrefix: "Dispatch.Node`1[[Dispatch.Pair`2[[Dispatch.First,",
+            associationContains: "],[Dispatch.Second,");
+    }
+
+    [TestMethod]
     public void IndependentReceiverAndMethodArguments_AreComposed()
     {
         AssertDispatchNode("""
@@ -416,9 +588,10 @@ public partial class Test_InteropGenericDiscovery
         string helpers = "",
         string associationPrefix = "Dispatch.Node`1[[Dispatch.Marker,",
         bool expected = true,
-        string? associationContains = null)
+        string? associationContains = null,
+        string[]? absentAssociationPrefixes = null)
     {
-        AssertDispatchSource(CreateDispatchSource(declarations, main, helpers), associationPrefix, expected, associationContains);
+        AssertDispatchSource(CreateDispatchSource(declarations, main, helpers), associationPrefix, expected, associationContains, absentAssociationPrefixes);
     }
 
     private static string CreateDispatchSource(string declarations, string main, string helpers)
@@ -458,7 +631,12 @@ public partial class Test_InteropGenericDiscovery
             """;
     }
 
-    private static void AssertDispatchSource(string source, string associationPrefix, bool expected = true, string? associationContains = null)
+    private static void AssertDispatchSource(
+        string source,
+        string associationPrefix,
+        bool expected = true,
+        string? associationContains = null,
+        string[]? absentAssociationPrefixes = null)
     {
         string directory = Directory.CreateTempSubdirectory("InteropDispatchTest_").FullName;
 
@@ -471,9 +649,16 @@ public partial class Test_InteropGenericDiscovery
             (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors: true);
 
             Assert.AreEqual(0, exitCode, log);
-            Assert.AreEqual(expected, GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
-                .Any(type => type.StartsWith(associationPrefix, StringComparison.Ordinal) &&
+            string[] associations = [.. GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))];
+
+            Assert.AreEqual(expected, associations.Any(type => type.StartsWith(associationPrefix, StringComparison.Ordinal) &&
                     (associationContains is null || type.Contains(associationContains, StringComparison.Ordinal))), log);
+
+            foreach (string absentPrefix in absentAssociationPrefixes ?? [])
+            {
+                Assert.IsFalse(associations.Any(type => type.StartsWith(absentPrefix, StringComparison.Ordinal)),
+                    $"Unexpected type-map source:\n{string.Join('\n', associations.Where(type => type.StartsWith(absentPrefix, StringComparison.Ordinal)))}\n{log}");
+            }
         }
         finally
         {

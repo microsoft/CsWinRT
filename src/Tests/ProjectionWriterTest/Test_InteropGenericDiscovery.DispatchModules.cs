@@ -13,6 +13,50 @@ namespace ProjectionWriterTest;
 public partial class Test_InteropGenericDiscovery
 {
     [TestMethod]
+    public void CrossModuleInheritedNonvirtualImplementation_ClosesForwardingStub()
+    {
+        string directory = Directory.CreateTempSubdirectory("InteropInheritedDispatch_").FullName;
+
+        try
+        {
+            string library = ProjectionWriterRunner.CompileSources(
+                ["""
+                namespace Across;
+                public sealed class Node<U, T> : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "node";
+                }
+                public interface IOuter { object Check<T>(); }
+                public class Base<U>
+                {
+                    public object Check<T>() => new Node<U, T>();
+                }
+                """], Path.Combine(directory, "Library.dll"));
+            string app = ProjectionWriterRunner.CompileSources(
+                ["""
+                using Across;
+                public sealed class Outer<U> : Base<U>, IOuter;
+                public static class Program
+                {
+                    public static void Main() => _ = ((IOuter)new Outer<string>()).Check<int>();
+                }
+                """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
+                additionalReferences: [library]);
+            (int exitCode, string log) = RunGenerator(directory, app, treatWarningsAsErrors: true,
+                additionalReferences: [library]);
+
+            Assert.AreEqual(0, exitCode, log);
+            Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll")).Any(type =>
+                type.StartsWith("Across.Node`2[[System.String,", StringComparison.Ordinal) &&
+                type.Contains("],[System.Int32,", StringComparison.Ordinal)), log);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public void DefaultInterfaceBody_PublishesContextsForLateDispatch(bool publishesReceiver)
