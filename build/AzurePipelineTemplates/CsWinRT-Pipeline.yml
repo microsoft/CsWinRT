@@ -39,7 +39,7 @@ extends:
 
     featureFlags:
       WindowsHostVersion:
-        Version: 2022
+        Version: 2025
 
     globalSdl:
       isNativeCode: true

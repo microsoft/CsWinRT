@@ -2,6 +2,9 @@
   "test": {
     "runner": "Microsoft.Testing.Platform"
   },
+  "msbuild-sdks": {
+    "MSTest.Sdk": "4.5.1"
+  },
   "sdk": {
     "allowPrerelease": true
   }

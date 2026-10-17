@@ -1,12 +1,12 @@
 # Background Task C#/WinRT Authoring Sample
 
-This sample demonstrates how to author an [out-of-process background task](https://docs.microsoft.com/windows/uwp/launch-resume/create-and-register-a-background-task) in a C#/WinRT component and how to consume the component from a packaged .NET 6 WPF app.
+This sample demonstrates how to author an [out-of-process background task](https://docs.microsoft.com/windows/uwp/launch-resume/create-and-register-a-background-task) in a C#/WinRT component and how to consume the component from a packaged .NET 10 WPF app.
 
 This sample includes the following projects:
 
 - **BgTaskComponent**: This is a C#/WinRT component with an example background task that pops a toast notification.
 
-- **WpfApp** and **WpfApp.Package**: These projects demonstrate hosting the background task component in a packaged .NET 6 desktop (WPF) application.
+- **WpfApp** and **WpfApp.Package**: These projects demonstrate hosting the background task component in a packaged .NET 10 desktop (WPF) application.
 
   - **WpfApp** has a project reference to **BgTaskComponent**.
 
@@ -14,14 +14,12 @@ This sample includes the following projects:
 
 ## Prerequisites
 
-* [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0)
-* Visual Studio 2022
-
-**Note**: This sample can be modified to target .NET 5 and Visual Studio 2019. This involves editing the `TargetFramework` properties to target `net5.0-windows10.0.19041.0`.
+* [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+* Visual Studio 2026
 
 ## Build and run the sample
 
-1. Open **BgTaskComponent.sln** in Visual Studio 2022.
+1. Open **BgTaskComponent.sln** in Visual Studio 2026.
 
 2. Ensure that the **WpfApp.Package** project is set as the startup project.
 
