@@ -1006,6 +1006,24 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Conflicting IIDs were generated for the same structural type key.
+    /// </summary>
+    public static WellKnownInteropException ConflictingIidTypeNames(string key, Guid first, Guid second)
+    {
+        return Exception(111,
+            $"Conflicting Windows Runtime IIDs '{first}' and '{second}' were generated for structural type key '{key}'. " +
+            "Structural type keys must identify one runtime type across the application's projections.");
+    }
+
+    /// <summary>
+    /// Failed to generate the external type map entries for IID lookups.
+    /// </summary>
+    public static WellKnownInteropException IidTypeMapEntriesCodeGenerationError(Exception exception)
+    {
+        return Exception(112, "Failed to generate the external Windows Runtime IID type map entries.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
