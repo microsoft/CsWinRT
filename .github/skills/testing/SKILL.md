@@ -339,6 +339,12 @@ A **WinRT test component** (defined in `TestComponentCSharp.idl`, implemented in
 
 **Referenced from:** unit tests (`UnitTest/`), functional tests (`FunctionalTests/`), and projection test projects (`Projections/Test/`).
 
+## Experimental CI code coverage
+
+The x64 Release job runs an additional JIT coverage pass after the normal functional runs. It runs all seven MSTest hosts, rebuilding UnitTest and the unpackaged lifetime app with `PublishAot=false` (without rebuilding dependencies) to select the CoreCLR coverage extension instead of the Native AOT extension registered by an AOT build. It publishes each functional executable to a separate `coverage` folder with AOT, trimming, single-file publishing, and ReadyToRun disabled. The normal trimmed/AOT correctness runs are unchanged. Functional coverage preserves the `100` success convention and runs both `NativeExposedType` activation orders.
+
+`.config/dotnet-tools.json` pins `dotnet-coverage` for standalone collection and merging; MSTest uses its SDK-supplied coverage extension. `build/CodeCoverage.config` includes product runtime/generator assemblies and child processes, excluding test/framework assemblies and generated SDK projections. `build/scripts/Run-CodeCoverage.ps1` collects the individual binary reports and merges them into one Cobertura report. The shared CI templates publish it once through `PublishCodeCoverageResults@2`; raw reports and coverage-run TRX files remain under `CodeCoverage/<job-attempt>` in the staging artifacts. This measures managed JIT code, not Native AOT or C++ coverage, and does not enforce a percentage threshold. Coverage failures participate in the existing final job-failure gate.
+
 ## Style rules
 
 - Use MSTest attributes (`[TestClass]`, `[TestMethod]`) for all test projects except functional tests

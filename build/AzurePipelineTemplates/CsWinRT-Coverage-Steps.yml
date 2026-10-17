@@ -1,0 +1,123 @@
+parameters:
+  - name: FunctionalTests
+    type: object
+  - name: MSTestProjects
+    type: object
+    default:
+      - { name: UnitTest, project: UnitTest }
+      - { name: SourceGenerator2Test, project: SourceGenerator2Test }
+      - { name: WinMDGeneratorTest, project: WinMDGeneratorTest }
+      - { name: ProjectionWriterTest, project: ProjectionWriterTest }
+      - { name: ImplGeneratorTest, project: ImplGeneratorTest }
+      - { name: InteropGeneratorTest, project: InteropGeneratorTest }
+      - { name: ObjectLifetimeTests, project: ObjectLifetimeTests.Lifted }
+
+steps:
+  - task: PowerShell@2
+    displayName: Restore coverage tool
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      targetType: inline
+      script: |
+        dotnet tool restore --tool-manifest "$(Build.SourcesDirectory)\.config\dotnet-tools.json"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  - ${{ each test in parameters.MSTestProjects }}:
+    - ${{ if or(eq(test.name, 'UnitTest'), eq(test.name, 'ObjectLifetimeTests')) }}:
+      - task: MSBuild@1
+        displayName: Restore ${{ test.name }} for JIT coverage
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+        inputs:
+          solution: $(Build.SourcesDirectory)\src\Tests\${{ test.name }}\${{ test.project }}.csproj
+          msbuildArguments: /t:Restore /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,WindowsPackageType=None,RuntimeIdentifier=win-x64,RestoreRecursive=false,solutiondir=$(Build.SourcesDirectory)\src\
+          platform: x64
+          configuration: Release
+
+      - task: MSBuild@1
+        displayName: Build ${{ test.name }} for JIT coverage
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+        inputs:
+          solution: $(Build.SourcesDirectory)\src\Tests\${{ test.name }}\${{ test.project }}.csproj
+          msbuildArguments: /t:Build /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,WindowsPackageType=None,RuntimeIdentifier=win-x64,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+          platform: x64
+          configuration: Release
+
+    - task: PowerShell@2
+      displayName: Collect ${{ test.name }} JIT coverage
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+      continueOnError: true
+      env:
+        DOTNET_GCStress: '0'
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)\build\scripts\Run-CodeCoverage.ps1
+        arguments: -Mode MSTest -Name "${{ test.name }}" -OutputDir "$(StagingFolder)\CodeCoverage\$(System.JobAttempt)"
+
+  - ${{ each test in parameters.FunctionalTests }}:
+    - task: MSBuild@1
+      displayName: Restore ${{ test }} for JIT coverage
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\${{ test }}.csproj
+        msbuildArguments: /t:Restore /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,RuntimeIdentifier=win-x64,RestoreRecursive=false,solutiondir=$(Build.SourcesDirectory)\src\
+        platform: x64
+        configuration: Release
+
+    - task: MSBuild@1
+      displayName: Publish ${{ test }} for JIT coverage
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\${{ test }}.csproj
+        msbuildArguments: /t:Publish /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,RuntimeIdentifier=win-x64,TargetFramework=net10.0,PublishDir=$(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\bin\Release\net10.0\win-x64\coverage\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        platform: x64
+        configuration: Release
+
+    - task: PowerShell@2
+      displayName: Collect ${{ test }} JIT coverage
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+      continueOnError: true
+      env:
+        DOTNET_GCStress: '0'
+      inputs:
+        targetType: filePath
+        filePath: $(Build.SourcesDirectory)\build\scripts\Run-CodeCoverage.ps1
+        arguments: -Mode Functional -Name "${{ test }}" -OutputDir "$(StagingFolder)\CodeCoverage\$(System.JobAttempt)"
+
+    - ${{ if eq(test, 'NativeExposedType') }}:
+      - task: PowerShell@2
+        displayName: Collect NativeExposedType RCW-first JIT coverage
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+        continueOnError: true
+        env:
+          DOTNET_GCStress: '0'
+        inputs:
+          targetType: filePath
+          filePath: $(Build.SourcesDirectory)\build\scripts\Run-CodeCoverage.ps1
+          arguments: -Mode Functional -Name NativeExposedType -RcwFirst -OutputDir "$(StagingFolder)\CodeCoverage\$(System.JobAttempt)"
+
+  - task: PowerShell@2
+    displayName: Merge MSTest and functional JIT coverage
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\build\scripts\Run-CodeCoverage.ps1
+      arguments: -Mode Merge -OutputDir "$(StagingFolder)\CodeCoverage\$(System.JobAttempt)"
+
+  - task: PublishTestResults@2
+    displayName: Publish JIT coverage test results
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**/*.trx'
+      searchFolder: $(StagingFolder)\CodeCoverage\$(System.JobAttempt)\trx
+      mergeTestResults: true
+      testRunTitle: MSTest JIT coverage (x64, Release)
+
+  - task: PublishCodeCoverageResults@2
+    displayName: Publish merged MSTest and functional coverage
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      summaryFileLocation: $(StagingFolder)\CodeCoverage\$(System.JobAttempt)\merged.cobertura.xml
+      pathToSources: $(Build.SourcesDirectory)
+      failIfCoverageEmpty: true
