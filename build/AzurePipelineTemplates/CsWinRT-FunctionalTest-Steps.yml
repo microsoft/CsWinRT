@@ -40,7 +40,7 @@ steps:
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+        msbuildArguments: /t:publish /bl:$(StagingFolder)\binlog\Functional-${{ functionalTest }}-trimmed.binlog /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
@@ -76,7 +76,7 @@ steps:
       condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-        msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+        msbuildArguments: /t:publish /bl:$(StagingFolder)\binlog\Functional-${{ functionalTest }}-AOT.binlog /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 

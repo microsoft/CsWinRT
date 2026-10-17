@@ -53,7 +53,7 @@ stages:
       outputs:
       - output: pipelineArtifact
         displayName: 'Publish pipeline artifacts'
-        condition: or(failed(), eq(variables['BuildConfiguration'], 'release'))
+        condition: always()
         targetPath: $(StagingFolder)
         artifactName: drop_BuildAndTest_$(ob_artifactSuffix)
 

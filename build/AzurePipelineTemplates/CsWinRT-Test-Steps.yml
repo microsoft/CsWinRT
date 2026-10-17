@@ -193,7 +193,7 @@ steps:
     condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
     inputs:
       solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
-      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch),VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      msbuildArguments: /t:publish /bl:$(StagingFolder)\binlog\UnitTest-AOT.binlog /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch),VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
 
@@ -226,7 +226,7 @@ steps:
     condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
     inputs:
       solution: $(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj
-      msbuildArguments: /restore /t:Publish /p:RestoreRecursive=false,PublishAot=true,WindowsPackageType=None,RuntimeIdentifier=win-x64,TargetFramework=net10.0-windows10.0.26100.1,PublishDir=$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64\publish\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),solutiondir=$(Build.SourcesDirectory)\src\,CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      msbuildArguments: /restore /t:Publish /bl:$(StagingFolder)\binlog\ObjectLifetime-AOT.binlog /p:RestoreRecursive=false,PublishAot=true,WindowsPackageType=None,RuntimeIdentifier=win-x64,TargetFramework=net10.0-windows10.0.26100.1,PublishDir=$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64\publish\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),solutiondir=$(Build.SourcesDirectory)\src\,CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
 

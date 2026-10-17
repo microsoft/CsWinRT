@@ -161,14 +161,14 @@ steps:
       displayName: Build cswinrt.slnx
       inputs:
         solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch),ContinuousIntegrationBuild=true /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+        msbuildArgs: /m:2 /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch),ContinuousIntegrationBuild=true /bl:$(Build.SourcesDirectory)\cswinrt.binlog
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
     # Stage BinLog
     - task: CopyFiles@2
       displayName: Stage BinLog
-      condition: failed()
+      condition: always()
       inputs:
         SourceFolder: $(Build.SourcesDirectory)
         Contents: cswinrt.binlog

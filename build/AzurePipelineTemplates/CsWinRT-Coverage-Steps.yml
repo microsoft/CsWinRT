@@ -38,7 +38,7 @@ steps:
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
         inputs:
           solution: $(Build.SourcesDirectory)\src\Tests\${{ test.name }}\${{ test.project }}.csproj
-          msbuildArguments: /t:Build /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,WindowsPackageType=None,RuntimeIdentifier=win-x64,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+          msbuildArguments: /t:Build /bl:$(StagingFolder)\binlog\MSTest-${{ test.name }}-JIT-coverage.binlog /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,WindowsPackageType=None,RuntimeIdentifier=win-x64,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
           platform: x64
           configuration: Release
 
@@ -68,7 +68,7 @@ steps:
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\${{ test }}.csproj
-        msbuildArguments: /t:Publish /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,RuntimeIdentifier=win-x64,TargetFramework=net10.0,PublishDir=$(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\bin\Release\net10.0\win-x64\coverage\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+        msbuildArguments: /t:Publish /bl:$(StagingFolder)\binlog\Functional-${{ test }}-JIT-coverage.binlog /p:PublishAot=false,PublishTrimmed=false,PublishSingleFile=false,PublishReadyToRun=false,RuntimeIdentifier=win-x64,TargetFramework=net10.0,PublishDir=$(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ test }}\bin\Release\net10.0\win-x64\coverage\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),CIBuildReason=CI,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
         platform: x64
         configuration: Release
 
