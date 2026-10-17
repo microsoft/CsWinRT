@@ -74,7 +74,7 @@ public class Test_InteropGenericDiscovery
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public void RecursiveGenericMethodCalls_Terminate(bool indirect)
+    public void ExpandingGenericMethodCalls_AreBounded(bool indirect)
     {
         string source = $$"""
             using Windows.Foundation;
@@ -104,7 +104,8 @@ public class Test_InteropGenericDiscovery
             }
             """;
 
-        AssertGeneration(source, 1);
+        // The root body and 32 callee bodies each allocate one additional nested 'Node' type.
+        AssertGeneration(source, 33, expectedWarning: RecursionWarning);
     }
 
     [TestMethod]

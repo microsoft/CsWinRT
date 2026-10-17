@@ -377,6 +377,9 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
         Windows.Foundation.Collections.IVectorView<Int32> GetIntVector();
+        Object GetInputStreamOptionsVector();
+        Object GetFileAccessModeVector();
+        Object GetCreationCollisionOptionVector();
         Windows.Foundation.Collections.IVectorView<Boolean> GetBoolVector();
         Windows.Foundation.Collections.IVectorView<String> GetStringVector();
         Windows.Foundation.Collections.IVectorView<ComposedBlittableStruct> GetBlittableStructVector();

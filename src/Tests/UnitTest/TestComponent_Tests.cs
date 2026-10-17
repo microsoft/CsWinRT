@@ -7,6 +7,8 @@ using test_component_base;
 using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
@@ -752,6 +754,101 @@ namespace UnitTest
             var listCreatedWithIDIC = (IList<string>)(object)inspectable;
             RunListTests(listCreatedWithIDIC);
         }
+
+        [TestMethod]
+        public void Collections_GenericInterface_TypeTest_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInputStreamOptionsVector());
+
+            Assert.IsTrue(IsGenericList<InputStreamOptions>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericInterface_Cast_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInputStreamOptionsVector());
+
+            Assert.AreSame(value, CastGenericList<InputStreamOptions>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericInterface_Count_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInputStreamOptionsVector());
+
+            Assert.AreEqual(3, GetGenericListCount<InputStreamOptions>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericMethodTypeArgument_TypeTest_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetFileAccessModeVector());
+
+            Assert.IsTrue(IsGenericType<IList<FileAccessMode>>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericMethodTypeArgument_Cast_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetFileAccessModeVector());
+
+            Assert.AreSame(value, CastGenericType<IList<FileAccessMode>>(value));
+        }
+
+        [TestMethod]
+        public void Collections_NestedGenericInterface_TypeTest_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetCreationCollisionOptionVector());
+
+            Assert.IsTrue(OuterIsGenericList<CreationCollisionOption>(value));
+        }
+
+        [TestMethod]
+        public void Collections_NestedGenericInterface_Cast_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetCreationCollisionOptionVector());
+
+            Assert.AreSame(value, OuterCastGenericList<CreationCollisionOption>(value));
+        }
+
+        [TestMethod]
+        public void Collections_NestedGenericInterface_Count_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetCreationCollisionOptionVector());
+
+            Assert.AreEqual(3, OuterGetGenericListCount<CreationCollisionOption>(value));
+        }
+
+        private static unsafe object CreateGenericCastInspectable(object vector)
+        {
+            void* target = WindowsRuntimeMarshal.ConvertToUnmanaged(vector);
+
+            try
+            {
+                return new TestIDICInspectable(target);
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(target);
+                GC.KeepAlive(vector);
+            }
+        }
+
+        private static bool IsGenericList<T>(object value) => value is IList<T>;
+
+        private static object CastGenericList<T>(object value) => (IList<T>)value;
+
+        private static int GetGenericListCount<T>(object value) => ((IList<T>)value).Count;
+
+        private static bool IsGenericType<T>(object value) => value is T;
+
+        private static object CastGenericType<T>(object value) => (T)value;
+
+        private static bool OuterIsGenericList<T>(object value) => IsGenericList<T>(value);
+
+        private static object OuterCastGenericList<T>(object value) => CastGenericList<T>(value);
+
+        private static int OuterGetGenericListCount<T>(object value) => GetGenericListCount<T>(value);
 
         private void RunListTests(IList<string> c)
         {

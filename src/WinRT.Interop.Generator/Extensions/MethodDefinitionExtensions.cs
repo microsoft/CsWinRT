@@ -236,6 +236,70 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
+        /// Enumerates operand types used by casts, type tests, boxing, unboxing, and type tokens.
+        /// </summary>
+        /// <returns>The types referenced by the operands.</returns>
+        public IEnumerable<ITypeDefOrRef> EnumerateCastAndTypeTokenOperandTypes()
+        {
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                // Only inspect operations that can expose types absent from signatures, locals, and allocations
+                if (instruction.OpCode.Code is not (
+                    CilCode.Castclass or
+                    CilCode.Isinst or
+                    CilCode.Box or
+                    CilCode.Unbox_Any or
+                    CilCode.Ldtoken))
+                {
+                    continue;
+                }
+
+                if (instruction.Operand is ITypeDefOrRef operandType)
+                {
+                    yield return operandType;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enumerates operands of method instructions and member-token loads.
+        /// </summary>
+        /// <returns>The referenced method descriptors or field-token member references.</returns>
+        public IEnumerable<IMethodDescriptor> EnumerateMethodOperands()
+        {
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                // Only inspect invocations, method-pointer loads, and member tokens
+                if (instruction.OpCode.Code is not (
+                    CilCode.Call or
+                    CilCode.Callvirt or
+                    CilCode.Newobj or
+                    CilCode.Jmp or
+                    CilCode.Ldftn or
+                    CilCode.Ldvirtftn or
+                    CilCode.Ldtoken))
+                {
+                    continue;
+                }
+
+                if (instruction.Operand is IMethodDescriptor descriptor)
+                {
+                    yield return descriptor;
+                }
+            }
+        }
+
+        /// <summary>
         /// Enumerates the declaring types and value types of fields accessed by a method.
         /// </summary>
         /// <param name="runtimeContext">The context to assume when resolving types.</param>

@@ -285,6 +285,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
         Windows::Foundation::Collections::IVectorView<int32_t> GetIntVector();
+        Windows::Foundation::IInspectable GetInputStreamOptionsVector();
+        Windows::Foundation::IInspectable GetFileAccessModeVector();
+        Windows::Foundation::IInspectable GetCreationCollisionOptionVector();
         Windows::Foundation::Collections::IVectorView<bool> GetBoolVector();
         Windows::Foundation::Collections::IVectorView<hstring> GetStringVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector();
