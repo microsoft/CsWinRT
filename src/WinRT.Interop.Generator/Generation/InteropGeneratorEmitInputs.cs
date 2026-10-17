@@ -9,6 +9,7 @@ using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Helpers;
+using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -251,6 +252,48 @@ internal sealed class InteropGeneratorEmitInputs
 
         // 'OrderBy' keeps interface-set ties stable, while proxies independently keep global type order
         return new([.. groups.OrderBy(static group => group.OrderedTypes)], types);
+    }
+
+    /// <summary>
+    /// Enumerates the discovered constructed types and fixed Windows Runtime metadata catalogs.
+    /// </summary>
+    /// <returns>The canonicalized types used to populate the external IID map.</returns>
+    public IEnumerable<TypeSignature> EnumerateIidTypes()
+    {
+        ModuleDefinition runtime = _interopReferences.WindowsRuntimeObject.Resolve(_runtimeContext).DeclaringModule!;
+
+        IEnumerable<TypeSignature> types = [
+            .. _discoveryState.GenericDelegateTypes,
+            .. _discoveryState.IEnumerator1Types,
+            .. _discoveryState.IEnumerable1Types,
+            .. _discoveryState.IList1Types,
+            .. _discoveryState.IReadOnlyList1Types,
+            .. _discoveryState.IDictionary2Types,
+            .. _discoveryState.IReadOnlyDictionary2Types,
+            .. _discoveryState.KeyValuePairTypes,
+            .. _discoveryState.IObservableVector1Types,
+            .. _discoveryState.IObservableMap2Types,
+            .. _discoveryState.IMapChangedEventArgs1Types,
+            .. _discoveryState.IAsyncOperation1Types,
+            .. _discoveryState.IAsyncActionWithProgress1Types,
+            .. _discoveryState.IAsyncOperationWithProgress2Types,
+            .. _discoveryState.SzArrayAndVtableTypes.Keys,
+            .. runtime.GetRuntimeMetadataTypes(),
+            .. DynamicCustomMappedTypeMapEntriesBuilder.EnumerateMappedTypes(_interopReferences)];
+
+        IEnumerable<ModuleDefinition> projections = new[]
+        {
+            _discoveryState.WindowsRuntimeSdkProjectionModule,
+            _discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+            _discoveryState.WindowsRuntimeProjectionModule,
+            _discoveryState.WindowsRuntimeComponentModule
+        }.OfType<ModuleDefinition>();
+
+        IEnumerable<TypeSignature> projectedTypes = projections
+            .SelectMany(projection => projection.GetWindowsRuntimeMetadataTypesLookup().Values)
+            .Select(static entry => entry.Type);
+
+        return CanonicalizeTypes(types.Concat(projectedTypes));
     }
 
     /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>
