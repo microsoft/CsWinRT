@@ -29,12 +29,17 @@ if (-not $OutputDir) {
 $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 New-Item -ItemType Directory -Force $OutputDir | Out-Null
 $project = Join-Path $PSScriptRoot '..\..\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj'
+$targetPathProperty = if ($WindowsPackageType -eq 'None') {
+    "/p:TestingPlatformExecutablePath=$executable"
+} else {
+    "/p:TestingPlatformPackagedAppTargetPath=$executable"
+}
 
 # The SDK owns test startup, results, and exit codes, including sidecar activation when MSIX is requested.
 # MSBuild's %22 escaping preserves quotes around result paths containing spaces.
 & dotnet msbuild $project /t:InvokeTestingPlatform /nologo /v:minimal `
     "/p:Platform=$platform" "/p:Configuration=$configuration" "/p:TargetFramework=$targetFramework" `
     "/p:WindowsPackageType=$WindowsPackageType" `
-    "/p:TestingPlatformPackagedAppTargetPath=$executable" `
+    $targetPathProperty `
     "/p:TestingPlatformCommandLineArguments=--report-trx --results-directory %22$OutputDir%22"
 exit $LASTEXITCODE

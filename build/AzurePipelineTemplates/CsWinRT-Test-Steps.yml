@@ -22,6 +22,25 @@ steps:
         --no-build
       testRunTitle: Unit Tests
 
+# Run unpackaged UI tests on x64.
+  - task: PowerShell@2
+    displayName: Run Object Lifetime Tests (MTP)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-MTP"
+
+  - task: PublishTestResults@2
+    displayName: Publish Object Lifetime Test Results
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '*.trx'
+      searchFolder: $(StagingFolder)\ObjectLifetime-MTP
+      testRunTitle: Object Lifetime Tests ($(BuildPlatform), $(BuildConfiguration))
+
 # Run Source Generator 2 Tests. Gated to x64 only: these are Roslyn analyzer/source-generator tests,
 # which are architecture-independent (the compiler runs the analyzer the same regardless of the target
 # platform), so running them x86 adds no coverage. The x86 (32-bit) test host loads the full .NET 10
