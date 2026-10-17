@@ -90,9 +90,9 @@ internal partial class MethodDispatchIndex
 
             foreach (InterfaceImplementation implementation in current.Interfaces)
             {
-                if (implementation.Interface?.TryResolve(_runtimeContext, out TypeDefinition? iface) is true)
+                if (implementation.Interface?.TryResolve(_runtimeContext, out TypeDefinition? interfaceType) is true)
                 {
-                    pending.Push(iface);
+                    pending.Push(interfaceType);
                 }
             }
         }
@@ -216,11 +216,12 @@ internal partial class MethodDispatchIndex
                 CollectHierarchy(baseType.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token, canVisit);
             }
 
+            // Recursively collect declared interfaces and their ancestors after substituting the current type arguments
             foreach (InterfaceImplementation implementation in definition.Interfaces)
             {
-                if (implementation.Interface?.TryGetTypeSignature(runtimeContext, false, out TypeSignature? iface) is true)
+                if (implementation.Interface?.TryGetTypeSignature(runtimeContext, false, out TypeSignature? interfaceType) is true)
                 {
-                    CollectHierarchy(iface.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token, canVisit);
+                    CollectHierarchy(interfaceType.InstantiateGenericTypes(context), entries, path, runtimeContext, comparer, token, canVisit);
                 }
             }
         }

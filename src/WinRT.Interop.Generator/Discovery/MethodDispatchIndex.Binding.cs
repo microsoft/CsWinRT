@@ -20,7 +20,7 @@ internal partial class MethodDispatchIndex
     /// <returns>Whether the relationship is compatible with the observed contexts.</returns>
     public bool TryBind(Target target, TypeSignature declarationType, TypeSignature? receiverType, out TypeSignature bodyType)
     {
-        // Keep writable inference state separate from receiver metadata shared by parallel discovery.
+        // Keep writable inference state separate from receiver metadata shared by parallel discovery
         TypeSignature?[] bindings = new TypeSignature?[target.Receiver.GenericParameters.Count];
 
         if (receiverType is GenericInstanceTypeSignature receiver)
@@ -44,8 +44,9 @@ internal partial class MethodDispatchIndex
 
             for (int i = 0; i < pattern.TypeArguments.Count; i++)
             {
-                // A variant reference argument describes a conversion, not the receiver's exact type argument.
-                // Value types do not participate in variance and still permit exact inference.
+                // A covariant 'IOuter<object>' call can target an 'IOuter<string>' implementation, so a variant
+                // reference argument cannot infer an exact receiver binding. An observed receiver or an invariant
+                // position must supply it instead; value-type arguments do not participate in variance and remain exact.
                 if (definition?.GenericParameters[i].IsVariant == true && !actual.TypeArguments[i].IsValueType)
                 {
                     continue;

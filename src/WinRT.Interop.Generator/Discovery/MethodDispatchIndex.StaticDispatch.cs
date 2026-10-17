@@ -115,9 +115,9 @@ internal partial class MethodDispatchIndex
         HierarchyType[] hierarchy = GetBoundedInterfaceHierarchy(receiver, InterfaceDispatchKind.Static);
         Dictionary<MethodDefinition, List<Target>> targets = new(ReferenceEqualityComparer.Instance);
 
-        foreach (HierarchyType iface in hierarchy.Where(static entry => entry.Definition.IsInterface))
+        foreach (HierarchyType interfaceType in hierarchy.Where(static entry => entry.Definition.IsInterface))
         {
-            foreach (MethodDefinition declaration in iface.Definition.Methods)
+            foreach (MethodDefinition declaration in interfaceType.Definition.Methods)
             {
                 _token.ThrowIfCancellationRequested();
 
@@ -129,7 +129,7 @@ internal partial class MethodDispatchIndex
                     continue;
                 }
 
-                if (iface.Definition.IsExplicitImplementationBody(declaration, _runtimeContext))
+                if (interfaceType.Definition.IsExplicitImplementationBody(declaration, _runtimeContext))
                 {
                     continue;
                 }
@@ -146,7 +146,7 @@ internal partial class MethodDispatchIndex
                         continue;
                     }
 
-                    selected = GetExplicitDefaultImplementations(owner, declaration, iface.Signature, InterfaceDispatchKind.Static)
+                    selected = GetExplicitDefaultImplementations(owner, declaration, interfaceType.Signature, InterfaceDispatchKind.Static)
                         .FirstOrDefault();
 
                     if (selected is not null)
@@ -160,7 +160,7 @@ internal partial class MethodDispatchIndex
                 {
                     DefaultBody[] candidates = GetMostSpecificInterfaceBodies(
                         hierarchy: hierarchy,
-                        iface: iface,
+                        interfaceType: interfaceType,
                         declaration: declaration,
                         receiver: receiver,
                         kind: InterfaceDispatchKind.Static);
@@ -196,7 +196,7 @@ internal partial class MethodDispatchIndex
                 // Body policy is checked at admission, after selection has ruled out hidden defaults
                 implementations.Add(new Target(
                     Receiver: receiver,
-                    DeclarationType: iface.Signature,
+                    DeclarationType: interfaceType.Signature,
                     Method: selected.Method,
                     BodyType: selected.Owner));
             }

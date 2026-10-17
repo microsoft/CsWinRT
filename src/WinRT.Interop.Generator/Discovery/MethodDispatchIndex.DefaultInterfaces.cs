@@ -187,9 +187,9 @@ internal partial class MethodDispatchIndex
         HierarchyType[] hierarchy = GetDefaultHierarchy(receiver);
         List<DefaultBody> bodies = [];
 
-        foreach (HierarchyType iface in hierarchy.Where(static entry => entry.Definition.IsInterface))
+        foreach (HierarchyType interfaceType in hierarchy.Where(static entry => entry.Definition.IsInterface))
         {
-            foreach (MethodDefinition declaration in iface.Definition.Methods)
+            foreach (MethodDefinition declaration in interfaceType.Definition.Methods)
             {
                 _token.ThrowIfCancellationRequested();
 
@@ -202,24 +202,24 @@ internal partial class MethodDispatchIndex
                 }
 
                 // Explicit implementation methods are bodies for another slot, not independent entry points
-                if (iface.Definition.IsExplicitImplementationBody(declaration, _runtimeContext))
+                if (interfaceType.Definition.IsExplicitImplementationBody(declaration, _runtimeContext))
                 {
                     continue;
                 }
 
                 // Compare slot and implementation signatures in the same receiver parameter space
                 MethodSignature slotSignature = signature.InstantiateGenericTypes(new GenericContext(
-                    type: iface.Signature as GenericInstanceTypeSignature,
+                    type: interfaceType.Signature as GenericInstanceTypeSignature,
                     method: null));
 
-                if (HasClassImplementation(hierarchy, iface, declaration, slotSignature))
+                if (HasClassImplementation(hierarchy, interfaceType, declaration, slotSignature))
                 {
                     continue;
                 }
 
                 DefaultBody[] mostSpecific = GetMostSpecificInterfaceBodies(
                     hierarchy: hierarchy,
-                    iface: iface,
+                    interfaceType: interfaceType,
                     declaration: declaration,
                     receiver: receiver,
                     kind: InterfaceDispatchKind.Instance);
@@ -269,14 +269,14 @@ internal partial class MethodDispatchIndex
     /// Selects maximal interface implementations while retaining re-abstractions in the comparison.
     /// </summary>
     /// <param name="hierarchy">The receiver hierarchy in formal receiver parameters.</param>
-    /// <param name="iface">The constructed interface declaring the slot.</param>
+    /// <param name="interfaceType">The constructed interface declaring the slot.</param>
     /// <param name="declaration">The slot definition.</param>
     /// <param name="receiver">The receiver whose bounds constrain selection.</param>
     /// <param name="kind">The discovery path owning the hierarchy caches.</param>
     /// <returns>The most-specific candidates, including abstract entries.</returns>
     private DefaultBody[] GetMostSpecificInterfaceBodies(
         HierarchyType[] hierarchy,
-        HierarchyType iface,
+        HierarchyType interfaceType,
         MethodDefinition declaration,
         TypeDefinition receiver,
         InterfaceDispatchKind kind)
@@ -286,13 +286,13 @@ internal partial class MethodDispatchIndex
         // Abstract 'MethodImpl'-s must participate so re-abstraction can hide an inherited body
         foreach (HierarchyType owner in hierarchy.Where(static entry => entry.Definition.IsInterface))
         {
-            candidates.AddRange(GetExplicitDefaultImplementations(owner, declaration, iface.Signature, kind));
+            candidates.AddRange(GetExplicitDefaultImplementations(owner, declaration, interfaceType.Signature, kind));
         }
 
         // The declaration's own default survives when no more-derived interface remaps its slot
         candidates.Add(new DefaultBody(
             Method: declaration,
-            Owner: iface.Signature));
+            Owner: interfaceType.Signature));
 
         // A more-derived constructed owner supersedes an ancestor, regardless of whether it supplies a body
         return [.. candidates.Where(candidate => !HasMoreSpecificDefaultBody(candidate, candidates, receiver, kind))];
@@ -302,13 +302,13 @@ internal partial class MethodDispatchIndex
     /// Checks whether a class implementation takes precedence over an interface default.
     /// </summary>
     /// <param name="hierarchy">The receiver hierarchy in its formal type context.</param>
-    /// <param name="iface">The constructed interface declaring the slot.</param>
+    /// <param name="interfaceType">The constructed interface declaring the slot.</param>
     /// <param name="declaration">The slot definition.</param>
     /// <param name="slotSignature">The slot signature after substituting receiver arguments.</param>
     /// <returns>Whether the receiver or a base class implements the slot.</returns>
     private bool HasClassImplementation(
         HierarchyType[] hierarchy,
-        HierarchyType iface,
+        HierarchyType interfaceType,
         MethodDefinition declaration,
         MethodSignature slotSignature)
     {
@@ -320,7 +320,7 @@ internal partial class MethodDispatchIndex
             }
 
             // 'MethodImpl' identifies explicit implementations and compiler-generated stubs without name matching
-            if (GetExplicitDefaultImplementations(owner, declaration, iface.Signature).Any())
+            if (GetExplicitDefaultImplementations(owner, declaration, interfaceType.Signature).Any())
             {
                 return true;
             }
