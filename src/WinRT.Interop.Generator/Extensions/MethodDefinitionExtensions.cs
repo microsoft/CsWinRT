@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Models;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -241,6 +242,7 @@ internal static class MethodDefinitionExtensions
         /// <returns>The types referenced by the operands.</returns>
         public IEnumerable<ITypeDefOrRef> EnumerateCastAndTypeTokenOperandTypes()
         {
+            // Make sure that we do have some instructions to analyze
             if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
             {
                 yield break;
@@ -259,26 +261,44 @@ internal static class MethodDefinitionExtensions
                     continue;
                 }
 
-                if (instruction.Operand is ITypeDefOrRef operandType)
+                if (instruction.Operand is not ITypeDefOrRef operandType)
                 {
-                    yield return operandType;
+                    continue;
                 }
+
+                yield return operandType;
             }
         }
 
         /// <summary>
         /// Enumerates operands of method instructions and member-token loads.
         /// </summary>
-        /// <returns>The referenced method descriptors or field-token member references.</returns>
-        public IEnumerable<IMethodDescriptor> EnumerateMethodOperands()
+        /// <returns>The referenced methods with their dispatch opcodes and receiver constraints.</returns>
+        public IEnumerable<MethodOperand> EnumerateMethodOperands()
         {
+            // Make sure that we do have some instructions to analyze
             if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
             {
                 yield break;
             }
 
+            ITypeDefOrRef? constraint = null;
+
             foreach (CilInstruction instruction in instructions)
             {
+                // Preserve a constrained receiver across other prefixes, but only for the next instruction
+                if (instruction.OpCode.Code == CilCode.Constrained)
+                {
+                    constraint = instruction.Operand as ITypeDefOrRef;
+
+                    continue;
+                }
+
+                if (instruction.OpCode.OpCodeType == CilOpCodeType.Prefix)
+                {
+                    continue;
+                }
+
                 // Only inspect invocations, method-pointer loads, and member tokens
                 if (instruction.OpCode.Code is not (
                     CilCode.Call or
@@ -289,13 +309,25 @@ internal static class MethodDefinitionExtensions
                     CilCode.Ldvirtftn or
                     CilCode.Ldtoken))
                 {
+                    constraint = null;
+
                     continue;
                 }
 
-                if (instruction.Operand is IMethodDescriptor descriptor)
+                if (instruction.Operand is not IMethodDescriptor descriptor)
                 {
-                    yield return descriptor;
+                    constraint = null;
+
+                    continue;
                 }
+
+                yield return new MethodOperand(
+                    Descriptor: descriptor,
+                    Constraint: constraint,
+                    IsVirtual: instruction.OpCode.Code is CilCode.Callvirt or CilCode.Ldvirtftn,
+                    IsStaticDispatch: constraint is not null && instruction.OpCode.Code is CilCode.Call or CilCode.Ldftn);
+
+                constraint = null;
             }
         }
 

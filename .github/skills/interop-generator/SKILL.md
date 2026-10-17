@@ -56,8 +56,13 @@ WinRT.Interop.Generator/
 │   ├── MetadataAssemblyAttributesBuilder.cs # Assembly-level metadata attributes
 │   └── WindowsRuntimeTypeHierarchyBuilder.cs # Type hierarchy lookup table
 ├── Discovery/                              # Type discovery logic
+│   ├── DispatchContextRegistry.cs          # Publishes module-local dispatch observations and coverage
 │   ├── InteropTypeDiscovery.cs             # Main discovery: type hierarchy, user types, arrays
-│   └── InteropTypeDiscovery.Generics.cs    # Generic instantiation discovery + cascade logic
+│   ├── InteropTypeDiscovery.Generics.cs    # Generic instantiation discovery + cascade logic
+│   ├── MethodDispatchIndex.cs              # Shared declaration-to-body metadata index
+│   ├── MethodDispatchIndex.*.cs            # Hierarchy, binding, default and static interface selection
+│   ├── TypeSignatureDiscovery.cs           # Traversal state, metadata roots, and enumeration setup
+│   └── TypeSignatureDiscovery.*.cs         # Member contexts, admission, dispatch, and cross-module joins
 ├── Errors/                                 # Error/warning infrastructure
 │   ├── UnhandledInteropException.cs        # Wraps unexpected errors with phase context
 │   ├── WellKnownInteropException.cs        # Structured errors with CSWINRTINTEROPGEN### codes
@@ -177,11 +182,13 @@ Program.cs → ConsoleApp.Run(args, InteropGenerator.Run)
                 ├── runner.RunPhase("discovery", Discover)
                 │   ├── Load all reference + implementation assemblies (parallel)
                 │   ├── Load special WinRT modules (Sdk.Projection, Projection, Component)
+                │   ├── Build the shared dispatch metadata index
                 │   ├── For each module (parallel):
                 │   │   ├── DiscoverTypeHierarchyTypes()
                 │   │   ├── DiscoverGenericTypeInstantiations()
                 │   │   ├── DiscoverExposedUserDefinedTypes()
                 │   │   └── DiscoverSzArrayTypes()
+                │   ├── Complete cross-module generic and SZ-array dispatch joins
                 │   ├── ValidateWinRTRuntimeDllVersion2References()
                 │   └── Return frozen InteropGeneratorDiscoveryState
                 │
@@ -333,7 +340,7 @@ Processes reference assemblies to build a map of projected Windows Runtime class
 
 The core of discovery — finds all constructed generic types used anywhere in the application. Located in `InteropTypeDiscovery.Generics.cs`.
 
-`TypeSignatureDiscovery<TResult>.Enumerate`, exposed through the `ModuleDefinitionExtensions.EnumerateGenericInstanceTypeSignatures` and `ModuleDefinitionExtensions.EnumerateSzArrayTypeSignatures` helpers, supplies the shared generic and SZ-array discovery sources: fields, method signatures and locals, allocations and field accesses, type operands (including casts, boxing, and `ldtoken`), TypeSpecs, and MethodSpec arguments. Its member worklist composes declaring-type and method contexts through nested generic calls and delegate targets. Referenced signatures remain visible without following dependency bodies; further body expansion follows the assembly marshalling policy, while explicit metadata roots retain their one-hop member scan. Exact contexts are deduplicated, cancellation is checked during traversal, and expanding contexts use the existing depth (32), signature complexity (256), and transitive type-or-method instantiation (1024) limits and `CSWINRTINTEROPGEN0104`–`0106` diagnostics.
+`TypeSignatureDiscovery<TResult>.Enumerate`, exposed through the `ModuleDefinitionExtensions.EnumerateGenericInstanceTypeSignatures` and `ModuleDefinitionExtensions.EnumerateSzArrayTypeSignatures` helpers, supplies the shared generic and SZ-array discovery sources: fields, method signatures and locals, allocations and field accesses, type operands (including casts, boxing, and `ldtoken`), `TypeSpec` entries, and `MethodSpec` arguments. Its member worklist composes declaring-type and method contexts through nested generic calls and delegate targets. Referenced signatures remain visible without following dependency bodies; further body expansion follows the assembly marshalling policy, while explicit metadata roots retain their one-hop member scan. Exact contexts are deduplicated and cancellation is checked during traversal. Expanding contexts are bounded by depth (32), signature complexity (256), and transitive type-or-method instantiations (1024 per allowance), with `CSWINRTINTEROPGEN0104`–`0106` diagnostics; see [discovery limits and additive work](#discovery-limits-and-additive-work).
 
 **Algorithm:**
 1. Validate the type is fully constructed (via `IsConstructedGenericTypeVisitor`)
@@ -359,6 +366,62 @@ The core of discovery — finds all constructed generic types used anywhere in t
 **For managed generic types** (`TryTrackManagedGenericTypeInstance`):
 - `Span<T>` and `ReadOnlySpan<T>` where `T` is a Windows Runtime type → construct `SzArrayType` and route to array discovery
 - All other types → route to `TryTrackExposedUserDefinedType`
+
+### Generic signature traversal (`TypeSignatureDiscovery`)
+
+The stateful traversal is split by responsibility: the main file owns all traversal state, enumeration setup, and metadata roots; `.Members` composes and scans member contexts; `.Worklist` owns admission and limits; `.Supplemental` records primary observations and replays additive work without changing primary reservations; `.Dispatch` binds local dispatch demands to observed receivers; `.DefaultInterfaces` closes instance default bodies; `.StaticDispatch` follows constrained static interface calls; and `.CrossModule` imports published contexts after the parallel module barrier. `DispatchContextRegistry` publishes observations and completed-body coverage. `MethodDispatchIndex` indexes declaration-to-body relationships once per invocation, with fields in its main definition, `.Hierarchy` handling metadata ancestry, `.Binding` unifying receiver arguments, and `.DefaultInterfaces` and `.StaticDispatch` selecting interface bodies.
+
+#### Dispatch binding
+
+Generic method discovery propagates call contexts through interface implementations and virtual overrides, including explicit and inherited implementations, virtual delegate targets, and constrained calls. Matching respects declaration identity, substituted signatures, custom modifiers, and virtual slots: a `new` virtual slot is not an override, and an ordinary nonvirtual or explicit `base` call does not expand sibling overrides.
+
+When an implementation needs generic receiver arguments, discovery composes the interface/base context with its declaring type and joins it with observed constructed receiver types. This is conservative metadata analysis, not runtime receiver data-flow analysis: more than one implementation may match. It does not synthesize arbitrary receiver instantiations for unconstrained parameters or discover receivers available only through reflection or bodies skipped by assembly policy. An explicitly observed receiver from a skipped module can still supply arguments for an eligible base implementation; its own excluded bodies remain skipped. Dispatch candidates never inherit an explicit metadata root's one-hop exemption from assembly policy.
+
+#### Default interface bodies
+
+Observed concrete generic receivers supply arguments to applicable non-generic default interface bodies. For example, `Factory<long> : IFactory<long>` can inherit a non-generic `IFactory.Create()` implementation that constructs `List<IAsyncOperation<T>>`; the receiver closes `T` even though the call has no generic method arguments. Interface ancestry and explicit `MethodImpl` mappings preserve inherited, nested, and permuted arguments. Class implementations, more-specific interface overrides, and re-abstractions suppress replaced defaults; ambiguous defaults are not selected.
+
+Initial selection includes applicable instance bodies, not unrelated private or static interface members, and applies the body assembly's marshalling policy. Descendants retain ordinary member traversal: a closed type exposed by a helper operand can receive a whole-type member scan. This receiver-driven path does not require a managed call site and does not invent receiver instantiations.
+
+#### Static interface dispatch
+
+Static abstract and static virtual interface calls use the actual closed receiver supplied by a constrained call or method-pointer load, such as `TFactory.Create()` or `TFactory.Create` inside a generic method. This also covers static properties, event accessors, and operators. Discovery matches declaration identity and the exact constructed interface, composes inherited or reordered receiver arguments, and selects the most-specific implementation. Class implementations use `MethodImpl` mappings, including C# implicit implementations; a same-named static method that merely hides an inherited member does not replace that mapping. Interface overrides and re-abstractions follow the same specificity rules as instance defaults.
+
+A non-generic static slot needs no fabricated `MethodSpec`: its selected body is scanned with a constructed owner and no method arguments. Open constrained receivers are not inferred from unrelated type sightings, and observing a receiver alone does not invoke its static defaults.
+
+Ordinary member discovery still covers class-owned static implementations and default bodies exposed by explicit declaring-interface types. A default body independently rooted by a closed `TypeSpec` or `MethodSpec` can therefore contribute types even when another implementation is selected at a call. For generic static calls already handled by dispatch discovery, complete constrained-slot selection filters unrelated or replaced candidates without changing target ordinals. If bounded metadata makes that filter inconclusive, that path retains its candidates; this fallback does not apply to receiver-driven default-body selection. Additional interface-owned static overrides, including bodies whose receiver closes types independently of an open method argument, run in the final supplemental phase.
+
+#### Discovery limits and additive work
+
+Generic-instance and SZ-array discovery have independent enumerations, worklists, visited state, and allowances:
+
+| Enumeration | Scope | Transitive instantiation limit | Warning prefix |
+|-------------|-------|-------------------------------|----------------|
+| Primary | Per input module and result kind | 1024 | `Generic member discovery reached` |
+| Module-local supplemental | Per input module and result kind | 1024, separate from primary | `Supplemental generic discovery reached` |
+| Late cross-module supplemental | Once for the application per result kind | 1024, shared across publication stages | `Supplemental generic discovery reached` |
+
+Type member scans and generic method bodies share their enumeration's counter. Branching return types such as `Node<A<T>>` and `Node<B<T>>`, or branching generic helper calls, can otherwise create exponentially many work items below the depth and complexity limits. Types with no eligible members, including policy-skipped framework generics without a static initializer, do not consume reservations. Unresolved methods, methods without IL bodies, and transitive callees skipped by policy do not consume reservations either; their referenced signatures and method arguments remain visible.
+
+Primary discovery completes first with first-visit ordering. Generic dispatch observations and shorter-depth sightings are recorded without spending primary reservations or adding primary work. An isolated supplemental enumeration then expands interface implementations, virtual overrides, and contexts that can recover a depth-limited path. All descendants, including ordinary callees, spend the supplemental allowance. Results are unioned additively: supplemental work cannot displace primary signatures or member scans.
+
+Receiver-driven instance defaults wait until the supplemental generic-dispatch queue drains, then run in first-observation order. Newly discovered receivers form subsequent batches without resetting the counter. Additional constrained static calls run last, sharing that same remaining allowance rather than receiving another 1024 reservations. Their ordinary callees, static initializers, and newly exposed instance defaults retain normal member traversal and static-phase provenance. The final loop drains both default and static work to a fixpoint, allowing interleaved call chains.
+
+Explicit signatures in the input metadata are roots and do not consume transitive reservations. Reaching the limit can prevent further member scans while still allowing signatures to be reported; other discovery branches continue. Depth, complexity, and instantiation-limit diagnostics are `CSWINRTINTEROPGEN0104`, `CSWINRTINTEROPGEN0105`, and `CSWINRTINTEROPGEN0106`. Supplemental and late-join warnings use the supplemental prefix, and warnings-as-errors promotes both primary and supplemental forms.
+
+#### Cross-module completion
+
+Receiver and demand contexts published by different modules are joined after parallel discovery, preserving their original traversal depths and allowing further transitive contexts. Recorded coverage prevents completed module-local joins and expanded dispatch bodies from being replayed at an equal or greater depth.
+
+Publications are admitted in generic-dispatch, instance-default, then static-dispatch order. Earlier pairs and their descendants drain before observations published by receiver-driven default discovery are admitted. Join-local default work completes before importing static publications, so later work cannot displace those earlier contexts. An earlier demand can join a newly published receiver, and a new demand can join an earlier receiver, without retrying completed module-local pairs. Imported receivers do not repeat their default scans; new receivers discovered during the late traversal can still contribute defaults.
+
+Demands created by late traversal are not part of the completed publication registry. If they need receivers imported by a later stage, those missing pairs are appended only after all prior late work and its default/static descendants finish. Their descendants can interleave ordinary generic calls, instance defaults, and constrained static calls; once all publication stages are imported, newly discovered demands and receivers join inline. All stages and appended pairs share the remaining late allowance, with no counter reset. Exhaustion can leave additional support incomplete but cannot displace earlier admitted contexts.
+
+The late enumeration uses the application's output module, so its diagnostics name that module even when the expanding pattern originates in a dependency.
+
+#### Regression coverage
+
+Runtime dispatch regressions belong in `UnitTest/TestComponent_Tests.cs` and `FunctionalTests/DynamicInterfaceCasting`, using opaque wrappers over real `TestComponentCSharp` native vectors with distinct enum element types. Generator-only binding, policy, cutoff, and determinism tests remain in `ProjectionWriterTest`.
 
 ### User-defined type discovery (`TryTrackExposedUserDefinedType`)
 

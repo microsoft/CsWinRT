@@ -14,7 +14,7 @@ using WindowsRuntime.ProjectionWriter;
 namespace ProjectionWriterTest;
 
 [TestClass]
-public class Test_InteropGenericDiscovery
+public partial class Test_InteropGenericDiscovery
 {
     private const string RecursionWarning = "CSWINRTINTEROPGEN0104";
     private const string ComplexityWarning = "CSWINRTINTEROPGEN0105";
@@ -104,7 +104,7 @@ public class Test_InteropGenericDiscovery
             }
             """;
 
-        // The root body and 32 callee bodies each allocate one additional nested 'Node' type.
+        // The root body and 32 callee bodies each allocate one additional nested 'Node' type
         AssertGeneration(source, 33, expectedWarning: RecursionWarning);
     }
 
@@ -641,7 +641,8 @@ public class Test_InteropGenericDiscovery
         bool treatWarningsAsErrors = false,
         string[]? additionalReferences = null,
         string[]? additionalArguments = null,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null,
+        int maxDegreesOfParallelism = 1)
     {
         string projection = Path.Combine(SdkFixture.Value, "WinRT.Sdk.Projection.dll");
         string sdkReference = Path.Combine(SdkFixture.Value, "Microsoft.Windows.SDK.NET.dll");
@@ -659,7 +660,7 @@ public class Test_InteropGenericDiscovery
             "--validate-winrt-runtime-dll-version-2-references true",
             "--enable-incremental-generation false",
             $"--treat-warnings-as-errors {treatWarningsAsErrors}",
-            "--max-degrees-of-parallelism 1",
+            $"--max-degrees-of-parallelism {maxDegreesOfParallelism}",
             .. additionalArguments ?? []
         ]);
 

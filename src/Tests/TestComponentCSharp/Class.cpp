@@ -1167,7 +1167,7 @@ namespace winrt::TestComponentCSharp::implementation
 
     Windows::Foundation::IInspectable Class::GetInputStreamOptionsVector()
     {
-        // Keep the closed vector types out of the managed projection's signatures.
+        // Keep the closed vector types out of the managed projection's signatures
         return winrt::single_threaded_vector(std::vector{
             Windows::Storage::Streams::InputStreamOptions::None,
             Windows::Storage::Streams::InputStreamOptions::Partial,
@@ -1188,6 +1188,62 @@ namespace winrt::TestComponentCSharp::implementation
             Windows::Storage::CreationCollisionOption::GenerateUniqueName,
             Windows::Storage::CreationCollisionOption::ReplaceExisting,
             Windows::Storage::CreationCollisionOption::FailIfExists });
+    }
+
+    Windows::Foundation::IInspectable Class::GetInterfaceDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            InterfaceDispatchElement::First,
+            InterfaceDispatchElement::Second,
+            InterfaceDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetDirectDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            DirectDispatchElement::First,
+            DirectDispatchElement::Second,
+            DirectDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetAbstractDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            AbstractDispatchElement::First,
+            AbstractDispatchElement::Second,
+            AbstractDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetVirtualDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            VirtualDispatchElement::First,
+            VirtualDispatchElement::Second,
+            VirtualDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetSealedDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            SealedDispatchElement::First,
+            SealedDispatchElement::Second,
+            SealedDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetClosedArgumentVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            ClosedArgumentElement::First,
+            ClosedArgumentElement::Second,
+            ClosedArgumentElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetStaticChainVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            StaticChainElement::First,
+            StaticChainElement::Second,
+            StaticChainElement::Third });
     }
 
     IVectorView<bool> Class::GetBoolVector()

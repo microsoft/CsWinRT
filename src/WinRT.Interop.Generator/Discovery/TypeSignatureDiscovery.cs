@@ -3,13 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Visitors;
+using WindowsRuntime.InteropGenerator.Models;
 
 namespace WindowsRuntime.InteropGenerator.Discovery;
 
@@ -17,11 +15,7 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 /// Discovers type signatures from a module's metadata roots and instantiated members.
 /// </summary>
 /// <typeparam name="TResult">The type signatures selected by the result visitor.</typeparam>
-/// <remarks>
-/// Each instance belongs to a single enumeration. Generic and SZ array discovery share this traversal,
-/// including its generic contexts, member eligibility rules, and expansion limits.
-/// </remarks>
-internal sealed class TypeSignatureDiscovery<TResult>
+internal sealed partial class TypeSignatureDiscovery<TResult>
     where TResult : TypeSignature
 {
     /// <summary>The maximum depth at which discovered members can be queued.</summary>
@@ -54,6 +48,21 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <summary>The cancellation token for this enumeration.</summary>
     private readonly CancellationToken _token;
 
+    /// <summary>The invocation's complete, read-only dispatch metadata.</summary>
+    private readonly MethodDispatchIndex _dispatchIndex;
+
+    /// <summary>The write-only registry for late cross-module receiver contexts, or null in its completion pass.</summary>
+    private readonly DispatchContextRegistry? _dispatchContexts;
+
+    /// <summary>Whether this instance expands additive work instead of ordinary metadata roots.</summary>
+    private readonly bool _isSupplemental;
+
+    /// <summary>The completed primary traversal, read-only while supplemental work is running.</summary>
+    private readonly TypeSignatureDiscovery<TResult>? _primary;
+
+    /// <summary>The stable ordinal of this enumeration's root module.</summary>
+    private readonly int _moduleOrdinal;
+
     /// <summary>The signatures already reported to the consumer.</summary>
     private readonly HashSet<TResult> _results;
 
@@ -61,13 +70,88 @@ internal sealed class TypeSignatureDiscovery<TResult>
     private readonly HashSet<TypeSignature> _typeSpecifications;
 
     /// <summary>Type contexts already considered for member expansion, distinct from reported results.</summary>
-    private readonly HashSet<TypeSignature> _visitedTypes;
+    private readonly Dictionary<TypeSignature, int> _visitedTypes;
+
+    /// <summary>Argument contexts grouped by resolved method definition identity, not by method signature.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedMethods;
 
     /// <summary>The FIFO worklist of type or method contexts awaiting member discovery.</summary>
     private readonly Queue<PendingMember> _pendingMembers;
 
-    /// <summary>Argument contexts grouped by resolved method definition identity, not by method signature.</summary>
-    private readonly Dictionary<MethodDefinition, HashSet<IList<TypeSignature>>> _visitedMethods;
+    /// <summary>Actual scans recorded during traversal and consulted only by supplemental replay.</summary>
+    private readonly Dictionary<TypeSignature, int> _coveredTypes;
+
+    /// <summary>Method contexts actually scanned at their minimum observed depth.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _coveredMethods = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Shallower type sightings that may recover a depth-limited primary path.</summary>
+    private readonly Dictionary<TypeSignature, int> _shallowerTypes;
+
+    /// <summary>Shallower method sightings, retained in their first observation order.</summary>
+    private readonly List<ShallowerMethodObservation> _shallowerMethods = [];
+
+    /// <summary>Minimum method sighting depths, without repeated list entries for hot contexts.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, ShallowerMethodObservation>> _shallowerMethodContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Dispatch observations recorded without affecting the primary queue or budget.</summary>
+    private readonly List<DispatchObservation> _dispatchObservations = [];
+
+    /// <summary>Composed dispatch keys deduplicated before replaying the supplemental phase.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, DispatchObservation>> _dispatchObservationContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Observed dispatch contexts, deduplicated by slot definition identity.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedDispatches = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Constructed type signatures already considered as sources of receiver contexts.</summary>
+    private readonly Dictionary<TypeSignature, int> _receiverCandidates;
+
+    /// <summary>Actually observed receiver contexts, indexed by receiver definition.</summary>
+    private readonly Dictionary<TypeDefinition, Dictionary<TypeSignature, int>> _receiverContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Dispatch demands waiting for receiver type arguments, indexed by receiver definition.</summary>
+    private readonly Dictionary<TypeDefinition, List<DispatchContextRegistry.Demand>> _receiverDemands = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Demand contexts grouped by stable binding and origin ordinals.</summary>
+    private readonly Dictionary<(int Target, int Origin), Dictionary<IList<TypeSignature>, int>> _demandContexts = [];
+
+    /// <summary>Receiver depths from each imported phase, in admission order.</summary>
+    private readonly List<Dictionary<TypeSignature, int>> _importedReceiverPhases = [];
+
+    /// <summary>Demands first discovered by late traversal, retained in observation order.</summary>
+    private readonly List<LateDemandObservation> _lateDemandObservations = [];
+
+    /// <summary>Minimum late demand depths for each binding and composed argument context.</summary>
+    private readonly Dictionary<int, Dictionary<IList<TypeSignature>, LateDemandObservation>> _lateDemandContexts = [];
+
+    /// <summary>Dispatch-capable body contexts already expanded before the publishing barrier.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _expandedBodies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Actual default-body receiver observations in first-sighting order.</summary>
+    private readonly List<DefaultReceiverObservation> _defaultReceiverObservations = [];
+
+    /// <summary>Minimum observation depths for receivers with applicable default bodies.</summary>
+    private readonly Dictionary<TypeSignature, DefaultReceiverObservation> _defaultReceiverContexts;
+
+    /// <summary>Deferred default receivers, drained only after the existing supplemental worklist.</summary>
+    private readonly Queue<DefaultReceiverObservation> _pendingDefaultReceivers = new();
+
+    /// <summary>Type-only interface body contexts, separate from generic 'MethodSpec' contexts.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>> _visitedDefaultBodies = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Static call observations retained in first-sighting order without primary expansion.</summary>
+    private readonly List<StaticCallObservation> _staticCallObservations = [];
+
+    /// <summary>Minimum depths for exact static slot, receiver, and method-argument contexts.</summary>
+    private readonly Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, StaticCallObservation>> _staticCallContexts = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Static calls deferred until earlier supplemental work and instance defaults have drained.</summary>
+    private readonly Queue<StaticCallObservation> _pendingStaticCalls = new();
+
+    /// <summary>Tags publications with the phase that owns their remaining supplemental allowance.</summary>
+    private DispatchContextRegistry.DiscoveryPhase _dispatchPhase;
+
+    /// <summary>Whether an oversized static call has already been retained for a deferred diagnostic.</summary>
+    private bool _complexStaticCallRecorded;
 
     /// <summary>Whether a recursion warning has been reported for either a type or a method.</summary>
     private bool _recursionLimitReported;
@@ -78,8 +162,20 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <summary>Whether the shared transitive instantiation budget warning has been reported.</summary>
     private bool _transitiveTypeLimitReported;
 
+    /// <summary>Whether an oversized dispatch observation has already been retained for diagnostics.</summary>
+    private bool _complexDispatchRecorded;
+
     /// <summary>The number of transitive type and method instantiations reserved so far.</summary>
     private int _transitiveTypeCount;
+
+    /// <summary>One oversized primary receiver retained silently for a supplemental diagnostic.</summary>
+    private TypeSignature? _complexReceiver;
+
+    /// <summary>The traversal depth of the retained oversized receiver.</summary>
+    private int _complexReceiverDepth;
+
+    /// <summary>The publication sequence within this enumeration.</summary>
+    private int _publicationSequence;
 
     /// <summary>
     /// Creates the state for a single enumeration.
@@ -91,6 +187,10 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <param name="token">The cancellation token for discovery.</param>
+    /// <param name="dispatchIndex">The complete dispatch metadata index.</param>
+    /// <param name="dispatchContexts">The optional write-only cross-module registry.</param>
+    /// <param name="isSupplemental">Whether this instance uses the isolated supplemental allowance.</param>
+    /// <param name="primary">The completed primary enumeration, if this is its supplemental phase.</param>
     private TypeSignatureDiscovery(
         ModuleDefinition module,
         ITypeSignatureVisitor<IEnumerable<TResult>> visitor,
@@ -98,7 +198,11 @@ internal sealed class TypeSignatureDiscovery<TResult>
         Func<ModuleDefinition, bool> shouldProcessModule,
         Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors,
-        CancellationToken token)
+        CancellationToken token,
+        MethodDispatchIndex dispatchIndex,
+        DispatchContextRegistry? dispatchContexts,
+        bool isSupplemental = false,
+        TypeSignatureDiscovery<TResult>? primary = null)
     {
         _module = module;
         _visitor = visitor;
@@ -107,11 +211,20 @@ internal sealed class TypeSignatureDiscovery<TResult>
         _isMarshallingDisabledModule = isMarshallingDisabledModule;
         _treatWarningsAsErrors = treatWarningsAsErrors;
         _token = token;
+        _dispatchIndex = dispatchIndex;
+        _dispatchContexts = dispatchContexts;
+        _isSupplemental = isSupplemental;
+        _primary = primary;
+        _moduleOrdinal = dispatchIndex.GetModuleOrdinal(module);
+        _receiverCandidates = new Dictionary<TypeSignature, int>(signatureComparer);
+        _defaultReceiverContexts = new Dictionary<TypeSignature, DefaultReceiverObservation>(signatureComparer);
+        _coveredTypes = new Dictionary<TypeSignature, int>(signatureComparer);
+        _shallowerTypes = new Dictionary<TypeSignature, int>(signatureComparer);
         _results = new HashSet<TResult>(signatureComparer);
         _typeSpecifications = new HashSet<TypeSignature>(signatureComparer);
-        _visitedTypes = new HashSet<TypeSignature>(signatureComparer);
+        _visitedTypes = new Dictionary<TypeSignature, int>(signatureComparer);
         _pendingMembers = new Queue<PendingMember>();
-        _visitedMethods = [];
+        _visitedMethods = new Dictionary<MethodDefinition, Dictionary<IList<TypeSignature>, int>>(ReferenceEqualityComparer.Instance);
     }
 
     /// <summary>
@@ -124,6 +237,9 @@ internal sealed class TypeSignatureDiscovery<TResult>
     /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
     /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
     /// <param name="token">The cancellation token for discovery.</param>
+    /// <param name="dispatchIndex">The complete dispatch metadata index.</param>
+    /// <param name="dispatchContexts">The registry populated during parallel module processing.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts instead of reading metadata roots.</param>
     /// <returns>The unique type signatures of interest.</returns>
     public static IEnumerable<TResult> Enumerate(
         ModuleDefinition module,
@@ -132,13 +248,26 @@ internal sealed class TypeSignatureDiscovery<TResult>
         Func<ModuleDefinition, bool> shouldProcessModule,
         Func<ModuleDefinition, bool> isMarshallingDisabledModule,
         bool treatWarningsAsErrors,
-        CancellationToken token)
+        CancellationToken token,
+        MethodDispatchIndex dispatchIndex,
+        DispatchContextRegistry dispatchContexts,
+        bool completeCrossModuleJoins)
     {
         // Keep construction inside this iterator: repeated or interleaved enumerations must not share state
+        // A join pass only reads the completed registry, so it publishes nothing and uses supplemental admission.
         TypeSignatureDiscovery<TResult> discovery = new(
-            module, visitor, signatureComparer, shouldProcessModule, isMarshallingDisabledModule, treatWarningsAsErrors, token);
+            module: module,
+            visitor: visitor,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors,
+            token: token,
+            dispatchIndex: dispatchIndex,
+            dispatchContexts: completeCrossModuleJoins ? null : dispatchContexts,
+            isSupplemental: completeCrossModuleJoins);
 
-        foreach (TResult result in discovery.EnumerateRoots())
+        foreach (TResult result in completeCrossModuleJoins ? discovery.EnumerateCrossModuleJoins(dispatchContexts) : discovery.EnumerateRoots())
         {
             yield return result;
         }
@@ -147,6 +276,47 @@ internal sealed class TypeSignatureDiscovery<TResult>
         foreach (TResult result in discovery.EnumeratePendingMembers())
         {
             yield return result;
+        }
+
+        if (completeCrossModuleJoins)
+        {
+            // Only actual sightings in the join traversal enter this queue; imported receivers do not
+            foreach (TResult result in discovery.EnumerateDefaultInterfaceMembers())
+            {
+                yield return result;
+            }
+
+            foreach (TResult result in discovery.EnumerateStaticDispatchMembers())
+            {
+                yield return result;
+            }
+
+            // Reserve missing late pairs only after all existing joins and their descendants have drained
+            foreach (TResult result in discovery.EnumerateLateDispatchMembers())
+            {
+                yield return result;
+            }
+        }
+        else
+        {
+            // Receiver-only modules must still publish their contexts for the late cross-module join
+            TypeSignatureDiscovery<TResult> supplemental = new(
+                module: module,
+                visitor: visitor,
+                signatureComparer: signatureComparer,
+                shouldProcessModule: shouldProcessModule,
+                isMarshallingDisabledModule: isMarshallingDisabledModule,
+                treatWarningsAsErrors: treatWarningsAsErrors,
+                token: token,
+                dispatchIndex: dispatchIndex,
+                dispatchContexts: dispatchContexts,
+                isSupplemental: true,
+                primary: discovery);
+
+            foreach (TResult result in supplemental.EnumerateSupplementalMembers())
+            {
+                yield return result;
+            }
         }
     }
 
@@ -165,8 +335,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             }
         }
 
-        // Method definitions expose return types, parameters, locals, allocations, field accesses, and type operands.
-        // Their generic arguments are not available here, but even partially open signatures can contain closed types.
+        // Open method definitions can expose closed types through signatures, locals, and instruction operands
         foreach (MethodDefinition method in _module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
             foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(_module.RuntimeContext))
@@ -191,7 +360,7 @@ internal sealed class TypeSignatureDiscovery<TResult>
             {
                 _ = _typeSpecifications.Add(signature);
 
-                if (_visitedTypes.Add(signature))
+                if (_visitedTypes.TryAdd(signature, 0))
                 {
                     _pendingMembers.Enqueue(new PendingMember(
                         type: signature,
@@ -215,425 +384,14 @@ internal sealed class TypeSignatureDiscovery<TResult>
                 yield return result;
             }
         }
-    }
 
-    /// <summary>
-    /// Expands queued member contexts in discovery order.
-    /// </summary>
-    /// <returns>The signatures visible from instantiated members.</returns>
-    private IEnumerable<TResult> EnumeratePendingMembers()
-    {
-        // A type context can close an ordinary method that has no 'MethodSpec' of its own:
-        //
-        // class C<T>
-        // {
-        //     List<T> M() => [];
-        // }
-        //
-        // A 'C<int>' 'TypeSpec' lets us discover 'List<int>' from 'M()', unlike the open method definition.
-        // Closed types discovered through generic factories need the same traversal, including ordinary
-        // methods and cache initializers, to expose nested property/indexer descriptors transitively.
-        while (_pendingMembers.TryDequeue(out PendingMember current))
+        // 'MethodSpec' rows carry no opcode; actual dispatch sites do not get the root's one-hop exemption
+        foreach (MethodDefinition method in _module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
-            _token.ThrowIfCancellationRequested();
-
-            if (current.Method is MethodDefinition currentMethod)
+            foreach (MethodOperand operand in method.EnumerateMethodOperands())
             {
-                // A method item's context was already counted at its own depth; only its callees advance it
-                foreach (TResult result in EnumerateMethodBodyTypes(currentMethod, current.Context, typeDepth: current.Depth, methodDepth: current.Depth + 1))
-                {
-                    yield return result;
-                }
-
-                continue;
-            }
-
-            TypeSignature typeSignature = current.Type!;
-
-            if (!typeSignature.TryResolve(_module.RuntimeContext, out TypeDefinition? type))
-            {
-                continue;
-            }
-
-            GenericContext genericContext = new(typeSignature as GenericInstanceTypeSignature, null);
-
-            // The type's arguments can close member signatures that are open in the method table
-            foreach (MethodDefinition method in GetMethodsToScan(typeSignature, type))
-            {
-                foreach (TResult result in EnumerateMethodBodyTypes(method, genericContext, typeDepth: current.Depth + 1, methodDepth: current.Depth + 1))
-                {
-                    yield return result;
-                }
+                RegisterDispatch(operand, default, 1);
             }
         }
-    }
-
-    /// <summary>
-    /// Queues generic member contexts and reports the selected signatures within a signature tree.
-    /// </summary>
-    /// <param name="type">The signature to visit, if available.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit root.</param>
-    /// <returns>The signatures not yet reported by this enumeration.</returns>
-    private IEnumerable<TResult> EnumerateTypeSignatures(TypeSignature? type, int depth = 0)
-    {
-        _token.ThrowIfCancellationRequested();
-
-        // 'Node<Pair<T, T>>' grows exponentially before reaching the depth limit.
-        // Bound the work before visiting, hashing, or formatting a newly expanded signature.
-        if (!IsSignatureWithinComplexityLimit(type, depth: depth))
-        {
-            yield break;
-        }
-
-        EnqueueGenericTypes(type, depth: depth);
-
-        foreach (TResult result in type?.AcceptVisitor(_visitor) ?? [])
-        {
-            if (_results.Add(result))
-            {
-                yield return result;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Queues closed generic types independently of which signatures the result visitor selects.
-    /// </summary>
-    /// <param name="type">The signature whose generic contexts should be considered.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit root.</param>
-    private void EnqueueGenericTypes(TypeSignature? type, int depth)
-    {
-        // Array discovery also needs generic contexts to find arrays exposed only by instantiated members
-        foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
-        {
-            if (genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) &&
-                !_visitedTypes.Contains(genericType))
-            {
-                // Types with no eligible members need no worklist entry but are still reported by the result visitor
-                if (depth > 0 &&
-                    (!genericType.TryResolve(_module.RuntimeContext, out TypeDefinition? resolvedType) ||
-                     !GetMethodsToScan(genericType, resolvedType).Any()))
-                {
-                    _ = _visitedTypes.Add(genericType);
-
-                    continue;
-                }
-
-                // Bound the worklist when branching methods create many distinct types below the depth limit
-                if (!TryReserveTransitiveInstantiation(depth: depth))
-                {
-                    continue;
-                }
-
-                _ = _visitedTypes.Add(genericType);
-
-                // 'Node<T>' -> 'Node<Node<T>>' never repeats an exact signature. Keep reporting the
-                // discovered type beyond the depth limit, but do not expand its members.
-                if (depth <= MaxDiscoveryDepth)
-                {
-                    _pendingMembers.Enqueue(new PendingMember(
-                        type: genericType,
-                        method: null,
-                        context: default,
-                        depth: depth));
-                }
-                else if (!_recursionLimitReported)
-                {
-                    _recursionLimitReported = true;
-
-                    WellKnownInteropExceptions.GenericTypeDiscoveryRecursionLimitExceededWarning(genericType, _module, MaxDiscoveryDepth).LogOrThrow(_treatWarningsAsErrors);
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Composes a referenced method's context, reports its visible signatures, and queues eligible bodies.
-    /// </summary>
-    /// <param name="descriptor">The referenced method or method specification.</param>
-    /// <param name="callerContext">The caller's declaring-type and method arguments.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
-    /// <returns>The signatures visible after substituting the callee's context.</returns>
-    private IEnumerable<TResult> EnumerateMethodTypes(IMethodDescriptor descriptor, GenericContext callerContext, int depth)
-    {
-        MethodSpecification? specification = descriptor as MethodSpecification;
-        IMethodDefOrRef? method = specification is not null ? specification.Method : descriptor as IMethodDefOrRef;
-
-        if (method is null)
-        {
-            yield break;
-        }
-
-        // The operand's parameters belong to the callee. Substitute the caller into its declaring
-        // type and method arguments first, then use the composed context for its signature and body.
-        TypeSignature? declaringType = (method.DeclaringType as TypeSpecification)?.Signature?.InstantiateGenericTypes(callerContext);
-        GenericInstanceMethodSignature? methodArguments = specification?.Signature is { } signature
-            ? new GenericInstanceMethodSignature(
-                attributes: signature.Attributes,
-                typeArguments: [.. signature.TypeArguments.Select(argument => argument.InstantiateGenericTypes(callerContext))])
-            : null;
-
-        // Bound the aggregate context before any argument is visited or hashed, not just each argument separately
-        int complexity = declaringType?.GetSignatureElementCount(MaxSignatureComplexity + 1) ?? 0;
-
-        // Many individually small arguments can still exceed the shared complexity budget
-        foreach (TypeSignature argument in methodArguments?.TypeArguments ?? [])
-        {
-            complexity += argument.GetSignatureElementCount(MaxSignatureComplexity + 1);
-
-            if (!IsComplexityWithinLimit(complexity, depth: depth))
-            {
-                yield break;
-            }
-        }
-
-        if (!IsComplexityWithinLimit(complexity, depth: depth))
-        {
-            yield break;
-        }
-
-        GenericContext genericContext = new(declaringType as GenericInstanceTypeSignature, methodArguments);
-
-        // Method arguments can require marshalling even when the callee's signature omits them
-        foreach (TypeSignature argument in methodArguments?.TypeArguments ?? [])
-        {
-            foreach (TResult result in EnumerateTypeSignatures(argument, depth: depth))
-            {
-                yield return result;
-            }
-        }
-
-        // Closed declaring types provide contexts for otherwise non-generic member discovery
-        foreach (TResult result in EnumerateTypeSignatures(declaringType, depth: depth))
-        {
-            yield return result;
-        }
-
-        // Referenced signatures remain visible even when module policy prevents following the body
-        if (method.Signature is MethodSignature methodSignature)
-        {
-            // The reference signature remains usable even when the callee cannot be resolved
-            foreach (TypeSignature visibleType in new[] { methodSignature.ReturnType }.Concat(methodSignature.ParameterTypes))
-            {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: depth))
-                {
-                    yield return result;
-                }
-            }
-        }
-
-        // Queue the body after reporting its signatures, so their type contexts keep their place in the FIFO
-        EnqueueMethodBody(method, declaringType, methodArguments, genericContext, depth: depth);
-    }
-
-    /// <summary>
-    /// Queues an instantiated method body if its context has not already been considered.
-    /// </summary>
-    /// <param name="method">The method to resolve.</param>
-    /// <param name="declaringType">The declaring type with the caller's arguments substituted.</param>
-    /// <param name="methodArguments">The substituted method arguments, if this is a 'MethodSpec'.</param>
-    /// <param name="genericContext">The composed context to use when scanning the body.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
-    private void EnqueueMethodBody(
-        IMethodDefOrRef method,
-        TypeSignature? declaringType,
-        GenericInstanceMethodSignature? methodArguments,
-        GenericContext genericContext,
-        int depth)
-    {
-        // Ordinary methods on constructed declaring types are already covered by the type worklist.
-        // Only explicit 'MethodSpec' roots retain the one-hop body scan of skipped modules.
-        if (methodArguments is null ||
-            !method.TryResolve(_module.RuntimeContext, out MethodDefinition? definition) ||
-            definition.CilMethodBody is null ||
-            (depth > 0 && (definition.DeclaringModule is not ModuleDefinition declaringModule || !_shouldProcessModule(declaringModule))))
-        {
-            return;
-        }
-
-        IList<TypeSignature> arguments = [
-            .. (declaringType as GenericInstanceTypeSignature)?.TypeArguments ?? [],
-            .. methodArguments.TypeArguments];
-
-        // Partially open contexts can still reveal closed types; skip only wholly unbound argument lists
-        if (depth > 0 && arguments.All(static argument => argument is GenericParameterSignature))
-        {
-            return;
-        }
-
-        if (!_visitedMethods.TryGetValue(definition, out HashSet<IList<TypeSignature>>? contexts))
-        {
-            contexts = new HashSet<IList<TypeSignature>>(_signatureComparer);
-
-            _visitedMethods.Add(definition, contexts);
-        }
-
-        if (!contexts.Add(arguments) || !TryReserveTransitiveInstantiation(depth: depth))
-        {
-            return;
-        }
-
-        if (depth <= MaxDiscoveryDepth)
-        {
-            _pendingMembers.Enqueue(new PendingMember(
-                type: null,
-                method: definition,
-                context: genericContext,
-                depth: depth));
-        }
-        else if (!_recursionLimitReported)
-        {
-            _recursionLimitReported = true;
-
-            WellKnownInteropExceptions.GenericMethodDiscoveryRecursionLimitExceededWarning(definition, _module, MaxDiscoveryDepth).LogOrThrow(_treatWarningsAsErrors);
-        }
-    }
-
-    /// <summary>
-    /// Visits a method's visible types and generic operands using an instantiated context.
-    /// </summary>
-    /// <param name="method">The method whose signature and body should be scanned.</param>
-    /// <param name="genericContext">The context to substitute into visible types and referenced members.</param>
-    /// <param name="typeDepth">The depth assigned to types found directly in the method.</param>
-    /// <param name="methodDepth">The depth assigned to referenced method contexts.</param>
-    /// <returns>The signatures visible from the instantiated method.</returns>
-    private IEnumerable<TResult> EnumerateMethodBodyTypes(MethodDefinition method, GenericContext genericContext, int typeDepth, int methodDepth)
-    {
-        foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(_module.RuntimeContext))
-        {
-            foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), depth: typeDepth))
-            {
-                yield return result;
-            }
-        }
-
-        foreach (IMethodDescriptor descriptor in method.EnumerateMethodOperands())
-        {
-            // Non-generic calls cannot provide new substitutions. Do not crawl their dependency bodies
-            if (descriptor is MethodSpecification || descriptor.DeclaringType is TypeSpecification)
-            {
-                foreach (TResult result in EnumerateMethodTypes(descriptor, genericContext, depth: methodDepth))
-                {
-                    yield return result;
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Selects the same eligible members for both budget accounting and queued type expansion.
-    /// </summary>
-    /// <param name="typeSignature">The type context being expanded.</param>
-    /// <param name="type">The resolved type definition.</param>
-    /// <returns>The methods eligible for discovery in this context.</returns>
-    private IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
-    {
-        // Explicit type specifications provide the caller's generic context for a one-hop member scan.
-        // Further traversal of ordinary methods follows the module's marshalling policy.
-        if (_typeSpecifications.Contains(typeSignature) ||
-            (type.DeclaringModule is ModuleDefinition declaringModule && _shouldProcessModule(declaringModule)))
-        {
-            return type.Methods;
-        }
-
-        // Mode-based skips still scan static initializers, but explicit exclusions do not
-        if (type.DeclaringModule is ModuleDefinition excludedModule && _isMarshallingDisabledModule(excludedModule))
-        {
-            return [];
-        }
-
-        // Static initializers can reveal concrete cached instances and arrays hidden behind
-        // fields declared as 'object' or an interface.
-        return type.TryGetStaticConstructor(out MethodDefinition? initializer) ? [initializer] : [];
-    }
-
-    /// <summary>
-    /// Reserves from the shared type and method expansion budget.
-    /// </summary>
-    /// <param name="depth">The expansion depth, or zero for an explicit root.</param>
-    /// <returns>Whether expansion may proceed, or no reservation is needed.</returns>
-    private bool TryReserveTransitiveInstantiation(int depth)
-    {
-        // Roots are unbounded; contexts beyond the depth limit will not be queued at all
-        if (depth is 0 or > MaxDiscoveryDepth)
-        {
-            return true;
-        }
-
-        if (_transitiveTypeCount == MaxTransitiveTypes)
-        {
-            if (!_transitiveTypeLimitReported)
-            {
-                _transitiveTypeLimitReported = true;
-
-                WellKnownInteropExceptions.GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(_module, MaxTransitiveTypes).LogOrThrow(_treatWarningsAsErrors);
-            }
-
-            return false;
-        }
-
-        _transitiveTypeCount++;
-
-        return true;
-    }
-
-    /// <summary>
-    /// Checks a signature's element count without walking beyond what is needed to detect an overflow.
-    /// </summary>
-    /// <param name="type">The signature to check, if available.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit root.</param>
-    /// <returns>Whether the signature may be visited.</returns>
-    private bool IsSignatureWithinComplexityLimit(TypeSignature? type, int depth)
-    {
-        return IsComplexityWithinLimit(type?.GetSignatureElementCount(MaxSignatureComplexity + 1) ?? 0, depth: depth);
-    }
-
-    /// <summary>
-    /// Checks signature or aggregate context complexity, exempting explicit roots.
-    /// </summary>
-    /// <param name="complexity">The signature element count accumulated so far.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit root.</param>
-    /// <returns>Whether discovery may proceed within this complexity.</returns>
-    private bool IsComplexityWithinLimit(int complexity, int depth)
-    {
-        if (depth == 0 || complexity <= MaxSignatureComplexity)
-        {
-            return true;
-        }
-
-        if (!_complexityLimitReported)
-        {
-            _complexityLimitReported = true;
-
-            WellKnownInteropExceptions.GenericTypeDiscoveryComplexityLimitExceededWarning(_module, MaxSignatureComplexity).LogOrThrow(_treatWarningsAsErrors);
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// A type or method context awaiting member discovery.
-    /// </summary>
-    /// <param name="type">The type context to expand, or <see langword="null"/> for a method body.</param>
-    /// <param name="method">The method body to scan, or <see langword="null"/> for a type context.</param>
-    /// <param name="context">The substituted method context, or the default value for type expansion.</param>
-    /// <param name="depth">The expansion depth, or zero for an explicit metadata root.</param>
-    private readonly struct PendingMember(
-        TypeSignature? type,
-        MethodDefinition? method,
-        GenericContext context,
-        int depth)
-    {
-        /// <summary>The type context to expand, or <see langword="null"/> for a method body.</summary>
-        public TypeSignature? Type { get; } = type;
-
-        /// <summary>The method body to scan, or <see langword="null"/> for a type context.</summary>
-        public MethodDefinition? Method { get; } = method;
-
-        /// <summary>The substituted method context; type contexts are composed when dequeued.</summary>
-        public GenericContext Context { get; } = context;
-
-        /// <summary>The expansion depth, with zero reserved for explicit metadata roots.</summary>
-        public int Depth { get; } = depth;
     }
 }
