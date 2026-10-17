@@ -185,6 +185,7 @@
     </Target>
     
     <ItemGroup>
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" />
         <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>

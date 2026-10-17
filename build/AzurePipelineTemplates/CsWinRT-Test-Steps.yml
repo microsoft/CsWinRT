@@ -24,7 +24,7 @@ steps:
 
 # Run unpackaged UI tests on x64.
   - task: PowerShell@2
-    displayName: Run Object Lifetime Tests (MTP)
+    displayName: Run Object Lifetime Tests (JIT)
     condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
     continueOnError: true
     inputs:
@@ -33,13 +33,13 @@ steps:
       arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-MTP"
 
   - task: PublishTestResults@2
-    displayName: Publish Object Lifetime Test Results
+    displayName: Publish Object Lifetime JIT Results
     condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'))
     inputs:
       testResultsFormat: VSTest
       testResultsFiles: '*.trx'
       searchFolder: $(StagingFolder)\ObjectLifetime-MTP
-      testRunTitle: Object Lifetime Tests ($(BuildPlatform), $(BuildConfiguration))
+      testRunTitle: Object Lifetime Tests JIT ($(BuildPlatform), $(BuildConfiguration))
 
 # Run Source Generator 2 Tests. Gated to x64 only: these are Roslyn analyzer/source-generator tests,
 # which are architecture-independent (the compiler runs the analyzer the same regardless of the target
@@ -220,6 +220,33 @@ steps:
       testResultsFiles: '**/UNITTEST-AOT-$(Build.BuildNumber).trx'
       searchFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish\TestResults
       testRunTitle: Unit Tests AOT (net10.0)
+
+  - task: MSBuild@1
+    displayName: Publish Object Lifetime Tests (Native AOT)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj
+      msbuildArguments: /restore /t:Publish /p:RestoreRecursive=false,PublishAot=true,WindowsPackageType=None,RuntimeIdentifier=win-x64,TargetFramework=net10.0-windows10.0.26100.1,PublishDir=$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64\publish\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),solutiondir=$(Build.SourcesDirectory)\src\,CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: PowerShell@2
+    displayName: Run Object Lifetime Tests (Native AOT)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64" -OutputDir "$(StagingFolder)\ObjectLifetime-AOT" -NativeAot
+
+  - task: PublishTestResults@2
+    displayName: Publish Object Lifetime Native AOT Results
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '*.trx'
+      searchFolder: $(StagingFolder)\ObjectLifetime-AOT
+      testRunTitle: Object Lifetime Tests Native AOT ($(BuildPlatform), $(BuildConfiguration))
 
 # Run Functional Tests
   - template: CsWinRT-FunctionalTest-Steps.yml@self
