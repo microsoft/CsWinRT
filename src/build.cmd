@@ -179,8 +179,7 @@ if not exist %dotnet_exe% (
 :objectlifetimetests
 rem Running Object Lifetime Unit Tests
 echo Running object lifetime tests for %cswinrt_platform% %cswinrt_configuration%
-if '%NUGET_PACKAGES%'=='' set NUGET_PACKAGES=%USERPROFILE%\.nuget\packages
-call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net10.0-windows10.0.19041.0\win-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\3.10.1\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
+call :exec powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%this_dir%..\build\scripts\Run-ObjectLifetimeInProcess.ps1" -LayoutDir "%this_dir%Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net10.0-windows10.0.26100.1\win-%cswinrt_platform%" -OutputDir "%this_dir%TestResults\ObjectLifetime"
 if ErrorLevel 1 (
   echo.
   echo ERROR: Lifetime test failed, skipping NuGet pack

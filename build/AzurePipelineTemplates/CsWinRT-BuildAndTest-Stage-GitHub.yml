@@ -78,8 +78,7 @@ stages:
         targetPath: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
         artifactName: benchmarks
 
-  # Seperate job to run certain tests
-  # that can't run in the other environment.
+  # Separate hosted-agent UI test runs.
   - job: Tests
     displayName: Run Tests
     condition: and(succeeded(), ne(variables['_BenchmarksOnly'],'true'))
@@ -111,10 +110,7 @@ stages:
         BuildPlatform: $(BuildPlatform) 
         SetupForBuildOnly: true
 
-    # Build just the CsWinRT build tooling (generator exes + WinRT.Generator.Tasks.dll)
-    # and WinRT.Internal (WindowsRuntime.Internal.winmd), which the standalone "Build
-    # Object Lifetime Tests" step below needs. Build by target name so the solution's
-    # BuildDependency ordering and x64->AnyCPU platform mapping apply.
+    # Build tooling and interop metadata for the standalone test build.
     - task: MSBuild@1
       displayName: Build CsWinRT build tooling
       condition: succeeded()
@@ -133,13 +129,7 @@ stages:
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
         
-# Run Object Lifetime Tests via VSTest. Currently DISABLED: VSTest discovery finds 0 tests because
-# MSTest.TestAdapter.dll's module initializer (MSTestExecutor.SetPlatformLogger) references the CsWinRT
-# 2.x type WinRT.ComWrappersSupport, which no longer exists in the CsWinRT 3.0 WinRT.Runtime (3.0.0.0)
-# the app deploys. The adapter's <Module> initializer throws TypeLoadException, VSTest skips the whole
-# adapter, and reports "No test is available". Root-caused from the vstest.console /Diag log. Kept (not
-# removed) so it can be re-enabled once a CsWinRT 3.0-compatible MSTest adapter is available. Use the
-# in-process runner below in the meantime.
+    # Legacy VSTest deployment; use MTP below.
     - task: VSTest@3
       displayName: Run Object Lifetime Tests
       enabled: false
@@ -151,21 +141,18 @@ stages:
         resultsFolder: $(StagingFolder)\TestResults
         otherConsoleOptions: /Diag:$(StagingFolder)\vstest-diag\log.txt
 
-# Run Object Lifetime Tests in-process by launching the packaged app directly (no --parentprocessid),
-# which exercises App.OnLaunched's RunTestsInProcess path; the app self-exits with the pass/fail code.
-# This is the actual test gate while VSTest discovery is broken (see above).
+    # Run the unpackaged WinUI host through MTP.
     - task: PowerShell@2
-      displayName: Run Object Lifetime Tests (In-Process)
+      displayName: Run Object Lifetime Tests (MTP)
       condition: succeeded()
-      # Some tests currently fail on CsWinRT 3.0; don't fail the pipeline on test failures for now.
+      # Keep UI test failures non-blocking.
       continueOnError: true
       inputs:
         targetType: filePath
         filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
         arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-InProc"
 
-# Echo the vstest.console /Diag logs to the build log and publish them. DISABLED alongside the VSTest
-# step above; re-enable together with it.
+    # Diagnostics for the disabled VSTest step.
     - task: PowerShell@2
       displayName: Collect VSTest diagnostics
       enabled: false

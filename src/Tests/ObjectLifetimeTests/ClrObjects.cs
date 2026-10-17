@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
+using WindowsRuntime.Xaml;
 
 
 namespace ObjectLifetimeTests
@@ -67,7 +68,8 @@ namespace ObjectLifetimeTests
         }
     }
 
-    public class ClrObject3
+    [GeneratedCustomPropertyProvider]
+    public partial class ClrObject3
     {
         private object _myTag = 0;
         public object MyTag

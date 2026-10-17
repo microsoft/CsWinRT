@@ -27,7 +27,7 @@ CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. 
 - **Output type:** Exe, self-contained, AOT-enabled
 - **Key dependencies:** MSTest.TestFramework, MSTest.TestAdapter, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
 - **References:** WinRT.SourceGenerator2 (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
-- **Runner:** UnitTest, SourceGenerator2Test, and the four generator/writer test projects use `MSTest.Sdk`, pinned in `global.json`. The SDK supplies the runner and matching MSTest/MTP packages, using its default extension profile (TRX reporting and code coverage). Shared `Directory.Build.props` enables source generation for CoreCLR as well as Native AOT. Do not add redundant runner properties or MSTest package references; the custom WinUI lifetime-test host still manages its packages separately.
+- **Runner:** The MSTest projects use `MSTest.Sdk`, pinned in `global.json`. The SDK supplies the runner and matching MSTest/MTP packages, using its default extension profile (TRX reporting and code coverage). Shared `Directory.Build.props` enables source generation for CoreCLR as well as Native AOT. Do not add redundant runner properties or MSTest package references.
 
 **Test organization:**
 - Single namespace: `UnitTest`
@@ -207,6 +207,10 @@ public async Task InvalidType_Warns()
 - **Type:** WinExe (desktop XAML application)
 - **Test framework:** MSTest (runs inside a WinUI application)
 - **Dependencies:** Microsoft.WindowsAppSDK.WinUI, Windows/WinAppSDK projections
+- **Runner:** `MSTest.Sdk` supplies the generated `MicrosoftTestingPlatformApplication.RunAsync` helper. The app retains its custom STA entry point to avoid the XAML compiler's CsWinRT 2.x initialization code and runs MTP on a worker thread because `AsyncQueue.Run` blocks while dispatching work to the UI thread. Do not change these tests to `[UITestMethod]`: they already dispatch their UI work explicitly.
+- **CsWinRT 3.0 compatibility:** The project redirects MSTest's WinUI-specific adapter, platform services, and framework extension to the ordinary assemblies, avoiding their CsWinRT 2.x dependencies. Keep the existing projection/XAML reference workarounds.
+- **Execution:** The self-contained host defaults to unpackaged (`WindowsPackageType=None`), with a `Project` launch profile, so MTP can launch its executable directly without the legacy `.appxrecipe` container. From the repo root, build with `dotnet build src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj -c Release -p:Platform=x64`, then run `dotnet test --project src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj -c Release -p:Platform=x64 --no-build`. `build\scripts\Run-ObjectLifetimeInProcess.ps1` retains its existing filename and layout-directory interface for callers but invokes MTP and produces TRX reports.
+- **Optional MSIX execution:** Restore and build with `/p:WindowsPackageType=MSIX`, then use `InvokeTestingPlatform` with the same property, concrete `TargetFramework`, configuration, and platform, or pass `-WindowsPackageType MSIX` to the launch script. Restore again when switching modes so the SDK selects the matching launcher assets. The SDK's separate Windows sidecar handles registration/activation. Do not force the Windows `.0` `Microsoft.Testing.Extensions.PackagedApp` asset into the CsWinRT 3.0 `.1` host: NuGet deliberately rejects that incompatible projection contract. The selected plain asset can act as the activated child but cannot register/activate the package during direct native CLI startup. The packaged sidecar also does not support `--list-tests` or the MSTest-specific `--filter` option.
 
 **Key patterns:**
 - `WeakReference` tracking to verify objects are collected

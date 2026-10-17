@@ -24,7 +24,6 @@
     <PackageVersion Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
-    <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="18.11.0" />
     <PackageVersion Include="Microsoft.VCRTForwarders.140" Version="1.1.0" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.1.635-beta" />
@@ -40,8 +39,5 @@
     <PackageVersion Include="Perfolizer" Version="0.2.1" />
     <PackageVersion Include="SimpleMathComponent" Version="0.1.0-prerelease" />
     <PackageVersion Include="System.Numerics.Tensors" Version="9.0.7" />
-    <!-- The custom WinUI test host still references these directly; MSTest.Sdk owns its own versions. -->
-    <PackageVersion Include="MSTest.TestAdapter" Version="4.5.1" Condition="'$(UsingMSTestSdk)' != 'true'" />
-    <PackageVersion Include="MSTest.TestFramework" Version="4.5.1" Condition="'$(UsingMSTestSdk)' != 'true'" />
   </ItemGroup>
 </Project>
