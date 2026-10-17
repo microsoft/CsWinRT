@@ -37,9 +37,53 @@ internal static class GuidGenerator
         bool useWindowsUIXamlProjections)
     {
         string signature = SignatureGenerator.GetSignature(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
-        Guid guid = CreateGuidFromSignature(signature);
+        return interopDefinitions.GetOrCreateIID(signature, static signature => CreateGuidFromSignature(signature));
+    }
 
-        return guid;
+    /// <summary>
+    /// Tries to get the IID represented by a Windows Runtime type using its existing signature.
+    /// </summary>
+    /// <param name="type">The Windows Runtime type.</param>
+    /// <param name="interopDefinitions">The projection definitions and cached generated IIDs.</param>
+    /// <param name="interopReferences">The references for this invocation.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
+    /// <param name="iid">The interface, default-interface, or boxing IID.</param>
+    /// <returns>Whether the type has a Windows Runtime IID.</returns>
+    public static bool TryCreateIID(
+        TypeSignature type,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections,
+        out Guid iid)
+    {
+        iid = default;
+
+        if (!type.IsWindowsRuntimeIidType(interopReferences))
+        {
+            return false;
+        }
+
+        string signature = SignatureGenerator.GetSignature(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
+        ReadOnlySpan<char> interfaceSignature = signature;
+
+        if (interfaceSignature.StartsWith("rc("))
+        {
+            interfaceSignature = interfaceSignature[(interfaceSignature.IndexOf(';') + 1)..^1];
+        }
+        else if (interfaceSignature.StartsWith("delegate("))
+        {
+            interfaceSignature = interfaceSignature["delegate(".Length..^1];
+        }
+
+        iid = interfaceSignature.StartsWith("pinterface(")
+            ? interopDefinitions.GetOrCreateIID(interfaceSignature.ToString(), static signature => CreateGuidFromSignature(signature))
+            : interfaceSignature.StartsWith("{")
+                ? Guid.Parse(interfaceSignature)
+                : interfaceSignature.SequenceEqual("cinterface(IInspectable)")
+                    ? WellKnownInterfaceIIDs.IID_IInspectable
+                    : CreateIID(type.MakeBoxedType(), interopDefinitions, interopReferences, useWindowsUIXamlProjections);
+
+        return true;
     }
 
     /// <summary>

@@ -34,7 +34,8 @@ internal static partial class SignatureGenerator
         bool useWindowsUIXamlProjections)
     {
         // If we have a registered signature for a mapped type, just return that directly
-        if (TypeMapping.TryFindMappedTypeSignature(type.FullName, useWindowsUIXamlProjections, out string? mappedSignature))
+        if (type is not BoxedTypeSignature &&
+            TypeMapping.TryFindMappedTypeSignature(type.FullName, useWindowsUIXamlProjections, out string? mappedSignature))
         {
             return mappedSignature;
         }
