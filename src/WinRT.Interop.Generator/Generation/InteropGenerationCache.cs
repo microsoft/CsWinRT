@@ -197,8 +197,15 @@ internal static class InteropGenerationCache
     }
 
     /// <summary>
-    /// Hashes the MVID offset and the complete PE, treating the MVID entry as zero so it can be refreshed independently.
+    /// Computes an integrity digest for the cached assembly and its recorded MVID location.
     /// </summary>
+    /// <remarks>
+    /// The generated MVID depends on every input assembly byte, so a method-body edit can change it without
+    /// changing the required interop code. On a cache hit, <see cref="TryReuse"/> replaces that GUID to match
+    /// fresh output. Hashing zeros in its place keeps the digest valid across this update while checking
+    /// every other DLL byte. Hashing the recorded offset too prevents a damaged record from redirecting
+    /// the GUID write to a different location.
+    /// </remarks>
     /// <param name="stream">The stream for the generated assembly.</param>
     /// <param name="mvidOffset">The offset of the MVID entry in the generated assembly.</param>
     /// <param name="destination">The target buffer for the resulting digest.</param>
@@ -215,7 +222,8 @@ internal static class InteropGenerationCache
 
         hash.AppendData(mvidOffsetBytes);
 
-        byte[] buffer = ArrayPool<byte>.Shared.Rent(65536);
+        // Use 64 KiB chunks to amortize read/hash calls while keeping the pool bucket below the LOH threshold
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(64 * 1024);
         long offset = 0;
         int read;
 
