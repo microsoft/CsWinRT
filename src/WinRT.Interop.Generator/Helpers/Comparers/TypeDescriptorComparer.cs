@@ -53,8 +53,8 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     {
         return new(runtimeContext)
         {
-            _assemblyNames = new(ReferenceEqualityComparer.Instance),
-            _definitionNames = new(ReferenceEqualityComparer.Instance)
+            _assemblyNames = new Dictionary<AssemblyDescriptor, string>(ReferenceEqualityComparer.Instance),
+            _definitionNames = new Dictionary<TypeDefinition, string>(ReferenceEqualityComparer.Instance)
         };
     }
 
