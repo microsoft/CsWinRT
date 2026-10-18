@@ -2697,12 +2697,10 @@ internal partial class InteropGenerator
         {
             args.Token.ThrowIfCancellationRequested();
 
-            TypeSignature typeSignature = input.Type;
-
             try
             {
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
-                    userDefinedType: typeSignature,
+                    userDefinedType: input.Type,
                     vtableTypes: input.VtableTypes,
                     comWrappersMarshallerAttributeType: input.Group.MarshallerAttributeType!,
                     interopDefinitions: interopDefinitions,
@@ -2712,14 +2710,14 @@ internal partial class InteropGenerator
                     proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
-                    userDefinedType: typeSignature,
+                    userDefinedType: input.Type,
                     proxyType: proxyType,
                     interopReferences: interopReferences,
                     module: module);
             }
             catch (Exception e)
             {
-                WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
+                WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(input.Type.Name, e).ThrowOrAttach(e);
             }
         }
     }
