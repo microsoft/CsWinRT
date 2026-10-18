@@ -125,10 +125,12 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
             type = definition;
         }
 
+        // Format the type we have resolved, if that was successful (and cache the result)
         if (definitionNames is not null && type is TypeDefinition resolved)
         {
             ref string? name = ref CollectionsMarshal.GetValueRefOrAddDefault(definitionNames, resolved, out _);
             name ??= FormatDefinitionName(resolved, assemblyNames);
+
             handler.AppendLiteral(name);
 
             return;
@@ -166,6 +168,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
         if (type.Scope?.GetAssembly() is AssemblyDescriptor assembly)
         {
             handler.AppendLiteral(", ");
+
             if (assemblyNames is null)
             {
                 handler.AppendFormatted(assembly);
@@ -174,6 +177,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
             {
                 ref string? name = ref CollectionsMarshal.GetValueRefOrAddDefault(assemblyNames, assembly, out _);
                 name ??= assembly.ToString();
+
                 handler.AppendLiteral(name);
             }
         }
