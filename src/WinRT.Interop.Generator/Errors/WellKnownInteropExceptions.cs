@@ -1014,6 +1014,14 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// More than one interface IID maps to the same generated getter name.
+    /// </summary>
+    public static WellKnownInteropException DuplicateGeneratedInterfaceIID(string name)
+    {
+        return Exception(112, $"The generated IID getter name '{name}' is not unique. Multiple interface IIDs map to the same name; the interop assembly cannot be generated safely.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
